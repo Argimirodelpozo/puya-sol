@@ -6,12 +6,12 @@ from framework import (
     as_int, as_bytes,
 )
 
-def test_prediction_example(harness):
+def test_prediction_example(harness):  # currently fails
     """saltedCreate/contracts/prediction_example.sol"""
     app = harness.compile_and_deploy('saltedCreate/contracts/prediction_example.sol')
     r = harness.call(app, 'createDSalted(bytes32,uint256)', 42, 64)
 
-def test_salted_create(harness):
+def test_salted_create(harness):  # currently fails
     """saltedCreate/contracts/salted_create.sol"""
     app = harness.compile_and_deploy('saltedCreate/contracts/salted_create.sol')
     r = harness.call(app, 'different_salt()')
@@ -19,6 +19,6 @@ def test_salted_create(harness):
     r = harness.call(app, 'same_salt()')
     assert r.abi_return is True
 
-def test_salted_create_with_value(harness):
+def test_salted_create_with_value(harness):  # currently fails
     """saltedCreate/contracts/salted_create_with_value.sol"""
     app = harness.compile_and_deploy('saltedCreate/contracts/salted_create_with_value.sol')

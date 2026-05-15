@@ -162,7 +162,7 @@ def test_invalid_abi_decoding_calldata_v1(harness):
         harness, "revertStrings/contracts/invalid_abi_decoding_calldata_v1.sol",
         "d(byte[])uint64", (0xffff).to_bytes(2, "big"))
 
-def test_invalid_abi_decoding_memory_v1(harness):
+def test_invalid_abi_decoding_memory_v1(harness):  # currently fails
     """revertStrings/contracts/invalid_abi_decoding_memory_v1.sol"""
     app = harness.compile_and_deploy('revertStrings/contracts/invalid_abi_decoding_memory_v1.sol')
     r = harness.call(app, 'f(uint256,uint256,uint256, expect_revert=True)', 0, 0x200, 0x60)
@@ -170,7 +170,7 @@ def test_invalid_abi_decoding_memory_v1(harness):
     r = harness.call(app, 'f(uint256,uint256,uint256, expect_revert=True)', 0, 0x20, 0x60)
     assert r.reverted
 
-def test_library_non_view_call(harness):
+def test_library_non_view_call(harness):  # currently fails
     """revertStrings/contracts/library_non_view_call.sol"""
     app = harness.compile_and_deploy('revertStrings/contracts/library_non_view_call.sol')
 

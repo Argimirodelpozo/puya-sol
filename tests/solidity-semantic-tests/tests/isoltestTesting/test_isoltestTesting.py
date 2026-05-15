@@ -17,7 +17,7 @@ def test_account(harness):
         r = harness.call(app, "who_am_i()")
         assert r.abi_return == harness.localnet.account.address
 
-def test_balance_other_contract(harness):
+def test_balance_other_contract(harness):  # currently fails
     """isoltestTesting/contracts/balance_other_contract.sol"""
     app = harness.compile_and_deploy('isoltestTesting/contracts/balance_other_contract.sol')
 

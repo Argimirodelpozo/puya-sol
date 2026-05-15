@@ -32,7 +32,7 @@ def test_access_through_contract_name(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 2
 
-def test_access_through_module_name(harness):
+def test_access_through_module_name(harness):  # currently fails
     """modifiers/contracts/access_through_module_name.sol"""
     app = harness.compile_and_deploy('modifiers/contracts/access_through_module_name.sol')
     r = harness.call(app, 'x()')
@@ -310,7 +310,7 @@ def test_return_in_modifier(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 4
 
-def test_stacked_return_with_modifiers(harness):
+def test_stacked_return_with_modifiers(harness):  # currently fails
     """modifiers/contracts/stacked_return_with_modifiers.sol"""
     app = harness.compile_and_deploy('modifiers/contracts/stacked_return_with_modifiers.sol')
     r = harness.call(app, 'x()')

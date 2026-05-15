@@ -260,7 +260,7 @@ def test_packed_storage_structs_delete(harness):
     r = harness.call(app, "test()")
     assert as_int(r.abi_return) == 1
 
-def test_recursive_struct_2(harness):
+def test_recursive_struct_2(harness):  # currently fails
     """structs/contracts/recursive_struct_2.sol"""
     app = harness.compile_and_deploy('structs/contracts/recursive_struct_2.sol')
     r = harness.call(app, 'f()')
@@ -363,7 +363,7 @@ def test_struct_delete_storage(harness):
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
 
-def test_struct_delete_storage_nested_small(harness):
+def test_struct_delete_storage_nested_small(harness):  # currently fails
     """structs/contracts/struct_delete_storage_nested_small.sol"""
     app = harness.compile_and_deploy('structs/contracts/struct_delete_storage_nested_small.sol')
     r = harness.call(app, 'f()')
@@ -386,7 +386,7 @@ def test_struct_delete_storage_with_array(harness):
     r = harness.call(app, "g()")
     # (void return — call succeeding is the assertion)
 
-def test_struct_delete_storage_with_arrays_small(harness):
+def test_struct_delete_storage_with_arrays_small(harness):  # currently fails
     """structs/contracts/struct_delete_storage_with_arrays_small.sol"""
     app = harness.compile_and_deploy('structs/contracts/struct_delete_storage_with_arrays_small.sol')
     r = harness.call(app, 'f()')

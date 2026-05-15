@@ -177,7 +177,7 @@ def test_calldata_internal_library(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 8
 
-def test_calldata_internal_multi_array(harness):
+def test_calldata_internal_multi_array(harness):  # currently fails
     """calldata/contracts/calldata_internal_multi_array.sol"""
     app = harness.compile_and_deploy('calldata/contracts/calldata_internal_multi_array.sol')
     r = harness.call(app, 'g()')

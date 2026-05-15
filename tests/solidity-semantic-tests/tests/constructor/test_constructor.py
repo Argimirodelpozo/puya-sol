@@ -7,7 +7,7 @@ from framework import (
 )
 
 
-def test_arrays_in_constructors(harness):
+def test_arrays_in_constructors(harness):  # currently fails
     """constructor/contracts/arrays_in_constructors.sol"""
     app = harness.compile_and_deploy('constructor/contracts/arrays_in_constructors.sol')
     r = harness.call(app, 'f(uint256,address[])', 7, 0x40, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
@@ -20,7 +20,7 @@ def test_base_constructor_arguments(harness):
     r = harness.call(app, "getA()")
     assert as_int(r.abi_return) == 49
 
-def test_bytes_in_constructors_packer(harness):
+def test_bytes_in_constructors_packer(harness):  # currently fails
     """constructor/contracts/bytes_in_constructors_packer.sol"""
     app = harness.compile_and_deploy('constructor/contracts/bytes_in_constructors_packer.sol')
 
@@ -34,7 +34,7 @@ def test_bytes_in_constructors_unpacker(harness):
     assert as_int(harness.call(app, "m_x()").abi_return) == 7
     assert bytes(harness.call(app, "m_s()").abi_return) == s
 
-def test_callvalue_check(harness):
+def test_callvalue_check(harness):  # currently fails
     """constructor/contracts/callvalue_check.sol"""
     app = harness.compile_and_deploy('constructor/contracts/callvalue_check.sol')
 
@@ -63,7 +63,7 @@ def test_constructor_function_argument(harness):
     app = harness.compile_and_deploy("constructor/contracts/constructor_function_argument.sol", ctor_args=[0xfdd67305928fcac8d213d1e47bfa6165cd0b87b946644cd0000000000000000])
     # constructor-only test — deployment succeeding is the assertion
 
-def test_constructor_function_complex(harness):
+def test_constructor_function_complex(harness):  # currently fails
     """constructor/contracts/constructor_function_complex.sol"""
     app = harness.compile_and_deploy("constructor/contracts/constructor_function_complex.sol", contract_name="C")
     r = harness.call(app, "f()")

@@ -38,7 +38,7 @@ def test_storeInConstructor(harness):
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
-def test_uninitialized_internal_storage_function_legacy(harness):
+def test_uninitialized_internal_storage_function_legacy(harness):  # currently fails
     """uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_legacy.sol"""
     app = harness.compile_and_deploy('uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_legacy.sol')
     r = harness.call(app, 'f()')

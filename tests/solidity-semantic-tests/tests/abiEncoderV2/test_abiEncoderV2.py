@@ -54,7 +54,7 @@ def test_abi_encode_v2(harness):
     )
     assert bytes(harness.call(app, "f4()").abi_return) == expected_f4
 
-def test_abi_encode_v2_in_function_inherited_in_v1_contract(harness):
+def test_abi_encode_v2_in_function_inherited_in_v1_contract(harness):  # currently fails
     """abiEncoderV2/contracts/abi_encode_v2_in_function_inherited_in_v1_contract.sol"""
     app = harness.compile_and_deploy('abiEncoderV2/contracts/abi_encode_v2_in_function_inherited_in_v1_contract.sol')
     r = harness.call(app, 'test()')
@@ -140,7 +140,7 @@ def test_calldata_array_dynamic_index_access(harness):
     assert not harness.call(app, "k(bytes[2],uint256)", [bytes.fromhex("ab11ff"), bytes.fromhex("ff791432")], 0).reverted
     assert not harness.call(app, "k(bytes[2],uint256)", [bytes.fromhex("ab11ff"), bytes.fromhex("ff791432")], 1).reverted
 
-def test_calldata_array_dynamic_static_dynamic(harness):
+def test_calldata_array_dynamic_static_dynamic(harness):  # currently fails
     """abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol"""
     app = harness.compile_and_deploy('abiEncoderV2/contracts/calldata_array_dynamic_static_dynamic.sol')
     r = harness.call(app, 'g()')

@@ -130,7 +130,7 @@ def test_inheritance_from_interface(harness):
     r = harness.call(app, "y()")
     assert as_int(r.abi_return) == 6
 
-def test_inheritance_from_same_base_state_var_slots(harness):
+def test_inheritance_from_same_base_state_var_slots(harness):  # currently fails
     """storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol"""
     app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol')
     r = harness.call(app, 'contractASlots()')
@@ -453,7 +453,7 @@ def test_variable_cleanup(harness):
     # TODO: verify expected: 0x00 | 0x7f | "ab"
     assert not r.reverted
 
-def test_variable_cleanup_sstore(harness):
+def test_variable_cleanup_sstore(harness):  # currently fails
     """storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol"""
     app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol')
     r = harness.call(app, 'f()')

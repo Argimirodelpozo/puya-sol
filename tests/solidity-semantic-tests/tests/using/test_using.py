@@ -84,7 +84,7 @@ def test_library_functions_inside_contract(harness):
     r = harness.call(app, "h()")
     assert as_int(r.abi_return) == 3
 
-def test_library_on_interface(harness):
+def test_library_on_interface(harness):  # currently fails
     """using/contracts/library_on_interface.sol"""
     app = harness.compile_and_deploy('using/contracts/library_on_interface.sol')
     r = harness.call(app, 'x()')
@@ -113,13 +113,13 @@ def test_module_renamed(harness):
     r = harness.call(app, "test(uint256,uint256)", 1, 1)
     assert tuple(as_int(x) for x in r.abi_return) == (9, 3)
 
-def test_private_library_function(harness):
+def test_private_library_function(harness):  # currently fails
     """using/contracts/private_library_function.sol"""
     app = harness.compile_and_deploy('using/contracts/private_library_function.sol')
     r = harness.call(app, 'f()')
     assert as_int(r.abi_return) == 2
 
-def test_recursive_import(harness):
+def test_recursive_import(harness):  # currently fails
     """using/contracts/recursive_import.sol"""
     app = harness.compile_and_deploy('using/contracts/recursive_import.sol')
     r = harness.call(app, 'f()')

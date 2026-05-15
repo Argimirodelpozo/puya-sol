@@ -105,7 +105,7 @@ def test_revert(harness):
     r = harness.call(app, "a()")
     assert as_int(r.abi_return) == 42
 
-def test_revert_return_area(harness):
+def test_revert_return_area(harness):  # currently fails
     """reverts/contracts/revert_return_area.sol"""
     app = harness.compile_and_deploy('reverts/contracts/revert_return_area.sol')
     r = harness.call(app, 'f()')

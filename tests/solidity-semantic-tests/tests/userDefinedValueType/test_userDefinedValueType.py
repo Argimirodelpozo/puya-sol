@@ -262,7 +262,7 @@ def test_conversion_abicoderv1(harness):
     r = harness.call(app, "m(uint16)", 257)
     assert as_int(r.abi_return) == 1
 
-def test_dirty_slot(harness):
+def test_dirty_slot(harness):  # currently fails
     """userDefinedValueType/contracts/dirty_slot.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/dirty_slot.sol')
     r = harness.call(app, 'a()')
@@ -288,7 +288,7 @@ def test_dirty_slot(harness):
     r = harness.call(app, 'get_b(uint256, expect_revert=True)', 2)
     assert r.reverted
 
-def test_dirty_uint8_read(harness):
+def test_dirty_uint8_read(harness):  # currently fails
     """userDefinedValueType/contracts/dirty_uint8_read.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/dirty_uint8_read.sol')
     r = harness.call(app, 'x()')
@@ -356,7 +356,7 @@ def test_fixedpoint(harness):
     r = harness.call(app, "toUFixed256x18(uint256)", 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f22, expect_revert=True)
     assert r.reverted
 
-def test_immutable_signed(harness):
+def test_immutable_signed(harness):  # currently fails
     """userDefinedValueType/contracts/immutable_signed.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/immutable_signed.sol')
     r = harness.call(app, 'direct()')
@@ -493,11 +493,11 @@ def test_storage_layout(harness):
     r = harness.call(app, "storage_g()")
     assert tuple(as_int(x) for x in r.abi_return) == (2, 20)
 
-def test_storage_layout_struct(harness):
+def test_storage_layout_struct(harness):  # currently fails
     """userDefinedValueType/contracts/storage_layout_struct.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_layout_struct.sol')
 
-def test_storage_signed(harness):
+def test_storage_signed(harness):  # currently fails
     """userDefinedValueType/contracts/storage_signed.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_signed.sol')
     r = harness.call(app, 'a()')

@@ -8,7 +8,7 @@ from framework import (
 )
 
 
-def test_address_code(harness):
+def test_address_code(harness):  # currently fails
     """various/contracts/address_code.sol"""
     app = harness.compile_and_deploy('various/contracts/address_code.sol')
     r = harness.call(app, 'initCode()')
@@ -20,7 +20,7 @@ def test_address_code(harness):
     r = harness.call(app, 'h()')
     assert as_int(r.abi_return) == 0
 
-def test_address_code_complex(harness):
+def test_address_code_complex(harness):  # currently fails
     """various/contracts/address_code_complex.sol"""
     app = harness.compile_and_deploy('various/contracts/address_code_complex.sol')
     r = harness.call(app, 'f()')
@@ -53,7 +53,7 @@ def test_byte_optimization_bug(harness):
     r = harness.call(app, "g(uint256)", 2)
     assert as_int(r.abi_return) == 2
 
-def test_code_access_content(harness):
+def test_code_access_content(harness):  # currently fails
     """various/contracts/code_access_content.sol"""
     app = harness.compile_and_deploy('various/contracts/code_access_content.sol')
     r = harness.call(app, 'testRuntime()')
@@ -61,7 +61,7 @@ def test_code_access_content(harness):
     r = harness.call(app, 'testCreation()')
     assert r.abi_return is True
 
-def test_code_access_create(harness):
+def test_code_access_create(harness):  # currently fails
     """various/contracts/code_access_create.sol"""
     app = harness.compile_and_deploy('various/contracts/code_access_create.sol')
     r = harness.call(app, 'test()')
@@ -75,13 +75,13 @@ def test_code_access_padding(harness):
     # TODO: verify expected: 0 # This checks that the allocation function pads to multiples of 32 bytes #
     assert not r.reverted
 
-def test_code_access_runtime(harness):
+def test_code_access_runtime(harness):  # currently fails
     """various/contracts/code_access_runtime.sol"""
     app = harness.compile_and_deploy('various/contracts/code_access_runtime.sol')
     r = harness.call(app, 'test()')
     assert as_int(r.abi_return) == 42
 
-def test_code_length(harness):
+def test_code_length(harness):  # currently fails
     """various/contracts/code_length.sol"""
     app = harness.compile_and_deploy('various/contracts/code_length.sol')
     r = harness.call(app, 'f()', True, True)
@@ -95,7 +95,7 @@ def test_code_length_contract_member(harness):
     # TODO: verify expected: 0x20 | 0x20 | true
     assert not r.reverted
 
-def test_codebalance_assembly(harness):
+def test_codebalance_assembly(harness):  # currently fails
     """various/contracts/codebalance_assembly.sol"""
     app = harness.compile_and_deploy('various/contracts/codebalance_assembly.sol')
 
@@ -137,7 +137,7 @@ def test_crazy_elementary_typenames_on_stack(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) in (-7, 115792089237316195423570985008687907853269984665640564039457584007913129639929)
 
-def test_create_calldata(harness):
+def test_create_calldata(harness):  # currently fails
     """various/contracts/create_calldata.sol"""
     app = harness.compile_and_deploy('various/contracts/create_calldata.sol')
     r = harness.call(app, 's()')
@@ -173,7 +173,7 @@ def test_destructuring_assignment(harness):
     r = harness.call(app, "f(bytes)", b"abcde")
     assert as_int(r.abi_return) == 0
 
-def test_different_call_type_transient(harness):
+def test_different_call_type_transient(harness):  # currently fails
     """various/contracts/different_call_type_transient.sol"""
     app = harness.compile_and_deploy('various/contracts/different_call_type_transient.sol')
     r = harness.call(app, 'testDelegate()')
@@ -296,7 +296,7 @@ def test_literal_empty_string(harness):
     r = harness.call(app, "a()")
     assert as_int(r.abi_return) == 2
 
-def test_many_subassemblies(harness):
+def test_many_subassemblies(harness):  # currently fails
     """various/contracts/many_subassemblies.sol"""
     app = harness.compile_and_deploy('various/contracts/many_subassemblies.sol')
     r = harness.call(app, 'run()')
@@ -360,27 +360,27 @@ def test_positive_integers_to_signed(harness):
     r = harness.call(app, "q()")
     assert as_int(r.abi_return) == 250
 
-def test_selfdestruct_post_cancun(harness):
+def test_selfdestruct_post_cancun(harness):  # currently fails
     """various/contracts/selfdestruct_post_cancun.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun.sol")
 
-def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):
+def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):  # currently fails
     """various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol")
 
-def test_selfdestruct_post_cancun_redeploy(harness):
+def test_selfdestruct_post_cancun_redeploy(harness):  # currently fails
     """various/contracts/selfdestruct_post_cancun_redeploy.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_redeploy.sol")
 
-def test_selfdestruct_pre_cancun(harness):
+def test_selfdestruct_pre_cancun(harness):  # currently fails
     """various/contracts/selfdestruct_pre_cancun.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun.sol")
 
-def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):
+def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):  # currently fails
     """various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol")
 
-def test_selfdestruct_pre_cancun_redeploy(harness):
+def test_selfdestruct_pre_cancun_redeploy(harness):  # currently fails
     """various/contracts/selfdestruct_pre_cancun_redeploy.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_redeploy.sol")
 
@@ -412,7 +412,7 @@ def test_skip_dynamic_types(harness):
     r = harness.call(app, "g()")
     assert tuple(as_int(x) for x in r.abi_return) == (7, 8)
 
-def test_skip_dynamic_types_for_static_arrays_with_dynamic_elements(harness):
+def test_skip_dynamic_types_for_static_arrays_with_dynamic_elements(harness):  # currently fails
     """various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol"""
     app = harness.compile_and_deploy('various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol')
     r = harness.call(app, 'g()')
@@ -453,7 +453,7 @@ def test_staticcall_for_view_and_pure(harness):
     r = harness.call(app, "fpure()", expect_revert=True)
     assert r.reverted
 
-def test_staticcall_for_view_and_pure_pre_byzantium(harness):
+def test_staticcall_for_view_and_pure_pre_byzantium(harness):  # currently fails
     """various/contracts/staticcall_for_view_and_pure_pre_byzantium.sol"""
     app = harness.compile_and_deploy('various/contracts/staticcall_for_view_and_pure_pre_byzantium.sol')
     r = harness.call(app, 'f()')

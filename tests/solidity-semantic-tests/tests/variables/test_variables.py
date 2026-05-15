@@ -28,7 +28,7 @@ def test_delete_transient_state_variable(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 0
 
-def test_delete_transient_state_variable_non_zero_offset(harness):
+def test_delete_transient_state_variable_non_zero_offset(harness):  # currently fails
     """variables/contracts/delete_transient_state_variable_non_zero_offset.sol"""
     app = harness.compile_and_deploy('variables/contracts/delete_transient_state_variable_non_zero_offset.sol')
     r = harness.call(app, 'f()')
@@ -121,7 +121,7 @@ def test_transient_function_type_state_variable(harness):
     r = harness.call(app, "test()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_transient_state_address_variable_members(harness):
+def test_transient_state_address_variable_members(harness):  # currently fails
     """variables/contracts/transient_state_address_variable_members.sol"""
     app = harness.compile_and_deploy('variables/contracts/transient_state_address_variable_members.sol')
 

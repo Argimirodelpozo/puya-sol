@@ -52,7 +52,7 @@ def test_abi_encode_call(harness):
     r = harness.call(app, "callExternal()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_abi_encode_call_declaration(harness):
+def test_abi_encode_call_declaration(harness):  # currently fails
     """abiEncodeDecode/contracts/abi_encode_call_declaration.sol"""
     app = harness.compile_and_deploy('abiEncodeDecode/contracts/abi_encode_call_declaration.sol')
     r = harness.call(app, 'test()')
@@ -104,7 +104,7 @@ def test_abi_encode_call_memory(harness):
     r = harness.call(app, "test()", extra_fee=5000)
     assert bytes(r.abi_return) == bytes.fromhex("40e33532")
 
-def test_abi_encode_call_special_args(harness):
+def test_abi_encode_call_special_args(harness):  # currently fails
     """abiEncodeDecode/contracts/abi_encode_call_special_args.sol"""
     app = harness.compile_and_deploy('abiEncodeDecode/contracts/abi_encode_call_special_args.sol')
     r = harness.call(app, 'assertConsistentSelectors()')
@@ -276,7 +276,7 @@ def test_contract_array(harness):
     expected_g = b"".join(v.to_bytes(32, "big") for v in (32, 3, 0x42, 0x21, 0x23))
     assert bytes(harness.call(app, "g()").abi_return) == expected_g
 
-def test_contract_array_v2(harness):
+def test_contract_array_v2(harness):  # currently fails
     """abiEncodeDecode/contracts/contract_array_v2.sol"""
     app = harness.compile_and_deploy('abiEncodeDecode/contracts/contract_array_v2.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03)
@@ -295,7 +295,7 @@ def test_offset_overflow_in_array_decoding(harness):
     r = harness.call(app, "test()", expect_revert=True)
     assert r.reverted
 
-def test_offset_overflow_in_array_decoding_2(harness):
+def test_offset_overflow_in_array_decoding_2(harness):  # currently fails
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol"""
     app = harness.compile_and_deploy('abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol')
     r = harness.call(app, 'withinArray(, expect_revert=True)')

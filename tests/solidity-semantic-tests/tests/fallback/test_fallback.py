@@ -7,7 +7,7 @@ from framework import (
 )
 
 
-def test_call_forward_bytes(harness):
+def test_call_forward_bytes(harness):  # currently fails
     """fallback/contracts/call_forward_bytes.sol"""
     app = harness.compile_and_deploy('fallback/contracts/call_forward_bytes.sol')
     r = harness.call(app, 'recv(uint256)', 7)

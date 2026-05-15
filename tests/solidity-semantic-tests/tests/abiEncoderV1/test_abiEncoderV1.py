@@ -30,13 +30,13 @@ def _static_2x3_payload() -> bytes:
     return b"".join(v.to_bytes(32, "big") for v in (1, 2, 3, 4, 5, 6))
 
 
-def test_abi_decode_static_array(harness):
+def test_abi_decode_static_array(harness):  # currently fails
     """abiEncoderV1/contracts/abi_decode_static_array.sol"""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_static_array.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0xc0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6)
     assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6,)
 
-def test_abi_decode_static_array_v2(harness):
+def test_abi_decode_static_array_v2(harness):  # currently fails
     """abiEncoderV1/contracts/abi_decode_static_array_v2.sol"""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_static_array_v2.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0xc0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6)
@@ -57,7 +57,7 @@ def test_abi_decode_v2(harness):
     # TODO: verify structural decoding matches expected: 32, 8, 64, 3, 9, 10, 11
     assert not r.reverted
 
-def test_abi_decode_v2_calldata(harness):
+def test_abi_decode_v2_calldata(harness):  # currently fails
     """abiEncoderV1/contracts/abi_decode_v2_calldata.sol"""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_v2_calldata.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0xe0, 0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc)
@@ -208,7 +208,7 @@ def test_dynamic_arrays(harness):
     r = harness.call(app, "f(uint256,uint16[],uint256)", 6, [11, 12, 13, 14, 15, 16, 17], 9)
     assert tuple(as_int(x) for x in r.abi_return) == (7, 17, 9)
 
-def test_dynamic_memory_copy(harness):
+def test_dynamic_memory_copy(harness):  # currently fails
     """abiEncoderV1/contracts/dynamic_memory_copy.sol"""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/dynamic_memory_copy.sol')
     r = harness.call(app, 'test(bytes)', 0x20, 0x80, 0x40, 0x60, 0, 0)
@@ -284,7 +284,7 @@ def test_return_dynamic_types_cross_call_out_of_range_1(harness):
     r = harness.call(app, "f(uint256)", 128)
     assert bool(as_int(r.abi_return)) is True
 
-def test_return_dynamic_types_cross_call_out_of_range_2(harness):
+def test_return_dynamic_types_cross_call_out_of_range_2(harness):  # currently fails
     """abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol"""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol')
     r = harness.call(app, 'f(uint256, expect_revert=True)', 0x60)

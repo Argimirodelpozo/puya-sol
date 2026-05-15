@@ -8,7 +8,7 @@ from framework import (
 )
 
 
-def test_array_mapping_abstract_constructor_param(harness):
+def test_array_mapping_abstract_constructor_param(harness):  # currently fails
     """types/contracts/array_mapping_abstract_constructor_param.sol"""
     app = harness.compile_and_deploy('types/contracts/array_mapping_abstract_constructor_param.sol')
     r = harness.call(app, 'm(uint256,uint256,uint256, expect_revert=True)', 0, 0, 0)

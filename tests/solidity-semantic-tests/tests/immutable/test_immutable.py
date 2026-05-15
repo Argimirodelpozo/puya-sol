@@ -60,19 +60,19 @@ def test_getter(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 1
 
-def test_getter_call_in_constructor(harness):
+def test_getter_call_in_constructor(harness):  # currently fails
     """immutable/contracts/getter_call_in_constructor.sol"""
     app = harness.compile_and_deploy('immutable/contracts/getter_call_in_constructor.sol')
     r = harness.call(app, 'f()')
     assert r.abi_return is True
 
-def test_immutable_signed(harness):
+def test_immutable_signed(harness):  # currently fails
     """immutable/contracts/immutable_signed.sol"""
     app = harness.compile_and_deploy('immutable/contracts/immutable_signed.sol')
     r = harness.call(app, 'viaasm()')
     assert tuple(as_int(x) for x in r.abi_return) == (0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000,)
 
-def test_immutable_tag_too_large_bug(harness):
+def test_immutable_tag_too_large_bug(harness):  # currently fails
     """immutable/contracts/immutable_tag_too_large_bug.sol"""
     app = harness.compile_and_deploy('immutable/contracts/immutable_tag_too_large_bug.sol')
     r = harness.call(app, 'f()')
@@ -103,7 +103,7 @@ def test_internal_function_pointer(harness):
     r = harness.call(app, "callZ()")
     assert as_int(r.abi_return) == 7
 
-def test_multi_creation(harness):
+def test_multi_creation(harness):  # currently fails
     """immutable/contracts/multi_creation.sol"""
     app = harness.compile_and_deploy('immutable/contracts/multi_creation.sol')
     r = harness.call(app, 'f()')
@@ -113,7 +113,7 @@ def test_multi_creation(harness):
     r = harness.call(app, 'y()')
     assert as_int(r.abi_return) == 5
 
-def test_multiple_initializations(harness):
+def test_multiple_initializations(harness):  # currently fails
     """immutable/contracts/multiple_initializations.sol"""
     app = harness.compile_and_deploy('immutable/contracts/multiple_initializations.sol')
     r = harness.call(app, 'get()')

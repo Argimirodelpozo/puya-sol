@@ -135,7 +135,7 @@ def test_require_error_condition_evaluated_only_once(harness):
     r = harness.call(app, "getCounter()")
     assert as_int(r.abi_return) == 1
 
-def test_require_error_evaluation_order_1(harness):
+def test_require_error_evaluation_order_1(harness):  # currently fails
     """errors/contracts/require_error_evaluation_order_1.sol"""
     app = harness.compile_and_deploy('errors/contracts/require_error_evaluation_order_1.sol')
     r = harness.call(app, 'f()')
@@ -251,7 +251,7 @@ def test_simple(harness):
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
-def test_small_error_optimization(harness):
+def test_small_error_optimization(harness):  # currently fails
     """errors/contracts/small_error_optimization.sol"""
     app = harness.compile_and_deploy('errors/contracts/small_error_optimization.sol')
     r = harness.call(app, 'f(, expect_revert=True)')

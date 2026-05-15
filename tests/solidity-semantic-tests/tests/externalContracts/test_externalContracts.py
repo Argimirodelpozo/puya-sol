@@ -8,11 +8,11 @@ from framework import (
 )
 
 
-def test_FixedFeeRegistrar(harness):
+def test_FixedFeeRegistrar(harness):  # currently fails
     """externalContracts/contracts/FixedFeeRegistrar.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/FixedFeeRegistrar.sol')
 
-def test_base64(harness):
+def test_base64(harness):  # currently fails
     """externalContracts/contracts/base64.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/base64.sol')
     r = harness.call(app, 'encode_inline_asm(bytes)', 0x20, 0)
@@ -22,11 +22,11 @@ def test_base64(harness):
     r = harness.call(app, 'encode_inline_asm_large()')
     r = harness.call(app, 'encode_no_asm_large()')
 
-def test_deposit_contract(harness):
+def test_deposit_contract(harness):  # currently fails
     """externalContracts/contracts/deposit_contract.sol — ETH 2.0 deposit contract."""
     app = harness.compile_and_deploy('externalContracts/contracts/deposit_contract.sol — ETH 2.0 deposit contract.')
 
-def test_prbmath_signed(harness):
+def test_prbmath_signed(harness):  # currently fails
     """externalContracts/contracts/prbmath_signed.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/prbmath_signed.sol')
     r = harness.call(app, 'div(int256,int256)', 3141592653589793238, 88714123)
@@ -50,7 +50,7 @@ def test_prbmath_signed(harness):
     r = harness.call(app, 'benchmark(int256)', 3141592653589793238)
     assert tuple(as_int(x) for x in r.abi_return) == (998882724338592125, 1000000000000000000, 1000000000000000000,)
 
-def test_prbmath_unsigned(harness):
+def test_prbmath_unsigned(harness):  # currently fails
     """externalContracts/contracts/prbmath_unsigned.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/prbmath_unsigned.sol')
     r = harness.call(app, 'div(uint256,uint256)', 3141592653589793238, 88714123)
@@ -81,10 +81,10 @@ def test_ramanujan_pi(harness):
     r = harness.call(app, "prb_pi()")
     assert as_int(r.abi_return) == 3141592656369545286
 
-def test_snark(harness):
+def test_snark(harness):  # currently fails
     """externalContracts/contracts/snark.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/snark.sol')
 
-def test_strings(harness):
+def test_strings(harness):  # currently fails
     """externalContracts/contracts/strings.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/strings.sol')

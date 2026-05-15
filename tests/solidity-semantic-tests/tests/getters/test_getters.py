@@ -7,7 +7,7 @@ from framework import (
 )
 
 
-def test_array_mapping_struct(harness):
+def test_array_mapping_struct(harness):  # currently fails
     """getters/contracts/array_mapping_struct.sol"""
     app = harness.compile_and_deploy('getters/contracts/array_mapping_struct.sol')
     r = harness.call(app, 'm(uint256,uint256)', 0, 0)
@@ -159,7 +159,7 @@ def test_transient_value_types(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 0
 
-def test_transient_value_types_multi_frame_call(harness):
+def test_transient_value_types_multi_frame_call(harness):  # currently fails
     """getters/contracts/transient_value_types_multi_frame_call.sol"""
     app = harness.compile_and_deploy('getters/contracts/transient_value_types_multi_frame_call.sol')
     r = harness.call(app, 'x()')

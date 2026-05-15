@@ -30,7 +30,7 @@ def test_bool_conversion_v2(harness):
         assert bool(harness.call(app, "f(bool)", v).abi_return) is v
         assert bool(harness.call(app, "g(bool)", v).abi_return) is v
 
-def test_byte_array_to_storage_cleanup(harness):
+def test_byte_array_to_storage_cleanup(harness):  # currently fails
     """cleanup/contracts/byte_array_to_storage_cleanup.sol"""
     app = harness.compile_and_deploy('cleanup/contracts/byte_array_to_storage_cleanup.sol')
     r = harness.call(app, 'h()')

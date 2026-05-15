@@ -7,7 +7,7 @@ from framework import (
 )
 
 
-def test_evmone_support(harness):
+def test_evmone_support(harness):  # currently fails
     """shanghai/contracts/evmone_support.sol"""
     app = harness.compile_and_deploy('shanghai/contracts/evmone_support.sol')
     r = harness.call(app, 'bytecode()')

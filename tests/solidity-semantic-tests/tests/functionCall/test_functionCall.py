@@ -178,7 +178,7 @@ def test_creation_function_call_with_salt(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 2
 
-def test_delegatecall_return_value(harness):
+def test_delegatecall_return_value(harness):  # currently fails
     """functionCall/contracts/delegatecall_return_value.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/delegatecall_return_value.sol')
     r = harness.call(app, 'get()')
@@ -202,7 +202,7 @@ def test_delegatecall_return_value(harness):
     r = harness.call(app, 'get_delegated()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x01, 0x40, 0x20, 0x2a,)
 
-def test_delegatecall_return_value_pre_byzantium(harness):
+def test_delegatecall_return_value_pre_byzantium(harness):  # currently fails
     """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/delegatecall_return_value_pre_byzantium.sol')
     r = harness.call(app, 'get()')
@@ -323,7 +323,7 @@ def test_external_public_override(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 2
 
-def test_failed_create(harness):
+def test_failed_create(harness):  # currently fails
     """functionCall/contracts/failed_create.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/failed_create.sol')
 
@@ -350,7 +350,7 @@ def test_gas_and_value_basic(harness):
     r = harness.call(app, "checkState()")
     assert not r.reverted
 
-def test_mapping_array_internal_argument(harness):
+def test_mapping_array_internal_argument(harness):  # currently fails
     """functionCall/contracts/mapping_array_internal_argument.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/mapping_array_internal_argument.sol')
     r = harness.call(app, 'set(uint8,uint8,uint8,uint8,uint8)', 1, 21, 22, 42, 43)
@@ -469,7 +469,7 @@ def test_named_args_overload(harness):
     r = harness.call(app, "call(uint256)", 5)
     assert as_int(r.abi_return) == 500
 
-def test_precompile_extcodesize_check(harness):
+def test_precompile_extcodesize_check(harness):  # currently fails
     """functionCall/contracts/precompile_extcodesize_check.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/precompile_extcodesize_check.sol')
     r = harness.call(app, 'testHighLevel()')
@@ -479,13 +479,13 @@ def test_precompile_extcodesize_check(harness):
     r = harness.call(app, 'testHighLevel2(, expect_revert=True)')
     assert r.reverted
 
-def test_return_size_bigger_than_expected(harness):
+def test_return_size_bigger_than_expected(harness):  # currently fails
     """functionCall/contracts/return_size_bigger_than_expected.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/return_size_bigger_than_expected.sol')
     r = harness.call(app, 'test()')
     assert as_int(r.abi_return) == 0x20
 
-def test_return_size_shorter_than_expected(harness):
+def test_return_size_shorter_than_expected(harness):  # currently fails
     """functionCall/contracts/return_size_shorter_than_expected.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/return_size_shorter_than_expected.sol')
     r = harness.call(app, 'test()')

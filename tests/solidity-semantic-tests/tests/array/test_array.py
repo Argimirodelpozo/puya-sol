@@ -35,7 +35,7 @@ def test_array_3d_new(harness):
     r = harness.call(app, "f(uint256)", 42)
     assert as_int(r.abi_return) == 42
 
-def test_array_function_pointers(harness):
+def test_array_function_pointers(harness):  # currently fails
     """array/contracts/array_function_pointers.sol"""
     app = harness.compile_and_deploy('array/contracts/array_function_pointers.sol')
     r = harness.call(app, 'f(uint256,uint256, expect_revert=True)', 1823621, 12323)
@@ -335,7 +335,7 @@ def test_arrays_complex_from_and_to_storage(harness):
     r = harness.call(app, "get()")
     assert [[as_int(y) for y in row] for row in r.abi_return] == data
 
-def test_byte_array_storage_layout(harness):
+def test_byte_array_storage_layout(harness):  # currently fails
     """array/contracts/byte_array_storage_layout.sol"""
     app = harness.compile_and_deploy('array/contracts/byte_array_storage_layout.sol')
 
@@ -359,7 +359,7 @@ def test_bytes_length_member(harness):
     # On AVM msg.data for a bare set() call is the 4-byte ARC4 selector.
     assert as_int(harness.call(app, "getLength()").abi_return) == 4
 
-def test_bytes_to_fixed_bytes_cleanup(harness):
+def test_bytes_to_fixed_bytes_cleanup(harness):  # currently fails
     """array/contracts/bytes_to_fixed_bytes_cleanup.sol"""
     app = harness.compile_and_deploy('array/contracts/bytes_to_fixed_bytes_cleanup.sol')
     r = harness.call(app, 'fromStorage()')
@@ -542,7 +542,7 @@ def test_create_dynamic_array_with_zero_length(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 7
 
-def test_create_memory_array(harness):
+def test_create_memory_array(harness):  # currently fails
     """array/contracts/create_memory_array.sol"""
     app = harness.compile_and_deploy('array/contracts/create_memory_array.sol')
     r = harness.call(app, 'f()')
@@ -622,7 +622,7 @@ def test_dynamic_arrays_in_storage(harness):
     r = harness.call(app, "getData(uint256)", 8)
     assert tuple(as_int(x) for x in r.abi_return) == (10, 11)
 
-def test_dynamic_multi_array_cleanup(harness):
+def test_dynamic_multi_array_cleanup(harness):  # currently fails
     """array/contracts/dynamic_multi_array_cleanup.sol"""
     app = harness.compile_and_deploy('array/contracts/dynamic_multi_array_cleanup.sol')
 
@@ -783,7 +783,7 @@ def test_fixed_out_of_bounds_array_access(harness):
     r = harness.call(app, "length()")
     assert as_int(r.abi_return) == 4
 
-def test_function_array_cross_calls(harness):
+def test_function_array_cross_calls(harness):  # currently fails
     """array/contracts/function_array_cross_calls.sol"""
     app = harness.compile_and_deploy("array/contracts/function_array_cross_calls.sol", contract_name="C")
     r = harness.call(app, "test()")
@@ -857,7 +857,7 @@ def test_inline_array_strings_from_document(harness):
     r = harness.call(app, "f(uint256)", 3)
     assert r.abi_return == 'array'
 
-def test_invalid_encoding_for_storage_byte_array(harness):
+def test_invalid_encoding_for_storage_byte_array(harness):  # currently fails
     """array/contracts/invalid_encoding_for_storage_byte_array.sol"""
     app = harness.compile_and_deploy('array/contracts/invalid_encoding_for_storage_byte_array.sol')
     r = harness.call(app, 'x()')
@@ -982,7 +982,7 @@ def test_invalid_encoding_for_storage_byte_array(harness):
     r = harness.call(app, 'y()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
 
-def test_long_byte_array_cleanup_after_delete(harness):
+def test_long_byte_array_cleanup_after_delete(harness):  # currently fails
     """array/contracts/long_byte_array_cleanup_after_delete.sol"""
     app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_delete.sol')
     r = harness.call(app, 'getArrayDataAreaSlot()')
@@ -1000,7 +1000,7 @@ def test_long_byte_array_cleanup_after_delete(harness):
     r = harness.call(app, 'canaryValue()')
     assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-def test_long_byte_array_cleanup_after_overwrite_with_long(harness):
+def test_long_byte_array_cleanup_after_overwrite_with_long(harness):  # currently fails
     """array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol"""
     app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol')
     r = harness.call(app, 'arrayLength()')
@@ -1046,7 +1046,7 @@ def test_memory(harness):
     # extra opcode budget for the inner txn dance.
     assert as_int(harness.call(app, "i(uint256[4])", [1, 2, 3, 4], extra_fee=2000).abi_return) == 20
 
-def test_memory_arrays_of_various_sizes(harness):
+def test_memory_arrays_of_various_sizes(harness):  # currently fails
     """array/contracts/memory_arrays_of_various_sizes.sol"""
     app = harness.compile_and_deploy('array/contracts/memory_arrays_of_various_sizes.sol')
     r = harness.call(app, 'f(uint256,uint256)', 3, 1)

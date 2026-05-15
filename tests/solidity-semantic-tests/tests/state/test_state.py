@@ -146,7 +146,7 @@ def test_block_timestamp(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_blockhash_basic(harness):
+def test_blockhash_basic(harness):  # currently fails
     """state/contracts/blockhash_basic.sol"""
     app = harness.compile_and_deploy('state/contracts/blockhash_basic.sol')
     r = harness.call(app, 'genesisHash()')

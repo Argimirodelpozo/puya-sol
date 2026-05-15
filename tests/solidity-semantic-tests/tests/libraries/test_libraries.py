@@ -256,15 +256,15 @@ def test_internal_types_in_library(harness):
     r = harness.call(app, "f()")
     assert tuple(as_int(x) for x in r.abi_return) == (4, 17)
 
-def test_library_address(harness):
+def test_library_address(harness):  # currently fails
     """libraries/contracts/library_address.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_address.sol')
 
-def test_library_address_homestead(harness):
+def test_library_address_homestead(harness):  # currently fails
     """libraries/contracts/library_address_homestead.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_address_homestead.sol')
 
-def test_library_address_via_module(harness):
+def test_library_address_via_module(harness):  # currently fails
     """libraries/contracts/library_address_via_module.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_address_via_module.sol')
 
@@ -277,19 +277,19 @@ def test_library_call_in_homestead(harness):
     r = harness.call(app, "sender()")
     assert r.abi_return == harness.localnet.account.address
 
-def test_library_delegatecall_guard_pure(harness):
+def test_library_delegatecall_guard_pure(harness):  # currently fails
     """libraries/contracts/library_delegatecall_guard_pure.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_pure.sol')
 
-def test_library_delegatecall_guard_view_needed(harness):
+def test_library_delegatecall_guard_view_needed(harness):  # currently fails
     """libraries/contracts/library_delegatecall_guard_view_needed.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_needed.sol')
 
-def test_library_delegatecall_guard_view_not_needed(harness):
+def test_library_delegatecall_guard_view_not_needed(harness):  # currently fails
     """libraries/contracts/library_delegatecall_guard_view_not_needed.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_not_needed.sol')
 
-def test_library_delegatecall_guard_view_staticcall(harness):
+def test_library_delegatecall_guard_view_staticcall(harness):  # currently fails
     """libraries/contracts/library_delegatecall_guard_view_staticcall.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_staticcall.sol')
 
@@ -300,11 +300,11 @@ def test_library_enum_as_an_expression(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 1
 
-def test_library_function_selectors(harness):
+def test_library_function_selectors(harness):  # currently fails
     """libraries/contracts/library_function_selectors.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_function_selectors.sol')
 
-def test_library_function_selectors_struct(harness):
+def test_library_function_selectors_struct(harness):  # currently fails
     """libraries/contracts/library_function_selectors_struct.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_function_selectors_struct.sol')
 
@@ -324,7 +324,7 @@ def test_library_references_preserve(harness):
     r = harness.call(app, "bSum()")
     assert as_int(r.abi_return) == 5
 
-def test_library_return_struct_with_mapping(harness):
+def test_library_return_struct_with_mapping(harness):  # currently fails
     """libraries/contracts/library_return_struct_with_mapping.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_return_struct_with_mapping.sol')
 
@@ -626,6 +626,6 @@ def test_using_library_mappings_return(harness):
     # TODO: verify structural decoding matches expected: 1, 0, 42, 23, 0, 99
     assert not r.reverted
 
-def test_using_library_structs(harness):
+def test_using_library_structs(harness):  # currently fails
     """libraries/contracts/using_library_structs.sol"""
     app = harness.compile_and_deploy('libraries/contracts/using_library_structs.sol')

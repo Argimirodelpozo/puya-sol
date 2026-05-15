@@ -56,7 +56,7 @@ def test_static_base_function_deployed(harness):
     r = harness.call(app, "test()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_subassembly_deduplication(harness):
+def test_subassembly_deduplication(harness):  # currently fails
     """deployedCodeExclusion/contracts/subassembly_deduplication.sol"""
     app = harness.compile_and_deploy('deployedCodeExclusion/contracts/subassembly_deduplication.sol')
     r = harness.call(app, 'test()')

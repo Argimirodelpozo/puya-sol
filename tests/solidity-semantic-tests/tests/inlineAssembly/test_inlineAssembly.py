@@ -50,31 +50,31 @@ def test_blobhash_pre_cancun(harness):
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 1000
 
-def test_calldata_array_assign_dynamic(harness):
+def test_calldata_array_assign_dynamic(harness):  # currently fails
     """inlineAssembly/contracts/calldata_array_assign_dynamic.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_array_assign_dynamic.sol')
     r = harness.call(app, 'f(uint256[2][])', 0x0, 1, 8, 7, 6, 5)
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 2, 8, 7, 6, 5,)
 
-def test_calldata_array_assign_static(harness):
+def test_calldata_array_assign_static(harness):  # currently fails
     """inlineAssembly/contracts/calldata_array_assign_static.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_array_assign_static.sol')
     r = harness.call(app, 'f(uint256[2][2])', 0x0, 8, 7, 6, 5)
     assert tuple(as_int(x) for x in r.abi_return) == (8, 7, 6, 5,)
 
-def test_calldata_array_read(harness):
+def test_calldata_array_read(harness):  # currently fails
     """inlineAssembly/contracts/calldata_array_read.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_array_read.sol')
     r = harness.call(app, 'f(uint256[2][])', 0x20, 2, 1, 2, 3, 4)
     assert tuple(as_int(x) for x in r.abi_return) == (0x44, 2, 0x84,)
 
-def test_calldata_assign(harness):
+def test_calldata_assign(harness):  # currently fails
     """inlineAssembly/contracts/calldata_assign.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_assign.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0, 0)
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x5754f80000000000000000000000000000000000000000000000000000000000,)
 
-def test_calldata_assign_from_nowhere(harness):
+def test_calldata_assign_from_nowhere(harness):  # currently fails
     """inlineAssembly/contracts/calldata_assign_from_nowhere.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_assign_from_nowhere.sol')
     r = harness.call(app, 'f()')
@@ -92,7 +92,7 @@ def test_calldata_length_read(harness):
     assert as_int(harness.call(app, "lenStringRead(string)", "").abi_return) == 0
     assert as_int(harness.call(app, "lenStringRead(string)", "abcd" * 8 + "e").abi_return) == 33
 
-def test_calldata_offset_read(harness):
+def test_calldata_offset_read(harness):  # currently fails
     """inlineAssembly/contracts/calldata_offset_read.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_offset_read.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0, 0)
@@ -104,7 +104,7 @@ def test_calldata_offset_read(harness):
     r = harness.call(app, 'f(uint256,bytes,uint256)', 0, 0, 0)
     assert tuple(as_int(x) for x in r.abi_return) == (0x24, 0x00,)
 
-def test_calldata_offset_read_write(harness):
+def test_calldata_offset_read_write(harness):  # currently fails
     """inlineAssembly/contracts/calldata_offset_read_write.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_offset_read_write.sol')
     r = harness.call(app, 'f(uint256,bytes,uint256)', 7, 0x60, 8, 2, 0)
@@ -112,13 +112,13 @@ def test_calldata_offset_read_write(harness):
     r = harness.call(app, 'f(uint256,bytes,uint256)', 0, 0, 0)
     assert tuple(as_int(x) for x in r.abi_return) == (8, 0x14,)
 
-def test_calldata_struct_assign(harness):
+def test_calldata_struct_assign(harness):  # currently fails
     """inlineAssembly/contracts/calldata_struct_assign.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_struct_assign.sol')
     r = harness.call(app, 'f((uint256),(uint256,uint256))', 0x42, 0x07, 0x77)
     assert tuple(as_int(x) for x in r.abi_return) == (0x07, 0x42,)
 
-def test_calldata_struct_assign_and_return(harness):
+def test_calldata_struct_assign_and_return(harness):  # currently fails
     """inlineAssembly/contracts/calldata_struct_assign_and_return.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_struct_assign_and_return.sol')
     r = harness.call(app, 'g()', 0xCAFFEE, 0x42, 0x21)
@@ -299,7 +299,7 @@ def test_inline_assembly_for(harness):
     r = harness.call(app, "f(uint256)", 4)
     assert as_int(r.abi_return) == 24
 
-def test_inline_assembly_for2(harness):
+def test_inline_assembly_for2(harness):  # currently fails
     """inlineAssembly/contracts/inline_assembly_for2.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/inline_assembly_for2.sol')
     r = harness.call(app, 'f(uint256)', 0)
@@ -405,13 +405,13 @@ def test_inline_assembly_storage_access_inside_function(harness):
     r = harness.call(app, "z()")
     assert as_int(r.abi_return) == 7
 
-def test_inline_assembly_storage_access_local_var(harness):
+def test_inline_assembly_storage_access_local_var(harness):  # currently fails
     """inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol')
     r = harness.call(app, 'f()')
     assert as_int(r.abi_return) == 7
 
-def test_inline_assembly_storage_access_via_pointer(harness):
+def test_inline_assembly_storage_access_via_pointer(harness):  # currently fails
     """inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol')
     r = harness.call(app, 'f()')
@@ -482,13 +482,13 @@ def test_keccak256_optimizer_bug_different_memory_location(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is False
 
-def test_keccak256_optimizer_cache_bug(harness):
+def test_keccak256_optimizer_cache_bug(harness):  # currently fails
     """inlineAssembly/contracts/keccak256_optimizer_cache_bug.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/keccak256_optimizer_cache_bug.sol')
     r = harness.call(app, 'val()')
     assert r.abi_return is True
 
-def test_keccak_optimization_bug_string(harness):
+def test_keccak_optimization_bug_string(harness):  # currently fails
     """inlineAssembly/contracts/keccak_optimization_bug_string.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/keccak_optimization_bug_string.sol')
     r = harness.call(app, 'f(string)', 0x20, 0x2e, 29457663690442756349866640336617293820574110049925353194191585327958485180523, 45859201465615193776739262511799714667061496775486067316261261194408342061056)
@@ -511,7 +511,7 @@ def test_leave(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 2
 
-def test_mcopy(harness):
+def test_mcopy(harness):  # currently fails
     """inlineAssembly/contracts/mcopy.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/mcopy.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0x20, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff)
@@ -534,7 +534,7 @@ def test_mcopy_empty(harness):
     r = harness.call(app, "mcopy_zero(bytes)", arg)
     assert bytes(r.abi_return) == arg
 
-def test_mcopy_overlap(harness):
+def test_mcopy_overlap(harness):  # currently fails
     """inlineAssembly/contracts/mcopy_overlap.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/mcopy_overlap.sol')
     r = harness.call(app, 'mcopy_to_right_overlap()')
@@ -588,7 +588,7 @@ def test_shadowing_local_function_opcode(harness):
     r = harness.call(app, "g()")
     assert tuple(as_int(x) for x in r.abi_return) == (7, 3)
 
-def test_slot_access(harness):
+def test_slot_access(harness):  # currently fails
     """inlineAssembly/contracts/slot_access.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/slot_access.sol')
     r = harness.call(app, 'get()')
@@ -601,7 +601,7 @@ def test_slot_access(harness):
     r = harness.call(app, 'mappingAccess(uint256)', 1)
     assert tuple(as_int(x) for x in r.abi_return) == (4, 0,)
 
-def test_slot_access_via_mapping_pointer(harness):
+def test_slot_access_via_mapping_pointer(harness):  # currently fails
     """inlineAssembly/contracts/slot_access_via_mapping_pointer.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/slot_access_via_mapping_pointer.sol')
     r = harness.call(app, 'f(uint256)', 0)
@@ -626,7 +626,7 @@ def test_transient_storage_creation(harness):
     app = harness.compile_and_deploy("inlineAssembly/contracts/transient_storage_creation.sol")
     # constructor-only test — deployment succeeding is the assertion
 
-def test_transient_storage_low_level_calls(harness):
+def test_transient_storage_low_level_calls(harness):  # currently fails
     """inlineAssembly/contracts/transient_storage_low_level_calls.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/transient_storage_low_level_calls.sol')
     r = harness.call(app, 'testDelegateCall()')
@@ -711,7 +711,7 @@ def test_truefalse(harness):
     r = harness.call(app, "f()")
     assert tuple(as_int(x) for x in r.abi_return) == (1, 0)
 
-def test_tstore_hidden_staticcall(harness):
+def test_tstore_hidden_staticcall(harness):  # currently fails
     """inlineAssembly/contracts/tstore_hidden_staticcall.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/tstore_hidden_staticcall.sol')
     r = harness.call(app, 'test(, expect_revert=True)')

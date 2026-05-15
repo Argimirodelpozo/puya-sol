@@ -6,10 +6,10 @@ from framework import (
     as_int, as_bytes,
 )
 
-def test_stub(harness):
+def test_stub(harness):  # currently fails
     """experimental/contracts/stub.sol"""
     app = harness.compile_and_deploy('experimental/contracts/stub.sol')
 
-def test_type_class(harness):
+def test_type_class(harness):  # currently fails
     """experimental/contracts/type_class.sol"""
     app = harness.compile_and_deploy('experimental/contracts/type_class.sol')

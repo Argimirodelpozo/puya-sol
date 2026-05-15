@@ -62,13 +62,13 @@ def test_erc7201_equivalent_solidity_spec_comptime(harness):
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_erc7201_layout_specifier_slot_match_comptime(harness):
+def test_erc7201_layout_specifier_slot_match_comptime(harness):  # currently fails
     """builtinFunctions/contracts/erc7201_layout_specifier_slot_match_comptime.sol"""
     app = harness.compile_and_deploy('builtinFunctions/contracts/erc7201_layout_specifier_slot_match_comptime.sol')
     r = harness.call(app, 'builtinMatchesSolidityImplementation()')
     assert r.abi_return is True
 
-def test_erc7201_overflow_expression(harness):
+def test_erc7201_overflow_expression(harness):  # currently fails
     """builtinFunctions/contracts/erc7201_overflow_expression.sol"""
     app = harness.compile_and_deploy('builtinFunctions/contracts/erc7201_overflow_expression.sol')
     r = harness.call(app, 'f(, expect_revert=True)')
@@ -247,7 +247,7 @@ def test_keccak256_packed(harness):
     r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
     assert as_int(r.abi_return) == 85248082031449023985059491939699956408088110354102027088226743004047620283667
 
-def test_keccak256_packed_complex_types(harness):
+def test_keccak256_packed_complex_types(harness):  # currently fails
     """builtinFunctions/contracts/keccak256_packed_complex_types.sol"""
     app = harness.compile_and_deploy('builtinFunctions/contracts/keccak256_packed_complex_types.sol')
     r = harness.call(app, 'f()')
