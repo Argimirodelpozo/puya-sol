@@ -627,5 +627,10 @@ def test_using_library_mappings_return(harness):
     assert not r.reverted
 
 def test_using_library_structs(harness):
-    """libraries/contracts/using_library_structs.sol"""
-    app = harness.compile_and_deploy('libraries/contracts/using_library_structs.sol')
+    """libraries/contracts/using_library_structs.sol — `f()` calls
+    Lib.set on `data["abc"]`, pushing 20 elements into the inner uint[]
+    and setting [19] = 8. Returns (a=7, b=8)."""
+    app = harness.compile_and_deploy(
+        'libraries/contracts/using_library_structs.sol', contract_name='Test')
+    r = harness.call(app, 'f()', extra_fee=10000)
+    assert tuple(as_int(x) for x in r.abi_return) == (7, 8)
