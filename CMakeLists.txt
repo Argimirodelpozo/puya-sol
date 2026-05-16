@@ -91,6 +91,7 @@ set(SOURCES
 	src/builder/sol-eb/BuilderRegistry.cpp
 	src/builder/sol-eb/CallResolver.cpp
 	src/builder/sol-eb/AsaIntrinsics.cpp
+	src/builder/storage/StorageBackend.cpp
 	src/builder/sol-eb/AbiEncoderBuilder.cpp
 	src/builder/sol-eb/AbiDecode.cpp
 	src/builder/sol-eb/AbiEncodeHeadTail.cpp

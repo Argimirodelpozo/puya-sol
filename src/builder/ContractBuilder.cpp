@@ -282,6 +282,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
+	// Recreate the unified backend facade each contract: TransientStorage
+	// is per-contract (collected in `mapStateVariables` above), so the
+	// nullable pointer threaded into StorageBackend follows the same
+	// contract-level lifecycle.
+	m_storageBackend.emplace(m_storageMapper, m_exprBuilder->transientStorage);
+	m_exprBuilder->storageBackend = &*m_storageBackend;
 
 	// Set the contract cref for function pointer dispatch resolution.
 	// Library subroutines need this to construct SubroutineIDs.

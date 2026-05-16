@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/exprs/SolIdentifier.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -130,11 +131,13 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			// Transient state vars live in a packed blob in scratch slot
 			// AssemblyBuilder::TRANSIENT_SLOT (same storage that asm
 			// tload/tstore hits), so all reads share the same layout.
-			if (varDecl->referenceLocation() == VariableDeclaration::Location::Transient)
+			// StorageBackend dispatches to TransientStorage when the var
+			// is in the transient-namespace layout.
+			if (varDecl->referenceLocation() == VariableDeclaration::Location::Transient
+				&& m_ctx.storageBackend && m_ctx.storageBackend->isTransient(*varDecl))
 			{
-				if (auto* ts = m_ctx.transientStorage)
-					if (auto read = ts->buildRead(name, type, m_loc))
-						return read;
+				if (auto read = m_ctx.storageBackend->emitReadForVar(*varDecl, name, type, m_loc))
+					return read;
 			}
 
 			auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)

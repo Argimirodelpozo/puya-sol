@@ -8,6 +8,7 @@
 ///   - tryHandleMultiBoxArrayWrite: multi-box-paged array element assign
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
+#include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -32,11 +33,12 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	if (!lhsDecl
 		|| !lhsDecl->isStateVariable()
 		|| lhsDecl->referenceLocation() != VariableDeclaration::Location::Transient
-		|| !m_ctx.transientStorage
-		|| !m_ctx.transientStorage->isTransient(*lhsDecl))
+		|| !m_ctx.storageBackend
+		|| !m_ctx.storageBackend->isTransient(*lhsDecl))
 		return std::nullopt;
 
-	auto* ts = m_ctx.transientStorage;
+	auto* sb = m_ctx.storageBackend;
+	auto const& name = lhsIdent->name();
 	auto* varType = m_ctx.typeMapper.map(lhsDecl->type());
 	auto rhs = buildExpr(m_assignment.rightHandSide());
 
@@ -47,7 +49,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	}
 	else
 	{
-		auto currentValue = ts->buildRead(lhsIdent->name(), varType, m_loc);
+		auto currentValue = sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
 		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 			m_ctx, op, solType, currentValue, rhs, m_loc);
@@ -60,13 +62,13 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 
 	newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
 
-	auto stmt = ts->buildWrite(lhsIdent->name(), newValue, m_loc);
+	auto stmt = sb->emitWriteForVar(*lhsDecl, name, newValue, m_loc);
 	if (stmt)
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 
 	// Return the new value so assignment-as-expression yields the
 	// written value (Solidity semantics).
-	return ts->buildRead(lhsIdent->name(), varType, m_loc);
+	return sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
 }
 
 std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStoragePointerReassign()

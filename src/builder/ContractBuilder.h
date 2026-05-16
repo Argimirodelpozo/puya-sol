@@ -6,6 +6,7 @@
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolStatement.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StorageBackend.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -190,6 +191,11 @@ private:
 
 	/// Transient storage manager (blob-based, reset per transaction)
 	TransientStorage m_transientStorage;
+	/// Unified dispatch facade over AppGlobal / Box / Transient backends.
+	/// Constructed once per ContractBuilder; tracks the current TransientStorage
+	/// (or nullptr) so callers can route reads/writes by VariableDeclaration
+	/// without re-implementing the backend dispatch.
+	std::optional<StorageBackend> m_storageBackend;
 
 	/// The contract currently being built (for modifier override resolution).
 	solidity::frontend::ContractDefinition const* m_currentContract = nullptr;

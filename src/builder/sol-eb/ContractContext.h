@@ -28,6 +28,7 @@ namespace puyasol::builder
 {
 class TypeMapper;
 class StorageMapper;
+class StorageBackend;
 class TransientStorage;
 namespace sol_ast {
 class Context;
@@ -103,6 +104,12 @@ public:
 	/// has transient state variables. Used to route reads/writes of
 	/// `transient` state vars to a per-transaction blob.
 	TransientStorage* transientStorage = nullptr;
+	/// Unified dispatch over AppGlobal / Box / Transient backends. Use
+	/// `storageBackend->emitReadForVar(decl, ...)` / `emitWriteForVar` for
+	/// any state-var access driven by a VariableDeclaration; falls back to
+	/// the right backend internally. Populated alongside transientStorage
+	/// in ContractBuilder.
+	StorageBackend* storageBackend = nullptr;
 	std::string const& sourceFile;
 	std::string const& contractName;
 	/// The contract currently being built — used e.g. to look up the
