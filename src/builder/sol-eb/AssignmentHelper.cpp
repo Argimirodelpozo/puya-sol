@@ -1,9 +1,10 @@
 /// @file AssignmentHelper.cpp
-/// Compound assignment via builder pattern.
+/// Compound assignment via builder pattern + ARC4 struct chain rebuild.
 
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "builder/sol-eb/BuilderRegistry.h"
+#include "builder/storage/StorageMapper.h"
 
 #include <libsolidity/ast/Types.h>
 
@@ -60,6 +61,67 @@ std::shared_ptr<awst::Expression> AssignmentHelper::tryComputeCompoundValue(
 		return nullptr;
 
 	return result->resolve();
+}
+
+ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _initialTarget,
+	std::shared_ptr<awst::Expression> _initialValue,
+	awst::SourceLocation const& _loc)
+{
+	ArcStructCowResult result;
+	result.assignTarget = std::move(_initialTarget);
+	result.assignValue = std::move(_initialValue);
+
+	while (auto const* outerField =
+		dynamic_cast<awst::FieldExpression const*>(result.assignTarget.get()))
+	{
+		// Outer base's struct type — direct, or peek through StateGet.
+		auto const* outerStructType =
+			dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
+		if (!outerStructType)
+			if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerField->base.get()))
+				outerStructType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
+		if (!outerStructType) break;
+
+		auto outerBase = outerField->base;
+		// Write target: bare base, no StateGet wrapper (puya rejects).
+		auto outerWriteBase = outerBase;
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerBase.get()))
+			outerWriteBase = sg->field;
+		// Read base: surviving fields need a read-shape (BoxValue needs to
+		// be wrapped in StateGet so field reads return the box content).
+		auto outerReadBase = outerBase;
+		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
+			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
+		{
+			auto sg = awst::makeStateGet(
+				outerWriteBase,
+				builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, _loc),
+				outerWriteBase->wtype, _loc);
+			outerReadBase = sg;
+		}
+
+		std::string outerFieldName = outerField->name;
+		awst::WType const* outerFieldWtype = nullptr;
+		for (auto const& [fn, ft]: outerStructType->fields())
+			if (fn == outerFieldName) { outerFieldWtype = ft; break; }
+		result.fieldChain.push_back({outerFieldName, outerFieldWtype});
+
+		auto outerNewStruct = awst::makeNewStruct(outerStructType, _loc);
+		for (auto const& [fn, ft]: outerStructType->fields())
+		{
+			if (fn == outerFieldName)
+				outerNewStruct->values[fn] = std::move(result.assignValue);
+			else
+				outerNewStruct->values[fn] =
+					awst::makeFieldExpression(outerReadBase, fn, ft, _loc);
+		}
+		result.assignTarget = std::move(outerWriteBase);
+		result.assignValue = std::move(outerNewStruct);
+	}
+
+	return result;
 }
 
 } // namespace puyasol::builder::eb

@@ -57,45 +57,10 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 
 	// Walk outer FieldExpression chain, rebuilding NewStructs (copy-on-write
 	// for nested `outer.inner.b[i] = v` patterns).
-	auto assignTarget = base;
-	std::shared_ptr<awst::Expression> assignValue = std::move(newStruct);
-
-	while (auto const* outerField = dynamic_cast<awst::FieldExpression const*>(assignTarget.get()))
-	{
-		auto const* outerStructType = dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
-		if (!outerStructType)
-			if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerField->base.get()))
-				outerStructType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
-		if (!outerStructType) break;
-
-		auto outerBase = outerField->base;
-		auto outerWriteBase = outerBase;
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerBase.get()))
-			outerWriteBase = sg->field;
-		auto outerReadBase = outerBase;
-		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
-			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
-		{
-			auto sg = awst::makeStateGet(outerWriteBase, builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc), outerWriteBase->wtype, m_loc);
-			outerReadBase = sg;
-		}
-
-		std::string outerFieldName = outerField->name;
-
-		auto outerNewStruct = awst::makeNewStruct(outerStructType, m_loc);
-		for (auto const& [fn, ft]: outerStructType->fields())
-		{
-			if (fn == outerFieldName)
-				outerNewStruct->values[fn] = std::move(assignValue);
-			else
-			{
-				auto f = awst::makeFieldExpression(outerReadBase, fn, ft, m_loc);
-				outerNewStruct->values[fn] = std::move(f);
-			}
-		}
-		assignTarget = std::move(outerWriteBase);
-		assignValue = std::move(outerNewStruct);
-	}
+	auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(
+		m_ctx, base, std::move(newStruct), m_loc);
+	auto assignTarget = std::move(cow.assignTarget);
+	auto assignValue = std::move(cow.assignValue);
 
 	// Normalize the final write target — strip any StateGet / ARC4Decode
 	// wrappers in the chain that survived the copy-on-write rebuild above.
@@ -173,49 +138,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		}
 	}
 
-	// Recursive copy-on-write for nested structs
-	auto assignTarget2 = std::move(base);
-	std::shared_ptr<awst::Expression> assignValue2 = std::move(newStruct);
-	std::vector<std::pair<std::string, awst::WType const*>> fieldChain;
-
-	while (auto const* outerField = dynamic_cast<awst::FieldExpression const*>(assignTarget2.get()))
-	{
-		auto const* outerStructType = dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
-		if (!outerStructType) break;
-		auto outerBase = outerField->base;
-		// Unwrap StateGet for assignment targets (StateGet is not an Lvalue)
-		auto outerWriteBase = outerBase;
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerBase.get()))
-			outerWriteBase = sg->field;
-		// Wrap in StateGet for reads if needed
-		auto outerReadBase = outerBase;
-		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
-			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
-		{
-			auto sg = awst::makeStateGet(outerWriteBase, builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc), outerWriteBase->wtype, m_loc);
-			outerReadBase = sg;
-		}
-
-		std::string outerFieldName = outerField->name;
-		awst::WType const* outerFieldWtype = nullptr;
-		for (auto const& [fn, ft]: outerStructType->fields())
-			if (fn == outerFieldName) { outerFieldWtype = ft; break; }
-		fieldChain.push_back({outerFieldName, outerFieldWtype});
-
-		auto outerNewStruct = awst::makeNewStruct(outerStructType, m_loc);
-		for (auto const& [fn, ft]: outerStructType->fields())
-		{
-			if (fn == outerFieldName)
-				outerNewStruct->values[fn] = std::move(assignValue2);
-			else
-			{
-				// Use StateGet-wrapped base for reads
-				outerNewStruct->values[fn] = awst::makeFieldExpression(outerReadBase, fn, ft, m_loc);
-			}
-		}
-		assignTarget2 = std::move(outerWriteBase); // Use unwrapped for target
-		assignValue2 = std::move(outerNewStruct);
-	}
+	// Recursive copy-on-write for nested structs.
+	auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(
+		m_ctx, std::move(base), std::move(newStruct), m_loc);
+	auto assignTarget2 = std::move(cow.assignTarget);
+	auto assignValue2 = std::move(cow.assignValue);
+	auto& fieldChain = cow.fieldChain;
 
 	// If the outermost write target is an IndexExpression whose base is
 	// wrapped in StateGet (e.g. `data[2].x = v` on a box-stored static
