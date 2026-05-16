@@ -208,7 +208,20 @@ void inlineModifiers(
 				if (param->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Storage)
 				{
-					m_tr.setStorageAlias(param->id(), std::move(argExpr));
+					// Modifier args come from the caller's expression
+					// context; pick the alias kind from the AWST shape.
+					sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
+						if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
+							return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
+						if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
+							return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
+						if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
+							return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
+						if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
+							return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
+						return sol_ast::StorageAlias::stateRead(std::move(argExpr));
+					}();
+					m_tr.setStorageAlias(param->id(), std::move(alias));
 					// Track for cleanup via the same remappedDeclIds list, so
 					// the post-body sweep removes the alias too.
 					remappedDeclIds.push_back(param->id());

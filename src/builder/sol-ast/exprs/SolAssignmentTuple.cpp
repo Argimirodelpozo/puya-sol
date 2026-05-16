@@ -253,13 +253,22 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						auto slice = awst::makeTupleItem(_value, static_cast<int>(i), sliceType, m_loc);
 						aliasExpr = slice;
 					}
+					bool wrappedStateRead = false;
 					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::AppStateExpression const*>(aliasExpr.get()))
 					{
 						auto sg = awst::makeStateGet(aliasExpr, StorageMapper::makeDefaultValue(aliasExpr->wtype, m_loc), aliasExpr->wtype, m_loc);
 						aliasExpr = sg;
+						wrappedStateRead = true;
 					}
-					m_scope.setStorageAlias(lhsDecl->id(), std::move(aliasExpr));
+					// The slice may have come straight from the RHS tuple's
+					// underlying state expression (StateGet/BoxValue/AppState),
+					// or fallen back to a TupleItemExpression (TupleSlice).
+					auto alias = wrappedStateRead
+						|| dynamic_cast<awst::StateGet const*>(aliasExpr.get())
+						? StorageAlias::stateRead(std::move(aliasExpr))
+						: StorageAlias::tupleSlice(std::move(aliasExpr));
+					m_scope.setStorageAlias(lhsDecl->id(), std::move(alias));
 					continue;
 				}
 			}

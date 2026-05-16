@@ -157,14 +157,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		{
 			if (!decl->isStateVariable())
 			{
-				auto aliasShared = m_scope.findStorageAlias(decl->id());
-				if (aliasShared
+				auto const* alias = m_scope.findStorageAlias(decl->id());
+				if (alias
 					&& (memberName == "push" || memberName == "pop"))
 				{
 					auto const* solArrType = dynamic_cast<ArrayType const*>(decl->type());
 					if (solArrType && !solArrType->isByteArrayOrString())
 					{
-						std::shared_ptr<awst::Expression> aliasExpr = aliasShared;
+						std::shared_ptr<awst::Expression> aliasExpr = alias->expr;
 						// Unwrap StateGet (top-level, and any nested in the
 						// access chain) to underlying writable target. Same
 						// transform used by the `m[k].push()` path above.

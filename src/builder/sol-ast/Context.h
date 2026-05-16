@@ -50,6 +50,59 @@ struct ParamRemap
 	awst::WType const* type;
 };
 
+/// Typed local storage-pointer alias.
+///
+/// Solidity lets you bind a local pointer to part of a state container:
+///   `mapping(K=>V) storage m = stateMap;`    // MappingHolder
+///   `T[] storage p = stateArr;`              // StateRead
+///   `T storage e = container[i];`            // IndexedPath
+///   `T storage f = s.field;`                 // FieldPath
+///   `(_, T storage e, _) = (...);`           // TupleSlice (destructuring)
+///
+/// Each shape has a distinct expression form: a BytesConstant for the
+/// mapping holder, a StateGet wrapping the state-var, an IndexExpression
+/// for the indexed path, etc. Consumers that resolve a pointer use the
+/// expression — but historically they had to `dynamic_cast` the
+/// `shared_ptr<Expression>` to figure out *which* shape they got, with
+/// the casts spread across SolIdentifier, SolIndexAccessHandlers,
+/// SolArrayMethod, etc., and no compile-time signal of which shapes a
+/// producer was allowed to register.
+///
+/// The `Kind` tag makes the producer's intent explicit at the call site
+/// (via the small named factory methods below), keeps the existing
+/// expression payload available for consumers that still need it, and
+/// gives consumers a single enum to switch on instead of an
+/// if/`dynamic_cast` ladder. The actual write-vs-read shape of `expr`
+/// must match the tag — factories are the only sanctioned way to build
+/// one to keep that invariant local.
+struct StorageAlias
+{
+	enum class Kind
+	{
+		MappingHolder,   ///< BytesConstant — runtime mapping holder name
+		StateRead,       ///< StateGet wrapping a state-var read (or, post
+		                 ///<   `makeWritableTarget`, the bare BoxValueExpression /
+		                 ///<   AppStateExpression)
+		IndexedPath,     ///< IndexExpression into a state container
+		FieldPath,       ///< FieldExpression onto a state-struct field
+		TupleSlice,      ///< TupleItemExpression — destructured tuple element
+	};
+
+	Kind kind;
+	std::shared_ptr<awst::Expression> expr;
+
+	static StorageAlias mappingHolder(std::shared_ptr<awst::Expression> _e)
+		{ return {Kind::MappingHolder, std::move(_e)}; }
+	static StorageAlias stateRead(std::shared_ptr<awst::Expression> _e)
+		{ return {Kind::StateRead, std::move(_e)}; }
+	static StorageAlias indexedPath(std::shared_ptr<awst::Expression> _e)
+		{ return {Kind::IndexedPath, std::move(_e)}; }
+	static StorageAlias fieldPath(std::shared_ptr<awst::Expression> _e)
+		{ return {Kind::FieldPath, std::move(_e)}; }
+	static StorageAlias tupleSlice(std::shared_ptr<awst::Expression> _e)
+		{ return {Kind::TupleSlice, std::move(_e)}; }
+};
+
 /// Flat translation-time scope state. All decl-id-keyed bindings live
 /// here in a single struct owned by TranslationContext at the chain
 /// root. Decl IDs are globally unique, so the maps grow monotonically
@@ -60,9 +113,11 @@ struct ParamRemap
 /// bindings are inert.
 struct ScopeState
 {
-	/// `mapping(K=>V) storage m = m1; ...; m[k]` — local pointer aliasing
-	/// a state-var mapping. Lookup resolves `m` to `m1`'s base expression.
-	std::unordered_map<int64_t, std::shared_ptr<awst::Expression>> storageAliases;
+	/// Local storage-pointer alias: `T storage p = …`. The map value
+	/// carries both the bound expression and a tag for the shape (see
+	/// `StorageAlias`). Consumers resolve a pointer by reading the tag
+	/// (cheap switch) and/or inspecting the expression.
+	std::unordered_map<int64_t, StorageAlias> storageAliases;
 
 	/// Local `function (…) returns (…)` variable → its bound
 	/// FunctionDefinition. Used by SolInternalCall to lower an indirect
@@ -136,10 +191,10 @@ public:
 
 	// ── Decl-id-keyed lookups (O(1) flat) ───────────────────────────
 
-	std::shared_ptr<awst::Expression> findStorageAlias(int64_t _declId) const
+	StorageAlias const* findStorageAlias(int64_t _declId) const
 	{
 		auto it = m_state->storageAliases.find(_declId);
-		return it != m_state->storageAliases.end() ? it->second : nullptr;
+		return it != m_state->storageAliases.end() ? &it->second : nullptr;
 	}
 
 	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(int64_t _declId) const
@@ -180,9 +235,9 @@ public:
 
 	// ── Mutators (direct map ops on the shared state) ───────────────
 
-	void setStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
+	void setStorageAlias(int64_t _declId, StorageAlias _alias)
 	{
-		m_state->storageAliases[_declId] = std::move(_expr);
+		m_state->storageAliases[_declId] = std::move(_alias);
 	}
 
 	void setFuncPtrTarget(int64_t _declId,

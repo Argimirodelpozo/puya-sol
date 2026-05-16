@@ -104,7 +104,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
-				m_blk.setStorageAlias(decl.id(), value);
+				m_blk.setStorageAlias(decl.id(), StorageAlias::mappingHolder(value));
 				m_blk.builderCtx().appendPendingTo(result);
 				return result;
 			}
@@ -124,7 +124,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					auto stateGet = awst::makeStateGet(value, StorageMapper::makeDefaultValue(appState->wtype, m_loc), appState->wtype, m_loc);
 					aliasExpr = stateGet;
 				}
-				m_blk.setStorageAlias(decl.id(), aliasExpr);
+				m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(std::move(aliasExpr)));
 				m_blk.builderCtx().appendPendingTo(result);
 				return result;
 			}
@@ -135,10 +135,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// subsequent operations through `b` (push, pop, indexed write)
 			// route through the underlying state container's read-modify-write
 			// codegen.
-			if (dynamic_cast<awst::IndexExpression const*>(value.get())
-				|| dynamic_cast<awst::FieldExpression const*>(value.get()))
+			if (dynamic_cast<awst::IndexExpression const*>(value.get()))
 			{
-				m_blk.setStorageAlias(decl.id(), value);
+				m_blk.setStorageAlias(decl.id(), StorageAlias::indexedPath(value));
+				m_blk.builderCtx().appendPendingTo(result);
+				return result;
+			}
+			if (dynamic_cast<awst::FieldExpression const*>(value.get()))
+			{
+				m_blk.setStorageAlias(decl.id(), StorageAlias::fieldPath(value));
 				m_blk.builderCtx().appendPendingTo(result);
 				return result;
 			}

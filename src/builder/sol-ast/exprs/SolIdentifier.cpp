@@ -42,8 +42,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			return awst::makeVarExpression(remap->name, remap->type, m_loc);
 
 		// Storage pointer aliases
-		if (auto alias = m_scope.findStorageAlias(decl->id()))
-			return alias;
+		if (auto const* alias = m_scope.findStorageAlias(decl->id()))
+			return alias->expr;
 	}
 
 	// Variable references
