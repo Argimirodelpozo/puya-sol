@@ -1323,6 +1323,53 @@ inline std::shared_ptr<StateDelete> makeStateDelete(
 	return node;
 }
 
+// Walk a `IndexExpression` / `FieldExpression` chain and rebuild it as a
+// writable form: any inner `StateGet` (read-with-default wrapper) becomes
+// its `field`, and any inner `ARC4Decode` becomes its `value`. Used to
+// turn a read-shaped expression like
+// `IndexExpression(FieldExpression(StateGet(BoxValueExpression), "f"), i)`
+// into the writable target
+// `IndexExpression(FieldExpression(BoxValueExpression, "f"), i)`. Puya
+// rejects StateGet / ARC4Decode as lvalues, so any assignment or
+// array-mutation codegen that derived its target from a read expression
+// must funnel through this normalizer first.
+//
+// Returns a freshly-rebuilt chain (the input shared_ptrs are not mutated)
+// so it is safe to call on expressions that may be aliased elsewhere.
+inline std::shared_ptr<Expression> makeWritableTarget(
+	std::shared_ptr<Expression> e)
+{
+	if (auto const* ie = dynamic_cast<IndexExpression const*>(e.get()))
+	{
+		auto newBase = makeWritableTarget(ie->base);
+		if (newBase.get() == ie->base.get())
+			return e;
+		auto ne = std::make_shared<IndexExpression>();
+		ne->sourceLocation = ie->sourceLocation;
+		ne->wtype = ie->wtype;
+		ne->base = std::move(newBase);
+		ne->index = ie->index;
+		return ne;
+	}
+	if (auto const* fe = dynamic_cast<FieldExpression const*>(e.get()))
+	{
+		auto newBase = makeWritableTarget(fe->base);
+		if (newBase.get() == fe->base.get())
+			return e;
+		auto ne = std::make_shared<FieldExpression>();
+		ne->sourceLocation = fe->sourceLocation;
+		ne->wtype = fe->wtype;
+		ne->base = std::move(newBase);
+		ne->name = fe->name;
+		return ne;
+	}
+	if (auto const* sg = dynamic_cast<StateGet const*>(e.get()))
+		return makeWritableTarget(sg->field);
+	if (auto const* dec = dynamic_cast<ARC4Decode const*>(e.get()))
+		return makeWritableTarget(dec->value);
+	return e;
+}
+
 struct StateGetEx: Expression
 {
 	std::string nodeType() const override { return "StateGetEx"; }

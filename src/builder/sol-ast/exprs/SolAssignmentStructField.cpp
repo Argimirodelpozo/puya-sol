@@ -97,15 +97,9 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 		assignValue = std::move(outerNewStruct);
 	}
 
-	// Unwrap StateGet nested inside an IndexExpression lvalue (puya rejects).
-	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(assignTarget.get()))
-	{
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(idx->base.get()))
-		{
-			auto newIdx = awst::makeIndexExpression(sg->field, idx->index, idx->wtype, idx->sourceLocation);
-			assignTarget = std::move(newIdx);
-		}
-	}
+	// Normalize the final write target — strip any StateGet / ARC4Decode
+	// wrappers in the chain that survived the copy-on-write rebuild above.
+	assignTarget = awst::makeWritableTarget(std::move(assignTarget));
 
 	return awst::makeAssignmentExpression(
 		std::move(assignTarget), std::move(assignValue), m_loc);

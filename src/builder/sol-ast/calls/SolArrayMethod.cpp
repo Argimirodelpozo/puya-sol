@@ -16,48 +16,6 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-namespace
-{
-// Walk an access chain (IndexExpression / FieldExpression / TupleItemExpression
-// nodes) and rebuild it with any inner `StateGet` unwrapped to its `field`.
-// Used to convert a read expression like
-// `IndexExpression(FieldExpression(StateGet(BoxValueExpression), "f"), i)` into
-// a writable target `IndexExpression(FieldExpression(BoxValueExpression, "f"), i)`.
-// Composes recursively, so the unwrap handles arbitrary chain depth (any
-// combination of indexing and field access).
-std::shared_ptr<awst::Expression> unwrapStateGetInChain(
-	std::shared_ptr<awst::Expression> e)
-{
-	if (auto const* ie = dynamic_cast<awst::IndexExpression const*>(e.get()))
-	{
-		auto newBase = unwrapStateGetInChain(ie->base);
-		if (newBase.get() == ie->base.get())
-			return e;
-		auto ne = std::make_shared<awst::IndexExpression>();
-		ne->sourceLocation = ie->sourceLocation;
-		ne->wtype = ie->wtype;
-		ne->base = std::move(newBase);
-		ne->index = ie->index;
-		return ne;
-	}
-	if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(e.get()))
-	{
-		auto newBase = unwrapStateGetInChain(fe->base);
-		if (newBase.get() == fe->base.get())
-			return e;
-		auto ne = std::make_shared<awst::FieldExpression>();
-		ne->sourceLocation = fe->sourceLocation;
-		ne->wtype = fe->wtype;
-		ne->base = std::move(newBase);
-		ne->name = fe->name;
-		return ne;
-	}
-	if (auto const* sg = dynamic_cast<awst::StateGet const*>(e.get()))
-		return sg->field;
-	return e;
-}
-}
-
 std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 {
 	auto const& funcExpr = funcExpression();
@@ -86,7 +44,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			// (IndexExpression / FieldExpression of any depth). The
 			// rewritten chain bottoms out at the BoxValueExpression so
 			// puya's IR accepts it as a writable target.
-			baseAwst = unwrapStateGetInChain(baseAwst);
+			baseAwst = awst::makeWritableTarget(baseAwst);
 
 			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
 				|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
@@ -213,7 +171,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						if (auto const* sg = dynamic_cast<awst::StateGet const*>(
 								aliasExpr.get()))
 							aliasExpr = sg->field;
-						aliasExpr = unwrapStateGetInChain(aliasExpr);
+						aliasExpr = awst::makeWritableTarget(aliasExpr);
 						// Underlying targets we can write through:
 						//   - BoxValueExpression  (simple `T[] storage p = state;`)
 						//   - IndexExpression  (e.g. `T[] storage p = a[i];` — nested
@@ -486,7 +444,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			&& (memberName == "push" || memberName == "pop"))
 		{
 			auto baseAwst = buildExpr(baseExpr);
-			baseAwst = unwrapStateGetInChain(baseAwst);
+			baseAwst = awst::makeWritableTarget(baseAwst);
 
 			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
 				|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
