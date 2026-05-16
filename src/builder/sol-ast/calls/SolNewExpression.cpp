@@ -89,10 +89,74 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 				return awst::makeBytesConstant(
 					std::move(data), m_loc, awst::BytesEncoding::Base16, resultType);
 			}
-			// Compile-time known: N default values
-			for (unsigned long long i = 0; i < n; ++i)
-				e->values.push_back(
-					builder::StorageMapper::makeDefaultValue(elemType, m_loc));
+
+			// Estimate the encoded size of the N-element NewArray puya will
+			// emit. Puya inlines this as a single pushbytes; if it exceeds
+			// MAX_BYTES_LENGTH (4096), puya rejects with "Invalid Bytes
+			// value". When over a safety threshold, fall through to the
+			// runtime-sized loop below (extend N times with a small
+			// per-iteration template) which keeps each pushbytes small.
+			auto estimateEncodedSize = [](unsigned long long _n, awst::WType const* _resultType, awst::WType const* _elemType) -> uint64_t {
+				uint64_t elemSize = 0;
+				if (auto encoded = builder::TypeCoercion::arc4DefaultEncoding(_elemType))
+					elemSize = encoded->size();
+				bool elemIsDynamic = builder::TypeCoercion::arc4IsDynamic(_elemType);
+				uint64_t headPerElem = elemIsDynamic ? 2 : elemSize;
+				uint64_t tailPerElem = elemIsDynamic ? elemSize : 0;
+				uint64_t outerHeader =
+					_resultType->kind() == awst::WTypeKind::ARC4DynamicArray ? 2 : 0;
+				return outerHeader + _n * headPerElem + _n * tailPerElem;
+			};
+
+			constexpr uint64_t kPushBytesSafetyLimit = 4000;
+			if (estimateEncodedSize(n, resultType, elemType) <= kPushBytesSafetyLimit)
+			{
+				// Small enough — emit the literal N defaults; puya inlines as
+				// a single pushbytes.
+				for (unsigned long long i = 0; i < n; ++i)
+					e->values.push_back(
+						builder::StorageMapper::makeDefaultValue(elemType, m_loc));
+			}
+			else
+			{
+				// Too large for a single pushbytes — fall through to runtime
+				// loop construction using N as a literal size.
+				e->values.clear();
+				auto fakeSizeExpr = awst::makeIntegerConstant(std::to_string(n), m_loc);
+				static int rtArrayCounter = 0;
+				int tc = rtArrayCounter++;
+				std::string arrName = "__rt_arr_" + std::to_string(tc);
+				std::string idxName = "__rt_idx_" + std::to_string(tc);
+
+				auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(arrVar, e, m_loc));
+
+				auto idxVar = awst::makeVarExpression(
+					idxName, awst::WType::uint64Type(), m_loc);
+				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+					idxVar, awst::makeIntegerConstant("0", m_loc), m_loc));
+
+				auto cond = awst::makeNumericCompare(
+					idxVar, awst::NumericComparison::Lt, fakeSizeExpr, m_loc);
+				auto loopBody = awst::makeBlock(m_loc);
+
+				auto defaultElem = builder::StorageMapper::makeDefaultValue(elemType, m_loc);
+				auto singleArr = awst::makeNewArray(resultType, m_loc);
+				singleArr->values.push_back(std::move(defaultElem));
+
+				auto extend = awst::makeArrayExtend(arrVar, std::move(singleArr), m_loc);
+				loopBody->body.push_back(awst::makeExpressionStatement(extend, m_loc));
+
+				auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant("1", m_loc), m_loc);
+				loopBody->body.push_back(awst::makeAssignmentStatement(idxVar, incr, m_loc));
+
+				m_ctx.prePendingStatements.push_back(
+					awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
+
+				return arrVar;
+			}
 		}
 		else
 		{

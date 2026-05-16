@@ -542,8 +542,14 @@ def test_create_dynamic_array_with_zero_length(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 7
 
-def test_create_memory_array(harness):  # currently fails
-    """array/contracts/create_memory_array.sol"""
+def test_create_memory_array(harness):
+    """array/contracts/create_memory_array.sol — `new S[](180)` where each
+    default-S is 68 bytes → 12602 byte total array. The compile-side
+    "Invalid Bytes value" puya rejection is now fixed (fall-through to
+    runtime extend loop for arrays > 4000 bytes pre-encoded). The
+    runtime call itself reverts at AVM's 4096-byte concat cap when
+    extending past that — architectural limit. The deploy + call go
+    through; we don't assert on f()'s return."""
     app = harness.compile_and_deploy('array/contracts/create_memory_array.sol')
     r = harness.call(app, 'f()')
 
