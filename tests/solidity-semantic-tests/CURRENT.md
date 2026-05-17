@@ -1,3 +1,40 @@
+# Semantic Test Status — v249
+
+**Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
+
+vs v248: +1 PASS, −1 FAIL. Zero regressions. The flip is
+`tests/functionCall/test_functionCall.py::test_mapping_array_internal_argument`
+via commit f0b807d15.
+
+## v249 puya-sol changes (vs v248)
+
+One commit: *f0b807d15* `fix(storage): plumb mapping[N] storage refs
+through internal calls`. Two coupled fixes:
+
+1. Widen the "mapping storage-ref" param detection across 3 sites
+   (AWSTBuilder.cpp, SolInternalCall.cpp, FunctionBuilder.cpp) to
+   recognise any storage-ref shape that contains a Mapping in its
+   subtree — array-of-mapping, array-of-array-of-mapping, etc.
+   Without this, `function f(mapping[N] storage m)` fell through:
+   the param `m` got encoded as its own state-var name and
+   `m[i][k]` inside the body hashed against the param name instead
+   of the caller's actual state-var prefix.
+2. Snapshot tuple-returning calls to a temp in SolAssignmentTuple.
+   `(a, b) = setInternal(...)` was emitting per-LHS-element
+   `TupleItemExpression(SubroutineCallExpression(...), i)`, making
+   puya re-invoke the call once per destructured element. Side
+   effects multiplied and late-binding reads saw the call's own
+   writes. Cache the call result in `__call_tuple_tmp_<N>` first.
+
+Companion: design notes for the planned slot-based storage
+architecture migration captured in `/slots.md` (top of tree). Not
+yet implemented — written up after this fix made the limits of the
+composite-single-hash scheme visible. Solidity-style per-layer
+hashing + explicit slot numbers would obviate the storage-pointer
+plumbing across the 3 widening sites.
+
+---
+
 # Semantic Test Status — v248
 
 **Totals (pytest)**: 1187 PASS / 115 FAIL / 20 xfailed = **1187/1322 (89.8%)**
