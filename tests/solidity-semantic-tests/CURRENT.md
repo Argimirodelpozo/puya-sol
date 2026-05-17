@@ -1,3 +1,55 @@
+# Semantic Test Status — v245
+
+**Totals (pytest)**: 1184 PASS / 118 FAIL / 20 xfailed = **1184/1322 (89.6%)**
+
+The legacy `run_tests.py` cutoffs counted compile_err / deploy_err separately
+from FAIL; v245 is the first run captured directly via the pytest harness, so
+the numbers re-aggregate previously-bucketed failures. Net effect vs v37
+in-session baseline (1181 PASS / 121 FAIL / 20 xfail): **+3 PASS, −3 FAIL**.
+
+## v245 puya-sol changes
+
+Three commits this round, two functional + one doc:
+
+1. *285ae7d69* `fix(storage): unify mapping/array auto-getter walk with writer's rule` —
+   PublicGetterBuilder previously assumed "mappings first, then arrays" when
+   classifying which getter args feed the composite box key vs become
+   IndexExpression on the box value. This was wrong for `mapping(K=>Y)[N]`
+   where the OUTER level is an array of mappings; the auto-getter returned
+   the wrong shape (`byte[]` instead of `(a, b)`) and the composite key was
+   different from what SolIndexAccess emitted on the writer side, so writes
+   from the constructor were unreadable through the auto-getter.
+   Replace the walk with the same classification SolIndexAccess uses in
+   `handleMappingAccess`: each `[i]` level outer-to-inner is either a
+   **key contributor** (mapping, or array whose element type contains a
+   Mapping below) or a **value-index** (array of "flat" elements). Track
+   per-key-arg encoding type (`uint64` for array-of-mapping levels,
+   declared keyType for mapping levels) so reader and writer hash the same
+   bytes. The writer is canonicalised too: array-level keys now always
+   coerce to uint64 instead of inheriting the index expression's runtime
+   wtype, so `n[1][0]` (literal index, uint64) and `n[varBigUint][0]`
+   (variable index, biguint) hash to the same key.
+   Flips `test_array_mapping_struct` PASS.
+2. *ddb723c75* `docs(readme): nested-storage key derivation vs EVM slot arithmetic` —
+   adds a bullet to the Architecture-notes section describing the per-level
+   classification + canonical encoding rule (uint64 for array-level,
+   declared keyType for mapping-level) and how it diverges from EVM's
+   recursive `keccak256(key . slot)` slot derivation.
+3. *(v245 results commit, this update)* — captured pytest log to
+   `results_v245.txt`. First run via pytest harness; previous
+   `results_v<N>.txt` files used the legacy `run_tests.py` output format
+   and aren't directly diff-able.
+
+### Architectural feedback captured
+
+- `feedback-delegatecall-hard-error.md` — `.delegatecall(...)` must stay a
+  compile-time hard error. Don't stub it to `(true, "")` even when a
+  fixture has been pre-modified to assume stubbed behavior. Companion rule
+  for `selfdestruct`, `address(x).code`, `blockhash`: default to hard
+  error rather than silent miscompile.
+
+---
+
 # Semantic Test Status — v244
 
 **Totals**: 1097 PASS / 152 FAIL / 73 (56 compile_err + 17 deploy_err) = **1097/1322 (83.0%)**
