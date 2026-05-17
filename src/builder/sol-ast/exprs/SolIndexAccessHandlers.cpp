@@ -246,8 +246,15 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
 		{
 			auto translated = buildExpr(*indexExprs[ki]);
+			// Mapping levels encode as the declared keyType; array levels in
+			// an array-of-mapping chain canonicalize to uint64 (matches AVM's
+			// IndexExpression coercion and the auto-getter reader). Without
+			// canonicalization the writer would hash itob(uint64) for literal
+			// indices but pad32(biguint) for variable indices, so the same
+			// `n[i][k]` would land in different boxes depending on i's static
+			// type.
 			awst::WType const* keyWType = (ki < declaredKeyWTypes.size() && declaredKeyWTypes[ki])
-				? declaredKeyWTypes[ki] : translated->wtype;
+				? declaredKeyWTypes[ki] : awst::WType::uint64Type();
 
 			if (keyWType != translated->wtype)
 				translated = builder::TypeCoercion::implicitNumericCast(

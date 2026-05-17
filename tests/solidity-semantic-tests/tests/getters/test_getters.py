@@ -7,7 +7,7 @@ from framework import (
 )
 
 
-def test_array_mapping_struct(harness):  # currently fails
+def test_array_mapping_struct(harness):
     """getters/contracts/array_mapping_struct.sol"""
     app = harness.compile_and_deploy('getters/contracts/array_mapping_struct.sol')
     r = harness.call(app, 'm(uint256,uint256)', 0, 0)

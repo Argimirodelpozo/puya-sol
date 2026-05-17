@@ -299,47 +299,74 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 			else
 			{
-				// Mapping/array getter — build box read with key from mapping arguments,
-				// then index into the stored value for each nested array dimension.
-				// Walk mappings first to determine how many args feed the box key.
-				solidity::frontend::Type const* valueType = var->type();
+				// Classify each level of the var's type outer-to-inner:
+				//   Mapping → contributes to box key
+				//   Array containing a Mapping in its subtree → contributes
+				//     to box key (mirrors SolIndexAccess::handleMappingAccess,
+				//     which folds outer arrays-of-mappings into the composite
+				//     key when the chain's top resolves to a mapping)
+				//   Array of flat elements (no Mapping below) → IndexExpression
+				//     on the box value
+				// Once we leave key mode the remaining levels stay value-indexing,
+				// so the getter's arg order is K…K I…I.
+				std::function<bool(solidity::frontend::Type const*)> containsMapping;
+				containsMapping = [&](solidity::frontend::Type const* t) -> bool {
+					if (!t) return false;
+					if (dynamic_cast<solidity::frontend::MappingType const*>(t)) return true;
+					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
+						return containsMapping(at->baseType());
+					return false;
+				};
+
+				solidity::frontend::Type const* walkType = var->type();
 				size_t keyArgCount = 0;
-				while (keyArgCount < getter.args.size())
-				{
-					if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
-					{
-						valueType = mt->valueType();
-						keyArgCount++;
-					}
-					else
-						break;
-				}
-
-				// The type stored in the box (may be a nested array/struct).
-				// Remaining args index into this value after the box read.
-				solidity::frontend::Type const* storedValueType = valueType;
-
-				// Walk nested arrays for index args.
 				size_t indexArgCount = 0;
-				solidity::frontend::Type const* elemType = storedValueType;
+				bool inIndexMode = false;
+				solidity::frontend::Type const* storedValueType = walkType;
+				// Per-key-arg encoding wtype: matches what SolIndexAccess uses
+				// at the writer. Array-of-mapping levels: uint64 (itob, 8 B).
+				// Mapping levels: declared keyType (typically biguint → 32-B pad).
+				std::vector<awst::WType const*> keyArgEncodingType;
+
 				while (keyArgCount + indexArgCount < getter.args.size())
 				{
-					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(elemType))
+					if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(walkType))
 					{
-						if (at->isByteArrayOrString())
-							break;
-						elemType = at->baseType();
-						indexArgCount++;
+						if (inIndexMode) break;
+						keyArgEncodingType.push_back(m_typeMapper.map(mt->keyType()));
+						keyArgCount++;
+						walkType = mt->valueType();
+						continue;
 					}
-					else
-						break;
+					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType))
+					{
+						if (at->isByteArrayOrString()) break;
+						if (!inIndexMode && containsMapping(at->baseType()))
+						{
+							keyArgEncodingType.push_back(awst::WType::uint64Type());
+							keyArgCount++;
+							walkType = at->baseType();
+							continue;
+						}
+						if (!inIndexMode)
+						{
+							inIndexMode = true;
+							storedValueType = walkType;
+						}
+						indexArgCount++;
+						walkType = at->baseType();
+						continue;
+					}
+					break;
 				}
+				if (!inIndexMode)
+					storedValueType = walkType;
 
-				// Map the box-stored type (before indexing).
+				// Map the box-stored type.
 				awst::WType const* storedWType = m_typeMapper.map(storedValueType);
-				// The unwound value type used for struct-field decomposition below
-				// is the element type after indexing.
-				valueType = elemType;
+				// The deepest type after all key + index levels — used for
+				// struct-field decomposition.
+				solidity::frontend::Type const* valueType = walkType;
 
 				std::shared_ptr<awst::Expression> storageRead;
 				if (keyArgCount == 0)
@@ -363,23 +390,30 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				for (size_t i = 0; i < keyArgCount; ++i)
 				{
 					auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
+					// Coerce to the writer's encoding type for this level (uint64
+					// for array-of-mapping levels, declared keyType for mapping
+					// levels) so reader + writer hash the same bytes.
+					auto const* encType = i < keyArgEncodingType.size() ? keyArgEncodingType[i] : argRef->wtype;
+					std::shared_ptr<awst::Expression> encoded = argRef;
+					if (encType != argRef->wtype)
+						encoded = TypeCoercion::implicitNumericCast(std::move(encoded), encType, loc);
 
 					std::shared_ptr<awst::Expression> keyBytes;
-					if (argRef->wtype == awst::WType::uint64Type())
+					if (encType == awst::WType::uint64Type())
 					{
-						keyBytes = awst::makeItob(std::move(argRef), loc);
+						keyBytes = awst::makeItob(std::move(encoded), loc);
 					}
-					else if (argRef->wtype == awst::WType::biguintType())
+					else if (encType == awst::WType::biguintType())
 					{
 						// Normalize biguint to exactly 32 bytes before hashing.
-						auto reinterpret = awst::makeReinterpretCast(std::move(argRef), awst::WType::bytesType(), loc);
+						auto reinterpret = awst::makeReinterpretCast(std::move(encoded), awst::WType::bytesType(), loc);
 						auto cat = awst::makeLeftPad(std::move(reinterpret), 32, loc);
 						keyBytes = awst::makeExtractLastN(std::move(cat), 32, loc);
 					}
 					else
 					{
 						// string / bytes / address → ReinterpretCast to bytes
-						auto reinterpret = awst::makeReinterpretCast(std::move(argRef), awst::WType::bytesType(), loc);
+						auto reinterpret = awst::makeReinterpretCast(std::move(encoded), awst::WType::bytesType(), loc);
 						keyBytes = std::move(reinterpret);
 					}
 					keyParts.push_back(std::move(keyBytes));
