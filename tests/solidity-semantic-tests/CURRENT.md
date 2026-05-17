@@ -1,3 +1,48 @@
+# Semantic Test Status — v246
+
+**Totals (pytest)**: 1185 PASS / 117 FAIL / 20 xfailed = **1185/1322 (89.6%)**
+
+vs v245 = 1184 PASS: +1 PASS, −1 FAIL. Zero regressions. The flip is
+`tests/immutable/test_immutable.py::test_immutable_signed`, unfailed
+via the dual-form acceptance pattern (commit e9674da60). The
+`tests/userDefinedValueType/test_userDefinedValueType.py::test_immutable_signed`
+flip from commit b4e8ab316 lands in the same run but was already
+passing under a different marker.
+
+## v246 puya-sol changes (vs v245)
+
+Five commits this round, mix of feat + test:
+
+1. *8823cd135* `feat(stdlib): AVM stdlib — Crypto / Group / Txn / Global libraries` —
+   extends `WIP/tokens/AVM.sol` (previously ASA-only) with four new
+   Solidity libraries exposing AVM-native primitives: `Crypto`
+   (sha512_256, sha3_256, ed25519Verify, falconVerify, vrfVerify),
+   `Group` (size/index/per-gtxn field reads), `Txn` (current-txn field
+   reads), `Global` (currentApplicationId / Address / groupId /
+   latestTimestamp / round / opcodeBudget / minBalance / balance).
+   Plus 3 new ASA ops (asaOptIn / asaDestroy / asaFreeze).
+   Implementation generalises AsaIntrinsics dispatch from `name() == "AVM"`
+   to 5-library match; per-library dispatcher emits the right intrinsic.
+   Bumps default `target_avm_version` 10 → 12 so falcon_verify et al.
+   work. Adds `tests/avm-stdlib/` pytest suite (17 tests passing).
+2. *e9674da60* `test(immutable): unfail test_immutable_signed via dual-form acceptance` —
+   accept either AVM uint64 form (2^64-2) or EVM sign-extended form
+   (2^256-2) for inline-asm reads of int8 immutables.
+3. *2b31d4bf3* `test(abiEncoderV1): real bytes payload for abi_decode_static_array` —
+   re-marked `currently fails` with EVM-flat-ABI-vs-ARC4-decode root
+   cause documented (was failing earlier via algosdk TypeError on the
+   bare positional args, which hid the actual architectural mismatch).
+4. *b4e8ab316* `test(userDefinedValueType): unfail test_immutable_signed via dual-form acceptance` —
+   same pattern applied to the UDVT variant.
+5. *c6c1e5912* `test(types): document real-bug failure for array_mapping_abstract_constructor_param` —
+   investigated and named the storage-alias-through-inheritance-specifier
+   bug. The compiler currently doesn't route writes through
+   `A(state[k])`-style aliases passed to abstract-contract constructors;
+   `m.push(); m[0][1] = 2` inside A's ctor body becomes a noop. Real
+   compiler gap, separate from the v245 auto-getter unification.
+
+---
+
 # Semantic Test Status — v245
 
 **Totals (pytest)**: 1184 PASS / 118 FAIL / 20 xfailed = **1184/1322 (89.6%)**
