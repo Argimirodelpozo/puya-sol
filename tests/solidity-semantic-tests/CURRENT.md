@@ -1,3 +1,25 @@
+# Semantic Test Status — v248
+
+**Totals (pytest)**: 1187 PASS / 115 FAIL / 20 xfailed = **1187/1322 (89.8%)**
+
+vs v247: +1 PASS, −1 FAIL. Zero regressions. The flip is
+`tests/externalSource/test_externalSource.py::test_source_remapping`,
+unfailed via the harness-side fix at commit 1c5082ae6.
+
+## v248 puya-sol changes (vs v247)
+
+One commit: *1c5082ae6* `test(harness): isolate rooted ExternalSource
+aliases to fix basename collisions`. Multi-source fixtures whose
+ExternalSource aliases use a leading `/` (rooted) now land in an
+isolated per-directive subdir + get a `--remapping <alias>=<rel_path>`
+entry, so two aliases sharing a basename — e.g. `ExtSource.sol` and
+`/ExtSource.sol` in source_remapping.sol — no longer overwrite each
+other on disk. Non-rooted aliases still place in-tree (preserves the
+nested directory structure that relative_imports.sol and
+source_name_starting_with_dots.sol depend on).
+
+---
+
 # Semantic Test Status — v247
 
 **Totals (pytest)**: 1186 PASS / 116 FAIL / 20 xfailed = **1186/1322 (89.7%)**
