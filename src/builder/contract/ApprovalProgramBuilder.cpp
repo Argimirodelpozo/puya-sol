@@ -1065,6 +1065,32 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						if (!argExpr)
 							continue;
 
+						// Storage-pointer params (`T storage p`, `mapping… storage m`,
+						// `mapping…[] storage`): register a storage alias instead of
+						// materialising a local copy, mirroring the modifier inliner
+						// pattern at ModifierInliner.cpp:200-228. Without this, writes
+						// inside the base ctor body land in the local var (a noop) and
+						// the underlying state never sees them — e.g. `A(m[1])` with
+						// A's body doing `m.push(); m[0][1] = 2` silently drops the
+						// [1] from the inheritance arg's index chain.
+						if (params[i]->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Storage)
+						{
+							sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
+								if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
+									return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
+								if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
+									return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
+								if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
+									return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
+								if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
+									return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
+								return sol_ast::StorageAlias::stateRead(std::move(argExpr));
+							}();
+							m_tr->setStorageAlias(params[i]->id(), std::move(alias));
+							continue;
+						}
+
 						auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
 
 						argExpr = TypeCoercion::implicitNumericCast(

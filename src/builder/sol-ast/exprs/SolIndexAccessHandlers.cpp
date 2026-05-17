@@ -11,6 +11,8 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "awst/WType.h"
 
+#include <functional>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -84,6 +86,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 {
+	// Set by the alias-resolution block below when the param/local is
+	// aliased to a nested storage path (e.g. `A(state[k])`). Consumed by
+	// the prefix construction + keyParts assembly so the new chain's parts
+	// append to the alias's existing parts and the prefix matches the
+	// underlying state-var encoding.
+	std::vector<std::shared_ptr<awst::Expression>> m_aliasPrependParts;
+	std::shared_ptr<awst::Expression> m_aliasOverridePrefix;
+
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
 
 	std::vector<Expression const*> indexExprs;
@@ -135,19 +145,19 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			auto const* alias = m_scope.findStorageAlias(decl->id());
 			if (alias)
 			{
-				auto const* expr = alias->expr.get();
+				auto aliasExpr = alias->expr;
 				// Unwrap StateGet → underlying state expression
-				if (auto const* sg = dynamic_cast<awst::StateGet const*>(expr))
-					expr = sg->field.get();
+				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
+					aliasExpr = sg->field;
 				// Peel off FieldExpressions so we pick the *root* state var
 				// name; key synthesis works for root-level mapping aliases,
 				// not nested field mappings.
-				while (auto const* fe = dynamic_cast<awst::FieldExpression const*>(expr))
-					expr = fe->base.get();
+				while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
+					aliasExpr = fe->base;
 				std::shared_ptr<awst::Expression> keyExpr;
-				if (auto const* appState = dynamic_cast<awst::AppStateExpression const*>(expr))
+				if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
 					keyExpr = appState->key;
-				else if (auto const* boxVal = dynamic_cast<awst::BoxValueExpression const*>(expr))
+				else if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
 					keyExpr = boxVal->key;
 				if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(keyExpr.get()))
 					varName = std::string(bc->value.begin(), bc->value.end());
@@ -156,8 +166,44 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				// prefix). When that lands as a storage alias (`mapping
 				// storage m = m1;`), use the constant value as varName so
 				// `m[k]` keys land under the underlying state-var prefix.
-				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(expr))
+				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(aliasExpr.get()))
 					varName = std::string(bc->value.begin(), bc->value.end());
+
+				// Nested-storage alias (e.g. `A(state[k])` inheritance arg, or
+				// `T storage p = state[k]; p[…] = …`): if the alias resolves to
+				// a BoxValueExpression whose key is `BoxPrefixedKey(prefix,
+				// sha256(concat(parts…)))`, lift the parts out so the new chain
+				// prepends them — same composite key as if the writer had built
+				// the full path directly. Without this, writes through the
+				// alias miss the alias's index chain and land in the wrong box.
+				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
+				{
+					if (auto bpk = std::dynamic_pointer_cast<awst::BoxPrefixedKeyExpression>(boxVal->key))
+					{
+						m_aliasOverridePrefix = bpk->prefix;
+						if (auto sha = std::dynamic_pointer_cast<awst::IntrinsicCall>(bpk->key))
+						{
+							if (sha->opCode == "sha256" && sha->stackArgs.size() == 1)
+							{
+								std::function<void(std::shared_ptr<awst::Expression> const&)> flatten;
+								flatten = [&](std::shared_ptr<awst::Expression> const& node)
+								{
+									if (auto ic = std::dynamic_pointer_cast<awst::IntrinsicCall>(node))
+									{
+										if (ic->opCode == "concat" && ic->stackArgs.size() == 2)
+										{
+											flatten(ic->stackArgs[0]);
+											flatten(ic->stackArgs[1]);
+											return;
+										}
+									}
+									m_aliasPrependParts.push_back(node);
+								};
+								flatten(sha->stackArgs[0]);
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -235,14 +281,18 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				std::move(prefix), awst::WType::bytesType(), m_loc);
 		}
 	}
+	else if (m_aliasOverridePrefix)
+	{
+		prefix = m_aliasOverridePrefix;
+	}
 	else
 	{
 		prefix = awst::makeUtf8BytesConstant(varName, m_loc, awst::WType::boxKeyType());
 	}
 
-	if (!indexExprs.empty())
+	if (!indexExprs.empty() || !m_aliasPrependParts.empty())
 	{
-		std::vector<std::shared_ptr<awst::Expression>> keyParts;
+		std::vector<std::shared_ptr<awst::Expression>> keyParts = m_aliasPrependParts;
 		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
 		{
 			auto translated = buildExpr(*indexExprs[ki]);

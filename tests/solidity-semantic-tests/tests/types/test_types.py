@@ -11,11 +11,17 @@ from framework import (
 def test_array_mapping_abstract_constructor_param(harness):  # currently fails
     """types/contracts/array_mapping_abstract_constructor_param.sol
 
-    Storage-pointer arg passed via inheritance specifier `A(m[1])`
-    doesn't route the abstract constructor's writes to the aliased
-    sub-storage on AVM — `m[1][0][1] = 2` in `A`'s ctor body becomes
-    a noop, so `m(1, 0, 1)` reads back 0 instead of 2. Real compiler
-    bug at the storage-alias-through-inheritance-specifier hand-off.
+    Storage-pointer arg passed via inheritance specifier `A(m[1])`.
+    The alias-registration + key-chain fixes (commits *) plumb the
+    outer mapping key `[1]` through `A`'s body so `m[0][1] = 2` writes
+    to the correct composite box key.
+
+    Remaining gap: `m.push()` inside `A`'s body emits ArrayExtend on
+    the (newly-aliased) inner box, which doesn't exist yet — puya's
+    ArrayExtend codegen does `box_get; assert` and reverts on the
+    non-existent box. Fix needs to live on the puya side (treat
+    missing box as empty array, or pre-emit box_create). Currently
+    out of scope for the puya submodule per project boundaries.
     """
     app = harness.compile_and_deploy('types/contracts/array_mapping_abstract_constructor_param.sol')
     r = harness.call(app, 'm(uint256,uint256,uint256)', 0, 0, 0, expect_revert=True)
