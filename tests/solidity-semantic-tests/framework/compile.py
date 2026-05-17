@@ -68,7 +68,7 @@ def compile_sol(
     from multisource_splitter import split_multisource
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    source_path, all_sources, import_dir = split_multisource(sol_path)
+    source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
 
     cmd = [str(COMPILER), "--source", str(source_path)]
     for extra in all_sources:
@@ -77,6 +77,8 @@ def compile_sol(
     cmd += ["--output-dir", str(out_dir), "--puya-path", str(PUYA)]
     if import_dir:
         cmd += ["--import-path", str(import_dir)]
+    for rmap in remappings:
+        cmd += ["--remapping", rmap]
     if ensure_budget:
         for func, budget in ensure_budget.items():
             cmd += ["--ensure-budget", f"{func}:{budget}"]

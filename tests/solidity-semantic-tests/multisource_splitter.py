@@ -65,13 +65,20 @@ def _upstream_test_dir(sol_path: Path, upstream_root: Path) -> Path:
 def split_multisource(
     sol_path: Path,
     upstream_root: Path | None = None,
-) -> tuple[Path, list[Path], Path | None]:
+) -> tuple[Path, list[Path], Path | None, list[str]]:
     """Split a multi-source test fixture into individual files.
 
-    Returns `(main_source_path, [all_source_paths], import_dir)`. If the
-    fixture has no `==== Source: ====` / `==== ExternalSource: ====`
-    directives, returns `(sol_path, [sol_path], None)` — caller should
+    Returns `(main_source_path, [all_source_paths], import_dir, remappings)`.
+    If the fixture has no `==== Source: ====` / `==== ExternalSource: ====`
+    directives, returns `(sol_path, [sol_path], None, [])` — caller should
     compile `sol_path` directly.
+
+    `remappings` is a list of `<alias>=<filesystem_path>` strings the caller
+    should pass via `--remapping` so the Solidity FileReader resolves each
+    `import "<alias>"` to its dedicated physical file. This matters when
+    two ExternalSource directives share a basename (e.g. `ExtSource.sol`
+    and `/ExtSource.sol`) — without per-alias placement they would
+    collide on disk and one import would silently shadow the other.
 
     `upstream_root` overrides upstream-tree discovery; pass None to walk
     up from this script's directory looking for
@@ -81,10 +88,11 @@ def split_multisource(
     has_source = "==== Source:" in content
     has_ext_source = "==== ExternalSource:" in content
     if not has_source and not has_ext_source:
-        return sol_path, [sol_path], None
+        return sol_path, [sol_path], None, []
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="multisource_"))
     all_sources: list[Path] = []
+    remappings: list[str] = []
     last_name: str | None = None
 
     # Resolve ExternalSource directives by copying upstream files in.
@@ -97,8 +105,22 @@ def split_multisource(
             # Two forms:
             #   ==== ExternalSource: path/file.sol ====
             #   ==== ExternalSource: alias.sol=path/file.sol ====
+            #
+            # Default placement preserves the alias's directory structure
+            # (e.g. `_relativeImports/dir/contract.sol` lands at
+            # `tmp_dir/_relativeImports/dir/contract.sol`) — this matters
+            # for fixtures whose external sources use relative imports
+            # like `import "../a.sol"`.
+            #
+            # Rooted aliases (`/X.sol`) get an isolated subdir + a
+            # `--remapping` entry instead, so two aliases sharing a
+            # basename (e.g. `ExtSource.sol` and `/ExtSource.sol` in
+            # source_remapping.sol) don't overwrite each other. Targets
+            # are tmp_dir-relative because Solidity's FileReader resolves
+            # remapping targets against its allow-paths (set via
+            # `--import-path tmp_dir`).
             ext_re = re.compile(r"^==== ExternalSource: (.+?) ====$", re.MULTILINE)
-            for m in ext_re.finditer(content):
+            for i, m in enumerate(ext_re.finditer(content)):
                 raw = m.group(1).strip()
                 if "=" in raw:
                     alias, ext_path = raw.split("=", 1)
@@ -108,9 +130,22 @@ def split_multisource(
                     alias = raw
                     ext_path = raw
                 src = test_dir / ext_path
-                if src.exists():
-                    rel_alias = alias.lstrip("/")
-                    dest = tmp_dir / rel_alias
+                if not src.exists():
+                    continue
+
+                if alias.startswith("/"):
+                    # Rooted alias — isolate to avoid basename collisions.
+                    basename = Path(alias).name
+                    subdir = tmp_dir / f"_ext_{i}"
+                    subdir.mkdir(parents=True, exist_ok=True)
+                    dest = subdir / basename
+                    shutil.copy(src, dest)
+                    all_sources.append(dest)
+                    rel_dest = dest.relative_to(tmp_dir)
+                    remappings.append(f"{alias}={rel_dest}")
+                else:
+                    # Non-rooted alias — preserve directory structure.
+                    dest = tmp_dir / alias
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy(src, dest)
                     all_sources.append(dest)
@@ -127,6 +162,7 @@ def split_multisource(
                 tmp_dir / sol_path.name,
                 all_sources + [tmp_dir / sol_path.name],
                 tmp_dir,
+                remappings,
             )
         for i in range(1, len(parts), 2):
             name = parts[i].strip()
@@ -149,7 +185,7 @@ def split_multisource(
             last_name + ".sol" if last_name and not last_name.endswith(".sol")
             else (last_name or sol_path.name)
         )
-        return tmp_dir / main_name, all_sources, tmp_dir
+        return tmp_dir / main_name, all_sources, tmp_dir, remappings
     else:
         # ExternalSource only — strip directives, keep body as main.
         stripped = re.sub(
@@ -157,4 +193,4 @@ def split_multisource(
         )
         (tmp_dir / sol_path.name).write_text(stripped)
         main_path = tmp_dir / sol_path.name
-        return main_path, all_sources + [main_path], tmp_dir
+        return main_path, all_sources + [main_path], tmp_dir, remappings

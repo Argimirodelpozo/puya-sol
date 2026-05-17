@@ -52,6 +52,6 @@ def test_source_name_starting_with_dots(harness):
     app = harness.compile_and_deploy("externalSource/contracts/source_name_starting_with_dots.sol")
     # constructor-only test — deployment succeeding is the assertion
 
-def test_source_remapping(harness):  # currently fails
+def test_source_remapping(harness):
     """externalSource/contracts/source_remapping.sol"""
     app = harness.compile_and_deploy('externalSource/contracts/source_remapping.sol')
