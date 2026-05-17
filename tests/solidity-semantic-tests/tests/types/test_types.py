@@ -9,7 +9,14 @@ from framework import (
 
 
 def test_array_mapping_abstract_constructor_param(harness):  # currently fails
-    """types/contracts/array_mapping_abstract_constructor_param.sol"""
+    """types/contracts/array_mapping_abstract_constructor_param.sol
+
+    Storage-pointer arg passed via inheritance specifier `A(m[1])`
+    doesn't route the abstract constructor's writes to the aliased
+    sub-storage on AVM — `m[1][0][1] = 2` in `A`'s ctor body becomes
+    a noop, so `m(1, 0, 1)` reads back 0 instead of 2. Real compiler
+    bug at the storage-alias-through-inheritance-specifier hand-off.
+    """
     app = harness.compile_and_deploy('types/contracts/array_mapping_abstract_constructor_param.sol')
     r = harness.call(app, 'm(uint256,uint256,uint256)', 0, 0, 0, expect_revert=True)
     assert r.reverted
