@@ -14,20 +14,27 @@ using namespace solidity::frontend;
 namespace
 {
 
-/// True iff `_memberAccess.expression()` resolves to the `AVM` library
-/// (per the bundled tokens/AVM.sol). Uses solc's
+/// Return library name if `_memberAccess` resolves to an AVM-stdlib
+/// library (AVM, Crypto, Group, Txn, Global), else "". Uses solc's
 /// `ASTNode::referencedDeclaration` so both `AVM.foo()` (Identifier)
 /// and module-aliased `import "tokens/AVM.sol" as Mod; Mod.AVM.foo()`
-/// (MemberAccess) resolve through one path. AVM is a library — no
-/// virtual / super dispatch involved, so this is safe to widen.
-bool isAvmLibraryAccess(MemberAccess const& _memberAccess)
+/// (MemberAccess) resolve through one path.
+std::string getAvmStdlibLibraryName(MemberAccess const& _memberAccess)
 {
 	auto const* contractDef = dynamic_cast<ContractDefinition const*>(
 		ASTNode::referencedDeclaration(_memberAccess.expression()));
 	if (!contractDef || !contractDef->isLibrary())
-		return false;
+		return "";
+	std::string const& name = contractDef->name();
+	if (name == "AVM" || name == "Crypto" || name == "Group"
+		|| name == "Txn" || name == "Global")
+		return name;
+	return "";
+}
 
-	return contractDef->name() == "AVM";
+bool isAvmLibraryAccess(MemberAccess const& _memberAccess)
+{
+	return !getAvmStdlibLibraryName(_memberAccess).empty();
 }
 
 /// Promote a uint64-typed value to biguint via itob + reinterpret.
@@ -113,7 +120,8 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	FunctionCall const& _call,
 	awst::SourceLocation const& _loc)
 {
-	if (!isAvmLibraryAccess(_memberAccess))
+	std::string lib = getAvmStdlibLibraryName(_memberAccess);
+	if (lib.empty())
 		return std::nullopt;
 
 	std::string method = _memberAccess.memberName();
@@ -122,23 +130,30 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	for (auto const& arg: _call.arguments())
 		args.push_back(_ctx.buildExpr(*arg));
 
-	if (method == "asaCreate")
-		return handleAsaCreate(_ctx, args, _loc);
-	if (method == "asaBalance")
-		return handleAsaBalance(_ctx, args, _loc);
-	if (method == "asaTotalSupply")
-		return handleAsaTotalSupply(_ctx, args, _loc);
-	if (method == "asaDecimals")
-		return handleAsaDecimals(_ctx, args, _loc);
-	if (method == "asaUnitName")
-		return handleAsaUnitName(_ctx, args, _loc);
-	if (method == "asaName")
-		return handleAsaName(_ctx, args, _loc);
-	if (method == "asaTransfer")
-		return handleAsaTransfer(_ctx, args, _loc);
+	if (lib == "AVM")
+	{
+		if (method == "asaCreate") return handleAsaCreate(_ctx, args, _loc);
+		if (method == "asaDestroy") return handleAsaDestroy(_ctx, args, _loc);
+		if (method == "asaOptIn") return handleAsaOptIn(_ctx, args, _loc);
+		if (method == "asaFreeze") return handleAsaFreeze(_ctx, args, _loc);
+		if (method == "asaBalance") return handleAsaBalance(_ctx, args, _loc);
+		if (method == "asaTotalSupply") return handleAsaTotalSupply(_ctx, args, _loc);
+		if (method == "asaDecimals") return handleAsaDecimals(_ctx, args, _loc);
+		if (method == "asaUnitName") return handleAsaUnitName(_ctx, args, _loc);
+		if (method == "asaName") return handleAsaName(_ctx, args, _loc);
+		if (method == "asaTransfer") return handleAsaTransfer(_ctx, args, _loc);
+	}
+	else if (lib == "Crypto")
+		return dispatchCrypto(_ctx, method, args, _loc);
+	else if (lib == "Group")
+		return dispatchGroup(_ctx, method, args, _loc);
+	else if (lib == "Txn")
+		return dispatchTxn(_ctx, method, args, _loc);
+	else if (lib == "Global")
+		return dispatchGlobal(_ctx, method, args, _loc);
 
 	Logger::instance().warning(
-		"unknown AVM intrinsic 'AVM." + method + "'; falling through to library resolver", _loc);
+		"unknown AVM stdlib intrinsic '" + lib + "." + method + "'", _loc);
 	return std::nullopt;
 }
 
@@ -346,6 +361,260 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 
 	auto vc = awst::makeVoidConstant(_loc);
 	return vc;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// ASA: opt-in, destroy, freeze
+// ═══════════════════════════════════════════════════════════════════════
+
+std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaOptIn(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("AVM.asaOptIn expects 1 arg (assetId)", _loc);
+		return nullptr;
+	}
+	auto assetId = std::move(_args[0]);
+
+	// axfer 0 units to self — the standard ASA opt-in pattern.
+	static awst::WInnerTransactionFields s_axferFields(4);
+	auto create = awst::makeCreateInnerTransaction(&s_axferFields, _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant("4", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
+	create->fields["XferAsset"] = std::move(assetId);
+	create->fields["AssetReceiver"] = currentAppAddress(_loc);
+	create->fields["AssetAmount"] = awst::makeZero(_loc);
+
+	static awst::WInnerTransaction s_axferTxn(4);
+	auto submit = awst::makeSubmitInnerTransaction(&s_axferTxn, _loc);
+	submit->itxns.push_back(std::move(create));
+	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+	return awst::makeVoidConstant(_loc);
+}
+
+std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDestroy(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("AVM.asaDestroy expects 1 arg (assetId)", _loc);
+		return nullptr;
+	}
+	auto assetId = std::move(_args[0]);
+
+	// acfg with ConfigAsset = assetId and no other config fields = destroy.
+	static awst::WInnerTransactionFields s_acfgFields(3);
+	auto create = awst::makeCreateInnerTransaction(&s_acfgFields, _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant("3", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
+	create->fields["ConfigAsset"] = std::move(assetId);
+
+	static awst::WInnerTransaction s_acfgTxn(3);
+	auto submit = awst::makeSubmitInnerTransaction(&s_acfgTxn, _loc);
+	submit->itxns.push_back(std::move(create));
+	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+	return awst::makeVoidConstant(_loc);
+}
+
+std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaFreeze(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	if (_args.size() != 3)
+	{
+		Logger::instance().error("AVM.asaFreeze expects 3 args (assetId, holder, frozen)", _loc);
+		return nullptr;
+	}
+	auto assetId = std::move(_args[0]);
+	auto holder = std::move(_args[1]);
+	auto frozen = std::move(_args[2]);
+
+	// afrz (TypeEnum = 5)
+	static awst::WInnerTransactionFields s_afrzFields(5);
+	auto create = awst::makeCreateInnerTransaction(&s_afrzFields, _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant("5", _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
+	create->fields["FreezeAsset"] = std::move(assetId);
+	create->fields["FreezeAssetAccount"] = std::move(holder);
+	create->fields["FreezeAssetFrozen"] = std::move(frozen);
+
+	static awst::WInnerTransaction s_afrzTxn(5);
+	auto submit = awst::makeSubmitInnerTransaction(&s_afrzTxn, _loc);
+	submit->itxns.push_back(std::move(create));
+	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+	return awst::makeVoidConstant(_loc);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Crypto / Group / Txn / Global dispatchers
+// ═══════════════════════════════════════════════════════════════════════
+
+std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchCrypto(
+	ContractContext& _ctx,
+	std::string const& _method,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	auto bytesArg = [&](size_t i) {
+		return stringToBytes(std::move(_args[i]), _loc);
+	};
+
+	if (_method == "sha512_256")
+	{
+		if (_args.size() != 1) { Logger::instance().error("Crypto.sha512_256 expects 1 arg", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall("sha512_256", awst::WType::bytesType(), _loc);
+		call->stackArgs.push_back(bytesArg(0));
+		return std::shared_ptr<awst::Expression>(call);
+	}
+	if (_method == "sha3_256")
+	{
+		if (_args.size() != 1) { Logger::instance().error("Crypto.sha3_256 expects 1 arg", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall("sha3_256", awst::WType::bytesType(), _loc);
+		call->stackArgs.push_back(bytesArg(0));
+		return std::shared_ptr<awst::Expression>(call);
+	}
+	if (_method == "ed25519Verify")
+	{
+		if (_args.size() != 3) { Logger::instance().error("Crypto.ed25519Verify expects 3 args", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall("ed25519verify_bare", awst::WType::boolType(), _loc);
+		call->stackArgs.push_back(bytesArg(0));
+		call->stackArgs.push_back(bytesArg(1));
+		call->stackArgs.push_back(bytesArg(2));
+		return std::shared_ptr<awst::Expression>(call);
+	}
+	if (_method == "falconVerify")
+	{
+		if (_args.size() != 3) { Logger::instance().error("Crypto.falconVerify expects 3 args", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall("falcon_verify", awst::WType::boolType(), _loc);
+		call->stackArgs.push_back(bytesArg(0));
+		call->stackArgs.push_back(bytesArg(1));
+		call->stackArgs.push_back(bytesArg(2));
+		return std::shared_ptr<awst::Expression>(call);
+	}
+	if (_method == "vrfVerify")
+	{
+		if (_args.size() != 3) { Logger::instance().error("Crypto.vrfVerify expects 3 args", _loc); return nullptr; }
+		auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
+		auto call = awst::makeIntrinsicCall("vrf_verify", tupleType, _loc);
+		call->immediates = {std::string("VrfAlgorand")};
+		call->stackArgs.push_back(bytesArg(0));
+		call->stackArgs.push_back(bytesArg(1));
+		call->stackArgs.push_back(bytesArg(2));
+		return std::shared_ptr<awst::Expression>(call);
+	}
+	Logger::instance().warning("unknown Crypto." + _method, _loc);
+	return std::nullopt;
+}
+
+std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGroup(
+	ContractContext& _ctx,
+	std::string const& _method,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	(void)_ctx;
+	auto gtxnsField = [&](std::string const& field, awst::WType const* wt) -> std::shared_ptr<awst::Expression> {
+		if (_args.size() != 1) { Logger::instance().error("Group." + _method + " expects 1 arg (idx)", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall("gtxns", wt, _loc);
+		call->immediates = {field};
+		call->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc));
+		return call;
+	};
+
+	if (_method == "size")
+		return std::shared_ptr<awst::Expression>(awst::makeGlobal(std::string("GroupSize"), awst::WType::uint64Type(), _loc));
+	if (_method == "index")
+		return std::shared_ptr<awst::Expression>(awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), _loc));
+	if (_method == "txnSender") return gtxnsField("Sender", awst::WType::accountType());
+	if (_method == "txnReceiver") return gtxnsField("Receiver", awst::WType::accountType());
+	if (_method == "txnAmount") return gtxnsField("Amount", awst::WType::uint64Type());
+	if (_method == "txnAssetReceiver") return gtxnsField("AssetReceiver", awst::WType::accountType());
+	if (_method == "txnAssetAmount") return gtxnsField("AssetAmount", awst::WType::uint64Type());
+	if (_method == "txnAssetId") return gtxnsField("XferAsset", awst::WType::uint64Type());
+	if (_method == "txnApplicationId") return gtxnsField("ApplicationID", awst::WType::uint64Type());
+	if (_method == "txnFee") return gtxnsField("Fee", awst::WType::uint64Type());
+	if (_method == "txnType") return gtxnsField("TypeEnum", awst::WType::uint64Type());
+
+	Logger::instance().warning("unknown Group." + _method, _loc);
+	return std::nullopt;
+}
+
+std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchTxn(
+	ContractContext& _ctx,
+	std::string const& _method,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	(void)_ctx;
+	auto txnField = [&](std::string const& field, awst::WType const* wt) -> std::shared_ptr<awst::Expression> {
+		if (!_args.empty()) { Logger::instance().error("Txn." + _method + " expects 0 args", _loc); return nullptr; }
+		return awst::makeTxn(field, wt, _loc);
+	};
+
+	if (_method == "sender") return txnField("Sender", awst::WType::accountType());
+	if (_method == "fee") return txnField("Fee", awst::WType::uint64Type());
+	if (_method == "firstValid") return txnField("FirstValid", awst::WType::uint64Type());
+	if (_method == "lastValid") return txnField("LastValid", awst::WType::uint64Type());
+	if (_method == "note") return txnField("Note", awst::WType::bytesType());
+	if (_method == "lease") return txnField("Lease", awst::WType::bytesType());
+	if (_method == "typeEnum") return txnField("TypeEnum", awst::WType::uint64Type());
+	if (_method == "groupIndex") return txnField("GroupIndex", awst::WType::uint64Type());
+	if (_method == "txnId") return txnField("TxID", awst::WType::bytesType());
+	if (_method == "rekeyTo") return txnField("RekeyTo", awst::WType::accountType());
+	if (_method == "applicationId") return txnField("ApplicationID", awst::WType::uint64Type());
+	if (_method == "onCompletion") return txnField("OnCompletion", awst::WType::uint64Type());
+	if (_method == "numAppArgs") return txnField("NumAppArgs", awst::WType::uint64Type());
+	if (_method == "appArg")
+	{
+		if (_args.size() != 1) { Logger::instance().error("Txn.appArg expects 1 arg (idx)", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall("txnas", awst::WType::bytesType(), _loc);
+		call->immediates = {std::string("ApplicationArgs")};
+		call->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc));
+		return std::shared_ptr<awst::Expression>(call);
+	}
+
+	Logger::instance().warning("unknown Txn." + _method, _loc);
+	return std::nullopt;
+}
+
+std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGlobal(
+	ContractContext& _ctx,
+	std::string const& _method,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	(void)_ctx;
+	auto globalField = [&](std::string const& field, awst::WType const* wt) -> std::shared_ptr<awst::Expression> {
+		if (!_args.empty()) { Logger::instance().error("Global." + _method + " expects 0 args", _loc); return nullptr; }
+		return awst::makeGlobal(field, wt, _loc);
+	};
+	auto accountStackCall = [&](std::string const& op) -> std::shared_ptr<awst::Expression> {
+		if (_args.size() != 1) { Logger::instance().error("Global." + _method + " expects 1 arg (account)", _loc); return nullptr; }
+		auto call = awst::makeIntrinsicCall(op, awst::WType::uint64Type(), _loc);
+		call->stackArgs.push_back(std::move(_args[0]));
+		return call;
+	};
+
+	if (_method == "currentApplicationId") return globalField("CurrentApplicationID", awst::WType::uint64Type());
+	if (_method == "currentApplicationAddress") return globalField("CurrentApplicationAddress", awst::WType::accountType());
+	if (_method == "groupId") return globalField("GroupID", awst::WType::bytesType());
+	if (_method == "latestTimestamp") return globalField("LatestTimestamp", awst::WType::uint64Type());
+	if (_method == "round") return globalField("Round", awst::WType::uint64Type());
+	if (_method == "opcodeBudget") return globalField("OpcodeBudget", awst::WType::uint64Type());
+	if (_method == "callerApplicationId") return globalField("CallerApplicationID", awst::WType::uint64Type());
+	if (_method == "minBalance") return accountStackCall("min_balance");
+	if (_method == "balance") return accountStackCall("balance");
+
+	Logger::instance().warning("unknown Global." + _method, _loc);
+	return std::nullopt;
 }
 
 } // namespace puyasol::builder::eb

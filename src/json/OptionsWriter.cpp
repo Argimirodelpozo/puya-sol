@@ -51,7 +51,7 @@ void OptionsWriter::write(
 	opts["output_bytecode"] = true;
 	opts["debug_level"] = 1;
 	opts["optimization_level"] = _optimizationLevel;
-	opts["target_avm_version"] = 10;
+	opts["target_avm_version"] = 12;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
 	addTemplateVarDefs(opts, _templateVarChildren, _intTemplateVars);
@@ -93,7 +93,7 @@ void OptionsWriter::writeMultiple(
 	opts["output_bytecode"] = true;
 	opts["debug_level"] = 1;
 	opts["optimization_level"] = _optimizationLevel;
-	opts["target_avm_version"] = 10;
+	opts["target_avm_version"] = 12;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
 	addTemplateVarDefs(opts, _templateVarChildren, _intTemplateVars);

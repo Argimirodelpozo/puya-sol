@@ -34,7 +34,23 @@ public:
 		awst::SourceLocation const& _loc);
 
 private:
+	// ASA handlers
 	static std::shared_ptr<awst::Expression> handleAsaCreate(
+		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::shared_ptr<awst::Expression> handleAsaDestroy(
+		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::shared_ptr<awst::Expression> handleAsaOptIn(
+		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::shared_ptr<awst::Expression> handleAsaFreeze(
 		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
@@ -66,6 +82,32 @@ private:
 
 	static std::shared_ptr<awst::Expression> handleAsaTransfer(
 		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	// Crypto / Group / Txn / Global library dispatchers — each switches
+	// on _method name and returns an AWST expression for the matched op.
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchCrypto(
+		ContractContext& _ctx,
+		std::string const& _method,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchGroup(
+		ContractContext& _ctx,
+		std::string const& _method,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchTxn(
+		ContractContext& _ctx,
+		std::string const& _method,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchGlobal(
+		ContractContext& _ctx,
+		std::string const& _method,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 };

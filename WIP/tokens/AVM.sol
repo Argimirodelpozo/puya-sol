@@ -1,15 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @notice Algorand Virtual Machine intrinsics.
+/// AVM standard library — Solidity surface for Algorand-native primitives.
 ///
-/// These functions are NOT executable on EVM. They are recognized by the
-/// puya-sol compiler and replaced at call-resolution time with the
-/// corresponding AVM operations (asset_holding_get, asset_params_get,
-/// acfg / axfer inner transactions).
+/// These libraries are recognised by the puya-sol compiler and replaced at
+/// call-resolution time with the corresponding AVM intrinsic / inner-txn /
+/// transaction-field opcodes. Bodies revert as a safety net so accidental
+/// EVM use fails fast.
 ///
-/// Bodies revert as a safety net so accidental EVM use fails fast.
+/// Layout:
+///   library AVM     — ASA ops (create / opt-in / transfer / freeze / destroy
+///                     + holding & params reads)
+///   library Crypto  — Hash + signature verify (sha512_256, sha3_256,
+///                     ed25519, falcon, vrf, ecdsa). Solidity's keccak256()
+///                     and sha256() builtins map natively, no wrapper needed.
+///   library Group   — Atomic-group txn access (size, index, gtxn fields)
+///   library Txn     — Current-txn field reads (sender, fee, note, etc.)
+///   library Global  — Global params (current app id/address, group id,
+///                     opcode budget, latest timestamp)
 library AVM {
+    // ─── ASA: configuration ──────────────────────────────────────────────
+
     /// Create a new ASA owned and clawback-controlled by the contract.
     /// Returns the new ASA's id.
     function asaCreate(
@@ -21,6 +32,41 @@ library AVM {
         total; decimals; name; symbol;
         revert("AVM.asaCreate: requires puya-sol");
     }
+
+    /// Permanently destroy `assetId`. The contract must hold all units and
+    /// be the asset's manager.
+    function asaDestroy(uint64 assetId) internal {
+        assetId;
+        revert("AVM.asaDestroy: requires puya-sol");
+    }
+
+    /// Opt this contract into `assetId`. Required before receiving any units.
+    function asaOptIn(uint64 assetId) internal {
+        assetId;
+        revert("AVM.asaOptIn: requires puya-sol");
+    }
+
+    /// Set `holder`'s freeze state for `assetId`.
+    function asaFreeze(uint64 assetId, address holder, bool frozen) internal {
+        assetId; holder; frozen;
+        revert("AVM.asaFreeze: requires puya-sol");
+    }
+
+    // ─── ASA: transfers ──────────────────────────────────────────────────
+
+    /// Clawback `amount` of `assetId` from `from` to `to`. Reverts if either
+    /// party has not opted in. Use `from == address(this)` for plain sends.
+    function asaTransfer(
+        uint64 assetId,
+        address from,
+        address to,
+        uint256 amount
+    ) internal {
+        assetId; from; to; amount;
+        revert("AVM.asaTransfer: requires puya-sol");
+    }
+
+    // ─── ASA: reads ──────────────────────────────────────────────────────
 
     /// Read `holder`'s balance of `assetId`. Returns 0 if not opted in.
     function asaBalance(address holder, uint64 assetId)
@@ -53,16 +99,246 @@ library AVM {
         assetId;
         revert("AVM.asaName: requires puya-sol");
     }
+}
 
-    /// Clawback `amount` of `assetId` from `from` to `to`. Reverts if
-    /// either party has not opted in.
-    function asaTransfer(
-        uint64 assetId,
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
-        assetId; from; to; amount;
-        revert("AVM.asaTransfer: requires puya-sol");
+/// Hash + signature verification primitives.
+library Crypto {
+    /// SHA-512/256 hash. AVM-native; differs from EVM's keccak256.
+    function sha512_256(bytes memory data) internal pure returns (bytes32) {
+        data;
+        revert("Crypto.sha512_256: requires puya-sol");
+    }
+
+    /// SHA-3-256 hash (Keccak with SHA-3 padding). AVM-native.
+    function sha3_256(bytes memory data) internal pure returns (bytes32) {
+        data;
+        revert("Crypto.sha3_256: requires puya-sol");
+    }
+
+    /// Verify Ed25519 signature over the raw `data` bytes.
+    /// `signature` is 64 bytes, `pubKey` is 32 bytes.
+    function ed25519Verify(
+        bytes memory data,
+        bytes memory signature,
+        bytes memory pubKey
+    ) internal pure returns (bool) {
+        data; signature; pubKey;
+        revert("Crypto.ed25519Verify: requires puya-sol");
+    }
+
+    /// Verify Falcon signature over `data`. AVM v12+.
+    /// `signature` is compressed-format Falcon-512, `pubKey` is 897 bytes.
+    function falconVerify(
+        bytes memory data,
+        bytes memory signature,
+        bytes memory pubKey
+    ) internal pure returns (bool) {
+        data; signature; pubKey;
+        revert("Crypto.falconVerify: requires puya-sol");
+    }
+
+    /// Verify Algorand VRF proof. Returns (vrf_output, is_valid).
+    /// ECVRF-ED25519-SHA512-Elligator2 (IETF draft-irtf-cfrg-vrf-03).
+    function vrfVerify(
+        bytes memory message,
+        bytes memory proof,
+        bytes memory pubKey
+    ) internal pure returns (bytes memory, bool) {
+        message; proof; pubKey;
+        revert("Crypto.vrfVerify: requires puya-sol");
+    }
+}
+
+/// Atomic-group transaction inspection.
+library Group {
+    /// Number of transactions in the current group (1 for stand-alone txn).
+    function size() internal view returns (uint64) {
+        revert("Group.size: requires puya-sol");
+    }
+
+    /// Index of THIS transaction within the group (0..size()-1).
+    function index() internal view returns (uint64) {
+        revert("Group.index: requires puya-sol");
+    }
+
+    /// Sender of group txn at `idx`.
+    function txnSender(uint64 idx) internal view returns (address) {
+        idx;
+        revert("Group.txnSender: requires puya-sol");
+    }
+
+    /// Receiver of payment txn at `idx`. Reverts if not a payment.
+    function txnReceiver(uint64 idx) internal view returns (address) {
+        idx;
+        revert("Group.txnReceiver: requires puya-sol");
+    }
+
+    /// Amount of payment / asset-transfer txn at `idx` (microAlgos / ASA units).
+    function txnAmount(uint64 idx) internal view returns (uint64) {
+        idx;
+        revert("Group.txnAmount: requires puya-sol");
+    }
+
+    /// Asset receiver of axfer at `idx`.
+    function txnAssetReceiver(uint64 idx) internal view returns (address) {
+        idx;
+        revert("Group.txnAssetReceiver: requires puya-sol");
+    }
+
+    /// Asset amount of axfer at `idx`.
+    function txnAssetAmount(uint64 idx) internal view returns (uint64) {
+        idx;
+        revert("Group.txnAssetAmount: requires puya-sol");
+    }
+
+    /// Asset id (xferAsset) of axfer at `idx`.
+    function txnAssetId(uint64 idx) internal view returns (uint64) {
+        idx;
+        revert("Group.txnAssetId: requires puya-sol");
+    }
+
+    /// Application id called by app-call txn at `idx`.
+    function txnApplicationId(uint64 idx) internal view returns (uint64) {
+        idx;
+        revert("Group.txnApplicationId: requires puya-sol");
+    }
+
+    /// Fee (microAlgos) of txn at `idx`.
+    function txnFee(uint64 idx) internal view returns (uint64) {
+        idx;
+        revert("Group.txnFee: requires puya-sol");
+    }
+
+    /// Type enum of txn at `idx` (0=unknown, 1=pay, 2=keyreg, 3=acfg, 4=axfer,
+    /// 5=afrz, 6=appl).
+    function txnType(uint64 idx) internal view returns (uint64) {
+        idx;
+        revert("Group.txnType: requires puya-sol");
+    }
+}
+
+/// Current-transaction field reads.
+library Txn {
+    /// Transaction sender (caller).
+    function sender() internal view returns (address) {
+        revert("Txn.sender: requires puya-sol");
+    }
+
+    /// Fee paid by this txn (microAlgos).
+    function fee() internal view returns (uint64) {
+        revert("Txn.fee: requires puya-sol");
+    }
+
+    /// First-valid round.
+    function firstValid() internal view returns (uint64) {
+        revert("Txn.firstValid: requires puya-sol");
+    }
+
+    /// Last-valid round.
+    function lastValid() internal view returns (uint64) {
+        revert("Txn.lastValid: requires puya-sol");
+    }
+
+    /// 0-1024 byte free-form note.
+    function note() internal view returns (bytes memory) {
+        revert("Txn.note: requires puya-sol");
+    }
+
+    /// 32-byte lease value.
+    function lease() internal view returns (bytes32) {
+        revert("Txn.lease: requires puya-sol");
+    }
+
+    /// Type enum (see Group.txnType for values).
+    function typeEnum() internal view returns (uint64) {
+        revert("Txn.typeEnum: requires puya-sol");
+    }
+
+    /// Index within atomic group; 0 for stand-alone.
+    function groupIndex() internal view returns (uint64) {
+        revert("Txn.groupIndex: requires puya-sol");
+    }
+
+    /// 32-byte computed txn id.
+    function txnId() internal view returns (bytes32) {
+        revert("Txn.txnId: requires puya-sol");
+    }
+
+    /// Sender's new AuthAddr (rekey target), zero if no rekey.
+    function rekeyTo() internal view returns (address) {
+        revert("Txn.rekeyTo: requires puya-sol");
+    }
+
+    /// Application id invoked by this txn (0 in stateless / pay txns).
+    function applicationId() internal view returns (uint64) {
+        revert("Txn.applicationId: requires puya-sol");
+    }
+
+    /// OnCompletion enum (0=NoOp, 1=OptIn, 2=CloseOut, 3=ClearState,
+    /// 4=UpdateApplication, 5=DeleteApplication).
+    function onCompletion() internal view returns (uint64) {
+        revert("Txn.onCompletion: requires puya-sol");
+    }
+
+    /// Number of app-call args.
+    function numAppArgs() internal view returns (uint64) {
+        revert("Txn.numAppArgs: requires puya-sol");
+    }
+
+    /// App-call arg `i` (0-indexed).
+    function appArg(uint64 i) internal view returns (bytes memory) {
+        i;
+        revert("Txn.appArg: requires puya-sol");
+    }
+}
+
+/// Global / protocol-level reads.
+library Global {
+    /// Current application id (`global CurrentApplicationID`).
+    function currentApplicationId() internal view returns (uint64) {
+        revert("Global.currentApplicationId: requires puya-sol");
+    }
+
+    /// Current application address (`global CurrentApplicationAddress`).
+    function currentApplicationAddress() internal view returns (address) {
+        revert("Global.currentApplicationAddress: requires puya-sol");
+    }
+
+    /// 32-byte group id of the current atomic group.
+    function groupId() internal view returns (bytes32) {
+        revert("Global.groupId: requires puya-sol");
+    }
+
+    /// Latest-block timestamp (Unix seconds). Same as Solidity's
+    /// `block.timestamp` but exposed here for explicit-stdlib style.
+    function latestTimestamp() internal view returns (uint64) {
+        revert("Global.latestTimestamp: requires puya-sol");
+    }
+
+    /// Current round (Solidity `block.number` analogue).
+    function round() internal view returns (uint64) {
+        revert("Global.round: requires puya-sol");
+    }
+
+    /// Remaining opcode budget for this application call.
+    function opcodeBudget() internal view returns (uint64) {
+        revert("Global.opcodeBudget: requires puya-sol");
+    }
+
+    /// Application id of the caller (0 for top-level call from a non-app txn).
+    function callerApplicationId() internal view returns (uint64) {
+        revert("Global.callerApplicationId: requires puya-sol");
+    }
+
+    /// Minimum-balance requirement for `account` (microAlgos).
+    function minBalance(address account) internal view returns (uint64) {
+        account;
+        revert("Global.minBalance: requires puya-sol");
+    }
+
+    /// Algo balance of `account` (microAlgos).
+    function balance(address account) internal view returns (uint64) {
+        account;
+        revert("Global.balance: requires puya-sol");
     }
 }
