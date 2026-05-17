@@ -13,6 +13,8 @@
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 
+#include <functional>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -84,8 +86,19 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
 		{
 			auto const& param = _funcDef->parameters()[pi];
+			// Widen to include array-of-mapping (`mapping[N] storage`) etc.
+			// Mirrors AWSTBuilder.cpp:containsMappingType — both sides need
+			// to agree on which params travel as bytes prefixes.
+			std::function<bool(solidity::frontend::Type const*)> containsMapping =
+				[&](solidity::frontend::Type const* t) {
+					if (!t) return false;
+					if (dynamic_cast<MappingType const*>(t)) return true;
+					if (auto const* arr = dynamic_cast<ArrayType const*>(t))
+						return containsMapping(arr->baseType());
+					return false;
+				};
 			if (param->referenceLocation() == VariableDeclaration::Location::Storage
-				&& dynamic_cast<MappingType const*>(param->type()))
+				&& containsMapping(param->type()))
 			{
 				paramTypes.push_back(awst::WType::bytesType());
 				mappingStorageParamIndices.insert(pi);

@@ -50,6 +50,33 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
 
+	// Side-effecting non-tuple RHS that returns a WTuple — typically a
+	// tuple-returning function call: `(a, b) = f(...)` where `f` returns
+	// `(uint, uint)`. Without snapshotting, each LHS element's
+	// `TupleItemExpression(f(...), i)` carries a fresh `SubroutineCallExpression`
+	// and puya re-emits the call once per element — multiplying side
+	// effects and re-reading state AFTER prior calls' writes have already
+	// committed. Cache the call result in a single temp var so each
+	// TupleItem reads from the cached tuple. The TupleExpression-RHS
+	// snapshot below handles the literal `(x, y) = (a(), b())` pattern;
+	// this is its single-call analogue.
+	if (dynamic_cast<awst::SubroutineCallExpression const*>(_value.get())
+		|| dynamic_cast<awst::SubmitInnerTransaction const*>(_value.get()))
+	{
+		if (dynamic_cast<awst::WTuple const*>(_value->wtype))
+		{
+			static int s_callTupleCounter = 0;
+			std::string tmpName = "__call_tuple_tmp_" + std::to_string(s_callTupleCounter++);
+			awst::WType const* tupleWtype = _value->wtype;
+			auto srcLoc = _value->sourceLocation;
+			auto tmpVar = awst::makeVarExpression(tmpName, tupleWtype, srcLoc);
+			auto tmpAssign = awst::makeAssignmentExpression(tmpVar, _value, srcLoc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeExpressionStatement(std::move(tmpAssign), srcLoc));
+			_value = awst::makeVarExpression(tmpName, tupleWtype, srcLoc);
+		}
+	}
+
 	// If the RHS is a literal tuple of VarExpressions (local variables),
 	// snapshot each item into a temporary variable first so later element
 	// reads see the pre-assignment value — otherwise `(a, b) = (b, a)` would

@@ -14,6 +14,27 @@
 namespace puyasol::builder
 {
 
+namespace
+{
+
+/// True iff `_t` is a mapping or a (possibly nested) container of one.
+/// Array-of-mapping (`mapping(K=>V)[N] storage`) and array-of-array-of-
+/// mapping (etc.) all need the same storage-pointer-as-bytes-prefix
+/// treatment as a plain mapping ref — the underlying storage shape uses
+/// a composite box key over every nested index, and the holder name
+/// must come from the caller's state var, not the callee's param.
+bool containsMappingType(solidity::frontend::Type const* _t)
+{
+	if (!_t) return false;
+	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
+	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
+		return containsMappingType(arr->baseType());
+	return false;
+}
+
+} // namespace
+
+
 using awst::statementAlwaysTerminates;
 using awst::blockAlwaysTerminates;
 
@@ -363,8 +384,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		// Mapping storage refs: callee receives the box key PREFIX as bytes
 		// so `m[k]` → box_get(prefix+sha256(k)) uses the caller's storage var
 		// name, not the param name.
+		// Recognise mapping holders AND any storage-ref shape containing a
+		// mapping (e.g. `mapping(K=>V)[N] storage m`). Both pass the
+		// caller-side state-var name as a bytes prefix so the callee's
+		// `m[i][k]` chain hashes against the caller's holder, not the
+		// param's local name. Without widening, array-of-mapping params
+		// silently get encoded as their own "state var" and box keys
+		// diverge from the auto-getter's reads.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& dynamic_cast<solidity::frontend::MappingType const*>(param->type()))
+			&& containsMappingType(param->type()))
 		{
 			arg.wtype = awst::WType::bytesType();
 			mappingStorageParams.insert(pi);

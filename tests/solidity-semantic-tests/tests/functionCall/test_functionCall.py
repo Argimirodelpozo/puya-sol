@@ -350,7 +350,7 @@ def test_gas_and_value_basic(harness):
     r = harness.call(app, "checkState()")
     assert not r.reverted
 
-def test_mapping_array_internal_argument(harness):  # currently fails
+def test_mapping_array_internal_argument(harness):
     """functionCall/contracts/mapping_array_internal_argument.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/mapping_array_internal_argument.sol')
     r = harness.call(app, 'set(uint8,uint8,uint8,uint8,uint8)', 1, 21, 22, 42, 43)

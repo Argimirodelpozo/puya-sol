@@ -475,9 +475,25 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// pushed — stash the decls in `m_currentMappingKeyParams` for it
 		// to pick up.
 		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
-		auto isMappingStorageRef = [](solidity::frontend::VariableDeclaration const* p) {
+		// Match the storage-ref widening at AWSTBuilder.cpp (containsMappingType)
+		// and SolInternalCall.cpp — recognise nested array-of-mapping shapes,
+		// not just plain mapping refs. Without this, `f(mapping[N] storage m)`
+		// inside a contract method falls through; the param `m` doesn't get a
+		// runtime-prefix binding and `m[i][k]` hashes against the encoded
+		// PARAM NAME instead of the caller's state-var name. End result:
+		// callees write to a private namespace per-callee-name and the
+		// state-var's auto-getter sees nothing.
+		std::function<bool(solidity::frontend::Type const*)> containsMapping =
+			[&](solidity::frontend::Type const* t) {
+				if (!t) return false;
+				if (dynamic_cast<solidity::frontend::MappingType const*>(t)) return true;
+				if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(t))
+					return containsMapping(arr->baseType());
+				return false;
+			};
+		auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
 			return p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& dynamic_cast<solidity::frontend::MappingType const*>(p->type())
+				&& containsMapping(p->type())
 				&& !p->name().empty();
 		};
 		for (auto const& p: _func.parameters())
