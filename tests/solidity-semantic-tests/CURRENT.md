@@ -1,3 +1,36 @@
+# Semantic Test Status — v247
+
+**Totals (pytest)**: 1186 PASS / 116 FAIL / 20 xfailed = **1186/1322 (89.7%)**
+
+vs v246: +1 PASS, −1 FAIL. Zero regressions across the full suite.
+The newly-passing test is `userDefinedValueType::test_immutable_signed`
+which had been unmarked but flaking under full-load runs; now reliable.
+
+## v247 puya-sol changes (vs v246)
+
+One commit: *0e7ffbb30* `fix(storage): plumb storage-pointer aliases
+through inheritance specifiers`. Two coupled fixes:
+
+1. ApprovalProgramBuilder.cpp registers a storage alias for base-ctor
+   storage-pointer params (instead of materialising a local var),
+   mirroring the modifier inliner's pattern.
+2. SolIndexAccessHandlers.cpp::handleMappingAccess extracts an alias's
+   inner key-parts (when the alias resolves to a `BoxValueExpression`
+   keyed by `BoxPrefixedKey(prefix, sha256(concat(parts…)))`) and
+   prepends them to the new chain's parts so writes through nested
+   aliases hash to the same composite key as direct writes.
+
+Net effect on `test_array_mapping_abstract_constructor_param`: `m[0][1]
+= 2` in A's body now writes to the correct composite key
+`prefix("m") + sha256(pad(1) ++ itob(0) ++ pad(1))` — matching what
+`m(1, 0, 1)` auto-getter reads. Test still currently_fails on a
+downstream issue: `m.push()` emits ArrayExtend on the (newly-aliased)
+inner box, and puya's ArrayExtend codegen does `box_get; assert`
+which reverts on a non-existent box. That fix lives on the puya side
+(out of scope for this submodule per project boundaries).
+
+---
+
 # Semantic Test Status — v246
 
 **Totals (pytest)**: 1185 PASS / 117 FAIL / 20 xfailed = **1185/1322 (89.6%)**
