@@ -81,10 +81,10 @@ The "current slot pointer" walks one transform per layer:
 | Layer | AWST operation | Output bytes width |
 |---|---|---|
 | Mapping `m[k]` | `sha256(h(k) ++ parent)` | 32 |
-| Static array `arr[i]` (elem = 1 box) | `biguint_add(parent, itob(i))` | same as parent |
-| Static array `arr[i]` (elem = N boxes) | `biguint_add(parent, itob(i * N))` | same |
-| Dynamic array body | `sha256(parent)` once, then linear extension | 32 → 32 + size×i |
-| Struct field `.x` | `biguint_add(parent, itob(field_offset))` | same |
+| Static array `arr[i]` of non-flat element (e.g. `mapping[N]`) | `biguint_add(parent, itob(i * elem_slots))` | same as parent |
+| Static array `arr[i]` of flat T | NONE — whole `arr` is one box; index becomes `IndexExpression(read, i)` on the value | n/a (no derivation) |
+| Dynamic array `T[]` access | NONE — whole array is one box; index becomes `IndexExpression(read, i)` on the value | n/a |
+| Struct field `.x` (value-type field) | NONE — whole struct is one box; field becomes `FieldExpression(read, "x")` on the value | n/a |
 
 Key encoding `h(k)` matches Solidity:
 - Value types: 32-byte right-padded big-endian (same as today's
@@ -102,11 +102,63 @@ ARC4-encoded value**:
   to Solidity, enables partial deletes, but multiplies box ref
   count. Recommended: per-blob first; reconsider if a test fixture
   needs per-field semantics.)
-- Dynamic array `T[]`: length at the slot; elements at
-  `sha256(slot)` linear extension. Each element gets its own box at
-  `sha256(slot) + i * size`. Same shape as Solidity.
+- **Dynamic array `T[]`: one box per whole array (current AVM
+  model — KEEP).** Solidity stores length at slot + elements at
+  `keccak256(slot) + i*size` (one slot per element). We deliberately
+  diverge here: AVM's 8-box-ref-per-txn budget would break the
+  moment a contract reads >8 elements; the single-box-with-ARC4-
+  encoded-array model gives O(1) box refs for whole-array reads at
+  the cost of O(N) bytes per push (capped by AVM box-size + concat
+  4 KB caps).
+- **Static array `T[N]` of value-type T: one box per whole array
+  (current AVM model — KEEP)** for the same reason.
 - Mapping: no box at the mapping's own slot (Solidity stores
   nothing there either — the slot is a "placeholder").
+
+### Hybrid box-layout policy
+
+We adopt Solidity's per-layer **hashing for derivation** but reject
+Solidity's per-element **box layout** for arrays. The split:
+
+| Layer | Derivation | Box count |
+|---|---|---|
+| Mapping `m[k]` | `sha256(h(k) ++ parent_slot)` per-layer hash | 1 box per (mapping, k) tuple |
+| Array of flat T `arr[i]` | None — whole `arr` lives in one box | 1 box per whole array |
+| Array of non-flat element `arr[i]` (e.g. `mapping[N]`) | `biguint_add(parent_slot, itob(i * 1))` linear offset | 1 box per (i, k) tuple |
+| Struct field `.x` | None — whole struct lives in one box | 1 box per struct |
+| Dynamic array `T[]` | None — whole array lives in one box | 1 box per whole array |
+
+**Result**: same box count as today's model. Only the hashing
+strategy changes, not the storage layout. The migration's value is
+architectural — storage-pointer aliases become trivial — not
+runtime.
+
+### Per-access cost comparison (AVM opcodes)
+
+| Pattern | Today (composite) | New (per-layer) |
+|---|---|---|
+| `m[k]` 1 mapping level | 1 × sha256 + concat ≈ 100 op | 1 × sha256 ≈ 35 op |
+| `m[k1][k2]` 2 mapping levels | 1 × sha256 + 2× concat ≈ 130 op | 2 × sha256 ≈ 70 op |
+| `m[k1][k2][k3]` 3 mapping levels | 1 × sha256 + 3× concat ≈ 160 op | 3 × sha256 ≈ 105 op |
+| `arr[i][k]` array-of-mapping | 1 × sha256 + 2× concat ≈ 130 op | 1 × sha256 + 1 × biguint_add ≈ 50 op |
+
+For 1–2 layer accesses (the common case), per-layer is slightly
+CHEAPER than today's composite (no concat overhead). For 3+ layers
+of nested mapping, per-layer pays ~35 extra opcodes per level.
+
+### Future hashing optimizations (not Phase 1)
+
+1. **Static collapse**: when all mapping keys in a chain are known
+   at compile time, pre-hash to a constant. Most relevant for
+   constructors with literal indices.
+2. **No-alias-crossing collapse**: when a mapping chain appears
+   textually without an intervening alias boundary, compile to
+   ONE composite sha256 (today's model). Per-layer becomes the
+   fallback only when crossing an alias edge. Optimization, not
+   correctness.
+3. **uint64 mapping keys skip pad-to-32**: for keys that fit in
+   uint64, hash the 8-byte itob directly. Saves 24 bytes per
+   hash input.
 
 ## What this fixes
 
