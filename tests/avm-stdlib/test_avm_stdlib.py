@@ -182,3 +182,49 @@ def test_group_gtxn_fee_self_index(harness):
     app = harness.compile_and_deploy(CONTRACTS / "crypto_group.sol")
     r = harness.call(app, "gtxnFee(uint64)", 0)
     assert as_int(r.abi_return) >= 1000  # standard minimum fee
+
+
+# ─── ASA lifecycle: create / opt-in / transfer / balance / destroy ──────────
+
+def test_asa_create_returns_id(harness):
+    """AVM.asaCreate returns a non-zero ASA id; reading totalSupply
+    immediately after confirms the asset exists."""
+    app = harness.compile_and_deploy(
+        CONTRACTS / "asa_lifecycle.sol",
+        postinit_inner_txns=1,  # __postInit might submit itxns
+    )
+    r = harness.call(app, "createIt()", extra_fee=2_000)
+    asa_id = as_int(r.abi_return)
+    assert asa_id > 0
+
+    # Total supply matches what we minted
+    r = harness.call(app, "totalSupplyOf(uint64)", asa_id)
+    assert as_int(r.abi_return) == 1000
+
+
+def test_asa_balance_of_self_after_create(harness):
+    """Right after asaCreate the contract holds all units (manager-mint
+    pattern: total supply lands in the contract's reserve, which IS the
+    contract itself in our asaCreate impl)."""
+    app = harness.compile_and_deploy(CONTRACTS / "asa_lifecycle.sol")
+    r = harness.call(app, "createIt()", extra_fee=2_000)
+    asa_id = as_int(r.abi_return)
+
+    r = harness.call(app, "balanceOfSelf(uint64)", asa_id)
+    assert as_int(r.abi_return) == 1000
+
+
+def test_asa_destroy_removes_asset(harness):
+    """After asaDestroy, totalSupplyOf the (now-deleted) id returns 0
+    (asset_params_get default for non-existent asset)."""
+    app = harness.compile_and_deploy(CONTRACTS / "asa_lifecycle.sol")
+    r = harness.call(app, "createIt()", extra_fee=2_000)
+    asa_id = as_int(r.abi_return)
+
+    # Verify it exists, then destroy
+    assert as_int(harness.call(app, "totalSupplyOf(uint64)", asa_id).abi_return) == 1000
+
+    harness.call(app, "destroyIt(uint64)", asa_id, extra_fee=2_000)
+
+    # After destroy: 0
+    assert as_int(harness.call(app, "totalSupplyOf(uint64)", asa_id).abi_return) == 0
