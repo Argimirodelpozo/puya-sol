@@ -16,6 +16,21 @@
 
 namespace puyasol::builder::sol_ast
 {
+namespace
+{
+/// Detect mapping-derived box keys: either the legacy `BoxPrefixedKey(prefix, sha256(...))`
+/// shape, or the per-layer `sha256(keyBytes ++ parent)` shape. Used to gate the
+/// pre-create-the-per-entry-box logic for `mapping(K => sized_type) m; m[k] ... = v`.
+bool isMappingDerivedKey(awst::Expression const* _key)
+{
+	if (!_key) return false;
+	if (dynamic_cast<awst::BoxPrefixedKeyExpression const*>(_key)) return true;
+	if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(_key))
+		return ic->opCode == "sha256";
+	return false;
+}
+} // namespace
+
 
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
@@ -449,7 +464,7 @@ void SolAssignment::maybePrePopulateBox(
 
 	auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(boxIdx->base.get());
 	if (!bv || !bv->key
-		|| !dynamic_cast<awst::BoxPrefixedKeyExpression const*>(bv->key.get()))
+		|| !isMappingDerivedKey(bv->key.get()))
 		return;
 
 	// Static array of dynamic-content elements: a zero-filled box_create

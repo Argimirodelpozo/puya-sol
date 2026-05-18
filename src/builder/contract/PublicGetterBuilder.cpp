@@ -381,18 +381,13 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				}
 				else
 				{
-				// Build the box key from the getter arguments.
-				// Each arg is converted to bytes, concatenated, then sha256-hashed.
-				auto prefix = awst::makeUtf8BytesConstant(
+				// Per-layer hash derivation (matches handleMappingAccess writer).
+				std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
 					var->name(), loc, awst::WType::boxKeyType());
 
-				std::vector<std::shared_ptr<awst::Expression>> keyParts;
 				for (size_t i = 0; i < keyArgCount; ++i)
 				{
 					auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
-					// Coerce to the writer's encoding type for this level (uint64
-					// for array-of-mapping levels, declared keyType for mapping
-					// levels) so reader + writer hash the same bytes.
 					auto const* encType = i < keyArgEncodingType.size() ? keyArgEncodingType[i] : argRef->wtype;
 					std::shared_ptr<awst::Expression> encoded = argRef;
 					if (encType != argRef->wtype)
@@ -400,43 +395,26 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 					std::shared_ptr<awst::Expression> keyBytes;
 					if (encType == awst::WType::uint64Type())
-					{
 						keyBytes = awst::makeItob(std::move(encoded), loc);
-					}
 					else if (encType == awst::WType::biguintType())
 					{
-						// Normalize biguint to exactly 32 bytes before hashing.
 						auto reinterpret = awst::makeReinterpretCast(std::move(encoded), awst::WType::bytesType(), loc);
 						auto cat = awst::makeLeftPad(std::move(reinterpret), 32, loc);
 						keyBytes = awst::makeExtractLastN(std::move(cat), 32, loc);
 					}
 					else
 					{
-						// string / bytes / address → ReinterpretCast to bytes
 						auto reinterpret = awst::makeReinterpretCast(std::move(encoded), awst::WType::bytesType(), loc);
 						keyBytes = std::move(reinterpret);
 					}
-					keyParts.push_back(std::move(keyBytes));
+
+					auto concat = awst::makeConcat(std::move(keyBytes), std::move(currentPrefix), loc);
+					auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::boxKeyType(), loc);
+					hashCall->stackArgs.push_back(std::move(concat));
+					currentPrefix = std::move(hashCall);
 				}
 
-				// Concatenate key parts
-				std::shared_ptr<awst::Expression> compositeKey;
-				if (keyParts.size() == 1)
-					compositeKey = std::move(keyParts[0]);
-				else
-				{
-					compositeKey = std::move(keyParts[0]);
-					for (size_t i = 1; i < keyParts.size(); ++i)
-						compositeKey = awst::makeConcat(std::move(compositeKey), std::move(keyParts[i]), loc);
-				}
-
-				// Hash the composite key
-				auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), loc);
-				hashCall->stackArgs.push_back(std::move(compositeKey));
-
-				auto boxKey = awst::makeBoxPrefixedKey(prefix, std::move(hashCall), loc);
-
-				auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), storedWType, loc);
+				auto boxExpr = awst::makeBoxValueExpression(std::move(currentPrefix), storedWType, loc);
 
 				auto defaultVal = StorageMapper::makeDefaultValue(storedWType, loc);
 

@@ -86,12 +86,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 {
-	// Set by the alias-resolution block below when the param/local is
-	// aliased to a nested storage path (e.g. `A(state[k])`). Consumed by
-	// the prefix construction + keyParts assembly so the new chain's parts
-	// append to the alias's existing parts and the prefix matches the
-	// underlying state-var encoding.
-	std::vector<std::shared_ptr<awst::Expression>> m_aliasPrependParts;
+	// Set by the alias-resolution block below when the cursor identifier
+	// is aliased (inheritance-specifier param, internal-call param, or
+	// local storage pointer). Under per-layer hashing the alias's box-key
+	// expression IS the slot pointer at that level — feed it as the chain's
+	// starting prefix; per-layer sha256 extends it cleanly.
 	std::shared_ptr<awst::Expression> m_aliasOverridePrefix;
 
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
@@ -146,68 +145,29 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			if (alias)
 			{
 				auto aliasExpr = alias->expr;
-				// Unwrap StateGet → underlying state expression
+				// Unwrap StateGet → underlying state expression.
 				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
 					aliasExpr = sg->field;
-				// Peel off FieldExpressions so we pick the *root* state var
-				// name; key synthesis works for root-level mapping aliases,
-				// not nested field mappings.
+				// Peel off FieldExpressions to reach the root state expression.
 				while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
 					aliasExpr = fe->base;
-				std::shared_ptr<awst::Expression> keyExpr;
-				if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
-					keyExpr = appState->key;
-				else if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-					keyExpr = boxVal->key;
-				if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(keyExpr.get()))
-					varName = std::string(bc->value.begin(), bc->value.end());
-				// SolIdentifier now returns a BytesConstant directly for
-				// mapping state-var identifiers (the holder name as runtime
-				// prefix). When that lands as a storage alias (`mapping
-				// storage m = m1;`), use the constant value as varName so
-				// `m[k]` keys land under the underlying state-var prefix.
+				// Under per-layer hashing the alias's box-key expression IS the
+				// slot pointer at that level — feed it directly as the chain's
+				// starting prefix. No inner-sha256 unwrapping required.
+				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
+					m_aliasOverridePrefix = boxVal->key;
+				else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
+					m_aliasOverridePrefix = appState->key;
+				// Simple holder-name alias (`mapping storage m = state_m;`):
+				// alias is a BytesConstant of the underlying state-var's
+				// encoded name. Use as varName so the default-prefix path picks
+				// the right starting bytes.
 				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(aliasExpr.get()))
 					varName = std::string(bc->value.begin(), bc->value.end());
-
-				// Nested-storage alias (e.g. `A(state[k])` inheritance arg, or
-				// `T storage p = state[k]; p[…] = …`): if the alias resolves to
-				// a BoxValueExpression whose key is `BoxPrefixedKey(prefix,
-				// sha256(concat(parts…)))`, lift the parts out so the new chain
-				// prepends them — same composite key as if the writer had built
-				// the full path directly. Without this, writes through the
-				// alias miss the alias's index chain and land in the wrong box.
-				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-				{
-					if (auto bpk = std::dynamic_pointer_cast<awst::BoxPrefixedKeyExpression>(boxVal->key))
-					{
-						m_aliasOverridePrefix = bpk->prefix;
-						if (auto sha = std::dynamic_pointer_cast<awst::IntrinsicCall>(bpk->key))
-						{
-							if (sha->opCode == "sha256" && sha->stackArgs.size() == 1)
-							{
-								std::function<void(std::shared_ptr<awst::Expression> const&)> flatten;
-								flatten = [&](std::shared_ptr<awst::Expression> const& node)
-								{
-									if (auto ic = std::dynamic_pointer_cast<awst::IntrinsicCall>(node))
-									{
-										if (ic->opCode == "concat" && ic->stackArgs.size() == 2)
-										{
-											flatten(ic->stackArgs[0]);
-											flatten(ic->stackArgs[1]);
-											return;
-										}
-									}
-									m_aliasPrependParts.push_back(node);
-								};
-								flatten(sha->stackArgs[0]);
-							}
-						}
-					}
-				}
 			}
 		}
 	}
-	else if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
+		else if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
 	{
 		varName = ma->memberName();
 		rootMappingType = ma->annotation().type;
@@ -290,19 +250,15 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		prefix = awst::makeUtf8BytesConstant(varName, m_loc, awst::WType::boxKeyType());
 	}
 
-	if (!indexExprs.empty() || !m_aliasPrependParts.empty())
+	if (!indexExprs.empty())
 	{
-		std::vector<std::shared_ptr<awst::Expression>> keyParts = m_aliasPrependParts;
+		// Per-layer hash derivation (Solidity-style): start with the initial
+		// prefix and apply `sha256(keyBytes ++ currentPrefix)` per layer.
+		std::shared_ptr<awst::Expression> currentPrefix = std::move(prefix);
+
 		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
 		{
 			auto translated = buildExpr(*indexExprs[ki]);
-			// Mapping levels encode as the declared keyType; array levels in
-			// an array-of-mapping chain canonicalize to uint64 (matches AVM's
-			// IndexExpression coercion and the auto-getter reader). Without
-			// canonicalization the writer would hash itob(uint64) for literal
-			// indices but pad32(biguint) for variable indices, so the same
-			// `n[i][k]` would land in different boxes depending on i's static
-			// type.
 			awst::WType const* keyWType = (ki < declaredKeyWTypes.size() && declaredKeyWTypes[ki])
 				? declaredKeyWTypes[ki] : awst::WType::uint64Type();
 
@@ -310,19 +266,6 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				translated = builder::TypeCoercion::implicitNumericCast(
 					std::move(translated), keyWType, m_loc);
 
-			// Side-effect-safe: the biguint key build below references
-			// the index value twice (concat for padding + len() for
-			// the extract3 offset). When the index has side effects
-			// (e.g. `m[--bucket]` → AssignmentExpression), the puya
-			// backend re-emits IR for each reference path even with
-			// SingleEvaluation wrapping (the cache key relies on
-			// post-deserialization equality, which doesn't always
-			// hold for nested AssignmentExpressions).
-			//
-			// Materialise to a fresh local var: the side effect runs
-			// once at the temp-var assignment, and subsequent uses
-			// just read the var. This is the same pattern as
-			// post-increment's `__postinc_` in SolUnaryOperation.
 			if (dynamic_cast<awst::AssignmentExpression const*>(translated.get()))
 			{
 				static int idxTempCounter = 0;
@@ -336,12 +279,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 			std::shared_ptr<awst::Expression> keyBytes;
 			if (keyWType == awst::WType::uint64Type())
-			{
 				keyBytes = awst::makeItob(std::move(translated), m_loc);
-			}
 			else if (keyWType == awst::WType::biguintType())
 			{
-				// Force biguint key → 32 bytes (right-aligned).
 				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
 				auto cat = awst::makeLeftPad(std::move(reinterpret), 32, m_loc);
 				keyBytes = awst::makeExtractLastN(std::move(cat), 32, m_loc);
@@ -351,24 +291,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
 				keyBytes = std::move(reinterpret);
 			}
-			keyParts.push_back(std::move(keyBytes));
+
+			auto concat = awst::makeConcat(std::move(keyBytes), std::move(currentPrefix), m_loc);
+			auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::boxKeyType(), m_loc);
+			hashCall->stackArgs.push_back(std::move(concat));
+			currentPrefix = std::move(hashCall);
 		}
 
-		std::shared_ptr<awst::Expression> compositeKey;
-		if (keyParts.size() == 1)
-			compositeKey = std::move(keyParts[0]);
-		else
-		{
-			compositeKey = std::move(keyParts[0]);
-			for (size_t i = 1; i < keyParts.size(); ++i)
-				compositeKey = awst::makeConcat(std::move(compositeKey), std::move(keyParts[i]), m_loc);
-		}
-
-		auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), m_loc);
-		hashCall->stackArgs.push_back(std::move(compositeKey));
-		compositeKey = std::move(hashCall);
-
-		e->key = awst::makeBoxPrefixedKey(prefix, std::move(compositeKey), m_loc);
+		e->key = std::move(currentPrefix);
 	}
 	else
 		e->key = std::move(prefix);
