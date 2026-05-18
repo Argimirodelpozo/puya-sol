@@ -327,6 +327,14 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				// at the writer. Array-of-mapping levels: uint64 (itob, 8 B).
 				// Mapping levels: declared keyType (typically biguint → 32-B pad).
 				std::vector<awst::WType const*> keyArgEncodingType;
+				// Parallel: per-key-arg array-level info.
+				//   absent (= encType-only check is enough): mapping level
+				//   present, value = 0: dynamic array level (bounds-check
+				//     against length in box header)
+				//   present, value > 0: static array level of fixed size N
+				//     (bounds-check against compile-time constant N)
+				std::vector<uint64_t> keyArgStaticLen; // 0 = dynamic, >0 = static N
+				std::vector<bool> keyArgIsArrayLevel;
 
 				while (keyArgCount + indexArgCount < getter.args.size())
 				{
@@ -334,6 +342,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					{
 						if (inIndexMode) break;
 						keyArgEncodingType.push_back(m_typeMapper.map(mt->keyType()));
+						keyArgIsArrayLevel.push_back(false);
+						keyArgStaticLen.push_back(0);
 						keyArgCount++;
 						walkType = mt->valueType();
 						continue;
@@ -344,6 +354,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						if (!inIndexMode && containsMapping(at->baseType()))
 						{
 							keyArgEncodingType.push_back(awst::WType::uint64Type());
+							keyArgIsArrayLevel.push_back(true);
+							// Static array: arraySize() is the constant N.
+							// Dynamic: leave as 0 — fall back to box-header
+							// length lookup at bounds-check site.
+							keyArgStaticLen.push_back(
+								at->isDynamicallySized() ? 0 : static_cast<uint64_t>(at->length()));
 							keyArgCount++;
 							walkType = at->baseType();
 							continue;
@@ -392,6 +408,56 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					std::shared_ptr<awst::Expression> encoded = argRef;
 					if (encType != argRef->wtype)
 						encoded = TypeCoercion::implicitNumericCast(std::move(encoded), encType, loc);
+
+					// Bounds check at array-of-non-flat levels: matches
+					// Solidity's Panic(0x32) on OOB. The array's length lives
+					// in the first 2 bytes of the box at the current slot
+					// pointer (the ARC4-dyn-array header pre-created by the
+					// push path); default empty box → length 0 → any index
+					// fails. Skip mapping levels even when they share the
+					// uint64 encoding type (enum / uint8 keys) — mappings
+					// return defaults for unset keys, not revert.
+					bool isArrayLevel = i < keyArgIsArrayLevel.size() && keyArgIsArrayLevel[i];
+					if (isArrayLevel)
+					{
+						uint64_t staticN = i < keyArgStaticLen.size() ? keyArgStaticLen[i] : 0;
+						auto argForCheck = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
+						auto argU64 = TypeCoercion::implicitNumericCast(std::move(argForCheck), awst::WType::uint64Type(), loc);
+
+						std::shared_ptr<awst::Expression> lengthExpr;
+						if (staticN > 0)
+						{
+							// Static array of size N: compile-time length.
+							lengthExpr = awst::makeIntegerConstant(std::to_string(staticN), loc, awst::WType::uint64Type());
+						}
+						else
+						{
+							// Dynamic array: length lives in the first 2 bytes
+							// of the box at currentPrefix (ARC4-dyn-array
+							// header). Materialise currentPrefix so the
+							// bounds-check read + the next layer's hash don't
+							// both re-emit the chain.
+							static int s_boundsCounter = 0;
+							std::string tempName = "__bounds_prefix_" + std::to_string(s_boundsCounter++);
+							auto tempVar = awst::makeVarExpression(tempName, awst::WType::boxKeyType(), loc);
+							auto saveStmt = awst::makeAssignmentStatement(tempVar, std::move(currentPrefix), loc);
+							body->body.push_back(std::move(saveStmt));
+							currentPrefix = tempVar;
+
+							auto boxExpr = awst::makeBoxValueExpression(currentPrefix, awst::WType::bytesType(), loc);
+							std::vector<unsigned char> twoZeros{0, 0};
+							auto defaultBytes = awst::makeBytesConstant(std::move(twoZeros), loc);
+							auto stateGet = awst::makeStateGet(std::move(boxExpr), std::move(defaultBytes), awst::WType::bytesType(), loc);
+							auto extractLen = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), loc);
+							extractLen->stackArgs.push_back(std::move(stateGet));
+							extractLen->stackArgs.push_back(awst::makeZero(loc));
+							lengthExpr = std::move(extractLen);
+						}
+
+						auto cmp = awst::makeNumericCompare(std::move(argU64), awst::NumericComparison::Lt, std::move(lengthExpr), loc);
+						auto assertExpr = awst::makeAssert(std::move(cmp), loc, "array out-of-bounds");
+						body->body.push_back(awst::makeExpressionStatement(std::move(assertExpr), loc));
+					}
 
 					std::shared_ptr<awst::Expression> keyBytes;
 					if (encType == awst::WType::uint64Type())

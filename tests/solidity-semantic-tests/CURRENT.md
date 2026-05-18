@@ -1,3 +1,41 @@
+# Semantic Test Status — v252
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v250: +1 PASS, −1 FAIL. Zero regressions. The flip is
+`tests/types/test_types.py::test_array_mapping_abstract_constructor_param`
+via 9fdd2faea (m.push() on aliased non-existent box pre-creates the
+ARC4 dyn-array header so subsequent box_replace finds storage).
+
+## v252 puya-sol changes (vs v250)
+
+Two commits land between baselines:
+
+1. *9fdd2faea* `fix(storage): pre-create aliased dynamic-array box
+   before push/pop`. Extends `emitEnsureBox` semantics to the
+   storage-pointer-alias branch of `SolArrayMethod` so
+   `T[] storage p = state[k]; p.push(v);` (and the inheritance-arg
+   form `Base(state[k])`) creates the underlying box before the first
+   `box_replace`. Flips the m.push() test.
+2. *(this commit)* Case B array-of-non-flat OOB bounds-check in the
+   auto-getter. For `T[K][]` / `T[K][N]` / `mapping(K=>V)[]` shapes,
+   `PublicGetterBuilder` now emits an `array out-of-bounds` assert
+   before chaining the next sha256 layer:
+   - Dynamic levels (`[]`): materialise the prefix to a temp, read the
+     ARC4 length header (`extract_uint16 box[0:2]`), assert
+     `idx < length`. Default-empty box → length 0 → all indices revert.
+   - Static levels (`[N]`): compile-time constant N; assert `idx < N`.
+   Mapping levels are skipped even when their key encodes as uint64
+   (enum / uint8 keys) — mappings return the default for unset keys,
+   matching Solidity's `Panic(0x32)`-vs-mapping-default split.
+
+Two parallel vectors (`keyArgIsArrayLevel`, `keyArgStaticLen`) carry
+the necessary metadata through the existing walk. Zero behavioural
+diff on the suite; the safeguard is correctness-prep for tests that
+do exercise OOB getter calls.
+
+---
+
 # Semantic Test Status — v250
 
 **Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
