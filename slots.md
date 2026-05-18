@@ -328,6 +328,66 @@ code, some additions for the new abstractions).
 - `multi-box storage` (`name + itob(page)` for oversized fixed
   arrays) becomes the natural extension of the dynamic-array case.
 
+## Implementation lessons (attempted v250, reverted)
+
+First attempt: rewrite `handleMappingAccess` + `PublicGetterBuilder`
+to per-layer hashing. The two-file change compiled clean and the 3
+storage-pointer-heavy tests (`test_array_mapping_struct`,
+`test_mapping_array_internal_argument`, `test_mapping_internal_argument`)
+all passed. But the wider smoke surfaced **4 regressions** in tests
+that use **dynamic arrays inside mapping values** (e.g.
+`mapping(K=>Y[]) m; m[k].push();` in
+`test_mapping_array_struct`):
+
+```
+ValueError: ... logic eval error: no such box 0xb750…418f.
+opcodes=intc_1 // 0; uncover 2; box_replace
+```
+
+Root cause: the per-layer change moved the box key for `m[k]` to a
+new derivation, but **box-creation paths weren't updated to match**.
+`m[k].push()` translates to `ArrayExtend(BoxValue(new_key), ...)`,
+which calls `box_replace` on a box that was never created. The OLD
+composite-key scheme worked because puya-sol's pre-existing
+box-creation codepath (somewhere in `StorageMapper` / the
+constructor codegen) happened to materialise the box at the
+composite-key address before the first push. Moving the access key
+without moving the creation key splits the namespace.
+
+Reverted both files. The per-layer migration needs a wider set of
+touchpoints aligned in the same change:
+
+1. `handleMappingAccess` (writer) — done in attempt.
+2. `PublicGetterBuilder` (auto-getter reader) — done in attempt.
+3. **Box-creation sites** — find every `box_create` / `box_put`
+   emission for state vars and route through the new key derivation.
+   Search: `make.*box_create`, `makeStateAssign`, the per-state-var
+   init code in `ApprovalProgramBuilder` / `__postInit`.
+4. **ArrayExtend / ArrayPop / ArrayDelete codegen** — these assume
+   the box exists. Add a box-existence check + auto-create on first
+   push, OR ensure step 3 pre-creates for every mapping-value-array
+   slot that might receive a push.
+5. **Multi-box storage** (`<name> ++ itob(page)` per
+   `multi-box-storage.md` memory) — same key derivation, needs to be
+   aligned.
+6. **Transient storage** — scratch-slot-packed scheme uses its own
+   "slot" concept; needs the same per-layer treatment for transient
+   mappings.
+
+This is genuinely multi-day work. Path forward:
+
+- Add **slot allocator** first (no behavior change — slots are
+  allocated and stored against `VariableDeclaration*` but the
+  derivation code keeps using encoded names). Commit.
+- Migrate to per-layer ON TOP of the slot allocator, BUT also
+  update box-creation + ArrayExtend codegen in the same commit.
+  Land as a single coherent change with the full v250 baseline
+  showing each test that flips. Expect a few regressions on edge
+  cases (multi-box arrays of mappings, transient mappings) that
+  need dedicated follow-up.
+- Optimisation passes (static-collapse, no-alias-crossing) come
+  later, never on the critical path.
+
 ## What gets harder
 
 - Migration from the existing test corpus produces churn — each
