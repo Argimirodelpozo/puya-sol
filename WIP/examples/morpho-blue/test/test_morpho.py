@@ -178,27 +178,24 @@ def create_market_with_irm(morpho, irm, loan, collateral_token, oracle, lltv):
 class TestCompilation:
     """Verify all contracts compiled to valid TEAL and bytecode."""
 
-    @pytest.mark.parametrize("name,subdir", [
-        ("Morpho", "MorphoTest"),
-        ("ERC20Mock", "ERC20MockTest"),
-        ("OracleMock", "OracleMockTest"),
-        ("IrmMock", "IrmMockTest"),
+    @pytest.mark.parametrize("name", [
+        "Morpho", "ERC20Mock", "OracleMock", "IrmMock",
     ])
-    def test_teal_files_exist(self, name, subdir):
-        base = OUT_DIR / subdir
+    def test_teal_files_exist(self, name):
+        base = OUT_DIR / name
         assert (base / f"{name}.approval.teal").exists()
         assert (base / f"{name}.clear.teal").exists()
         assert (base / f"{name}.approval.bin").exists()
         assert (base / f"{name}.clear.bin").exists()
 
     def test_arc56_spec_exists(self):
-        arc56_path = OUT_DIR / "MorphoTest" / "Morpho.arc56.json"
+        arc56_path = OUT_DIR / "Morpho" / "Morpho.arc56.json"
         assert arc56_path.exists()
         spec = au.Arc56Contract.from_json(arc56_path.read_text())
         assert spec.name == "Morpho"
 
     def test_morpho_has_expected_methods(self):
-        spec = load_arc56("Morpho", "MorphoTest")
+        spec = load_arc56("Morpho")
         method_names = {m.name for m in spec.methods}
         expected = {
             "setOwner", "enableIrm", "enableLltv", "setFee", "setFeeRecipient",
@@ -210,22 +207,28 @@ class TestCompilation:
         assert expected.issubset(method_names), f"Missing: {expected - method_names}"
 
     def test_erc20mock_has_expected_methods(self):
-        spec = load_arc56("ERC20Mock", "ERC20MockTest")
+        spec = load_arc56("ERC20Mock")
         method_names = {m.name for m in spec.methods}
         expected = {"setBalance", "approve", "transfer", "transferFrom"}
         assert expected.issubset(method_names)
 
     def test_teal_compiles_to_bytecode(self, algod_client):
-        """Verify all TEAL files compile without errors."""
-        for subdir in ["MorphoTest", "ERC20MockTest", "OracleMockTest", "IrmMockTest"]:
-            base = OUT_DIR / subdir
+        """Verify all TEAL files compile without errors. Files that
+        carry uros template vars (TMPL_UROS_ORCH_APP_ID etc.) are skipped
+        — those only become real bytecode after the deploy harness
+        substitutes the deployed app IDs."""
+        for name in ["Morpho", "ERC20Mock", "OracleMock", "IrmMock"]:
+            base = OUT_DIR / name
             for teal_file in base.glob("*.teal"):
-                result = algod_client.compile(teal_file.read_text())
+                src = teal_file.read_text()
+                if "TMPL_UROS_" in src:
+                    continue
+                result = algod_client.compile(src)
                 assert "result" in result, f"Failed to compile {teal_file.name}"
 
     def test_morpho_bytecode_within_limits(self):
         """Verify Morpho bytecode fits within AVM 8KB limit."""
-        bin_path = OUT_DIR / "MorphoTest" / "Morpho.approval.bin"
+        bin_path = OUT_DIR / "Morpho" / "Morpho.approval.bin"
         size = bin_path.stat().st_size
         assert size <= 8192, f"Morpho bytecode {size} bytes exceeds 8KB limit"
 
@@ -249,10 +252,10 @@ class TestDeployment:
         client = deploy_contract(localnet, account, "IrmMock")
         assert client.app_id > 0
 
-    def test_deploy_morpho(self, localnet, account):
+    def test_deploy_morpho(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         client = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
         )
         assert client.app_id > 0
@@ -389,11 +392,11 @@ class TestMorphoGovernance:
     """Test Morpho governance functions (setOwner, enableIrm, enableLltv)."""
 
     @pytest.fixture
-    def morpho_env(self, localnet, account):
+    def morpho_env(self, localnet, account, orch_app_id):
         """Deploy full Morpho environment: Morpho + mocks."""
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=2_000_000,
         )
@@ -578,11 +581,11 @@ class TestMarketCreation:
     """
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         """Deploy full environment with IRM/LLTV pre-enabled."""
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -726,11 +729,11 @@ class TestSupplyManagement:
     """Test supply and withdraw operations."""
 
     @pytest.fixture
-    def market_env(self, localnet, account):
+    def market_env(self, localnet, account, orch_app_id):
         """Deploy everything and create a market."""
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -869,11 +872,11 @@ class TestCollateralManagement:
     """
 
     @pytest.fixture
-    def market_env(self, localnet, account):
+    def market_env(self, localnet, account, orch_app_id):
         """Deploy everything and create a market with real IRM."""
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -967,10 +970,10 @@ class TestOwnerManagement:
     """Test setOwner and owner() read."""
 
     @pytest.fixture
-    def morpho_env(self, localnet, account):
+    def morpho_env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=2_000_000,
         )
@@ -1038,10 +1041,10 @@ class TestSetFee:
     """Test setting market fees."""
 
     @pytest.fixture
-    def market_env(self, localnet, account):
+    def market_env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -1173,10 +1176,10 @@ class TestMarketNotCreated:
     """Test that operations on non-existent markets revert."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=2_000_000,
         )
@@ -1292,11 +1295,11 @@ class TestSupplyFlow:
     """
 
     @pytest.fixture
-    def full_env(self, localnet, account):
+    def full_env(self, localnet, account, orch_app_id):
         """Deploy full environment with market and funded ERC20 tokens."""
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -1466,10 +1469,10 @@ class TestCollateralFlow:
     """Test full supplyCollateral flow with ERC20 transfers."""
 
     @pytest.fixture
-    def full_env(self, localnet, account):
+    def full_env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -1579,10 +1582,10 @@ class TestWithdrawFlow:
     """Test supply then withdraw — full ERC20 transfer out."""
 
     @pytest.fixture
-    def full_env(self, localnet, account):
+    def full_env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -1727,10 +1730,10 @@ class TestWithdrawCollateralFlow:
     """Supply collateral then withdraw it — safeTransfer out."""
 
     @pytest.fixture
-    def full_env(self, localnet, account):
+    def full_env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -1886,10 +1889,10 @@ class TestBorrowRepayFlow:
     """Full borrow/repay cycle: supply loan + supply collateral → borrow → repay."""
 
     @pytest.fixture
-    def full_env(self, localnet, account):
+    def full_env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=5_000_000,
         )
@@ -2160,7 +2163,7 @@ def _make_full_env(localnet, account, oracle_price=10**36):
     """Deploy all contracts, create a market, return env dict."""
     owner_bytes = addr_to_bytes32(account.address)
     morpho = deploy_contract(
-        localnet, account, "Morpho", subdir="MorphoTest",
+        localnet, account, "Morpho", orch_app_id=orch_app_id,
         constructor_args=[owner_bytes],
         fund_amount=5_000_000,
     )
@@ -2316,7 +2319,7 @@ class TestAuthorizationDelegation:
     """Test withdraw/borrow on behalf of another address via isAuthorized."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     @pytest.fixture
@@ -2675,7 +2678,7 @@ class TestAuthorizationWithSig:
     """
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def _make_sig(self, morpho_app_id, authorizer_addr_bytes, authorized_addr_bytes,
@@ -2880,7 +2883,7 @@ class TestByShares:
     """Test supply and withdraw using shares instead of assets."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_supply_by_shares(self, env, account, localnet):
@@ -3159,7 +3162,7 @@ class TestInsufficientReverts:
     """Test that insufficient liquidity and collateral checks work."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_withdraw_insufficient_liquidity_reverts(self, env, account, localnet):
@@ -3308,7 +3311,7 @@ class TestInterestWithFee:
     """Test _accrueInterest when market has a nonzero fee."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         e = _make_full_env(localnet, account)
         morpho = e["morpho"]
         irm = e["irm"]
@@ -3408,7 +3411,7 @@ class TestLiquidation:
     """Test liquidation flow — requires unhealthy position."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_liquidate_unhealthy_position(self, env, account, localnet):
@@ -3688,7 +3691,7 @@ class TestFlashLoan:
     """
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         e = _make_full_env(localnet, account)
         morpho = e["morpho"]
         loan = e["loan"]
@@ -3784,7 +3787,7 @@ class TestExtSloads:
     """Test extSloads storage view function."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_ext_sloads_empty(self, env, account):
@@ -3835,10 +3838,10 @@ class TestOnlyOwner:
     """Test that onlyOwner functions revert when called by non-owner."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=2_000_000,
         )
@@ -3936,7 +3939,7 @@ class TestGovernanceEdgeCases:
     """Test governance edge cases: boundary values, already-set, etc."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_set_fee_at_max_boundary(self, env, account):
@@ -4065,10 +4068,10 @@ class TestWithdrawCollateralMarketNotCreated:
     """Test withdrawCollateral on non-existent market."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         owner_bytes = addr_to_bytes32(account.address)
         morpho = deploy_contract(
-            localnet, account, "Morpho", subdir="MorphoTest",
+            localnet, account, "Morpho", orch_app_id=orch_app_id,
             constructor_args=[owner_bytes],
             fund_amount=2_000_000,
         )
@@ -4103,7 +4106,7 @@ class TestLiquidateInputValidation:
     """Test liquidate input validation."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_liquidate_both_nonzero_reverts(self, env, account):
@@ -4155,7 +4158,7 @@ class TestWithdrawBothZero:
     """Test withdraw with both assets and shares zero."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     def test_withdraw_both_zero_reverts(self, env, account):
@@ -4187,7 +4190,7 @@ class TestMediumGaps:
     """Test medium-difficulty coverage gaps."""
 
     @pytest.fixture
-    def env(self, localnet, account):
+    def env(self, localnet, account, orch_app_id):
         return _make_full_env(localnet, account)
 
     @pytest.fixture

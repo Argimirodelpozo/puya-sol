@@ -53,10 +53,8 @@ def localnet(
 
 
 def load_arc56(name: str, subdir: str | None = None) -> au.Arc56Contract:
-    if subdir:
-        arc56_path = OUT_DIR / subdir / f"{name}.arc56.json"
-    else:
-        arc56_path = OUT_DIR / f"{name}Test" / f"{name}.arc56.json"
+    base = OUT_DIR / (subdir or name)
+    arc56_path = base / f"{name}.arc56.json"
     return au.Arc56Contract.from_json(arc56_path.read_text())
 
 
@@ -85,8 +83,37 @@ def deploy_contract(
     extra_pages: int = 0,
     fund_amount: int = 1_000_000,
     constructor_args: list[bytes] | None = None,
+    orch_app_id: int | None = None,
 ) -> au.AppClient:
+    """Deploy a compiled contract and return an AppClient pointing at
+    the user-facing app (main app for split contracts; the single app
+    for non-split). For split contracts (Morpho), pass `orch_app_id`
+    fixture; the dance is run transparently and the returned AppClient
+    is bound to `main_id`.
+    """
     app_spec = load_arc56(name, subdir)
+    contract_dir = OUT_DIR / (subdir or name)
+    if (contract_dir / "deploy.uros.json").exists():
+        if orch_app_id is None:
+            raise RuntimeError(
+                f"{name} is uros-split; pass orch_app_id fixture to "
+                f"deploy_contract"
+            )
+        from uros_dance import deploy_split_app
+        d = deploy_split_app(
+            localnet.client.algod, account, name,
+            orch_id=orch_app_id,
+            app_args=constructor_args or [],
+            fund_amount=fund_amount,
+        )
+        return au.AppClient(
+            au.AppClientParams(
+                algorand=localnet,
+                app_spec=app_spec,
+                app_id=d.main_id,
+                default_sender=account.address,
+            )
+        )
     client = deploy_contract_raw(
         localnet, account, name, app_spec,
         subdir=subdir,
@@ -96,6 +123,17 @@ def deploy_contract(
     if fund_amount > 0:
         fund_contract(localnet, account, client.app_id, fund_amount)
     return client
+
+
+@pytest.fixture(scope="module")
+def orch_app_id(localnet, account):
+    """Module-scoped: each test file deploys its own Uros orchestrator.
+    Module isolation matters because the orch holds chunk bytecode in
+    boxes keyed by chunk index. Two split contracts deployed via the
+    same orch would collide on chunk_0/.../chunk_N (the second
+    `Box.create` asserts on existence)."""
+    from uros_dance import deploy_orchestrator
+    return deploy_orchestrator(localnet.client.algod, account)
 
 
 def deploy_contract_raw(
@@ -108,10 +146,7 @@ def deploy_contract_raw(
     extra_pages: int = 0,
 ) -> au.AppClient:
     algod = localnet.client.algod
-    if subdir:
-        base = OUT_DIR / subdir
-    else:
-        base = OUT_DIR / f"{name}Test"
+    base = OUT_DIR / (subdir or name)
 
     approval_path = base / f"{name}.approval.teal"
     clear_path = base / f"{name}.clear.teal"
