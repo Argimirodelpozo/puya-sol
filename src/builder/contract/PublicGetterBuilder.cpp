@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "builder/AWSTBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -309,15 +310,6 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				//     on the box value
 				// Once we leave key mode the remaining levels stay value-indexing,
 				// so the getter's arg order is K…K I…I.
-				std::function<bool(solidity::frontend::Type const*)> containsMapping;
-				containsMapping = [&](solidity::frontend::Type const* t) -> bool {
-					if (!t) return false;
-					if (dynamic_cast<solidity::frontend::MappingType const*>(t)) return true;
-					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
-						return containsMapping(at->baseType());
-					return false;
-				};
-
 				solidity::frontend::Type const* walkType = var->type();
 				size_t keyArgCount = 0;
 				size_t indexArgCount = 0;
@@ -351,7 +343,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType))
 					{
 						if (at->isByteArrayOrString()) break;
-						if (!inIndexMode && containsMapping(at->baseType()))
+						if (!inIndexMode && containsMappingType(at->baseType()))
 						{
 							keyArgEncodingType.push_back(awst::WType::uint64Type());
 							keyArgIsArrayLevel.push_back(true);

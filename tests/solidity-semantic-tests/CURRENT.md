@@ -1,3 +1,17 @@
+# Semantic Test Status — v257
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v256: **bit-identical per-test results**. Pure refactor.
+
+## v257 puya-sol changes (vs v256)
+
+Removed the 4th and last inline copy of the `containsMapping` lambda
+(in `PublicGetterBuilder.cpp`). Now uses shared
+`builder::containsMappingType` from `AWSTBuilder.h`.
+
+---
+
 # Semantic Test Status — v256
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
