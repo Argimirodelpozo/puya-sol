@@ -213,38 +213,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	e->sourceLocation = m_loc;
 	e->wtype = valueWType;
 
-	// Build the box key prefix. For mapping-storage-ref parameters, the
-	// prefix is a runtime bytes value (the caller passes the state variable
-	// name). For regular state variables, it's a compile-time constant.
-	std::shared_ptr<awst::Expression> prefix;
-	std::string mappingKeyParam;
-	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
-		if (auto const* decl = ident->annotation().referencedDeclaration)
-			mappingKeyParam = m_scope.findMappingKeyParam(decl->id());
-	if (!mappingKeyParam.empty())
-	{
-		// Dynamic prefix from function parameter (bytes value at runtime)
-		auto var = awst::makeVarExpression(mappingKeyParam, awst::WType::bytesType(), m_loc);
-		prefix = std::move(var);
-	}
-	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(cursor))
-	{
-		// `f()[k]` — evaluate the call; its bytes return value is the prefix.
-		prefix = buildExpr(*cursor);
-		if (prefix && prefix->wtype != awst::WType::bytesType())
-		{
-			prefix = builder::TypeCoercion::coerceForAssignment(
-				std::move(prefix), awst::WType::bytesType(), m_loc);
-		}
-	}
-	else if (m_aliasOverridePrefix)
-	{
-		prefix = m_aliasOverridePrefix;
-	}
-	else
-	{
-		prefix = awst::makeUtf8BytesConstant(varName, m_loc, awst::WType::boxKeyType());
-	}
+	auto prefix = buildInitialPrefix(cursor, varName, m_aliasOverridePrefix);
 
 	if (!indexExprs.empty())
 	{
@@ -286,6 +255,42 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		return e;
 
 	return builder::StorageMapper::makeStateGetWithDefault(e, e->wtype, m_loc);
+}
+
+std::shared_ptr<awst::Expression> SolIndexAccess::buildInitialPrefix(
+	solidity::frontend::Expression const* _cursor,
+	std::string const& _varName,
+	std::shared_ptr<awst::Expression> _aliasOverridePrefix)
+{
+	// 1. Mapping-storage-ref param: prefix is the runtime bytes value the
+	//    caller passed (its state-var holder name encoded as bytes).
+	if (auto const* ident = dynamic_cast<Identifier const*>(_cursor))
+		if (auto const* decl = ident->annotation().referencedDeclaration)
+		{
+			auto const& mappingKeyParam = m_scope.findMappingKeyParam(decl->id());
+			if (!mappingKeyParam.empty())
+				return awst::makeVarExpression(
+					mappingKeyParam, awst::WType::bytesType(), m_loc);
+		}
+
+	// 2. `f()[k]`: evaluate the call; its bytes return is the prefix.
+	if (dynamic_cast<solidity::frontend::FunctionCall const*>(_cursor))
+	{
+		auto p = buildExpr(*_cursor);
+		if (p && p->wtype != awst::WType::bytesType())
+			p = builder::TypeCoercion::coerceForAssignment(
+				std::move(p), awst::WType::bytesType(), m_loc);
+		return p;
+	}
+
+	// 3. Alias-override prefix: the alias's box-key expression IS the
+	//    slot pointer at that level (set by the cursor-resolution block
+	//    above when the cursor identifier is a storage alias).
+	if (_aliasOverridePrefix)
+		return _aliasOverridePrefix;
+
+	// 4. Plain state variable: utf8 bytes of the var name.
+	return awst::makeUtf8BytesConstant(_varName, m_loc, awst::WType::boxKeyType());
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()

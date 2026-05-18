@@ -30,6 +30,18 @@ private:
 		std::string const& _varName,
 		awst::WType const* _arrWtype,
 		std::shared_ptr<awst::Expression> _idxExpr);
+
+	/// Phase-extract of `handleMappingAccess`: builds the initial bytes
+	/// prefix that the per-layer sha256 chain starts from. Picks among
+	/// four sources in priority order:
+	///   1. mapping-storage-ref param  → runtime VarExpression(<paramName>)
+	///   2. `f()[k]` call cursor       → result of the call, coerced to bytes
+	///   3. alias-override prefix      → key of the aliased state slot
+	///   4. plain state var            → `BytesConstant(varName)` (literal)
+	std::shared_ptr<awst::Expression> buildInitialPrefix(
+		solidity::frontend::Expression const* _cursor,
+		std::string const& _varName,
+		std::shared_ptr<awst::Expression> _aliasOverridePrefix);
 };
 
 /// arr[start:end] range access.

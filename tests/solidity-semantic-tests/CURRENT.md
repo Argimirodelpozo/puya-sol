@@ -1,3 +1,25 @@
+# Semantic Test Status — v258
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v257: **bit-identical per-test results**. Pure refactor.
+
+## v258 puya-sol changes (vs v257)
+
+Phase-extract from `handleMappingAccess` (task #41 partial). Pulled the
+30-line "build initial key prefix" if/else chain into a named private
+method `SolIndexAccess::buildInitialPrefix(cursor, varName, aliasOverride)`.
+Four cases as named branches in priority order:
+  1. mapping-storage-ref param → runtime VarExpression
+  2. `f()[k]` call cursor → coerce call result to bytes
+  3. alias-override prefix → key of the aliased state slot
+  4. plain state var → BytesConstant(varName)
+
+`handleMappingAccess` body shrinks ~30 lines; intent becomes obvious at
+the call site (`auto prefix = buildInitialPrefix(...)`).
+
+---
+
 # Semantic Test Status — v257
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
