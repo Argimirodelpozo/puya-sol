@@ -459,25 +459,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						body->body.push_back(awst::makeExpressionStatement(std::move(assertExpr), loc));
 					}
 
-					std::shared_ptr<awst::Expression> keyBytes;
-					if (encType == awst::WType::uint64Type())
-						keyBytes = awst::makeItob(std::move(encoded), loc);
-					else if (encType == awst::WType::biguintType())
-					{
-						auto reinterpret = awst::makeReinterpretCast(std::move(encoded), awst::WType::bytesType(), loc);
-						auto cat = awst::makeLeftPad(std::move(reinterpret), 32, loc);
-						keyBytes = awst::makeExtractLastN(std::move(cat), 32, loc);
-					}
-					else
-					{
-						auto reinterpret = awst::makeReinterpretCast(std::move(encoded), awst::WType::bytesType(), loc);
-						keyBytes = std::move(reinterpret);
-					}
-
-					auto concat = awst::makeConcat(std::move(keyBytes), std::move(currentPrefix), loc);
-					auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::boxKeyType(), loc);
-					hashCall->stackArgs.push_back(std::move(concat));
-					currentPrefix = std::move(hashCall);
+					currentPrefix = awst::makeMappingKeyLayer(
+						std::move(encoded), encType, std::move(currentPrefix), loc);
 				}
 
 				auto boxExpr = awst::makeBoxValueExpression(std::move(currentPrefix), storedWType, loc);

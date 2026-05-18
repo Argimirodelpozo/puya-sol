@@ -1068,6 +1068,41 @@ inline std::shared_ptr<ReinterpretCast> makeReinterpretCast(
 	return node;
 }
 
+// Encode a typed key value to its canonical byte form for storage-key
+// derivation: uint64 → itob (8 B); biguint → left-padded then trimmed
+// to exactly 32 B (matching Solidity uint256 ABI width); anything else
+// → reinterpret-cast to bytes (already in canonical form for string /
+// bytesN / address).
+inline std::shared_ptr<Expression> makeKeyBytes(
+	std::shared_ptr<Expression> value, WType const* encType, SourceLocation loc)
+{
+	if (encType == WType::uint64Type())
+		return makeItob(std::move(value), std::move(loc));
+	if (encType == WType::biguintType())
+	{
+		auto reinterpret = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
+		auto cat = makeLeftPad(std::move(reinterpret), 32, loc);
+		return makeExtractLastN(std::move(cat), 32, std::move(loc));
+	}
+	return makeReinterpretCast(std::move(value), WType::bytesType(), std::move(loc));
+}
+
+// One layer of Solidity-style storage-key derivation:
+// `sha256(keyBytes(value, encType) ++ prefix)`. Chain repeatedly for
+// nested mappings / arrays of compound types.
+inline std::shared_ptr<IntrinsicCall> makeMappingKeyLayer(
+	std::shared_ptr<Expression> value,
+	WType const* encType,
+	std::shared_ptr<Expression> prefix,
+	SourceLocation loc)
+{
+	auto keyBytes = makeKeyBytes(std::move(value), encType, loc);
+	auto concat = makeConcat(std::move(keyBytes), std::move(prefix), loc);
+	auto hash = makeIntrinsicCall("sha256", WType::boxKeyType(), std::move(loc));
+	hash->stackArgs.push_back(std::move(concat));
+	return hash;
+}
+
 /// A placeholder for a value not known at compile time — substituted
 /// before deployment. Compiles to `pushbytes TMPL_<name>` in TEAL.
 struct TemplateVar: Expression

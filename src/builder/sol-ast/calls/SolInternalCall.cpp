@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-eb/AsaIntrinsics.h"
 #include "builder/sol-eb/CallResolver.h"
@@ -86,19 +87,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
 		{
 			auto const& param = _funcDef->parameters()[pi];
-			// Widen to include array-of-mapping (`mapping[N] storage`) etc.
-			// Mirrors AWSTBuilder.cpp:containsMappingType — both sides need
-			// to agree on which params travel as bytes prefixes.
-			std::function<bool(solidity::frontend::Type const*)> containsMapping =
-				[&](solidity::frontend::Type const* t) {
-					if (!t) return false;
-					if (dynamic_cast<MappingType const*>(t)) return true;
-					if (auto const* arr = dynamic_cast<ArrayType const*>(t))
-						return containsMapping(arr->baseType());
-					return false;
-				};
 			if (param->referenceLocation() == VariableDeclaration::Location::Storage
-				&& containsMapping(param->type()))
+				&& builder::containsMappingType(param->type()))
 			{
 				paramTypes.push_back(awst::WType::bytesType());
 				mappingStorageParamIndices.insert(pi);

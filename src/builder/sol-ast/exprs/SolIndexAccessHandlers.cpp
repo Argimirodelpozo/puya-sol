@@ -277,25 +277,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				translated = tempVar;
 			}
 
-			std::shared_ptr<awst::Expression> keyBytes;
-			if (keyWType == awst::WType::uint64Type())
-				keyBytes = awst::makeItob(std::move(translated), m_loc);
-			else if (keyWType == awst::WType::biguintType())
-			{
-				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
-				auto cat = awst::makeLeftPad(std::move(reinterpret), 32, m_loc);
-				keyBytes = awst::makeExtractLastN(std::move(cat), 32, m_loc);
-			}
-			else
-			{
-				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
-				keyBytes = std::move(reinterpret);
-			}
-
-			auto concat = awst::makeConcat(std::move(keyBytes), std::move(currentPrefix), m_loc);
-			auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::boxKeyType(), m_loc);
-			hashCall->stackArgs.push_back(std::move(concat));
-			currentPrefix = std::move(hashCall);
+			currentPrefix = awst::makeMappingKeyLayer(
+				std::move(translated), keyWType, std::move(currentPrefix), m_loc);
 		}
 
 		e->key = std::move(currentPrefix);

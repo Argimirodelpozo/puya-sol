@@ -1,3 +1,42 @@
+# Semantic Test Status — v253
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v252: **bit-identical per-test results**. Pure refactor — zero
+behaviour change confirmed across the full 1322-test suite.
+
+## v253 puya-sol changes (vs v252)
+
+Two pure-refactor commits, no functional change. ~75 LOC down.
+
+1. *(this batch, helper extraction)* Two factory helpers added to
+   `awst::Node.h`:
+   - `makeKeyBytes(value, encType, loc)` — encode a typed value to
+     its canonical byte form for storage-key derivation (uint64→itob,
+     biguint→32-B pad-trim, default→reinterpret).
+   - `makeMappingKeyLayer(value, encType, prefix, loc)` — one layer of
+     Solidity-style key derivation: `sha256(keyBytes(value) ++ prefix)`.
+
+   Collapses two 17-line inline copies of the same sha256 chain into a
+   one-line helper call at:
+   - `SolIndexAccessHandlers.cpp` (mapping/array compound storage reads
+     and writes — the writer side of the chain)
+   - `PublicGetterBuilder.cpp` (auto-generated public getter — the
+     reader side of the same chain)
+
+   The duplication had been there since the per-layer migration in
+   e69022b36; both sides have to agree byte-for-byte for storage round-
+   tripping, so consolidating them into one helper is also a safety win.
+
+2. *(this batch, predicate promotion)* `containsMappingType` moved from
+   `AWSTBuilder.cpp` anonymous namespace to inline in `AWSTBuilder.h`.
+   Two duplicate inline lambdas (`SolInternalCall.cpp` and
+   `FunctionBuilder.cpp`) collapsed to call sites of the shared
+   predicate. Removes a "this MUST agree across 3 sites" comment that
+   was a smell-flag for drift.
+
+---
+
 # Semantic Test Status — v252
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**

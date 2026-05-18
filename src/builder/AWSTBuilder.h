@@ -5,6 +5,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/CompilerStack.h>
 
 #include <memory>
@@ -13,6 +14,22 @@
 
 namespace puyasol::builder
 {
+
+/// True if `_t` is a MappingType, or any array (possibly nested) whose
+/// element type eventually contains a MappingType. Used to decide which
+/// `storage` reference parameters travel as runtime bytes prefixes (the
+/// callee receives the caller's state-variable holder name) vs ordinary
+/// AWST-mapped parameter values. Must agree across the 3 call sites
+/// (AWSTBuilder, SolInternalCall, FunctionBuilder) or callee writes
+/// land under the wrong key.
+inline bool containsMappingType(solidity::frontend::Type const* _t)
+{
+	if (!_t) return false;
+	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
+	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
+		return containsMappingType(arr->baseType());
+	return false;
+}
 
 /// Top-level builder that drives the Solidity AST → AWST transformation.
 /// Uses CompilerStack for parsing and type-checking, then visits all contracts.

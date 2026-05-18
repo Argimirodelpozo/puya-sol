@@ -14,27 +14,6 @@
 namespace puyasol::builder
 {
 
-namespace
-{
-
-/// True iff `_t` is a mapping or a (possibly nested) container of one.
-/// Array-of-mapping (`mapping(K=>V)[N] storage`) and array-of-array-of-
-/// mapping (etc.) all need the same storage-pointer-as-bytes-prefix
-/// treatment as a plain mapping ref — the underlying storage shape uses
-/// a composite box key over every nested index, and the holder name
-/// must come from the caller's state var, not the callee's param.
-bool containsMappingType(solidity::frontend::Type const* _t)
-{
-	if (!_t) return false;
-	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
-	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return containsMappingType(arr->baseType());
-	return false;
-}
-
-} // namespace
-
-
 using awst::statementAlwaysTerminates;
 using awst::blockAlwaysTerminates;
 
