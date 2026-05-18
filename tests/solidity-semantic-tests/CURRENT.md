@@ -1,3 +1,23 @@
+# Semantic Test Status — v260
+
+**Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
+
+vs v259: 1 flip each way (both flakes — pass individually). v260's
+`test_packing_signed_types` failed with TimeoutError under a 57-minute
+slow run (vs typical 30 min — localnet throughput variance). v259's
+`test_storage_signed` recovered. Real-world refactor outcome is
+bit-identical to v258.
+
+## v260 puya-sol changes (vs v259)
+
+Tiny cleanup commit:
+- Renamed `m_aliasOverridePrefix` local variable → `aliasOverridePrefix`
+  (dropped bogus `m_` prefix that suggested member-var when it's local).
+- Fixed indentation glitch on the `else if (MemberAccess)` arm of the
+  cursor-resolution chain (mixed-tab issue introduced earlier).
+
+---
+
 # Semantic Test Status — v259
 
 **Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**

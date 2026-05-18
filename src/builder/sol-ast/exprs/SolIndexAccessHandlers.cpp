@@ -82,13 +82,6 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 {
-	// Set by the alias-resolution block below when the cursor identifier
-	// is aliased (inheritance-specifier param, internal-call param, or
-	// local storage pointer). Under per-layer hashing the alias's box-key
-	// expression IS the slot pointer at that level — feed it as the chain's
-	// starting prefix; per-layer sha256 extends it cleanly.
-	std::shared_ptr<awst::Expression> m_aliasOverridePrefix;
-
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
 
 	std::vector<Expression const*> indexExprs;
@@ -125,6 +118,13 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		}
 		break;
 	}
+
+	// Set when the cursor identifier is aliased (inheritance-specifier
+	// param, internal-call param, or local storage pointer). Under per-
+	// layer hashing the alias's box-key expression IS the slot pointer at
+	// that level — fed as the chain's starting prefix; per-layer sha256
+	// extends it cleanly.
+	std::shared_ptr<awst::Expression> aliasOverridePrefix;
 	Type const* rootMappingType = nullptr;
 	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
 	{
@@ -151,9 +151,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				// slot pointer at that level — feed it directly as the chain's
 				// starting prefix. No inner-sha256 unwrapping required.
 				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-					m_aliasOverridePrefix = boxVal->key;
+					aliasOverridePrefix = boxVal->key;
 				else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
-					m_aliasOverridePrefix = appState->key;
+					aliasOverridePrefix = appState->key;
 				// Simple holder-name alias (`mapping storage m = state_m;`):
 				// alias is a BytesConstant of the underlying state-var's
 				// encoded name. Use as varName so the default-prefix path picks
@@ -163,7 +163,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			}
 		}
 	}
-		else if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
+	else if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
 	{
 		varName = ma->memberName();
 		rootMappingType = ma->annotation().type;
@@ -183,7 +183,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	e->sourceLocation = m_loc;
 	e->wtype = resolveValueWType(baseType);
 
-	auto prefix = buildInitialPrefix(cursor, varName, m_aliasOverridePrefix);
+	auto prefix = buildInitialPrefix(cursor, varName, aliasOverridePrefix);
 
 	if (!indexExprs.empty())
 	{
