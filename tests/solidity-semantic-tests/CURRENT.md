@@ -1,3 +1,26 @@
+# Semantic Test Status — v255
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v254: **bit-identical per-test results**. Pure refactor.
+
+## v255 puya-sol changes (vs v254)
+
+Round 2 of `makeStateGetWithDefault` collapse — applies the helper at
+6 more call sites that escaped the initial round:
+
+- SolAssignment.cpp (compound-op LHS BoxValue unwrap)
+- StorageMapper.cpp:269 (createStateRead's Box branch — self-collapse)
+- SolIndexAccessHandlers.cpp:46 (dynamic-array read path)
+- SolIndexAccessHandlers.cpp:293 (mapping read tail)
+- SolUnaryOperation.cpp (BoxValue unwrap for unary read)
+- SolInternalCall.cpp (struct read from root box)
+- AssignmentHelper.cpp (compound write-base read wrap)
+
+~25 LOC down across the two rounds total.
+
+---
+
 # Semantic Test Status — v254
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**

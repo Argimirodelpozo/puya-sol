@@ -308,11 +308,7 @@ SolAssignment::applyCompoundAssignment(
 
 	auto currentValue = buildExpr(m_assignment.leftHandSide());
 	if (dynamic_cast<awst::BoxValueExpression const*>(currentValue.get()))
-	{
-		auto defaultVal = builder::StorageMapper::makeDefaultValue(currentValue->wtype, m_loc);
-		auto stateGet = awst::makeStateGet(currentValue, defaultVal, currentValue->wtype, m_loc);
-		currentValue = std::move(stateGet);
-	}
+		currentValue = builder::StorageMapper::makeStateGetWithDefault(currentValue, currentValue->wtype, m_loc);
 	auto* targetSolType = m_assignment.leftHandSide().annotation().type;
 	auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 		m_ctx, _op, targetSolType, currentValue, _value, m_loc);

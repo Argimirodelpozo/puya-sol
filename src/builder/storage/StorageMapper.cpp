@@ -266,10 +266,7 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 		// Use StateGet with a default value so that missing boxes return the
 		// Solidity default (0/false/empty) instead of asserting existence.
 		auto boxExpr = awst::makeBoxValueExpression(key, _type, _loc);
-		auto defaultVal = makeDefaultValue(_type, _loc);
-
-		auto stateGet = awst::makeStateGet(boxExpr, defaultVal, _type, _loc);
-		return stateGet;
+		return makeStateGetWithDefault(boxExpr, _type, _loc);
 	}
 	default:
 	{

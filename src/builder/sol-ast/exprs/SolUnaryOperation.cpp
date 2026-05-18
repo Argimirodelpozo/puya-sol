@@ -329,11 +329,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 	// Unwrap BoxValueExpression for reads
 	if (dynamic_cast<awst::BoxValueExpression const*>(_operand.get()))
-	{
-		auto defaultVal = builder::StorageMapper::makeDefaultValue(_operand->wtype, m_loc);
-		auto stateGet = awst::makeStateGet(_operand, defaultVal, _operand->wtype, m_loc);
-		_operand = std::move(stateGet);
-	}
+		_operand = builder::StorageMapper::makeStateGetWithDefault(_operand, _operand->wtype, m_loc);
 
 	static const std::string pow256 =
 		kPow2_256;

@@ -94,13 +94,8 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 		auto outerReadBase = outerBase;
 		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
 			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
-		{
-			auto sg = awst::makeStateGet(
-				outerWriteBase,
-				builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, _loc),
-				outerWriteBase->wtype, _loc);
-			outerReadBase = sg;
-		}
+			outerReadBase = builder::StorageMapper::makeStateGetWithDefault(
+				outerWriteBase, outerWriteBase->wtype, _loc);
 
 		std::string outerFieldName = outerField->name;
 		awst::WType const* outerFieldWtype = nullptr;

@@ -390,10 +390,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 						std::shared_ptr<awst::Expression> readStruct;
 						if (sr.rootBox)
 						{
-							readStruct = awst::makeStateGet(
-								sr.rootBox,
-								builder::StorageMapper::makeDefaultValue(sr.rootType, m_loc),
-								sr.rootType, m_loc);
+							readStruct = builder::StorageMapper::makeStateGetWithDefault(
+								sr.rootBox, sr.rootType, m_loc);
 						}
 						else
 						{
