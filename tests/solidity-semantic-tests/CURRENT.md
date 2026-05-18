@@ -1,3 +1,28 @@
+# Semantic Test Status — v250
+
+**Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
+
+vs v249: **bit-identical per-test results**. Zero diff in pass/fail lists.
+
+## v250 puya-sol changes (vs v249)
+
+One commit: *e69022b36* `refactor(storage): migrate mapping key derivation
+to per-layer hashing`. Architectural rewrite that moves storage-key
+derivation from composite-single-sha256-over-concat to Solidity-style
+per-layer hashing — `sha256(keyBytes ++ currentPrefix)` applied once per
+layer. Box count unchanged. Test outcomes bit-identical (writer + reader
+agreement is preserved by construction). The architectural cleanup
+removes the alias-prepend-parts hack from `handleMappingAccess` (added
+in 0e7ffbb30 to make storage-pointer-through-inheritance work) and
+simplifies storage-pointer-alias resolution: the alias IS the slot
+pointer at its level; chains just continue.
+
+Net diff: 4 files, 68 insertions, 130 deletions (~60 LOC down). Future
+storage-shape fixes can lean on the per-layer chain directly instead of
+plumbing through multiple AWST-shape touchpoints.
+
+---
+
 # Semantic Test Status — v249
 
 **Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
