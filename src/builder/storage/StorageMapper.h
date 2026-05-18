@@ -82,6 +82,17 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// `makeStateGet(field, makeDefaultValue(type, loc), type, loc)`. Wraps the
+	/// common "read storage slot, fall back to type default" pattern. Pass the
+	/// stored wtype explicitly because some callers read with a wtype that
+	/// differs from the field's own wtype (multi-page arrays, struct slot
+	/// promotion, etc).
+	static std::shared_ptr<awst::StateGet> makeStateGetWithDefault(
+		std::shared_ptr<awst::Expression> _field,
+		awst::WType const* _type,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Convert a biguint slot expression to a uint64 via btoi(extract3(reinterpret(slot), len-8, 8)).
 	static std::shared_ptr<awst::Expression> biguintSlotToBtoi(
 		std::shared_ptr<awst::Expression> const& _slotExpr,

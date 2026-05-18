@@ -284,8 +284,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::AppStateExpression const*>(aliasExpr.get()))
 					{
-						auto sg = awst::makeStateGet(aliasExpr, StorageMapper::makeDefaultValue(aliasExpr->wtype, m_loc), aliasExpr->wtype, m_loc);
-						aliasExpr = sg;
+						aliasExpr = StorageMapper::makeStateGetWithDefault(aliasExpr, aliasExpr->wtype, m_loc);
 						wrappedStateRead = true;
 					}
 					// The slice may have come straight from the RHS tuple's

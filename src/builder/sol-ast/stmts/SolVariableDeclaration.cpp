@@ -115,15 +115,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				auto aliasExpr = value;
 				if (auto const* boxVal = dynamic_cast<awst::BoxValueExpression const*>(value.get()))
-				{
-					auto stateGet = awst::makeStateGet(value, StorageMapper::makeDefaultValue(boxVal->wtype, m_loc), boxVal->wtype, m_loc);
-					aliasExpr = stateGet;
-				}
+					aliasExpr = StorageMapper::makeStateGetWithDefault(value, boxVal->wtype, m_loc);
 				else if (auto const* appState = dynamic_cast<awst::AppStateExpression const*>(value.get()))
-				{
-					auto stateGet = awst::makeStateGet(value, StorageMapper::makeDefaultValue(appState->wtype, m_loc), appState->wtype, m_loc);
-					aliasExpr = stateGet;
-				}
+					aliasExpr = StorageMapper::makeStateGetWithDefault(value, appState->wtype, m_loc);
 				m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(std::move(aliasExpr)));
 				m_blk.builderCtx().appendPendingTo(result);
 				return result;

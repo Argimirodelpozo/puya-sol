@@ -43,6 +43,16 @@ std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(
 	return TypeCoercion::makeDefaultValue(_type, _loc);
 }
 
+std::shared_ptr<awst::StateGet> StorageMapper::makeStateGetWithDefault(
+	std::shared_ptr<awst::Expression> _field,
+	awst::WType const* _type,
+	awst::SourceLocation const& _loc
+)
+{
+	auto def = makeDefaultValue(_type, _loc);
+	return awst::makeStateGet(std::move(_field), std::move(def), _type, _loc);
+}
+
 int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
 {
 	return TypeCoercion::computeEncodedElementSize(_type);

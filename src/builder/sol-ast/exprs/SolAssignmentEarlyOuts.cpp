@@ -107,10 +107,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	auto aliasExpr = rhsExpr;
 	if (dynamic_cast<awst::BoxValueExpression const*>(rhsExpr.get())
 		|| dynamic_cast<awst::AppStateExpression const*>(rhsExpr.get()))
-	{
-		auto sg = awst::makeStateGet(rhsExpr, StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc), rhsExpr->wtype, m_loc);
-		aliasExpr = sg;
-	}
+		aliasExpr = StorageMapper::makeStateGetWithDefault(rhsExpr, rhsExpr->wtype, m_loc);
 	m_scope.setStorageAlias(
 		lhsDecl->id(), StorageAlias::stateRead(std::move(aliasExpr)));
 	auto voidExpr = awst::makeVoidConstant(m_loc);

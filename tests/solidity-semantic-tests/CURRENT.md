@@ -1,3 +1,19 @@
+# Semantic Test Status — v254
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v253: **bit-identical per-test results**. Pure refactor.
+
+## v254 puya-sol changes (vs v253)
+
+Added `StorageMapper::makeStateGetWithDefault(field, type, loc)` — wraps
+the common "read storage slot, fall back to type default" pattern that
+was inlined as 3-4 lines at multiple call sites. Collapses 5 call sites
+across SolVariableDeclaration, SolAssignmentStructField, SolUnaryOperation,
+SolAssignmentTuple, SolAssignmentEarlyOuts.
+
+---
+
 # Semantic Test Status — v253
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**

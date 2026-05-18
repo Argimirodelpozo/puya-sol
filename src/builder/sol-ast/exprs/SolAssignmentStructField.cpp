@@ -105,10 +105,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 
 	auto readBase = base;
 	if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
-	{
-		auto stateGet = awst::makeStateGet(base, builder::StorageMapper::makeDefaultValue(base->wtype, m_loc), base->wtype, m_loc);
-		readBase = stateGet;
-	}
+		readBase = builder::StorageMapper::makeStateGetWithDefault(base, base->wtype, m_loc);
 
 	if (op != Token::Assign)
 	{
