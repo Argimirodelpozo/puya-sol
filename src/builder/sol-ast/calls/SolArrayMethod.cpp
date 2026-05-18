@@ -64,7 +64,17 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					// Nested case (IndexExpression base): the outer box
 					// already holds the whole multi-dim array; no per-entry
 					// box to create.
-					auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get());
+					// Storage-pointer alias path: the SolIdentifier resolution
+					// returns the alias's `expr` which is typically
+					// `StateGet(BoxValueExpression(...))`. Unwrap StateGet so
+					// the underlying box-creation runs against the aliased
+					// slot pointer — without this, `A(m[1])` followed by
+					// `m.push()` in A's body silently skips the pre-create and
+					// trips the puya ArrayExtend's box-exists assertion.
+					auto unwrapped = baseAwst;
+					if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(unwrapped))
+						unwrapped = sg->field;
+					auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(unwrapped.get());
 					if (!bv || !bv->key)
 						return;
 					auto boxKey = bv->key;
@@ -188,14 +198,48 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								? aliasExpr->wtype
 								: m_ctx.typeMapper.map(solArrType);
 
+							// Ensure the aliased per-entry box exists with the
+							// empty ARC4 dyn-array header (0x0000) before
+							// ArrayExtend/ArrayPop reads it. Mirrors the
+							// emitEnsureBox helper used in the `m[k].push()`
+							// path above — without this, `A(state[k])`
+							// followed by `m.push()` in A's body trips puya's
+							// box-exists assertion because the aliased box was
+							// never created on first access.
+							auto emitEnsureAliasBox = [&]() {
+								auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get());
+								if (!bv || !bv->key)
+									return;
+								auto boxKey = bv->key;
+								auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+									std::vector<awst::WType const*>{
+										awst::WType::uint64Type(), awst::WType::boolType()});
+								auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
+								boxLen->stackArgs.push_back(boxKey);
+								auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
+								auto notExists = awst::makeNot(std::move(existsVal), m_loc);
+								auto createCall = awst::makeIntrinsicCall(
+									"box_create", awst::WType::boolType(), m_loc);
+								createCall->stackArgs.push_back(boxKey);
+								createCall->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
+								auto createStmt = awst::makeExpressionStatement(
+									std::move(createCall), m_loc);
+								auto ifBranch = awst::makeBlock(m_loc);
+								ifBranch->body.push_back(std::move(createStmt));
+								m_ctx.queuePrePending(awst::makeIfElse(
+									std::move(notExists), std::move(ifBranch), nullptr, m_loc));
+							};
+
 							if (memberName == "push" && !m_call.arguments().empty())
 							{
+								emitEnsureAliasBox();
 								auto val = buildExpr(*m_call.arguments()[0]);
 								auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
 								return awst::makeArrayPushOne(aliasExpr, std::move(encoded), arrWType, m_loc);
 							}
 							if (memberName == "push" && m_call.arguments().empty())
 							{
+								emitEnsureAliasBox();
 								std::shared_ptr<awst::Expression> elem;
 								bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
 								if (fromAssign)
@@ -216,7 +260,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								return awst::makeVoidConstant(m_loc);
 							}
 							if (memberName == "pop")
+							{
+								emitEnsureAliasBox();
 								return awst::makeArrayPopDecode(aliasExpr, elemType, rawElemType, m_loc);
+							}
 						}
 					}
 				}
