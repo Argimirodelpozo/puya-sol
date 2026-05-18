@@ -110,14 +110,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 
 			if (dynamic_cast<awst::StateGet const*>(value.get())
-				|| dynamic_cast<awst::BoxValueExpression const*>(value.get())
-				|| dynamic_cast<awst::AppStateExpression const*>(value.get()))
+				|| awst::isRawStorageRead(value.get()))
 			{
-				auto aliasExpr = value;
-				if (auto const* boxVal = dynamic_cast<awst::BoxValueExpression const*>(value.get()))
-					aliasExpr = StorageMapper::makeStateGetWithDefault(value, boxVal->wtype, m_loc);
-				else if (auto const* appState = dynamic_cast<awst::AppStateExpression const*>(value.get()))
-					aliasExpr = StorageMapper::makeStateGetWithDefault(value, appState->wtype, m_loc);
+				// Raw box/app-state reads must be wrapped in StateGet with
+				// a default so the alias evaluates the same as a direct read.
+				// Already-wrapped StateGet passes through unchanged.
+				auto aliasExpr = awst::isRawStorageRead(value.get())
+					? StorageMapper::makeStateGetWithDefault(value, value->wtype, m_loc)
+					: value;
 				m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(std::move(aliasExpr)));
 				m_blk.builderCtx().appendPendingTo(result);
 				return result;

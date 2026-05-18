@@ -1472,6 +1472,17 @@ inline std::shared_ptr<BoxValueExpression> makeBoxValueExpression(
 	return node;
 }
 
+/// True if `_e` is a raw storage-read expression — a BoxValueExpression
+/// (box-backed slot) or an AppStateExpression (app-global slot) — i.e.,
+/// a slot reference that has not yet been wrapped in a `StateGet` to
+/// supply a default value. Used at sites that need to decide whether
+/// to wrap a value in `StateGet` before consuming it as an rvalue.
+inline bool isRawStorageRead(Expression const* _e)
+{
+	return dynamic_cast<BoxValueExpression const*>(_e) != nullptr
+		|| dynamic_cast<AppStateExpression const*>(_e) != nullptr;
+}
+
 // Inner transactions
 struct CreateInnerTransaction: Expression
 {

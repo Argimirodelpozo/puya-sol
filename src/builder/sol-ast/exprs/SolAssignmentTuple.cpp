@@ -184,8 +184,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					auto const* base = idx->base.get();
 					if (auto const* sg = dynamic_cast<awst::StateGet const*>(base))
 						base = sg->field.get();
-					if (dynamic_cast<awst::BoxValueExpression const*>(base)
-						|| dynamic_cast<awst::AppStateExpression const*>(base))
+					if (awst::isRawStorageRead(base))
 					{
 						lhsHasStateIndex = true;
 						break;
@@ -281,8 +280,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						aliasExpr = slice;
 					}
 					bool wrappedStateRead = false;
-					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
-						|| dynamic_cast<awst::AppStateExpression const*>(aliasExpr.get()))
+					if (awst::isRawStorageRead(aliasExpr.get()))
 					{
 						aliasExpr = StorageMapper::makeStateGetWithDefault(aliasExpr, aliasExpr->wtype, m_loc);
 						wrappedStateRead = true;

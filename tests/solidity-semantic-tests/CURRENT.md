@@ -1,3 +1,23 @@
+# Semantic Test Status — v256
+
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
+
+vs v255: **bit-identical per-test results**. Pure refactor.
+
+## v256 puya-sol changes (vs v255)
+
+Added `awst::isRawStorageRead(Expression const*)` predicate to
+`Node.h`. Collapses the recurring `BoxValueExpression || AppStateExpression`
+disjunction at:
+- SolAssignmentEarlyOuts (RHS storage-read wrap)
+- SolAssignmentTuple (lhsHasStateIndex check + alias-wrap)
+- SolVariableDeclaration (3-way StateGet||BoxValue||AppState — simplified
+  to `StateGet || isRawStorageRead` + a ternary that picks wrap-or-pass)
+
+~10 LOC down.
+
+---
+
 # Semantic Test Status — v255
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
