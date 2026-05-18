@@ -177,41 +177,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 	std::reverse(indexExprs.begin(), indexExprs.end());
 
-	std::vector<awst::WType const*> declaredKeyWTypes;
-	{
-		Type const* walkType = rootMappingType;
-		for (size_t i = 0; i < indexExprs.size(); ++i)
-		{
-			if (auto const* mt = dynamic_cast<MappingType const*>(walkType))
-			{
-				declaredKeyWTypes.push_back(m_ctx.typeMapper.map(mt->keyType()));
-				walkType = mt->valueType();
-			}
-			else
-			{
-				declaredKeyWTypes.push_back(nullptr);
-				if (auto const* at = dynamic_cast<ArrayType const*>(walkType))
-					walkType = at->baseType();
-				else
-					break;
-			}
-		}
-	}
-
-	awst::WType const* valueWType = nullptr;
-	if (auto const* mappingType = dynamic_cast<MappingType const*>(baseType))
-	{
-		Type const* vt = mappingType->valueType();
-		while (auto const* nested = dynamic_cast<MappingType const*>(vt))
-			vt = nested->valueType();
-		valueWType = m_ctx.typeMapper.map(vt);
-	}
-	else
-		valueWType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
+	auto declaredKeyWTypes = resolveKeyWTypes(rootMappingType, indexExprs.size());
 
 	auto e = std::make_shared<awst::BoxValueExpression>();
 	e->sourceLocation = m_loc;
-	e->wtype = valueWType;
+	e->wtype = resolveValueWType(baseType);
 
 	auto prefix = buildInitialPrefix(cursor, varName, m_aliasOverridePrefix);
 
@@ -255,6 +225,42 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		return e;
 
 	return builder::StorageMapper::makeStateGetWithDefault(e, e->wtype, m_loc);
+}
+
+std::vector<awst::WType const*> SolIndexAccess::resolveKeyWTypes(
+	solidity::frontend::Type const* _rootType, size_t _numLevels)
+{
+	std::vector<awst::WType const*> result;
+	Type const* walkType = _rootType;
+	for (size_t i = 0; i < _numLevels; ++i)
+	{
+		if (auto const* mt = dynamic_cast<MappingType const*>(walkType))
+		{
+			result.push_back(m_ctx.typeMapper.map(mt->keyType()));
+			walkType = mt->valueType();
+		}
+		else
+		{
+			result.push_back(nullptr);
+			if (auto const* at = dynamic_cast<ArrayType const*>(walkType))
+				walkType = at->baseType();
+			else
+				break;
+		}
+	}
+	return result;
+}
+
+awst::WType const* SolIndexAccess::resolveValueWType(solidity::frontend::Type const* _baseType)
+{
+	if (auto const* mappingType = dynamic_cast<MappingType const*>(_baseType))
+	{
+		Type const* vt = mappingType->valueType();
+		while (auto const* nested = dynamic_cast<MappingType const*>(vt))
+			vt = nested->valueType();
+		return m_ctx.typeMapper.map(vt);
+	}
+	return m_ctx.typeMapper.map(m_indexAccess.annotation().type);
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::buildInitialPrefix(

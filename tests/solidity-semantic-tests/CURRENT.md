@@ -1,3 +1,25 @@
+# Semantic Test Status — v259
+
+**Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
+
+vs v258: −1 PASS, +1 FAIL — but the nominal diff is a flaky test:
+`tests/userDefinedValueType/test_userDefinedValueType.py::test_storage_signed`
+passes 3/3 runs individually. Real-world refactor outcome is bit-identical.
+
+## v259 puya-sol changes (vs v258)
+
+More phase-extract from `handleMappingAccess` (task #41 continued):
+- `resolveKeyWTypes(rootType, numLevels)` — walks the root mapping/
+  array type for N index steps, returns the declared key wtype at each
+  level (nullptr at array levels).
+- `resolveValueWType(baseType)` — peels nested mappings to reach the
+  innermost value type.
+
+handleMappingAccess body shrinks another ~30 lines. ~36 line method
+body now → mostly cursor walk + chain hashing loop.
+
+---
+
 # Semantic Test Status — v258
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed = **1189/1322 (89.9%)**
