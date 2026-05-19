@@ -2,6 +2,7 @@ import hashlib
 from pathlib import Path
 
 import algokit_utils as au
+import algosdk
 from algosdk import encoding
 from algosdk.kmd import KMDClient
 from algosdk.transaction import (
@@ -49,6 +50,11 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
                 merged.append(x)
         return merged
 
+    import hashlib
+    import os
+    pad_sel = hashlib.new(
+        "sha512_256", b"set_storage(uint64)void").digest()[:4]
+
     def patched_call(
         params: "au.AppClientMethodCallParams",
         send_params: "au.SendParams | None" = None,
@@ -62,28 +68,53 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
             params,
             account_references=_merge_refs(
                 params.account_references, [main_addr]),
-            extra_fee=params.extra_fee or au.AlgoAmount(micro_algo=20_000),
+            # main → orch → 3-itxn dance + chunk internal itxns burn
+            # 20+ inner txns at min_fee 1000 each. Set a max_fee
+            # budget; cover_app_call_inner_transaction_fees uses
+            # simulate to compute the exact extra_fee needed and
+            # populates it on the real call.
+            max_fee=params.max_fee or au.AlgoAmount(micro_algo=100_000),
         )
-        # Always force populate. Tests' NO_POPULATE doesn't account for
-        # the dance's resource overhead.
-        send_params = au.SendParams(populate_app_call_resources=True)
-        # The dance carries ~5 boxes (orch's __codebox_default,
-        # __codebox_chunk_N, csel_<sel>, clen_<sel>) + 2 apps
-        # (storage_id, orch_id) + 1 account (main_addr). That leaves
-        # at most ~0 user refs in a single txn before the 8-cap. Pad
-        # with a budget-call group so populate can spread refs:
-        # algokit groups consume 8 refs each, so adding N padding
-        # txns yields 8*(N+1) total slots.
+        send_params = au.SendParams(
+            populate_app_call_resources=True,
+            cover_app_call_inner_transaction_fees=True,
+        )
+
+        # The dance burns ~5 dance boxes on orch + 1+ user boxes on
+        # storage + 2 foreign apps + 1 account per call, easily
+        # exceeding the 8-ref-per-txn cap. AVM v9+ shares refs across
+        # a group, so the more app-call txns in the group, the more
+        # slots populate has to spread refs.
+        #
+        # Pad with cheap orch.set_storage(uint64) calls — idempotent,
+        # plain calls to orch (NOT main), so they don't trigger the
+        # dance themselves and only carry orch in foreign-apps. Each
+        # one buys 8 extra ref slots for populate to distribute.
         composer = client._algorand.new_group()
-        for _ in range(2):  # 2 noop calls → 3 × 8 = 24 ref slots
-            import os
-            pad = au.AppClientMethodCallParams(
-                method="owner",
-                note=os.urandom(8),
-            )
-            composer.add_app_call_method_call(client.params.call(pad))
+        # 3 padding txns × 8 refs = 24 extra slots beyond the real
+        # call's own 8.
+        for i in range(3):
+            composer.add_app_call(au.AppCallParams(
+                app_id=orch_id,
+                sender=client._default_sender,
+                on_complete=algosdk.transaction.OnComplete.NoOpOC,
+                args=[pad_sel, storage_id.to_bytes(8, "big")],
+                note=os.urandom(8) + bytes([i]),
+                static_fee=au.AlgoAmount(micro_algo=1000),
+            ))
         composer.add_app_call_method_call(client.params.call(params))
-        return composer.send(send_params)
+        result = composer.send(send_params)
+        # The real call is the LAST txn in the group. Promote its
+        # decoded abi return so call sites that read `.abi_return`
+        # on the result keep working transparently.
+        try:
+            last = result.returns[-1] if result.returns else None
+            if last is not None:
+                result.abi_return = (  # type: ignore[attr-defined]
+                    getattr(last, "return_value", None))
+        except Exception:
+            pass
+        return result
 
     sender_accessor.call = patched_call  # type: ignore[assignment]
 
