@@ -122,6 +122,49 @@ def deploy_contract(
     )
     if fund_amount > 0:
         fund_contract(localnet, account, client.app_id, fund_amount)
+
+    # puya-sol's "constructor box-write auto-split" pattern: AppCreate
+    # sets `__ctor_pending = 1`; the actual constructor body runs in
+    # `__postInit()`. Mocks (ERC20Mock, IrmMock etc.) have state-var
+    # initializers (e.g. `uint public totalSupply = 0`) that only land
+    # after __postInit fires. Tests reading those state vars before
+    # __postInit see `app_global_get_ex` assert-fail.
+    postinit_method = next(
+        (m for m in getattr(app_spec, "methods", []) or []
+         if getattr(m, "name", None) == "__postInit"),
+        None,
+    )
+    args_in = constructor_args or []
+    if postinit_method is not None and len(args_in) >= len(postinit_method.args):
+        from algosdk.atomic_transaction_composer import (
+            AtomicTransactionComposer, TransactionWithSigner,
+            AccountTransactionSigner,
+        )
+        from algosdk.transaction import ApplicationCallTxn, OnComplete
+        algod = localnet.client.algod
+        signer = AccountTransactionSigner(account.private_key)
+        sp = algod.suggested_params()
+        arg_types = ",".join(getattr(a, "type", "") for a in postinit_method.args)
+        sig = f"__postInit({arg_types})void"
+        sel = hashlib.new("sha512_256", sig.encode()).digest()[:4]
+        call_args = [sel] + list(args_in)[: len(postinit_method.args)]
+        call_txn = ApplicationCallTxn(
+            sender=account.address, sp=sp, index=client.app_id,
+            on_complete=OnComplete.NoOpOC, app_args=call_args,
+        )
+        atc = AtomicTransactionComposer()
+        atc.add_transaction(TransactionWithSigner(call_txn, signer))
+        try:
+            atc = au.populate_app_call_resources(atc, algod)
+        except Exception:
+            pass
+        try:
+            atc.execute(algod, 4)
+        except Exception:
+            # __postInit may revert on mis-encoded ctor args; let the
+            # downstream test surface the real failure mode (e.g.
+            # field-read returning default).
+            pass
     return client
 
 
@@ -190,12 +233,17 @@ def deploy_contract_raw(
 def mapping_box_key(mapping_name: str, *keys: bytes) -> bytes:
     """Compute the box key for a Solidity mapping.
 
-    Box key = mapping_name_bytes + sha256(concat(keys))
-    For nested mappings, keys are concatenated before hashing.
+    puya-sol's per-layer-hashed (Solidity-style) derivation:
+        prefix_0  = utf8(mapping_name)
+        prefix_i  = sha256(key_bytes_i ++ prefix_{i-1})  for i in 1..N
+        box_key   = prefix_N
+    Each key must already be encoded in its canonical form (uint64→itob
+    8 B; biguint/uint256→32-byte pad; bytes/bytesN/address→raw).
     """
-    concat_keys = b"".join(keys)
-    key_hash = hashlib.sha256(concat_keys).digest()
-    return mapping_name.encode() + key_hash
+    prefix = mapping_name.encode()
+    for k in keys:
+        prefix = hashlib.sha256(k + prefix).digest()
+    return prefix
 
 
 def box_ref(app_id: int, name: bytes) -> au.BoxReference:

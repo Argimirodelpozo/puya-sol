@@ -72,8 +72,12 @@ REPO_ROOT = Path(__file__).resolve().parents[4]  # → puya-sol/
 PUYAPY_BIN = REPO_ROOT / "puya" / ".venv" / "bin" / "puyapy"
 ORCH_PY = REPO_ROOT / "src" / "splitter" / "uros_orchestrator.py"
 STORAGE_PY = REPO_ROOT / "src" / "splitter" / "uros_storage.py"
-ORCH_OUT = REPO_ROOT / "tests" / "uros-splitter" / "out" / "Orchestrator"
-STORAGE_OUT = REPO_ROOT / "tests" / "uros-splitter" / "out" / "Storage"
+# Local cache for orch + storage default bytecode. Per-example
+# cache dir so a parallel aave-v4 run targeting v10 doesn't clobber
+# this example's v12 cached compiles (they share the
+# tests/uros-splitter/out dir otherwise).
+ORCH_OUT = Path(__file__).parent.parent / "out" / "_uros_cache" / "Orchestrator"
+STORAGE_OUT = Path(__file__).parent.parent / "out" / "_uros_cache" / "Storage"
 
 OUT_DIR = Path(__file__).parent.parent / "out"
 

@@ -1,0 +1,669 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/mocks/ERC20Mock.sol.ERC20Mock.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "balanceOf" "totalSupply" "allowance" "__ctor_pending" 0x151f7c75 0x151f7c7580 0x28918861
+    intc_2 // 0
+    dupn 6
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xd829bf87 0x50699f6d 0xfafb6a08 0x198c9820 0x6df41f6d 0x79fab465 0x83bad7cc 0x5d854d0e // method "__postInit()void", method "setBalance(address,uint256)void", method "setAllowance(address,address,uint256)void", method "approve(address,uint256)bool", method "transfer(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "totalSupply()uint256", method "balanceOf(address)uint256", method "allowance(address,address)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setBalance_route@6 main_setAllowance_route@7 main_approve_route@8 main_transfer_route@9 main_transferFrom_route@10 main_totalSupply_route@11 main_balanceOf_route@12 main_allowance_route@13
+    err
+
+main_allowance_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    dig 5
+    bytec 4 // "allowance"
+    concat
+    sha256
+    dig 3
+    swap
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_balanceOf_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    dig 5
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_2 // 0
+    b main_ternary_merge@25
+
+main_totalSupply_route@11:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30
+
+main_transferFrom_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    txn Sender
+    dig 5
+    dup
+    cover 2
+    bytec 4 // "allowance"
+    concat
+    sha256
+    swap
+    dig 1
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 9
+    dup
+    cover 3
+    b>=
+    assert // insufficient allowance
+    txn Sender
+    dig 1
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b>=
+    assert // underflow
+    txn Sender
+    dig 1
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 1
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b>=
+    assert // insufficient balance
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 2
+    dup
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    bytec 8 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    bytec 7 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@34:
+    intc_2 // 0
+    b main_ternary_merge@35
+
+main_transfer_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    txn Sender
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 7
+    dup
+    cover 2
+    b>=
+    assert // insufficient balance
+    txn Sender
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // underflow
+    txn Sender
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    txn Sender
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 1
+    dup
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    txn Sender
+    swap
+    concat
+    swap
+    concat
+    bytec 8 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    bytec 7 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@39:
+    intc_2 // 0
+    b main_ternary_merge@40
+
+main_approve_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    txn Sender
+    bytec 4 // "allowance"
+    concat
+    sha256
+    dig 3
+    dup
+    uncover 2
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 8
+    dup
+    cover 2
+    box_put
+    txn Sender
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+    bytec 7 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@44:
+    intc_2 // 0
+    b main_ternary_merge@45
+
+main_setAllowance_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    dig 3
+    bytec 4 // "allowance"
+    concat
+    sha256
+    dig 3
+    swap
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
+
+main_setBalance_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@54
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@55:
+    !
+    assert // not payable
+    dig 5
+    bytec_2 // "balanceOf"
+    concat
+    sha256
+    dup
+    bury 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 7
+    b<
+    bz main_else_body@57
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 7
+    dup
+    cover 2
+    dig 1
+    b>=
+    assert // underflow
+    intc_2 // 0
+    bytec_3 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    uncover 2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_3 // "totalSupply"
+    swap
+    app_global_put
+
+main_after_if_else@58:
+    dig 1
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    intc_1 // 1
+    return
+
+main_else_body@57:
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 8
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    intc_2 // 0
+    bytec_3 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    swap
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup2
+    b>=
+    assert // underflow
+    swap
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // "totalSupply"
+    swap
+    app_global_put
+    b main_after_if_else@58
+
+main_ternary_false@54:
+    intc_2 // 0
+    b main_ternary_merge@55
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "balanceOf"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 4 // "allowance"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return

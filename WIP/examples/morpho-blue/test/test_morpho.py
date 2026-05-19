@@ -58,14 +58,17 @@ def make_market_params(loan_token: str, collateral_token: str,
                        oracle: str, irm: str, lltv: int) -> tuple:
     """Build a MarketParams tuple for ABI calls.
 
-    MarketParams = (loanToken:uint8[32], collateralToken:uint8[32],
-                    oracle:uint8[32], irm:uint8[32], lltv:uint256)
+    MarketParams struct ABI: (address,address,address,address,uint256).
+    Each address field is a 32-byte value; algosdk's address codec
+    accepts bytes/bytearray of len 32 or a str-form Algorand address.
+    Pass the bytes directly (NOT `list(...)` — algosdk rejects list[int]
+    even though the bytes are equivalent).
     """
     return (
-        list(addr_to_bytes32(loan_token)),
-        list(addr_to_bytes32(collateral_token)),
-        list(addr_to_bytes32(oracle)),
-        list(addr_to_bytes32(irm)),
+        addr_to_bytes32(loan_token),
+        addr_to_bytes32(collateral_token),
+        addr_to_bytes32(oracle),
+        addr_to_bytes32(irm),
         lltv,
     )
 
@@ -2159,7 +2162,7 @@ class TestBorrowRepayFlow:
 # Helper: set up a full market environment with supply + collateral
 # ---------------------------------------------------------------------------
 
-def _make_full_env(localnet, account, oracle_price=10**36):
+def _make_full_env(localnet, account, orch_app_id, oracle_price=10**36):
     """Deploy all contracts, create a market, return env dict."""
     owner_bytes = addr_to_bytes32(account.address)
     morpho = deploy_contract(
@@ -2320,7 +2323,7 @@ class TestAuthorizationDelegation:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     @pytest.fixture
     def second_account(self, localnet, account):
@@ -2679,7 +2682,7 @@ class TestAuthorizationWithSig:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def _make_sig(self, morpho_app_id, authorizer_addr_bytes, authorized_addr_bytes,
                   is_authorized, nonce, deadline, private_key_bytes):
@@ -2884,7 +2887,7 @@ class TestByShares:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_supply_by_shares(self, env, account, localnet):
         """Supply by specifying shares (assets=0, shares>0).
@@ -3163,7 +3166,7 @@ class TestInsufficientReverts:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_withdraw_insufficient_liquidity_reverts(self, env, account, localnet):
         """Withdraw more than available (after borrowing) should revert."""
@@ -3312,7 +3315,7 @@ class TestInterestWithFee:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        e = _make_full_env(localnet, account)
+        e = _make_full_env(localnet, account, orch_app_id)
         morpho = e["morpho"]
         irm = e["irm"]
         params = e["params"]
@@ -3412,7 +3415,7 @@ class TestLiquidation:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_liquidate_unhealthy_position(self, env, account, localnet):
         """Full liquidation: supply, borrow, drop oracle price, liquidate."""
@@ -3692,7 +3695,7 @@ class TestFlashLoan:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        e = _make_full_env(localnet, account)
+        e = _make_full_env(localnet, account, orch_app_id)
         morpho = e["morpho"]
         loan = e["loan"]
 
@@ -3788,7 +3791,7 @@ class TestExtSloads:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_ext_sloads_empty(self, env, account):
         """extSloads with empty array returns empty array."""
@@ -3940,7 +3943,7 @@ class TestGovernanceEdgeCases:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_set_fee_at_max_boundary(self, env, account):
         """setFee at exactly MAX_FEE (25%) should succeed."""
@@ -4107,7 +4110,7 @@ class TestLiquidateInputValidation:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_liquidate_both_nonzero_reverts(self, env, account):
         """liquidate with both seizedAssets and repaidShares nonzero should revert."""
@@ -4159,7 +4162,7 @@ class TestWithdrawBothZero:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     def test_withdraw_both_zero_reverts(self, env, account):
         """withdraw with both assets and shares zero should revert (INCONSISTENT_INPUT)."""
@@ -4191,7 +4194,7 @@ class TestMediumGaps:
 
     @pytest.fixture
     def env(self, localnet, account, orch_app_id):
-        return _make_full_env(localnet, account)
+        return _make_full_env(localnet, account, orch_app_id)
 
     @pytest.fixture
     def second_account(self, localnet, account):
