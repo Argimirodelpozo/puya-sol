@@ -123,13 +123,36 @@ def call_with_budget(
     storage_id = getattr(morpho, "_morpho_storage_id", None)
     orch_id = getattr(morpho, "_morpho_orch_id", None)
 
+    # Collect the user's intended refs, then HOIST them onto padding
+    # txns rather than the real call. AVM v9+ admits the access from
+    # any txn in the group as long as the ref is present somewhere.
+    # Keeping the real call lean leaves room for populate to add the
+    # dance overhead (storage_id, chunk apps, orch dance boxes) without
+    # pushing over 8.
+    user_box_refs: list[au.BoxReference] = []
+    user_app_refs: list[int] = list(params.app_references or [])
+    user_acct_refs: list[str] = list(params.account_references or [])
+
     if storage_addr is not None:
-        accts = list(params.account_references or [])
-        if storage_addr not in accts:
-            accts.append(storage_addr)
+        if storage_addr not in user_acct_refs:
+            user_acct_refs.append(storage_addr)
+        for br in (params.box_references or []):
+            br_app = getattr(br, "app_id", None) or getattr(
+                br, "app_index", None)
+            if br_app == morpho.app_id:
+                user_box_refs.append(au.BoxReference(
+                    app_id=storage_id, name=br.name))
+                if storage_id not in user_app_refs:
+                    user_app_refs.append(storage_id)
+            else:
+                user_box_refs.append(br)
+        # Strip user-provided refs from the real call; they'll live on
+        # padding instead.
         params = replace(
             params,
-            account_references=accts,
+            box_references=[],
+            app_references=[],
+            account_references=[storage_addr] if storage_addr else [],
             max_fee=params.max_fee or au.AlgoAmount(micro_algo=200_000),
         )
 
@@ -138,16 +161,81 @@ def call_with_budget(
 
     composer = localnet.new_group()
     sender_addr = morpho._default_sender  # AppClient default sender
-    # Dance-aware padding: hand-built orch.set_storage(uint64) calls.
-    # These DON'T trigger the dance (they're direct orch calls), so
-    # they pay 1 min-fee and contribute 8 ref slots each.
-    for i in range(max(budget_calls, 3)):
+    # Distribute user refs across padding txns. Each pad has a 8-ref
+    # cap. Box ref consumes 1 slot, its parent app another (unless
+    # already in foreign_apps via current-app or earlier box).
+    # Pack greedy: fill pad N to ~6 refs, move on.
+    pad_count = max(budget_calls, 3, len(user_box_refs) + 2)
+    box_iter = iter(user_box_refs)
+    apps_unused = set(user_app_refs)
+    accts_unused = list(user_acct_refs)
+    cur_box: list[au.BoxReference] = []
+    cur_apps: list[int] = []
+    cur_accts: list[str] = []
+    pads_built: list[tuple[list, list, list]] = []
+    PAD_CAP = 6  # leave 2 slots for safety/populate's own additions
+
+    def _used():
+        return len(cur_box) + len(cur_apps) + len(cur_accts)
+
+    for br in user_box_refs:
+        br_app = getattr(br, "app_id", None) or getattr(
+            br, "app_index", None)
+        # Optimistic cost: box always 1 slot; +1 if parent app isn't
+        # current-pad's target (orch_id) and isn't already in cur_apps.
+        # Recompute after potential rollover.
+        for _attempt in range(2):
+            need_app = br_app is not None and br_app != orch_id and \
+                br_app not in cur_apps
+            cost = 1 + (1 if need_app else 0)
+            if _used() + cost > PAD_CAP and (
+                    cur_box or cur_apps or cur_accts):
+                pads_built.append((cur_box, cur_apps, cur_accts))
+                cur_box, cur_apps, cur_accts = [], [], []
+                continue
+            break
+        if need_app:
+            cur_apps.append(br_app)
+            apps_unused.discard(br_app)
+        cur_box.append(br)
+    # Drain remaining apps
+    for a in list(apps_unused):
+        if a == orch_id:
+            continue
+        if _used() + 1 > PAD_CAP and (cur_box or cur_apps or cur_accts):
+            pads_built.append((cur_box, cur_apps, cur_accts))
+            cur_box, cur_apps, cur_accts = [], [], []
+        cur_apps.append(a)
+    # Drain accts (storage_addr handled per-pad below for dance)
+    if cur_box or cur_apps or cur_accts:
+        pads_built.append((cur_box, cur_apps, cur_accts))
+
+    # Always-include base padding for the dance (storage_id + storage_addr
+    # in foreign_apps/accounts → chunk's storage reads resolve via group
+    # share). If pads_built is empty or short of pad_count, fill with
+    # bare-minimum dance pads.
+    while len(pads_built) < pad_count:
+        pads_built.append(([], [storage_id], [storage_addr]
+                           if storage_addr else []))
+
+    for i, (boxes_i, apps_i, accts_i) in enumerate(pads_built):
+        # algosdk's translate_box_references SKIPS BoxReference instances
+        # (treats them as already-translated). Pass plain tuples so
+        # algosdk maps app_id → foreign_apps position correctly.
+        boxes_tuple = []
+        for br in boxes_i:
+            br_app = getattr(br, "app_id", None) or getattr(
+                br, "app_index", None)
+            boxes_tuple.append((br_app, br.name))
         composer.add_app_call(au.AppCallParams(
             app_id=orch_id, sender=sender_addr,
             on_complete=OnComplete.NoOpOC,
             args=[pad_sel, storage_id.to_bytes(8, "big")],
             note=os.urandom(8) + bytes([i]),
             static_fee=au.AlgoAmount(micro_algo=1000),
+            box_references=boxes_tuple,
+            app_references=apps_i,
+            account_references=accts_i,
         ))
     composer.add_app_call_method_call(morpho.params.call(params))
     result = composer.send(au.SendParams(

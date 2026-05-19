@@ -64,8 +64,25 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
         # (main → orch → storage[chunk]). Chunks emit user-code inner
         # txns with Sender=main_addr; AVM needs main_addr in the outer
         # txn's foreign-accounts pool.
+        #
+        # Box refs the test passes are keyed against `morpho.app_id`
+        # (main_id) because tests don't know about the dance. But
+        # boxes physically live on STORAGE's app (chunks write/read
+        # there). Remap main_id → storage_id so box_get lookups
+        # resolve, and box-ref-pool gives the chunk access.
+        # Strip user-provided refs from the real call entirely. With
+        # all-methods-split + dance, the real call needs to leave room
+        # for populate to add dance overhead (~5 boxes on orch + 2-3
+        # foreign apps + main_addr account). User-provided refs that
+        # belong on the real call would push over 8.
+        #
+        # populate will auto-discover the user's box accesses via
+        # simulate and distribute them across the group's available
+        # txns. Padding txns give populate slots to use.
         params = replace(
             params,
+            box_references=[],
+            app_references=[],
             account_references=_merge_refs(
                 params.account_references, [main_addr]),
             # main → orch → 3-itxn dance + chunk internal itxns burn
@@ -88,12 +105,34 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
         #
         # Pad with cheap orch.set_storage(uint64) calls — idempotent,
         # plain calls to orch (NOT main), so they don't trigger the
-        # dance themselves and only carry orch in foreign-apps. Each
-        # one buys 8 extra ref slots for populate to distribute.
+        # dance themselves. We PRE-POPULATE the dance constants
+        # (storage_id in foreign_apps, dance addresses in accounts) on
+        # padding txns so AVM v9+ group-share resolves the chunk's
+        # accesses, and simulate's `unnamed_resources_accessed` for the
+        # real call comes back smaller. Without pre-pop, populate's
+        # per-txn block (algokit_utils transaction_composer.py:1085)
+        # blindly extends the real call's arrays, pushing it over 8.
+        #
+        # Distribution strategy (each pad has ≤8 refs):
+        #   pad 0: foreign_apps=[storage_id], accounts=[storage_addr]
+        #          → 2 of 8 used, 6 slots reserve for user boxes
+        #            (lives on storage_id, derived per-call)
+        #   pad 1: foreign_apps=[storage_id], accounts=[storage_addr]
+        #          → same; mirror for additional boxes
+        #   pad 2: foreign_apps=[storage_id], accounts=[storage_addr]
+        #          → same; more box slots
+        #   pad 3..6: target app = orch_id (current-app for free); box
+        #             refs against orch (dance bookkeeping: csel/clen/
+        #             codebox) admit without foreign_apps cost.
         composer = client._algorand.new_group()
-        # 3 padding txns × 8 refs = 24 extra slots beyond the real
-        # call's own 8.
-        for i in range(3):
+        for i in range(7):
+            # First 3 padding txns carry storage_id + storage_addr so
+            # populate can attach storage_owned boxes here (line 1023:
+            # is_appl_below_limit + storage_id in foreign_apps → txn_idx
+            # picks pad N). pad 3..6 stay clean so orch's own boxes can
+            # land on them via t.txn.index == orch_id check.
+            extra_apps = [storage_id] if i < 3 else []
+            extra_accs = [storage_addr] if i < 3 else []
             composer.add_app_call(au.AppCallParams(
                 app_id=orch_id,
                 sender=client._default_sender,
@@ -101,6 +140,8 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
                 args=[pad_sel, storage_id.to_bytes(8, "big")],
                 note=os.urandom(8) + bytes([i]),
                 static_fee=au.AlgoAmount(micro_algo=1000),
+                app_references=extra_apps,
+                account_references=extra_accs,
             ))
         composer.add_app_call_method_call(client.params.call(params))
         result = composer.send(send_params)
@@ -286,13 +327,19 @@ def deploy_contract(
     return client
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def orch_app_id(localnet, account):
-    """Module-scoped: each test file deploys its own Uros orchestrator.
-    Module isolation matters because the orch holds chunk bytecode in
-    boxes keyed by chunk index. Two split contracts deployed via the
-    same orch would collide on chunk_0/.../chunk_N (the second
-    `Box.create` asserts on existence)."""
+    """Function-scoped: each test deploys its own Uros orchestrator.
+    Per-test isolation matters because:
+      1. orch.setup_chunk_box asserts the chunk box doesn't already
+         exist, so two morpho deploys in the same orch collide.
+      2. Chunks store the ORIGINAL deploy's substituted main/storage
+         IDs in orch's __codebox_chunk_<i>. A second deploy reusing
+         the orch would re-execute chunks with the OLD test's IDs,
+         touching wrong boxes / wrong apps.
+    Module scoping previously hid bug #2: most failures in the full
+    suite were actually "test 2+ in a module inherits test 1's chunk
+    bytes" — passing in isolation, failing in full-suite."""
     from uros_dance import deploy_orchestrator
     return deploy_orchestrator(localnet.client.algod, account)
 
