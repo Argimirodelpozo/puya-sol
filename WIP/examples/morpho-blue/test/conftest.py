@@ -54,26 +54,36 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
         send_params: "au.SendParams | None" = None,
     ):
         from dataclasses import replace
-        # With every method split, main is a pure forwarding stub
-        # (main → orch → storage[chunk]). The user-code inner txns
-        # all execute inside the chunk (on storage's account) and the
-        # chunk-side TEAL patch in `UrosSplitter` overrides their
-        # Sender to main_addr. AVM requires main_addr to be in the
-        # txn's foreign-accounts pool for that Sender override to
-        # succeed.
+        # All-methods-split: main is a pure forwarding stub
+        # (main → orch → storage[chunk]). Chunks emit user-code inner
+        # txns with Sender=main_addr; AVM needs main_addr in the outer
+        # txn's foreign-accounts pool.
         params = replace(
             params,
             account_references=_merge_refs(
                 params.account_references, [main_addr]),
             extra_fee=params.extra_fee or au.AlgoAmount(micro_algo=20_000),
         )
-        # Force populate=True regardless of what the test passed.
-        # Tests using NO_POPULATE bypass auto-resource resolution, which
-        # the dance needs (additional foreign apps reached by simulate-
-        # tracing chunk dispatch and box refs for boxes the chunk
-        # touches but the test caller doesn't know about).
+        # Always force populate. Tests' NO_POPULATE doesn't account for
+        # the dance's resource overhead.
         send_params = au.SendParams(populate_app_call_resources=True)
-        return original_call(params, send_params)
+        # The dance carries ~5 boxes (orch's __codebox_default,
+        # __codebox_chunk_N, csel_<sel>, clen_<sel>) + 2 apps
+        # (storage_id, orch_id) + 1 account (main_addr). That leaves
+        # at most ~0 user refs in a single txn before the 8-cap. Pad
+        # with a budget-call group so populate can spread refs:
+        # algokit groups consume 8 refs each, so adding N padding
+        # txns yields 8*(N+1) total slots.
+        composer = client._algorand.new_group()
+        for _ in range(2):  # 2 noop calls → 3 × 8 = 24 ref slots
+            import os
+            pad = au.AppClientMethodCallParams(
+                method="owner",
+                note=os.urandom(8),
+            )
+            composer.add_app_call_method_call(client.params.call(pad))
+        composer.add_app_call_method_call(client.params.call(params))
+        return composer.send(send_params)
 
     sender_accessor.call = patched_call  # type: ignore[assignment]
 
