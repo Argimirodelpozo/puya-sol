@@ -1,9 +1,52 @@
-# Semantic Test Status — v262
+# Semantic Test Status — v263
 
-**Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
-(unchanged vs v260; v262's puya-sol changes are splitter-side and
-biguint-narrowing-side, neither fires on any semantic test — sampled
-tests pass at baseline rates).
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 1 skipped / 20 xfailed =
+**1189/1322 (90.0%)**.
+
+vs v260's 1188/1322: **+1 pass, 0 regressions**. The flip is
+`tests/types/test_types.py::test_packing_signed_types` — was failing
+with TimeoutError in v260 under load (per v260 notes), passes
+cleanly in v263. Possibly also a clean-up from v261's `b%` narrowing
+fix (signed-types-packing exercises uintN narrowing extensively),
+but the v260 note about the test being a flake makes that
+indeterminate from one run.
+
+The four puya-sol changes shipped this session (v261-v263) — `byte[]`
+selector unification, chunk internal-helper Sender patch, `b%`
+biguint narrowing, og_setup app-caller convention, two-pass
+patchChunkMethodBody, `>4096B` gate removal in PureHelperExtractor —
+collectively introduced **zero semantic-test regressions**.
+
+## v263 puya-sol changes (vs v262)
+
+Two changes, both in the pure-helper extraction path (rust-honk
+unblocker):
+
+**Fix A** (`PureHelperExtractor.cpp::buildInnerCallReplacement`):
+removed the `totalSize > 4096 B` skip-gate that was blocking lifting
+of any pure helper returning a struct larger than the AVM
+max-bytes-per-stack-element cap. Effect: `TranscriptLib.loadProof`
+(return type `Proof memory` = 14080 B) now lifts to a sidecar,
+shrinking HonkVerifier main from 11408 B → 6915 B (fits 4-page AVM
+cap ✓). Caller-side TEAL still emits the >4 KB concat-LastLogs that
+would fail at runtime; runtime path will need the blob-write
+redesign described in `[[rust-honk-status]]`.
+
+**Fix B** (`UrosSplitter.cpp::makeTxnSenderExpr` + two-pass
+`patchChunkMethodBody`): `og_setup` now stores `__og_sender` as the
+puya-sol address convention `bzero(24) ++ itob(caller_app_id)` when
+the caller is another app, so chunk-side `extract_uint64(msg.sender, 24)`
+recovers the right app_id for cross-contract callbacks. Plus the
+walker pass now applies leaf rewrites (Txn.Sender, msg.value,
+address(this)) BEFORE the inner-txn-wrap pass — the walker's visitSlot
+stops descending after a replacement, so the order matters when
+inner-txn fields reference `Txn.Sender` inside.
+
+## v262 puya-sol changes (vs v260)
+
+(Documented earlier in CURRENT.md — kept for diff continuity. The
+4 fixes there + the 2 above add up to all morpho-blue → 115/115
+and rust-honk main → fits in 8 KB.)
 
 **Morpho-blue: 115/115 passing ✓** (was 36/115 at session start;
 +79 tests unblocked via 4 compiler fixes + harness improvements).
