@@ -1,12 +1,35 @@
-# Semantic Test Status — v260
+# Semantic Test Status — v261
 
 **Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
+(unchanged vs v260; v261's only puya-sol change is splitter-side and
+doesn't fire on any semantic test).
 
-vs v259: 1 flip each way (both flakes — pass individually). v260's
-`test_packing_signed_types` failed with TimeoutError under a 57-minute
-slow run (vs typical 30 min — localnet throughput variance). v259's
-`test_storage_signed` recovered. Real-world refactor outcome is
-bit-identical to v258.
+## v261 puya-sol changes (vs v260)
+
+`src/splitter/UrosSplitter.cpp::buildSelectorSig` now emits `byte[]`
+for variable-length `BytesWType` arguments (was: falling through to
+`wtypeToABIName` → `_type->name()` = `"bytes"`). The chunk-forward
+stub in main and the orch's csel registration both use the canonical
+ARC4 `byte[]` form now, so the selectors agree.
+
+Morpho-blue impact:
+- `supply(...,byte[])` previously had mismatched main-stub-forward
+  selector `0x9bdec4f7` (`bytes` form) vs registered csel `0xfef86d49`
+  (`byte[]` form). Now both are `0xfef86d49`.
+- Morpho-blue test suite: 36/115 → 83/115 passing (+47). The remaining
+  27 fail on chunk-internal subroutines reading raw `txn Sender`
+  instead of main's `__og_sender` — the shallow-cloned bodies aren't
+  patched by `patchChunkMethodBody`. See [[morpho-blue-status]].
+
+Also bumped morpho-blue test harness:
+- `conftest.py`: `orch_app_id` fixture switched from `scope="module"`
+  to `scope="function"`. Module-scope was sharing test-1's substituted
+  main/storage IDs in chunk-codebox bytes across all tests in the
+  module — every test 2+ ran against test-1's stale apps.
+- `test_morpho.py::call_with_budget`: rewritten to hoist user-passed
+  box/app refs onto padding txns instead of leaving them on the real
+  call (AVM v9+ group-share admits the access from any txn; real call
+  stays under 8-ref cap).
 
 ## v260 puya-sol changes (vs v259)
 
