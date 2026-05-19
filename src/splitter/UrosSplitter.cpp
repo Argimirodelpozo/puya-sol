@@ -143,6 +143,13 @@ std::string buildSelectorSig(awst::ContractMethod const& _m)
 			auto const* bw = static_cast<awst::BytesWType const*>(_t);
 			if (bw->length().has_value())
 				return "byte[" + std::to_string(*bw->length()) + "]";
+			// Variable-length `bytes`: emit "byte[]" to match the
+			// chunk-side ABI router signature (registered with the
+			// orch). wtypeToABIName's fallback returns the raw type
+			// name "bytes", giving a different selector — the
+			// chunk-forward stub would push a selector that orch's
+			// csel_<sel> box never sees, → dispatch box_get assert.
+			return "byte[]";
 		}
 		return builder::TypeCoercion::wtypeToABIName(_t);
 	};
