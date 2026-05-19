@@ -1,12 +1,32 @@
-# Semantic Test Status — v263
+# Semantic Test Status — v264
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 1 skipped / 20 xfailed =
 **1189/1322 (90.0%)**.
 
+vs v260's 1188/1322: **+1 pass, 0 regressions**. Same flip as v263 —
+`tests/types/test_types.py::test_packing_signed_types`.
+
+## v264 puya-sol changes (vs v263)
+
+Three pure refactors (zero outcome diff vs v263):
+
+- `1535867dd` `resolveCursorContext` phase-extracted from
+  `SolIndexAccess::handleMappingAccess` (+23 LOC; readability win,
+  not LOC win — separates cursor-walk from mapping-key derivation).
+- `3cc187407` `awst::makeCreateInnerTransaction` adopted at 8 call
+  sites (PureHelperExtractor + UrosSplitter), −16 LOC.
+- `a7a0f3a56` `awst::makeSingleEvaluation` adopted at 3 sites;
+  added + adopted `awst::makeCommaExpression` at 2 sites, −5 LOC.
+
+Net: +2 LOC across 3 commits (the cursor-context extract increases
+file size but materially improves readability of the 200-line
+mapping handler). All three are pure refactors — same TEAL output
+mod TXIDs/sig-bytes nonce-driven only.
+
 vs v260's 1188/1322: **+1 pass, 0 regressions**. The flip is
 `tests/types/test_types.py::test_packing_signed_types` — was failing
 with TimeoutError in v260 under load (per v260 notes), passes
-cleanly in v263. Possibly also a clean-up from v261's `b%` narrowing
+cleanly in v263+v264. Possibly also a clean-up from v261's `b%` narrowing
 fix (signed-types-packing exercises uintN narrowing extensively),
 but the v260 note about the test being a flake makes that
 indeterminate from one run.
