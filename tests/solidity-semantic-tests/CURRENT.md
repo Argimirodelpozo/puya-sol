@@ -1,27 +1,51 @@
 # Semantic Test Status — v261
 
 **Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
-(unchanged vs v260; v261's only puya-sol change is splitter-side and
-doesn't fire on any semantic test).
+(unchanged vs v260; v261's puya-sol changes are splitter-side and
+don't fire on any semantic test — sampled tests pass at baseline rates).
 
 ## v261 puya-sol changes (vs v260)
 
-`src/splitter/UrosSplitter.cpp::buildSelectorSig` now emits `byte[]`
-for variable-length `BytesWType` arguments (was: falling through to
-`wtypeToABIName` → `_type->name()` = `"bytes"`). The chunk-forward
-stub in main and the orch's csel registration both use the canonical
-ARC4 `byte[]` form now, so the selectors agree.
+Two splitter fixes that unblock morpho-blue without touching the
+semantic test baseline:
 
-Morpho-blue impact:
-- `supply(...,byte[])` previously had mismatched main-stub-forward
-  selector `0x9bdec4f7` (`bytes` form) vs registered csel `0xfef86d49`
-  (`byte[]` form). Now both are `0xfef86d49`.
-- Morpho-blue test suite: 36/115 → 83/115 passing (+47). The remaining
-  27 fail on chunk-internal subroutines reading raw `txn Sender`
-  instead of main's `__og_sender` — the shallow-cloned bodies aren't
-  patched by `patchChunkMethodBody`. See [[morpho-blue-status]].
+**Fix #1** (`buildSelectorSig`): emit `byte[]` for variable-length
+`BytesWType` arguments (was: falling through to `wtypeToABIName` →
+`_type->name()` = `"bytes"`). The chunk-forward stub in main and the
+orch's csel registration both use the canonical ARC4 `byte[]` form
+now, so the selectors agree.
 
-Also bumped morpho-blue test harness:
+**Fix #2** (`patchChunkMethodBody` on internal helpers): the pass
+that rewrites `txn Sender` → `__og_sender` and other chunk-context
+fixups now runs over internal helpers reachable from a chunk's live
+ABI methods (`_isSenderAuthorized`, `_isHealthy`, math libs, etc.),
+not just the ABI methods themselves. Was: helpers kept raw `txn
+Sender` → resolved to orch's app account on chunk-on-storage context
+→ auth checks for borrow/withdraw/liquidate failed. Now: helpers
+read main's `__og_sender`, holding the user's identity.
+
+Sharing of helper body shared_ptr with mainContract isn't a
+correctness issue under all-methods-split: main's ABI methods are
+stubbed and never call these helpers, so puya DCE drops them from
+main's bytecode. Acknowledged narrow regression risk for partial-
+split contracts is documented in-source.
+
+## Morpho-blue impact: 36/115 → 102/115 passing (+66)
+
+- Selector unification (Fix #1): +47 tests (supply/withdraw/borrow
+  dispatch).
+- Internal-helper Sender patch (Fix #2): +18 tests (auth-gated flows
+  including TestByShares, TestAuthorizationDelegation, TestLiquidation).
+- Test harness changes that also contributed: function-scoped orch
+  fixture, ref hoisting in `call_with_budget`.
+
+Remaining 8 fail + 1 error all share the SAME failure: `pushint 16;
+<=; assert // overflow` inside the inlined `_accrueInterest` body
+called from `setFee` / `accrueInterest` / `setAuthorizationWithSig`.
+Likely a `uint128(...)` cast where the biguint encoding produces
+more than 16 bytes; needs source-mapped chunk TEAL to pinpoint.
+
+Test harness changes (v261):
 - `conftest.py`: `orch_app_id` fixture switched from `scope="module"`
   to `scope="function"`. Module-scope was sharing test-1's substituted
   main/storage IDs in chunk-codebox bytes across all tests in the
