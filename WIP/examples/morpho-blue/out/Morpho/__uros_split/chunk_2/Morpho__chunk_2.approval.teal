@@ -2078,8 +2078,12 @@ _accrueInterest_after_if_else@2:
     frame_dig 1
     pushint 24
     extract_uint64
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
+    itxn_field Sender
     intc_2 // 0
     itxn_field OnCompletion
     intc_2 // 0

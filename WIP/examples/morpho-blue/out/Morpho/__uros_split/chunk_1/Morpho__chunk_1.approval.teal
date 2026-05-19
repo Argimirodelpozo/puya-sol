@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 16 TMPL_UROS_MAIN_APP_ID 160
-    bytecblock 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff "market" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__og_sender" 0x01 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "position" "__og_value" 0x0f4240 0x151f7c7500 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x87109a38
+    intcblock 32 1 0 TMPL_UROS_MAIN_APP_ID 160
+    bytecblock 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff "__og_sender" "market" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x01 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "position" "__og_value" 0x0f4240 0x151f7c7500 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x87109a38
     intc_2 // 0
     dupn 17
     pushint 4096
@@ -158,7 +158,7 @@ main_extSloads_route@25:
 main_accrueInterest_route@24:
     txna ApplicationArgs 1
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     intc_1 // 1
@@ -219,7 +219,7 @@ main_flashLoan_route@21:
 main_liquidate_route@20:
     txna ApplicationArgs 1
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -256,7 +256,7 @@ main_withdrawCollateral_route@19:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -277,7 +277,7 @@ main_withdrawCollateral_route@19:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -286,7 +286,7 @@ main_withdrawCollateral_route@19:
     uncover 3
     callsub MarketParamsLib.id
     dig 1
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     box_get
@@ -320,7 +320,7 @@ main_withdrawCollateral_route@19:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -345,10 +345,10 @@ main_withdrawCollateral_route@19:
     extract 32 16
     dig 1
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     uncover 2
     b|
@@ -364,8 +364,8 @@ main_withdrawCollateral_route@19:
     callsub _isHealthy(2125,2128,addr)
     swap
     assert // insufficient collateral
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     uncover 2
@@ -392,7 +392,7 @@ main_supplyCollateral_route@18:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -423,7 +423,7 @@ main_supplyCollateral_route@18:
     dup
     cover 4
     bury 14
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -433,7 +433,7 @@ main_supplyCollateral_route@18:
     callsub MarketParamsLib.id
     bury 12
     dup
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     box_get
@@ -465,7 +465,7 @@ main_supplyCollateral_route@18:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -481,10 +481,10 @@ main_supplyCollateral_route@18:
     extract 32 16
     dig 1
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     uncover 2
     b|
@@ -495,8 +495,8 @@ main_supplyCollateral_route@18:
     swap
     concat
     box_put
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     concat
@@ -532,7 +532,7 @@ main_supplyCollateral_route@18:
     txn Sender
     pushint 24
     extract_uint64
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     pushint 6
@@ -553,11 +553,11 @@ main_supplyCollateral_route@18:
 main_after_if_else@75:
     dig 7
     extract 32 32
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     dig 20
@@ -569,7 +569,7 @@ main_repay_route@17:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -608,7 +608,7 @@ main_repay_route@17:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     bury 14
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -620,7 +620,7 @@ main_repay_route@17:
     dup
     bury 14
     dup
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     dup
@@ -679,7 +679,7 @@ main_after_if_else@80:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -704,10 +704,10 @@ main_after_if_else@80:
     assert // overflow
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     swap
     dig 1
@@ -756,7 +756,7 @@ main_after_if_else@80:
     extract 32 16
     dig 3
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 3
@@ -788,7 +788,7 @@ main_after_if_else@80:
     callsub UtilsLib.toUint128
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 5
@@ -823,8 +823,8 @@ main_after_if_else@80:
     dup
     cover 2
     bury 21
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     dig 3
@@ -875,7 +875,7 @@ main_after_if_else@80:
     txn Sender
     pushint 24
     extract_uint64
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     pushint 6
@@ -896,11 +896,11 @@ main_after_if_else@80:
 main_after_if_else@82:
     dig 7
     extract 0 32
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     dig 13
@@ -937,7 +937,7 @@ main_borrow_route@16:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -972,7 +972,7 @@ main_borrow_route@16:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -984,7 +984,7 @@ main_borrow_route@16:
     dup
     bury 15
     dup
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     dup
@@ -1043,7 +1043,7 @@ main_after_if_else@87:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -1059,10 +1059,10 @@ main_after_if_else@87:
     assert // overflow
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     swap
     dig 1
@@ -1102,7 +1102,7 @@ main_after_if_else@87:
     extract 32 16
     dig 3
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 3
@@ -1138,7 +1138,7 @@ main_after_if_else@87:
     extract 64 16
     dig 2
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 2
@@ -1184,8 +1184,8 @@ main_after_if_else@87:
     dig 2
     dig 1
     b|
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     dig 5
@@ -1248,7 +1248,7 @@ main_withdraw_route@15:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -1283,7 +1283,7 @@ main_withdraw_route@15:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -1295,7 +1295,7 @@ main_withdraw_route@15:
     dup
     bury 15
     dup
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     dup
@@ -1354,7 +1354,7 @@ main_after_if_else@92:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -1430,10 +1430,10 @@ main_after_if_else@92:
     extract 0 16
     dig 5
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     uncover 6
     dig 1
@@ -1479,7 +1479,7 @@ main_after_if_else@92:
     extract 48 16
     dig 4
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 4
@@ -1513,8 +1513,8 @@ main_after_if_else@92:
     dup
     dig 2
     b|
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     dig 4
@@ -1577,7 +1577,7 @@ main_supply_route@14:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -1616,7 +1616,7 @@ main_supply_route@14:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     bury 14
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -1628,7 +1628,7 @@ main_supply_route@14:
     dup
     bury 14
     dup
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     dup
@@ -1687,7 +1687,7 @@ main_after_if_else@97:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -1744,10 +1744,10 @@ main_after_if_else@97:
     extract 0 16
     dig 5
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     uncover 6
     dig 1
@@ -1784,7 +1784,7 @@ main_after_if_else@97:
     extract 48 16
     dig 4
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 4
@@ -1814,8 +1814,8 @@ main_after_if_else@97:
     dup
     cover 2
     bury 19
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
     dig 1
@@ -1866,7 +1866,7 @@ main_after_if_else@97:
     txn Sender
     pushint 24
     extract_uint64
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     pushint 6
@@ -1887,11 +1887,11 @@ main_after_if_else@97:
 main_after_if_else@99:
     dig 7
     extract 0 32
-    intc 4 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
     app_global_get_ex
     pop
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     dig 13
@@ -1928,10 +1928,10 @@ main_createMarket_route@13:
     txna ApplicationArgs 1
     dup
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     bytec 11 // "__og_value"
     app_global_get_ex
     pop
@@ -1981,7 +1981,7 @@ main_createMarket_route@13:
     select
     assert // LLTV not enabled
     dig 2
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     dup
@@ -2004,10 +2004,10 @@ main_createMarket_route@13:
     b&
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     b|
     dig 2
@@ -2052,7 +2052,7 @@ main_createMarket_route@13:
     dig 12
     pushint 24
     extract_uint64
-    intc 4 // TMPL_UROS_MAIN_APP_ID
+    intc_3 // TMPL_UROS_MAIN_APP_ID
     app_params_get AppAddress
     pop
     pushint 6
@@ -2086,7 +2086,7 @@ main___postInit_route@7:
 main_setFee_route@11:
     txna ApplicationArgs 1
     len
-    intc 5 // 160
+    intc 4 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
@@ -2517,7 +2517,10 @@ UtilsLib.zeroFloorSub:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho._isSenderAuthorized(onBehalf: bytes) -> uint64:
 _isSenderAuthorized:
     proto 1 1
-    txn Sender
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
+    app_global_get_ex
+    pop
     frame_dig -1
     ==
     bnz _isSenderAuthorized_bool_true@4
@@ -2533,7 +2536,10 @@ _isSenderAuthorized:
     bnz _isSenderAuthorized_bool_true@4
 
 _isSenderAuthorized_or_contd@3:
-    txn Sender
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 4 // "__og_sender"
+    app_global_get_ex
+    pop
     frame_dig -1
     pushbytes "isAuthorized"
     concat
@@ -2566,7 +2572,7 @@ _accrueInterest:
     global LatestTimestamp
     itob
     frame_dig -1
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     dup
@@ -2614,8 +2620,12 @@ _accrueInterest_after_if_else@2:
     frame_dig 1
     pushint 24
     extract_uint64
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
+    itxn_field Sender
     intc_2 // 0
     itxn_field OnCompletion
     intc_2 // 0
@@ -2656,10 +2666,10 @@ _accrueInterest_after_if_else@2:
     extract 64 16
     dig 2
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     dup
     frame_bury 0
@@ -2700,7 +2710,7 @@ _accrueInterest_after_if_else@2:
     extract 48 16
     dig 4
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 4
@@ -2766,7 +2776,7 @@ _accrueInterest_after_if_else@2:
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -2816,7 +2826,7 @@ _accrueInterest_after_if_else@2:
     extract 0 16
     dig 5
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 5
@@ -2888,10 +2898,10 @@ _accrueInterest_after_if_else@7:
     b&
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
-    intc_3 // 16
+    pushint 16
     bzero
     b|
     dig 2
@@ -2930,7 +2940,7 @@ _isHealthy(2125,2128,addr):
     sha256
     dup
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 32 16
@@ -2948,8 +2958,12 @@ _isHealthy(2125,2128,addr)_after_if_else@2:
     extract 64 32
     pushint 24
     extract_uint64
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
+    itxn_field Sender
     intc_2 // 0
     itxn_field OnCompletion
     intc_2 // 0
@@ -2962,13 +2976,13 @@ _isHealthy(2125,2128,addr)_after_if_else@2:
     extract 4 0
     frame_dig 0
     box_get
-    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
     extract 32 16
     frame_dig -2
-    bytec 4 // "market"
+    bytec 5 // "market"
     concat
     sha256
     box_get
