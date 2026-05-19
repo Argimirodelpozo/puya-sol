@@ -2828,33 +2828,45 @@ class TestAuthorizationWithSig:
             b"Authorization(address authorizer,address authorized,bool isAuthorized,uint256 nonce,uint256 deadline)"
         )
 
-        # On AVM: block.chainid → global CurrentApplicationID (uint64)
-        # address(this) → global CurrentApplicationAddress (32-byte Algorand app address)
-        chain_id = morpho_app_id
         # The Algorand app address = sha512_256("appID" + app_id.to_bytes(8, "big"))
         import hashlib
         app_addr_raw = hashlib.new("sha512_256", b"appID" + morpho_app_id.to_bytes(8, "big")).digest()
         verifying_contract = app_addr_raw  # 32 bytes, same as global CurrentApplicationAddress
 
-        # DOMAIN_SEPARATOR = keccak256(DOMAIN_TYPEHASH || itob(app_id) || app_address)
-        # On AVM: block.chainid → uint64 → itob (8 bytes), address(this) → 32-byte app address
+        # DOMAIN_SEPARATOR = keccak256(DOMAIN_TYPEHASH || chain_id_padded || app_address)
+        # puya-sol's lowering of `abi.encode(TYPEHASH, block.chainid, address(this))`:
+        # - block.chainid is hard-coded to 1 (single Algorand chain), padded to 32 bytes
+        # - address(this) is the 32-byte Algorand app address
+        # The chunk's TEAL emits the (TYPEHASH || chainid_padded_to_32) as a single
+        # `pushbytes 0x...0001` constant and concats with the dynamic app address.
+        chain_id = 1
         domain_data = (
             DOMAIN_TYPEHASH
-            + chain_id.to_bytes(8, "big")       # itob: 8 bytes, NOT 32
-            + verifying_contract                 # 32-byte Algorand app address
+            + chain_id.to_bytes(32, "big")       # uint256 padded: 32 bytes
+            + verifying_contract                  # 32-byte Algorand app address
         )
         domain_separator = keccak256_hash(domain_data)
 
-        # hashStruct = keccak256(AUTHORIZATION_TYPEHASH || struct_arc4_bytes)
-        # ARC4 struct encoding: address(32) + address(32) + bool(1, 0x80/0x00) + uint256(32) + uint256(32)
+        # hashStruct = keccak256(AUTHORIZATION_TYPEHASH || abi_encoded_auth_fields)
+        # puya-sol's lowering of `abi.encode(TYPEHASH, struct)` uses Solidity
+        # standard ABI form: each field padded to 32 bytes. The chunk's TEAL
+        # converts the 1-byte ARC4 bool to a 32-byte padded representation
+        # before the keccak — verified in chunk_0:220-289 concat chain.
+        bool_32 = (b"\x00" * 31) + (b"\x01" if is_authorized else b"\x00")
         auth_data = (
             AUTHORIZATION_TYPEHASH
-            + authorizer_addr_bytes              # uint8[32]: 32 bytes
-            + authorized_addr_bytes              # uint8[32]: 32 bytes
-            + (b"\x80" if is_authorized else b"\x00")  # ARC4 bool: 1 byte
+            + authorizer_addr_bytes              # address: 32 bytes
+            + authorized_addr_bytes              # address: 32 bytes
+            + bool_32                            # bool padded to 32 bytes
             + nonce.to_bytes(32, "big")          # uint256: 32 bytes
             + deadline.to_bytes(32, "big")       # uint256: 32 bytes
         )
+        # KNOWN MISMATCH: even with the corrected layouts above (chain_id=1
+        # padded to 32B, bool padded to 32B), the chunk's keccak digest still
+        # disagrees with this Python-side computation. Further debugging
+        # needs source-mapped chunk TEAL + a simulate trace at the
+        # ecrecover-compare site (chunk_0 pc=1714) to inspect the actual
+        # byte string the chunk hashes. Punted from v261.
         hash_struct = keccak256_hash(auth_data)
 
         # digest = keccak256("\x19\x01" + DOMAIN_SEPARATOR + hashStruct)
