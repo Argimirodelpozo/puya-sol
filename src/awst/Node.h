@@ -1530,6 +1530,16 @@ struct CommaExpression: Expression
 	std::vector<std::shared_ptr<Expression>> expressions;
 };
 
+// Empty CommaExpression with location and wtype set; caller fills expressions.
+inline std::shared_ptr<CommaExpression> makeCommaExpression(
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = std::make_shared<CommaExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	return node;
+}
+
 struct MethodConstant: Expression
 {
 	std::string nodeType() const override { return "MethodConstant"; }

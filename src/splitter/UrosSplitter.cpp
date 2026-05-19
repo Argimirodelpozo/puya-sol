@@ -278,12 +278,9 @@ std::shared_ptr<awst::Expression> decodeFromBytes(
 	// fields manually.
 	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_ret))
 	{
-		auto singleBytes = std::make_shared<awst::SingleEvaluation>();
-		singleBytes->sourceLocation = _loc;
-		singleBytes->wtype = awst::WType::bytesType();
-		singleBytes->source = std::move(_bytes);
 		static int seCounter = 0;
-		singleBytes->id = ++seCounter;
+		auto singleBytes = awst::makeSingleEvaluation(
+			std::move(_bytes), awst::WType::bytesType(), ++seCounter, _loc);
 
 		auto tuple = awst::makeTupleExpression(_ret, _loc);
 

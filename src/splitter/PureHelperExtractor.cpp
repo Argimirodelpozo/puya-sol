@@ -215,12 +215,9 @@ std::shared_ptr<awst::Expression> decodeArgFromBytes(
 		// SingleEvaluation so multiple field-decodes don't re-evaluate
 		// the source expression (which may have side effects, like
 		// `extract` of `itxn LastLog`).
-		auto se = std::make_shared<awst::SingleEvaluation>();
-		se->sourceLocation = _loc;
-		se->wtype = awst::WType::bytesType();
-		se->source = std::move(_bytes);
 		static int seCounter = 0;
-		se->id = ++seCounter;
+		auto se = awst::makeSingleEvaluation(
+			std::move(_bytes), awst::WType::bytesType(), ++seCounter, _loc);
 
 		auto out = awst::makeTupleExpression(_t, _loc);
 		int offset = 0;
@@ -282,12 +279,9 @@ std::shared_ptr<awst::Expression> encodeValueToBytes(
 		// Walk fields, concat per-field encoded bytes. SingleEvaluation
 		// the source so the per-field TupleItemExpression reads don't
 		// re-trigger any side effects.
-		auto se = std::make_shared<awst::SingleEvaluation>();
-		se->sourceLocation = _loc;
-		se->wtype = _t;
-		se->source = std::move(_value);
 		static int seCounter = 1000;
-		se->id = ++seCounter;
+		auto se = awst::makeSingleEvaluation(
+			std::move(_value), _t, ++seCounter, _loc);
 
 		std::shared_ptr<awst::Expression> acc;
 		for (size_t i = 0; i < tup->types().size(); ++i)
@@ -723,9 +717,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	// (submit, decode) sequencing via CommaExpression so the whole
 	// thing is one expression slot the original SubroutineCall site
 	// can be drop-in replaced with.
-	auto comma = std::make_shared<awst::CommaExpression>();
-	comma->sourceLocation = _loc;
-	comma->wtype = _retType;
+	auto comma = awst::makeCommaExpression(_retType, _loc);
 	comma->expressions.push_back(std::move(submit));
 	comma->expressions.push_back(std::move(decoded));
 	return comma;
@@ -841,9 +833,7 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 	strip->stackArgs.push_back(std::move(readLog));
 	auto decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
 
-	auto comma = std::make_shared<awst::CommaExpression>();
-	comma->sourceLocation = _loc;
-	comma->wtype = _retType;
+	auto comma = awst::makeCommaExpression(_retType, _loc);
 	comma->expressions.push_back(std::move(submit));
 	comma->expressions.push_back(std::move(decoded));
 	return comma;
