@@ -2847,26 +2847,25 @@ class TestAuthorizationWithSig:
         )
         domain_separator = keccak256_hash(domain_data)
 
-        # hashStruct = keccak256(AUTHORIZATION_TYPEHASH || abi_encoded_auth_fields)
-        # puya-sol's lowering of `abi.encode(TYPEHASH, struct)` uses Solidity
-        # standard ABI form: each field padded to 32 bytes. The chunk's TEAL
-        # converts the 1-byte ARC4 bool to a 32-byte padded representation
-        # before the keccak — verified in chunk_0:220-289 concat chain.
-        bool_32 = (b"\x00" * 31) + (b"\x01" if is_authorized else b"\x00")
+        # hashStruct = keccak256(AUTHORIZATION_TYPEHASH || encoded_auth_fields)
+        # puya-sol's lowering of `abi.encode(TYPEHASH, struct)` uses a
+        # PARTIALLY-Solidity-ABI form: addresses + uint256 fields are
+        # padded to 32 bytes, but the ARC4 bool is converted via
+        # getbit→itob to its uint64-as-itob form (8 bytes), NOT padded
+        # to 32. Verified by simulate trace of the chunk's keccak input
+        # at chunk_0 pc=1611 — captured 168-byte hashStruct input:
+        #   TYPEHASH(32) + authorizer(32) + authorized(32) +
+        #   bool_uint64_itob(8) + nonce_uint256(32) + deadline_uint256(32)
+        # = 168 bytes total.
+        bool_8 = (1 if is_authorized else 0).to_bytes(8, "big")
         auth_data = (
             AUTHORIZATION_TYPEHASH
             + authorizer_addr_bytes              # address: 32 bytes
             + authorized_addr_bytes              # address: 32 bytes
-            + bool_32                            # bool padded to 32 bytes
+            + bool_8                             # bool as uint64-itob: 8 bytes
             + nonce.to_bytes(32, "big")          # uint256: 32 bytes
             + deadline.to_bytes(32, "big")       # uint256: 32 bytes
         )
-        # KNOWN MISMATCH: even with the corrected layouts above (chain_id=1
-        # padded to 32B, bool padded to 32B), the chunk's keccak digest still
-        # disagrees with this Python-side computation. Further debugging
-        # needs source-mapped chunk TEAL + a simulate trace at the
-        # ecrecover-compare site (chunk_0 pc=1714) to inspect the actual
-        # byte string the chunk hashes. Punted from v261.
         hash_struct = keccak256_hash(auth_data)
 
         # digest = keccak256("\x19\x01" + DOMAIN_SEPARATOR + hashStruct)
@@ -4443,8 +4442,8 @@ class TestMediumGaps:
             localnet, morpho,
             au.AppClientMethodCallParams(
                 method="setAuthorizationWithSig",
-                args=[(list(authorizer_addr), list(authorized_bytes), True, 0, 2**64 - 1),
-                      (v, list(r), list(s))],
+                args=[(bytes(authorizer_addr), bytes(authorized_bytes), True, 0, 2**64 - 1),
+                      (v, bytes(r), bytes(s))],
                 box_references=refs,
             ),
             budget_calls=3,
@@ -4459,8 +4458,8 @@ class TestMediumGaps:
             localnet, morpho,
             au.AppClientMethodCallParams(
                 method="setAuthorizationWithSig",
-                args=[(list(authorizer_addr), list(authorized_bytes), False, 1, 2**64 - 1),
-                      (v, list(r), list(s))],
+                args=[(bytes(authorizer_addr), bytes(authorized_bytes), False, 1, 2**64 - 1),
+                      (v, bytes(r), bytes(s))],
                 box_references=refs,
             ),
             budget_calls=3,
