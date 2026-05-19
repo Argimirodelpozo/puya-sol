@@ -30,20 +30,26 @@ stubbed and never call these helpers, so puya DCE drops them from
 main's bytecode. Acknowledged narrow regression risk for partial-
 split contracts is documented in-source.
 
-## Morpho-blue impact: 36/115 → 102/115 passing (+66)
+## Morpho-blue impact: 36/115 → 107/115 passing (+71)
 
-- Selector unification (Fix #1): +47 tests (supply/withdraw/borrow
-  dispatch).
-- Internal-helper Sender patch (Fix #2): +18 tests (auth-gated flows
-  including TestByShares, TestAuthorizationDelegation, TestLiquidation).
-- Test harness changes that also contributed: function-scoped orch
-  fixture, ref hoisting in `call_with_budget`.
+- Selector unification (Fix #1): +47 (supply/withdraw/borrow dispatch).
+- Internal-helper Sender patch (Fix #2): +18 (auth-gated flows).
+- **Fix #3: `b%` (mod) instead of `b&` (mask) for biguint narrowing**
+  (`SolTypeConversion::applyNarrowingMask`) — AVM `b&` returns
+  `max(len(a), len(b))` bytes WITHOUT stripping leading zeros, so
+  `uint128(uint256)` cast left a 32-byte result that failed downstream
+  `to_fixed_size`'s `len <= 16` check. `b%` with `2^targetBits`
+  divisor gives the minimum-length representation. Puya can't fold
+  `b% x non-zero-const` for non-constant inputs. +5 tests
+  (setFee, accrueInterest, governance edge cases).
+- Test harness changes: function-scoped orch, ref hoisting in
+  `call_with_budget`, accrue_twice via call_with_budget (was
+  bypassing dance), sig test address encoding fix (list → bytes).
 
-Remaining 8 fail + 1 error all share the SAME failure: `pushint 16;
-<=; assert // overflow` inside the inlined `_accrueInterest` body
-called from `setFee` / `accrueInterest` / `setAuthorizationWithSig`.
-Likely a `uint128(...)` cast where the biguint encoding produces
-more than 16 bytes; needs source-mapped chunk TEAL to pinpoint.
+Remaining 4 failures: 2 localnet load flakes (pass in isolation) +
+2 EIP-712 signature verification tests (compiler-side `abi.encode`
+bytes layout doesn't match what `eth_keys` produces — requires
+source-mapped chunk TEAL trace).
 
 Test harness changes (v261):
 - `conftest.py`: `orch_app_id` fixture switched from `scope="module"`
