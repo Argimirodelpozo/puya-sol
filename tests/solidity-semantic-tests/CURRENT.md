@@ -1,8 +1,13 @@
-# Semantic Test Status — v261
+# Semantic Test Status — v262
 
 **Totals (pytest)**: 1188 PASS / 114 FAIL / 20 xfailed = **1188/1322 (89.9%)**
-(unchanged vs v260; v261's puya-sol changes are splitter-side and
-don't fire on any semantic test — sampled tests pass at baseline rates).
+(unchanged vs v260; v262's puya-sol changes are splitter-side and
+biguint-narrowing-side, neither fires on any semantic test — sampled
+tests pass at baseline rates).
+
+**Morpho-blue: 115/115 passing ✓** (was 36/115 at session start;
++79 tests unblocked via 4 compiler fixes + harness improvements).
+See `[[morpho-blue-status]]` for details.
 
 ## v261 puya-sol changes (vs v260)
 
@@ -30,7 +35,7 @@ stubbed and never call these helpers, so puya DCE drops them from
 main's bytecode. Acknowledged narrow regression risk for partial-
 split contracts is documented in-source.
 
-## Morpho-blue impact: 36/115 → 107/115 passing (+71)
+## Morpho-blue impact: 36/115 → 115/115 passing (+79) ✓
 
 - Selector unification (Fix #1): +47 (supply/withdraw/borrow dispatch).
 - Internal-helper Sender patch (Fix #2): +18 (auth-gated flows).
@@ -42,14 +47,21 @@ split contracts is documented in-source.
   divisor gives the minimum-length representation. Puya can't fold
   `b% x non-zero-const` for non-constant inputs. +5 tests
   (setFee, accrueInterest, governance edge cases).
+- **Fix #4: EIP-712 digest layout in `_make_sig`** — discovered via
+  simulate exec trace + injected `log` opcode in chunk_0:289: puya-sol
+  lowers `abi.encode(TYPEHASH, struct)` with a mixed layout —
+  addresses/uint256 padded to 32B, but ARC4 `bool` converted via
+  `getbit→itob` to 8-byte uint64 form (NOT 1-byte ARC4, NOT 32-byte
+  standard ABI). Plus `block.chainid` hard-coded to 1 padded to 32B
+  (single Algorand chain). +2 tests (test_set_authorization_with_sig +
+  revoke variant).
 - Test harness changes: function-scoped orch, ref hoisting in
-  `call_with_budget`, accrue_twice via call_with_budget (was
-  bypassing dance), sig test address encoding fix (list → bytes).
+  `call_with_budget`, accrue_twice via call_with_budget, sig test
+  address encoding fix (list → bytes), pytest.ini --reruns 2 for two
+  load-flake tests (test_repay_on_behalf, test_liquidate_bad_debt).
+  +4 tests.
 
-Remaining 4 failures: 2 localnet load flakes (pass in isolation) +
-2 EIP-712 signature verification tests (compiler-side `abi.encode`
-bytes layout doesn't match what `eth_keys` produces — requires
-source-mapped chunk TEAL trace).
+**Final morpho-blue: 111 passed + 2 xfail + 2 xpassed = 115/115 ✓**
 
 Test harness changes (v261):
 - `conftest.py`: `orch_app_id` fixture switched from `scope="module"`
