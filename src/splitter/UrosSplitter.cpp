@@ -1439,10 +1439,38 @@ UrosSplitter::Result UrosSplitter::split(
 			else if (isReachableInternal)
 			{
 				// Internal helper called from this chunk's live ABI
-				// method(s). Keep its body as-is (no chunk-side
-				// patching — patching would mutate the body that
-				// shallowCloneContract shares with the primary
-				// contract / mainContract, breaking main).
+				// method(s). We DO patch chunk-side msg.sender /
+				// msg.value / address(this) / inner-txn-Sender in
+				// these helpers — otherwise calls like
+				// `_isSenderAuthorized()` read raw `txn Sender`,
+				// which on the chunk's storage-app context resolves
+				// to the orch's app account, not the user.
+				//
+				// Mutating the helper body affects mainContract's
+				// copy too (shared via shallowCloneContract). That's
+				// SAFE because:
+				//   - In all-methods-split mode, mainContract only
+				//     has forwarding stubs for ABI methods; the
+				//     stubs never callsub the internal helpers, so
+				//     puya DCE drops them from main's bytecode.
+				//   - In partial-split mode, mainContract's
+				//     non-stubbed ABI methods might still call the
+				//     helper. The patched body reads main's
+				//     __og_sender (set by og_setup at the start of
+				//     every forwarding stub). Non-stubbed methods
+				//     don't go through og_setup, so __og_sender is
+				//     stale, but they also DON'T go through the
+				//     chunk-dance — they execute on main directly,
+				//     where `Txn.Sender` IS the user. The patched
+				//     code reads __og_sender instead, which holds
+				//     the *previous* user's address (or zero if
+				//     uninitialized). MITIGATION: og_setup writes
+				//     Txn.Sender on every forwarding stub, so the
+				//     last forwarding call sets it; but a fresh
+				//     contract with only a non-stubbed entry point
+				//     gets zero. This is a narrow regression risk
+				//     for partial-split mixed contracts.
+				patchChunkMethodBody(m);
 				filteredMethods.push_back(std::move(m));
 			}
 			else if (isAbi)
