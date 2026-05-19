@@ -1,0 +1,181 @@
+{
+    "name": "UrosStorage",
+    "structs": {},
+    "methods": [
+        {
+            "name": "init",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [
+                    "NoOp"
+                ],
+                "call": []
+            },
+            "readonly": false,
+            "desc": "One-time AppCreate anchor.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "set_orch",
+            "args": [
+                {
+                    "type": "uint64",
+                    "name": "orch_app_id"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Pin which orchestrator app may swap in chunks. Call once\nright after AppCreate.\nNote: __storage's own __init__ never ran here \u2014 AppCreate was for main's bytecode (so the user contract's state-var inits run on __storage). Then the harness UpdateApplications to this thin default. So orch_app_id starts uninitialized; we just write it without checking \u2014 the deployer's first call sets it. After this, only the pinned orch can UpdateApplication per __delegate_update's sender check.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "__delegate_update",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "UpdateApplication"
+                ]
+            },
+            "readonly": false,
+            "desc": "The only path through which a chunk can be installed. Caller\nmust be the pinned orch app's address; any other sender is rejected. The new program bytes ride on the inner txn's approval_program field \u2014 this method's body never reads them.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "__rekey_to_main",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "main_addr"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Rekey __storage's app account to main_addr. After this,\nmain has signing authority over __storage's account, so the dance can issue inner txns with Sender=__storage_addr from main's stub (the bidirectional half of the mirror rekey \u2014 main's other half is __rekey_to_storage on main itself).\nCalled once at deploy time, paired with the main->__storage rekey. No caller-auth check; the deploy harness must call it before any user-facing txns can land. After both rekeys are in place, neither contract can re-rekey itself: any inner pay txn with Sender=CurrentApplicationAddress no longer satisfies AVM's authForSender check. So the bootstrap is a one-shot.",
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "desc": "State holder for split contracts. Default bytecode admits\n    UpdateApplication from orch and rejects everything else.",
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 1,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {
+                "orch_app_id": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "b3JjaF9hcHBfaWQ="
+                }
+            },
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        122
+                    ],
+                    "errorMessage": "application exists"
+                },
+                {
+                    "pc": [
+                        119
+                    ],
+                    "errorMessage": "check self.orch_app_id exists"
+                },
+                {
+                    "pc": [
+                        135
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.static_array<arc4.uint8, 32>"
+                },
+                {
+                    "pc": [
+                        107
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.uint64"
+                },
+                {
+                    "pc": [
+                        124
+                    ],
+                    "errorMessage": "uros_storage: only orch may update"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxIDAKICAgIGJ5dGVjYmxvY2sgIm9yY2hfYXBwX2lkIgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6NjEtNjMKICAgIC8vICMgUGlubmVkIGF0IGRlcGxveSB0aW1lIHZpYSBzZXRfb3JjaCgpLiBVcGRhdGVBcHBsaWNhdGlvbiBvbmx5CiAgICAvLyAjIGFjY2VwdGVkIHdoZW4gc2VuZGVyID09IG9yY2hfYXBwJ3MgYWRkcmVzcy4KICAgIC8vIHNlbGYub3JjaF9hcHBfaWQgPSBVSW50NjQoMCkKICAgIGJ5dGVjXzAgLy8gIm9yY2hfYXBwX2lkIgogICAgaW50Y18xIC8vIDAKICAgIGFwcF9nbG9iYWxfcHV0CgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjU2CiAgICAvLyBjbGFzcyBVcm9zU3RvcmFnZShBUkM0Q29udHJhY3QpOgogICAgcHVzaGJ5dGVzIDB4ZGM1ZTM3OTggLy8gbWV0aG9kICJfX2RlbGVnYXRlX3VwZGF0ZSgpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fX19kZWxlZ2F0ZV91cGRhdGVfcm91dGVANAoKbWFpbl9zd2l0Y2hfY2FzZV9uZXh0QDU6CiAgICAvLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvc3JjL3NwbGl0dGVyL3Vyb3Nfc3RvcmFnZS5weTo1NgogICAgLy8gY2xhc3MgVXJvc1N0b3JhZ2UoQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJ6IG1haW5fY3JlYXRlX05vT3BAMTAKICAgIHB1c2hieXRlc3MgMHhkNWFmNmY2YyAweDliYWIzNjgzIC8vIG1ldGhvZCAic2V0X29yY2godWludDY0KXZvaWQiLCBtZXRob2QgIl9fcmVrZXlfdG9fbWFpbihhZGRyZXNzKXZvaWQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBzZXRfb3JjaCBfX3Jla2V5X3RvX21haW4KICAgIGVycgoKbWFpbl9jcmVhdGVfTm9PcEAxMDoKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjU2CiAgICAvLyBjbGFzcyBVcm9zU3RvcmFnZShBUkM0Q29udHJhY3QpOgogICAgcHVzaGJ5dGVzIDB4ODNmMTQ3NDggLy8gbWV0aG9kICJpbml0KCl2b2lkIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9pbml0X3JvdXRlQDExCiAgICBlcnIKCm1haW5faW5pdF9yb3V0ZUAxMToKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjY1CiAgICAvLyBAYXJjNC5hYmltZXRob2QoY3JlYXRlPSJyZXF1aXJlIikKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fX19kZWxlZ2F0ZV91cGRhdGVfcm91dGVANDoKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjgzCiAgICAvLyBAYXJjNC5hYmltZXRob2QoYWxsb3dfYWN0aW9ucz1bIlVwZGF0ZUFwcGxpY2F0aW9uIl0pCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBwdXNoaW50IDQgLy8gVXBkYXRlQXBwbGljYXRpb24KICAgID09CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgJiYKICAgIGFzc2VydAogICAgYiBfX2RlbGVnYXRlX3VwZGF0ZQoKCi8vIHVyb3Nfc3RvcmFnZS5Vcm9zU3RvcmFnZS5zZXRfb3JjaFtyb3V0aW5nXSgpIC0+IHZvaWQ6CnNldF9vcmNoOgogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6NjkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBsZW4KICAgIHB1c2hpbnQgOAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50NjQKICAgIGJ0b2kKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjgxCiAgICAvLyBzZWxmLm9yY2hfYXBwX2lkID0gb3JjaF9hcHBfaWQKICAgIGJ5dGVjXzAgLy8gIm9yY2hfYXBwX2lkIgogICAgc3dhcAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjY5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyB1cm9zX3N0b3JhZ2UuVXJvc1N0b3JhZ2UuX19kZWxlZ2F0ZV91cGRhdGVbcm91dGluZ10oKSAtPiB2b2lkOgpfX2RlbGVnYXRlX3VwZGF0ZToKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5Ojg5CiAgICAvLyBzZW5kZXIgPSBUeG4uc2VuZGVyCiAgICB0eG4gU2VuZGVyCiAgICAvLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvc3JjL3NwbGl0dGVyL3Vyb3Nfc3RvcmFnZS5weTo5MAogICAgLy8gb3JjaF9hZGRyID0gQXBwbGljYXRpb24oc2VsZi5vcmNoX2FwcF9pZCkuYWRkcmVzcwogICAgaW50Y18xIC8vIDAKICAgIGJ5dGVjXzAgLy8gIm9yY2hfYXBwX2lkIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLm9yY2hfYXBwX2lkIGV4aXN0cwogICAgYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwogICAgYXNzZXJ0IC8vIGFwcGxpY2F0aW9uIGV4aXN0cwogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6OTEKICAgIC8vIGFzc2VydCBzZW5kZXIgPT0gb3JjaF9hZGRyLCAidXJvc19zdG9yYWdlOiBvbmx5IG9yY2ggbWF5IHVwZGF0ZSIKICAgID09CiAgICBhc3NlcnQgLy8gdXJvc19zdG9yYWdlOiBvbmx5IG9yY2ggbWF5IHVwZGF0ZQogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6ODMKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChhbGxvd19hY3Rpb25zPVsiVXBkYXRlQXBwbGljYXRpb24iXSkKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyB1cm9zX3N0b3JhZ2UuVXJvc1N0b3JhZ2UuX19yZWtleV90b19tYWluW3JvdXRpbmddKCkgLT4gdm9pZDoKX19yZWtleV90b19tYWluOgogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6OTMKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBsZW4KICAgIHB1c2hpbnQgMzIKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuc3RhdGljX2FycmF5PGFyYzQudWludDgsIDMyPgogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6MTA3LTExMgogICAgLy8gaXR4bi5QYXltZW50KAogICAgLy8gICAgIHJlY2VpdmVyPUdsb2JhbC5jdXJyZW50X2FwcGxpY2F0aW9uX2FkZHJlc3MsCiAgICAvLyAgICAgYW1vdW50PVVJbnQ2NCgwKSwKICAgIC8vICAgICByZWtleV90bz1tYWluX2FkZHIsCiAgICAvLyAgICAgZmVlPVVJbnQ2NCgwKSwKICAgIC8vICkuc3VibWl0KCkKICAgIGl0eG5fYmVnaW4KICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjEwOAogICAgLy8gcmVjZWl2ZXI9R2xvYmFsLmN1cnJlbnRfYXBwbGljYXRpb25fYWRkcmVzcywKICAgIGdsb2JhbCBDdXJyZW50QXBwbGljYXRpb25BZGRyZXNzCiAgICBzd2FwCiAgICBpdHhuX2ZpZWxkIFJla2V5VG8KICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjEwOQogICAgLy8gYW1vdW50PVVJbnQ2NCgwKSwKICAgIGludGNfMSAvLyAwCiAgICBpdHhuX2ZpZWxkIEFtb3VudAogICAgaXR4bl9maWVsZCBSZWNlaXZlcgogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6MTA3CiAgICAvLyBpdHhuLlBheW1lbnQoCiAgICBpbnRjXzAgLy8gcGF5CiAgICBpdHhuX2ZpZWxkIFR5cGVFbnVtCiAgICAvLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvc3JjL3NwbGl0dGVyL3Vyb3Nfc3RvcmFnZS5weToxMTEKICAgIC8vIGZlZT1VSW50NjQoMCksCiAgICBpbnRjXzEgLy8gMAogICAgaXR4bl9maWVsZCBGZWUKICAgIC8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9zcmMvc3BsaXR0ZXIvdXJvc19zdG9yYWdlLnB5OjEwNy0xMTIKICAgIC8vIGl0eG4uUGF5bWVudCgKICAgIC8vICAgICByZWNlaXZlcj1HbG9iYWwuY3VycmVudF9hcHBsaWNhdGlvbl9hZGRyZXNzLAogICAgLy8gICAgIGFtb3VudD1VSW50NjQoMCksCiAgICAvLyAgICAgcmVrZXlfdG89bWFpbl9hZGRyLAogICAgLy8gICAgIGZlZT1VSW50NjQoMCksCiAgICAvLyApLnN1Ym1pdCgpCiAgICBpdHhuX3N1Ym1pdAogICAgLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3NyYy9zcGxpdHRlci91cm9zX3N0b3JhZ2UucHk6OTMKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgo=",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="
+    },
+    "byteCode": {
+        "approval": "DCACAQAmAQtvcmNoX2FwcF9pZDEYQAADKCNngATcXjeYNhoAjgEALzEZFEQxGEEAFoICBNWvb2wEm6s2gzYaAI4CAB0AOQCABIPxR0g2GgCOAQABACJDMRmBBBIxGBBEQgAPNhoBSRWBCBJEFyhMZyJDMQAjKGVEcghEEkQiQzYaAUkVgSASRLEyCkyyICOyCLIHIrIQI7IBsyJD",
+        "clear": "DIEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 8,
+            "patch": 0
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}

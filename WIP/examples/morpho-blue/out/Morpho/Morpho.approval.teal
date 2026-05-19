@@ -3,12 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 16 160 TMPL_UROS_ORCH_APP_ID TMPL_UROS_STORAGE_APP_ID
-    bytecblock 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x151f7c75 "owner" 0x0000000000000000000000000000000000000000000000000000000000000000 "market" "position" 0x01 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "isAuthorized" "feeRecipient" "isLltvEnabled" "isIrmEnabled" "idToMarketParams" "nonce" 0x00 "DOMAIN_SEPARATOR" 0x0f4240 "__ctor_pending" 0x7423d3e6 "__og_sender" "__og_value" 0x87109a38 0x4064f981 "__dyn_storage"
-    intc_1 // 0
-    dupn 46
-    bytec_0 // ""
-    dupn 4
+    intcblock 0 32 1 TMPL_UROS_ORCH_APP_ID TMPL_UROS_STORAGE_APP_ID 160
+    bytecblock "__og_sender" "__og_value" 0x617da41d 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x00 0x990f30ae 0x64e61812 0x473fea3d 0xaad49274 0x1e66859e 0x78192a24 0x3abce638 0x979760d4 0xb5cb9f41 0xbbb17fa3 0x8a2c1ebe 0x9179ff57 0xacf0dd89 0x0ea3780d 0xbd0b8e46 0xb1bbb0a8 0x62b0d5c7 0x22c96197 0x6d6d1f6a 0x891b58c4 0xdd7a4abc
     pushint 4096
     bzero
     dup
@@ -20,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 20 // "__ctor_pending"
+    pushbytes "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -35,7 +31,32 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x990f30ae 0x64e61812 0x473fea3d 0xaad49274 0x1e66859e 0x78192a24 0x3abce638 0xfef86d49 0x979760d4 0xb5cb9f41 0x786f56ba 0xbc1d9d91 0xbbb17fa3 0x74c54fcb 0xc5a2f617 0x8a2c1ebe 0x9179ff57 0xacf0dd89 0x0ea3780d 0xbd0b8e46 0xb1bbb0a8 0x62b0d5c7 0x12bb4644 0xf4d1ba9a 0x22c96197 0x6d6d1f6a 0x891b58c4 0xdd7a4abc 0x2758de33 0x54bd02eb // method "__postInit(address)void", method "setOwner(address)void", method "enableIrm(address)void", method "enableLltv(uint256)void", method "setFee((address,address,address,address,uint256),uint256)void", method "setFeeRecipient(address)void", method "createMarket((address,address,address,address,uint256))void", method "supply((address,address,address,address,uint256),uint256,uint256,address,byte[])(uint256,uint256)", method "withdraw((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)", method "borrow((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)", method "repay((address,address,address,address,uint256),uint256,uint256,address,byte[])(uint256,uint256)", method "supplyCollateral((address,address,address,address,uint256),uint256,address,byte[])void", method "withdrawCollateral((address,address,address,address,uint256),uint256,address,address)void", method "liquidate((address,address,address,address,uint256),address,uint256,uint256,byte[])(uint256,uint256)", method "flashLoan(address,uint256,byte[])void", method "setAuthorization(address,bool)void", method "setAuthorizationWithSig((address,address,bool,uint256,uint256),(uint8,byte[32],byte[32]))void", method "accrueInterest((address,address,address,address,uint256))void", method "extSloads(byte[32][])byte[32][]", method "DOMAIN_SEPARATOR()byte[32]", method "owner()address", method "feeRecipient()address", method "position(byte[32],address)(uint512,uint512,uint512)", method "market(byte[32])(uint512,uint512,uint512,uint512,uint512,uint512)", method "isIrmEnabled(address)bool", method "isLltvEnabled(uint256)bool", method "isAuthorized(address,address)bool", method "nonce(address)uint256", method "idToMarketParams(byte[32])(address,address,address,address,uint512)", method "__rekey_to_storage(address)void"
+    bytec 6 // method "__postInit(address)void"
+    bytec 7 // method "setOwner(address)void"
+    bytec 8 // method "enableIrm(address)void"
+    bytec 9 // method "enableLltv(uint256)void"
+    bytec 10 // method "setFee((address,address,address,address,uint256),uint256)void"
+    bytec 11 // method "setFeeRecipient(address)void"
+    bytec 12 // method "createMarket((address,address,address,address,uint256))void"
+    pushbytes 0xfef86d49 // method "supply((address,address,address,address,uint256),uint256,uint256,address,byte[])(uint256,uint256)"
+    bytec 13 // method "withdraw((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)"
+    bytec 14 // method "borrow((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)"
+    pushbytess 0x786f56ba 0xbc1d9d91 // method "repay((address,address,address,address,uint256),uint256,uint256,address,byte[])(uint256,uint256)", method "supplyCollateral((address,address,address,address,uint256),uint256,address,byte[])void"
+    bytec 15 // method "withdrawCollateral((address,address,address,address,uint256),uint256,address,address)void"
+    pushbytess 0x74c54fcb 0xc5a2f617 // method "liquidate((address,address,address,address,uint256),address,uint256,uint256,byte[])(uint256,uint256)", method "flashLoan(address,uint256,byte[])void"
+    bytec 16 // method "setAuthorization(address,bool)void"
+    bytec 17 // method "setAuthorizationWithSig((address,address,bool,uint256,uint256),(uint8,byte[32],byte[32]))void"
+    bytec 18 // method "accrueInterest((address,address,address,address,uint256))void"
+    bytec 19 // method "extSloads(byte[32][])byte[32][]"
+    bytec 20 // method "DOMAIN_SEPARATOR()byte[32]"
+    bytec 21 // method "owner()address"
+    bytec 22 // method "feeRecipient()address"
+    pushbytess 0x12bb4644 0xf4d1ba9a // method "position(byte[32],address)(uint512,uint512,uint512)", method "market(byte[32])(uint512,uint512,uint512,uint512,uint512,uint512)"
+    bytec 23 // method "isIrmEnabled(address)bool"
+    bytec 24 // method "isLltvEnabled(uint256)bool"
+    bytec 25 // method "isAuthorized(address,address)bool"
+    bytec 26 // method "nonce(address)uint256"
+    pushbytess 0x2758de33 0x54bd02eb // method "idToMarketParams(byte[32])(address,address,address,address,uint512)", method "__rekey_to_storage(address)void"
     txna ApplicationArgs 0
     match main___postInit_route@7 main_setOwner_route@8 main_enableIrm_route@9 main_enableLltv_route@10 main_setFee_route@11 main_setFeeRecipient_route@12 main_createMarket_route@13 main_supply_route@14 main_withdraw_route@15 main_borrow_route@16 main_repay_route@17 main_supplyCollateral_route@18 main_withdrawCollateral_route@19 main_liquidate_route@20 main_flashLoan_route@21 main_setAuthorization_route@22 main_setAuthorizationWithSig_route@23 main_accrueInterest_route@24 main_extSloads_route@25 main_DOMAIN_SEPARATOR_route@26 main_owner_route@27 main_feeRecipient_route@28 main_position_route@29 main_market_route@30 main_isIrmEnabled_route@31 main_isLltvEnabled_route@32 main_isAuthorized_route@33 main_nonce_route@34 main_idToMarketParams_route@35 main___rekey_to_storage_route@36
     err
@@ -44,7 +65,7 @@ main___rekey_to_storage_route@36:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     itxn_begin
@@ -53,9 +74,9 @@ main___rekey_to_storage_route@36:
     itxn_field TypeEnum
     itxn_field Receiver
     itxn_field RekeyTo
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Amount
     itxn_submit
     intc_2 // 1
@@ -63,40 +84,47 @@ main___rekey_to_storage_route@36:
 
 main_idToMarketParams_route@35:
     txna ApplicationArgs 1
-    dup
-    bury 28
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@44
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@45:
-    !
-    assert // not payable
-    dig 26
-    bytec 15 // "idToMarketParams"
-    concat
-    sha256
-    box_get
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 32
-    dig 1
-    extract 32 32
-    dig 2
-    extract 64 32
-    dig 3
-    extract 96 32
-    uncover 4
-    extract 128 32
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x47b093d4 // method "idToMarketParams(byte[32])(address,address,address,address,biguint)"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    itxn LastLog
+    extract 74 32
+    itxn LastLog
+    extract 106 32
+    itxn LastLog
+    extract 138 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     uncover 4
     uncover 4
     concat
@@ -115,98 +143,98 @@ main_ternary_merge@45:
     log
     intc_2 // 1
     return
-
-main_ternary_false@44:
-    intc_1 // 0
-    b main_ternary_merge@45
 
 main_nonce_route@34:
     txna ApplicationArgs 1
-    dup
-    bury 27
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@49
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@50:
-    !
-    assert // not payable
-    dig 25
-    bytec 16 // "nonce"
-    concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 26 // method "nonce(address)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
-
-main_ternary_false@49:
-    intc_1 // 0
-    b main_ternary_merge@50
 
 main_isAuthorized_route@33:
     txna ApplicationArgs 1
-    dup
-    bury 27
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
-    dup
-    bury 26
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@54
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@55:
-    !
-    assert // not payable
-    dig 25
-    bytec 11 // "isAuthorized"
-    concat
-    sha256
-    dig 25
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 25 // method "isAuthorized(address,address)bool"
+    itxn_field ApplicationArgs
     swap
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bytec 17 // 0x00
-    intc_1 // 0
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    !=
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    bytec 5 // 0x00
+    intc_0 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
@@ -215,51 +243,48 @@ main_ternary_merge@55:
     log
     intc_2 // 1
     return
-
-main_ternary_false@54:
-    intc_1 // 0
-    b main_ternary_merge@55
 
 main_isLltvEnabled_route@32:
     txna ApplicationArgs 1
-    dup
-    bury 52
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@59
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@60:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dig 51
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // "isLltvEnabled"
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bytec 17 // 0x00
-    intc_1 // 0
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 24 // method "isLltvEnabled(uint256)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    !=
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    bytec 5 // 0x00
+    intc_0 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
@@ -268,42 +293,48 @@ main_ternary_merge@60:
     log
     intc_2 // 1
     return
-
-main_ternary_false@59:
-    intc_1 // 0
-    b main_ternary_merge@60
 
 main_isIrmEnabled_route@31:
     txna ApplicationArgs 1
-    dup
-    bury 27
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@64
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@65:
-    !
-    assert // not payable
-    dig 25
-    bytec 14 // "isIrmEnabled"
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bytec 17 // 0x00
-    intc_1 // 0
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 23 // method "isIrmEnabled(address)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    !=
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    bytec 5 // 0x00
+    intc_0 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
@@ -313,48 +344,51 @@ main_ternary_merge@65:
     intc_2 // 1
     return
 
-main_ternary_false@64:
-    intc_1 // 0
-    b main_ternary_merge@65
-
 main_market_route@30:
     txna ApplicationArgs 1
-    dup
-    bury 28
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@69
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@70:
-    !
-    assert // not payable
-    dig 26
-    bytec 7 // "market"
-    concat
-    sha256
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 16
-    dig 1
-    extract 16 16
-    dig 2
-    extract 32 16
-    dig 3
-    extract 48 16
-    dig 4
-    extract 64 16
-    uncover 5
-    extract 80 16
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0xd468c375 // method "market(byte[32])(biguint,biguint,biguint,biguint,biguint,biguint)"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    itxn LastLog
+    extract 74 32
+    itxn LastLog
+    extract 106 32
+    itxn LastLog
+    extract 138 32
+    itxn LastLog
+    extract 170 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     pushint 64
     bzero
     uncover 6
@@ -386,53 +420,53 @@ main_ternary_merge@70:
     intc_2 // 1
     return
 
-main_ternary_false@69:
-    intc_1 // 0
-    b main_ternary_merge@70
-
 main_position_route@29:
     txna ApplicationArgs 1
-    dup
-    bury 28
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
-    dup
-    bury 26
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@74
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@75:
-    !
-    assert // not payable
-    dig 26
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 25
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0xa249b4c3 // method "position(byte[32],address)(biguint,biguint,biguint)"
+    itxn_field ApplicationArgs
     swap
-    concat
-    sha256
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 32
-    dig 1
-    extract 32 16
-    uncover 2
-    extract 48 16
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    itxn LastLog
+    extract 74 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     pushint 64
     bzero
     uncover 3
@@ -452,98 +486,117 @@ main_ternary_merge@75:
     intc_2 // 1
     return
 
-main_ternary_false@74:
-    intc_1 // 0
-    b main_ternary_merge@75
-
 main_feeRecipient_route@28:
-    txn GroupIndex
-    bz main_ternary_false@79
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@80:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec 12 // "feeRecipient"
-    app_global_get_ex
-    assert // check feeRecipient exists
+    callsub __uros_og_setup
+    itxn_begin
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 22 // method "feeRecipient()address"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
-
-main_ternary_false@79:
-    intc_1 // 0
-    b main_ternary_merge@80
 
 main_owner_route@27:
-    txn GroupIndex
-    bz main_ternary_false@84
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@85:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
+    callsub __uros_og_setup
+    itxn_begin
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 21 // method "owner()address"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
-
-main_ternary_false@84:
-    intc_1 // 0
-    b main_ternary_merge@85
 
 main_DOMAIN_SEPARATOR_route@26:
-    txn GroupIndex
-    bz main_ternary_false@89
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@90:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec 18 // "DOMAIN_SEPARATOR"
-    app_global_get_ex
-    assert // check DOMAIN_SEPARATOR exists
+    callsub __uros_og_setup
+    itxn_begin
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 20 // method "DOMAIN_SEPARATOR()byte[32]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
-
-main_ternary_false@89:
-    intc_1 // 0
-    b main_ternary_merge@90
 
 main_extSloads_route@25:
     txna ApplicationArgs 1
     dup
-    bury 16
-    dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    dup
-    bury 5
-    intc_0 // 32
+    intc_1 // 32
     *
     pushint 2
     +
@@ -551,665 +604,274 @@ main_extSloads_route@25:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
-    txn GroupIndex
-    bz main_ternary_false@94
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@95:
-    !
-    assert // not payable
-    dig 2
-    itob
-    bury 23
-    pushbytes 0x0000
-    bury 45
-    intc_1 // 0
-    bury 4
-
-main_while_top@96:
-    pushint 8
-    bzero
-    dup
-    bury 9
-    dig 23
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 4
-    >
-    bz main_after_while@98
-    dig 44
-    dup
-    intc_1 // 0
-    extract_uint16
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    bury 45
-    dig 3
-    intc_2 // 1
-    +
-    bury 4
-    b main_while_top@96
-
-main_after_while@98:
-    bytec_0 // 0x
-    bury 30
-
-main_while_top@99:
-    dig 29
-    dig 23
-    b<
-    bz main_after_while@101
-    dig 29
-    dup
-    bytec 9 // 0x01
-    b+
-    dig 9
-    dup
-    cover 3
-    uncover 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 17
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    load 0
-    dig 2
-    pushbytes 0x20
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    intc_0 // 32
-    bzero
-    dig 3
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    uncover 4
-    callsub __storage_read
-    uncover 2
-    swap
-    concat
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    replace3
-    store 0
-    bury 30
-    b main_while_top@99
-
-main_after_while@101:
-    bytec 4 // 0x151f7c75
-    dig 45
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@94:
-    intc_1 // 0
-    b main_ternary_merge@95
-
-main_accrueInterest_route@24:
-    txna ApplicationArgs 1
-    dup
-    bury 25
-    len
-    intc 4 // 160
-    ==
-    assert // invalid number of bytes for MarketParams
-    txn GroupIndex
-    bz main_ternary_false@105
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@106:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    dig 1
-    bytec 7 // "market"
-    concat
-    sha256
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    swap
-    callsub _accrueInterest
-    pop
-    intc_2 // 1
-    return
-
-main_ternary_false@105:
-    intc_1 // 0
-    b main_ternary_merge@106
-
-main_setAuthorizationWithSig_route@23:
-    txna ApplicationArgs 1
-    dup
-    bury 35
-    len
-    pushint 129
-    ==
-    assert // invalid number of bytes for Authorization
-    txna ApplicationArgs 2
-    dup
-    bury 17
-    len
-    pushint 65
-    ==
-    assert // invalid number of bytes for Signature
-    txn GroupIndex
-    bz main_ternary_false@110
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@111:
-    !
-    assert // not payable
-    global LatestTimestamp
-    itob
-    dig 34
-    dup
-    cover 2
-    extract 97 32
-    swap
-    dig 1
-    b<=
-    assert // signature expired
-    dig 1
-    extract 0 32
-    dup
-    bury 42
-    dup
-    bytec 16 // "nonce"
-    concat
-    sha256
-    dup
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    bytec 9 // 0x01
-    b+
-    dig 2
-    box_del
-    pop
-    uncover 2
-    swap
-    box_put
-    dig 3
-    extract 65 32
-    dup
-    bury 43
-    dup
-    uncover 2
-    b==
-    assert // invalid nonce
-    dig 3
-    extract 32 32
-    dup
-    bury 42
-    uncover 2
-    swap
-    concat
-    uncover 3
-    pushint 512
-    getbit
-    bytec 17 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    dup
-    bury 44
-    intc_1 // 0
-    getbit
-    itob
-    dup
-    bury 14
-    concat
-    intc_0 // 32
-    bzero
-    dup
-    bury 13
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    pushbytes 0x81d0284fb0e2cde18d0553b06189d6f7613c96a01bb5b5e7828eade6a0dcac91
-    swap
-    concat
-    keccak256
-    intc_1 // 0
-    bytec 18 // "DOMAIN_SEPARATOR"
-    app_global_get_ex
-    assert // check DOMAIN_SEPARATOR exists
-    pushbytes "\x19\x01"
-    swap
-    concat
-    swap
-    concat
-    keccak256
-    bury 31
-    dig 15
-    intc_1 // 0
-    getbyte
-    dup
-    bury 6
-    pushint 27
-    >=
-    dup
-    bury 2
-    bz main_ternary_false@113
-    dig 4
-    pushint 27
-    -
-
-main_ternary_merge@114:
-    intc_2 // 1
-    &
-    dig 16
-    dup
-    extract 1 32
-    swap
-    extract 33 32
-    dig 33
-    cover 3
-    ecdsa_pk_recover Secp256k1
-    bury 47
-    bury 47
-    dup
-    bz main_ternary_false@117
-    dig 4
-    pushint 28
-    <=
-    bz main_ternary_false@117
-    pushint 12
-    bzero
-    dig 47
-    dig 47
-    concat
-    keccak256
-    extract 12 20
-    concat
-    bury 17
-
-main_ternary_merge@118:
-    dig 16
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    bz main_bool_false@121
-    dig 38
-    dig 17
-    ==
-    bz main_bool_false@121
-    intc_2 // 1
-
-main_bool_merge@122:
-    assert // invalid signature
-    txn Sender
-    dig 39
-    dup
-    cover 2
-    concat
-    dig 39
-    concat
-    pushbytes 0x17f26e37 // method "IncrementNonce(address,address,uint256)"
-    swap
-    concat
-    log
-    dup
-    bytec 11 // "isAuthorized"
-    concat
-    sha256
-    dig 38
-    dup
-    uncover 2
-    concat
-    sha256
-    dig 12
-    box_put
-    txn Sender
-    uncover 2
-    concat
-    swap
-    concat
-    dig 40
-    concat
-    bytec 21 // method "SetAuthorization(address,address,address,bool)"
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_bool_false@121:
-    intc_1 // 0
-    b main_bool_merge@122
-
-main_ternary_false@117:
-    dig 8
-    bury 17
-    b main_ternary_merge@118
-
-main_ternary_false@113:
-    intc_1 // 0
-    b main_ternary_merge@114
-
-main_ternary_false@110:
-    intc_1 // 0
-    b main_ternary_merge@111
-
-main_setAuthorization_route@22:
-    txna ApplicationArgs 1
-    dup
-    bury 34
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    bury 13
-    dup
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    bury 2
-    txn GroupIndex
-    bz main_ternary_false@126
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@127:
-    !
-    assert // not payable
-    dig 1
-    dup
-    intc_2 // 1
-    <=
-    assert // ABI bool validation
-    txn Sender
-    bytec 11 // "isAuthorized"
-    concat
-    sha256
-    dig 34
-    dup
-    cover 3
-    swap
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    dig 1
-    !=
-    assert // already set
-    txn Sender
-    bytec 11 // "isAuthorized"
-    concat
-    sha256
-    dig 2
-    swap
-    concat
-    sha256
-    swap
-    itob
-    box_put
-    txn Sender
-    dup
-    concat
-    swap
-    concat
-    dig 12
-    concat
-    bytec 21 // method "SetAuthorization(address,address,address,bool)"
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@126:
-    intc_1 // 0
-    b main_ternary_merge@127
-
-main_flashLoan_route@21:
-    txna ApplicationArgs 1
-    dup
-    bury 7
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    bury 53
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bury 32
-    txn GroupIndex
-    bz main_ternary_false@131
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@132:
-    !
-    assert // not payable
-    dig 51
-    dup
-    bytec_0 // 0x
-    b!=
-    assert // zero assets
-    txn Sender
-    dig 7
-    dup
-    cover 3
-    concat
-    dig 1
-    concat
-    pushbytes 0x9364dde5 // method "FlashLoan(address,address,uint256)"
-    swap
-    concat
-    log
-    dig 1
-    txn Sender
-    dig 2
-    callsub SafeTransferLib.safeTransfer
-    itxn_begin
-    intc_0 // 32
-    bzero
-    dig 1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 34
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    txn Sender
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0x486ea445 // method "onMorphoFlashLoan(uint256,byte[])void"
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    txn Sender
-    global CurrentApplicationAddress
-    uncover 2
-    callsub SafeTransferLib.safeTransferFrom
-    intc_2 // 1
-    return
-
-main_ternary_false@131:
-    intc_1 // 0
-    b main_ternary_merge@132
-
-main_liquidate_route@20:
-    txna ApplicationArgs 1
-    len
-    intc 4 // 160
-    ==
-    assert // invalid number of bytes for MarketParams
-    txna ApplicationArgs 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 3
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 4
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 5
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    swap
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    bytec 22 // "__og_sender"
-    txn Sender
-    app_global_put
-    txn GroupIndex
-    bz main_ternary_false@242
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@243:
-    bytec 23 // "__og_value"
-    swap
-    app_global_put
+    callsub __uros_og_setup
     itxn_begin
     txna ApplicationArgs 1
-    txna ApplicationArgs 2
-    txna ApplicationArgs 3
-    txna ApplicationArgs 4
-    txna ApplicationArgs 5
-    intc 5 // TMPL_UROS_ORCH_APP_ID
-    intc 6 // TMPL_UROS_STORAGE_APP_ID
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
     app_params_get AppAddress
     pop
     pushint 6
     itxn_field TypeEnum
     itxn_field Sender
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x617da41d // method "dispatch()byte[]"
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 19 // method "extSloads(byte[32][])byte[32][]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 0
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_accrueInterest_route@24:
+    txna ApplicationArgs 1
+    len
+    intc 5 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 18 // method "accrueInterest((address,address,address,address,uint256))void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_setAuthorizationWithSig_route@23:
+    txna ApplicationArgs 1
+    len
+    pushint 129
+    ==
+    assert // invalid number of bytes for Authorization
+    txna ApplicationArgs 2
+    len
+    pushint 65
+    ==
+    assert // invalid number of bytes for Signature
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 17 // method "setAuthorizationWithSig((address,address,bool,uint256,uint256),(uint8,byte[32],byte[32]))void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_setAuthorization_route@22:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 16 // method "setAuthorization(address,bool)void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_flashLoan_route@21:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x6af24393 // method "flashLoan(address,uint256,bytes)void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_liquidate_route@20:
+    txna ApplicationArgs 1
+    len
+    intc 5 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    txna ApplicationArgs 5
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
     itxn_field ApplicationArgs
     pushbytes 0x74770855 // method "liquidate((address,address,address,address,uint256),address,uint256,uint256,bytes)(uint256,uint256)"
     itxn_field ApplicationArgs
@@ -1227,11 +889,11 @@ main_ternary_merge@243:
     extract 10 32
     itxn LastLog
     extract 42 32
-    bytec 22 // "__og_sender"
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 23 // "__og_value"
-    intc_1 // 0
+    bytec_1 // "__og_value"
+    intc_0 // 0
     app_global_put
     concat
     bytec 4 // 0x151f7c75
@@ -1240,673 +902,206 @@ main_ternary_merge@243:
     log
     intc_2 // 1
     return
-
-main_ternary_false@242:
-    intc_1 // 0
-    b main_ternary_merge@243
 
 main_withdrawCollateral_route@19:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 53
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
-    bury 21
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
-    dup
-    bury 20
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@138
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@139:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    dig 1
-    bytec 7 // "market"
-    concat
-    sha256
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    dig 53
-    dup
-    cover 3
-    bytec_0 // 0x
-    b!=
-    assert // zero assets
-    dig 21
-    dup
-    cover 4
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    dig 23
-    dup
-    callsub _isSenderAuthorized
-    assert // unauthorized
-    swap
-    dig 2
-    callsub _accrueInterest
-    dig 2
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 2
-    swap
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 48 16
-    dig 6
-    callsub UtilsLib.toUint128
-    dig 1
-    b<=
-    assert // underflow
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 6
-    callsub UtilsLib.toUint128
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 32 16
-    dig 1
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    uncover 2
-    b|
-    uncover 2
-    extract 0 32
-    uncover 2
-    concat
-    swap
-    concat
-    box_put
-    dig 2
-    dig 2
-    callsub _isHealthy(2125,2128,addr)
-    swap
-    assert // insufficient collateral
-    txn Sender
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 15 // method "withdrawCollateral((address,address,address,address,uint256),uint256,address,address)void"
+    itxn_field ApplicationArgs
     uncover 3
-    swap
-    concat
+    itxn_field ApplicationArgs
     uncover 2
-    concat
-    dig 3
-    concat
-    dig 2
-    concat
-    pushbytes 0x8053cb76 // method "WithdrawCollateral(byte[32],address,address,address,uint256)"
+    itxn_field ApplicationArgs
     swap
-    concat
-    log
-    extract 32 32
-    cover 2
-    callsub SafeTransferLib.safeTransfer
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_ternary_false@138:
-    intc_1 // 0
-    b main_ternary_merge@139
 
 main_supplyCollateral_route@18:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 53
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
-    bury 21
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bury 32
-    txn GroupIndex
-    bz main_ternary_false@143
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@144:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    bury 25
-    dup
-    bytec 7 // "market"
-    concat
-    sha256
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    dig 52
-    dup
-    cover 2
-    bytec_0 // 0x
-    b!=
-    assert // zero assets
-    intc_0 // 32
-    bzero
-    bury 16
-    dig 21
-    dup
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    dig 1
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 1
-    swap
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 48 16
-    dig 5
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 32 16
-    dig 1
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    uncover 2
-    b|
-    uncover 2
-    extract 0 32
-    uncover 2
-    concat
-    swap
-    concat
-    box_put
-    txn Sender
-    uncover 2
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    pushbytes 0xb66ceecf // method "SupplyCollateral(byte[32],address,address,uint256)"
-    swap
-    concat
-    log
-    dig 31
-    len
-    itob
-    dup
-    bury 19
-    bytec_0 // 0x
-    b>
-    bz main_after_if_else@146
+    callsub __uros_og_setup
     itxn_begin
-    dig 13
-    dig 52
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 18
-    extract 6 2
-    dig 33
-    concat
-    txn Sender
-    pushint 24
-    extract_uint64
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    itxn_field Sender
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xeba3ff35 // method "onMorphoSupplyCollateral(uint256,byte[])void"
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x485dd4fe // method "supplyCollateral((address,address,address,address,uint256),uint256,address,bytes)void"
+    itxn_field ApplicationArgs
+    uncover 3
+    itxn_field ApplicationArgs
+    uncover 2
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-
-main_after_if_else@146:
-    dig 23
-    extract 32 32
-    txn Sender
-    global CurrentApplicationAddress
-    dig 54
-    callsub SafeTransferLib.safeTransferFrom
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_ternary_false@143:
-    intc_1 // 0
-    b main_ternary_merge@144
 
 main_repay_route@17:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 53
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
-    bury 49
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
-    dup
-    bury 21
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 5
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bury 32
-    txn GroupIndex
-    bz main_ternary_false@150
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@151:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    swap
-    dup
-    bury 31
-    dup
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    bury 10
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    dig 53
-    dup
-    dig 51
-    callsub UtilsLib.exactlyOneZero
-    assert // inconsistent input
-    intc_0 // 32
-    bzero
-    bury 16
-    dig 22
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    cover 2
-    callsub _accrueInterest
-    bury 25
-    bytec_0 // 0x
-    b>
-    bz main_else_body@153
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    swap
-    extract 48 16
-    dig 53
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toSharesDown
-    swap
-    bury 36
-
-main_after_if_else@154:
-    dig 29
-    dup
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 22
-    dup
-    uncover 2
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    uncover 5
-    dup
-    cover 2
-    callsub UtilsLib.toUint128
-    dig 1
-    b<=
-    assert // underflow
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 1
-    callsub UtilsLib.toUint128
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    swap
-    dig 1
-    b|
-    dig 3
-    extract 48 16
-    uncover 4
-    extract 0 32
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    box_put
-    dig 10
-    dup
-    cover 3
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 48 16
-    dig 3
-    callsub UtilsLib.toUint128
-    dig 1
-    b<=
-    assert // underflow
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 3
-    callsub UtilsLib.toUint128
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 3
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 3
-    dig 5
-    b|
-    dig 4
-    extract 0 16
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    dup
-    extract 80 16
-    dig 1
-    extract 64 16
-    dig 2
-    extract 32 16
-    dig 43
-    dup
-    cover 4
-    callsub UtilsLib.zeroFloorSub
-    callsub UtilsLib.toUint128
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 5
-    b|
-    dig 4
-    extract 48 16
-    dig 5
-    extract 0 16
-    uncover 6
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    box_put
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 16
-    dup
-    cover 2
-    b|
-    dup
-    cover 2
-    bury 49
-    txn Sender
-    dig 3
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 3
-    uncover 2
-    b|
-    dup
-    bury 48
-    uncover 4
-    uncover 2
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x087e7d35 // method "Repay(byte[32],address,address,uint256,uint256)"
-    swap
-    concat
-    log
-    dig 31
-    len
-    itob
-    dup
-    bury 19
-    bytec_0 // 0x
-    b>
-    bz main_after_if_else@156
+    callsub __uros_og_setup
     itxn_begin
-    dig 12
-    dig 35
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 18
-    extract 6 2
-    dig 33
-    concat
-    txn Sender
-    pushint 24
-    extract_uint64
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    txna ApplicationArgs 5
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    itxn_field Sender
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xe54934cb // method "onMorphoRepay(uint256,byte[])void"
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x8c07c148 // method "repay((address,address,address,address,uint256),uint256,uint256,address,bytes)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    uncover 4
+    itxn_field ApplicationArgs
+    uncover 3
+    itxn_field ApplicationArgs
+    uncover 2
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-
-main_after_if_else@156:
-    dig 23
-    extract 0 32
-    txn Sender
-    global CurrentApplicationAddress
-    dig 37
-    callsub SafeTransferLib.safeTransferFrom
-    dig 43
-    dig 43
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     concat
     bytec 4 // 0x151f7c75
     swap
@@ -1914,314 +1109,76 @@ main_after_if_else@156:
     log
     intc_2 // 1
     return
-
-main_else_body@153:
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    swap
-    extract 48 16
-    dig 49
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toAssetsUp
-    bury 36
-    b main_after_if_else@154
-
-main_ternary_false@150:
-    intc_1 // 0
-    b main_ternary_merge@151
 
 main_borrow_route@16:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 53
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
-    bury 49
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
-    dup
-    bury 21
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 5
-    dup
-    bury 20
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@160
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@161:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    swap
-    dup
-    bury 31
-    dup
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    bury 10
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    dig 53
-    dup
-    dig 51
-    callsub UtilsLib.exactlyOneZero
-    assert // inconsistent input
-    dig 21
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    dig 22
-    callsub _isSenderAuthorized
-    assert // unauthorized
-    cover 2
-    callsub _accrueInterest
-    bury 25
-    bytec_0 // 0x
-    b>
-    bz main_else_body@163
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    swap
-    extract 48 16
-    dig 53
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toSharesUp
-    swap
-    bury 36
-
-main_after_if_else@164:
-    dig 29
-    dup
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 22
-    dup
-    uncover 2
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    uncover 5
-    dup
-    cover 4
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    swap
-    dig 1
-    b|
-    dig 2
-    extract 48 16
-    uncover 3
-    extract 0 32
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 2
-    swap
-    box_put
-    dig 10
-    dup
-    cover 3
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 48 16
-    dig 3
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 3
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 3
-    dig 5
-    b|
-    dig 4
-    extract 0 16
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    dup
-    extract 32 16
-    dig 41
-    dup
-    cover 4
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 2
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 2
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    txna ApplicationArgs 5
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 14 // method "borrow((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)"
+    itxn_field ApplicationArgs
     uncover 4
-    b|
-    dig 3
-    extract 48 16
-    dig 4
-    extract 0 16
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
+    itxn_field ApplicationArgs
     uncover 3
-    dig 1
-    box_put
-    dig 28
-    dig 5
-    dig 5
-    callsub _isHealthy(2125,2128,addr)
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
     swap
-    assert // insufficient collateral
-    dig 1
-    extract 32 16
-    uncover 2
-    extract 0 16
-    b<=
-    assert // insufficient liquidity
-    dig 1
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    dig 2
-    dig 1
-    b|
-    txn Sender
-    dig 5
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 5
-    uncover 3
-    b|
-    uncover 6
-    uncover 2
-    concat
-    uncover 5
-    concat
-    dig 23
-    dup
-    cover 3
-    concat
-    dig 3
-    concat
-    dig 1
-    concat
-    pushbytes 0x9b7aa51c // method "Borrow(byte[32],address,address,address,uint256,uint256)"
-    swap
-    concat
-    log
-    uncover 3
-    extract 0 32
-    uncover 2
-    uncover 4
-    callsub SafeTransferLib.safeTransfer
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     concat
     bytec 4 // 0x151f7c75
     swap
@@ -2229,332 +1186,76 @@ main_after_if_else@164:
     log
     intc_2 // 1
     return
-
-main_else_body@163:
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    swap
-    extract 48 16
-    dig 49
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toAssetsDown
-    bury 36
-    b main_after_if_else@164
-
-main_ternary_false@160:
-    intc_1 // 0
-    b main_ternary_merge@161
 
 main_withdraw_route@15:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 53
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
-    bury 49
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
-    dup
-    bury 21
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 5
-    dup
-    bury 20
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@168
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@169:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    swap
-    dup
-    bury 31
-    dup
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    bury 10
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    dig 53
-    dup
-    dig 51
-    callsub UtilsLib.exactlyOneZero
-    assert // inconsistent input
-    dig 21
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    dig 22
-    callsub _isSenderAuthorized
-    assert // unauthorized
-    cover 2
-    callsub _accrueInterest
-    bury 25
-    bytec_0 // 0x
-    b>
-    bz main_else_body@171
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 16
-    swap
-    extract 16 16
-    dig 53
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toSharesUp
-    swap
-    bury 36
-
-main_after_if_else@172:
-    dig 29
-    dup
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 22
-    dup
-    uncover 2
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 32
-    dup
-    uncover 6
-    dup
-    cover 4
-    b>=
-    assert // underflow
-    dig 1
-    extract 32 16
-    uncover 2
-    extract 48 16
-    uncover 2
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 3
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    txna ApplicationArgs 5
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 13 // method "withdraw((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    uncover 4
+    itxn_field ApplicationArgs
     uncover 3
-    concat
+    itxn_field ApplicationArgs
     uncover 2
-    concat
-    uncover 3
+    itxn_field ApplicationArgs
     swap
-    box_put
-    dig 10
-    dup
-    cover 2
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 16 16
-    dig 4
-    callsub UtilsLib.toUint128
-    dig 1
-    b<=
-    assert // underflow
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 4
-    callsub UtilsLib.toUint128
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 4
-    extract 48 16
-    uncover 5
-    extract 0 16
-    dig 5
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    uncover 6
-    dig 1
-    b|
-    uncover 2
-    swap
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
-    dup
-    extract 0 16
-    dig 42
-    dup
-    cover 2
-    callsub UtilsLib.toUint128
-    dig 1
-    b<=
-    assert // underflow
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 1
-    callsub UtilsLib.toUint128
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 2
-    extract 80 16
-    dig 3
-    extract 64 16
-    dig 4
-    extract 32 16
-    dig 5
-    extract 48 16
-    dig 4
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 4
-    uncover 7
-    b|
-    uncover 6
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    uncover 3
-    dig 1
-    box_put
-    dup
-    extract 32 16
-    swap
-    extract 0 16
-    b<=
-    assert // insufficient liquidity
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dup
-    dig 2
-    b|
-    txn Sender
-    dig 4
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 4
-    uncover 4
-    b|
-    uncover 5
-    uncover 2
-    concat
-    uncover 4
-    concat
-    dig 22
-    dup
-    cover 3
-    concat
-    dig 3
-    concat
-    dig 1
-    concat
-    pushbytes 0xf226d6fa // method "Withdraw(byte[32],address,address,address,uint256,uint256)"
-    swap
-    concat
-    log
-    dig 27
-    extract 0 32
-    uncover 2
-    uncover 4
-    callsub SafeTransferLib.safeTransfer
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     concat
     bytec 4 // 0x151f7c75
     swap
@@ -2562,346 +1263,81 @@ main_after_if_else@172:
     log
     intc_2 // 1
     return
-
-main_else_body@171:
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 16
-    swap
-    extract 16 16
-    dig 49
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toAssetsDown
-    bury 36
-    b main_after_if_else@172
-
-main_ternary_false@168:
-    intc_1 // 0
-    b main_ternary_merge@169
 
 main_supply_route@14:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 53
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
-    bury 49
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
-    dup
-    bury 21
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 5
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bury 32
-    txn GroupIndex
-    bz main_ternary_false@176
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@177:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    swap
-    dup
-    bury 31
-    dup
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    bury 10
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    dig 53
-    dup
-    dig 51
-    callsub UtilsLib.exactlyOneZero
-    assert // inconsistent input
-    intc_0 // 32
-    bzero
-    bury 16
-    dig 22
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    cover 2
-    callsub _accrueInterest
-    bury 25
-    bytec_0 // 0x
-    b>
-    bz main_else_body@179
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 16
-    swap
-    extract 16 16
-    dig 53
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toSharesDown
-    swap
-    bury 36
-
-main_after_if_else@180:
-    dig 29
-    dup
-    bytec 8 // "position"
-    concat
-    sha256
-    dig 22
-    dup
-    uncover 2
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    dig 1
-    extract 48 16
-    uncover 2
-    extract 0 32
-    uncover 6
-    dup
-    cover 4
-    b+
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 19
-    dup
-    cover 6
-    b|
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 2
-    swap
-    box_put
-    dig 10
-    dup
-    cover 2
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 16 16
-    dig 2
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 4
-    extract 48 16
-    uncover 5
-    extract 0 16
-    dig 5
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    uncover 6
-    dig 1
-    b|
-    uncover 2
-    swap
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
-    dup
-    extract 0 16
-    dig 42
-    dup
-    cover 4
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 4
-    extract 48 16
-    dig 4
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 4
-    uncover 6
-    b|
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    box_put
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    dup
-    cover 2
-    bury 47
-    txn Sender
-    dig 1
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    swap
-    uncover 3
-    b|
-    dup
-    bury 46
-    uncover 4
-    uncover 2
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x4cb67c49 // method "Supply(byte[32],address,address,uint256,uint256)"
-    swap
-    concat
-    log
-    dig 31
-    len
-    itob
-    dup
-    bury 19
-    bytec_0 // 0x
-    b>
-    bz main_after_if_else@182
+    callsub __uros_og_setup
     itxn_begin
-    dig 12
-    dig 35
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 18
-    extract 6 2
-    dig 33
-    concat
-    txn Sender
-    pushint 24
-    extract_uint64
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    txna ApplicationArgs 5
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    itxn_field Sender
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x74d42b58 // method "onMorphoSupply(uint256,byte[])void"
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x9bdec4f7 // method "supply((address,address,address,address,uint256),uint256,uint256,address,bytes)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    uncover 4
+    itxn_field ApplicationArgs
+    uncover 3
+    itxn_field ApplicationArgs
+    uncover 2
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-
-main_after_if_else@182:
-    dig 23
-    extract 0 32
-    txn Sender
-    global CurrentApplicationAddress
-    dig 37
-    callsub SafeTransferLib.safeTransferFrom
-    dig 41
-    dig 41
+    itxn LastLog
+    extract 10 32
+    itxn LastLog
+    extract 42 32
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     concat
     bytec 4 // 0x151f7c75
     swap
@@ -2910,697 +1346,263 @@ main_after_if_else@182:
     intc_2 // 1
     return
 
-main_else_body@179:
-    dig 6
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 16
-    swap
-    extract 16 16
-    dig 49
-    dup
-    cover 3
-    cover 2
-    callsub SharesMathLib.toAssetsUp
-    bury 36
-    b main_after_if_else@180
-
-main_ternary_false@176:
-    intc_1 // 0
-    b main_ternary_merge@177
-
 main_createMarket_route@13:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
-    txn GroupIndex
-    bz main_ternary_false@186
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@187:
-    !
-    assert // not payable
-    dig 23
-    callsub MarketParamsLib.id
-    dup
-    cover 2
-    bury 26
-    swap
-    dup
-    extract 96 32
-    dup
-    bury 39
-    dup
-    bytec 14 // "isIrmEnabled"
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    assert // IRM not enabled
-    intc_0 // 32
-    bzero
-    dig 2
-    extract 128 32
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // "isLltvEnabled"
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    assert // LLTV not enabled
-    dig 2
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    bury 15
-    dup
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 64 16
-    bytec_0 // 0x
-    b==
-    assert // market already created
-    dup
-    extract 80 16
-    global LatestTimestamp
-    itob
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    b|
-    dig 2
-    extract 32 16
-    dig 3
-    extract 48 16
-    dig 4
-    extract 0 16
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    box_put
-    dig 2
-    bytec 15 // "idToMarketParams"
-    concat
-    sha256
-    dig 2
-    box_put
-    cover 2
-    concat
-    pushbytes 0xb3ce54cd // method "CreateMarket(byte[32],(address,address,address,address,uint256))"
-    swap
-    concat
-    log
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    bz main_after_if_else@189
+    callsub __uros_og_setup
     itxn_begin
-    dig 10
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dig 36
-    pushint 24
-    extract_uint64
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    itxn_field Sender
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 24 // method "borrowRate((address,address,address,address,uint256),(uint128,uint128,uint128,uint128,uint128,uint128))uint256"
+    bytec_2 // method "dispatch()byte[]"
     itxn_field ApplicationArgs
-    dig 24
+    bytec 12 // method "createMarket((address,address,address,address,uint256))void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-
-main_after_if_else@189:
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_ternary_false@186:
-    intc_1 // 0
-    b main_ternary_merge@187
 
 main_setFeeRecipient_route@12:
     txna ApplicationArgs 1
-    dup
-    bury 23
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@193
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@194:
-    !
-    assert // not payable
-    txn Sender
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bnz main_bool_true@197
-    global CallerApplicationID
-    bz main_bool_false@198
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bz main_bool_false@198
-
-main_bool_true@197:
-    intc_2 // 1
-
-main_bool_merge@199:
-    assert // not owner
-    intc_1 // 0
-    bytec 12 // "feeRecipient"
-    app_global_get_ex
-    assert // check feeRecipient exists
-    dig 22
-    dup
-    uncover 2
-    !=
-    assert // already set
-    bytec 12 // "feeRecipient"
-    dig 1
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 11 // method "setFeeRecipient(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    pushbytes 0x553ef370 // method "SetFeeRecipient(address)"
-    swap
-    concat
-    log
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_bool_false@198:
-    intc_1 // 0
-    b main_bool_merge@199
-
-main_ternary_false@193:
-    intc_1 // 0
-    b main_ternary_merge@194
 
 main_setFee_route@11:
     txna ApplicationArgs 1
-    dup
-    bury 25
     len
-    intc 4 // 160
+    intc 5 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
-    dup
-    bury 50
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@203
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@204:
-    !
-    assert // not payable
-    txn Sender
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bnz main_bool_true@207
-    global CallerApplicationID
-    bz main_bool_false@208
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bz main_bool_false@208
-
-main_bool_true@207:
-    intc_2 // 1
-
-main_bool_merge@209:
-    assert // not owner
-    dig 23
-    callsub MarketParamsLib.id
-    dig 1
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 64 16
-    bytec_0 // 0x
-    b!=
-    assert // market not created
-    extract 80 16
-    dig 52
-    dup
-    uncover 2
-    b!=
-    assert // already set
-    dup
-    pushbytes 0x03782dace9d90000
-    b<=
-    assert // max fee exceeded
-    uncover 2
-    dig 3
-    callsub _accrueInterest
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
     pop
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    b|
-    dig 2
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 64 16
-    dig 1
-    extract 32 16
-    dig 2
-    extract 48 16
-    dig 3
-    extract 0 16
-    uncover 4
-    extract 16 16
-    concat
-    uncover 2
-    concat
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 10 // method "setFee((address,address,address,address,uint256),uint256)void"
+    itxn_field ApplicationArgs
     swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    uncover 2
-    swap
-    box_put
-    concat
-    pushbytes 0xb516e080 // method "SetFee(byte[32],uint256)"
-    swap
-    concat
-    log
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_bool_false@208:
-    intc_1 // 0
-    b main_bool_merge@209
-
-main_ternary_false@203:
-    intc_1 // 0
-    b main_ternary_merge@204
 
 main_enableLltv_route@10:
     txna ApplicationArgs 1
-    dup
-    bury 51
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@213
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@214:
-    !
-    assert // not payable
-    txn Sender
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bnz main_bool_true@217
-    global CallerApplicationID
-    bz main_bool_false@218
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bz main_bool_false@218
-
-main_bool_true@217:
-    intc_2 // 1
-
-main_bool_merge@219:
-    assert // not owner
-    intc_0 // 32
-    bzero
-    dig 50
-    dup
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // "isLltvEnabled"
-    concat
-    sha256
-    dup
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    !
-    assert // already set
-    dig 1
-    pushbytes 0x0de0b6b3a7640000
-    b<
-    assert // max LLTV exceeded
-    intc_2 // 1
-    itob
-    box_put
-    pushbytes 0x3314b670 // method "EnableLltv(uint256)"
-    swap
-    concat
-    log
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 9 // method "enableLltv(uint256)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_bool_false@218:
-    intc_1 // 0
-    b main_bool_merge@219
-
-main_ternary_false@213:
-    intc_1 // 0
-    b main_ternary_merge@214
 
 main_enableIrm_route@9:
     txna ApplicationArgs 1
-    dup
-    bury 29
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@223
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@224:
-    !
-    assert // not payable
-    txn Sender
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bnz main_bool_true@227
-    global CallerApplicationID
-    bz main_bool_false@228
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bz main_bool_false@228
-
-main_bool_true@227:
-    intc_2 // 1
-
-main_bool_merge@229:
-    assert // not owner
-    dig 27
-    dup
-    bytec 14 // "isIrmEnabled"
-    concat
-    sha256
-    dup
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    !
-    assert // already set
-    intc_2 // 1
-    itob
-    box_put
-    pushbytes 0x66dba477 // method "EnableIrm(address)"
-    swap
-    concat
-    log
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 8 // method "enableIrm(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
-
-main_bool_false@228:
-    intc_1 // 0
-    b main_bool_merge@229
-
-main_ternary_false@223:
-    intc_1 // 0
-    b main_ternary_merge@224
 
 main_setOwner_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 22
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@233
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@234:
-    !
-    assert // not payable
-    txn Sender
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bnz main_bool_true@237
-    global CallerApplicationID
-    bz main_bool_false@238
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    ==
-    bz main_bool_false@238
-
-main_bool_true@237:
-    intc_2 // 1
-
-main_bool_merge@239:
-    assert // not owner
-    intc_1 // 0
-    bytec 5 // "owner"
-    app_global_get_ex
-    assert // check owner exists
-    dig 21
-    dup
-    uncover 2
-    !=
-    assert // already set
-    bytec 5 // "owner"
-    dig 1
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 7 // method "setOwner(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 25 // method "SetOwner(address)"
-    swap
-    concat
-    log
+    bytec_1 // "__og_value"
+    intc_0 // 0
+    app_global_put
     intc_2 // 1
     return
 
-main_bool_false@238:
-    intc_1 // 0
-    b main_bool_merge@239
-
-main_ternary_false@233:
-    intc_1 // 0
-    b main_ternary_merge@234
-
 main___postInit_route@7:
     txna ApplicationArgs 1
-    dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 20 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec 20 // "__ctor_pending"
-    intc_1 // 0
+    callsub __uros_og_setup
+    itxn_begin
+    txna ApplicationArgs 1
+    intc_3 // TMPL_UROS_ORCH_APP_ID
+    intc 4 // TMPL_UROS_STORAGE_APP_ID
+    app_params_get AppAddress
+    pop
+    pushint 6
+    itxn_field TypeEnum
+    itxn_field Sender
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "dispatch()byte[]"
+    itxn_field ApplicationArgs
+    bytec 6 // method "__postInit(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_0 // "__og_sender"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 8 // "position"
-    pushint 2
-    box_create
-    pop
-    bytec 7 // "market"
-    pushint 2
-    box_create
-    pop
-    bytec 14 // "isIrmEnabled"
-    pushint 2
-    box_create
-    pop
-    bytec 13 // "isLltvEnabled"
-    pushint 2
-    box_create
-    pop
-    bytec 11 // "isAuthorized"
-    pushint 2
-    box_create
-    pop
-    bytec 16 // "nonce"
-    pushint 2
-    box_create
-    pop
-    bytec 15 // "idToMarketParams"
-    pushint 2
-    box_create
-    pop
-    bytec 18 // "DOMAIN_SEPARATOR"
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // "__og_value"
+    intc_0 // 0
     app_global_put
-    bytec 5 // "owner"
-    bytec 6 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    app_global_put
-    bytec 12 // "feeRecipient"
-    bytec 6 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    app_global_put
-    dup
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    assert // zero address
-    pushbytes 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a794692180000000000000000000000000000000000000000000000000000000000000001
-    global CurrentApplicationAddress
-    concat
-    keccak256
-    bytec 18 // "DOMAIN_SEPARATOR"
-    swap
-    app_global_put
-    bytec 5 // "owner"
-    dig 1
-    app_global_put
-    bytec 25 // method "SetOwner(address)"
-    swap
-    concat
-    log
     intc_2 // 1
     return
 
@@ -3613,1059 +1615,24 @@ main___delegate_update_route@4:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.MarketParamsLib.id(marketParams: bytes) -> bytes, bytes:
-MarketParamsLib.id:
-    proto 1 2
-    load 0
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    extract 0 32
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    frame_dig -1
-    extract 32 32
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
-    extract 64 32
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
-    extract 96 32
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
-    extract 128 32
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 0 32
-    swap
-    store 0
-    frame_dig -1
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.MathLib.wMulDown(x: bytes, y: bytes) -> bytes:
-MathLib.wMulDown:
-    proto 2 1
-    pushint 1000000000000000000
-    itob
-    frame_dig -2
-    frame_dig -1
-    uncover 2
-    callsub MathLib.mulDivDown
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.MathLib.mulDivDown(x: bytes, y: bytes, d: bytes) -> bytes:
-MathLib.mulDivDown:
-    proto 3 1
-    frame_dig -3
-    frame_dig -2
-    b*
-    frame_dig -1
-    b/
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.MathLib.mulDivUp(x: bytes, y: bytes, d: bytes) -> bytes:
-MathLib.mulDivUp:
-    proto 3 1
-    frame_dig -1
-    bytec 9 // 0x01
-    b>=
-    assert // underflow
-    frame_dig -3
-    frame_dig -2
-    b*
-    frame_dig -1
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec 9 // 0x01
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b+
-    frame_dig -1
-    b/
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.MathLib.wTaylorCompounded(x: bytes, n: bytes) -> bytes:
-MathLib.wTaylorCompounded:
-    proto 2 1
-    frame_dig -2
-    frame_dig -1
-    b*
-    dup
-    dig 1
-    pushbytes 0x1bc16d674ec80000
-    callsub MathLib.mulDivDown
-    dup
-    dig 2
-    pushbytes 0x29a2241af62c0000
-    callsub MathLib.mulDivDown
-    cover 2
-    b+
-    b+
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.SafeTransferLib.safeTransfer(token: bytes, to: bytes, value: bytes) -> void:
-SafeTransferLib.safeTransfer:
-    proto 3 0
-    frame_dig -3
-    pushint 24
-    extract_uint64
-    dup
-    app_params_get AppApprovalProgram
-    pop
-    len
-    itob
-    bytec_0 // 0x
-    b>
-    assert // no code
-    itxn_begin
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    pushbytes 0x198c9820 // method "transfer(address,uint256)bool"
-    itxn_field ApplicationArgs
-    frame_dig -2
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    len
-    itob
-    bytec_0 // 0x
-    b==
-    bnz SafeTransferLib.safeTransfer_bool_true@3
-    frame_dig 0
-    btoi
-    bz SafeTransferLib.safeTransfer_bool_false@4
-
-SafeTransferLib.safeTransfer_bool_true@3:
-    intc_2 // 1
-
-SafeTransferLib.safeTransfer_bool_merge@5:
-    assert // transfer returned false
-    retsub
-
-SafeTransferLib.safeTransfer_bool_false@4:
-    intc_1 // 0
-    b SafeTransferLib.safeTransfer_bool_merge@5
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.SafeTransferLib.safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes) -> void:
-SafeTransferLib.safeTransferFrom:
-    proto 4 0
-    frame_dig -4
-    pushint 24
-    extract_uint64
-    dup
-    app_params_get AppApprovalProgram
-    pop
-    len
-    itob
-    bytec_0 // 0x
-    b>
-    assert // no code
-    itxn_begin
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    swap
-    itxn_field ApplicationID
-    pushbytes 0x6df41f6d // method "transferFrom(address,address,uint256)bool"
-    itxn_field ApplicationArgs
-    frame_dig -3
-    itxn_field ApplicationArgs
-    frame_dig -2
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    len
-    itob
-    bytec_0 // 0x
-    b==
-    bnz SafeTransferLib.safeTransferFrom_bool_true@3
-    frame_dig 0
-    btoi
-    bz SafeTransferLib.safeTransferFrom_bool_false@4
-
-SafeTransferLib.safeTransferFrom_bool_true@3:
-    intc_2 // 1
-
-SafeTransferLib.safeTransferFrom_bool_merge@5:
-    assert // transferFrom returned false
-    retsub
-
-SafeTransferLib.safeTransferFrom_bool_false@4:
-    intc_1 // 0
-    b SafeTransferLib.safeTransferFrom_bool_merge@5
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toSharesDown(assets: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
-SharesMathLib.toSharesDown:
-    proto 3 1
-    frame_dig -1
-    bytec 19 // 0x0f4240
-    b+
-    frame_dig -2
-    bytec 9 // 0x01
-    b+
-    frame_dig -3
-    cover 2
-    callsub MathLib.mulDivDown
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toAssetsDown(shares: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
-SharesMathLib.toAssetsDown:
-    proto 3 1
-    frame_dig -2
-    bytec 9 // 0x01
-    b+
-    frame_dig -1
-    bytec 19 // 0x0f4240
-    b+
-    frame_dig -3
-    cover 2
-    callsub MathLib.mulDivDown
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toSharesUp(assets: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
-SharesMathLib.toSharesUp:
-    proto 3 1
-    frame_dig -1
-    bytec 19 // 0x0f4240
-    b+
-    frame_dig -2
-    bytec 9 // 0x01
-    b+
-    frame_dig -3
-    cover 2
-    callsub MathLib.mulDivUp
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toAssetsUp(shares: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
-SharesMathLib.toAssetsUp:
-    proto 3 1
-    frame_dig -2
-    bytec 9 // 0x01
-    b+
-    frame_dig -1
-    bytec 19 // 0x0f4240
-    b+
-    frame_dig -3
-    cover 2
-    callsub MathLib.mulDivUp
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.exactlyOneZero(x: bytes, y: bytes) -> uint64:
-UtilsLib.exactlyOneZero:
-    proto 2 1
-    load 0
-    frame_dig -2
-    bytec_0 // 0x
-    b==
-    bytec_0 // 0x
-    bytec 9 // 0x01
-    uncover 2
-    select
-    frame_dig -1
-    bytec_0 // 0x
-    b==
-    bytec_0 // 0x
-    bytec 9 // 0x01
-    uncover 2
-    select
-    b^
-    bytec_0 // 0x
-    b!=
-    swap
-    store 0
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.toUint128(x: bytes) -> bytes:
-UtilsLib.toUint128:
-    proto 1 1
-    frame_dig -1
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // max uint128 exceeded
-    frame_dig -1
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b&
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.zeroFloorSub(x: bytes, y: bytes) -> bytes:
-UtilsLib.zeroFloorSub:
-    proto 2 1
-    load 0
-    frame_dig -2
-    frame_dig -1
-    b>
-    bytec_0 // 0x
-    bytec 9 // 0x01
-    uncover 2
-    select
-    frame_dig -2
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    frame_dig -1
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    swap
-    store 0
-    retsub
-
-
-// __puyasol___storage_read(__slot: uint64) -> bytes:
-__storage_read:
-    proto 1 1
-    frame_dig -1
-    pushint 8
-    ==
-    bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
-    bytec 15 // "idToMarketParams"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@2:
-    frame_dig -1
-    pushint 7
-    ==
-    bz __storage_read_else_body@4
-    intc_0 // 32
-    bzero
-    bytec 16 // "nonce"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@4:
-    frame_dig -1
-    pushint 6
-    ==
-    bz __storage_read_else_body@6
-    intc_0 // 32
-    bzero
-    bytec 11 // "isAuthorized"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@6:
-    frame_dig -1
-    pushint 5
-    ==
-    bz __storage_read_else_body@8
-    intc_0 // 32
-    bzero
-    bytec 13 // "isLltvEnabled"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@8:
-    frame_dig -1
-    pushint 4
-    ==
-    bz __storage_read_else_body@10
-    intc_0 // 32
-    bzero
-    bytec 14 // "isIrmEnabled"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@10:
-    frame_dig -1
-    pushint 3
-    ==
-    bz __storage_read_else_body@12
-    intc_0 // 32
-    bzero
-    bytec 7 // "market"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@12:
-    frame_dig -1
-    pushint 2
-    ==
-    bz __storage_read_else_body@14
-    intc_0 // 32
-    bzero
-    bytec 8 // "position"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@14:
-    frame_dig -1
-    intc_2 // 1
-    ==
-    bz __storage_read_else_body@16
-    intc_0 // 32
-    bzero
-    bytec 12 // "feeRecipient"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@16:
-    frame_dig -1
-    bnz __storage_read_else_body@18
-    intc_0 // 32
-    bzero
-    bytec 5 // "owner"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@18:
-    bytec 26 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    frame_dig -1
-    pushint 256
-    %
-    intc_0 // 32
-    *
-    bytec 26 // "__dyn_storage"
-    swap
-    intc_0 // 32
-    box_extract
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho._isSenderAuthorized(onBehalf: bytes) -> uint64:
-_isSenderAuthorized:
-    proto 1 1
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho.__uros_og_setup() -> void:
+__uros_og_setup:
+    bytec_0 // "__og_sender"
     txn Sender
-    frame_dig -1
-    ==
-    bnz _isSenderAuthorized_bool_true@4
-    global CallerApplicationID
-    bz _isSenderAuthorized_or_contd@3
-    pushint 24
-    bzero
-    global CallerApplicationID
-    itob
-    concat
-    frame_dig -1
-    ==
-    bnz _isSenderAuthorized_bool_true@4
-
-_isSenderAuthorized_or_contd@3:
-    txn Sender
-    frame_dig -1
-    bytec 11 // "isAuthorized"
-    concat
-    sha256
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bz _isSenderAuthorized_bool_false@5
-
-_isSenderAuthorized_bool_true@4:
+    app_global_put
+    txn GroupIndex
+    bz __uros_og_setup_ternary_false@2
+    txn GroupIndex
     intc_2 // 1
+    -
+    gtxns Amount
+
+__uros_og_setup_ternary_merge@3:
+    bytec_1 // "__og_value"
+    swap
+    app_global_put
     retsub
 
-_isSenderAuthorized_bool_false@5:
-    intc_1 // 0
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho._accrueInterest(marketParams: bytes, id: bytes) -> bytes:
-_accrueInterest:
-    proto 2 1
-    intc_1 // 0
-    dupn 4
-    global LatestTimestamp
-    itob
-    frame_dig -1
-    bytec 7 // "market"
-    concat
-    sha256
-    dup
-    cover 2
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 64 16
-    swap
-    dig 1
-    b>=
-    assert // underflow
-    global LatestTimestamp
-    itob
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    swap
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_0 // 0x
-    b==
-    bz _accrueInterest_after_if_else@2
-    frame_dig -2
-    frame_bury 0
-    retsub
-
-_accrueInterest_after_if_else@2:
-    frame_dig -2
-    extract 96 32
-    dup
-    frame_bury 1
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    bz _accrueInterest_after_if_else@7
-    itxn_begin
-    frame_dig 5
-    dup
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    frame_dig 1
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 24 // method "borrowRate((address,address,address,address,uint256),(uint128,uint128,uint128,uint128,uint128,uint128))uint256"
-    itxn_field ApplicationArgs
-    frame_dig -2
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    frame_bury 2
-    dig 1
-    extract 32 16
-    swap
-    frame_dig 6
-    callsub MathLib.wTaylorCompounded
-    dig 1
-    swap
-    callsub MathLib.wMulDown
-    dup
-    frame_bury 4
-    dup
-    callsub UtilsLib.toUint128
-    uncover 2
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 2
-    extract 80 16
-    dig 3
-    extract 64 16
-    dig 2
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    dup
-    frame_bury 0
-    uncover 3
-    dig 1
-    b|
-    dig 5
-    extract 48 16
-    dig 6
-    extract 0 16
-    uncover 7
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 2
-    concat
-    uncover 2
-    concat
-    dup
-    extract 0 16
-    uncover 3
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 4
-    extract 48 16
-    dig 4
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 4
-    uncover 6
-    b|
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    dig 1
-    box_put
-    bytec_0 // 0x
-    frame_bury 3
-    extract 80 16
-    bytec_0 // 0x
-    b!=
-    bz _accrueInterest_after_if_else@6
-    frame_dig 5
-    dup
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 80 16
-    frame_dig 4
-    swap
-    callsub MathLib.wMulDown
-    dig 1
-    extract 0 16
-    dup
-    dig 2
-    b>=
-    assert // underflow
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 1
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 2
-    extract 16 16
-    callsub SharesMathLib.toSharesDown
-    dup
-    frame_bury 3
-    intc_1 // 0
-    bytec 12 // "feeRecipient"
-    app_global_get_ex
-    assert // check feeRecipient exists
-    frame_dig -1
-    bytec 8 // "position"
-    concat
-    sha256
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    dig 1
-    extract 48 16
-    uncover 2
-    extract 0 32
-    dig 4
-    b+
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    uncover 2
-    concat
-    swap
-    concat
-    box_put
-    dig 1
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 16 16
-    uncover 2
-    callsub UtilsLib.toUint128
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
-    extract 80 16
-    dig 2
-    extract 64 16
-    dig 3
-    extract 32 16
-    dig 4
-    extract 48 16
-    uncover 5
-    extract 0 16
-    dig 5
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    uncover 5
-    frame_dig 0
-    b|
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    box_put
-
-_accrueInterest_after_if_else@6:
-    frame_dig 3
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    frame_dig 4
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    frame_dig 2
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 3
-    b|
-    frame_dig -1
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    pushbytes 0xccb57883 // method "AccrueInterest(byte[32],uint256,uint256,uint256)"
-    swap
-    concat
-    log
-
-_accrueInterest_after_if_else@7:
-    frame_dig 5
-    dup
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 80 16
-    global LatestTimestamp
-    itob
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    intc_3 // 16
-    bzero
-    b|
-    dig 2
-    extract 32 16
-    dig 3
-    extract 48 16
-    dig 4
-    extract 0 16
-    uncover 5
-    extract 16 16
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    box_put
-    frame_dig -2
-    frame_bury 0
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho._isHealthy(2125,2128,addr)(marketParams: bytes, id: bytes, borrower: bytes) -> uint64, bytes:
-_isHealthy(2125,2128,addr):
-    proto 3 2
-    frame_dig -2
-    bytec 8 // "position"
-    concat
-    sha256
-    frame_dig -1
-    swap
-    concat
-    sha256
-    dup
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 32 16
-    bytec_0 // 0x
-    b==
-    bz _isHealthy(2125,2128,addr)_after_if_else@2
-    intc_2 // 1
-    frame_dig -3
-    uncover 2
-    retsub
-
-_isHealthy(2125,2128,addr)_after_if_else@2:
-    itxn_begin
-    frame_dig -3
-    extract 64 32
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xc20e2c7c // method "price()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    frame_dig 0
-    box_get
-    bytec 10 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    frame_dig -2
-    bytec 7 // "market"
-    concat
-    sha256
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 32 16
-    swap
-    extract 48 16
-    callsub SharesMathLib.toAssetsUp
-    swap
-    extract 48 16
-    uncover 2
-    pushbytes 0xc097ce7bc90715b34b9f1000000000
-    callsub MathLib.mulDivDown
-    frame_dig -3
-    extract 128 32
-    callsub MathLib.wMulDown
-    b<=
-    frame_dig -3
-    uncover 2
-    retsub
+__uros_og_setup_ternary_false@2:
+    intc_0 // 0
+    b __uros_og_setup_ternary_merge@3

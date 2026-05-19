@@ -38,6 +38,7 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
     orch_id = client._morpho_orch_id  # type: ignore[attr-defined]
     storage_addr = client._morpho_storage_addr  # type: ignore[attr-defined]
     orch_addr = client._morpho_orch_addr  # type: ignore[attr-defined]
+    main_addr = client._morpho_main_addr  # type: ignore[attr-defined]
     sender_accessor = client.send
     original_call = sender_accessor.call
 
@@ -53,15 +54,17 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
         send_params: "au.SendParams | None" = None,
     ):
         from dataclasses import replace
-        # Only add storage_addr — that's the Sender main's patched
-        # TEAL claims for inner txns. orch is reachable via populate
-        # for the rare split-method dispatch case. Keeping the ref
-        # set minimal avoids tripping the 8-ref-per-txn cap on
-        # resource-heavy methods like createMarket (4 boxes + irm).
+        # With every method split, main is a pure forwarding stub
+        # (main → orch → storage[chunk]). The user-code inner txns
+        # all execute inside the chunk (on storage's account) and the
+        # chunk-side TEAL patch in `UrosSplitter` overrides their
+        # Sender to main_addr. AVM requires main_addr to be in the
+        # txn's foreign-accounts pool for that Sender override to
+        # succeed.
         params = replace(
             params,
             account_references=_merge_refs(
-                params.account_references, [storage_addr]),
+                params.account_references, [main_addr]),
             extra_fee=params.extra_fee or au.AlgoAmount(micro_algo=20_000),
         )
         # Force populate=True regardless of what the test passed.
@@ -184,6 +187,7 @@ def deploy_contract(
         client._morpho_orch_id = d.orch_id
         client._morpho_storage_addr = _app_addr(d.storage_id)
         client._morpho_orch_addr = _app_addr(d.orch_id)
+        client._morpho_main_addr = _app_addr(d.main_id)
         _wrap_send_for_dance(client)
         return client
     client = deploy_contract_raw(

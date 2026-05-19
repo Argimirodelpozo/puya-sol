@@ -58,7 +58,9 @@ from algopy import (
 
 
 # Trivial clear program (must match puya-sol's emission).
-CLEAR_PROGRAM = b"\x0a\x81\x01\x43"
+CLEAR_PROGRAM = b"\x0c\x81\x01\x43"  # v12 "int 1; return" — must match the
+# user contract's approval program version (puya-sol emits v12). AVM
+# rejects UpdateApplication when approval/clear versions differ.
 
 # `__delegate_update()void` ABI selector — sha512_256(sig)[:4]. Both
 # the __storage default and the chunks define this method; orch sends

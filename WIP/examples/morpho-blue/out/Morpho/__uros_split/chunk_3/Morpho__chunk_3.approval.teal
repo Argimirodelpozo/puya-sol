@@ -1,0 +1,724 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 TMPL_UROS_MAIN_APP_ID 160
+    bytecblock 0x151f7c75 "__og_value" 0x00
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xdc5e3798 // method "__delegate_update()void"
+    txna ApplicationArgs 0
+    match main___delegate_update_route@4
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x990f30ae 0x64e61812 0x473fea3d 0xaad49274 0x1e66859e 0x78192a24 0x3abce638 0xfef86d49 0x979760d4 0xb5cb9f41 0x786f56ba 0xbc1d9d91 0xbbb17fa3 0x74c54fcb 0xc5a2f617 0x8a2c1ebe 0x9179ff57 0xacf0dd89 0x0ea3780d 0xbd0b8e46 0xb1bbb0a8 0x62b0d5c7 0x12bb4644 0xf4d1ba9a 0x22c96197 0x6d6d1f6a 0x891b58c4 0xdd7a4abc 0x2758de33 // method "__postInit(address)void", method "setOwner(address)void", method "enableIrm(address)void", method "enableLltv(uint256)void", method "setFee((address,address,address,address,uint256),uint256)void", method "setFeeRecipient(address)void", method "createMarket((address,address,address,address,uint256))void", method "supply((address,address,address,address,uint256),uint256,uint256,address,byte[])(uint256,uint256)", method "withdraw((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)", method "borrow((address,address,address,address,uint256),uint256,uint256,address,address)(uint256,uint256)", method "repay((address,address,address,address,uint256),uint256,uint256,address,byte[])(uint256,uint256)", method "supplyCollateral((address,address,address,address,uint256),uint256,address,byte[])void", method "withdrawCollateral((address,address,address,address,uint256),uint256,address,address)void", method "liquidate((address,address,address,address,uint256),address,uint256,uint256,byte[])(uint256,uint256)", method "flashLoan(address,uint256,byte[])void", method "setAuthorization(address,bool)void", method "setAuthorizationWithSig((address,address,bool,uint256,uint256),(uint8,byte[32],byte[32]))void", method "accrueInterest((address,address,address,address,uint256))void", method "extSloads(byte[32][])byte[32][]", method "DOMAIN_SEPARATOR()byte[32]", method "owner()address", method "feeRecipient()address", method "position(byte[32],address)(uint512,uint512,uint512)", method "market(byte[32])(uint512,uint512,uint512,uint512,uint512,uint512)", method "isIrmEnabled(address)bool", method "isLltvEnabled(uint256)bool", method "isAuthorized(address,address)bool", method "nonce(address)uint256", method "idToMarketParams(byte[32])(address,address,address,address,uint512)"
+    txna ApplicationArgs 0
+    match main___postInit_route@7 main___postInit_route@7 main___postInit_route@7 main_enableLltv_route@10 main_setFee_route@11 main___postInit_route@7 main_createMarket_route@13 main_supply_route@14 main_withdraw_route@15 main_withdraw_route@15 main_repay_route@17 main_supplyCollateral_route@18 main_withdrawCollateral_route@19 main_liquidate_route@20 main_flashLoan_route@21 main_setAuthorization_route@22 main_setAuthorizationWithSig_route@23 main_createMarket_route@13 main_extSloads_route@25 main_DOMAIN_SEPARATOR_route@26 main_owner_route@27 main_feeRecipient_route@28 main_position_route@29 main_market_route@30 main_isIrmEnabled_route@31 main_isLltvEnabled_route@32 main_isAuthorized_route@33 main_nonce_route@34 main_idToMarketParams_route@35
+    err
+
+main_idToMarketParams_route@35:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    pushbytes "idToMarketParams"
+    concat
+    sha256
+    box_get
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    dig 2
+    extract 64 32
+    dig 3
+    extract 96 32
+    uncover 4
+    extract 128 32
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    pushint 64
+    bzero
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_nonce_route@34:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    pushbytes "nonce"
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_isAuthorized_route@33:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    swap
+    pushbytes "isAuthorized"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_isLltvEnabled_route@32:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "isLltvEnabled"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_isIrmEnabled_route@31:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    pushbytes "isIrmEnabled"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_market_route@30:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    pushbytes "market"
+    concat
+    sha256
+    box_get
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 16
+    dig 1
+    extract 16 16
+    dig 2
+    extract 32 16
+    dig 3
+    extract 48 16
+    dig 4
+    extract 64 16
+    uncover 5
+    extract 80 16
+    pushint 64
+    bzero
+    uncover 6
+    dig 1
+    b|
+    uncover 6
+    dig 2
+    b|
+    concat
+    uncover 5
+    dig 2
+    b|
+    concat
+    uncover 4
+    dig 2
+    b|
+    concat
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_position_route@29:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    swap
+    pushbytes "position"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 16
+    uncover 2
+    extract 48 16
+    pushint 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_feeRecipient_route@28:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    intc_2 // 0
+    pushbytes "feeRecipient"
+    app_global_get_ex
+    assert // check feeRecipient exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_owner_route@27:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    intc_2 // 0
+    pushbytes "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_DOMAIN_SEPARATOR_route@26:
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec_1 // "__og_value"
+    app_global_get_ex
+    pop
+    !
+    assert // not payable
+    intc_2 // 0
+    pushbytes "DOMAIN_SEPARATOR"
+    app_global_get_ex
+    assert // check DOMAIN_SEPARATOR exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_extSloads_route@25:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_createMarket_route@13:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    intc_1 // 1
+    return
+
+main_setAuthorizationWithSig_route@23:
+    txna ApplicationArgs 1
+    len
+    pushint 129
+    ==
+    assert // invalid number of bytes for Authorization
+    txna ApplicationArgs 2
+    len
+    pushint 65
+    ==
+    assert // invalid number of bytes for Signature
+    intc_1 // 1
+    return
+
+main_setAuthorization_route@22:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 1
+    return
+
+main_flashLoan_route@21:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    intc_1 // 1
+    return
+
+main_liquidate_route@20:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_withdrawCollateral_route@19:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 1
+    return
+
+main_supplyCollateral_route@18:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    intc_1 // 1
+    return
+
+main_repay_route@17:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_withdraw_route@15:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_supply_route@14:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@7:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 1
+    return
+
+main_setFee_route@11:
+    txna ApplicationArgs 1
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 1
+    return
+
+main_enableLltv_route@10:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 1
+    return
+
+main___delegate_update_route@4:
+    txn OnCompletion
+    pushint 4 // UpdateApplication
+    ==
+    txn ApplicationID
+    &&
+    return
