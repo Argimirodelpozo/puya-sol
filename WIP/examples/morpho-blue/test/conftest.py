@@ -105,13 +105,14 @@ def _wrap_send_for_dance(client: "au.AppClient") -> None:
         composer.add_app_call_method_call(client.params.call(params))
         result = composer.send(send_params)
         # The real call is the LAST txn in the group. Promote its
-        # decoded abi return so call sites that read `.abi_return`
-        # on the result keep working transparently.
+        # decoded ABI return so call sites that read `.abi_return`
+        # on the result keep working transparently. `returns[-1]` is
+        # an ABIReturn whose `.value` is the decoded Python value
+        # AppClient.send.call would have surfaced directly.
         try:
             last = result.returns[-1] if result.returns else None
             if last is not None:
-                result.abi_return = (  # type: ignore[attr-defined]
-                    getattr(last, "return_value", None))
+                result.abi_return = last.value  # type: ignore[attr-defined]
         except Exception:
             pass
         return result

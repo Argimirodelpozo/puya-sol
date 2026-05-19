@@ -103,47 +103,65 @@ def call_with_budget(
 ):
     """Call a Morpho method with extra opcode budget from dummy app calls.
 
-    AVM budget = 700 * (outer app calls in group). Complex methods like
-    withdraw/borrow need >700 opcodes before their first inner call.
-    Adding `budget_calls` extra owner() calls provides more base budget.
+    Under the all-methods-split uros architecture, padding calls go to
+    the ORCH (cheap `set_storage(uint64)` noop) rather than morpho.owner()
+    — owner()-via-morpho would itself trigger the dance per pad, eating
+    the ref/fee budget we're trying to free.
 
-    padding_box_refs/padding_app_refs: extra references placed on the padding
-    transactions to share resource availability across the group (AVM v9+
-    resource sharing). Use when the main call exceeds MaxAppTotalTxnReferences=8.
+    AVM budget = 700 * (outer app calls in group), and AVM v9+ shares
+    resource refs across the group. Each orch padding txn gives us 8
+    more ref slots plus 700 more opcodes plus 1 min-fee unit.
+
+    Setting `budget_calls` > 1 buys both more refs AND more opcode
+    budget, which deeper methods (supply/borrow/liquidate) need.
     """
-    import os
+    import os, hashlib
     from dataclasses import replace
-    # Inject the dance's storage_addr into account_references on the
-    # main call. Composer bypasses `morpho.send.call` so the conftest
-    # AppClient wrapper doesn't apply here — we have to dial it in
-    # manually. Mirrors `_wrap_send_for_dance` in conftest.py.
+    from algosdk.transaction import OnComplete
+
     storage_addr = getattr(morpho, "_morpho_storage_addr", None)
+    storage_id = getattr(morpho, "_morpho_storage_id", None)
+    orch_id = getattr(morpho, "_morpho_orch_id", None)
+
     if storage_addr is not None:
         accts = list(params.account_references or [])
         if storage_addr not in accts:
             accts.append(storage_addr)
-        params = replace(params, account_references=accts)
+        params = replace(
+            params,
+            account_references=accts,
+            max_fee=params.max_fee or au.AlgoAmount(micro_algo=200_000),
+        )
+
+    pad_sel = hashlib.new(
+        "sha512_256", b"set_storage(uint64)void").digest()[:4]
 
     composer = localnet.new_group()
-    # Add budget-padding noop calls (owner is cheap, read-only)
-    for i in range(budget_calls):
-        pad_params = au.AppClientMethodCallParams(
-            method="owner",
-            box_references=padding_box_refs or [],
-            app_references=padding_app_refs or [],
-            note=os.urandom(8),  # unique note to avoid duplicate txn errors
-        )
-        composer.add_app_call_method_call(
-            morpho.params.call(pad_params)
-        )
-    # Add the main call
+    sender_addr = morpho._default_sender  # AppClient default sender
+    # Dance-aware padding: hand-built orch.set_storage(uint64) calls.
+    # These DON'T trigger the dance (they're direct orch calls), so
+    # they pay 1 min-fee and contribute 8 ref slots each.
+    for i in range(max(budget_calls, 3)):
+        composer.add_app_call(au.AppCallParams(
+            app_id=orch_id, sender=sender_addr,
+            on_complete=OnComplete.NoOpOC,
+            args=[pad_sel, storage_id.to_bytes(8, "big")],
+            note=os.urandom(8) + bytes([i]),
+            static_fee=au.AlgoAmount(micro_algo=1000),
+        ))
     composer.add_app_call_method_call(morpho.params.call(params))
-    # Force populate=True so simulate auto-resolves resources the dance
-    # reaches (boxes the chunk touches, additional foreign apps). Tests
-    # historically passed NO_POPULATE for fee-cap reasons; under the
-    # dance, populate is mandatory.
-    result = composer.send(au.SendParams(populate_app_call_resources=True))
-    # The main call result is the last one (index = budget_calls)
+    result = composer.send(au.SendParams(
+        populate_app_call_resources=True,
+        cover_app_call_inner_transaction_fees=True,
+    ))
+    # Promote the real call's ABIReturn value to `.abi_return` for
+    # callers that still consume the old shape.
+    try:
+        last = result.returns[-1] if result.returns else None
+        if last is not None:
+            result.abi_return = last.value  # type: ignore[attr-defined]
+    except Exception:
+        pass
     return result
 
 
