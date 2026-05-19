@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho.approval_program() -> uint64:
 main:
     intcblock 32 1 0 TMPL_UROS_MAIN_APP_ID 160 1000000000000000000
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffffff 0x151f7c75 "__og_sender" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__og_value" "market" 0x0f4240 0x151f7c7500 "position" 0xc097ce7bc90715b34b9f1000000000 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0x0de0b6b3a7640000 0x010000000000000000000000000000000000000000000000000de0b6b3a7640000 0x0100000000000000000000000000000000 "feeRecipient" "__dyn_storage"
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffffff "__og_sender" 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__og_value" "market" 0x0f4240 0x151f7c7500 "position" 0xc097ce7bc90715b34b9f1000000000 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0x0de0b6b3a7640000 0x010000000000000000000000000000000000000000000000000de0b6b3a7640000 0x0100000000000000000000000000000000 "feeRecipient" "__dyn_storage"
     intc_2 // 0
     dupn 24
     bytec_1 // ""
@@ -56,7 +56,7 @@ main_nonce_route@34:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -133,7 +133,7 @@ main_owner_route@27:
     return
 
 main_DOMAIN_SEPARATOR_route@26:
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -269,7 +269,7 @@ main_while_top@63:
     b main_while_top@63
 
 main_after_while@65:
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     dig 24
     concat
     log
@@ -371,7 +371,7 @@ main_flashLoan_route@21:
     b!=
     assert // zero assets
     intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    bytec 5 // "__og_sender"
     app_global_get_ex
     pop
     dig 3
@@ -383,7 +383,7 @@ main_flashLoan_route@21:
     concat
     log
     intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    bytec 5 // "__og_sender"
     app_global_get_ex
     pop
     dig 3
@@ -407,7 +407,10 @@ main_flashLoan_route@21:
     extract 6 2
     uncover 2
     concat
-    txn Sender
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 5 // "__og_sender"
+    app_global_get_ex
+    pop
     pushint 24
     extract_uint64
     intc_3 // TMPL_UROS_MAIN_APP_ID
@@ -428,7 +431,7 @@ main_flashLoan_route@21:
     itxn_field ApplicationArgs
     itxn_submit
     intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    bytec 5 // "__og_sender"
     app_global_get_ex
     pop
     intc_3 // TMPL_UROS_MAIN_APP_ID
@@ -1040,7 +1043,7 @@ main_after_if_else@80:
     dig 2
     b|
     intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    bytec 5 // "__og_sender"
     app_global_get_ex
     pop
     swap
@@ -1096,7 +1099,7 @@ main_after_if_else@80:
     dig 11
     extract 32 32
     intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    bytec 5 // "__og_sender"
     app_global_get_ex
     pop
     uncover 2
@@ -1123,7 +1126,10 @@ main_after_if_else@80:
     extract 6 2
     dig 16
     concat
-    txn Sender
+    intc_3 // TMPL_UROS_MAIN_APP_ID
+    bytec 5 // "__og_sender"
+    app_global_get_ex
+    pop
     pushint 24
     extract_uint64
     intc_3 // TMPL_UROS_MAIN_APP_ID
@@ -1148,7 +1154,7 @@ main_after_if_else@82:
     dig 10
     extract 0 32
     intc_3 // TMPL_UROS_MAIN_APP_ID
-    bytec 6 // "__og_sender"
+    bytec 5 // "__og_sender"
     app_global_get_ex
     pop
     intc_3 // TMPL_UROS_MAIN_APP_ID
@@ -1159,7 +1165,7 @@ main_after_if_else@82:
     dig 21
     dig 23
     concat
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -1274,7 +1280,7 @@ main_repay_route@17:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -1305,7 +1311,7 @@ main_withdraw_route@15:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -1341,7 +1347,7 @@ main_supply_route@14:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     log
     intc_1 // 1
     return

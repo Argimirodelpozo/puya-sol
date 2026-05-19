@@ -1619,22 +1619,35 @@ main___delegate_update_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/morpho-blue/contracts/Morpho.sol.Morpho.__uros_og_setup() -> void:
 __uros_og_setup:
-    bytec_0 // "__og_sender"
+    global CallerApplicationID
+    bnz __uros_og_setup_ternary_false@2
     txn Sender
+
+__uros_og_setup_ternary_merge@3:
+    bytec_0 // "__og_sender"
+    swap
     app_global_put
     txn GroupIndex
-    bz __uros_og_setup_ternary_false@2
+    bz __uros_og_setup_ternary_false@5
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-__uros_og_setup_ternary_merge@3:
+__uros_og_setup_ternary_merge@6:
     bytec_1 // "__og_value"
     swap
     app_global_put
     retsub
 
-__uros_og_setup_ternary_false@2:
+__uros_og_setup_ternary_false@5:
     intc_0 // 0
+    b __uros_og_setup_ternary_merge@6
+
+__uros_og_setup_ternary_false@2:
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
     b __uros_og_setup_ternary_merge@3

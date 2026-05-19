@@ -3859,12 +3859,15 @@ class TestFlashLoan:
                 send_params=NO_POPULATE,
             )
 
-    @pytest.mark.xfail(reason="Inner call ABI type mismatch: FlashBorrowerMock emits uint8[32] selector vs Morpho's address selector")
+    @pytest.mark.xfail(reason="AVM rejects re-entry: flash_borrower → morpho → flash_borrower.onMorphoFlashLoan is a recursive call into flash_borrower, which Algorand AVM disallows for security. Solidity allows reentry; AVM doesn't. Fundamental architectural mismatch.")
     def test_flash_loan_via_mock(self, env, account, localnet):
         """Full flash loan via FlashBorrowerMock contract.
 
-        Currently xfail: high-level cross-contract calls encode address as
-        uint8[32] producing a different method selector than Morpho expects.
+        FlashBorrowerMock calls Morpho.flashLoan which calls back into
+        flash_borrower.onMorphoFlashLoan — a recursive callback pattern
+        that AVM rejects with `attempt to re-enter`. Would need to be
+        restructured (e.g., separate borrower-receiver app) to work on
+        Algorand.
         """
         morpho = env["morpho"]
         irm = env["irm"]
@@ -3901,6 +3904,19 @@ class TestFlashLoan:
         fb_bal = mapping_box_key("balanceOf", addr_to_bytes32(fb_addr))
         morpho_bal = mapping_box_key("balanceOf", addr_to_bytes32(morpho_addr))
 
+        # Note: morpho is split (uros dance), so its inner txns reach
+        # into storage/orch/chunks. Use populate to let simulate
+        # discover all dance refs across the group.
+        storage_id = getattr(morpho, "_morpho_storage_id", None)
+        orch_id = getattr(morpho, "_morpho_orch_id", None)
+        storage_addr = getattr(morpho, "_morpho_storage_addr", None)
+        app_refs = [morpho.app_id, loan.app_id]
+        acct_refs = []
+        if storage_id is not None:
+            app_refs.append(storage_id)
+            app_refs.append(orch_id)
+            acct_refs.append(storage_addr)
+
         result = flash_borrower.send.call(
             au.AppClientMethodCallParams(
                 method="flashLoan",
@@ -3910,10 +3926,14 @@ class TestFlashLoan:
                     box_ref(loan.app_id, morpho_bal),
                     box_ref(loan.app_id, allow_key),
                 ],
-                app_references=[morpho.app_id, loan.app_id],
-                extra_fee=au.AlgoAmount(micro_algo=5000),
+                app_references=app_refs,
+                account_references=acct_refs,
+                max_fee=au.AlgoAmount(micro_algo=200_000),
             ),
-            send_params=NO_POPULATE,
+            send_params=au.SendParams(
+                populate_app_call_resources=True,
+                cover_app_call_inner_transaction_fees=True,
+            ),
         )
         assert result is not None
 
@@ -4520,7 +4540,6 @@ class TestMediumGaps:
         )
         assert result is not None
 
-    @pytest.mark.xfail(reason="AVM requires app references even for unreachable inner calls — app 0 unavailable")
     def test_create_market_zero_irm(self, env, account):
         """Create a market with irm=address(0) — no borrowRate() call."""
         morpho = env["morpho"]
@@ -4563,7 +4582,6 @@ class TestMediumGaps:
         )
         assert result is not None
 
-    @pytest.mark.xfail(reason="AVM requires app references even for unreachable inner calls — app 0 unavailable")
     def test_accrue_interest_zero_irm_market(self, env, account):
         """accrueInterest on a zero-IRM market — only lastUpdate is updated, no inner call."""
         morpho = env["morpho"]

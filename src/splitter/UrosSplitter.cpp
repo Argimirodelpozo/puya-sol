@@ -354,14 +354,53 @@ std::shared_ptr<awst::Statement> makeAppGlobalPutStmt(
 		std::move(target), std::move(_value), _loc);
 }
 
-/// `Txn.Sender` (uint64-typed nope, account-typed) — the user calling main.
+/// The original caller's "address" to store as __og_sender. Two cases:
+///
+///   1. EOA caller (user wallet): Txn.Sender is the user's 32-byte
+///      Algorand address. Store as-is.
+///   2. App caller (cross-contract): Txn.Sender is the caller app's
+///      Algorand address = sha512_256("appID" + caller_app_id). That
+///      hash is one-way, so puya-sol can't extract app_id back for
+///      callbacks. Instead, store the puya-sol address convention
+///      `b"\x00"*24 + itob(caller_app_id)` so chunks that do
+///      `extract_uint64(msg.sender, 24)` to recover the app_id (and
+///      cross-call back to it) get the right value.
+///
+/// Built as: `caller_id == 0 ? Txn.Sender : (bzero(24) ++ itob(caller_id))`
 std::shared_ptr<awst::Expression> makeTxnSenderExpr(
 	awst::SourceLocation const& _loc)
 {
 	auto sender = awst::makeIntrinsicCall(
 		"txn", awst::WType::accountType(), _loc);
 	sender->immediates = {std::string("Sender")};
-	return sender;
+
+	auto callerId = awst::makeIntrinsicCall(
+		"global", awst::WType::uint64Type(), _loc);
+	callerId->immediates = {std::string("CallerApplicationID")};
+	auto zero = awst::makeIntegerConstant("0", _loc);
+	auto isEOA = awst::makeNumericCompare(
+		callerId, awst::NumericComparison::Eq, std::move(zero), _loc);
+
+	// App-caller branch: build b"\x00"*24 ++ itob(caller_id) as account
+	auto callerId2 = awst::makeIntrinsicCall(
+		"global", awst::WType::uint64Type(), _loc);
+	callerId2->immediates = {std::string("CallerApplicationID")};
+	auto idBytes = awst::makeItob(std::move(callerId2), _loc);
+	// bzero(24) -- need a 24-byte zero prefix
+	auto bzero24 = awst::makeIntrinsicCall(
+		"bzero", awst::WType::bytesType(), _loc);
+	bzero24->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
+	auto padded = awst::makeConcat(std::move(bzero24), std::move(idBytes), _loc);
+	auto appAddr = awst::makeReinterpretCast(
+		std::move(padded), awst::WType::accountType(), _loc);
+
+	// Ternary: isEOA ? Txn.Sender : (b"\x00"*24 ++ itob(caller_id))
+	return awst::makeConditional(
+		std::move(isEOA),
+		std::move(sender),
+		std::move(appAddr),
+		awst::WType::accountType(),
+		_loc);
 }
 
 /// `(GroupIndex > 0) ? gtxns(GroupIndex - 1, Amount) : 0` as uint64 —
@@ -886,14 +925,27 @@ std::shared_ptr<awst::Expression> patchInnerTxnSenderExpr(
 void patchChunkMethodBody(awst::ContractMethod& _m)
 {
 	if (!_m.body) return;
-	auto fn = [](awst::Expression const& e) -> std::shared_ptr<awst::Expression> {
+	// Pass A: rewrite leaf expressions (Txn.Sender, msg.value,
+	// address(this)). These run first so they apply EVEN INSIDE
+	// CreateInnerTransaction.fields slots — the walker's visitSlot
+	// stops descending after a replacement, so wrapping passes (B)
+	// must come second.
+	auto leafFn = [](awst::Expression const& e) -> std::shared_ptr<awst::Expression> {
 		if (auto r = patchMsgSenderExpr(e)) return r;
 		if (auto r = patchMsgValueExpr(e)) return r;
 		if (auto r = patchAddressThisExpr(e)) return r;
+		return nullptr;
+	};
+	walkBlock(*_m.body, leafFn);
+	// Pass B: wrap inner txns with Sender = main_addr injection. The
+	// walker stops descending after this replacement, but Pass A
+	// already handled the inner `txn Sender` reads inside the
+	// CreateInnerTransaction.fields above.
+	auto wrapFn = [](awst::Expression const& e) -> std::shared_ptr<awst::Expression> {
 		if (auto r = patchInnerTxnSenderExpr(e)) return r;
 		return nullptr;
 	};
-	walkBlock(*_m.body, fn);
+	walkBlock(*_m.body, wrapFn);
 }
 
 /// Forwarding stub body for main: inner-calls the orch with the
