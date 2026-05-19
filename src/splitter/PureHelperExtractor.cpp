@@ -125,9 +125,7 @@ std::string canonicalSig(awst::Subroutine const& _sub)
 /// `txn ApplicationID == 0` (creation guard).
 std::shared_ptr<awst::Expression> isCreate(awst::SourceLocation const& _loc)
 {
-	auto appId = awst::makeIntrinsicCall(
-		"txn", awst::WType::uint64Type(), _loc);
-	appId->immediates = {std::string("ApplicationID")};
+	auto appId = awst::makeTxn("ApplicationID", awst::WType::uint64Type(), _loc);
 	return awst::makeNumericCompare(
 		std::move(appId), awst::NumericComparison::Eq,
 		awst::makeIntegerConstant("0", _loc), _loc);
@@ -337,9 +335,7 @@ void appendBigReturnHelperBranch(
 	//   gloadss
 	//   log
 	auto txnIdx = awst::makeIntegerConstant("0", _loc);
-	auto myIdx = awst::makeIntrinsicCall(
-		"txn", awst::WType::uint64Type(), _loc);
-	myIdx->immediates = {std::string("GroupIndex")};
+	auto myIdx = awst::makeTxn("GroupIndex", awst::WType::uint64Type(), _loc);
 	auto base = awst::makeIntegerConstant("99", _loc);
 	auto slot = awst::makeUInt64BinOp(
 		std::move(myIdx), awst::UInt64BinaryOperator::Add,

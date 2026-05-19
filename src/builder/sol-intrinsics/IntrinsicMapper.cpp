@@ -10,48 +10,27 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 	awst::SourceLocation const& _loc
 )
 {
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-
 	if (_objectName == "msg")
 	{
 		if (_memberName == "sender")
-		{
-			call->opCode = "txn";
-			call->immediates = {std::string("Sender")};
-			call->wtype = awst::WType::accountType();
-			return call;
-		}
+			return awst::makeTxn("Sender", awst::WType::accountType(), _loc);
 	}
 	else if (_objectName == "block")
 	{
 		if (_memberName == "timestamp")
-		{
-			call->opCode = "global";
-			call->immediates = {std::string("LatestTimestamp")};
-			call->wtype = awst::WType::uint64Type();
-			return call;
-		}
-		else if (_memberName == "number")
-		{
-			call->opCode = "global";
-			call->immediates = {std::string("Round")};
-			call->wtype = awst::WType::uint64Type();
-			return call;
-		}
-		else if (_memberName == "chainid")
+			return awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
+		if (_memberName == "number")
+			return awst::makeGlobal("Round", awst::WType::uint64Type(), _loc);
+		if (_memberName == "chainid")
 		{
 			// AVM has no chain ID. The closest equivalent is GenesisHash which
 			// uniquely identifies the network (mainnet/testnet/localnet).
 			Logger::instance().warning(
 				"block.chainid mapped to global GenesisHash. "
 				"AVM has no chain ID; GenesisHash uniquely identifies the network", _loc);
-			call->opCode = "global";
-			call->immediates = {std::string("GenesisHash")};
-			call->wtype = awst::WType::bytesType();
-			return call;
+			return awst::makeGlobal("GenesisHash", awst::WType::bytesType(), _loc);
 		}
-		else if (_memberName == "coinbase")
+		if (_memberName == "coinbase")
 		{
 			// block.coinbase is the miner address on EVM. AVM has no miner
 			// concept — blocks are produced by rotating validators chosen by
@@ -61,22 +40,14 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			Logger::instance().warning(
 				"block.coinbase has no AVM analog — returning CurrentApplicationAddress. "
 				"EVM miner address is not a meaningful concept on Algorand.", _loc);
-			call->opCode = "global";
-			call->immediates = {std::string("CurrentApplicationAddress")};
-			call->wtype = awst::WType::accountType();
-			return call;
+			return awst::makeGlobal("CurrentApplicationAddress", awst::WType::accountType(), _loc);
 		}
 	}
 	else if (_objectName == "tx")
 	{
 		if (_memberName == "origin")
-		{
-			call->opCode = "txn";
-			call->immediates = {std::string("Sender")};
-			call->wtype = awst::WType::accountType();
-			return call;
-		}
-		else if (_memberName == "gasprice")
+			return awst::makeTxn("Sender", awst::WType::accountType(), _loc);
+		if (_memberName == "gasprice")
 		{
 			// tx.gasprice → txn Fee (in microAlgos).
 			// WARNING: These are NOT equivalent. EVM gas price is per-unit cost
@@ -87,10 +58,7 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 				"tx.gasprice mapped to txn Fee (microAlgos). "
 				"NOT equivalent to EVM gas price: AVM uses a flat transaction fee "
 				"(typically 1000 microAlgos), not a per-opcode gas price.", _loc);
-			call->opCode = "txn";
-			call->immediates = {std::string("Fee")};
-			call->wtype = awst::WType::uint64Type();
-			return call;
+			return awst::makeTxn("Fee", awst::WType::uint64Type(), _loc);
 		}
 	}
 

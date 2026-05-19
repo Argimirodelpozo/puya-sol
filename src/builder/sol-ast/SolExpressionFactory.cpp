@@ -63,12 +63,8 @@ public:
 						&innerMA->expression()))
 				{
 					if (baseId->name() == "this")
-					{
-						auto selfAddr = awst::makeIntrinsicCall(
-							"global", awst::WType::accountType(), m_loc);
-						selfAddr->immediates = {std::string("CurrentApplicationAddress")};
-						return selfAddr;
-					}
+						return awst::makeGlobal(
+							"CurrentApplicationAddress", awst::WType::accountType(), m_loc);
 				}
 			}
 		}

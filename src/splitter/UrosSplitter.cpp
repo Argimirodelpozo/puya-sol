@@ -367,21 +367,17 @@ std::shared_ptr<awst::Statement> makeAppGlobalPutStmt(
 std::shared_ptr<awst::Expression> makeTxnSenderExpr(
 	awst::SourceLocation const& _loc)
 {
-	auto sender = awst::makeIntrinsicCall(
-		"txn", awst::WType::accountType(), _loc);
-	sender->immediates = {std::string("Sender")};
+	auto sender = awst::makeTxn("Sender", awst::WType::accountType(), _loc);
 
-	auto callerId = awst::makeIntrinsicCall(
-		"global", awst::WType::uint64Type(), _loc);
-	callerId->immediates = {std::string("CallerApplicationID")};
+	auto callerId = awst::makeGlobal(
+		"CallerApplicationID", awst::WType::uint64Type(), _loc);
 	auto zero = awst::makeIntegerConstant("0", _loc);
 	auto isEOA = awst::makeNumericCompare(
 		callerId, awst::NumericComparison::Eq, std::move(zero), _loc);
 
 	// App-caller branch: build b"\x00"*24 ++ itob(caller_id) as account
-	auto callerId2 = awst::makeIntrinsicCall(
-		"global", awst::WType::uint64Type(), _loc);
-	callerId2->immediates = {std::string("CallerApplicationID")};
+	auto callerId2 = awst::makeGlobal(
+		"CallerApplicationID", awst::WType::uint64Type(), _loc);
 	auto idBytes = awst::makeItob(std::move(callerId2), _loc);
 	// bzero(24) -- need a 24-byte zero prefix
 	auto bzero24 = awst::makeIntrinsicCall(
@@ -406,16 +402,12 @@ std::shared_ptr<awst::Expression> makeTxnSenderExpr(
 std::shared_ptr<awst::Expression> makeMsgValueUint64Expr(
 	awst::SourceLocation const& _loc)
 {
-	auto groupIdx = awst::makeIntrinsicCall(
-		"txn", awst::WType::uint64Type(), _loc);
-	groupIdx->immediates = {std::string("GroupIndex")};
+	auto groupIdx = awst::makeTxn("GroupIndex", awst::WType::uint64Type(), _loc);
 	auto zero = awst::makeIntegerConstant("0", _loc);
 	auto hasPay = awst::makeNumericCompare(
 		groupIdx, awst::NumericComparison::Gt, std::move(zero), _loc);
 
-	auto groupIdx2 = awst::makeIntrinsicCall(
-		"txn", awst::WType::uint64Type(), _loc);
-	groupIdx2->immediates = {std::string("GroupIndex")};
+	auto groupIdx2 = awst::makeTxn("GroupIndex", awst::WType::uint64Type(), _loc);
 	auto one = awst::makeIntegerConstant("1", _loc);
 	auto payIdx = awst::makeUInt64BinOp(
 		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
@@ -1210,9 +1202,8 @@ awst::ContractMethod makeRekeyToStorageMethod(
 	// stub bodies (this is one) aren't subject to the chunk-side Pass 4
 	// patch; they always run on main, so Global.CurrentApplicationAddress
 	// is correct here.
-	auto recv = awst::makeIntrinsicCall(
-		"global", awst::WType::accountType(), _loc);
-	recv->immediates = {std::string("CurrentApplicationAddress")};
+	auto recv = awst::makeGlobal(
+		"CurrentApplicationAddress", awst::WType::accountType(), _loc);
 	create->fields["Receiver"] = std::move(recv);
 	create->fields["RekeyTo"] = awst::makeVarExpression(
 		"storage_addr", awst::WType::accountType(), _loc);
