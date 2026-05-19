@@ -272,6 +272,81 @@ def _substitute_chunk_uros_ids(
     )
 
 
+def _app_addr_bytes32(app_id: int) -> bytes:
+    """Compute the 32-byte raw account address for an app id (the
+    sha512_256("appID" + uint64_be) digest that AVM derives at runtime
+    via `app_params_get AppAddress`)."""
+    return hashlib.new("sha512_256", b"appID" + app_id.to_bytes(8, "big")).digest()
+
+
+def _patch_inner_txn_senders(teal: str, sender_app_id: int) -> str:
+    """Patch TEAL so every `itxn_submit` emits with Sender =
+    sender_app_id's app address (unless user code explicitly set
+    Sender earlier in the same itxn group via `itxn_field Sender`).
+
+    Used by both main and chunk TEAL post-processing under the
+    bidirectional uros rekey (main.AuthAddr=storage,
+    storage.AuthAddr=main):
+
+      * Main TEAL (sender_app_id = storage_id): main can't sign for
+        its own address (main.auth=storage), so default-Sender inner
+        txns from main are rejected. Setting Sender = storage_addr is
+        admissible because main signs for storage via storage.auth=main.
+      * Chunk TEAL (sender_app_id = main_id): chunks run inside
+        storage's account; default-Sender = storage_addr leaks the
+        wrong identity to external callees. Setting Sender = main_addr
+        is admissible because storage signs for main via main.auth=storage.
+
+    The AWST-level patch in `UrosSplitter::patchInnerTxnSenderExpr`
+    only runs on ABI-entry methods (not internal helpers, whose bodies
+    are shared with main via shallowCloneContract). This TEAL pass
+    covers every itxn_submit regardless of which method it lives in.
+
+    Insertion sequence (4 opcodes, ~6 B per itxn_submit):
+        pushint <sender_app_id>
+        app_params_get AppAddress
+        assert
+        itxn_field Sender
+        itxn_submit              ← original line
+    """
+    lines = teal.split("\n")
+    out: list[str] = []
+    for line in lines:
+        if line.strip().startswith("itxn_submit"):
+            # Walk backward inside the current itxn's field list. Stop
+            # at the previous itxn_begin / itxn_next / itxn_submit so we
+            # only inspect THIS itxn's fields, not an earlier one in a
+            # multi-txn group. We need to know two things:
+            #   1. Does it already have `itxn_field Sender`? (skip)
+            #   2. Does it have `itxn_field ApplicationID`? (only patch
+            #      APPL-type inner txns — Pay/Asset txns with
+            #      default Sender usually do what user code intended,
+            #      and the deploy-time rekey Pay txns specifically need
+            #      Sender=main_addr default to rekey the right account.)
+            saw_sender = False
+            saw_app_id = False
+            for prev in reversed(out):
+                s = prev.strip()
+                if s.startswith("itxn_begin") or s.startswith("itxn_next") \
+                        or s.startswith("itxn_submit"):
+                    break
+                if s.startswith("itxn_field Sender"):
+                    saw_sender = True
+                if s.startswith("itxn_field ApplicationID"):
+                    saw_app_id = True
+            if saw_app_id and not saw_sender:
+                # Push the literal 32-byte address rather than
+                # `app_params_get AppAddress` so the deployed contract
+                # doesn't depend on the sender-app being in foreign-apps
+                # at every call site (algokit's populate_app_call_resources
+                # auto-detects box refs but not app_params_get probes).
+                addr_hex = _app_addr_bytes32(sender_app_id).hex()
+                out.append(f"    pushbytes 0x{addr_hex}")
+                out.append("    itxn_field Sender")
+        out.append(line)
+    return "\n".join(out)
+
+
 def _compile_teal(algod: AlgodClient, teal: str) -> bytes:
     return base64.b64decode(algod.compile(teal)["result"])
 
@@ -607,9 +682,14 @@ def deploy_split_app(
     # TMPL_UROS_MAIN_APP_ID for cross-app reads of __og_sender /
     # __og_value, so we need main_id known before chunk TEAL compiles.
     print(f"[uros_dance] compiling main_v2 with orch_id={orch_id} storage_id={storage_id}")
+    # Patch main TEAL: every inner txn that doesn't already set Sender
+    # gets Sender=storage_addr injected. main.AuthAddr=storage means main
+    # can't sign for its own address, but it CAN sign for storage (via
+    # storage.AuthAddr=main). So all inner txns must claim Sender=storage.
+    main_teal_patched = _patch_inner_txn_senders(main_teal, storage_id)
     main_approval_v2 = _compile_teal(
         algod, _substitute_pure_helper_ids(
-            _substitute_main_uros_ids(main_teal, orch_id, storage_id),
+            _substitute_main_uros_ids(main_teal_patched, orch_id, storage_id),
             pure_helper_app_ids))
     sp = algod.suggested_params()
     txn = ApplicationCreateTxn(
@@ -692,6 +772,12 @@ def deploy_split_app(
     for ci, c in enumerate(deploy_tmpl["chunks"]):
         chunk_dir = contract_dir / "__uros_split" / f"chunk_{ci}"
         chunk_teal = (chunk_dir / f"{c['name']}.approval.teal").read_text()
+        # Patch chunk TEAL: every inner txn that doesn't already set
+        # Sender gets Sender=main_addr injected. Chunks run inside
+        # storage's account; storage.AuthAddr=main means storage can't
+        # sign for itself, but CAN sign for main (via main.AuthAddr=storage).
+        # External callees observe Sender=main consistently.
+        chunk_teal = _patch_inner_txn_senders(chunk_teal, main_id)
         chunk_bytes = _compile_teal(
             algod, _substitute_pure_helper_ids(
                 _substitute_chunk_uros_ids(
