@@ -378,10 +378,23 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 			sourceBits = srcInt->numBits();
 		if (targetBits < sourceBits && targetBits < 256)
 		{
-			solidity::u256 maskVal = (solidity::u256(1) << targetBits) - 1;
-			auto mask = awst::makeIntegerConstant(maskVal.str(), m_loc, awst::WType::biguintType());
-			auto bitAnd = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::BitAnd, std::move(mask), m_loc);
-			return bitAnd;
+			// Use `b%` (mod 2^targetBits) instead of `b&` (mask). Both
+			// give the lower `targetBits` bits, but they differ in result
+			// length: AVM `b&` returns `max(len(a), len(b))` bytes (no
+			// leading-zero strip), while `b%` returns the minimum-length
+			// representation. For a 32-byte ARC4-decoded value, `b&` with
+			// a 16-byte mask leaves a 32-byte result that fails downstream
+			// `to_fixed_size`'s `len <= num_bytes` check; `b%` produces a
+			// ≤16-byte result that passes.
+			//
+			// Puya's intrinsic_simplification folds `b+ x 0` → `x` (line
+			// ~1538), so we can't strip leading zeros via `b+ 0`. `b%`
+			// with a non-zero constant divisor is not similarly folded
+			// for non-constant inputs.
+			solidity::u256 modulusVal = solidity::u256(1) << targetBits;
+			auto modulus = awst::makeIntegerConstant(modulusVal.str(), m_loc, awst::WType::biguintType());
+			auto bMod = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, std::move(modulus), m_loc);
+			return bMod;
 		}
 	}
 
