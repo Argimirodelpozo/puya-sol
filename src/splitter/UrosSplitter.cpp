@@ -506,9 +506,7 @@ std::shared_ptr<awst::Block> makeForwardValueBody(
 
 	// itxn pay: Receiver=__storage.address, Amount=amount, Fee=0
 	static awst::WInnerTransactionFields s_payFieldsType(1);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_payFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("1", _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["Receiver"] = makeStorageAddressExpr(_loc);
@@ -904,9 +902,7 @@ std::shared_ptr<awst::Expression> patchInnerTxnSenderExpr(
 	if (cit->fields.count("Sender")) return nullptr;
 
 	// Clone (preserve all existing fields), inject Sender override.
-	auto cloned = std::make_shared<awst::CreateInnerTransaction>();
-	cloned->sourceLocation = cit->sourceLocation;
-	cloned->wtype = cit->wtype;
+	auto cloned = awst::makeCreateInnerTransaction(cit->wtype, cit->sourceLocation);
 	cloned->fields = cit->fields;
 	cloned->fields["Sender"] = makeMainAddressExpr(cit->sourceLocation);
 	return cloned;
@@ -1030,9 +1026,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	// Build CreateInnerTransaction(appl, app_id=orch, args=tuple, fee=0).
 	static awst::WInnerTransactionFields s_applFieldsType(
 		static_cast<int>(TXN_TYPE_APPL));
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_applFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(
 		std::to_string(TXN_TYPE_APPL), _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
@@ -1211,9 +1205,7 @@ awst::ContractMethod makeRekeyToStorageMethod(
 	auto block = awst::makeBlock(_loc);
 
 	static awst::WInnerTransactionFields s_payFieldsType(1);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_payFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("1", _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["Amount"] = awst::makeIntegerConstant("0", _loc);

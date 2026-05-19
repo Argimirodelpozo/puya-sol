@@ -611,9 +611,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	argsTuple->wtype = ownedTupleTypes.back().get();
 
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = std::make_shared<awst::CreateInnerTransaction>();
-	create->sourceLocation = _loc;
-	create->wtype = &s_applFieldsType;
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(
 		std::to_string(TxnTypeAppl), _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
@@ -658,9 +656,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 
 		for (int i = 1; i < chunks; ++i)
 		{
-			auto helperCreate = std::make_shared<awst::CreateInnerTransaction>();
-			helperCreate->sourceLocation = _loc;
-			helperCreate->wtype = &s_applFieldsType;
+			auto helperCreate = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 			helperCreate->fields["TypeEnum"] = awst::makeIntegerConstant(
 				std::to_string(TxnTypeAppl), _loc);
 			helperCreate->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
@@ -775,9 +771,7 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 			std::move(argT), std::nullopt));
 		argsTuple->wtype = ownedTupleTypes.back().get();
 
-		auto create = std::make_shared<awst::CreateInnerTransaction>();
-		create->sourceLocation = _loc;
-		create->wtype = &s_applFieldsType;
+		auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 		create->fields["TypeEnum"] = awst::makeIntegerConstant(
 			std::to_string(TxnTypeAppl), _loc);
 		create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
@@ -813,9 +807,7 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 				std::move(at), std::nullopt));
 			helperArgs->wtype = ownedTupleTypes.back().get();
 
-			auto hc = std::make_shared<awst::CreateInnerTransaction>();
-			hc->sourceLocation = _loc;
-			hc->wtype = &s_applFieldsType;
+			auto hc = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 			hc->fields["TypeEnum"] = awst::makeIntegerConstant(
 				std::to_string(TxnTypeAppl), _loc);
 			hc->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
