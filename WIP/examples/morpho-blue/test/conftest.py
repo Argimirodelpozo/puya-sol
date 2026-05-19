@@ -18,6 +18,63 @@ import pytest
 OUT_DIR = Path(__file__).parent.parent / "out"
 
 
+def _wrap_send_for_dance(client: "au.AppClient") -> None:
+    """Patch a split-contract AppClient's `.send.call` so every call
+    transparently adds:
+      1. `app_references = [storage_id, orch_id]` (so AVM admits the
+         Sender override the patched TEAL emits — main's inner-app
+         calls claim Sender=storage_addr).
+      2. `account_references = [storage_addr, orch_addr]` (so the
+         32-byte Sender is in the txn's foreign-accounts pool).
+      3. `send_params = SendParams(populate_app_call_resources=True)`
+         so any further unavailable resources (boxes the chunk
+         touches, additional foreign apps the dance reaches) are
+         auto-resolved via simulate.
+
+    Tests can still pass their own resource refs; we union them with
+    the dance refs so nothing is dropped.
+    """
+    storage_id = client._morpho_storage_id  # type: ignore[attr-defined]
+    orch_id = client._morpho_orch_id  # type: ignore[attr-defined]
+    storage_addr = client._morpho_storage_addr  # type: ignore[attr-defined]
+    orch_addr = client._morpho_orch_addr  # type: ignore[attr-defined]
+    sender_accessor = client.send
+    original_call = sender_accessor.call
+
+    def _merge_refs(existing: list | None, extras: list) -> list:
+        merged = list(existing or [])
+        for x in extras:
+            if x not in merged:
+                merged.append(x)
+        return merged
+
+    def patched_call(
+        params: "au.AppClientMethodCallParams",
+        send_params: "au.SendParams | None" = None,
+    ):
+        from dataclasses import replace
+        # Only add storage_addr — that's the Sender main's patched
+        # TEAL claims for inner txns. orch is reachable via populate
+        # for the rare split-method dispatch case. Keeping the ref
+        # set minimal avoids tripping the 8-ref-per-txn cap on
+        # resource-heavy methods like createMarket (4 boxes + irm).
+        params = replace(
+            params,
+            account_references=_merge_refs(
+                params.account_references, [storage_addr]),
+            extra_fee=params.extra_fee or au.AlgoAmount(micro_algo=20_000),
+        )
+        # Force populate=True regardless of what the test passed.
+        # Tests using NO_POPULATE bypass auto-resource resolution, which
+        # the dance needs (additional foreign apps reached by simulate-
+        # tracing chunk dispatch and box refs for boxes the chunk
+        # touches but the test caller doesn't know about).
+        send_params = au.SendParams(populate_app_call_resources=True)
+        return original_call(params, send_params)
+
+    sender_accessor.call = patched_call  # type: ignore[assignment]
+
+
 @pytest.fixture(scope="session")
 def algod_client() -> AlgodClient:
     config = au.ClientManager.get_default_localnet_config("algod")
@@ -99,14 +156,14 @@ def deploy_contract(
                 f"{name} is uros-split; pass orch_app_id fixture to "
                 f"deploy_contract"
             )
-        from uros_dance import deploy_split_app
+        from uros_dance import deploy_split_app, _app_addr
         d = deploy_split_app(
             localnet.client.algod, account, name,
             orch_id=orch_app_id,
             app_args=constructor_args or [],
             fund_amount=fund_amount,
         )
-        return au.AppClient(
+        client = au.AppClient(
             au.AppClientParams(
                 algorand=localnet,
                 app_spec=app_spec,
@@ -114,6 +171,21 @@ def deploy_contract(
                 default_sender=account.address,
             )
         )
+        # Wire dance-aware send semantics. Every outer call on a split
+        # contract has to:
+        #   * Carry __storage's app/account in the resources array (the
+        #     patched main TEAL emits inner txns with Sender =
+        #     storage_addr, which AVM only admits when storage is in
+        #     the txn's foreign-accounts/foreign-apps).
+        #   * Use simulate-based resource population so the rest of the
+        #     auto-resolvable resources (boxes, other foreign apps the
+        #     chunk may reach) come along for the ride.
+        client._morpho_storage_id = d.storage_id
+        client._morpho_orch_id = d.orch_id
+        client._morpho_storage_addr = _app_addr(d.storage_id)
+        client._morpho_orch_addr = _app_addr(d.orch_id)
+        _wrap_send_for_dance(client)
+        return client
     client = deploy_contract_raw(
         localnet, account, name, app_spec,
         subdir=subdir,
