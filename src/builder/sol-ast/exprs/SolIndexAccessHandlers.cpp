@@ -119,71 +119,19 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		break;
 	}
 
-	// Set when the cursor identifier is aliased (inheritance-specifier
-	// param, internal-call param, or local storage pointer). Under per-
-	// layer hashing the alias's box-key expression IS the slot pointer at
-	// that level — fed as the chain's starting prefix; per-layer sha256
-	// extends it cleanly.
-	std::shared_ptr<awst::Expression> aliasOverridePrefix;
-	Type const* rootMappingType = nullptr;
-	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
-	{
-		varName = ident->name();
-		rootMappingType = ident->annotation().type;
-
-		// Storage pointer alias: `mapping storage m = m1; m[k] = v;`
-		// The identifier resolves to a local with a registered alias;
-		// the box prefix must match the underlying state variable, not
-		// the local's name, or writes land under the wrong key.
-		if (auto const* decl = ident->annotation().referencedDeclaration)
-		{
-			auto const* alias = m_scope.findStorageAlias(decl->id());
-			if (alias)
-			{
-				auto aliasExpr = alias->expr;
-				// Unwrap StateGet → underlying state expression.
-				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
-					aliasExpr = sg->field;
-				// Peel off FieldExpressions to reach the root state expression.
-				while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
-					aliasExpr = fe->base;
-				// Under per-layer hashing the alias's box-key expression IS the
-				// slot pointer at that level — feed it directly as the chain's
-				// starting prefix. No inner-sha256 unwrapping required.
-				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-					aliasOverridePrefix = boxVal->key;
-				else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
-					aliasOverridePrefix = appState->key;
-				// Simple holder-name alias (`mapping storage m = state_m;`):
-				// alias is a BytesConstant of the underlying state-var's
-				// encoded name. Use as varName so the default-prefix path picks
-				// the right starting bytes.
-				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(aliasExpr.get()))
-					varName = std::string(bc->value.begin(), bc->value.end());
-			}
-		}
-	}
-	else if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
-	{
-		varName = ma->memberName();
-		rootMappingType = ma->annotation().type;
-	}
-	// `f()[k]` — mapping-pointer-returning call indexed directly. The call
-	// result (bytes — the holder name) is the runtime key prefix.
-	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(cursor))
-	{
-		rootMappingType = cursor->annotation().type;
-	}
+	auto ctx = resolveCursorContext(cursor);
+	if (!ctx.varName.empty())
+		varName = ctx.varName;
 
 	std::reverse(indexExprs.begin(), indexExprs.end());
 
-	auto declaredKeyWTypes = resolveKeyWTypes(rootMappingType, indexExprs.size());
+	auto declaredKeyWTypes = resolveKeyWTypes(ctx.rootMappingType, indexExprs.size());
 
 	auto e = std::make_shared<awst::BoxValueExpression>();
 	e->sourceLocation = m_loc;
 	e->wtype = resolveValueWType(baseType);
 
-	auto prefix = buildInitialPrefix(cursor, varName, aliasOverridePrefix);
+	auto prefix = buildInitialPrefix(cursor, varName, ctx.aliasOverridePrefix);
 
 	if (!indexExprs.empty())
 	{
@@ -249,6 +197,63 @@ std::vector<awst::WType const*> SolIndexAccess::resolveKeyWTypes(
 		}
 	}
 	return result;
+}
+
+SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
+	solidity::frontend::Expression const* _cursor)
+{
+	CursorContext out;
+
+	if (auto const* ident = dynamic_cast<Identifier const*>(_cursor))
+	{
+		out.varName = ident->name();
+		out.rootMappingType = ident->annotation().type;
+
+		// Storage pointer alias: `mapping storage m = m1; m[k] = v;`
+		// The identifier resolves to a local with a registered alias;
+		// the box prefix must match the underlying state variable, not
+		// the local's name, or writes land under the wrong key.
+		if (auto const* decl = ident->annotation().referencedDeclaration)
+		{
+			auto const* alias = m_scope.findStorageAlias(decl->id());
+			if (alias)
+			{
+				auto aliasExpr = alias->expr;
+				// Unwrap StateGet → underlying state expression.
+				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
+					aliasExpr = sg->field;
+				// Peel off FieldExpressions to reach the root state expression.
+				while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
+					aliasExpr = fe->base;
+				// Under per-layer hashing the alias's box-key expression IS the
+				// slot pointer at that level — feed it directly as the chain's
+				// starting prefix. No inner-sha256 unwrapping required.
+				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
+					out.aliasOverridePrefix = boxVal->key;
+				else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
+					out.aliasOverridePrefix = appState->key;
+				// Simple holder-name alias (`mapping storage m = state_m;`):
+				// alias is a BytesConstant of the underlying state-var's
+				// encoded name. Use as varName so the default-prefix path picks
+				// the right starting bytes.
+				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(aliasExpr.get()))
+					out.varName = std::string(bc->value.begin(), bc->value.end());
+			}
+		}
+	}
+	else if (auto const* ma = dynamic_cast<MemberAccess const*>(_cursor))
+	{
+		out.varName = ma->memberName();
+		out.rootMappingType = ma->annotation().type;
+	}
+	// `f()[k]` — mapping-pointer-returning call indexed directly. The call
+	// result (bytes — the holder name) is the runtime key prefix.
+	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(_cursor))
+	{
+		out.rootMappingType = _cursor->annotation().type;
+	}
+
+	return out;
 }
 
 awst::WType const* SolIndexAccess::resolveValueWType(solidity::frontend::Type const* _baseType)

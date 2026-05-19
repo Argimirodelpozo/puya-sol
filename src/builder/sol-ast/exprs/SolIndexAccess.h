@@ -54,6 +54,24 @@ private:
 	/// layer in `_baseType`. For non-mapping base types, returns the
 	/// type-mapped wtype of the index expression itself.
 	awst::WType const* resolveValueWType(solidity::frontend::Type const* _baseType);
+
+	/// Result of `resolveCursorContext`: the metadata needed by
+	/// `handleMappingAccess` to derive the initial storage-key prefix
+	/// from the cursor expression (after wrapper peeling).
+	struct CursorContext
+	{
+		std::string varName;                       // Identifier/MemberAccess name
+		solidity::frontend::Type const* rootMappingType = nullptr;
+		std::shared_ptr<awst::Expression> aliasOverridePrefix;  // alias's slot key, when applicable
+	};
+
+	/// Phase-extract of `handleMappingAccess`: given the cursor
+	/// expression (already peeled of Assignment/TupleExpression
+	/// wrappers), classify it as Identifier (possibly aliased),
+	/// MemberAccess, or mapping-returning FunctionCall, and return
+	/// the per-shape context the prefix builder needs.
+	CursorContext resolveCursorContext(
+		solidity::frontend::Expression const* _cursor);
 };
 
 /// arr[start:end] range access.
