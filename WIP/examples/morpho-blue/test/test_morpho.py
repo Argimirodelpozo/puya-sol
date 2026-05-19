@@ -112,6 +112,18 @@ def call_with_budget(
     resource sharing). Use when the main call exceeds MaxAppTotalTxnReferences=8.
     """
     import os
+    from dataclasses import replace
+    # Inject the dance's storage_addr into account_references on the
+    # main call. Composer bypasses `morpho.send.call` so the conftest
+    # AppClient wrapper doesn't apply here — we have to dial it in
+    # manually. Mirrors `_wrap_send_for_dance` in conftest.py.
+    storage_addr = getattr(morpho, "_morpho_storage_addr", None)
+    if storage_addr is not None:
+        accts = list(params.account_references or [])
+        if storage_addr not in accts:
+            accts.append(storage_addr)
+        params = replace(params, account_references=accts)
+
     composer = localnet.new_group()
     # Add budget-padding noop calls (owner is cheap, read-only)
     for i in range(budget_calls):
@@ -126,7 +138,11 @@ def call_with_budget(
         )
     # Add the main call
     composer.add_app_call_method_call(morpho.params.call(params))
-    result = composer.send(NO_POPULATE)
+    # Force populate=True so simulate auto-resolves resources the dance
+    # reaches (boxes the chunk touches, additional foreign apps). Tests
+    # historically passed NO_POPULATE for fee-cap reasons; under the
+    # dance, populate is mandatory.
+    result = composer.send(au.SendParams(populate_app_call_resources=True))
     # The main call result is the last one (index = budget_calls)
     return result
 
