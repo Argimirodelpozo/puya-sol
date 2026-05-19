@@ -2912,19 +2912,22 @@ class TestAuthorizationWithSig:
         )
 
         # Build Authorization tuple: (authorizer, authorized, isAuthorized, nonce, deadline)
+        # algokit's address-type encoder requires bytes/bytearray (not list);
+        # the byte[]/bytes ABI canonical names changed in v261 so the encoder
+        # routes via the bytes path instead of the list path.
         authorization = (
-            list(authorizer_sol_addr),   # authorizer: uint8[32]
-            list(authorized_bytes),      # authorized: uint8[32]
-            True,                        # isAuthorized: bool
-            nonce,                       # nonce: uint256
-            deadline,                    # deadline: uint256
+            bytes(authorizer_sol_addr),   # authorizer: uint8[32]
+            bytes(authorized_bytes),      # authorized: uint8[32]
+            True,                         # isAuthorized: bool
+            nonce,                        # nonce: uint256
+            deadline,                     # deadline: uint256
         )
 
         # Build Signature tuple: (v, r, s)
         signature = (
-            v,          # v: uint64
-            list(r),    # r: uint8[32]
-            list(s),    # s: uint8[32]
+            v,           # v: uint64
+            bytes(r),    # r: byte[32]
+            bytes(s),    # s: byte[32]
         )
 
         # Box key for isAuthorized[authorizer][authorized]
@@ -4155,33 +4158,29 @@ class TestGovernanceEdgeCases:
         params = env["params"]
         mkt_key = env["mkt_key"]
         import os
-        call_params = au.AppClientMethodCallParams(
-            method="accrueInterest", args=[params],
-            box_references=[box_ref(morpho.app_id, mkt_key)],
-            app_references=[irm.app_id],
-            extra_fee=au.AlgoAmount(micro_algo=1000),
+        # Two separate accrueInterest calls via call_with_budget. Each picks
+        # up the dance refs from its own padding txns. The "same block"
+        # property still holds because both run in the same round.
+        call_with_budget(
+            localnet, morpho,
+            au.AppClientMethodCallParams(
+                method="accrueInterest", args=[params],
+                box_references=[box_ref(morpho.app_id, mkt_key)],
+                app_references=[irm.app_id],
+                extra_fee=au.AlgoAmount(micro_algo=1000),
+                note=os.urandom(8),
+            ),
         )
-        # Call twice in same group — second call should hit elapsed=0 early return
-        composer = localnet.new_group()
-        composer.add_app_call_method_call(morpho.params.call(
+        result = call_with_budget(
+            localnet, morpho,
             au.AppClientMethodCallParams(
                 method="accrueInterest", args=[params],
                 box_references=[box_ref(morpho.app_id, mkt_key)],
                 app_references=[irm.app_id],
                 extra_fee=au.AlgoAmount(micro_algo=1000),
                 note=os.urandom(8),
-            )
-        ))
-        composer.add_app_call_method_call(morpho.params.call(
-            au.AppClientMethodCallParams(
-                method="accrueInterest", args=[params],
-                box_references=[box_ref(morpho.app_id, mkt_key)],
-                app_references=[irm.app_id],
-                extra_fee=au.AlgoAmount(micro_algo=1000),
-                note=os.urandom(8),
-            )
-        ))
-        result = composer.send(NO_POPULATE)
+            ),
+        )
         assert result is not None
 
 
