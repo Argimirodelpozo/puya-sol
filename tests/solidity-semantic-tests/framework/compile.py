@@ -1,12 +1,143 @@
 """Compile a Solidity test file to puya-sol ARC56 artifacts."""
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import shutil
 import subprocess
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .paths import COMPILER, PUYA
+from .paths import CACHE_DIR, COMPILER, PUYA, PUYA_BACKEND_SRC
+
+
+# Lazily-computed signature of the compiler stack (puya-sol binary + puya
+# backend source tree). Recomputed once per process — both are stable for
+# the duration of a test run. If either changes (rebuild puya-sol, edit
+# puya/src), the signature changes → cache misses for everything → fresh
+# compiles. Cheap because we only stat one file + walk one tree (no read).
+_COMPILER_STACK_SIG: str | None = None
+
+
+def _compiler_stack_sig() -> str:
+    global _COMPILER_STACK_SIG
+    if _COMPILER_STACK_SIG is not None:
+        return _COMPILER_STACK_SIG
+    h = hashlib.sha256()
+    # puya-sol binary: mtime_ns + size (cheap and content-equivalent for our
+    # build → never two builds same mtime+size with different content).
+    try:
+        st = COMPILER.stat()
+        h.update(f"compiler:{st.st_mtime_ns}:{st.st_size}".encode())
+    except FileNotFoundError:
+        h.update(b"compiler:missing")
+    # puya backend source tree: max mtime over all .py files. Walking ~500
+    # files takes <50 ms on warm cache.
+    max_mtime = 0
+    if PUYA_BACKEND_SRC.exists():
+        for p in PUYA_BACKEND_SRC.rglob("*.py"):
+            try:
+                m = p.stat().st_mtime_ns
+                if m > max_mtime:
+                    max_mtime = m
+            except FileNotFoundError:
+                pass
+    h.update(f"puya_src:{max_mtime}".encode())
+    _COMPILER_STACK_SIG = h.hexdigest()
+    return _COMPILER_STACK_SIG
+
+
+def _compute_cache_key(
+    source_path: Path,
+    all_sources: list[Path],
+    import_dir: Path | None,
+    remappings: list[str],
+    ensure_budget: dict[str, int] | None,
+    via_yul_behavior: bool,
+    evm_version: str | None,
+) -> str:
+    """Cache key from inputs that affect the compile output.
+
+    Hashes: every source file's contents, the compile flags, and the
+    compiler stack signature (puya-sol binary + puya backend tree).
+    `import_dir` content is captured indirectly via `all_sources` (the
+    multisource splitter writes all sources to the temp import_dir and
+    lists them in `all_sources`).
+    """
+    h = hashlib.sha256()
+    h.update(_compiler_stack_sig().encode())
+    # Hash source contents in stable order
+    seen = set()
+    for p in [source_path, *all_sources]:
+        p = p.resolve()
+        if p in seen:
+            continue
+        seen.add(p)
+        try:
+            data = p.read_bytes()
+        except FileNotFoundError:
+            data = b""
+        # Include the basename so renaming a file invalidates the cache
+        h.update(f"src:{p.name}:{len(data)}\n".encode())
+        h.update(data)
+    # Flags
+    flags = {
+        "remappings": sorted(remappings),
+        "ensure_budget": dict(sorted((ensure_budget or {}).items())),
+        "via_yul_behavior": via_yul_behavior,
+        "evm_version": evm_version,
+    }
+    h.update(json.dumps(flags, sort_keys=True).encode())
+    return h.hexdigest()
+
+
+def _cache_lookup(key: str, out_dir: Path) -> bool:
+    """If the cache has an entry for `key`, copy its files into `out_dir`.
+
+    Returns True on hit (out_dir now populated), False on miss.
+    """
+    entry = CACHE_DIR / key
+    if not entry.is_dir():
+        return False
+    # Sanity check: cache entry must have at least one .arc56.json
+    if not any(entry.glob("*.arc56.json")):
+        return False
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for src in entry.iterdir():
+        if src.is_file():
+            shutil.copy2(src, out_dir / src.name)
+    return True
+
+
+def _cache_store(key: str, out_dir: Path) -> None:
+    """Atomically store the compile artifacts in `out_dir` under `key`.
+
+    Concurrent stores (e.g. xdist with -n 2) are safe: each writer
+    populates a private tmp dir then atomically renames. If the target
+    already exists (raced), the rename fails and we silently drop the
+    duplicate — the first writer wins, and the result is identical.
+    """
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    entry = CACHE_DIR / key
+    if entry.exists():
+        return
+    # Build a sibling tmp dir, copy artifacts in, rename into place.
+    tmp = Path(tempfile.mkdtemp(prefix="cache_", dir=str(CACHE_DIR)))
+    try:
+        for src in out_dir.iterdir():
+            if src.is_file():
+                shutil.copy2(src, tmp / src.name)
+        try:
+            os.rename(tmp, entry)
+            tmp = None  # successful rename — don't clean up
+        except OSError:
+            # Another worker raced and won; that's fine.
+            pass
+    finally:
+        if tmp is not None and tmp.exists():
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 @dataclass
@@ -70,6 +201,39 @@ def compile_sol(
     out_dir.mkdir(parents=True, exist_ok=True)
     source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
 
+    # Cache lookup: hash all source files + flags + compiler-stack signature.
+    # On hit, copy artifacts straight into out_dir and skip the subprocess.
+    cache_key = _compute_cache_key(
+        source_path=source_path,
+        all_sources=all_sources,
+        import_dir=import_dir,
+        remappings=remappings,
+        ensure_budget=ensure_budget,
+        via_yul_behavior=via_yul_behavior,
+        evm_version=evm_version,
+    )
+    cache_hit = _cache_lookup(cache_key, out_dir)
+    main_source_text = ""
+    try:
+        main_source_text = source_path.read_text()
+    except Exception:
+        pass
+    if cache_hit:
+        if import_dir:
+            shutil.rmtree(import_dir, ignore_errors=True)
+        artifacts = CompiledArtifacts(
+            main_source=source_path, main_source_text=main_source_text
+        )
+        for arc56 in out_dir.glob("*.arc56.json"):
+            name = arc56.stem.replace(".arc56", "")
+            artifacts.by_contract[name] = {
+                "arc56": arc56,
+                "approval_teal": out_dir / f"{name}.approval.teal",
+                "clear_teal": out_dir / f"{name}.clear.teal",
+                "sol_path": source_path,
+            }
+        return artifacts
+
     cmd = [str(COMPILER), "--source", str(source_path)]
     for extra in all_sources:
         if str(extra) != str(source_path):
@@ -94,7 +258,6 @@ def compile_sol(
     # backend subprocess. Result: missing optimizations like
     # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
     # stack-value cap on long dynamic arrays.
-    import os
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
     try:
         result = subprocess.run(
@@ -121,6 +284,11 @@ def compile_sol(
             stdout=result.stdout,
             stderr=result.stderr,
         )
+
+    # Successful compile — populate cache for next run. Failures are
+    # deliberately NOT cached (could be transient: disk full, segfault,
+    # etc., and the cost of a re-run is bounded by the test timeout).
+    _cache_store(cache_key, out_dir)
 
     artifacts = CompiledArtifacts(main_source=source_path, main_source_text=main_source_text)
     for arc56 in out_dir.glob("*.arc56.json"):

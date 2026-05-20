@@ -12,3 +12,5 @@ PUYA = PUYA_SOL_ROOT / "puya" / ".venv" / "bin" / "puya"
 
 TESTS_DIR = SEMANTIC_TESTS_DIR / "tests"
 OUT_DIR = SEMANTIC_TESTS_DIR / "out"
+CACHE_DIR = SEMANTIC_TESTS_DIR / ".compile_cache"
+PUYA_BACKEND_SRC = PUYA_SOL_ROOT / "puya" / "src"
