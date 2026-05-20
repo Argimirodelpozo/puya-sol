@@ -114,11 +114,8 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// always ApplicationArgs[0], which is already 4 bytes, so we emit the
 	// same txna read and type it as bytes4.
 	if (baseName == "msg" && member == "sig")
-	{
-		auto appArgs0 = awst::makeIntrinsicCall("txna", m_ctx.typeMapper.createType<awst::BytesWType>(4), m_loc);
-		appArgs0->immediates = {std::string("ApplicationArgs"), 0};
-		return appArgs0;
-	}
+		return awst::makeAppArg(
+			0, m_loc, m_ctx.typeMapper.createType<awst::BytesWType>(4));
 
 	// msg.data → reconstruct EVM-style calldata: selector (4 bytes from
 	// ApplicationArgs[0]) followed by each subsequent ApplicationArgs slot
@@ -148,8 +145,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 			auto slotPresent = awst::makeNumericCompare(std::move(numArgsCheck), awst::NumericComparison::Gt, std::move(slotIdxCmp), m_loc);
 
-			auto slotBytes = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), m_loc);
-			slotBytes->immediates = {std::string("ApplicationArgs"), slot};
+			auto slotBytes = awst::makeAppArg(slot, m_loc);
 
 			auto slotChoice = awst::makeConditional(
 				std::move(slotPresent), std::move(slotBytes),

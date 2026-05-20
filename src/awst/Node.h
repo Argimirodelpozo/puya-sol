@@ -723,6 +723,19 @@ inline std::shared_ptr<IntrinsicCall> makeTxn(
 	return node;
 }
 
+// `txna ApplicationArgs <i>` — read the i-th application argument as
+// bytes. `wtype` defaults to `WType::bytesType()` but callers that need
+// a fixed-width view (e.g. `BytesWType(4)` for the 4-byte method
+// selector) can override.
+inline std::shared_ptr<IntrinsicCall> makeAppArg(
+	int i, SourceLocation loc, WType const* wtype = nullptr)
+{
+	auto node = makeIntrinsicCall(
+		"txna", wtype ? wtype : WType::bytesType(), std::move(loc));
+	node->immediates = {std::string("ApplicationArgs"), i};
+	return node;
+}
+
 // `box_put key value` — write `value` to the box stored at `key`. The
 // box's size must equal `len(value)` (otherwise it fails); callers that
 // resize must `box_del` first.

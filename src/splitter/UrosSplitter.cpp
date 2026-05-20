@@ -1001,11 +1001,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	// follow-up; the trailing-arg approach was rejected, packed-into-
 	// selector needs router rewrites in puya backend.
 	for (size_t i = 0; i < _m.args.size(); ++i)
-	{
-		auto txna = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), _loc);
-		txna->immediates = {std::string("ApplicationArgs"), int(i + 1)};
-		argsTuple->items.push_back(std::move(txna));
-	}
+		argsTuple->items.push_back(awst::makeAppArg(int(i + 1), _loc));
 
 	// WTuple type for the ApplicationArgs slot.
 	std::vector<awst::WType const*> argTypes(

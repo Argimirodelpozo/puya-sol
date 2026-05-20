@@ -134,9 +134,7 @@ std::shared_ptr<awst::Expression> isCreate(awst::SourceLocation const& _loc)
 /// `txna ApplicationArgs <i>`.
 std::shared_ptr<awst::Expression> appArgAt(int _i, awst::SourceLocation const& _loc)
 {
-	auto call = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), _loc);
-	call->immediates = {std::string("ApplicationArgs"), _i};
-	return call;
+	return awst::makeAppArg(_i, _loc);
 }
 
 /// MethodConstant(sig) — puya resolves to sha512_256(sig)[:4] at

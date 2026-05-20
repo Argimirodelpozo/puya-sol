@@ -522,8 +522,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto* paramType = m_typeMapper.map(param->type());
 
 				// txna ApplicationArgs i → raw ARC4 bytes
-				auto readArg = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), method.sourceLocation);
-				readArg->immediates = {std::string("ApplicationArgs"), argIndex};
+				auto readArg = awst::makeAppArg(argIndex, method.sourceLocation);
 
 				std::shared_ptr<awst::Expression> paramVal;
 
@@ -1453,9 +1452,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else
 				{
-					auto argBytes = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), method.sourceLocation);
-					argBytes->immediates = {std::string("ApplicationArgs"), 0};
-					argExpr = std::move(argBytes);
+					argExpr = awst::makeAppArg(0, method.sourceLocation);
 				}
 
 				awst::pushCallArg(call->args, std::move(argExpr));
