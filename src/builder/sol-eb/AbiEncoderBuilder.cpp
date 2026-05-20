@@ -183,10 +183,10 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 	if (wtype == awst::WType::boolType())
 	{
 		// Solidity ABI: bool is 32-byte right-aligned (0x00...00 or 0x00...01)
-		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
-		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
-		setbit->stackArgs.push_back(awst::makeZero(_loc));
-		setbit->stackArgs.push_back(std::move(_argExpr));
+		auto setbit = awst::makeSetbit(
+			awst::makeBytesConstant({0x00}, _loc),
+			awst::makeZero(_loc),
+			std::move(_argExpr), _loc);
 		return leftPadBytes(std::move(setbit), 32, _loc);
 	}
 	if (wtype == awst::WType::accountType())

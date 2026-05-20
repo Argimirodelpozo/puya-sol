@@ -157,12 +157,10 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 	if (_argExpr->wtype == awst::WType::boolType())
 	{
 		// ARC4 bool: 1 byte, 0x80 = true, 0x00 = false.
-		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
-		std::vector<uint8_t> zero1{0};
-		setbit->stackArgs.push_back(awst::makeBytesConstant(std::move(zero1), _loc));
-		setbit->stackArgs.push_back(awst::makeZero(_loc));
-		setbit->stackArgs.push_back(std::move(_argExpr));
-		return setbit;
+		return awst::makeSetbit(
+			awst::makeBytesConstant(std::vector<uint8_t>{0}, _loc),
+			awst::makeZero(_loc),
+			std::move(_argExpr), _loc);
 	}
 	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(_paramSolType);
 		arrType && arrType->isByteArrayOrString())
@@ -508,9 +506,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			if (retType == awst::WType::boolType())
 			{
 				// ARC4 bool: byte 0's top bit set → true.
-				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
-				getbit->stackArgs.push_back(std::move(strip));
-				getbit->stackArgs.push_back(awst::makeZero(_loc));
+				auto getbit = awst::makeGetbit(
+					std::move(strip), awst::makeZero(_loc), _loc);
 				return awst::makeNumericCompare(
 					std::move(getbit), awst::NumericComparison::Ne,
 					awst::makeIntegerConstant("0", _loc), _loc);

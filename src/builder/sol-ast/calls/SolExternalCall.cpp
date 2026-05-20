@@ -136,13 +136,10 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	else if (_argExpr->wtype == awst::WType::boolType())
 	{
 		// bool → ARC4 bool = setbit(0x00, 0, boolValue)
-		auto zeroByte = awst::makeBytesConstant({0x00}, m_loc);
-
-		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), m_loc);
-		setbit->stackArgs.push_back(std::move(zeroByte));
-		setbit->stackArgs.push_back(awst::makeZero(m_loc));
-		setbit->stackArgs.push_back(std::move(_argExpr));
-		return setbit;
+		return awst::makeSetbit(
+			awst::makeBytesConstant({0x00}, m_loc),
+			awst::makeZero(m_loc),
+			std::move(_argExpr), m_loc);
 	}
 	else if (_argExpr->wtype->kind() == awst::WTypeKind::ReferenceArray)
 	{
@@ -249,9 +246,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	}
 	else if (_returnType == awst::WType::boolType())
 	{
-		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
-		getbit->stackArgs.push_back(std::move(stripPrefix));
-		getbit->stackArgs.push_back(awst::makeZero(m_loc));
+		auto getbit = awst::makeGetbit(
+			std::move(stripPrefix), awst::makeZero(m_loc), m_loc);
 
 		auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
 		return cmp;
@@ -309,9 +305,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			}
 			else if (fieldType == awst::WType::boolType())
 			{
-				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
-				getbit->stackArgs.push_back(std::move(extract));
-				getbit->stackArgs.push_back(awst::makeZero(m_loc));
+				auto getbit = awst::makeGetbit(
+					std::move(extract), awst::makeZero(m_loc), m_loc);
 
 				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
 				decoded = std::move(cmp);

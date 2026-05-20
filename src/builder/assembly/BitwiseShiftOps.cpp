@@ -96,12 +96,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(clampedShift), _loc);
 
 	// setbit(bzero(32), 255-shift, 1) → bytes with only bit `shift` set
-	auto one = awst::makeOne(_loc);
-
-	auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
-	setbit->stackArgs.push_back(std::move(bzero));
-	setbit->stackArgs.push_back(std::move(bitIdx));
-	setbit->stackArgs.push_back(std::move(one));
+	auto setbit = awst::makeSetbit(
+		std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
 
 	// Cast bytes → biguint
 	auto castToBigUInt = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);

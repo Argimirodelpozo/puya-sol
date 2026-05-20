@@ -168,9 +168,8 @@ std::shared_ptr<awst::Expression> decodeScalarSlice(
 		return awst::makeBtoi(std::move(extract), _loc);
 	if (_t == awst::WType::boolType())
 	{
-		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
-		getbit->stackArgs.push_back(std::move(extract));
-		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		auto getbit = awst::makeGetbit(
+			std::move(extract), awst::makeIntegerConstant("0", _loc), _loc);
 		return awst::makeNumericCompare(
 			std::move(getbit), awst::NumericComparison::Ne,
 			awst::makeIntegerConstant("0", _loc), _loc);
@@ -196,9 +195,8 @@ std::shared_ptr<awst::Expression> decodeArgFromBytes(
 		return awst::makeBtoi(std::move(_bytes), _loc);
 	if (_t == awst::WType::boolType())
 	{
-		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
-		getbit->stackArgs.push_back(std::move(_bytes));
-		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
+		auto getbit = awst::makeGetbit(
+			std::move(_bytes), awst::makeIntegerConstant("0", _loc), _loc);
 		return awst::makeNumericCompare(
 			std::move(getbit), awst::NumericComparison::Ne,
 			awst::makeIntegerConstant("0", _loc), _loc);
@@ -261,12 +259,10 @@ std::shared_ptr<awst::Expression> encodeValueToBytes(
 		return awst::makeItob(std::move(_value), _loc);
 	if (_t == awst::WType::boolType())
 	{
-		auto zeroByte = awst::makeBytesConstant({0x00}, _loc);
-		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
-		setbit->stackArgs.push_back(std::move(zeroByte));
-		setbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		setbit->stackArgs.push_back(std::move(_value));
-		return setbit;
+		return awst::makeSetbit(
+			awst::makeBytesConstant({0x00}, _loc),
+			awst::makeIntegerConstant("0", _loc),
+			std::move(_value), _loc);
 	}
 	if (_t == awst::WType::accountType())
 		return awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);

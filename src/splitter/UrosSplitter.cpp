@@ -222,13 +222,11 @@ std::shared_ptr<awst::Expression> decodeScalarAt(
 		return awst::makeBtoi(std::move(extract), _loc);
 	if (_t == awst::WType::boolType())
 	{
-		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
-		getbit->stackArgs.push_back(std::move(extract));
-		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		auto cmp = awst::makeNumericCompare(
+		auto getbit = awst::makeGetbit(
+			std::move(extract), awst::makeIntegerConstant("0", _loc), _loc);
+		return awst::makeNumericCompare(
 			std::move(getbit), awst::NumericComparison::Ne,
 			awst::makeIntegerConstant("0", _loc), _loc);
-		return cmp;
 	}
 	if (_t == awst::WType::accountType())
 		return awst::makeReinterpretCast(std::move(extract), awst::WType::accountType(), _loc);
@@ -260,13 +258,11 @@ std::shared_ptr<awst::Expression> decodeFromBytes(
 		return awst::makeBtoi(std::move(_bytes), _loc);
 	if (_ret == awst::WType::boolType())
 	{
-		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
-		getbit->stackArgs.push_back(std::move(_bytes));
-		getbit->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		auto cmp = awst::makeNumericCompare(
+		auto getbit = awst::makeGetbit(
+			std::move(_bytes), awst::makeIntegerConstant("0", _loc), _loc);
+		return awst::makeNumericCompare(
 			std::move(getbit), awst::NumericComparison::Ne,
 			awst::makeIntegerConstant("0", _loc), _loc);
-		return cmp;
 	}
 	if (_ret == awst::WType::accountType())
 		return awst::makeReinterpretCast(std::move(_bytes), awst::WType::accountType(), _loc);

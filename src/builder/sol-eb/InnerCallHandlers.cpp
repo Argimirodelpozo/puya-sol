@@ -107,10 +107,10 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::boolType())
 	{
-		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
-		setbit->stackArgs.push_back(awst::makeBytesConstant({0x00}, _loc));
-		setbit->stackArgs.push_back(awst::makeZero(_loc));
-		setbit->stackArgs.push_back(std::move(_arg));
+		auto setbit = awst::makeSetbit(
+			awst::makeBytesConstant({0x00}, _loc),
+			awst::makeZero(_loc),
+			std::move(_arg), _loc);
 		return setbit;
 	}
 

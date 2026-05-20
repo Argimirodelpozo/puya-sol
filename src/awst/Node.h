@@ -912,6 +912,34 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	return extract;
 }
 
+// `setbit(bytes, bitIdx, value)` → bytes with the specified bit set
+// or cleared. Used heavily to build ARC4-encoded bools (0x80/0x00 byte).
+inline std::shared_ptr<IntrinsicCall> makeSetbit(
+	std::shared_ptr<Expression> bytes,
+	std::shared_ptr<Expression> bitIdx,
+	std::shared_ptr<Expression> value,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("setbit", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytes));
+	node->stackArgs.push_back(std::move(bitIdx));
+	node->stackArgs.push_back(std::move(value));
+	return node;
+}
+
+// `getbit(bytes, bitIdx)` → uint64 (0 or 1). Companion to makeSetbit;
+// dominant use is ARC4-bool decode (read bit 0 of a single-byte arg).
+inline std::shared_ptr<IntrinsicCall> makeGetbit(
+	std::shared_ptr<Expression> bytes,
+	std::shared_ptr<Expression> bitIdx,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("getbit", WType::uint64Type(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytes));
+	node->stackArgs.push_back(std::move(bitIdx));
+	return node;
+}
+
 // `extract_uint64(bytes, offset)` → 8-byte big-endian uint64 read.
 // Result type is `WType::uint64Type()` by default.
 inline std::shared_ptr<IntrinsicCall> makeExtractUInt64(
