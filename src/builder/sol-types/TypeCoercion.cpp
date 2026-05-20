@@ -1143,9 +1143,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::tryWidenArc4DynamicArrayInt(
 	std::string const resN = "__dwiden_res_" + std::to_string(n);
 
 	// __dwiden_len = extract_uint16(srcBytes, 0)
-	auto lenExtract = awst::makeIntrinsicCall("extract_uint16", u64, _loc);
-	lenExtract->stackArgs.push_back(_mkSourceBytes());
-	lenExtract->stackArgs.push_back(awst::makeIntegerConstant(0, _loc));
+	auto lenExtract = awst::makeExtractUInt16(
+		_mkSourceBytes(), awst::makeIntegerConstant(0, _loc), _loc, u64);
 	_emit(awst::makeAssignmentStatement(
 		awst::makeVarExpression(lenN, u64, _loc), std::move(lenExtract), _loc));
 

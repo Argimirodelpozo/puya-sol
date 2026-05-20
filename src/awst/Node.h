@@ -910,6 +910,35 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	return extract;
 }
 
+// `extract_uint64(bytes, offset)` → 8-byte big-endian uint64 read.
+// Result type is `WType::uint64Type()` by default.
+inline std::shared_ptr<IntrinsicCall> makeExtractUInt64(
+	std::shared_ptr<Expression> bytes,
+	std::shared_ptr<Expression> offset,
+	SourceLocation loc, WType const* wtype = nullptr)
+{
+	auto node = makeIntrinsicCall(
+		"extract_uint64", wtype ? wtype : WType::uint64Type(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytes));
+	node->stackArgs.push_back(std::move(offset));
+	return node;
+}
+
+// `extract_uint16(bytes, offset)` → 2-byte big-endian uint16 read,
+// widened to a stack uint64. Used heavily to read ARC4 dynamic-array
+// length prefixes.
+inline std::shared_ptr<IntrinsicCall> makeExtractUInt16(
+	std::shared_ptr<Expression> bytes,
+	std::shared_ptr<Expression> offset,
+	SourceLocation loc, WType const* wtype = nullptr)
+{
+	auto node = makeIntrinsicCall(
+		"extract_uint16", wtype ? wtype : WType::uint64Type(), std::move(loc));
+	node->stackArgs.push_back(std::move(bytes));
+	node->stackArgs.push_back(std::move(offset));
+	return node;
+}
+
 // `extract3(bytes, offset, length)` → bytes slice. ~70 sites across the
 // builder layer use this exact 3-stack-arg shape. `wtype` defaults to
 // `WType::bytesType()` but callers that need a fixed-width view

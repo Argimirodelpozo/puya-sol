@@ -364,9 +364,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 
 	auto blobRead = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	auto offset58 = awst::makeIntegerConstant("88", _loc);
-	auto extractFmp = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), _loc);
-	extractFmp->stackArgs.push_back(std::move(blobRead));
-	extractFmp->stackArgs.push_back(std::move(offset58));
+	auto extractFmp = awst::makeExtractUInt64(
+		std::move(blobRead), std::move(offset58), _loc);
 
 	auto sizeConst = awst::makeIntegerConstant(_size, _loc);
 	auto newFmp = awst::makeUInt64BinOp(
@@ -910,11 +909,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	start->stackArgs.push_back(std::move(lenCall));
 	start->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
 
-	auto extractU64 = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), _loc);
-	extractU64->stackArgs.push_back(cat);
-	extractU64->stackArgs.push_back(std::move(start));
-
-	return extractU64;
+	return awst::makeExtractUInt64(cat, std::move(start), _loc);
 }
 
 // ─── Recursive Yul function subroutine sink ─────────────────────────────────

@@ -815,9 +815,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 		awst::NumericComparison::Gt,
 		awst::makeIntegerConstant("0", m_loc),
 		m_loc);
-	auto extractLen = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), m_loc);
-	extractLen->stackArgs.push_back(boxRead());
-	extractLen->stackArgs.push_back(awst::makeZero(m_loc));
+	auto extractLen = awst::makeExtractUInt16(
+		boxRead(), awst::makeZero(m_loc), m_loc);
 	auto cur = awst::makeConditional(
 		std::move(isNonEmpty), std::move(extractLen),
 		awst::makeIntegerConstant("0", m_loc),

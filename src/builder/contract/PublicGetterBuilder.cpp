@@ -440,10 +440,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 							std::vector<unsigned char> twoZeros{0, 0};
 							auto defaultBytes = awst::makeBytesConstant(std::move(twoZeros), loc);
 							auto stateGet = awst::makeStateGet(std::move(boxExpr), std::move(defaultBytes), awst::WType::bytesType(), loc);
-							auto extractLen = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), loc);
-							extractLen->stackArgs.push_back(std::move(stateGet));
-							extractLen->stackArgs.push_back(awst::makeZero(loc));
-							lengthExpr = std::move(extractLen);
+							lengthExpr = awst::makeExtractUInt16(
+								std::move(stateGet), awst::makeZero(loc), loc);
 						}
 
 						auto cmp = awst::makeNumericCompare(std::move(argU64), awst::NumericComparison::Lt, std::move(lengthExpr), loc);

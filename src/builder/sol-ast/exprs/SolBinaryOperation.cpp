@@ -497,11 +497,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		start->stackArgs.push_back(std::move(lenCall));
 		start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
 
-		auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
-		extract->stackArgs.push_back(cat);
-		extract->stackArgs.push_back(std::move(start));
-
-		return extract;
+		return awst::makeExtractUInt64(cat, std::move(start), m_loc);
 	}
 
 	return rawResult;
@@ -766,10 +762,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 		start->stackArgs.push_back(std::move(lenCall));
 		start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
-		auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
-		extract->stackArgs.push_back(cat);
-		extract->stackArgs.push_back(std::move(start));
-		return extract;
+		return awst::makeExtractUInt64(cat, std::move(start), m_loc);
 	}
 
 	return finalResult;
