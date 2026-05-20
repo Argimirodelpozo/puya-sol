@@ -1,10 +1,52 @@
-# Semantic Test Status — v266
+# Semantic Test Status — v267
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed =
 **1189/1322 (90.0%)**.
 
-v266 = v264 exactly: same 113-test failure set, same 1189 passing set.
-Net effect of the session = 0 regressions, 0 recoveries vs v264.
+v267 = v266 = v264 exactly: same 113-test failure set, same 1189
+passing set. Cumulative session effect over 4 refactor batches:
+0 regressions, 0 recoveries.
+
+## Test-runner speed-up landed in v267
+
+Wall-clock dropped from v266's 1:07:06 to v267's **0:30:34 (2.2×)**
+via two infrastructure changes:
+
+- `pytest -n 2` parallelism (xdist)
+- Content-addressed compile-artifact cache at
+  `tests/solidity-semantic-tests/.compile_cache/<sha256>/`.
+  Cache key: all source-file contents + compile flags + puya-sol
+  binary mtime/size + max-mtime over `puya/src/**/*.py` (catches
+  rebuilds AND editable-backend edits). Cold run on v267
+  populates; subsequent runs skip the puya-sol subprocess on
+  cache hits. Concurrent-safe (tmp-dir-then-rename).
+
+## v267 puya-sol changes (vs v266)
+
+Four pure-refactor batches adopting awst factory helpers — all
+bit-identical AST.
+
+- `098bbf356` Batch #1 — `awst::makeGlobal` / `awst::makeTxn` at
+  ~12 inline `makeIntrinsicCall("txn"/"global", ...) + immediates`
+  sites. IntrinsicMapper::tryMapMemberAccess 101→68 lines. −49 LOC.
+- `f2dfa0bab` Batch #2 — `awst::makeExtract` at 10 sites
+  (TransientStorage, SolIndexAccess, SolExternalCall, UrosSplitter,
+  PureHelperExtractor ×3, AbiEncodeHeadTail, InnerCallShapes,
+  AbiEncoderBuilder, FunctionSplitter ×2). −27 LOC.
+- `dbbb660dc` Batch #3 — new `awst::makeAppArg(i, loc, wtype=null)`
+  helper + adopt at 6 inline `txna ApplicationArgs <i>` sites
+  (SolIntrinsicAccess ×2, PureHelperExtractor, ApprovalProgramBuilder ×2,
+  UrosSplitter). Net 0 LOC (helper offsets adoption gains).
+- `dff194231` Batch #4 — new `awst::makeLoadSlot` /
+  `awst::makeStoreSlot` helpers + adopt at 13 scratch-slot sites
+  (SignedOps ×3, AssemblyBuilder ×4, TransientStorage ×2,
+  ApprovalProgramBuilder ×4). +10 LOC (helper definitions
+  outweigh per-site savings; readability wins).
+
+Plus framework fixes (`342f9a8dd` from earlier): deploy.py page-budget
+sum-vs-max + compile.py PYTHONPATH strip.
+
+vs v264: 113 failing → 113 failing, same set.
 
 ## v265 → v266 (the PYTHONPATH detour)
 
