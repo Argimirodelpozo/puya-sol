@@ -1,10 +1,46 @@
-# Semantic Test Status — v264
+# Semantic Test Status — v266
 
-**Totals (pytest)**: 1189 PASS / 113 FAIL / 1 skipped / 20 xfailed =
+**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed =
 **1189/1322 (90.0%)**.
 
-vs v260's 1188/1322: **+1 pass, 0 regressions**. Same flip as v263 —
-`tests/types/test_types.py::test_packing_signed_types`.
+v266 = v264 exactly: same 113-test failure set, same 1189 passing set.
+Net effect of the session = 0 regressions, 0 recoveries vs v264.
+
+## v265 → v266 (the PYTHONPATH detour)
+
+v265 showed 6 "regressions" vs v264 (5 array storage tests + test_snark).
+Investigation revealed two **latent framework bugs** that just happened to
+not bite v264:
+
+1. **`deploy.py` page-budget formula**: used `max(approval, clear)` but
+   algod caps the SUM at `(1 + extra_pages) * 2048`. test_snark
+   approval=6142 + clear=4 = 6146 → needs extra_pages=3, formula gave
+   2 → `app programs too long. max total len 6144 bytes`. Fix: use sum,
+   not max.
+
+2. **`compile.py` PYTHONPATH shadowing**: pytest invoked with
+   `PYTHONPATH=~/.local/lib/python3.12/site-packages` (for algosdk)
+   gets that user-site inherited into puya-sol's subprocess env, which
+   then inherits into the puya backend subprocess. The user-site has
+   an OLDER puya install lacking `box_dynamic_array_concat_fixed`, so
+   dynamic-array push falls back to `box_get + concat + box_put` which
+   hits the 4096-byte stack-value cap at ~127 elements. Fix: strip
+   PYTHONPATH from subprocess env in `compile_sol`.
+
+The bugs were always there — v260/v263/v264 just ran in shells where
+PYTHONPATH wasn't set or didn't include the older puya.
+
+## v266 puya-sol changes (vs v264)
+
+One refactor commit (zero outcome diff):
+
+- `098bbf356` Adopt `awst::makeGlobal` / `awst::makeTxn` helpers at
+  ~12 inline `makeIntrinsicCall("txn"/"global", ...) + immediates`
+  sites. `IntrinsicMapper::tryMapMemberAccess` 101 → 68 lines.
+  −49 LOC across IntrinsicMapper.cpp, SolExpressionFactory.cpp,
+  PureHelperExtractor.cpp, UrosSplitter.cpp.
+
+Plus the two framework fixes above (commit `342f9a8dd`).
 
 ## v264 puya-sol changes (vs v263)
 
