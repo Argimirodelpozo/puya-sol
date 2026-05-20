@@ -237,12 +237,10 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			auto arr = awst::makeNewArray(_targetType, m_loc);
 			for (int i = 0; i < *arrSize; ++i)
 			{
-				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
-				extract->stackArgs.push_back(bytesSource);
 				auto off = awst::makeIntegerConstant(i * elemSize, m_loc);
-				extract->stackArgs.push_back(std::move(off));
 				auto len = awst::makeIntegerConstant(elemSize, m_loc);
-				extract->stackArgs.push_back(std::move(len));
+				auto extract = awst::makeExtract3(
+					bytesSource, std::move(off), std::move(len), m_loc);
 
 				if (elemType == awst::WType::biguintType())
 				{

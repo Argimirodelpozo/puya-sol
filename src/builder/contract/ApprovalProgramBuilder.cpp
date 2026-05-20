@@ -549,11 +549,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 					auto offset = awst::makeUInt64BinOp(std::move(len), awst::UInt64BinaryOperator::Sub, eight, method.sourceLocation);
 
-					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), method.sourceLocation);
-					extract->stackArgs.push_back(std::move(readArg));
-					extract->stackArgs.push_back(std::move(offset));
 					auto eight2 = awst::makeIntegerConstant("8", method.sourceLocation);
-					extract->stackArgs.push_back(std::move(eight2));
+					auto extract = awst::makeExtract3(
+						std::move(readArg), std::move(offset), std::move(eight2),
+						method.sourceLocation);
 
 					auto btoi = awst::makeIntrinsicCall("btoi", paramType, method.sourceLocation);
 					btoi->stackArgs.push_back(std::move(extract));

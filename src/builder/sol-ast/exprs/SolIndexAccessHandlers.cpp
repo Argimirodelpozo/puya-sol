@@ -57,12 +57,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		// When reading, the base expression is the raw bytes stored in the
 		// box (after stripping the ARC4 length header if any). The state
 		// var is stored as raw bytes in this path, so `extract3` directly.
-		auto extract = awst::makeIntrinsicCall("extract3", m_ctx.typeMapper.createType<awst::BytesWType>(1), m_loc);
-		extract->stackArgs.push_back(baseExprForRead);
-		extract->stackArgs.push_back(std::move(idx));
 		auto one = awst::makeOne(m_loc);
-		extract->stackArgs.push_back(std::move(one));
-		return extract;
+		return awst::makeExtract3(
+			baseExprForRead, std::move(idx), std::move(one), m_loc,
+			m_ctx.typeMapper.createType<awst::BytesWType>(1));
 	}
 
 	auto indexExpr = awst::makeIndexExpression(m_indexAccess.annotation().willBeWrittenTo ? boxExpr : baseExprForRead, std::move(idx), elemType, m_loc);
@@ -384,12 +382,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		&& index)
 	{
 		auto* bytes1Type = m_ctx.typeMapper.createType<awst::BytesWType>(1);
-		auto extract = awst::makeIntrinsicCall("extract3", bytes1Type, m_loc);
-		extract->stackArgs.push_back(std::move(base));
-		extract->stackArgs.push_back(std::move(index));
 		auto one = awst::makeOne(m_loc);
-		extract->stackArgs.push_back(std::move(one));
-		return extract;
+		return awst::makeExtract3(
+			std::move(base), std::move(index), std::move(one), m_loc, bytes1Type);
 	}
 
 	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);

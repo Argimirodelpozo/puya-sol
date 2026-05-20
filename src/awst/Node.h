@@ -911,14 +911,18 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 }
 
 // `extract3(bytes, offset, length)` → bytes slice. ~70 sites across the
-// builder layer use this exact 3-stack-arg shape.
+// builder layer use this exact 3-stack-arg shape. `wtype` defaults to
+// `WType::bytesType()` but callers that need a fixed-width view
+// (e.g. `BytesWType(1)` for a single-byte slice) can override.
 inline std::shared_ptr<IntrinsicCall> makeExtract3(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> offset,
 	std::shared_ptr<Expression> length,
-	SourceLocation loc)
+	SourceLocation loc,
+	WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall("extract3", WType::bytesType(), std::move(loc));
+	auto node = makeIntrinsicCall(
+		"extract3", wtype ? wtype : WType::bytesType(), std::move(loc));
 	node->stackArgs.push_back(std::move(bytes));
 	node->stackArgs.push_back(std::move(offset));
 	node->stackArgs.push_back(std::move(length));

@@ -251,10 +251,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			auto start = awst::makeUInt64BinOp(
 				std::move(lenCall), awst::UInt64BinaryOperator::Sub, std::move(nConst), m_loc);
 
-			auto extr = awst::makeIntrinsicCall("extract3", bytesT, m_loc);
-			extr->stackArgs.push_back(var);
-			extr->stackArgs.push_back(std::move(start));
-			extr->stackArgs.push_back(awst::makeIntegerConstant(n, m_loc));
+			auto extr = awst::makeExtract3(
+				var, std::move(start), awst::makeIntegerConstant(n, m_loc),
+				m_loc, bytesT);
 
 			// Re-type to bytes[N].
 			return awst::makeReinterpretCast(std::move(extr), resultType, m_loc);

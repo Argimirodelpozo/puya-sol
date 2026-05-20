@@ -74,11 +74,12 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	auto normBytes = awst::makeReinterpretCast(
 		std::move(normalised), awst::WType::bytesType(), _loc);
 
-	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	extract->stackArgs.push_back(std::move(normBytes));
-	// offset, length — keep last 8 bytes of the normalised 32-byte rep
-	extract->stackArgs.push_back(awst::makeIntegerConstant("24", _loc));
-	extract->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
+	// keep last 8 bytes of the normalised 32-byte rep
+	auto extract = awst::makeExtract3(
+		std::move(normBytes),
+		awst::makeIntegerConstant("24", _loc),
+		awst::makeIntegerConstant("8", _loc),
+		_loc);
 
 	return awst::makeBtoi(std::move(extract), _loc);
 }
