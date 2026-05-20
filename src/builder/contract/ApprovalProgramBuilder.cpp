@@ -1344,9 +1344,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			if (blobBytes < AssemblyBuilder::SLOT_SIZE)
 				blobBytes = AssemblyBuilder::SLOT_SIZE;
 
-			auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
-			storeOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
-			storeOp->stackArgs.push_back(awst::makeBzero(blobBytes, method.sourceLocation));
+			auto storeOp = awst::makeStoreSlot(
+				AssemblyBuilder::TRANSIENT_SLOT,
+				awst::makeBzero(blobBytes, method.sourceLocation),
+				method.sourceLocation);
 
 			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
 			body->body.push_back(std::move(exprStmt));
@@ -1358,16 +1359,17 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Each app call gets fresh scratch space, so we must initialize on every call.
 		// store 0, bzero(4096) — pre-allocate a 4KB memory blob
 		{
-			auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
-			storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
-			storeOp->stackArgs.push_back(awst::makeBzero(AssemblyBuilder::SLOT_SIZE, method.sourceLocation));
+			auto storeOp = awst::makeStoreSlot(
+				AssemblyBuilder::MEMORY_SLOT_FIRST,
+				awst::makeBzero(AssemblyBuilder::SLOT_SIZE, method.sourceLocation),
+				method.sourceLocation);
 
 			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
 			body->body.push_back(std::move(exprStmt));
 
 			// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
-			auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), method.sourceLocation);
-			loadBlob->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+			auto loadBlob = awst::makeLoadSlot(
+				AssemblyBuilder::MEMORY_SLOT_FIRST, method.sourceLocation);
 
 			auto fmpOffset = awst::makeIntegerConstant("64", method.sourceLocation); // 0x40
 
@@ -1377,9 +1379,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				std::move(fmpBytesVal), method.sourceLocation, awst::BytesEncoding::Unknown);
 
 			auto replaceOp = awst::makeReplace3(std::move(loadBlob), std::move(fmpOffset), std::move(fmpBytes), method.sourceLocation);
-			auto storeFmpOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
-			storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
-			storeFmpOp->stackArgs.push_back(std::move(replaceOp));
+			auto storeFmpOp = awst::makeStoreSlot(
+				AssemblyBuilder::MEMORY_SLOT_FIRST, std::move(replaceOp), method.sourceLocation);
 
 			auto fmpStmt = awst::makeExpressionStatement(std::move(storeFmpOp), method.sourceLocation);
 			body->body.push_back(std::move(fmpStmt));

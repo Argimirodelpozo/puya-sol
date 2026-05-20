@@ -139,9 +139,7 @@ namespace
 {
 	std::shared_ptr<awst::Expression> loadTransientBlob(awst::SourceLocation const& _loc)
 	{
-		auto loadOp = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
-		loadOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
-		return loadOp;
+		return awst::makeLoadSlot(AssemblyBuilder::TRANSIENT_SLOT, _loc);
 	}
 
 	/// Extract `byteSize` bytes from the transient blob at absolute byte
@@ -308,9 +306,8 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	replace->stackArgs.push_back(std::move(blobRead));
 	replace->stackArgs.push_back(std::move(raw));
 
-	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
-	storeOp->immediates = {AssemblyBuilder::TRANSIENT_SLOT};
-	storeOp->stackArgs.push_back(std::move(replace));
+	auto storeOp = awst::makeStoreSlot(
+		AssemblyBuilder::TRANSIENT_SLOT, std::move(replace), _loc);
 
 	return awst::makeExpressionStatement(std::move(storeOp), _loc);
 }

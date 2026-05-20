@@ -358,8 +358,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 
 	std::string blobTmp = "__fmp_blob_" + std::to_string(_uniqueId);
 
-	auto loadOp = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
-	loadOp->immediates = {MEMORY_SLOT_FIRST};
+	auto loadOp = awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc);
 	auto blobTarget = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	out.push_back(awst::makeAssignmentStatement(blobTarget, std::move(loadOp), _loc));
 
@@ -380,9 +379,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 	auto blobRead2 = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	auto offset40 = awst::makeIntegerConstant("64", _loc);
 	auto replaceCall = awst::makeReplace3(std::move(blobRead2), std::move(offset40), std::move(concat), _loc);
-	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
-	storeOp->immediates = {MEMORY_SLOT_FIRST};
-	storeOp->stackArgs.push_back(std::move(replaceCall));
+	auto storeOp = awst::makeStoreSlot(MEMORY_SLOT_FIRST, std::move(replaceCall), _loc);
 
 	out.push_back(awst::makeExpressionStatement(std::move(storeOp), _loc));
 	return out;
@@ -469,9 +466,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
 	int _slot
 )
 {
-	auto loadOp = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
-	loadOp->immediates = {MEMORY_SLOT_FIRST + _slot};
-	return loadOp;
+	return awst::makeLoadSlot(MEMORY_SLOT_FIRST + _slot, _loc);
 }
 
 void AssemblyBuilder::storeMemoryBlob(
@@ -481,10 +476,7 @@ void AssemblyBuilder::storeMemoryBlob(
 	int _slot
 )
 {
-	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
-	storeOp->immediates = {MEMORY_SLOT_FIRST + _slot};
-	storeOp->stackArgs.push_back(std::move(_blob));
-
+	auto storeOp = awst::makeStoreSlot(MEMORY_SLOT_FIRST + _slot, std::move(_blob), _loc);
 	auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
 	_out.push_back(std::move(exprStmt));
 }

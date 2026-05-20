@@ -736,6 +736,30 @@ inline std::shared_ptr<IntrinsicCall> makeAppArg(
 	return node;
 }
 
+// `load <slot>` — read a scratch slot as bytes. Used for the EVM memory
+// blob (MEMORY_SLOT_FIRST + n) and the transient-storage blob
+// (TRANSIENT_SLOT). Always returns bytes — callers that need a numeric
+// view btoi the result.
+inline std::shared_ptr<IntrinsicCall> makeLoadSlot(
+	int slot, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("load", WType::bytesType(), std::move(loc));
+	node->immediates = {slot};
+	return node;
+}
+
+// `store <slot> <value>` — write `value` to a scratch slot. Companion
+// to `makeLoadSlot`; `value` typically comes from a `replace3` over a
+// fresh slot read.
+inline std::shared_ptr<IntrinsicCall> makeStoreSlot(
+	int slot, std::shared_ptr<Expression> value, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("store", WType::voidType(), std::move(loc));
+	node->immediates = {slot};
+	node->stackArgs.push_back(std::move(value));
+	return node;
+}
+
 // `box_put key value` — write `value` to the box stored at `key`. The
 // box's size must equal `len(value)` (otherwise it fails); callers that
 // resize must `box_del` first.

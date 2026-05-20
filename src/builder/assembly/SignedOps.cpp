@@ -32,8 +32,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult, std::move(thirtyTwo), _loc);
 
 	// load TRANSIENT_SLOT
-	auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
-	loadBlob->immediates = {TRANSIENT_SLOT};
+	auto loadBlob = awst::makeLoadSlot(TRANSIENT_SLOT, _loc);
 
 	// extract3(blob, offset, 32)
 	auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
@@ -72,16 +71,13 @@ void AssemblyBuilder::handleTstore(
 	padded->stackArgs.push_back(std::move(valueBytes));
 
 	// replace3(load TRANSIENT_SLOT, offset, padded_value)
-	auto blobRead = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
-	blobRead->immediates = {TRANSIENT_SLOT};
+	auto blobRead = awst::makeLoadSlot(TRANSIENT_SLOT, _loc);
 
 	auto replace = awst::makeReplace3(std::move(blobRead), std::move(offset), std::move(padded), _loc);
 	// store TRANSIENT_SLOT ← replace3(...)
 	// Direct scratch write: write persists across callsub within the app call,
 	// and can't be DCE'd because store is a side-effectful intrinsic.
-	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
-	storeOp->immediates = {TRANSIENT_SLOT};
-	storeOp->stackArgs.push_back(std::move(replace));
+	auto storeOp = awst::makeStoreSlot(TRANSIENT_SLOT, std::move(replace), _loc);
 
 	auto stmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
 	_out.push_back(std::move(stmt));
