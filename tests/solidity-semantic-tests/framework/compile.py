@@ -87,9 +87,18 @@ def compile_sol(
     if evm_version:
         cmd += ["--evm-version", evm_version]
 
+    # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+    # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+    # set (for algosdk), but that user-site contains an OLDER puya install
+    # which shadows the project's puya/.venv puya when puya-sol spawns the
+    # backend subprocess. Result: missing optimizations like
+    # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+    # stack-value cap on long dynamic arrays.
+    import os
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
     try:
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout
+            cmd, capture_output=True, text=True, timeout=timeout, env=env
         )
     except subprocess.TimeoutExpired as e:
         if import_dir:

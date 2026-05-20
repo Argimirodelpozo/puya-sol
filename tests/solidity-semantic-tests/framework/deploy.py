@@ -113,7 +113,10 @@ def deploy(
     approval_bin = encoding.base64.b64decode(algod.compile(approval_src)["result"])
     clear_bin = encoding.base64.b64decode(algod.compile(clear_src)["result"])
 
-    extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
+    # algod caps the SUM of approval + clear at (1 + extra_pages) * 2048,
+    # not the max of the two individually. snark.sol hits this: approval=6142
+    # + clear=4 = 6146, which needs extra_pages=3 (budget 8192), not 2 (6144).
+    extra_pages = max(0, (len(approval_bin) + len(clear_bin) - 1) // 2048)
 
     # Encode constructor args (if any) into ApplicationArgs.
     app_args = None
