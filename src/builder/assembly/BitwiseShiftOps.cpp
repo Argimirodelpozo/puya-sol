@@ -42,12 +42,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	Logger::instance().debug(
 		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
 	auto gasCall = awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
-
-	auto itobCall = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-	itobCall->stackArgs.push_back(std::move(gasCall));
-
-	auto biguintCast = awst::makeReinterpretCast(std::move(itobCall), awst::WType::biguintType(), _loc);
-	return biguintCast;
+	auto itobCall = awst::makeItob(std::move(gasCall), _loc);
+	return awst::makeReinterpretCast(
+		std::move(itobCall), awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
@@ -56,12 +53,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
 {
 	// timestamp() → global LatestTimestamp (uint64) → itob → reinterpret as biguint
 	auto tsCall = awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
-
-	auto itobCall = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
-	itobCall->stackArgs.push_back(std::move(tsCall));
-
-	auto biguintCast = awst::makeReinterpretCast(std::move(itobCall), awst::WType::biguintType(), _loc);
-	return biguintCast;
+	auto itobCall = awst::makeItob(std::move(tsCall), _loc);
+	return awst::makeReinterpretCast(
+		std::move(itobCall), awst::WType::biguintType(), _loc);
 }
 
 // ─── New Yul builtins for Uniswap V4 ────────────────────────────────────────

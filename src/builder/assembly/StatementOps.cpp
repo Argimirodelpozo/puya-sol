@@ -517,10 +517,9 @@ void AssemblyBuilder::buildAssignment(
 				// Ensure biguint type for the slot value
 				if (slotExpr->wtype == awst::WType::uint64Type())
 				{
-					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
-					itob->stackArgs.push_back(std::move(slotExpr));
-					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
-					slotExpr = std::move(cast);
+					auto itob = awst::makeItob(std::move(slotExpr), loc);
+					slotExpr = awst::makeReinterpretCast(
+						std::move(itob), awst::WType::biguintType(), loc);
 				}
 				else if (slotExpr->wtype != awst::WType::biguintType())
 				{

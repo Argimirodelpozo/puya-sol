@@ -673,9 +673,11 @@ inline std::shared_ptr<IntrinsicCall> makeItob(
 
 // `btoi(bytesExpr)` → uint64. bytesExpr must be ≤ 8 bytes.
 inline std::shared_ptr<IntrinsicCall> makeBtoi(
-	std::shared_ptr<Expression> bytesExpr, SourceLocation loc)
+	std::shared_ptr<Expression> bytesExpr, SourceLocation loc,
+	WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall("btoi", WType::uint64Type(), std::move(loc));
+	auto node = makeIntrinsicCall(
+		"btoi", wtype ? wtype : WType::uint64Type(), std::move(loc));
 	node->stackArgs.push_back(std::move(bytesExpr));
 	return node;
 }

@@ -554,9 +554,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						std::move(readArg), std::move(offset), std::move(eight2),
 						method.sourceLocation);
 
-					auto btoi = awst::makeIntrinsicCall("btoi", paramType, method.sourceLocation);
-					btoi->stackArgs.push_back(std::move(extract));
-					paramVal = std::move(btoi);
+					paramVal = awst::makeBtoi(
+						std::move(extract), method.sourceLocation, paramType);
 				}
 				else if (paramType == awst::WType::stringType())
 				{

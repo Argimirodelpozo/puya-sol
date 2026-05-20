@@ -164,9 +164,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
 			expr = std::move(toBytes);
 		}
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
-		btoi->stackArgs.push_back(std::move(expr));
-
+		auto btoi = awst::makeBtoi(std::move(expr), m_loc);
 		std::shared_ptr<awst::Expression> result = std::move(btoi);
 
 		// Narrowing mask for bytes→uint16 etc.
@@ -249,9 +247,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 				}
 				else if (elemType == awst::WType::uint64Type())
 				{
-					auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
-					btoi->stackArgs.push_back(std::move(extract));
-					arr->values.push_back(std::move(btoi));
+					arr->values.push_back(
+						awst::makeBtoi(std::move(extract), m_loc));
 				}
 				else
 					arr->values.push_back(std::move(extract));

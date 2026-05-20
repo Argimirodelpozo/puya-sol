@@ -165,10 +165,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		}
 		// bytes[N≤8] → btoi → uint64/biguint
 		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
-
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(toBytes));
-
+		auto btoi = awst::makeBtoi(std::move(toBytes), _loc);
 		auto result = TypeCoercion::implicitNumericCast(std::move(btoi), _targetWType, _loc);
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}

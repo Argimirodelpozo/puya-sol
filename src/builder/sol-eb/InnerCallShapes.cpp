@@ -217,9 +217,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 		return awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 	};
 	auto makeLen = [&]() {
-		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
-		lenCall->stackArgs.push_back(tmpRead());
-		return lenCall;
+		return awst::makeLen(tmpRead(), _loc);
 	};
 	auto makeGe4 = [&]() {
 		return awst::makeNumericCompare(

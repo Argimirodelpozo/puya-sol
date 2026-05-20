@@ -688,10 +688,9 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			{
 				// bool → 32 bytes: 31 zeros + 0x01/0x00
 				auto bz = bzeroOf(u64Const(31));
-				auto byteByVal = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 				auto castU64 = awst::makeReinterpretCast(
 					std::move(paramVar), awst::WType::uint64Type(), _loc);
-				byteByVal->stackArgs.push_back(std::move(castU64));
+				auto byteByVal = awst::makeItob(std::move(castU64), _loc);
 				// itob produces 8 bytes BE; take last byte
 				auto extract = awst::makeExtract3(std::move(byteByVal), u64Const(7), u64Const(1), _loc);
 				headWord = concatBytes(std::move(bz), std::move(extract));

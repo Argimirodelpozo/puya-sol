@@ -237,9 +237,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	{
 		// biguint v → bytes → btoi
 		auto vBytes = awst::makeReinterpretCast(std::move(v), awst::WType::bytesType(), _loc);
-		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
-		btoi->stackArgs.push_back(std::move(vBytes));
-		vUint = std::move(btoi);
+		vUint = awst::makeBtoi(std::move(vBytes), _loc);
 	}
 
 	// Stash v in a temp so we can read it multiple times.
