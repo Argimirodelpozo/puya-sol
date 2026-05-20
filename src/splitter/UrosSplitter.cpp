@@ -413,10 +413,8 @@ std::shared_ptr<awst::Expression> makeMsgValueUint64Expr(
 		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
 		std::move(one), _loc);
 
-	auto amount = awst::makeIntrinsicCall(
-		"gtxns", awst::WType::uint64Type(), _loc);
-	amount->immediates = {std::string("Amount")};
-	amount->stackArgs.push_back(std::move(payIdx));
+	auto amount = awst::makeGtxns(
+		"Amount", std::move(payIdx), awst::WType::uint64Type(), _loc);
 
 	auto zeroVal = awst::makeIntegerConstant("0", _loc);
 	return awst::makeConditional(

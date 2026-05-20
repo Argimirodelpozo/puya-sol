@@ -167,9 +167,8 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
 		awst::makeIntegerConstant("1", loc), loc);
 
-	auto amount = awst::makeIntrinsicCall("gtxns", awst::WType::uint64Type(), loc);
-	amount->immediates = {std::string("Amount")};
-	amount->stackArgs.push_back(std::move(payIdx));
+	auto amount = awst::makeGtxns(
+		"Amount", std::move(payIdx), awst::WType::uint64Type(), loc);
 
 	// Match msg.value's ConditionalExpression shape — avoids evaluating
 	// GroupIndex - 1 when GroupIndex == 0 (underflow-safe).

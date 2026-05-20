@@ -252,9 +252,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTotalSupply(
 	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{
 			awst::WType::uint64Type(), awst::WType::boolType()});
-	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
-	paramsGet->immediates = {std::string("AssetTotal")};
-	paramsGet->stackArgs.push_back(std::move(assetId));
+	auto paramsGet = awst::makeAssetParamsGet(
+		"AssetTotal", std::move(assetId), tupleType, _loc);
 
 	auto totalU64 = tupleFirst(std::move(paramsGet), awst::WType::uint64Type(), _loc);
 	return uint64ToBigUInt(std::move(totalU64), _loc);
@@ -274,9 +273,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDecimals(
 	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{
 			awst::WType::uint64Type(), awst::WType::boolType()});
-	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
-	paramsGet->immediates = {std::string("AssetDecimals")};
-	paramsGet->stackArgs.push_back(std::move(_args[0]));
+	auto paramsGet = awst::makeAssetParamsGet(
+		"AssetDecimals", std::move(_args[0]), tupleType, _loc);
 
 	// AssetDecimals fits in uint8; the tuple-first uint64 is fine.
 	return tupleFirst(std::move(paramsGet), awst::WType::uint64Type(), _loc);
@@ -296,9 +294,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaUnitName(
 	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{
 			awst::WType::bytesType(), awst::WType::boolType()});
-	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
-	paramsGet->immediates = {std::string("AssetUnitName")};
-	paramsGet->stackArgs.push_back(std::move(_args[0]));
+	auto paramsGet = awst::makeAssetParamsGet(
+		"AssetUnitName", std::move(_args[0]), tupleType, _loc);
 
 	auto bytes = tupleFirst(std::move(paramsGet), awst::WType::bytesType(), _loc);
 	return awst::makeReinterpretCast(std::move(bytes), awst::WType::stringType(), _loc);
@@ -318,9 +315,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaName(
 	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{
 			awst::WType::bytesType(), awst::WType::boolType()});
-	auto paramsGet = awst::makeIntrinsicCall("asset_params_get", tupleType, _loc);
-	paramsGet->immediates = {std::string("AssetName")};
-	paramsGet->stackArgs.push_back(std::move(_args[0]));
+	auto paramsGet = awst::makeAssetParamsGet(
+		"AssetName", std::move(_args[0]), tupleType, _loc);
 
 	auto bytes = tupleFirst(std::move(paramsGet), awst::WType::bytesType(), _loc);
 	return awst::makeReinterpretCast(std::move(bytes), awst::WType::stringType(), _loc);
@@ -523,10 +519,8 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGroup(
 	(void)_ctx;
 	auto gtxnsField = [&](std::string const& field, awst::WType const* wt) -> std::shared_ptr<awst::Expression> {
 		if (_args.size() != 1) { Logger::instance().error("Group." + _method + " expects 1 arg (idx)", _loc); return nullptr; }
-		auto call = awst::makeIntrinsicCall("gtxns", wt, _loc);
-		call->immediates = {field};
-		call->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc));
-		return call;
+		return awst::makeGtxns(
+			field, bigUIntToUint64(std::move(_args[0]), _loc), wt, _loc);
 	};
 
 	if (_method == "size")

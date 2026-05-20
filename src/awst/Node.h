@@ -776,6 +776,33 @@ inline std::shared_ptr<IntrinsicCall> makeAppParamsGet(
 	return node;
 }
 
+// `asset_params_get <field> <assetId>` — query an ASA's params
+// (AssetTotal, AssetDecimals, AssetUnitName, AssetName, etc.). Always
+// returns a (value, exists) tuple; caller passes the matching
+// `tupleType` (uint64 fields → uint64+bool, byte fields → bytes+bool).
+inline std::shared_ptr<IntrinsicCall> makeAssetParamsGet(
+	std::string field, std::shared_ptr<Expression> assetId,
+	WType const* tupleType, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("asset_params_get", tupleType, std::move(loc));
+	node->immediates = {std::move(field)};
+	node->stackArgs.push_back(std::move(assetId));
+	return node;
+}
+
+// `gtxns <field> <groupIdx>` — read a field of another transaction in
+// the current group, indexed by `groupIdx`. Companion to makeTxn
+// (current txn) and makeGitxn (inner txn by index).
+inline std::shared_ptr<IntrinsicCall> makeGtxns(
+	std::string field, std::shared_ptr<Expression> groupIdx,
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("gtxns", wtype, std::move(loc));
+	node->immediates = {std::move(field)};
+	node->stackArgs.push_back(std::move(groupIdx));
+	return node;
+}
+
 // `load <slot>` — read a scratch slot as bytes. Used for the EVM memory
 // blob (MEMORY_SLOT_FIRST + n) and the transient-storage blob
 // (TRANSIENT_SLOT). Always returns bytes — callers that need a numeric

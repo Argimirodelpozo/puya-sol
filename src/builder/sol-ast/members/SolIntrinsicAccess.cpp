@@ -94,9 +94,8 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		auto one = awst::makeOne(m_loc);
 		auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx2), awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
 
-		auto amount = awst::makeIntrinsicCall("gtxns", awst::WType::uint64Type(), m_loc);
-		amount->immediates = {std::string("Amount")};
-		amount->stackArgs.push_back(std::move(payIdx));
+		auto amount = awst::makeGtxns(
+			"Amount", std::move(payIdx), awst::WType::uint64Type(), m_loc);
 
 		auto zeroVal = awst::makeZero(m_loc);
 
