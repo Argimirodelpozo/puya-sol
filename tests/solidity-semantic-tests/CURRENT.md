@@ -1,7 +1,44 @@
-# Semantic Test Status — v269
+# Semantic Test Status — v270
 
-**Totals (pytest)**: 1192 PASS / 110 FAIL / 20 xfailed =
-**1192/1322 (90.2%)**.
+**Totals (pytest)**: 1193 PASS / 109 FAIL / 20 xfailed =
+**1193/1322 (90.2%)**.
+
+## v270 (+1 vs v269, 0 regressions)
+
+One recovery: `test_transient_value_types_multi_frame_call`. Wall
+clock 35:38.
+
+The fix is two changes that work together:
+
+1. **`fix(coerce): materialise signExtendToUint256 input to temp`**
+   (`df0982889`). `signExtendToUint256` references its input three
+   times (cond LHS, add LHS, conditional else-branch). When the
+   input is a side-effecting expression — notably `this.h()` in
+   `return this.h();` from an int<N>-returning function whose body
+   mutates transient storage via `this.g()` — the AST duplication
+   makes puya emit the callsub three times, running side effects
+   thrice. f() then dropped x to -4 instead of the expected -2.
+
+   Bind via an AssignmentExpression to `__signext_tmp_N` and read
+   the temp; wrap in a CommaExpression so the helper still returns
+   an Expression. Lossless for non-side-effecting inputs (the
+   binding is dead-code-eliminated by puya).
+
+2. **`test(framework): add as_signed_int helper`** (`0576d4150`).
+   Our ABI surfacing emits signed int<N> returns as ARC4UIntN(256),
+   so algokit decodes the two's-complement payload as a positive
+   biguint. The new helper reinterprets the top bit as the sign;
+   it's a no-op for already-negative Python ints, so tests that
+   pre-existed with `as_int(x) == 2**256 - N` still pass when
+   refactored to `as_signed_int(x) == -N`.
+
+   Updated 2 test assertions (in test_transient_value_types_multi_frame_call
+   and test_dirty_uint8_read). test_dirty_uint8_read's second
+   branch still fails because it exercises EVM sstore slot-write
+   semantics; the partial fix is documented in the test's
+   docstring.
+
+## v269 (+3 vs v268)
 
 ## v269 (+3 vs v268)
 
