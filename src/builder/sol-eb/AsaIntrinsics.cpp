@@ -113,6 +113,25 @@ std::shared_ptr<awst::Expression> tupleFirst(
 	return out;
 }
 
+/// `asset_params_get <field> <assetId>` returning the (value, exists)
+/// tuple's first field only. `_firstType` selects between the two
+/// canonical ASA-params tuple shapes: `uint64+bool` for numeric
+/// fields (AssetTotal, AssetDecimals, AssetFrozen) and `bytes+bool`
+/// for string-ish fields (AssetUnitName, AssetName, AssetURL).
+std::shared_ptr<awst::Expression> assetParamFirst(
+	ContractContext& _ctx,
+	std::string _field,
+	std::shared_ptr<awst::Expression> _assetId,
+	awst::WType const* _firstType,
+	awst::SourceLocation const& _loc)
+{
+	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{_firstType, awst::WType::boolType()});
+	auto paramsGet = awst::makeAssetParamsGet(
+		std::move(_field), std::move(_assetId), tupleType, _loc);
+	return tupleFirst(std::move(paramsGet), _firstType, _loc);
+}
+
 } // namespace
 
 std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
@@ -248,15 +267,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTotalSupply(
 		return nullptr;
 	}
 
-	auto assetId = std::move(_args[0]);
-
-	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
-		std::vector<awst::WType const*>{
-			awst::WType::uint64Type(), awst::WType::boolType()});
-	auto paramsGet = awst::makeAssetParamsGet(
-		"AssetTotal", std::move(assetId), tupleType, _loc);
-
-	auto totalU64 = tupleFirst(std::move(paramsGet), awst::WType::uint64Type(), _loc);
+	auto totalU64 = assetParamFirst(
+		_ctx, "AssetTotal", std::move(_args[0]), awst::WType::uint64Type(), _loc);
 	return uint64ToBigUInt(std::move(totalU64), _loc);
 }
 
@@ -271,14 +283,10 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDecimals(
 		return nullptr;
 	}
 
-	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
-		std::vector<awst::WType const*>{
-			awst::WType::uint64Type(), awst::WType::boolType()});
-	auto paramsGet = awst::makeAssetParamsGet(
-		"AssetDecimals", std::move(_args[0]), tupleType, _loc);
-
 	// AssetDecimals fits in uint8; the tuple-first uint64 is fine.
-	return tupleFirst(std::move(paramsGet), awst::WType::uint64Type(), _loc);
+	return assetParamFirst(
+		_ctx, "AssetDecimals", std::move(_args[0]),
+		awst::WType::uint64Type(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaUnitName(
@@ -292,13 +300,9 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaUnitName(
 		return nullptr;
 	}
 
-	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
-		std::vector<awst::WType const*>{
-			awst::WType::bytesType(), awst::WType::boolType()});
-	auto paramsGet = awst::makeAssetParamsGet(
-		"AssetUnitName", std::move(_args[0]), tupleType, _loc);
-
-	auto bytes = tupleFirst(std::move(paramsGet), awst::WType::bytesType(), _loc);
+	auto bytes = assetParamFirst(
+		_ctx, "AssetUnitName", std::move(_args[0]),
+		awst::WType::bytesType(), _loc);
 	return awst::makeReinterpretCast(std::move(bytes), awst::WType::stringType(), _loc);
 }
 
@@ -313,13 +317,9 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaName(
 		return nullptr;
 	}
 
-	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
-		std::vector<awst::WType const*>{
-			awst::WType::bytesType(), awst::WType::boolType()});
-	auto paramsGet = awst::makeAssetParamsGet(
-		"AssetName", std::move(_args[0]), tupleType, _loc);
-
-	auto bytes = tupleFirst(std::move(paramsGet), awst::WType::bytesType(), _loc);
+	auto bytes = assetParamFirst(
+		_ctx, "AssetName", std::move(_args[0]),
+		awst::WType::bytesType(), _loc);
 	return awst::makeReinterpretCast(std::move(bytes), awst::WType::stringType(), _loc);
 }
 
