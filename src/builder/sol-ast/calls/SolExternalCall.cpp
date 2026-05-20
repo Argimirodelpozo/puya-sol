@@ -233,8 +233,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
 	m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), m_loc);
-	readLog->immediates = {std::string("LastLog")};
+	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), m_loc);
 
 	// Strip 4-byte ARC4 return prefix
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, m_loc);

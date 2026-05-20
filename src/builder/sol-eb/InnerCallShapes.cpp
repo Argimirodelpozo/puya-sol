@@ -179,8 +179,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 	// Read LastLog and strip ARC4 prefix
-	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
-	readLog->immediates = {std::string("LastLog")};
+	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 
@@ -271,8 +270,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 	// Read itxn LastLog as return data. Raw calls don't strip any prefix.
-	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
-	readLog->immediates = {std::string("LastLog")};
+	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(readLog), _loc));

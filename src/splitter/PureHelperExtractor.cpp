@@ -668,9 +668,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	if (chunks <= 1)
 	{
 		// ≤1024 B payload: single LastLog, strip 4-byte prefix, decode.
-		auto last = awst::makeIntrinsicCall(
-			"itxn", awst::WType::bytesType(), _loc);
-		last->immediates = {std::string("LastLog")};
+		auto last = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 		auto strip = awst::makeExtract(std::move(last), 4, 0, _loc);
 		decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
 	}

@@ -736,6 +736,19 @@ inline std::shared_ptr<IntrinsicCall> makeAppArg(
 	return node;
 }
 
+// `itxn <field>` — read a field of the most recently submitted inner
+// transaction (e.g. "LastLog" for the inner app call's return data,
+// "CreatedApplicationID" after a Create itxn). Companion to makeTxn /
+// makeGlobal; takes wtype because field types vary (LastLog→bytes,
+// most others→uint64 or account).
+inline std::shared_ptr<IntrinsicCall> makeItxn(
+	std::string field, WType const* wtype, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("itxn", wtype, std::move(loc));
+	node->immediates = {std::move(field)};
+	return node;
+}
+
 // `load <slot>` — read a scratch slot as bytes. Used for the EVM memory
 // blob (MEMORY_SLOT_FIRST + n) and the transient-storage blob
 // (TRANSIENT_SLOT). Always returns bytes — callers that need a numeric

@@ -198,8 +198,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 
 	// Read the new asset id from the just-submitted itxn context. Stash
 	// in a temp local so subsequent itxn submissions don't clobber it.
-	auto createdAsaCall = awst::makeIntrinsicCall("itxn", awst::WType::uint64Type(), _loc);
-	createdAsaCall->immediates = {std::string("CreatedAssetID")};
+	auto createdAsaCall = awst::makeItxn(
+		"CreatedAssetID", awst::WType::uint64Type(), _loc);
 
 	static int s_counter = 0;
 	std::string tmpName = "__new_asa_id_" + std::to_string(s_counter++);

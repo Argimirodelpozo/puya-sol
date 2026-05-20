@@ -1066,8 +1066,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	// fall AFTER all uses of itxn-derived state.
 	block->body.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 
-	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
-	readLog->immediates = {std::string("LastLog")};
+	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 10, 0, _loc);
 

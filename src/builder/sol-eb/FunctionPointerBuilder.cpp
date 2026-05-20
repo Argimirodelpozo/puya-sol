@@ -498,8 +498,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 		// Read itxn LastLog and coerce the ARC4-prefixed bytes to retType.
 		auto buildInnerTxnResult = [&]() -> std::shared_ptr<awst::Expression> {
-			auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
-			readLog->immediates = {std::string("LastLog")};
+			auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 			// extract(readLog, 4, 0) — strip the 4-byte ARC4 return prefix.
 			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())

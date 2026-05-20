@@ -723,8 +723,7 @@ void InnerCallHandlers::fundCreatedApp(
 	awst::SourceLocation const& _loc)
 {
 	// Get the real Algorand address of the just-created app
-	auto appId = awst::makeIntrinsicCall("itxn", awst::WType::uint64Type(), _loc);
-	appId->immediates = {std::string("CreatedApplicationID")};
+	auto appId = awst::makeItxn("CreatedApplicationID", awst::WType::uint64Type(), _loc);
 
 	auto* tupleType = new awst::WTuple({awst::WType::bytesType(), awst::WType::boolType()});
 	auto appParams = awst::makeIntrinsicCall("app_params_get", tupleType, _loc);

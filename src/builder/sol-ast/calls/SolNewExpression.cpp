@@ -425,8 +425,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 			// Read CreatedApplicationID via itxn intrinsic and save to temp var
 			// because subsequent fund txn would clobber the itxn context.
-			auto createdAppIdCall = awst::makeIntrinsicCall("itxn", awst::WType::uint64Type(), m_loc);
-			createdAppIdCall->immediates = {std::string("CreatedApplicationID")};
+			auto createdAppIdCall = awst::makeItxn(
+				"CreatedApplicationID", awst::WType::uint64Type(), m_loc);
 
 			static int newAppIdCounter = 0;
 			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppIdCounter++);
