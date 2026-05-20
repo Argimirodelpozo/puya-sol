@@ -843,6 +843,46 @@ inline std::shared_ptr<IntrinsicCall> makeBoxPut(
 	return node;
 }
 
+// `box_create key size` → bool (true if a new box was created, false
+// if it already existed). Callers typically discard the result.
+inline std::shared_ptr<IntrinsicCall> makeBoxCreate(
+	std::shared_ptr<Expression> key,
+	std::shared_ptr<Expression> size,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("box_create", WType::boolType(), std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	node->stackArgs.push_back(std::move(size));
+	return node;
+}
+
+// `box_len key` → (length: uint64, exists: bool) tuple. Caller passes
+// the matching `tupleType` (uint64 + bool); only differs by ownership.
+inline std::shared_ptr<IntrinsicCall> makeBoxLen(
+	std::shared_ptr<Expression> key,
+	WType const* tupleType,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("box_len", tupleType, std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	return node;
+}
+
+// `box_extract key offset length` → bytes slice from the box. Faults
+// if the box doesn't exist or the range overflows.
+inline std::shared_ptr<IntrinsicCall> makeBoxExtract(
+	std::shared_ptr<Expression> key,
+	std::shared_ptr<Expression> offset,
+	std::shared_ptr<Expression> length,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("box_extract", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	node->stackArgs.push_back(std::move(offset));
+	node->stackArgs.push_back(std::move(length));
+	return node;
+}
+
 // `box_del key` — delete the box at `key`. Returns a bool indicating
 // whether the box existed; most callsites ignore that and discard via a
 // statement.

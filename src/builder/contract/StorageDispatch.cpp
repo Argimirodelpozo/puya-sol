@@ -91,18 +91,14 @@ void ContractBuilder::buildStorageDispatch(
 			auto offset = awst::makeUInt64BinOp(std::move(mod256), awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 
 			// box_create("__dyn_storage", 8192) — 256 slots * 32 bytes
-			auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), loc);
-			boxCreate->stackArgs.push_back(boxKey);
-			boxCreate->stackArgs.push_back(makeUint64("8192"));
+			auto boxCreate = awst::makeBoxCreate(boxKey, makeUint64("8192"), loc);
 
 			auto popStmt = awst::makeExpressionStatement(std::move(boxCreate), loc);
 			defaultBlock->body.push_back(std::move(popStmt));
 
 			// box_extract("__dyn_storage", offset, 32)
-			auto boxExtract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), loc);
-			boxExtract->stackArgs.push_back(std::move(boxKey));
-			boxExtract->stackArgs.push_back(std::move(offset));
-			boxExtract->stackArgs.push_back(makeUint64("32"));
+			auto boxExtract = awst::makeBoxExtract(
+				std::move(boxKey), std::move(offset), makeUint64("32"), loc);
 
 			auto cast = awst::makeReinterpretCast(std::move(boxExtract), awst::WType::biguintType(), loc);
 
@@ -215,9 +211,7 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto paddedVal = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
 			// box_create("__dyn_storage", 8192) — ensure box exists
-			auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), loc);
-			boxCreate->stackArgs.push_back(boxKey);
-			boxCreate->stackArgs.push_back(makeUint64("8192"));
+			auto boxCreate = awst::makeBoxCreate(boxKey, makeUint64("8192"), loc);
 
 			auto createStmt = awst::makeExpressionStatement(std::move(boxCreate), loc);
 			defaultBlock->body.push_back(std::move(createStmt));

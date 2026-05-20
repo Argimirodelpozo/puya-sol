@@ -498,22 +498,19 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 		// requires plumbing through SolAssignment.cpp too. As a first cut,
 		// just emit the read path; writes via this path will fail until
 		// SolAssignment.cpp is extended. (Tracked as follow-up.)
-		auto extract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), m_loc);
-		extract->stackArgs.push_back(std::move(boxKey));
-		extract->stackArgs.push_back(std::move(offsetExpr));
-		extract->stackArgs.push_back(awst::makeIntegerConstant(elemSize, m_loc));
-		auto cast = awst::makeReinterpretCast(std::move(extract),
+		auto extract = awst::makeBoxExtract(
+			std::move(boxKey), std::move(offsetExpr),
+			awst::makeIntegerConstant(elemSize, m_loc), m_loc);
+		return awst::makeReinterpretCast(std::move(extract),
 			const_cast<awst::WType*>(elemArc4Type), m_loc);
-		return cast;
 	}
 
 	// Read path: box_extract(boxKey, inPageOffset, elemSize) returning the
 	// raw element bytes, reinterpreted as the element's ARC4 type, then
 	// optionally ARC4Decode'd to the native expected type.
-	auto extract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), m_loc);
-	extract->stackArgs.push_back(std::move(boxKey));
-	extract->stackArgs.push_back(std::move(offsetExpr));
-	extract->stackArgs.push_back(awst::makeIntegerConstant(elemSize, m_loc));
+	auto extract = awst::makeBoxExtract(
+		std::move(boxKey), std::move(offsetExpr),
+		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
 
 	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
 	auto* elemArc4 = const_cast<awst::WType*>(elemArc4Type);

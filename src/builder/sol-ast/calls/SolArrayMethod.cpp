@@ -82,8 +82,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 						std::vector<awst::WType const*>{
 							awst::WType::uint64Type(), awst::WType::boolType()});
-					auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
-					boxLen->stackArgs.push_back(boxKey);
+					auto boxLen = awst::makeBoxLen(boxKey, tupleType, m_loc);
 
 					auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 
@@ -214,14 +213,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 									std::vector<awst::WType const*>{
 										awst::WType::uint64Type(), awst::WType::boolType()});
-								auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
-								boxLen->stackArgs.push_back(boxKey);
+								auto boxLen = awst::makeBoxLen(boxKey, tupleType, m_loc);
 								auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 								auto notExists = awst::makeNot(std::move(existsVal), m_loc);
-								auto createCall = awst::makeIntrinsicCall(
-									"box_create", awst::WType::boolType(), m_loc);
-								createCall->stackArgs.push_back(boxKey);
-								createCall->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
+								auto createCall = awst::makeBoxCreate(
+									boxKey, awst::makeIntegerConstant("2", m_loc), m_loc);
 								auto createStmt = awst::makeExpressionStatement(
 									std::move(createCall), m_loc);
 								auto ifBranch = awst::makeBlock(m_loc);

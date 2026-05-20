@@ -478,15 +478,13 @@ void SolAssignment::maybePrePopulateBox(
 		auto enc = TypeCoercion::arc4DefaultEncoding(bv->wtype);
 		if (!enc || enc->size() == 0 || enc->size() > 32768) return;
 
-		auto putCall = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), m_loc);
-		putCall->stackArgs.push_back(bv->key);
-		putCall->stackArgs.push_back(awst::makeBytesConstant(std::move(*enc), m_loc));
+		auto putCall = awst::makeBoxPut(
+			bv->key, awst::makeBytesConstant(std::move(*enc), m_loc), m_loc);
 
 		auto* tupleType = m_ctx.typeMapper.template createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::uint64Type(), awst::WType::boolType()});
-		auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
-		boxLen->stackArgs.push_back(bv->key);
+		auto boxLen = awst::makeBoxLen(bv->key, tupleType, m_loc);
 		auto exists = awst::makeTupleItem(
 			std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 		auto notExists = awst::makeNot(std::move(exists), m_loc);
@@ -526,9 +524,8 @@ void SolAssignment::maybePrePopulateBox(
 	}
 	if (totalSize > 0 && totalSize <= 32768)
 	{
-		auto createCall = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), m_loc);
-		createCall->stackArgs.push_back(bv->key);
-		createCall->stackArgs.push_back(awst::makeIntegerConstant(totalSize, m_loc));
+		auto createCall = awst::makeBoxCreate(
+			bv->key, awst::makeIntegerConstant(totalSize, m_loc), m_loc);
 		m_ctx.queuePreStmt(std::move(createCall), m_loc);
 	}
 }
