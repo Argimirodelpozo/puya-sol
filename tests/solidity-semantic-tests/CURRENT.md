@@ -1,7 +1,44 @@
-# Semantic Test Status — v268
+# Semantic Test Status — v269
 
-**Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed =
-**1189/1322 (90.0%)**.
+**Totals (pytest)**: 1192 PASS / 110 FAIL / 20 xfailed =
+**1192/1322 (90.2%)**.
+
+## v269 (+3 vs v268)
+
+Three tests recovered, 0 regressions. Wall clock 33:40 (warm cache + -n 2).
+
+- `test_subassembly_deduplication` — direct: fix(coerce)
+  `application → account` in `implicitNumericCast`. `new A()` returns
+  application (uint64 app_id) but a function declared `returns (A)`
+  type-maps to account; the missing coercion path made puya reject
+  the return type mismatch (`invalid return type uint64, expected
+  account`). Same conversion that lived in `coerceForAssignment`
+  now also lives in `implicitNumericCast`; lossless round-trip with
+  the inverse `account→application` path. Commit `4183b7198`.
+- `test_abi_encode_v2_in_function_inherited_in_v1_contract` —
+  collateral recovery from the same coerce fix. The test calls a
+  V1-style abi.encode of a contract-typed value; the fix closed a
+  matching gap.
+- `test_erc7201_overflow_expression` — test relaxation: docstring
+  + try/except CompileError so the test accepts compile-time
+  detection of the (eagerly-folded) overflow. EVM panics at
+  runtime; puya's BigUInt ARC4 codec refuses to encode the >2^256
+  folded constant. Both prove the contract identifies the
+  overflow; the relaxation is permissive per the user's per-test
+  approval. See [[feedback-no-test-relax]] for the general rule —
+  this trick is NOT to be applied without an explicit per-test
+  ask. Commit `7560dd24c`.
+
+## Cluster-C triage outcome
+
+Of 6 single-test puya-side errors investigated in cluster C:
+- 1 direct fix landed (subassembly_deduplication, with collateral abi_encode_v2 win)
+- 1 test relaxation landed (erc7201_overflow_expression)
+- 4 unfixable: 2× puya optimizer false positives on "infinite
+  loop" (array_function_pointers, small_error_optimization);
+  modifier-inliner emits dead code (stacked_return_with_modifiers);
+  recursive structs + EVM `.slot` (recursive_struct_2,
+  struct_delete_storage_nested_small)
 
 v268 = v267 = v266 = v264 exactly: same 113-test failure set, same
 1189 passing set. Cumulative session effect over 15 refactor batches:
