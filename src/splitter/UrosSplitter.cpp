@@ -441,10 +441,8 @@ std::shared_ptr<awst::Expression> makeStorageAddressExpr(
 			awst::WType::accountType(), awst::WType::boolType()},
 		std::nullopt);
 
-	auto get = awst::makeIntrinsicCall(
-		"app_params_get", tupleType, _loc);
-	get->immediates = {std::string("AppAddress")};
-	get->stackArgs.push_back(std::move(storageTmpl));
+	auto get = awst::makeAppParamsGet(
+		"AppAddress", std::move(storageTmpl), tupleType, _loc);
 
 	return awst::makeTupleItem(
 		get, 0, awst::WType::accountType(), _loc);
@@ -844,10 +842,8 @@ std::shared_ptr<awst::Expression> makeMainAddressExpr(
 			awst::WType::accountType(), awst::WType::boolType()},
 		std::nullopt);
 
-	auto get = awst::makeIntrinsicCall(
-		"app_params_get", tupleType, _loc);
-	get->immediates = {std::string("AppAddress")};
-	get->stackArgs.push_back(std::move(mainTmpl));
+	auto get = awst::makeAppParamsGet(
+		"AppAddress", std::move(mainTmpl), tupleType, _loc);
 
 	return awst::makeTupleItem(
 		get, 0, awst::WType::accountType(), _loc);

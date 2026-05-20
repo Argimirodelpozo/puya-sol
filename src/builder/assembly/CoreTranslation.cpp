@@ -368,9 +368,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::bytesType(), awst::WType::boolType()});
-		auto appParamsGet = awst::makeIntrinsicCall("app_params_get", tupleType, loc);
-		appParamsGet->immediates = {std::string("AppApprovalProgram")};
-		appParamsGet->stackArgs.push_back(std::move(appIdCast));
+		auto appParamsGet = awst::makeAppParamsGet(
+			"AppApprovalProgram", std::move(appIdCast), tupleType, loc);
 
 		auto bytesOut = awst::makeTupleItem(std::move(appParamsGet), 0, awst::WType::bytesType(), loc);
 

@@ -75,9 +75,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::bytesType(), awst::WType::boolType()});
-		auto appParamsGet = awst::makeIntrinsicCall("app_params_get", tupleType, m_loc);
-		appParamsGet->immediates = {std::string("AppApprovalProgram")};
-		appParamsGet->stackArgs.push_back(std::move(appId));
+		auto appParamsGet = awst::makeAppParamsGet(
+			"AppApprovalProgram", std::move(appId), tupleType, m_loc);
 
 		// Stash the (bytes, bool) tuple into a fresh temp before pulling
 		// out the bytes element. Puya's TupleItemExpression lowering for a
@@ -151,10 +150,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					auto* addrTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 						std::vector<awst::WType const*>{
 							awst::WType::bytesType(), awst::WType::boolType()});
-					auto appParamsGet = awst::makeIntrinsicCall(
-						"app_params_get", addrTupleType, m_loc);
-					appParamsGet->immediates = {std::string("AppAddress")};
-					appParamsGet->stackArgs.push_back(std::move(appIdUint));
+					auto appParamsGet = awst::makeAppParamsGet(
+						"AppAddress", std::move(appIdUint), addrTupleType, m_loc);
 
 					std::string addrTmp = "__app_balance_addr";
 					auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
@@ -254,9 +251,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{
 						awst::WType::bytesType(), awst::WType::boolType()});
-				auto appParamsGet = awst::makeIntrinsicCall("app_params_get", tupleType, m_loc);
-				appParamsGet->immediates = {std::string("AppApprovalProgram")};
-				appParamsGet->stackArgs.push_back(std::move(appIdCast));
+				auto appParamsGet = awst::makeAppParamsGet(
+					"AppApprovalProgram", std::move(appIdCast), tupleType, m_loc);
 
 				auto bytesOut = awst::makeTupleItem(std::move(appParamsGet), 0, awst::WType::bytesType(), m_loc);
 

@@ -444,9 +444,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				auto* fundTupleType = new awst::WTuple(
 					{awst::WType::bytesType(), awst::WType::boolType()});
-				auto fundAppParams = awst::makeIntrinsicCall("app_params_get", fundTupleType, m_loc);
-				fundAppParams->immediates = {std::string("AppAddress")};
-				fundAppParams->stackArgs.push_back(std::move(fundAppId));
+				auto fundAppParams = awst::makeAppParamsGet(
+					"AppAddress", std::move(fundAppId), fundTupleType, m_loc);
 
 				std::string fundTmpName = "__fund_app_result";
 				auto fundTmpTarget = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
@@ -553,9 +552,10 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// Re-read the app's address for the Payment receiver.
 				auto* addrTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
-				auto postAddrCall = awst::makeIntrinsicCall("app_params_get", addrTupleType, m_loc);
-				postAddrCall->immediates = {std::string("AppAddress")};
-				postAddrCall->stackArgs.push_back(awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc));
+				auto postAddrCall = awst::makeAppParamsGet(
+					"AppAddress",
+					awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc),
+					addrTupleType, m_loc);
 
 				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppIdCounter);
 				auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);

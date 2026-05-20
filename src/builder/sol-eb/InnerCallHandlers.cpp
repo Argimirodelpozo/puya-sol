@@ -726,9 +726,8 @@ void InnerCallHandlers::fundCreatedApp(
 	auto appId = awst::makeItxn("CreatedApplicationID", awst::WType::uint64Type(), _loc);
 
 	auto* tupleType = new awst::WTuple({awst::WType::bytesType(), awst::WType::boolType()});
-	auto appParams = awst::makeIntrinsicCall("app_params_get", tupleType, _loc);
-	appParams->immediates = {std::string("AppAddress")};
-	appParams->stackArgs.push_back(std::move(appId));
+	auto appParams = awst::makeAppParamsGet(
+		"AppAddress", std::move(appId), tupleType, _loc);
 
 	auto addrBytes = awst::makeTupleItem(std::move(appParams), 0, awst::WType::bytesType(), _loc);
 

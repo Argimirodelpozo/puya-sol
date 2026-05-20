@@ -762,6 +762,20 @@ inline std::shared_ptr<IntrinsicCall> makeBlock(
 	return node;
 }
 
+// `app_params_get <field> <appId>` — query a deployed app's params
+// (AppAddress, AppApprovalProgram, AppGlobalNumByteSlice, etc.).
+// Always returns a (value, exists) tuple; caller passes the matching
+// `tupleType`. Stack arg is the appId.
+inline std::shared_ptr<IntrinsicCall> makeAppParamsGet(
+	std::string field, std::shared_ptr<Expression> appId,
+	WType const* tupleType, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("app_params_get", tupleType, std::move(loc));
+	node->immediates = {std::move(field)};
+	node->stackArgs.push_back(std::move(appId));
+	return node;
+}
+
 // `load <slot>` — read a scratch slot as bytes. Used for the EVM memory
 // blob (MEMORY_SLOT_FIRST + n) and the transient-storage blob
 // (TRANSIENT_SLOT). Always returns bytes — callers that need a numeric
