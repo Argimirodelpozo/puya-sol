@@ -20,6 +20,23 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	if (!_expr || !_targetType || _expr->wtype == _targetType)
 		return _expr;
 
+	// application → account: encode the app id into a fake address of the
+	// form `bzero(24) ++ itob(app_id)`. Solidity contract types (e.g. `A`)
+	// type-map to `account` (Solidity treats contract values as addresses),
+	// but `new A()` produces an `application` (uint64 app_id). When a
+	// function declared `returns (A)` returns a `new A()` expression — or
+	// any other application/account site mixing — this implicit cast
+	// closes the gap. Round-trips losslessly with the inverse account →
+	// application path in coerceForAssignment.
+	if (_targetType == awst::WType::accountType()
+		&& _expr->wtype == awst::WType::applicationType())
+	{
+		auto idBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::uint64Type(), _loc);
+		auto itob = awst::makeItob(std::move(idBytes), _loc);
+		auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
+		return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
+	}
+
 	// uint64 → biguint: itob then reinterpret as biguint
 	if (_expr->wtype == awst::WType::uint64Type() && _targetType == awst::WType::biguintType())
 	{
