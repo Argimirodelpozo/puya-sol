@@ -673,10 +673,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 		auto last = awst::makeIntrinsicCall(
 			"itxn", awst::WType::bytesType(), _loc);
 		last->immediates = {std::string("LastLog")};
-		auto strip = awst::makeIntrinsicCall(
-			"extract", awst::WType::bytesType(), _loc);
-		strip->immediates = {4, 0};
-		strip->stackArgs.push_back(std::move(last));
+		auto strip = awst::makeExtract(std::move(last), 4, 0, _loc);
 		decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
 	}
 	else
@@ -703,10 +700,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 		std::shared_ptr<awst::Expression> readLog = pickLog(0);
 		for (int i = 1; i < chunks; ++i)
 			readLog = awst::makeConcat(std::move(readLog), pickLog(i), _loc);
-		auto strip = awst::makeIntrinsicCall(
-			"extract", awst::WType::bytesType(), _loc);
-		strip->immediates = {4, 0};
-		strip->stackArgs.push_back(std::move(readLog));
+		auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 		decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
 	}
 
@@ -824,9 +818,7 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 		readLog = awst::makeConcat(std::move(readLog),
 			pickLog(basePieces - 1 + i), _loc);
 
-	auto strip = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-	strip->immediates = {4, 0};
-	strip->stackArgs.push_back(std::move(readLog));
+	auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 	auto decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
 
 	auto comma = awst::makeCommaExpression(_retType, _loc);

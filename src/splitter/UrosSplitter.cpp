@@ -1073,9 +1073,7 @@ std::shared_ptr<awst::Block> makeForwardingStubBody(
 	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 	readLog->immediates = {std::string("LastLog")};
 
-	auto stripPrefix = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-	stripPrefix->immediates = {10, 0};
-	stripPrefix->stackArgs.push_back(std::move(readLog));
+	auto stripPrefix = awst::makeExtract(std::move(readLog), 10, 0, _loc);
 
 	auto decoded = decodeFromBytes(std::move(stripPrefix), _m.returnType, _loc);
 

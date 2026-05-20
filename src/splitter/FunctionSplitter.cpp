@@ -600,18 +600,12 @@ std::shared_ptr<awst::Expression> coerceFromFixedBytes(
 			std::move(_bytes), awst::WType::accountType(), _loc);
 	if (_wtype == awst::WType::uint64Type())
 	{
-		auto extract = awst::makeIntrinsicCall(
-			"extract", awst::WType::bytesType(), _loc);
-		extract->immediates = {24, 8};
-		extract->stackArgs.push_back(std::move(_bytes));
+		auto extract = awst::makeExtract(std::move(_bytes), 24, 8, _loc);
 		return awst::makeBtoi(std::move(extract), _loc);
 	}
 	if (_wtype == awst::WType::boolType())
 	{
-		auto extract = awst::makeIntrinsicCall(
-			"extract", awst::WType::bytesType(), _loc);
-		extract->immediates = {31, 1};
-		extract->stackArgs.push_back(std::move(_bytes));
+		auto extract = awst::makeExtract(std::move(_bytes), 31, 1, _loc);
 		auto u64 = awst::makeBtoi(std::move(extract), _loc);
 		return awst::makeNumericCompare(
 			std::move(u64), awst::NumericComparison::Ne,

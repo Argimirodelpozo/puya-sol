@@ -159,9 +159,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
 
 						// Safe truncate biguint to uint64
-						auto last8 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
-						last8->immediates = {24, 8};
-						last8->stackArgs.push_back(std::move(castToBytes));
+						auto last8 = awst::makeExtract(std::move(castToBytes), 24, 8, m_loc);
 
 						auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 

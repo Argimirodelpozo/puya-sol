@@ -182,9 +182,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 	readLog->immediates = {std::string("LastLog")};
 
-	auto stripPrefix = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-	stripPrefix->immediates = {4, 0};
-	stripPrefix->stackArgs.push_back(std::move(readLog));
+	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));

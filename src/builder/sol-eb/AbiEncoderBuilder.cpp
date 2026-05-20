@@ -133,11 +133,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	{
 		if (packedWidth <= 8)
 		{
-			auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			extract->immediates.push_back(8 - packedWidth);
-			extract->immediates.push_back(packedWidth);
-			extract->stackArgs.push_back(std::move(bytesExpr));
-			bytesExpr = std::move(extract);
+			bytesExpr = awst::makeExtract(
+				std::move(bytesExpr), 8 - packedWidth, packedWidth, _loc);
 		}
 		else
 			bytesExpr = leftPadBytes(std::move(bytesExpr), packedWidth, _loc);

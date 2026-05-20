@@ -150,10 +150,9 @@ namespace
 		unsigned absByte, unsigned byteSize, awst::SourceLocation const& _loc)
 	{
 		auto blob = loadTransientBlob(_loc);
-		auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-		extract->immediates = {static_cast<int>(absByte), static_cast<int>(byteSize)};
-		extract->stackArgs.push_back(std::move(blob));
-		return extract;
+		return awst::makeExtract(
+			std::move(blob),
+			static_cast<int>(absByte), static_cast<int>(byteSize), _loc);
 	}
 }
 
@@ -270,10 +269,9 @@ namespace
 			// (drop the leading 32 - byteSize bytes) to match EVM layout.
 			auto bytesView = awst::makeReinterpretCast(
 				std::move(_value), awst::WType::bytesType(), _loc);
-			auto ext = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-			ext->immediates = {static_cast<int>(32 - byteSize), static_cast<int>(byteSize)};
-			ext->stackArgs.push_back(std::move(bytesView));
-			raw = std::move(ext);
+			raw = awst::makeExtract(
+				std::move(bytesView),
+				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
 		}
 		else
 		{

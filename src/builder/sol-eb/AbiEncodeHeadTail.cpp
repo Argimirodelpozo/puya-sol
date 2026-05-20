@@ -248,12 +248,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				auto lenItob = awst::makeItob(std::move(lenExpr), _loc);
 				auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
 
-				auto stripHeader = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
-				stripHeader->immediates = {2, 0};
-				{
-					auto bytesCast = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
-					stripHeader->stackArgs.push_back(std::move(bytesCast));
-				}
+				auto bytesCast = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
+				auto stripHeader = awst::makeExtract(std::move(bytesCast), 2, 0, _loc);
 
 				return awst::makeConcat(std::move(lenPadded), std::move(stripHeader), _loc);
 			}
