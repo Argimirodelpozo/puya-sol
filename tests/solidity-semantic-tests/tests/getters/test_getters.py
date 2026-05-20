@@ -3,7 +3,7 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_signed_int, as_bytes,
 )
 
 
@@ -159,15 +159,21 @@ def test_transient_value_types(harness):
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 0
 
-def test_transient_value_types_multi_frame_call(harness):  # currently fails
-    """getters/contracts/transient_value_types_multi_frame_call.sol"""
+def test_transient_value_types_multi_frame_call(harness):
+    """getters/contracts/transient_value_types_multi_frame_call.sol
+
+    Signed int8 returns surface as uint256-encoded two's complement
+    (our ABI surfacing uses ARC4UIntN(256)); algokit decodes that as a
+    biguint. Use `as_signed_int` to reinterpret the top bit as the
+    sign.
+    """
     app = harness.compile_and_deploy('getters/contracts/transient_value_types_multi_frame_call.sol')
     r = harness.call(app, 'x()')
     assert as_int(r.abi_return) == 0
     r = harness.call(app, 'f()')
-    assert as_int(r.abi_return) == -2
+    assert as_signed_int(r.abi_return) == -2
     r = harness.call(app, 'h()')
-    assert as_int(r.abi_return) == -1
+    assert as_signed_int(r.abi_return) == -1
     r = harness.call(app, 'x()')
     assert as_int(r.abi_return) == 0
 

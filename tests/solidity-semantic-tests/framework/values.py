@@ -66,6 +66,36 @@ def raw(value: bytes) -> bytes:
     return value
 
 
+def as_signed_int(value, bits: int = 256) -> int:
+    """Coerce algosdk's typed return into a signed Python int.
+
+    Use when a Solidity function declared `returns (int<N>)` (or any
+    signed integer type) but our ABI surfacing emits the value as a
+    32-byte uint256 (two's-complement payload). algosdk decodes that
+    as a positive biguint; this helper reinterprets the top `bits`
+    bits as signed two's complement.
+
+    Examples:
+        as_signed_int(2**256 - 5)        → -5     (default 256 bits)
+        as_signed_int(0xfb, bits=8)      → -5
+        as_signed_int(42)                →  42
+
+    When the value is already a negative Python int (e.g. algokit's
+    patched SignedIntType returned `int8` natively), it is passed
+    through unchanged.
+    """
+    if isinstance(value, int) and not isinstance(value, bool):
+        if value < 0:
+            return value
+        n = value
+    else:
+        n = as_int(value)
+    sign_bit = 1 << (bits - 1)
+    if n & sign_bit:
+        n -= 1 << bits
+    return n
+
+
 def as_int(value) -> int:
     """Coerce algosdk's typed return into the equivalent uint256 int.
 

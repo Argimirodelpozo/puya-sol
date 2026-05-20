@@ -4,7 +4,7 @@ import pytest
 from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_signed_int, as_bytes,
 )
 
 
@@ -288,11 +288,23 @@ def test_dirty_slot(harness):  # currently fails
     r = harness.call(app, 'get_b(uint256)', 2, expect_revert=True)
     assert r.reverted
 
-def test_dirty_uint8_read(harness):  # currently fails
-    """userDefinedValueType/contracts/dirty_uint8_read.sol"""
+def test_dirty_uint8_read(harness):
+    """userDefinedValueType/contracts/dirty_uint8_read.sol
+
+    Signed int8 returns surface as uint256-encoded two's complement
+    (our ABI surfacing uses ARC4UIntN(256)); use as_signed_int to
+    reinterpret. The dirty-slot read still expects the raw uint256
+    payload (0xfff..fb), which `as_int` returns unchanged.
+
+    Note: this test also calls `create_dirty_slot()` which uses
+    `sstore(x.slot, ...)` — that branch tests EVM slot-storage
+    semantics we don't fully emulate, so this assertion may still
+    fail downstream of the slot write. The signed-decode fix here
+    only addresses the `x()` read.
+    """
     app = harness.compile_and_deploy('userDefinedValueType/contracts/dirty_uint8_read.sol')
     r = harness.call(app, 'x()')
-    assert as_int(r.abi_return) == -5
+    assert as_signed_int(r.abi_return) == -5
     r = harness.call(app, 'create_dirty_slot()')
     r = harness.call(app, 'read_unclean_value()')
     assert as_int(r.abi_return) == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
