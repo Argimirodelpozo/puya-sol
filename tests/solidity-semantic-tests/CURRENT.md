@@ -1,11 +1,53 @@
-# Semantic Test Status — v267
+# Semantic Test Status — v268
 
 **Totals (pytest)**: 1189 PASS / 113 FAIL / 20 xfailed =
 **1189/1322 (90.0%)**.
 
-v267 = v266 = v264 exactly: same 113-test failure set, same 1189
-passing set. Cumulative session effect over 4 refactor batches:
-0 regressions, 0 recoveries.
+v268 = v267 = v266 = v264 exactly: same 113-test failure set, same
+1189 passing set. Cumulative session effect over 15 refactor batches:
+0 regressions, 0 recoveries vs v267 (which was 0 vs v264).
+
+Wall-clock from cold-cached `-n 2` baseline: **24:26** (down from
+v266's 67:06 = 2.7× faster total since the cache+xdist infrastructure
+landed in v267).
+
+## v268 puya-sol changes (vs v267)
+
+Eleven pure-refactor batches adopting awst factory helpers — all
+bit-identical AST. Net effect ~80 inline `makeIntrinsicCall(...) +
+immediates/stackArgs` sites collapsed to single-line helpers in
+`src/awst/Node.h`.
+
+- `0ffd5bbbc` Batch #5 — `awst::makeItxn` at 8 sites (LastLog ×6 +
+  CreatedApplicationID ×2 + CreatedAssetID).
+- `c0a7e507d` Batch #6 — `awst::makeBlock` at 4 sites (BlkSeed reads).
+- `19693aecf` Batch #7 — `awst::makeAppParamsGet` at 7 sites.
+- `08b3af528` Batch #8+9 — `awst::makeAssetParamsGet` + `awst::makeGtxns`
+  at 8 sites.
+- `45c701da9` Batch #10 — `awst::makeExtract3` extended with optional
+  wtype, adopted at 7 inline sites that needed BytesWType(N).
+- `17e668cee` Batch #11 — `awst::makeExtractUInt64` +
+  `awst::makeExtractUInt16` at 9 sites.
+- `e104771df` Batch #12 — adopted existing `makeItob`/`makeBtoi`/
+  `makeLen` at 8 stragglers; extended makeBtoi with optional wtype.
+- `88a288f0a` Batch #13 — `awst::makeSetbit` + `awst::makeGetbit` at
+  15 ARC4-bool encode/decode sites.
+- `28e683eea` Batch #14 — `awst::makeBoxCreate` + `awst::makeBoxLen`
+  + `awst::makeBoxExtract` at 13 sites; tidied a stray makeBoxPut.
+- `1c43c56b3` Batch #15 — local `assetParamFirst` helper in
+  AsaIntrinsics.cpp; 4 handler methods collapse to 1-call shape.
+
+vs v267: same 113 fail set.
+
+## v267 → v268 cumulative helper-set in Node.h
+
+The session shipped these awst factory helpers
+(makeGlobal / makeTxn / makeItxn / makeBlock / makeAppArg /
+makeAppParamsGet / makeAssetParamsGet / makeGtxns / makeLoadSlot /
+makeStoreSlot / makeBoxCreate / makeBoxLen / makeBoxExtract /
+makeSetbit / makeGetbit / makeExtractUInt64 / makeExtractUInt16),
+plus extensions for makeExtract / makeExtract3 / makeBtoi to accept
+optional `wtype`.
 
 ## Test-runner speed-up landed in v267
 
