@@ -749,6 +749,19 @@ inline std::shared_ptr<IntrinsicCall> makeItxn(
 	return node;
 }
 
+// `block <field> <roundExpr>` — read a past-block field (BlkSeed,
+// BlkTimestamp). Unlike makeTxn/makeGlobal/makeItxn, this opcode takes
+// the round as a stack argument, not an immediate.
+inline std::shared_ptr<IntrinsicCall> makeBlock(
+	std::string field, std::shared_ptr<Expression> roundExpr,
+	WType const* wtype, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("block", wtype, std::move(loc));
+	node->immediates = {std::move(field)};
+	node->stackArgs.push_back(std::move(roundExpr));
+	return node;
+}
+
 // `load <slot>` — read a scratch slot as bytes. Used for the EVM memory
 // blob (MEMORY_SLOT_FIRST + n) and the transient-storage blob
 // (TRANSIENT_SLOT). Always returns bytes — callers that need a numeric

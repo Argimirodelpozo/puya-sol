@@ -74,9 +74,8 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
 
-		auto blockSeed = awst::makeIntrinsicCall("block", awst::WType::bytesType(), m_loc);
-		blockSeed->immediates = {std::string("BlkSeed")};
-		blockSeed->stackArgs.push_back(std::move(prevRound));
+		auto blockSeed = awst::makeBlock(
+			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
 
 		auto cast = awst::makeReinterpretCast(std::move(blockSeed), awst::WType::biguintType(), m_loc);
 		return cast;

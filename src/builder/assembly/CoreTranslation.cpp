@@ -465,9 +465,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 
 		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), loc);
 
-		auto seed = awst::makeIntrinsicCall("block", awst::WType::bytesType(), loc);
-		seed->immediates = {std::string("BlkSeed")};
-		seed->stackArgs.push_back(std::move(prevRound));
+		auto seed = awst::makeBlock(
+			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc);
 
 		auto seedBigUint = awst::makeReinterpretCast(std::move(seed), awst::WType::biguintType(), loc);
 

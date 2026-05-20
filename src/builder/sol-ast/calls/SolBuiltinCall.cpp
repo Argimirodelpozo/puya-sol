@@ -55,9 +55,8 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two2), m_loc);
 
-		auto seed = awst::makeIntrinsicCall("block", awst::WType::bytesType(), m_loc);
-		seed->immediates = {std::string("BlkSeed")};
-		seed->stackArgs.push_back(std::move(prevRound));
+		auto seed = awst::makeBlock(
+			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
 
 		auto zeros = awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 
@@ -225,9 +224,8 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 
 	auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
 
-	auto e = awst::makeIntrinsicCall("block", awst::WType::bytesType(), m_loc);
-	e->immediates = {std::string("BlkSeed")};
-	e->stackArgs.push_back(std::move(prevRound));
+	auto e = awst::makeBlock(
+		"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
 
 	// Cast to the target type (bytes32 or biguint)
 	if (m_wtype && m_wtype != awst::WType::bytesType())
