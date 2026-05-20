@@ -107,6 +107,29 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 		promoted = masked;
 	}
 
+	// `promoted` is referenced 3 times below (cond LHS, add LHS, conditional
+	// else-branch). If it's a side-effecting expression — notably `this.h()`
+	// in `return this.h();` from an int<N>-returning function whose body
+	// mutates transient storage via this.g() — naïve AST duplication would
+	// emit the callsub three times, running the side effects thrice. Bind
+	// to a fresh temp variable via an AssignmentExpression so the value is
+	// computed once and the three subsequent references read the temp.
+	//
+	// CommaExpression wraps the (assign-then-conditional) sequence so this
+	// remains an Expression (signExtendToUint256's return contract).
+	static int s_signExtTempId = 0;
+	std::string tempName = "__signext_tmp_" + std::to_string(++s_signExtTempId);
+	auto tempVar = awst::makeVarExpression(tempName, awst::WType::biguintType(), _loc);
+	auto bind = awst::makeAssignmentExpression(
+		tempVar, std::move(promoted), _loc, awst::WType::biguintType());
+
+	// All subsequent uses reference the temp var (a fresh VarExpression each
+	// time — puya treats local-var reads as cheap and never re-evaluates the
+	// underlying side-effecting source).
+	auto tempRead = [&]() {
+		return awst::makeVarExpression(tempName, awst::WType::biguintType(), _loc);
+	};
+
 	// threshold = 2^(N-1)
 	solidity::u256 threshold = solidity::u256(1) << (_bits - 1);
 	// 2^256 as a string (u256 can't hold it, it overflows to 0)
@@ -117,19 +140,24 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 
 	auto threshConst = awst::makeIntegerConstant(threshold.str(), _loc, awst::WType::biguintType());
 
-	auto cond = awst::makeNumericCompare(promoted, awst::NumericComparison::Gte, threshConst, _loc);
+	auto cond = awst::makeNumericCompare(tempRead(), awst::NumericComparison::Gte, threshConst, _loc);
 
 	auto offsetConst = awst::makeIntegerConstant(offsetStr, _loc, awst::WType::biguintType());
 
-	auto add = awst::makeBigUIntBinOp(promoted, awst::BigUIntBinaryOperator::Add, std::move(offsetConst), _loc);
+	auto add = awst::makeBigUIntBinOp(tempRead(), awst::BigUIntBinaryOperator::Add, std::move(offsetConst), _loc);
 
 	// Mod 2^256 to keep within 32 bytes
 	auto pow256Const = makePow256(_loc);
 
 	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(pow256Const), _loc);
 
-	return awst::makeConditional(
-		std::move(cond), std::move(mod), promoted, awst::WType::biguintType(), _loc);
+	auto conditional = awst::makeConditional(
+		std::move(cond), std::move(mod), tempRead(), awst::WType::biguintType(), _loc);
+
+	auto comma = awst::makeCommaExpression(awst::WType::biguintType(), _loc);
+	comma->expressions.push_back(std::move(bind));
+	comma->expressions.push_back(std::move(conditional));
+	return comma;
 }
 
 // ── Bytes ────────────────────────────────────────────────────────
