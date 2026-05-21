@@ -367,8 +367,24 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 
 	// Regular array index
 	if (index && index->wtype == awst::WType::biguintType())
+	{
+		// A side-effecting index — `a[--i]`, `a[i = expr]` — must run
+		// exactly once. The biguint→uint64 cast below duplicates its
+		// operand (it slices `concat(bzero(8), idx)` and also takes that
+		// concat's length), so a side-effecting idx would execute twice.
+		// Pin it to a temp first. Mirrors the mapping-key handler above.
+		if (dynamic_cast<awst::AssignmentExpression const*>(index.get()))
+		{
+			static int idxCoerceTemp = 0;
+			std::string tempName = "__sol_ixc_" + std::to_string(idxCoerceTemp++);
+			auto tempVar = awst::makeVarExpression(tempName, index->wtype, m_loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(tempVar, std::move(index), m_loc));
+			index = tempVar;
+		}
 		index = builder::TypeCoercion::implicitNumericCast(
 			std::move(index), awst::WType::uint64Type(), m_loc);
+	}
 
 	// bytes / bytesN indexing → extract3(base, index, 1) → bytes[1]
 	// Solidity `bytes[i]` returns a `bytes1` value. Puya doesn't support

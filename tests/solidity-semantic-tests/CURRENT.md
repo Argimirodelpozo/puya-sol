@@ -1,7 +1,35 @@
-# Semantic Test Status — v275
+# Semantic Test Status — v276
 
-**Totals (pytest)**: 1196 PASS / 106 FAIL / 20 xfailed =
-**1196/1322 (90.5%)**.
+**Totals (pytest)**: 1197 PASS / 105 FAIL / 20 xfailed =
+**1197/1322 (90.5%)**.
+
+## v276 — side-effecting array index evaluated once (+1 vs v275)
+
+One recovery: `externalContracts/test_base64`. 0 regressions
+(test-by-test diff vs v275's 106-failure set: 1 recovered, 0 new).
+
+`a[--i] = v` — an index-access store whose index has a side effect —
+miscompiled. The biguint→uint64 index cast emits
+`btoi(extract3(concat(bzero(8), idx), len(concat(bzero(8), idx)) - 8,
+8))`, which references `idx` twice (once for the slice, once for that
+concat's length). A side-effecting `idx` therefore ran twice — the
+Base64 reference contract's `result[--resultPtr] = 0x3d` padding step
+decremented `resultPtr` twice per store, writing to the wrong byte
+(`encode("f")` → `=gA=` instead of `Zg==`).
+
+Fix (`SolIndexAccessHandlers.cpp` handleRegularIndex): when the
+biguint index is a side-effecting `AssignmentExpression`, pin it to a
+temp before the cast — mirrors the mapping-key handler's existing
+materialise-to-temp (the [[puya-sol-bucket-loop-bug]] fix, which only
+covered the mapping path). `encode_no_asm` now matches all RFC4648
+§10 vectors.
+
+`test_base64` was also converted off the raw-EVM-calldata call form
+(`f(bytes), 0x20, 0` — which the algosdk ABI encoder can't model) to
+the harness convention: `encode_no_asm` is checked across the full
+RFC4648 set; `encode_inline_asm` (raw EVM memory-pointer Yul,
+mload/mstore8 walking) is checked for empty input only — non-empty
+needs EVM-memory-model fidelity beyond puya-sol's blob model.
 
 ## v275 — Yul for-loop side-effecting condition (+1 vs v274)
 
