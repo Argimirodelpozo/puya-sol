@@ -153,3 +153,124 @@ In puya's ARC4 struct encoder, initialize the running bool-pack
 buffer as `bzero(ceil(group_size / 8))` instead of an empty bytes
 constant, so the first `getbit`/`setbit` operates on a valid byte
 index.
+
+---
+
+## 3. False-positive "infinite loop detected" for a loop followed by an unconditional revert
+
+**Status:** Open in puya. No clean puya-sol-side workaround — the
+AWST and initial SSA IR puya-sol emits are correct; the defect is
+puya's optimizer + validator interaction. puya 5.8.0rc3
+(submodule `0d5af6b41`).
+
+### What
+
+When a loop is **immediately followed by an unconditional failure**
+(`revert` / `err`), puya's optimizer correctly folds the loop's exit
+edge into an in-loop `assert`, producing a basic block whose
+terminator targets only itself. `NoInfiniteLoopsValidator`
+(`puya/src/puya/ir/validation/infinite_loop.py`) then rejects that
+block — but it is **not** infinite: the block contains an `assert`
+that halts execution once the loop condition goes false. A valid,
+terminating program is refused with:
+
+```
+<source>:NN error: infinite loop detected
+error: puya exited with code: 1
+```
+
+### Reproduction
+
+The trigger is specifically *loop → unconditional fail*. With
+`return` (or nothing) trailing, it compiles fine:
+
+```solidity
+contract T {
+    uint8[] x;
+    function withReturn() public {          // COMPILES OK
+        for (uint i = 0; i < 100; ++i) x.push(uint8(i));
+        return;
+    }
+    function loopOnly() public {            // COMPILES OK
+        for (uint i = 0; i < 100; ++i) x.push(uint8(i));
+    }
+    function withRevert() public {          // FAILS: "infinite loop detected"
+        for (uint i = 0; i < 100; ++i) x.push(uint8(i));
+        revert();
+    }
+}
+```
+
+Equivalent puyapy shape — any loop whose only exit is an
+unconditional `op.err()` / failing assert with nothing after it.
+
+Fixtures hitting it in the puya-sol suite:
+`errors/small_error_optimization.sol`,
+`array/array_function_pointers.sol`.
+
+### IR trace
+
+The AWST puya receives is correct; the **initial SSA IR is correct
+and terminating** (`*.000.ssa.ir`):
+
+```
+block@4: // while_top
+    let i#1: biguint = φ(i#0 <- block@3, i#2 <- block@5)
+    let tmp%5#0: bool = (b< i#1 100b)
+    goto tmp%5#0 ? block@5 : block@6      // 2 distinct targets — fine
+block@5: ... loop body ...; i#2 = (b+ i#1 1b); goto block@4
+block@6: fail // revert
+```
+
+Then puya's own optimizer folds the conditional branch whose false
+edge is a pure-`Fail` block into an `assert`
+(`ir/optimize/control_op_simplification.py` /
+`collapse_blocks.py`). By `*.002.ssa.opt.ir`:
+
+```
+block@14: // while_top
+    let i#1: biguint = φ(i#0 <- block@13, i#2 <- block@14)
+    let tmp%5#1: bool = (b< i#1 100b)
+    (assert tmp%5#1)                      // exit edge folded into assert
+    ... loop body ...
+    let i#2: biguint = (b+ i#1 1b)
+    goto block@14                         // terminator now targets ONLY itself
+```
+
+The fold is **valid** (`if (!cond) fail` ≡ `assert(cond)`); the
+merged block iterates while `cond` holds and terminates via the
+failing `assert` when `cond` is false.
+
+### Why the validator is wrong
+
+```python
+class NoInfiniteLoopsValidator(DestructuredIRValidator):
+    def visit_block(self, block: models.BasicBlock) -> None:
+        assert block.terminator is not None, ...
+        if block.terminator.unique_targets == [block]:
+            logger.error("infinite loop detected", ...)
+```
+
+It inspects only `block.terminator`. The invariant
+"self-targeting terminator ⇒ infinite loop" is sound only for
+blocks with no intervening halting op. After the fold, `block@14`
+contains `(assert tmp%5#1)` — a mid-block exit.
+
+### Suggested upstream fix
+
+In `NoInfiniteLoopsValidator.visit_block`, skip the report when the
+block contains a halting op (`assert` intrinsic, `err`, etc.):
+
+```python
+def visit_block(self, block):
+    assert block.terminator is not None, ...
+    if block.terminator.unique_targets != [block]:
+        return
+    if any(_can_halt(op) for op in block.ops):   # assert / err / ...
+        return
+    logger.error("infinite loop detected", ...)
+```
+
+Alternatively, prevent the upstream fold from merging an exit edge
+into a loop header when that makes the block self-targeting — but
+the validator guard is the smaller fix and keeps the optimisation.
