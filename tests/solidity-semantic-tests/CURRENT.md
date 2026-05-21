@@ -1,7 +1,26 @@
-# Semantic Test Status — v276
+# Semantic Test Status — v277
 
-**Totals (pytest)**: 1197 PASS / 105 FAIL / 20 xfailed =
-**1197/1322 (90.5%)**.
+**Totals (pytest)**: 1198 PASS / 104 FAIL / 20 xfailed =
+**1198/1322 (90.6%)**.
+
+## v277 — template-var substitution: replace longest keys first (+1 vs v276)
+
+One recovery: `various/test_many_subassemblies`. 0 regressions
+(test-by-test diff vs v276's 105-failure set: 1 recovered, 0 new).
+
+A contract that creates many sub-contracts (`new C0{salt}()` …
+`new C10{salt}()`) embeds each child's program as a `TMPL_*` template
+variable in its `bytecblock`. The harness's `_substitute_template_vars`
+replaced them with a naive per-key `str.replace` in dict order. Since
+`TMPL_APPROVAL_C1` is a prefix of `TMPL_APPROVAL_C10`, replacing `C1`
+first also rewrote the `C1` prefix inside `C10`: the trailing `0` of
+`C10` survived and landed on C1's hex value, producing an odd-length
+hex constant the assembler rejects (`bytec N is not defined`, surfaced
+as HTTP 400 at deploy).
+
+Fix (`framework/deploy.py`): replace longest keys first, so a key can
+never corrupt a longer placeholder it is a prefix of. Harness-only —
+no compiler change.
 
 ## v276 — side-effecting array index evaluated once (+1 vs v275)
 

@@ -296,7 +296,7 @@ def test_literal_empty_string(harness):
     r = harness.call(app, "a()")
     assert as_int(r.abi_return) == 2
 
-def test_many_subassemblies(harness):  # currently fails
+def test_many_subassemblies(harness):
     """various/contracts/many_subassemblies.sol"""
     app = harness.compile_and_deploy('various/contracts/many_subassemblies.sol')
     r = harness.call(app, 'run()')

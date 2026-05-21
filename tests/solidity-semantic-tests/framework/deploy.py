@@ -49,7 +49,13 @@ def _substitute_template_vars(teal: str, tmpl_path: Path) -> str:
     # (matching the placeholders in the TEAL bytecblock); replace verbatim.
     # Values are bare hex (no `0x` prefix) — the bytecblock pseudo-op expects
     # the prefix, so add it.
-    for k, v in data.items():
+    #
+    # Replace longest keys first: a key that is a prefix of another
+    # (`TMPL_APPROVAL_C1` ⊂ `TMPL_APPROVAL_C10`) would otherwise corrupt the
+    # longer placeholder — the trailing `0` of `C10` survives and lands on
+    # the C1 value, producing an odd-length hex constant the assembler
+    # rejects ("bytec N is not defined").
+    for k, v in sorted(data.items(), key=lambda kv: -len(kv[0])):
         s = str(v)
         if all(c in "0123456789abcdefABCDEF" for c in s):
             s = "0x" + s
