@@ -1,7 +1,28 @@
-# Semantic Test Status — v272
+# Semantic Test Status — v274
 
-**Totals (pytest)**: 1194 PASS / 108 FAIL / 20 xfailed =
-**1194/1322 (90.3%)**.
+**Totals (pytest)**: 1195 PASS / 107 FAIL / 20 xfailed =
+**1195/1322 (90.4%)**.
+
+## v274 — storage-reference-returning functions (+1 vs v272)
+
+One recovery: `externalContracts/test_FixedFeeRegistrar`. 0 regressions.
+
+A Solidity function returning `T storage` hands back a storage pointer.
+puya's `Lvalue` union is closed (a call result can never be an lvalue),
+and a `callsub` only returns a value copy — so a storage pointer cannot
+survive a real subroutine return. Such functions previously emitted a
+`SubroutineCallExpression` in lvalue position → puya
+`deserialization failed: SubroutineCallExpression` on write-through, or
+a silent value-copy miscompile on read-via-temp.
+
+Fix (commit `3bbc5b0ec`): the function stays a real subroutine but
+returns only the uint64 **index** of the location; each call site
+reconstitutes `IndexExpression(<stateVar>, <call>)` — a valid lvalue.
+The body (guards, local-var computation) runs in the subroutine; only
+the index crosses the return. No body inlining. Three pieces:
+`StorageRefPointer.h` detector, `FunctionBuilder` (return type +
+return-statement rewrite), `SolInternalCall` (return type + call-site
+wrap).
 
 ## v272 — confirming re-run, identical to v271
 
