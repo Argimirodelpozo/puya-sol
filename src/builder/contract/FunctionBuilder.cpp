@@ -3,6 +3,7 @@
 #include "builder/AWSTBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -237,6 +238,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			&& std::any_of(_func.body().statements().begin(), _func.body().statements().end(),
 				[](auto const& s) { return dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()); }))
 			method.returnType = awst::WType::biguintType();
+		// Storage-ref pointer function (`return <stateVar>[<idx>];`): the
+		// function returns only the uint64 index; call sites reconstitute
+		// the storage location as IndexExpression(<stateVar>, <call>).
+		else if (storageRefPointerReturn(&_func))
+			method.returnType = awst::WType::uint64Type();
 		// For signed integer returns ≤64 bits, promote to biguint for proper
 		// 256-bit two's complement ARC4 encoding.
 		// Unwrap UserDefinedValueType/EnumType to find the underlying IntegerType.
@@ -537,6 +543,37 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					std::make_move_iterator(inits.end())
 				);
 			}
+		}
+
+		// Storage-ref pointer function: rewrite `return <stateVar>[<idx>];`
+		// (translated to `return IndexExpression(base, index)`) to return
+		// just the uint64 `index`. The location is reconstituted at call
+		// sites — see storageRefPointerReturn / SolInternalCall. returnType
+		// was already set to uint64 above.
+		if (storageRefPointerReturn(&_func))
+		{
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> rewriteRet;
+			rewriteRet = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+			{
+				for (auto& stmt: stmts)
+				{
+					if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+					{
+						if (auto* ix = dynamic_cast<awst::IndexExpression*>(ret->value.get()))
+							ret->value = TypeCoercion::implicitNumericCast(
+								ix->index, awst::WType::uint64Type(),
+								ret->value->sourceLocation);
+					}
+					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+					{
+						if (ifElse->ifBranch) rewriteRet(ifElse->ifBranch->body);
+						if (ifElse->elseBranch) rewriteRet(ifElse->elseBranch->body);
+					}
+					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+						rewriteRet(block->body);
+				}
+			};
+			rewriteRet(method.body->body);
 		}
 
 		// Ensure all non-void functions end with a return statement.

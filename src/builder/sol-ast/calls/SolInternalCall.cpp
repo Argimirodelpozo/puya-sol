@@ -5,6 +5,7 @@
 #include "builder/sol-ast/calls/SolInternalCall.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/AsaIntrinsics.h"
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
@@ -59,6 +60,11 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			&& std::any_of(_funcDef->body().statements().begin(), _funcDef->body().statements().end(),
 				[](auto const& s) { return dynamic_cast<InlineAssembly const*>(s.get()); }))
 			return awst::WType::biguintType();
+		// Storage-ref pointer function: the subroutine returns the uint64
+		// index of the location; buildSubroutineCall wraps the call in an
+		// IndexExpression to reconstitute the storage reference.
+		if (builder::storageRefPointerReturn(_funcDef))
+			return awst::WType::uint64Type();
 		return mapReturnType(_funcDef->returnParameters()[0]->type());
 	}
 
@@ -74,6 +80,23 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	FunctionDefinition const* _funcDef,
 	bool _isUsingForCall)
 {
+	// Storage-ref pointer function: the subroutine returns the uint64
+	// index of the location. Reconstitute the storage reference at the
+	// call site as `IndexExpression(<stateVar>, <call>)` — a real lvalue
+	// node, which puya accepts where a SubroutineCallExpression would not.
+	auto wrapStorageRef =
+		[&](std::shared_ptr<awst::Expression> _result) -> std::shared_ptr<awst::Expression>
+	{
+		auto const* indexAccess = builder::storageRefPointerReturn(_funcDef);
+		if (!indexAccess)
+			return _result;
+		auto base = m_ctx.buildExpr(indexAccess->baseExpression());
+		auto* elemType = m_ctx.typeMapper.map(
+			_funcDef->returnParameters()[0]->type());
+		return awst::makeIndexExpression(
+			std::move(base), std::move(_result), elemType, m_loc);
+	};
+
 	// External function-type params are passed as bytes (12-byte packed
 	// appId + selector). No guard needed — the dispatch handles them.
 
@@ -462,10 +485,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			m_ctx.queueStmt(std::move(writeBack), m_loc);
 		}
 
-		return origRet;
+		return wrapStorageRef(origRet);
 	}
 
-	return call;
+	return wrapStorageRef(call);
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
