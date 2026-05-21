@@ -58,17 +58,20 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			if (val > 0 && val <= 0xFFFF) // Reasonable compile-time array limit
 				n = static_cast<unsigned long long>(val);
 		}
-		// Try tracked constant locals
-		if (n == 0)
-		{
-			if (auto const* ident = dynamic_cast<Identifier const*>(&*m_call.arguments()[0]))
-			{
-				auto v = m_scope.findConstantLocal(
-					ident->annotation().referencedDeclaration->id());
-				if (v > 0)
-					n = v;
-			}
-		}
+		// NB: previously a `findConstantLocal` lookup ran here for the
+		// Identifier case to fold `new T[](localVar)` to a literal size
+		// when `localVar` was declared with a constant initialiser. That
+		// optimisation was unsafe — `setConstantLocal` registers any
+		// `uint256 x = K;` initial value but never invalidates on
+		// reassignment, so a for-loop counter
+		//   `for (uint256 i = 1; i <= n; i++) { new T[](i); }`
+		// was being constant-folded to `new T[](1)` on every iteration,
+		// silently producing single-element arrays regardless of the
+		// runtime counter (test_memory_arrays_of_various_sizes' Pascal
+		// triangle hit this). The Identifier path now falls through to
+		// the runtime-sized loop below, which builds the right N-element
+		// array at runtime. Literal `new T[](5)` still folds via the
+		// RationalNumberType branch above.
 
 		if (n > 0)
 		{
