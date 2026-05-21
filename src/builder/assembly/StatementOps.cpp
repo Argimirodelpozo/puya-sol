@@ -82,7 +82,18 @@ void AssemblyBuilder::buildStatement(
 				for (auto const& preStmt: _node.pre.statements)
 					buildStatement(preStmt, _out);
 
+				// Building the condition may produce pending statements —
+				// e.g. a side-effecting Yul function call inside the
+				// condition (`for {} eq(i, sideeffect()) {} {}`). Those must
+				// run before EVERY condition check, including the first. Pull
+				// them out here so they don't silently leak into the loop
+				// body, where the first check would see stale values.
+				size_t pendingBefore = m_pendingStatements.size();
 				auto cond = ensureBool(buildExpression(*_node.condition), loc);
+				std::vector<std::shared_ptr<awst::Statement>> condStmts;
+				for (size_t i = pendingBefore; i < m_pendingStatements.size(); ++i)
+					condStmts.push_back(std::move(m_pendingStatements[i]));
+				m_pendingStatements.resize(pendingBefore);
 
 				// Set post statements so `continue` can emit them
 				auto* savedPost = m_forLoopPost;
@@ -96,7 +107,30 @@ void AssemblyBuilder::buildStatement(
 					buildStatement(postStmt, body->body);
 
 				m_forLoopPost = savedPost;
-				_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), loc));
+
+				if (condStmts.empty())
+				{
+					// Pure condition — plain `while (cond) { body; post }`.
+					_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), loc));
+				}
+				else
+				{
+					// Side-effecting condition — restructure as
+					//   while (true) { <cond-stmts>; if (!cond) break; body; post }
+					// so the condition's side effects run before every check.
+					auto outerBody = awst::makeBlock(loc);
+					for (auto& cs: condStmts)
+						outerBody->body.push_back(std::move(cs));
+					auto breakBlock = awst::makeBlock(loc);
+					breakBlock->body.push_back(awst::makeLoopExit(loc));
+					outerBody->body.push_back(awst::makeIfElse(
+						awst::makeNot(std::move(cond), loc),
+						std::move(breakBlock), nullptr, loc));
+					for (auto& s: body->body)
+						outerBody->body.push_back(std::move(s));
+					_out.push_back(awst::makeWhileLoop(
+						awst::makeTrue(loc), std::move(outerBody), loc));
+				}
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Break>)
 			{

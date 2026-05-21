@@ -1,9 +1,33 @@
-# Semantic Test Status — v274
+# Semantic Test Status — v275
 
-**Totals (pytest)**: 1195 PASS / 107 FAIL / 20 xfailed =
-**1195/1322 (90.4%)**.
+**Totals (pytest)**: 1196 PASS / 106 FAIL / 20 xfailed =
+**1196/1322 (90.5%)**.
+
+## v275 — Yul for-loop side-effecting condition (+1 vs v274)
+
+One recovery: `inlineAssembly/test_inline_assembly_for2`. 0 regressions
+(test-by-test diff vs v274's 107-failure set: 1 recovered, 0 new).
+
+A Yul `for` loop whose condition contains a side-effecting call —
+`for {let i:=a} eq(i, sideeffect(2)) {...} {...}` where `sideeffect`
+is an inlined Yul function — lowered the condition's side-effect
+statements (param bind, return-var init, the function body) into the
+**start of the loop body**, *after* the WhileLoop's condition check.
+The first iteration therefore evaluated `eq(i, x)` with `x` (the
+inlined function's return var) never assigned → runtime
+`b== arg 1 wanted bigint but got uint64`.
+
+Fix (`assembly/StatementOps.cpp` ForLoop handler): capture the pending
+statements produced while building the condition. When non-empty,
+restructure the loop as `while (true) { <cond-stmts>; if (!cond)
+break; body; post }` so the condition's side effects run before every
+check, including the first. Pure conditions (the overwhelming common
+case) keep the byte-identical `while (cond) { body; post }` form —
+zero codegen change there.
 
 ## v274 — storage-reference-returning functions (+1 vs v272)
+
+One recovery: `externalContracts/test_FixedFeeRegistrar`. 0 regressions.
 
 One recovery: `externalContracts/test_FixedFeeRegistrar`. 0 regressions.
 
