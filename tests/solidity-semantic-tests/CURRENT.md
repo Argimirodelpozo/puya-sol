@@ -1,7 +1,29 @@
-# Semantic Test Status — v270
+# Semantic Test Status — v271
 
-**Totals (pytest)**: 1193 PASS / 109 FAIL / 20 xfailed =
-**1193/1322 (90.2%)**.
+**Totals (pytest)**: 1194 PASS / 108 FAIL / 20 xfailed =
+**1194/1322 (90.3%)**.
+
+## v271 (+1 vs v270, 0 regressions)
+
+One recovery: `test_memory_arrays_of_various_sizes` (commit
+`b29ec90cb`). The contract builds Pascal's triangle in
+`uint256[][] memory rows`. The bug was that puya-sol's
+`handleNewArray` constant-folded `new T[](localVar)` to a literal
+size when the local was registered in `setConstantLocal`. But that
+tracker never invalidates on reassignment — so a for-loop counter
+`uint256 i = 1` stays "constant 1" forever, and the body's
+`new uint256[](i)` was emitted as a literal `new uint256[](1)` on
+every iteration. rows[1..n] all ended up as single-element arrays;
+subsequent reads ran off the end and TEAL faulted with
+`extract3 end 66 beyond length 34`.
+
+Fix: drop the Identifier→findConstantLocal lookup. The
+RationalNumberType branch above still folds direct literals like
+`new T[](5)`. For `new T[](localConst)` the result now lowers to a
+runtime-sized loop — same code path as `new T[](runtime_i)`,
+slightly larger TEAL but correct.
+
+## v270 (+1 vs v269, 0 regressions)
 
 ## v270 (+1 vs v269, 0 regressions)
 
