@@ -1,7 +1,23 @@
-# Semantic Test Status — v271
+# Semantic Test Status — v272
 
 **Totals (pytest)**: 1194 PASS / 108 FAIL / 20 xfailed =
 **1194/1322 (90.3%)**.
+
+## v272 — confirming re-run, identical to v271
+
+v272 is a clean rebuild + full re-run that confirms v271's 1194/1322
+after a stale-working-tree incident was corrected. v272 fail set is
+bit-identical to v271 (0 regressions, 0 recoveries).
+
+**Incident (corrected):** an overnight turn was handed a stale
+pre-v269 working tree (puya-sol source + framework reverted to v268
+state) and briefly committed it as `f32a92cf8` + `c77ecd04c` — which
+reverted the v269/v270/v271 fixes (app→account cast, signext temp
+materialise, findConstantLocal drop, as_signed_int helper; +5 tests).
+A v269 run on that stale code showed 113 fails, exposing the
+discrepancy vs the committed v271 (108). HEAD was reset to `7f7e921bc`
+(v271), puya-sol rebuilt from correct source, and v272 re-run confirms
+1194/1322. No progress was lost.
 
 ## v271 (+1 vs v270, 0 regressions)
 
