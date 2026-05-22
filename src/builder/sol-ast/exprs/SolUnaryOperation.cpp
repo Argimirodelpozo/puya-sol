@@ -150,13 +150,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		// Convert back to uint64 for ≤64-bit types
 		if (bits <= 64)
 		{
-			auto castBytes = awst::makeReinterpretCast(std::move(negated), awst::WType::bytesType(), m_loc);
-			auto cat = awst::makeLeftPad(std::move(castBytes), 8, m_loc);
-			auto lenCall = awst::makeLen(cat, m_loc);
-			auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-			start->stackArgs.push_back(std::move(lenCall));
-			start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
-			return awst::makeExtractUInt64(cat, std::move(start), m_loc);
+			return awst::makeBiguintToUInt64(std::move(negated), m_loc);
 		}
 		return negated;
 	}
@@ -430,13 +424,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			// Convert back to uint64 for ≤64-bit types
 			if (signedBits <= 64)
 			{
-				auto castBytes = awst::makeReinterpretCast(std::move(mod), awst::WType::bytesType(), m_loc);
-				auto cat = awst::makeLeftPad(std::move(castBytes), 8, m_loc);
-				auto lenCall = awst::makeLen(cat, m_loc);
-				auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-				start->stackArgs.push_back(std::move(lenCall));
-				start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
-				return awst::makeExtractUInt64(cat, std::move(start), m_loc);
+				return awst::makeBiguintToUInt64(std::move(mod), m_loc);
 			}
 			return mod;
 		}

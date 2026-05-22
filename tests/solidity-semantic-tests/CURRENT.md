@@ -1,7 +1,19 @@
-# Semantic Test Status — v281
+# Semantic Test Status — v282
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v282 — refactor: makeBiguintToUInt64 for the low-8-bytes idiom
+
+Pure refactor — totals bit-identical to v281 (1199/103/20; 0 recovered,
+0 new).
+
+The "narrow a biguint to uint64 by taking its low 8 bytes" idiom —
+`extract_uint64(bzero(8) ++ value, len - 8)` — was a 7-line block
+copy-pasted at five sites (SolBinaryOperation ×2, SolUnaryOperation ×2,
+AssemblyBuilder's safe-btoi helper). Extracted to a single canonical
+`awst::makeBiguintToUInt64`; the five sites are now one-liners. Helper
+reproduces the block verbatim — bit-identical.
 
 ## v281 — refactor: consolidate bzero / b| intrinsic construction
 

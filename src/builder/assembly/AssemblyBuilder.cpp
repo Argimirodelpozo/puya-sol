@@ -896,18 +896,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	awst::SourceLocation const& _loc
 )
 {
-	// Safe btoi pattern: concat(bzero(8), bytes(expr)) → extract last 8 bytes → btoi
-	// This handles biguint values > 8 bytes from b&/b|/b^ padding.
-	auto cast = awst::makeReinterpretCast(std::move(_biguintExpr), awst::WType::bytesType(), _loc);
-
-	auto cat = awst::makeLeftPad(std::move(cast), 8, _loc);
-	auto lenCall = awst::makeLen(cat, _loc);
-
-	auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
-	start->stackArgs.push_back(std::move(lenCall));
-	start->stackArgs.push_back(awst::makeIntegerConstant("8", _loc));
-
-	return awst::makeExtractUInt64(cat, std::move(start), _loc);
+	// Safe btoi: take the low 8 bytes — handles biguint values > 8 bytes
+	// (e.g. from b&/b|/b^ padding).
+	return awst::makeBiguintToUInt64(std::move(_biguintExpr), _loc);
 }
 
 // ─── Recursive Yul function subroutine sink ─────────────────────────────────

@@ -487,17 +487,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	if (!isBiguint)
 	{
 		// rawResult is biguint from the mod — convert back to uint64
-		auto cast = awst::makeReinterpretCast(std::move(rawResult), awst::WType::bytesType(), m_loc);
-
-		// concat(bzero(8), bytes) then extract last 8 bytes → btoi
-		auto cat = awst::makeLeftPad(std::move(cast), 8, m_loc);
-		auto lenCall = awst::makeLen(cat, m_loc);
-
-		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-		start->stackArgs.push_back(std::move(lenCall));
-		start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
-
-		return awst::makeExtractUInt64(cat, std::move(start), m_loc);
+		// biguint → uint64: take the low 8 bytes.
+		return awst::makeBiguintToUInt64(std::move(rawResult), m_loc);
 	}
 
 	return rawResult;
@@ -755,14 +746,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	// Convert back to uint64 for ≤64-bit types
 	if (bits <= 64)
 	{
-		auto castBytes = awst::makeReinterpretCast(std::move(finalResult), awst::WType::bytesType(), m_loc);
-
-		auto cat = awst::makeLeftPad(std::move(castBytes), 8, m_loc);
-		auto lenCall = awst::makeLen(cat, m_loc);
-		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
-		start->stackArgs.push_back(std::move(lenCall));
-		start->stackArgs.push_back(awst::makeIntegerConstant("8", m_loc));
-		return awst::makeExtractUInt64(cat, std::move(start), m_loc);
+		return awst::makeBiguintToUInt64(std::move(finalResult), m_loc);
 	}
 
 	return finalResult;

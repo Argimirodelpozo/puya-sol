@@ -1325,6 +1325,21 @@ inline std::shared_ptr<Expression> makeKeyBytes(
 	return makeReinterpretCast(std::move(value), WType::bytesType(), std::move(loc));
 }
 
+// Narrow a biguint-shaped value to uint64 by taking its low 8 bytes:
+// `extract_uint64(bzero(8) ++ value, len - 8)`. The bzero(8) prefix keeps
+// the slice in range when `value` is shorter than 8 bytes; a value wider
+// than 8 bytes is truncated to its low 64 bits.
+inline std::shared_ptr<IntrinsicCall> makeBiguintToUInt64(
+	std::shared_ptr<Expression> value, SourceLocation loc)
+{
+	auto cast = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
+	auto cat = makeLeftPad(std::move(cast), 8, loc);
+	auto start = makeIntrinsicCall("-", WType::uint64Type(), loc);
+	start->stackArgs.push_back(makeLen(cat, loc));
+	start->stackArgs.push_back(makeIntegerConstant("8", loc));
+	return makeExtractUInt64(cat, std::move(start), std::move(loc));
+}
+
 // One layer of Solidity-style storage-key derivation:
 // `sha256(keyBytes(value, encType) ++ prefix)`. Chain repeatedly for
 // nested mappings / arrays of compound types.
