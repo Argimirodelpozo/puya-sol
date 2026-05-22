@@ -40,6 +40,81 @@ public:
 	}
 };
 
+/// Conservative dead-code elimination for an inlined function body.
+///
+/// Modifier inlining rewrites a `return;` inside a modifier loop into an
+/// unconditional `{ __mod_exit = …; break; }`. That strands the loop's
+/// post-increment (`i++`) as unreachable code after the break. puya's IR
+/// validator rejects unreachable code outright, whereas an IR/Yul backend
+/// would silently DCE it — so puya-sol must drop it before handing the body
+/// to puya (`f() m m m` in stacked_return_with_modifiers.sol).
+///
+/// `stmtTerminates` reports only constructs control provably cannot fall
+/// through past — return / break / continue, or a block or if/else built
+/// solely from those. Removing statements after such a construct is always
+/// behaviour-preserving, so this is safe to run on every inlined body.
+bool blockTerminates(awst::Block const* b);
+
+bool stmtTerminates(awst::Statement const* s)
+{
+	if (!s) return false;
+	if (dynamic_cast<awst::ReturnStatement const*>(s)) return true;
+	if (dynamic_cast<awst::LoopExit const*>(s)) return true;
+	if (dynamic_cast<awst::LoopContinue const*>(s)) return true;
+	if (auto const* b = dynamic_cast<awst::Block const*>(s))
+		return blockTerminates(b);
+	if (auto const* ie = dynamic_cast<awst::IfElse const*>(s))
+		return ie->elseBranch
+			&& blockTerminates(ie->ifBranch.get())
+			&& blockTerminates(ie->elseBranch.get());
+	return false;
+}
+
+bool blockTerminates(awst::Block const* b)
+{
+	return b && !b->body.empty() && stmtTerminates(b->body.back().get());
+}
+
+void dropUnreachableStatements(awst::Block* b)
+{
+	if (!b) return;
+	for (size_t i = 0; i < b->body.size(); ++i)
+	{
+		awst::Statement* s = b->body[i].get();
+		// Recurse into nested control flow before judging this statement.
+		if (auto* nb = dynamic_cast<awst::Block*>(s))
+			dropUnreachableStatements(nb);
+		else if (auto* wl = dynamic_cast<awst::WhileLoop*>(s))
+			dropUnreachableStatements(wl->loopBody.get());
+		else if (auto* ie = dynamic_cast<awst::IfElse*>(s))
+		{
+			dropUnreachableStatements(ie->ifBranch.get());
+			dropUnreachableStatements(ie->elseBranch.get());
+		}
+		// Everything after an unconditional terminator is unreachable.
+		if (stmtTerminates(s) && i + 1 < b->body.size())
+		{
+			b->body.erase(b->body.begin() + i + 1, b->body.end());
+			break;
+		}
+	}
+}
+
+/// True for a compile-time zero / default scalar constant. Used to drop the
+/// redundant `retvar = 0` the deferral would split out of an implicit
+/// trailing `return 0`: the return var is already default-initialised, and
+/// any earlier `return` would have left the frame, so the var is provably
+/// still zero wherever a `return 0` is reached — re-assigning it there only
+/// risks clobbering a value a nested `return expr;` already stored.
+bool isZeroConstantExpr(awst::Expression const* val)
+{
+	if (auto const* i = dynamic_cast<awst::IntegerConstant const*>(val))
+		return i->value == "0";
+	if (auto const* b = dynamic_cast<awst::BoolConstant const*>(val))
+		return !b->value;
+	return false;
+}
+
 /// Free-function entry. Used by AWSTBuilder for the library /
 /// internalized-lib / free-function translation path that doesn't have a
 /// ContractBuilder instance. Mirrors `ContractBuilder::inlineModifiers`
@@ -277,7 +352,17 @@ void inlineModifiers(
 					if (auto const* varRef = dynamic_cast<awst::VarExpression const*>(retStmt->value.get()))
 						isJustRetVar = (varRef->name == retName);
 
-					if (!isJustRetVar)
+					// Skip a redundant `retvar = 0` split from an implicit
+					// trailing `return 0`: the synthetic return var is already
+					// 0-initialised and is only ever written by return-handling,
+					// so a value-carrying `return` nested in a loop would
+					// otherwise be clobbered here. Restricted to synthetic
+					// `__mod_retval_*` vars — a *named* return var can be
+					// assigned directly by user code, so its `return 0` must
+					// still emit the assignment.
+					if (!isJustRetVar
+						&& !(isZeroConstantExpr(retStmt->value.get())
+							&& retName.rfind("__mod_retval_", 0) == 0))
 					{
 						auto target = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
 						placeholderBody->body.push_back(
@@ -381,9 +466,29 @@ void inlineModifiers(
 				for (size_t i = 0; i < stmts.size(); ++i)
 				{
 					auto& s = stmts[i];
-					if (dynamic_cast<awst::ReturnStatement*>(s.get()))
+					if (auto* retSt = dynamic_cast<awst::ReturnStatement*>(s.get()))
 					{
 						auto block = awst::makeBlock(s->sourceLocation);
+						// A valued return nested in a loop/branch is the inlined
+						// inner body's `return expr;` — preserve the value by
+						// assigning it to the single return var before the
+						// modifier exit (top-level returns are handled by the
+						// deferral pass). Bare `return;` → flag+break only.
+						if (retSt->value && returnParamNames.size() == 1)
+						{
+							auto const& retName = *returnParamNames.begin();
+							bool isJustRetVar = false;
+							if (auto const* vr = dynamic_cast<awst::VarExpression const*>(
+									retSt->value.get()))
+								isJustRetVar = (vr->name == retName);
+							if (!isJustRetVar)
+							{
+								auto target = awst::makeVarExpression(
+									retName, retSt->value->wtype, retSt->sourceLocation);
+								block->body.push_back(awst::makeAssignmentStatement(
+									std::move(target), retSt->value, retSt->sourceLocation));
+							}
+						}
 						block->body.push_back(makeFlagSet());
 						block->body.push_back(makeBreak());
 						s = std::move(block);
@@ -463,6 +568,8 @@ void inlineModifiers(
 			std::make_move_iterator(hoistedInits.begin()),
 			std::make_move_iterator(hoistedInits.end()));
 	}
+
+	dropUnreachableStatements(_body.get());
 }
 
 void ContractBuilder::inlineModifiers(
@@ -694,7 +801,17 @@ void ContractBuilder::inlineModifiers(
 					if (auto const* varRef = dynamic_cast<awst::VarExpression const*>(retStmt->value.get()))
 						isJustRetVar = (varRef->name == retName);
 
-					if (!isJustRetVar)
+					// Skip a redundant `retvar = 0` split from an implicit
+					// trailing `return 0`: the synthetic return var is already
+					// 0-initialised and is only ever written by return-handling,
+					// so a value-carrying `return` nested in a loop would
+					// otherwise be clobbered here. Restricted to synthetic
+					// `__mod_retval_*` vars — a *named* return var can be
+					// assigned directly by user code, so its `return 0` must
+					// still emit the assignment.
+					if (!isJustRetVar
+						&& !(isZeroConstantExpr(retStmt->value.get())
+							&& retName.rfind("__mod_retval_", 0) == 0))
 					{
 						// Create assignment: r = expr
 						auto target = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
@@ -834,10 +951,31 @@ void ContractBuilder::inlineModifiers(
 				for (size_t i = 0; i < stmts.size(); ++i)
 				{
 					auto& s = stmts[i];
-					if (dynamic_cast<awst::ReturnStatement*>(s.get()))
+					if (auto* retSt = dynamic_cast<awst::ReturnStatement*>(s.get()))
 					{
-						// Replace return with { flag=true; break; }
+						// Replace return with { [retvar = value;] flag=true; break; }
 						auto block = awst::makeBlock(s->sourceLocation);
+						// A *valued* return reached here is the inlined inner body's
+						// `return expr;` nested inside a loop/branch (top-level
+						// returns are handled by the deferral pass above). The
+						// value must survive the modifier exit: assign it to the
+						// single return var, mirroring that deferral. A bare
+						// `return;` (modifier's own) has no value — flag+break only.
+						if (retSt->value && returnParamNames.size() == 1)
+						{
+							auto const& retName = *returnParamNames.begin();
+							bool isJustRetVar = false;
+							if (auto const* vr = dynamic_cast<awst::VarExpression const*>(
+									retSt->value.get()))
+								isJustRetVar = (vr->name == retName);
+							if (!isJustRetVar)
+							{
+								auto target = awst::makeVarExpression(
+									retName, retSt->value->wtype, retSt->sourceLocation);
+								block->body.push_back(awst::makeAssignmentStatement(
+									std::move(target), retSt->value, retSt->sourceLocation));
+							}
+						}
 						block->body.push_back(makeFlagSet());
 						block->body.push_back(makeBreak());
 						s = std::move(block);
@@ -925,6 +1063,8 @@ void ContractBuilder::inlineModifiers(
 			std::make_move_iterator(hoistedInits.begin()),
 			std::make_move_iterator(hoistedInits.end()));
 	}
+
+	dropUnreachableStatements(_body.get());
 }
 
 void ContractBuilder::buildModifierChain(

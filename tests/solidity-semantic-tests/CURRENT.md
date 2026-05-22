@@ -1,7 +1,40 @@
-# Semantic Test Status — v277
+# Semantic Test Status — v278
 
-**Totals (pytest)**: 1198 PASS / 104 FAIL / 20 xfailed =
-**1198/1322 (90.6%)**.
+**Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
+**1199/1322 (90.7%)**.
+
+## v278 — `return` inside a modified function's loop (+1 vs v277)
+
+One recovery: `modifiers/test_stacked_return_with_modifiers`. 0
+regressions (test-by-test diff vs v277's 104-failure set: 1 recovered,
+0 new — verified across the modifier-heavy suite).
+
+`f() m m m` where modifier `m` is `for {_; ++x; return;}` and `f` is
+`for {++x; return 42;}` — three stacked modifiers, each with a `return`
+inside a loop. The legacy modifier inliner (`inlineModifiers`,
+puya-sol's default) had three bugs:
+
+1. **Return value discarded.** `replaceReturns` rewrote *every*
+   `ReturnStatement` to `{flag=true; break}` — including the inlined
+   inner body's `return 42` — throwing the `42` away. Now a valued
+   return assigns its value to the single return var first.
+2. **Implicit `return 0` clobbered the value.** puya-sol appends a
+   default `return 0` to f's body; the deferral split it into
+   `__mod_retval_0 = 0`, which ran after the real return and reset it.
+   The synthetic return var is already 0-initialised and only written
+   by return-handling, so that assignment is redundant — now skipped
+   (synthetic `__mod_retval_*` only; a named return var can be
+   user-assigned, so its `return 0` still emits).
+3. **Stranded loop post = unreachable code.** The `return;`→`{break}`
+   rewrite leaves the for-loop's post-increment after an unconditional
+   break; puya rejects unreachable code. `dropUnreachableStatements`
+   (run only after modifier inlining) drops statements following an
+   unconditional terminator — return / break / continue, or a block /
+   if-else built solely from those.
+
+Recovers `test_stacked_return_with_modifiers` (`f()->42`, `x()->4`).
+Note: modifier inlining underpins the example suites (OZ etc.) too;
+only the semantic suite was run — 0 regressions there.
 
 ## v277 — template-var substitution: replace longest keys first (+1 vs v276)
 
