@@ -77,12 +77,6 @@ private:
 		awst::WType const* _targetWType,
 		std::shared_ptr<awst::Expression> _arg,
 		awst::SourceLocation const& _loc);
-
-	/// Left-pad a bytes expression to exactly N bytes.
-	static std::shared_ptr<awst::Expression> leftPadToN(
-		std::shared_ptr<awst::Expression> _expr,
-		int _n,
-		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::eb

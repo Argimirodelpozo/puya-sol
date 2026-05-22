@@ -1,7 +1,24 @@
-# Semantic Test Status — v278
+# Semantic Test Status — v279
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v279 — refactor: consolidate the left-pad-to-N helper family
+
+Pure refactor — totals bit-identical to v278 (1199/103/20; test-by-test
+diff: 0 recovered, 0 new).
+
+`left-pad bytes to exactly N` was implemented three times:
+`SolTypeConversion::leftPadToN` and `TypeConversionRegistry::leftPadToN`
+(both pure forwarders to `awst::makeLeftPadToN`) and
+`AbiEncoderBuilder::leftPadBytes` (its own copy of the
+`makeLeftPad`+`extract3` logic). Consolidated to the single canonical
+`awst::makeLeftPadToN`: the two forwarder methods are deleted (6 call
+sites now call the helper directly) and `leftPadBytes` is a thin
+module-local alias (24 abi.encode* call sites unchanged). The only
+codegen delta is the offset sub-node in the abi.encode* path moving
+from a raw `IntrinsicCall("-")` to a typed `UInt64BinaryOperation` —
+same `-` opcode, hence identical TEAL.
 
 ## v278 — `return` inside a modified function's loop (+1 vs v277)
 

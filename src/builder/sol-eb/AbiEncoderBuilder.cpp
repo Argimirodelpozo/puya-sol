@@ -28,15 +28,9 @@ public:
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
 {
-	auto cat = awst::makeLeftPad(std::move(_expr), _n, _loc);
-	auto lenCall = awst::makeLen(cat, _loc);
-
-	auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
-	offset->stackArgs.push_back(std::move(lenCall));
-	offset->stackArgs.push_back(awst::makeIntegerConstant(_n, _loc));
-
-	auto extract = awst::makeExtract3(std::move(cat), std::move(offset), awst::makeIntegerConstant(_n, _loc), _loc);
-	return extract;
+	// Thin module-local alias for the canonical Node.h helper — retained
+	// because the abi.encode* builders call it from 20+ sites.
+	return awst::makeLeftPadToN(std::move(_expr), _n, _loc);
 }
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::concatByteExprs(

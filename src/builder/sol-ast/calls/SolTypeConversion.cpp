@@ -80,7 +80,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 				std::move(argExpr), awst::WType::biguintType(), m_loc);
 			auto toBytes = awst::makeReinterpretCast(std::move(promoted), awst::WType::bytesType(), m_loc);
 
-			auto padded = leftPadToN(std::move(toBytes), 32);
+			auto padded = awst::makeLeftPadToN(std::move(toBytes), 32, m_loc);
 			auto addrCast = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), m_loc);
 			return addrCast;
 		}
@@ -412,7 +412,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleIntToBytes(
 	}
 	else if (_byteWidth > 8)
 	{
-		result = leftPadToN(std::move(result), _byteWidth);
+		result = awst::makeLeftPadToN(std::move(result), _byteWidth, m_loc);
 	}
 
 	if (targetType != awst::WType::bytesType())
@@ -432,7 +432,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleBiguintToBytes(
 {
 	auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), m_loc);
 
-	auto result = leftPadToN(std::move(toBytes), _byteWidth);
+	auto result = awst::makeLeftPadToN(std::move(toBytes), _byteWidth, m_loc);
 	auto* targetType = m_ctx.typeMapper.map(m_call.annotation().type);
 
 	if (targetType != awst::WType::bytesType())
@@ -446,12 +446,6 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleBiguintToBytes(
 // ─────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────
-
-std::shared_ptr<awst::Expression> SolTypeConversion::leftPadToN(
-	std::shared_ptr<awst::Expression> _expr, int _n)
-{
-	return awst::makeLeftPadToN(std::move(_expr), _n, m_loc);
-}
 
 std::shared_ptr<awst::Expression> SolTypeConversion::extractLastN(
 	std::shared_ptr<awst::Expression> _expr, int _n)

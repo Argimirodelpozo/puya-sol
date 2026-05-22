@@ -207,14 +207,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 // Address conversion: address(x)
 // ─────────────────────────────────────────────────────────────────────
 
-std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
-	std::shared_ptr<awst::Expression> _expr,
-	int _n,
-	awst::SourceLocation const& _loc)
-{
-	return awst::makeLeftPadToN(std::move(_expr), _n, _loc);
-}
-
 std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
@@ -235,7 +227,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 			std::move(_arg), awst::WType::biguintType(), _loc);
 		auto toBytes = awst::makeReinterpretCast(std::move(promoted), awst::WType::bytesType(), _loc);
 
-		auto padded = leftPadToN(std::move(toBytes), 32, _loc);
+		auto padded = awst::makeLeftPadToN(std::move(toBytes), 32, _loc);
 
 		auto result = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), _loc);
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
@@ -291,7 +283,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		else if (byteWidth > 8)
 		{
 			// Pad: concat(bzero(byteWidth), itob) → extract last byteWidth
-			result = leftPadToN(std::move(itob), byteWidth, _loc);
+			result = awst::makeLeftPadToN(std::move(itob), byteWidth, _loc);
 		}
 		else
 			result = std::move(itob);
@@ -306,7 +298,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		unsigned byteWidth = fbType->numBytes();
 		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
-		auto padded = leftPadToN(std::move(toBytes), byteWidth, _loc);
+		auto padded = awst::makeLeftPadToN(std::move(toBytes), byteWidth, _loc);
 
 		auto cast = awst::makeReinterpretCast(std::move(padded), _targetWType, _loc);
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));

@@ -42,10 +42,6 @@ private:
 	std::shared_ptr<awst::Expression> handleBiguintToBytes(
 		std::shared_ptr<awst::Expression> _expr, int _byteWidth);
 
-	/// Left-pad bytes to N using concat(bzero(N), expr) then extract last N.
-	std::shared_ptr<awst::Expression> leftPadToN(
-		std::shared_ptr<awst::Expression> _expr, int _n);
-
 	/// Extract last N bytes from an 8-byte itob result.
 	std::shared_ptr<awst::Expression> extractLastN(
 		std::shared_ptr<awst::Expression> _expr, int _n);
