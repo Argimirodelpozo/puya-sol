@@ -586,8 +586,7 @@ std::shared_ptr<awst::Expression> padTo32Multiple(
 	auto pad = awst::makeUInt64BinOp(
 		std::move(sub), O::Mod, awst::makeIntegerConstant("32", _loc), _loc);
 
-	auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	bz->stackArgs.push_back(std::move(pad));
+	auto bz = awst::makeBzero(std::move(pad), _loc);
 
 	return awst::makeConcat(std::move(_bytes), std::move(bz), _loc);
 }
@@ -626,9 +625,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
 	};
 	auto bzeroOf = [&](std::shared_ptr<awst::Expression> n) {
-		auto c = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-		c->stackArgs.push_back(std::move(n));
-		return c;
+		return awst::makeBzero(std::move(n), _loc);
 	};
 	auto concatBytes = [&](std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b) {
 		return awst::makeConcat(std::move(a), std::move(b), _loc);
@@ -677,11 +674,10 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			else if (type == awst::WType::biguintType())
 			{
 				// biguint as bytes; left-pad to 32 if shorter.
-				auto bz = bzeroOf(u64Const(32));
-				auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-				orOp->stackArgs.push_back(awst::makeReinterpretCast(
-					std::move(paramVar), awst::WType::bytesType(), _loc));
-				orOp->stackArgs.push_back(std::move(bz));
+				auto orOp = awst::makeBytesOr(
+					awst::makeReinterpretCast(
+						std::move(paramVar), awst::WType::bytesType(), _loc),
+					bzeroOf(u64Const(32)), _loc);
 				headWord = std::move(orOp);
 			}
 			else if (type == awst::WType::boolType())

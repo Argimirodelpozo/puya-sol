@@ -1,7 +1,21 @@
-# Semantic Test Status — v280
+# Semantic Test Status — v281
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v281 — refactor: consolidate bzero / b| intrinsic construction
+
+Pure refactor — totals bit-identical to v280 (1199/103/20; 0 recovered,
+0 new).
+
+Runtime-count `bzero(<expr>)` had three local re-implementations
+(`Ripemd160Builder::bzeroOf`, `AbiCodecHelpers::bytesBzero`, a DataOps
+lambda) plus open-coded sites; `b|(a,b)` was open-coded at four sites.
+Added a `makeBzero` overload taking a runtime `Expression` count and a
+`makeBytesOr` helper; routed all of the above through them and deleted
+the three redundant local helpers. `makeBzero(int)` and the
+v280 `makeZeroExtendToN` are now expressed in terms of these. All
+sites bit-identical (operand order preserved).
 
 ## v280 — refactor: makeZeroExtendToN for the `b|`+`bzero` pad pattern
 

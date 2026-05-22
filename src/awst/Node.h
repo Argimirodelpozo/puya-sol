@@ -1043,12 +1043,30 @@ inline std::shared_ptr<IntrinsicCall> makeReplace3(
 	return node;
 }
 
-// `bzero(count)` → `count` zero bytes.
+// `bzero(count)` → `count` zero bytes, with a runtime-evaluated count.
+inline std::shared_ptr<IntrinsicCall> makeBzero(
+	std::shared_ptr<Expression> count, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("bzero", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(count));
+	return node;
+}
+
+// `bzero(count)` → `count` zero bytes, with a compile-time-constant count.
 inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 {
 	auto countExpr = makeIntegerConstant(static_cast<uint64_t>(count), loc);
-	auto node = makeIntrinsicCall("bzero", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(countExpr));
+	return makeBzero(std::move(countExpr), std::move(loc));
+}
+
+// `b|(lhs, rhs)` — bitwise-OR of two byte strings (commutative).
+inline std::shared_ptr<IntrinsicCall> makeBytesOr(
+	std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("b|", WType::bytesType(), std::move(loc));
+	node->stackArgs.push_back(std::move(lhs));
+	node->stackArgs.push_back(std::move(rhs));
 	return node;
 }
 
@@ -1078,10 +1096,8 @@ inline std::shared_ptr<IntrinsicCall> makeRightPad(
 inline std::shared_ptr<IntrinsicCall> makeZeroExtendToN(
 	std::shared_ptr<Expression> value, int n, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("b|", WType::bytesType(), loc);
-	node->stackArgs.push_back(makeBzero(n, loc));
-	node->stackArgs.push_back(std::move(value));
-	return node;
+	auto pad = makeBzero(n, loc);
+	return makeBytesOr(std::move(pad), std::move(value), std::move(loc));
 }
 
 // Left-pad `value` to *exactly* `n` bytes — `extract3(bzero(n) ++ value,

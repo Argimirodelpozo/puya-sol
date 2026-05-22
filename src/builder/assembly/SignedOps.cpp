@@ -369,9 +369,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 
 	auto fillBytes = awst::makeReinterpretCast(fillMask, awst::WType::bytesType(), _loc);
 
-	auto orCall = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-	orCall->stackArgs.push_back(std::move(shrBytes));
-	orCall->stackArgs.push_back(std::move(fillBytes));
+	auto orCall = awst::makeBytesOr(std::move(shrBytes), std::move(fillBytes), _loc);
 
 	auto negResult = awst::makeReinterpretCast(std::move(orCall), awst::WType::biguintType(), _loc);
 

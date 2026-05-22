@@ -83,14 +83,4 @@ inline std::shared_ptr<awst::Expression> u64Itob(
 	return e;
 }
 
-/// bzero(n) → bytes of n zero bytes
-inline std::shared_ptr<awst::Expression> bytesBzero(
-	std::shared_ptr<awst::Expression> _n,
-	awst::SourceLocation const& _loc)
-{
-	auto e = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-	e->stackArgs.push_back(std::move(_n));
-	return e;
-}
-
 } // namespace puyasol::builder::eb::abi_codec

@@ -130,13 +130,6 @@ std::shared_ptr<Expression> bytesLen(std::shared_ptr<Expression> b, SourceLocati
 	return call;
 }
 
-std::shared_ptr<Expression> bzeroOf(std::shared_ptr<Expression> n, SourceLocation const& loc)
-{
-	auto call = makeIntrinsicCall("bzero", WType::bytesType(), loc);
-	call->stackArgs.push_back(std::move(n));
-	return call;
-}
-
 std::shared_ptr<Expression> concatBytes(
 	std::shared_ptr<Expression> a, std::shared_ptr<Expression> b, SourceLocation const& loc)
 {
@@ -198,7 +191,7 @@ std::shared_ptr<Expression> wordLeBytes(
 			u64BinOp(u64Var(wName, loc), UInt64BinaryOperator::RShift, shift, loc),
 			UInt64BinaryOperator::BitAnd, 0xFFULL, loc);
 	};
-	auto buf = bzeroOf(u64Const(4, loc), loc);
+	std::shared_ptr<Expression> buf = makeBzero(u64Const(4, loc), loc);
 	buf = setByte(std::move(buf), u64Const(0, loc), byte(0), loc);
 	buf = setByte(std::move(buf), u64Const(1, loc), byte(8), loc);
 	buf = setByte(std::move(buf), u64Const(2, loc), byte(16), loc);
@@ -557,7 +550,7 @@ std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 		UInt64BinaryOperator::Sub, u64Const(9, loc), loc);
 	auto firstPart = concatBytes(
 		concatBytes(bytesVar("data", loc), oneByte(0x80, loc), loc),
-		bzeroOf(std::move(zerosLen), loc), loc);
+		makeBzero(std::move(zerosLen), loc), loc);
 	body->body.push_back(assignStmt(bytesVar("padded", loc), std::move(firstPart), loc));
 
 	// 8-byte LE length of bits at the end of the last chunk.
@@ -566,7 +559,7 @@ std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 			u64BinOp(u64Var("bits", loc), UInt64BinaryOperator::RShift, shift, loc),
 			UInt64BinaryOperator::BitAnd, 0xFFULL, loc);
 	};
-	auto lenLeBuf = bzeroOf(u64Const(8, loc), loc);
+	std::shared_ptr<Expression> lenLeBuf = makeBzero(u64Const(8, loc), loc);
 	for (int i = 0; i < 8; ++i)
 		lenLeBuf = setByte(std::move(lenLeBuf), u64Const(i, loc), bitsByte(i * 8), loc);
 	body->body.push_back(assignStmt(bytesVar("padded", loc),

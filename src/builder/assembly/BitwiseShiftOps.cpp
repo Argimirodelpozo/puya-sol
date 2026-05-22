@@ -310,9 +310,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto highMaskBytes = awst::makeReinterpretCast(highMask, awst::WType::bytesType(), _loc);
 
-	auto orCall = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-	orCall->stackArgs.push_back(std::move(xCastNeg));
-	orCall->stackArgs.push_back(std::move(highMaskBytes));
+	auto orCall = awst::makeBytesOr(std::move(xCastNeg), std::move(highMaskBytes), _loc);
 
 	auto negResult = awst::makeReinterpretCast(std::move(orCall), awst::WType::biguintType(), _loc);
 

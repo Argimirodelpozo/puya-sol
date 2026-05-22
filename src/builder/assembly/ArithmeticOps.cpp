@@ -218,11 +218,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleOr(
 		Logger::instance().error("or requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto call = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 	auto lhsCast = awst::makeReinterpretCast(ensureBiguint(_args[0], _loc), awst::WType::bytesType(), _loc);
 	auto rhsCast = awst::makeReinterpretCast(ensureBiguint(_args[1], _loc), awst::WType::bytesType(), _loc);
-	call->stackArgs.push_back(std::move(lhsCast));
-	call->stackArgs.push_back(std::move(rhsCast));
+	auto call = awst::makeBytesOr(std::move(lhsCast), std::move(rhsCast), _loc);
 	auto result = awst::makeReinterpretCast(std::move(call), awst::WType::biguintType(), _loc);
 	return result;
 }

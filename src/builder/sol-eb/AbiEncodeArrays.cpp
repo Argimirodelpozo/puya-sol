@@ -93,14 +93,14 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 	{
 		// bytesN: right-pad with zeros to 32 (low bytes).
 		// elem ++ bzero(32 - sz)
-		auto pad = bytesBzero(u64Const(std::to_string(32 - _elemByteSize), _loc), _loc);
+		auto pad = awst::makeBzero(u64Const(std::to_string(32 - _elemByteSize), _loc), _loc);
 		padded = bytesConcat(std::move(elem), std::move(pad), _loc);
 	}
 	else
 	{
 		// uint/bool/address: left-pad with zeros to 32 (high bytes).
 		// bzero(32 - sz) ++ elem
-		auto pad = bytesBzero(u64Const(std::to_string(32 - _elemByteSize), _loc), _loc);
+		auto pad = awst::makeBzero(u64Const(std::to_string(32 - _elemByteSize), _loc), _loc);
 		padded = bytesConcat(std::move(pad), std::move(elem), _loc);
 	}
 
@@ -154,13 +154,13 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayDynElems(
 	std::string headName = "__abi_dynelem_head_" + suffix;
 	auto headVar = awst::makeVarExpression(headName, bytesT, _loc);
 	_ctx.prePendingStatements.push_back(assignFresh(headVar,
-		bytesBzero(u64Const("0", _loc), _loc), _loc));
+		awst::makeBzero(u64Const("0", _loc), _loc), _loc));
 
 	// acc_tail = bzero(0)
 	std::string tailName = "__abi_dynelem_tail_" + suffix;
 	auto tailVar = awst::makeVarExpression(tailName, bytesT, _loc);
 	_ctx.prePendingStatements.push_back(assignFresh(tailVar,
-		bytesBzero(u64Const("0", _loc), _loc), _loc));
+		awst::makeBzero(u64Const("0", _loc), _loc), _loc));
 
 	// off = outer_n * 32             (initial running EVM-ABI offset)
 	std::string offName = "__abi_dynelem_off_" + suffix;
@@ -322,11 +322,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeStaticArrayDynElems(
 	std::string headName = "__abi_sadyn_head_" + suffix;
 	auto headVar = awst::makeVarExpression(headName, bytesT, _loc);
 	_ctx.prePendingStatements.push_back(assignFresh(headVar,
-		bytesBzero(u64Const("0", _loc), _loc), _loc));
+		awst::makeBzero(u64Const("0", _loc), _loc), _loc));
 	std::string tailName = "__abi_sadyn_tail_" + suffix;
 	auto tailVar = awst::makeVarExpression(tailName, bytesT, _loc);
 	_ctx.prePendingStatements.push_back(assignFresh(tailVar,
-		bytesBzero(u64Const("0", _loc), _loc), _loc));
+		awst::makeBzero(u64Const("0", _loc), _loc), _loc));
 
 	// off = n * 32  (initial running EVM-ABI offset; n head slots × 32B)
 	std::string offName = "__abi_sadyn_off_" + suffix;
