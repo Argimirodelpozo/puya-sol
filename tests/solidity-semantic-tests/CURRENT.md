@@ -1,7 +1,35 @@
-# Semantic Test Status — v283
+# Semantic Test Status — v284
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v284 — refactor: consolidate the two inlineModifiers (−478 lines)
+
+Totals bit-identical to v283 (1199/103/20; 0 recovered, 0 new).
+
+`ModifierInliner.cpp` carried two near-identical modifier inliners: a
+free `inlineModifiers(FunctionTranslationCtx&, ...)` (used by the
+free-function path) and a ~490-line member `ContractBuilder::
+inlineModifiers` (contract methods + constructors). The two had drifted
+— the member copy lacked the free version's storage-pointer
+modifier-param handling — and v278 had to apply the same three fixes to
+both copies.
+
+`ContractBuilder::buildBlock` was already a thin wrapper
+(`makeFunctionCtx()` packages the builder's per-function state into the
+`FunctionTranslationCtx`, then delegates to the free `buildBlock`);
+`inlineModifiers` was the last un-migrated routine. It now delegates
+the same way — the ~490-line member body collapses to two lines.
+
+Behaviour delta: contract methods/constructors now also get the free
+version's storage-pointer modifier-param handling (an addition, not a
+change to existing paths), and the `__mod_*_N` uniquifier counters
+renumber (cosmetic). v284 = 0 outcome diff across the semantic suite's
+modifier coverage (`modifiers/` category, stacked-modifier tests, etc.).
+Not re-verified on the OpenZeppelin example suite — its `out/`
+artifacts are ~82 days stale and it has no build script; OZ modifiers
+take no storage params, so the only delta there is the cosmetic
+counter renumbering.
 
 ## v283 — refactor: makeWord32ToUInt64 (promote uint64FromAbiWord)
 
