@@ -183,11 +183,9 @@ void AssemblyBuilder::buildStatement(
 					// Normalise to a fixed 32-byte big-endian encoding —
 					// biguint ABI decoding may produce 64-byte values (our
 					// uint512 mapping) but the case constants below are 32
-					// bytes. Pattern: b| bzero(32) → ensures at least 32
-					// bytes, then extract the last 32.
-					auto bor = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), loc);
-					bor->stackArgs.push_back(awst::makeBzero(32, loc));
-					bor->stackArgs.push_back(std::move(cast));
+					// bytes. Zero-extend to at least 32 bytes, then extract
+					// the last 32.
+					auto bor = awst::makeZeroExtendToN(std::move(cast), 32, loc);
 
 					auto lenCall = awst::makeLen(bor, loc);
 

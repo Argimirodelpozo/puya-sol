@@ -1,7 +1,22 @@
-# Semantic Test Status — v279
+# Semantic Test Status — v280
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v280 — refactor: makeZeroExtendToN for the `b|`+`bzero` pad pattern
+
+Pure refactor — totals bit-identical to v279 (1199/103/20; 0 recovered,
+0 new).
+
+`b|(bzero(n), value)` — zero-extend a bytes value to at least N bytes —
+was open-coded at five sites (TransientStorage, assembly StatementOps /
+SignedOps, and a footgun-named file-local `leftPadBytes` free function
+in FunctionPointerBuilder that collided in name with the unrelated
+`AbiEncoderBuilder::leftPadBytes`). Added `awst::makeZeroExtendToN` and
+routed all five through it; the misnamed free function is deleted. The
+three `b|(bzero,v)` sites are bit-identical; the two FunctionPointer
+sites had their `b|` operands in the other order — `b|` is commutative,
+so identical TEAL.
 
 ## v279 — refactor: consolidate the left-pad-to-N helper family
 

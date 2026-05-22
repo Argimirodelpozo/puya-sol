@@ -41,19 +41,6 @@ bool inLibraryContext(ContractContext const& _ctx, std::string const& _currentCr
 		&& _currentCref.find("." + _ctx.contractName) == std::string::npos;
 }
 
-/// Left-pad `_bytes` to exactly _targetBytes bytes via `b| bzero(_targetBytes)`.
-/// Both operands are shorter-first aligned to the right by `b|`.
-std::shared_ptr<awst::Expression> leftPadBytes(
-	std::shared_ptr<awst::Expression> _bytes,
-	unsigned _targetBytes,
-	awst::SourceLocation const& _loc)
-{
-	auto orOp = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-	orOp->stackArgs.push_back(std::move(_bytes));
-	orOp->stackArgs.push_back(awst::makeBzero(_targetBytes, _loc));
-	return orOp;
-}
-
 /// For a public/external target function, compute the ARC4 WType that the
 /// target's AWST parameter will have. Mirrors ContractBuilder's param remap:
 ///   - biguint (uint128..uint256, etc.): arc4.uintN preserving bit width.
@@ -144,14 +131,16 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 	{
 		std::shared_ptr<awst::Expression> bytesExpr = awst::makeItob(std::move(_argExpr), _loc);
 		if (targetBytes > 8 && dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
-			bytesExpr = leftPadBytes(std::move(bytesExpr), targetBytes, _loc);
+			bytesExpr = awst::makeZeroExtendToN(
+				std::move(bytesExpr), static_cast<int>(targetBytes), _loc);
 		return bytesExpr;
 	}
 	if (_argExpr->wtype == awst::WType::biguintType())
 	{
 		auto raw = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
 		if (dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
-			return leftPadBytes(std::move(raw), targetBytes, _loc);
+			return awst::makeZeroExtendToN(
+				std::move(raw), static_cast<int>(targetBytes), _loc);
 		return raw;
 	}
 	if (_argExpr->wtype == awst::WType::boolType())

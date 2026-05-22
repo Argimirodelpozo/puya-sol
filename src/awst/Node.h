@@ -1069,6 +1069,21 @@ inline std::shared_ptr<IntrinsicCall> makeRightPad(
 	return makeConcat(std::move(value), std::move(pad), std::move(loc));
 }
 
+// `b|(bzero(n), value)` — zero-extend `value` to *at least* `n` bytes.
+// Unlike makeLeftPad (which always grows by `n`) and makeLeftPadToN
+// (which trims to exactly `n`), this leaves an already-≥n-byte value
+// untouched: `b|` with `n` zero bytes is value-preserving and widens a
+// shorter operand to `n`. Used to normalise a value to a minimum width
+// before a fixed-width extract / store.
+inline std::shared_ptr<IntrinsicCall> makeZeroExtendToN(
+	std::shared_ptr<Expression> value, int n, SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("b|", WType::bytesType(), loc);
+	node->stackArgs.push_back(makeBzero(n, loc));
+	node->stackArgs.push_back(std::move(value));
+	return node;
+}
+
 // Left-pad `value` to *exactly* `n` bytes — `extract3(bzero(n) ++ value,
 // len - n, n)`. Required for ABI-encoding values whose minimal AVM
 // representation is shorter than the target ABI width (biguint, etc.):

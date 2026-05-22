@@ -254,9 +254,7 @@ namespace
 			// max(len(a), len(b)); biguint ≤ 32 bytes so result is 32).
 			// Then extract the trailing `byteSize` bytes at compile-time offset.
 			auto bytesView = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
-			auto padded = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-			padded->stackArgs.push_back(awst::makeBzero(32, _loc));
-			padded->stackArgs.push_back(std::move(bytesView));
+			auto padded = awst::makeZeroExtendToN(std::move(bytesView), 32, _loc);
 			raw = awst::makeExtract(std::move(padded),
 				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
 		}

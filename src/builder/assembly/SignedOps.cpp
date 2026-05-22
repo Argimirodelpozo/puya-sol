@@ -63,12 +63,10 @@ void AssemblyBuilder::handleTstore(
 
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult, std::move(thirtyTwo), _loc);
 
-	// Convert value to 32 bytes: b| with bzero(32)
+	// Convert value to 32 bytes: zero-extend to at least 32.
 	auto valueBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), _loc);
 
-	auto padded = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
-	padded->stackArgs.push_back(awst::makeBzero(32, _loc));
-	padded->stackArgs.push_back(std::move(valueBytes));
+	auto padded = awst::makeZeroExtendToN(std::move(valueBytes), 32, _loc);
 
 	// replace3(load TRANSIENT_SLOT, offset, padded_value)
 	auto blobRead = awst::makeLoadSlot(TRANSIENT_SLOT, _loc);
