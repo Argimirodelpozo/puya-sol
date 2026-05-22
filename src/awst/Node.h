@@ -1340,6 +1340,16 @@ inline std::shared_ptr<IntrinsicCall> makeBiguintToUInt64(
 	return makeExtractUInt64(cat, std::move(start), std::move(loc));
 }
 
+// Narrow a *fixed* 32-byte ABI word to uint64: `btoi(extract(word, 24, 8))`
+// — the trailing 8 bytes hold the value. Use makeBiguintToUInt64 instead
+// when the input width is not known to be exactly 32 bytes.
+inline std::shared_ptr<IntrinsicCall> makeWord32ToUInt64(
+	std::shared_ptr<Expression> word32, SourceLocation loc)
+{
+	auto last8 = makeExtract(std::move(word32), 24, 8, loc);
+	return makeBtoi(std::move(last8), std::move(loc));
+}
+
 // One layer of Solidity-style storage-key derivation:
 // `sha256(keyBytes(value, encType) ++ prefix)`. Chain repeatedly for
 // nested mappings / arrays of compound types.

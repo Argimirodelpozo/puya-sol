@@ -82,8 +82,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 		bytesExpr = std::move(toBytes);
 	}
 
-	auto extract = awst::makeExtract(std::move(bytesExpr), 24, 8, _loc);
-	auto btoi = awst::makeBtoi(std::move(extract), _loc);
+	auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), _loc);
 	return awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), _loc);
 }
 

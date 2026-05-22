@@ -67,8 +67,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				bytesExpr = std::move(toBytes);
 			}
 
-			auto extract = awst::makeExtract(std::move(bytesExpr), 24, 8, m_loc);
-			auto btoi = awst::makeBtoi(std::move(extract), m_loc);
+			auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), m_loc);
 			appId = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
 		}
 

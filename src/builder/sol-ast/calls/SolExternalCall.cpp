@@ -208,9 +208,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 		bytesExpr = std::move(toBytes);
 	}
 
-	// extract last 8 bytes from 32-byte address
-	auto extract = awst::makeExtract(std::move(bytesExpr), 24, 8, m_loc);
-	auto btoi = awst::makeBtoi(std::move(extract), m_loc);
+	// low 8 bytes of the 32-byte address → app id
+	auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), m_loc);
 	return awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
 }
 

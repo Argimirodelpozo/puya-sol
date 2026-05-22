@@ -1046,8 +1046,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		&& _expr->wtype == awst::WType::accountType())
 	{
 		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
-		auto extract = awst::makeExtract(std::move(toBytes), 24, 8, _loc);
-		auto btoi = awst::makeBtoi(std::move(extract), _loc);
+		auto btoi = awst::makeWord32ToUInt64(std::move(toBytes), _loc);
 		return awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
 	}
 

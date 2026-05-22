@@ -1,7 +1,20 @@
-# Semantic Test Status — v282
+# Semantic Test Status — v283
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v283 — refactor: makeWord32ToUInt64 (promote uint64FromAbiWord)
+
+Pure refactor — totals bit-identical to v282 (1199/103/20; 0 recovered,
+0 new).
+
+"Narrow a fixed 32-byte ABI word to uint64" — `btoi(extract(word, 24,
+8))` — existed as `AbiEncoderBuilder::uint64FromAbiWord` (a static
+method, sol-eb-only) plus four open-coded copies in unrelated modules
+(SolAddressProperty, InnerCallHandlers, TypeCoercion, SolExternalCall —
+mostly address→app-id extraction). Promoted to a canonical
+`awst::makeWord32ToUInt64`; `uint64FromAbiWord` now delegates to it and
+the four copies call it directly. Bit-identical.
 
 ## v282 — refactor: makeBiguintToUInt64 for the low-8-bytes idiom
 

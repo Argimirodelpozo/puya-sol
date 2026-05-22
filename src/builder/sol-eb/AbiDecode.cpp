@@ -22,9 +22,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::uint64FromAbiWord(
 	std::shared_ptr<awst::Expression> _word32,
 	awst::SourceLocation const& _loc)
 {
-	// Last 8 bytes of a 32-byte word: extract(_word32, 24, 8) → btoi
-	auto last8 = awst::makeExtract(std::move(_word32), 24, 8, _loc);
-	return awst::makeBtoi(std::move(last8), _loc);
+	return awst::makeWord32ToUInt64(std::move(_word32), _loc);
 }
 
 // ── decodeAbiValue: decode one value from EVM ABI bytes ──
