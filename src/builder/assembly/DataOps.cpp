@@ -327,8 +327,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (!offset || !length)
 	{
-		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
-		return nullptr;
+		// Either offset, length, or both are runtime values. AVM's keccak256
+		// opcode accepts any-length bytes, so we just read the slice from the
+		// EVM memory blob via runtime extract3 and hash it. Solady's EIP-712
+		// typed-data hashing (PermissionedRamp.witnessed{Wrap,Unwrap}) builds
+		// the hash buffer dynamically and hits this path.
+		auto offsetU64 = offset
+			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*offset, _loc))
+			: offsetToUint64(_args[0], _loc);
+		auto lengthU64 = length
+			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*length, _loc))
+			: offsetToUint64(_args[1], _loc);
+
+		auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(lengthU64), _loc);
+		auto keccak = awst::makeKeccak256(std::move(data), _loc);
+		return awst::makeAsBiguint(std::move(keccak), _loc);
 	}
 
 	int numSlots = static_cast<int>(*length / 0x20);

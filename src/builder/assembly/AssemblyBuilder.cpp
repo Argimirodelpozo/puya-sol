@@ -838,6 +838,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 		return cmp;
 	}
 
+	// Yul `if value {}` admits any uint256, including stack words that we
+	// type as fixed-size bytes (e.g., bytes32 EIP-712 hashes, Solady
+	// _ERC1967_IMPLEMENTATION_SLOT). Compare to a zero buffer of matching
+	// length — same semantics, satisfies puya's bool-only IfElse validator.
+	if (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bw = dynamic_cast<awst::BytesWType const*>(_expr->wtype);
+		size_t len = (bw && bw->length()) ? static_cast<size_t>(*bw->length()) : 32u;
+		auto zeros = awst::makeBytesConstant(
+			std::vector<uint8_t>(len, 0), _loc,
+			awst::BytesEncoding::Base16, _expr->wtype);
+		auto cmp = awst::makeBytesComparison(std::move(_expr), awst::EqualityComparison::Ne, std::move(zeros), _loc);
+		return cmp;
+	}
+
 	return _expr;
 }
 
