@@ -49,7 +49,21 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 		return bigConst;
 	}
 
-	// itob → ReinterpretCast to biguint
+	// account / fixed-bytes / dynamic bytes are already big-endian byte
+	// buffers — reinterpret-cast to biguint directly. Going through itob
+	// (which is uint64-only) would silently truncate everything above the
+	// low 8 bytes. Mirrors the parallel coercion fix in
+	// AssemblyBuilder::ensureBiguint (commit `01332f363`).
+	if (_expr->wtype == awst::WType::accountType()
+		|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes))
+	{
+		auto bytesExpr = _expr->wtype == awst::WType::accountType()
+			? awst::makeAsBytes(std::move(_expr), _loc)
+			: std::move(_expr);
+		return awst::makeAsBiguint(std::move(bytesExpr), _loc);
+	}
+
+	// uint64 → biguint via itob → ReinterpretCast (canonical path)
 	auto itob = awst::makeItob(std::move(_expr), _loc);
 	return awst::makeAsBiguint(std::move(itob), _loc);
 }
