@@ -616,7 +616,30 @@ def deploy_split_app(
     except Exception:
         app_spec = None
 
-    # 0. Deploy any --deploy-pure-helpers sidecar apps first so we can
+    # 0. Read state schema from arc56 — both main and __storage are
+    # deployed with the user contract's actual schema (puya-sol bakes the
+    # state vars into both, and main's __postInit body runs on __storage
+    # via the dance, writing state-vars that need their schema slots).
+    # Fall back to (16, 16) — morpho-blue's defaults — if missing.
+    #
+    # Plus a buffer: puya-sol's reported schema in arc56 can be a low
+    # estimate (e.g. v2 CTFExchange reports ints=3 / bytes=19 but
+    # __postInit's actual writes need ints>3 because some state vars are
+    # written via app_global_put that arc56 doesn't catalogue). Take the
+    # max of arc56's count and a comfortable lower bound; AVM ignores
+    # over-provisioned schema slots.
+    state_schema = arc56_raw.get("state", {}).get("schema", {}).get("global", {})
+    schema_global = StateSchema(
+        num_uints=max(state_schema.get("ints", 0), 16),
+        num_byte_slices=max(state_schema.get("bytes", 0), 24),
+    )
+    local_state_schema = arc56_raw.get("state", {}).get("schema", {}).get("local", {})
+    schema_local = StateSchema(
+        num_uints=local_state_schema.get("ints", 0),
+        num_byte_slices=local_state_schema.get("bytes", 0),
+    )
+
+    # 0b. Deploy any --deploy-pure-helpers sidecar apps first so we can
     # bake their app ids into main + chunk TEAL. Each helper is a
     # one-method standalone Contract with its own approval/clear; the
     # rewritten call sites in main + chunks reference each helper by
@@ -650,8 +673,8 @@ def deploy_split_app(
         sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
         approval_program=main_approval_v1, clear_program=main_clear,
-        global_schema=StateSchema(num_uints=16, num_byte_slices=16),
-        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        global_schema=schema_global,
+        local_schema=schema_local,
         app_args=app_args or [], extra_pages=3,
     )
     txid = algod.send_transaction(txn.sign(sender.private_key))
@@ -700,8 +723,8 @@ def deploy_split_app(
         sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
         approval_program=main_approval_v2, clear_program=main_clear,
-        global_schema=StateSchema(num_uints=16, num_byte_slices=16),
-        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        global_schema=schema_global,
+        local_schema=schema_local,
         app_args=app_args or [], extra_pages=3,
     )
     txid = algod.send_transaction(txn.sign(sender.private_key))
