@@ -642,7 +642,7 @@ void AssemblyBuilder::buildAssignment(
 			// Account (address) — pad biguint to 32 bytes for AVM address
 			auto biguintVal = ensureBiguint(std::move(value), loc);
 			auto padded = padTo32Bytes(std::move(biguintVal), loc);
-			auto cast = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), loc);
+			auto cast = awst::makeAsAccount(std::move(padded), loc);
 			value = std::move(cast);
 		}
 		else if (target->wtype == awst::WType::uint64Type())
@@ -676,12 +676,12 @@ void AssemblyBuilder::buildAssignment(
 				// biguint → bytes → account
 				auto toBytes = awst::makeAsBytes(std::move(value), loc);
 
-				auto toAccount = awst::makeReinterpretCast(std::move(toBytes), awst::WType::accountType(), loc);
+				auto toAccount = awst::makeAsAccount(std::move(toBytes), loc);
 				value = std::move(toAccount);
 			}
 			else if (value->wtype != awst::WType::accountType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(value), awst::WType::accountType(), loc);
+				auto cast = awst::makeAsAccount(std::move(value), loc);
 				value = std::move(cast);
 			}
 		}

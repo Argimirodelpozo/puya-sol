@@ -195,7 +195,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 			{
 				auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
 
-				auto cast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), m_loc);
+				auto cast = awst::makeAsApplication(std::move(appId), m_loc);
 				return cast;
 			}
 		}
@@ -210,7 +210,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 
 	// low 8 bytes of the 32-byte address → app id
 	auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), m_loc);
-	return awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
+	return awst::makeAsApplication(std::move(btoi), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
@@ -253,7 +253,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	}
 	else if (_returnType == awst::WType::accountType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(stripPrefix), awst::WType::accountType(), m_loc);
+		auto cast = awst::makeAsAccount(std::move(stripPrefix), m_loc);
 		return cast;
 	}
 
@@ -312,7 +312,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			}
 			else if (fieldType == awst::WType::accountType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::accountType(), m_loc);
+				auto cast = awst::makeAsAccount(std::move(extract), m_loc);
 				decoded = std::move(cast);
 			}
 			else

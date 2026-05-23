@@ -81,12 +81,12 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 			auto toBytes = awst::makeAsBytes(std::move(promoted), m_loc);
 
 			auto padded = awst::makeLeftPadToN(std::move(toBytes), 32, m_loc);
-			auto addrCast = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), m_loc);
+			auto addrCast = awst::makeAsAccount(std::move(padded), m_loc);
 			return addrCast;
 		}
 
 		// bytes → account
-		auto addrCast = awst::makeReinterpretCast(std::move(argExpr), awst::WType::accountType(), m_loc);
+		auto addrCast = awst::makeAsAccount(std::move(argExpr), m_loc);
 		return addrCast;
 	}
 

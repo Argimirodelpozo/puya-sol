@@ -328,7 +328,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		awst::WType::bytesType(), _loc);
 
 	// Cast to account type (address return type)
-	auto addrCast = awst::makeReinterpretCast(std::move(maskedAddr), awst::WType::accountType(), _loc);
+	auto addrCast = awst::makeAsAccount(std::move(maskedAddr), _loc);
 
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(addrCast));
 }

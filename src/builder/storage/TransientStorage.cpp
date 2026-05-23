@@ -205,7 +205,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	{
 		auto raw = extractBytes(absByte, sz, _loc);
 		auto cat = awst::makeLeftPad(std::move(raw), 32 - sz, _loc);
-		return awst::makeReinterpretCast(std::move(cat), awst::WType::accountType(), _loc);
+		return awst::makeAsAccount(std::move(cat), _loc);
 	}
 
 	// Default: raw bytes of the stored width (e.g., bytesN). Reinterpret to

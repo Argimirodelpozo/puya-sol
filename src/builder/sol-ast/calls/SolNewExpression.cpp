@@ -360,8 +360,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 					}
 					else if (argVal->wtype == awst::WType::boolType())
 					{
-						auto asU64 = awst::makeReinterpretCast(
-							std::move(argVal), awst::WType::uint64Type(), m_loc);
+						auto asU64 = awst::makeAsUInt64(std::move(argVal), m_loc);
 						auto itob = awst::makeIntrinsicCall(
 							"itob", awst::WType::bytesType(), m_loc);
 						itob->stackArgs.push_back(std::move(asU64));
@@ -457,7 +456,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				auto fundTupleRead = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
 				auto fundAddrBytes = awst::makeTupleItem(std::move(fundTupleRead), 0, awst::WType::bytesType(), m_loc);
-				auto fundAddr = awst::makeReinterpretCast(std::move(fundAddrBytes), awst::WType::accountType(), m_loc);
+				auto fundAddr = awst::makeAsAccount(std::move(fundAddrBytes), m_loc);
 
 				static awst::WInnerTransactionFields s_fundFieldsType(1);
 				auto fundCreate = awst::makeCreateInnerTransaction(&s_fundFieldsType, m_loc);
@@ -567,7 +566,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				auto addrRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 				auto addrBytes = awst::makeTupleItem(std::move(addrRead), 0, awst::WType::bytesType(), m_loc);
-				auto receiver = awst::makeReinterpretCast(std::move(addrBytes), awst::WType::accountType(), m_loc);
+				auto receiver = awst::makeAsAccount(std::move(addrBytes), m_loc);
 
 				// PaymentTxn (sets msg.value for __postInit)
 				static awst::WInnerTransactionFields s_payFieldsType(1);
@@ -599,7 +598,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// Return CreatedApplicationID as applicationType directly.
 			// This allows subsequent method calls to use the app ID
 			// instead of converting through the hashed address.
-			auto appIdCast = awst::makeReinterpretCast(std::move(createdAppId), awst::WType::applicationType(), m_loc);
+			auto appIdCast = awst::makeAsApplication(std::move(createdAppId), m_loc);
 
 			return appIdCast;
 		}

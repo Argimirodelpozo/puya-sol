@@ -82,7 +82,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 
 		std::vector<unsigned char> zeros(32, 0);
 		auto bc = awst::makeBytesConstant(std::move(zeros), m_loc);
-		return awst::makeReinterpretCast(std::move(bc), awst::WType::accountType(), m_loc);
+		return awst::makeAsAccount(std::move(bc), m_loc);
 	}
 
 	return nullptr;

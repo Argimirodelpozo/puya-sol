@@ -1,7 +1,18 @@
-# Semantic Test Status — v285
+# Semantic Test Status — v286
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v286 — refactor: complete the makeAs* reinterpret alias family
+
+Pure refactor — totals bit-identical to v285 (1199/103/20; 0 recovered,
+0 new).
+
+Followup to v285. Added `awst::makeAsAccount` / `makeAsApplication` /
+`makeAsUInt64` and swept the remaining reinterpret-cast call sites:
+20 + 10 + 8 = 38 sites across 18 files. `string` (5 sites) left as
+`makeReinterpretCast` — too few to warrant a helper. Each call produces
+the same `ReinterpretCast` AWST node.
 
 ## v285 — refactor: makeAsBytes / makeAsBiguint reinterpret aliases
 

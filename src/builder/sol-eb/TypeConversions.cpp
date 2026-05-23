@@ -229,7 +229,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 
 		auto padded = awst::makeLeftPadToN(std::move(toBytes), 32, _loc);
 
-		auto result = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), _loc);
+		auto result = awst::makeAsAccount(std::move(padded), _loc);
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
 	}
 
@@ -237,7 +237,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 	if (srcWType == awst::WType::bytesType()
 		|| (srcWType && srcWType->kind() == awst::WTypeKind::Bytes))
 	{
-		auto result = awst::makeReinterpretCast(std::move(_arg), awst::WType::accountType(), _loc);
+		auto result = awst::makeAsAccount(std::move(_arg), _loc);
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
 	}
 

@@ -69,7 +69,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 			{
 				auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), _loc);
 
-				auto cast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), _loc);
+				auto cast = awst::makeAsApplication(std::move(appId), _loc);
 				return cast;
 			}
 		}
@@ -83,7 +83,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	}
 
 	auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), _loc);
-	return awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), _loc);
+	return awst::makeAsApplication(std::move(btoi), _loc);
 }
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
@@ -431,8 +431,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								}
 								if (v->wtype == awst::WType::boolType())
 								{
-									auto asInt = awst::makeReinterpretCast(
-										std::move(v), awst::WType::uint64Type(), _loc);
+									auto asInt = awst::makeAsUInt64(std::move(v), _loc);
 									auto bytes = awst::makeItob(std::move(asInt), _loc);
 									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
 								}
@@ -727,7 +726,7 @@ void InnerCallHandlers::fundCreatedApp(
 
 	auto addrBytes = awst::makeTupleItem(std::move(appParams), 0, awst::WType::bytesType(), _loc);
 
-	auto receiver = awst::makeReinterpretCast(std::move(addrBytes), awst::WType::accountType(), _loc);
+	auto receiver = awst::makeAsAccount(std::move(addrBytes), _loc);
 
 	// Build and submit inner payment
 	auto create = buildPaymentTransaction(_ctx, std::move(receiver), std::move(_amount), _loc);

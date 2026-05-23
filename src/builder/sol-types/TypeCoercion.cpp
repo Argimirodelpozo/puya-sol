@@ -31,7 +31,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	if (_targetType == awst::WType::accountType()
 		&& _expr->wtype == awst::WType::applicationType())
 	{
-		auto idBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::uint64Type(), _loc);
+		auto idBytes = awst::makeAsUInt64(std::move(_expr), _loc);
 		auto itob = awst::makeItob(std::move(idBytes), _loc);
 		auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
 		return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
@@ -1032,7 +1032,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_targetType == awst::WType::accountType()
 		&& _expr->wtype == awst::WType::applicationType())
 	{
-		auto idBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::uint64Type(), _loc);
+		auto idBytes = awst::makeAsUInt64(std::move(_expr), _loc);
 		auto itob = awst::makeItob(std::move(idBytes), _loc);
 		auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
 		return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);

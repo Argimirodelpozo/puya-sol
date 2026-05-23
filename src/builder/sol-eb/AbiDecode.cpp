@@ -65,7 +65,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	// Address → 32 bytes, take last 32 (it's the full word)
 	if (wtype == awst::WType::accountType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(headWord), awst::WType::accountType(), _loc);
+		auto cast = awst::makeAsAccount(std::move(headWord), _loc);
 		return cast;
 	}
 

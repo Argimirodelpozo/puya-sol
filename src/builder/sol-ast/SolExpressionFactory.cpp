@@ -80,7 +80,7 @@ public:
 		// Left-pad to 32 bytes to form an address.
 		auto cat = awst::makeLeftPad(std::move(appIdBytes), 24, m_loc);
 		// Reinterpret as account for assignment to an address-typed target.
-		return awst::makeReinterpretCast(std::move(cat), awst::WType::accountType(), m_loc);
+		return awst::makeAsAccount(std::move(cat), m_loc);
 	}
 };
 

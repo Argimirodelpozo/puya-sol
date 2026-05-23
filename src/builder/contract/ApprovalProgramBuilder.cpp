@@ -529,7 +529,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (paramType == awst::WType::accountType())
 				{
 					// bytes → account via ReinterpretCast
-					auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::accountType(), method.sourceLocation);
+					auto cast = awst::makeAsAccount(std::move(readArg), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::biguintType())

@@ -361,7 +361,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		}
 
 		auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), loc);
-		auto appIdCast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), loc);
+		auto appIdCast = awst::makeAsApplication(std::move(appId), loc);
 
 		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{

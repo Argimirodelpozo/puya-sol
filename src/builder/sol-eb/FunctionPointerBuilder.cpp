@@ -331,7 +331,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			auto addr = _receiverAddress;
 			if (addr->wtype == awst::WType::applicationType())
 			{
-				auto toU64 = awst::makeReinterpretCast(std::move(addr), awst::WType::uint64Type(), _loc);
+				auto toU64 = awst::makeAsUInt64(std::move(addr), _loc);
 				appIdBytes = awst::makeItob(std::move(toU64), _loc);
 			}
 			else
@@ -473,8 +473,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
 		create->fields["Fee"] = awst::makeZero(_loc);
 		// ApplicationID: reinterpret uint64 appId to application type
-		create->fields["ApplicationID"] = awst::makeReinterpretCast(
-			extractU64(0), awst::WType::applicationType(), _loc);
+		create->fields["ApplicationID"] = awst::makeAsApplication(extractU64(0), _loc);
 		create->fields["OnCompletion"] = awst::makeZero(_loc);
 		create->fields["ApplicationArgs"] = std::move(argsTuple);
 

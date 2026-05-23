@@ -53,7 +53,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress")
 			{
 				auto idCall = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
-				auto cast = awst::makeReinterpretCast(std::move(idCall), awst::WType::applicationType(), m_loc);
+				auto cast = awst::makeAsApplication(std::move(idCall), m_loc);
 				appId = std::move(cast);
 			}
 		}
@@ -68,7 +68,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			}
 
 			auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), m_loc);
-			appId = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
+			appId = awst::makeAsApplication(std::move(btoi), m_loc);
 		}
 
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
@@ -138,13 +138,11 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					{
 						auto appAsApp = TypeCoercion::coerceForAssignment(
 							std::move(appExpr), awst::WType::applicationType(), m_loc);
-						appIdUint = awst::makeReinterpretCast(
-							std::move(appAsApp), awst::WType::uint64Type(), m_loc);
+						appIdUint = awst::makeAsUInt64(std::move(appAsApp), m_loc);
 					}
 					else
 					{
-						appIdUint = awst::makeReinterpretCast(
-							std::move(appExpr), awst::WType::uint64Type(), m_loc);
+						appIdUint = awst::makeAsUInt64(std::move(appExpr), m_loc);
 					}
 					auto* addrTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 						std::vector<awst::WType const*>{
@@ -160,8 +158,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 					auto addrTupleRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 					auto addrBytesItem = awst::makeTupleItem(std::move(addrTupleRead), 0, awst::WType::bytesType(), m_loc);
-					auto realAddr = awst::makeReinterpretCast(
-						std::move(addrBytesItem), awst::WType::accountType(), m_loc);
+					auto realAddr = awst::makeAsAccount(std::move(addrBytesItem), m_loc);
 
 					auto* balTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 						std::vector<awst::WType const*>{
@@ -244,7 +241,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress")
 			{
 				auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
-				auto appIdCast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), m_loc);
+				auto appIdCast = awst::makeAsApplication(std::move(appId), m_loc);
 
 				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{

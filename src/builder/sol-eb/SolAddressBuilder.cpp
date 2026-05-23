@@ -61,7 +61,7 @@ std::shared_ptr<awst::Expression> makeConventionFormAddress(
 {
 	auto itob = awst::makeItob(std::move(appId), loc);
 	auto pad = awst::makeLeftPad(std::move(itob), 24, loc);
-	return awst::makeReinterpretCast(std::move(pad), awst::WType::accountType(), loc);
+	return awst::makeAsAccount(std::move(pad), loc);
 }
 
 std::shared_ptr<awst::Expression> makeBytesEq(

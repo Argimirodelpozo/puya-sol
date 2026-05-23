@@ -1306,9 +1306,8 @@ inline std::shared_ptr<ReinterpretCast> makeReinterpretCast(
 	return node;
 }
 
-// Shorthands for the two reinterpret-cast targets that dominate the
-// builder layer (~119 + ~85 call sites): `value` viewed as `bytes` /
-// `biguint`. Pure aliases for `makeReinterpretCast(value, <type>, loc)`.
+// Shorthands for the common reinterpret-cast targets in the builder
+// layer. Pure aliases for `makeReinterpretCast(value, <type>, loc)`.
 inline std::shared_ptr<ReinterpretCast> makeAsBytes(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
@@ -1318,6 +1317,21 @@ inline std::shared_ptr<ReinterpretCast> makeAsBiguint(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
 	return makeReinterpretCast(std::move(expr), WType::biguintType(), std::move(loc));
+}
+inline std::shared_ptr<ReinterpretCast> makeAsAccount(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	return makeReinterpretCast(std::move(expr), WType::accountType(), std::move(loc));
+}
+inline std::shared_ptr<ReinterpretCast> makeAsApplication(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	return makeReinterpretCast(std::move(expr), WType::applicationType(), std::move(loc));
+}
+inline std::shared_ptr<ReinterpretCast> makeAsUInt64(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	return makeReinterpretCast(std::move(expr), WType::uint64Type(), std::move(loc));
 }
 
 // Encode a typed key value to its canonical byte form for storage-key
