@@ -274,3 +274,94 @@ def visit_block(self, block):
 Alternatively, prevent the upstream fold from merging an exit edge
 into a loop header when that makes the block self-targeting — but
 the validator guard is the smaller fix and keeps the optimisation.
+
+## 4. puya 5.9.0rc1 optimizer regressions (4 tests)
+
+**Status:** Open in puya 5.9.0rc1. Workaround: stay on puya 5.8.0rc3 OR
+accept the 4-test regression (1199→1196). Discovered while bumping puya
+5.8→5.9 to chase a separate stack-emission issue (see #5 below).
+
+### What
+
+Bumping puya 5.8.0rc3 → 5.9.0rc1 + the corresponding AWSTSerializer
+compat changes (ARC4Struct.fields as JSON array of WTypeField,
+BoxPrefixedKeyExpression → IntrinsicCall(concat) inline) introduces 4
+runtime regressions in the semantic test suite, all looking like
+puya-5.9 optimizer over-aggressiveness:
+
+#### 4a. `test_create_random` — `extract 7 1` on 1-byte buffer
+
+Solidity source (`tests/various/contracts/create_random.sol`):
+```solidity
+function calculateCreate2(address creator, bytes32 codehash, bytes32 salt)
+    private pure returns (address)
+{
+    return address(uint160(uint256(keccak256(
+        abi.encodePacked(bytes1(0xff), creator, salt, codehash)))));
+}
+```
+
+Runtime error:
+```
+logic eval error: extraction start 7 is beyond length: 1.
+Details: extract3; pushbytes 0xff // 0xff; extract 7 1
+```
+
+puya 5.9 emits `pushbytes 0xff; extract 7 1` — extract 1 byte at offset
+7 from a 1-byte literal `0xff`. Overflows. Worked on 5.8.
+
+#### 4b. `test_exp_cleanup_smaller_base` — `exp` overflow on `uint8 ** uint16`
+
+Solidity source (`tests/cleanup/contracts/exp_cleanup_smaller_base.sol`):
+```solidity
+function f() public pure returns (uint16 x) {
+    uint16 e = 0x100;
+    uint8 b = 0x2;
+    unchecked { return b**e; }   // 2**256, wraps to 0 in uint16
+}
+```
+
+puya 5.9 lowers this to AVM's `exp` opcode (uint64-only), which
+overflows on `2**256`. puya 5.8 used a wider biguint path. Expected
+return: 0; actual: revert.
+
+#### 4c. `test_fixed_arrays_in_storage` — abi_return = None
+
+Test calls `c.getID` / `c.getData` on a contract with a 2**10-sized
+storage array. Returns `None` (revert) under puya 5.9; returned the
+expected `(8, 9)` tuple under 5.8.
+
+#### 4d. `test_array_storage_index_boundary_test` — out-of-bounds revert
+expected but didn't fire
+
+Test calls `test_boundary_check(uint256,uint256)` with various
+in-bounds vs out-of-bounds index pairs. Expects revert on OOB access;
+under puya 5.9 one of the boundary cases doesn't revert.
+
+### Where to look (puya-side)
+
+These look like the new optimization passes in puya 5.9. Likely
+suspect commits between puya 5.8.0rc3 (`0d5af6b41`) and 5.9.0rc1
+(`2ed95fdff`):
+- `e93308c3c fix: consistently rely on optimisation to replace stack-arg
+  variant with immediate-arg variant`
+- `1cf62c121 refactor: add special handling for extract in eb`
+- `69f1214d5 test: add tests for op code selection optimisation
+  preferring variant with immediates`
+
+The `extract 7 1` overflow specifically smells like the new immediate-
+variant selection going wrong on a literal too short to slice.
+
+### Affected tests
+
+- `tests/various/test_various.py::test_create_random`
+- `tests/cleanup/test_cleanup.py::test_exp_cleanup_smaller_base`
+- `tests/array/test_array.py::test_fixed_arrays_in_storage`
+- `tests/array/test_array.py::test_array_storage_index_boundary_test`
+
+### Workaround
+
+Stay on puya 5.8.0rc3 (`0d5af6b41`) — bit-identical 1199/1322 on the
+semantic suite (v286 → v290 across 4 verification runs). The puya
+5.9.0rc1 bump is needed for polymarket-experiment compatibility but
+introduces the regressions above.

@@ -206,14 +206,26 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	}
 	else if (declarations.size() > 1 && initialValue)
 	{
-		// Tuple destructuring
+		// Tuple destructuring `(a, b) = expr;` — bind each component to a
+		// separate local. The RHS must be evaluated EXACTLY ONCE, otherwise
+		// a tuple-returning function call gets re-emitted per destructured
+		// component (manifesting as duplicate `callsub`s in the generated
+		// TEAL with all the call's side-effects repeated). `SingleEvaluation`
+		// is the in-memory hint for that, but the AWST JSON serialization
+		// inlines its `source` per consumer and the puya backend then
+		// re-emits the call for each `TupleItemExpression`. We spell out
+		// the temp explicitly: assign the RHS to a synthetic variable, then
+		// extract each tuple item from that variable by name.
+		// (Port of polymarket-experiment commit `271d85851`.)
 		auto rhsExpr = m_blk.builderCtx().build(*initialValue);
 		m_blk.builderCtx().appendPendingTo(result);
 
-		auto const* rhsWtype = rhsExpr->wtype;
-		auto singleRhs = awst::makeSingleEvaluation(
-			std::move(rhsExpr), rhsWtype, static_cast<int>(m_node.id()), m_loc);
-		rhsExpr = std::move(singleRhs);
+		auto const* tupleType = rhsExpr->wtype;
+		std::string tempName = "__tuple_destruct_" + std::to_string(m_node.id());
+		auto tempTarget = awst::makeVarExpression(tempName, tupleType, m_loc);
+		auto tempAssign = awst::makeAssignmentStatement(
+			std::move(tempTarget), std::move(rhsExpr), m_loc);
+		result.push_back(std::move(tempAssign));
 
 		for (size_t i = 0; i < declarations.size(); ++i)
 		{
@@ -223,7 +235,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 			auto target = awst::makeVarExpression(decl.name(), type, m_blk.makeLoc(decl.location()));
 
-			auto itemExpr = awst::makeTupleItem(rhsExpr, static_cast<int>(i), type, m_loc);
+			auto baseRef = awst::makeVarExpression(tempName, tupleType, m_loc);
+			auto itemExpr = awst::makeTupleItem(std::move(baseRef), static_cast<int>(i), type, m_loc);
 
 			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(itemExpr), m_loc);
 			result.push_back(assign);
