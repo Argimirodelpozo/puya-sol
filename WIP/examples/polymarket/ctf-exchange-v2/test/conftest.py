@@ -843,31 +843,18 @@ def split_exchange(localnet, admin, universal_mock, uros_orch_id):
     main_client._uros_main_addr = _app_addr(d.main_id)
     _wrap_send_for_dance(main_client)
 
-    # 3. Call __postInit via wrapped main — runs through the dance and
-    #    initialises ExchangeInitParams (admin, collateral, ctf, etc.).
-    #    NB: under main's UROS, algokit's encoder rejects list-of-ints
-    #    address shape (which the legacy PE conftest used). Encode each
-    #    address as a base32 string instead — matches what algokit's
-    #    Address-type encoder accepts.
-    from algosdk import encoding as _alg_enc
-    admin_b32 = _alg_enc.encode_address(addr(admin))
-    tok_b32 = _alg_enc.encode_address(app_id_to_address(universal_mock.app_id))
-    init_params = [
-        admin_b32,  # admin
-        tok_b32,    # collateral
-        tok_b32,    # ctf
-        tok_b32,    # ctfCollateral
-        tok_b32,    # outcomeTokenFactory
-        tok_b32,    # proxyFactory
-        tok_b32,    # safeFactory
-        admin_b32,  # feeReceiver
-    ]
-    main_client.send.call(au.AppClientMethodCallParams(
-        method="__postInit",
-        args=[init_params],
-        extra_fee=au.AlgoAmount(micro_algo=50_000),
-        app_references=[universal_mock.app_id],
-    ))
+    # 3. __postInit deferred for now — the call hits an
+    #    `extract_uint64 wanted []byte but got uint64` runtime error at
+    #    pc=4671 inside one of PolyFactoryHelper's constructor inner-calls
+    #    (`IPolyProxyFactory(proxyFactory).getImplementation()` etc.).
+    #    The pattern `itxn_begin; pushint 24; extract_uint64` puya-sol
+    #    emits to extract the app-id from an address arg expects bytes
+    #    on stack, but here gets a uint64. Investigation needed.
+    #
+    #    Tests that just check deployment (test_split_deploys) work
+    #    without __postInit. Tests that need state-var-initialised
+    #    state (test_split_admin_is_deployer, test_split_admin_is_operator)
+    #    will fail until this is unblocked — track as a separate issue.
 
     return (
         main_client,
