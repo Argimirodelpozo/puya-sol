@@ -688,15 +688,20 @@ abstract contract Trading is Hashing, AssetOperations, Events, Fees, UserPausabl
         internal
         returns (uint256 remaining)
     {
+        // AVM-PORT-ADAPTATION: the upstream EVM implementation uses
+        // `assembly { sload(status.slot) }` + bit unpacking and `sstore(status.slot,
+        // packed)` + bit packing to fold `bool filled` and `uint248 remaining`
+        // into a single SLOAD/SSTORE. That relies on EVM's flat-slot storage
+        // model + packed-struct layout; AVM has no analog (puya-sol stores
+        // ARC4-struct fields under separate keys and has no integer "slot"
+        // for a local storage ref). Use plain Solidity field access — same
+        // observable runtime behavior, 2 reads + 2 writes per call instead of
+        // 1+1. Gas cost is irrelevant on AVM (opcode budget pumped via
+        // `--ensure-budget`); functional equivalence is what tests check.
         OrderStatus storage status = orderStatus[orderHash];
 
-        // Single SLOAD: read packed slot and extract both filled and remaining
-        bool filled;
-        assembly {
-            let packed := sload(status.slot)
-            filled := and(packed, 0xff)
-            remaining := shr(8, packed)
-        }
+        bool filled = status.filled;
+        remaining = status.remaining;
 
         // Validate that the order can be filled
         require(!filled, OrderAlreadyFilled());
@@ -711,10 +716,7 @@ abstract contract Trading is Hashing, AssetOperations, Events, Fees, UserPausabl
             remaining = remaining - makingAmount; // safety: makingAmount <= remaining checked above
         }
 
-        // Single SSTORE: pack filled (1 byte) and remaining (31 bytes) into one slot
-        assembly {
-            let packed := or(shl(8, remaining), iszero(remaining))
-            sstore(status.slot, packed)
-        }
+        status.remaining = uint248(remaining);
+        status.filled = (remaining == 0);
     }
 }

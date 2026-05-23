@@ -30,13 +30,22 @@ compile() {
 
     echo -n "[$rel] "
 
-    # CTFExchange.sol gets matchOrders force-delegated into a lonely-chunk
-    # sidecar — without this the orch is 10.7KB (over 8KB cap). split.json
-    # already moves auxiliary helpers to Helper1/Helper2; the delegate is
-    # what brings the orch under the cap.
+    # CTFExchange.sol gets matchOrders peeled into a uros-split chunk —
+    # without splitting, the orch is 13.8KB (over 8KB cap). Main's
+    # `--uros-splitter <method>` peels each named method out into its own
+    # chunk under `__uros_split/chunk_<N>/`; chunks share state with the
+    # main contract via the uros dance (`src/splitter/uros_orchestrator.py`:
+    # main → orch.dispatch → __storage with per-call UpdateApplication
+    # bytecode install + restore).
+    #
+    # PE's compile_all.sh used `--split-config <json> --force-delegate <fn>`;
+    # those flags are PE-only. Main's `--uros-splitter <list>` is the
+    # equivalent CLI. (CTFExchange now under 8KB with the AVM-PORT-ADAPTATION
+    # to `_updateOrderStatus` that replaces the EVM packed-slot SLOAD/SSTORE
+    # idiom with plain Solidity field access — see ADAPTATIONS.md #3.)
     local extra_args=()
     if [[ "$rel" == "exchange/CTFExchange.sol" ]]; then
-        extra_args+=(--split-config "$EXAMPLE/split.json" --force-delegate matchOrders)
+        extra_args+=(--uros-splitter "matchOrders")
         # matchOrders + ECDSA recovers + getCollectionId/getPositionId all
         # blow past the 700-op single-tx budget. Pump via ensure_budget so
         # the runtime opup pool covers two ECDSA recovers (~1700 ea) + body.

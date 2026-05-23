@@ -235,6 +235,68 @@ fixtures (in `test/conftest.py` and
 
 ---
 
+## 10. Trading._updateOrderStatus packed-slot SLOAD/SSTORE → plain field access
+
+**Why:** the upstream EVM implementation reads/writes `OrderStatus`'s
+two fields (`bool filled`, `uint248 remaining`) as a single SLOAD/SSTORE
+by bit-packing them into one 256-bit storage slot via inline assembly:
+
+```solidity
+OrderStatus storage status = orderStatus[orderHash];
+bool filled;
+assembly {
+    let packed := sload(status.slot)
+    filled := and(packed, 0xff)
+    remaining := shr(8, packed)
+}
+// ... compute new remaining ...
+assembly {
+    let packed := or(shl(8, remaining), iszero(remaining))
+    sstore(status.slot, packed)
+}
+```
+
+This relies on EVM's flat 2^256-slot storage model plus packed-struct
+layout (Solidity packs `bool filled` and `uint248 remaining` into one
+slot because they fit). On AVM, neither prerequisite holds: puya-sol
+stores ARC4-struct fields under separate keys, and `.slot` on a local
+storage reference (`OrderStatus storage status = ...`) has no integer
+analog — puya-sol leaves it as a phantom `status.slot` variable typed
+as the struct, which puya then rejects with `incompatible types on
+assignment: source = (Encoded(bool1,uint248)), target = (uint64)` in
+`_updateOrderStatus`'s SSA build.
+
+**Fix shape:** replace the assembly blocks with plain Solidity field
+access — same observable runtime behavior, 2 reads + 2 writes per call
+instead of 1 + 1. Gas cost is irrelevant on AVM (the matchOrders path's
+budget is already pumped via `--ensure-budget matchOrders:100000` in
+`compile_all.sh`); functional equivalence is what tests assert.
+
+```solidity
+OrderStatus storage status = orderStatus[orderHash];
+bool filled = status.filled;
+remaining = status.remaining;
+// ... compute new remaining ...
+status.remaining = uint248(remaining);
+status.filled = (remaining == 0);
+```
+
+**File touched:** `src/exchange/mixins/Trading.sol` (`_updateOrderStatus`
+only — every other function in Trading.sol is unchanged).
+
+**Tests unblocked:** the entire matchOrders path. Without this fix,
+`CTFExchange.sol` failed to compile at all (puya rejected the AWST as
+soon as `_updateOrderStatus` showed up in any code path). With it,
+CTFExchange.sol compiles cleanly, then the `--uros-splitter matchOrders`
+chunk lands the orchestrator under the 8KB AVM cap (main: 7349B,
+chunk_0: 8043B).
+
+**Companion CLI change:** `compile_all.sh` now uses main puya-sol's
+`--uros-splitter matchOrders` (was PE-only `--split-config <json>
+--force-delegate matchOrders`).
+
+---
+
 ## 9. Test-side fixture: `usdce_stateful` for wrap/unwrap selectors
 
 **Why:** the Solidity USDC.sol mock inherits Solady ERC20, whose
