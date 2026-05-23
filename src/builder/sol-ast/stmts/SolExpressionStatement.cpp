@@ -122,6 +122,20 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	{
 		stmt->value = m_blk.builderCtx().build(*m_node.expression());
 
+		// `return foo();` where foo is void: Solidity allows this when the
+		// surrounding function is also void. The call must run for side effects;
+		// the AWST return must carry no value (puya rejects void value
+		// providers with 'Attempted to assign from expression that has no
+		// result'). Solady's _revertWithPanic / SafeTransferLib internal
+		// helpers tail-call other void functions this way.
+		if (stmt->value && stmt->value->wtype == awst::WType::voidType())
+		{
+			result.push_back(awst::makeExpressionStatement(std::move(stmt->value), m_loc));
+			stmt->value = nullptr;
+			result.push_back(stmt);
+			return result;
+		}
+
 		auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(m_node.annotation());
 		if (retAnnotation.functionReturnParameters)
 		{
