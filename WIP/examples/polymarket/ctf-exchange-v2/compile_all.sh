@@ -30,22 +30,22 @@ compile() {
 
     echo -n "[$rel] "
 
-    # CTFExchange.sol gets matchOrders peeled into a uros-split chunk —
-    # without splitting, the orch is 13.8KB (over 8KB cap). Main's
-    # `--uros-splitter <method>` peels each named method out into its own
-    # chunk under `__uros_split/chunk_<N>/`; chunks share state with the
-    # main contract via the uros dance (`src/splitter/uros_orchestrator.py`:
-    # main → orch.dispatch → __storage with per-call UpdateApplication
-    # bytecode install + restore).
+    # CTFExchange.sol uses SimpleSplitter (`--split-config <json>` +
+    # `--force-delegate matchOrders`): peels listed utility subroutines
+    # (Solady ECDSA, PolyProxyLib, PolySafeLib, CalculatorHelper, CTHelpers,
+    # ...) into a sibling Helper1 contract; in-source pure mixin helpers
+    # (_emitOrderFilledEvent, _validateOrdersMatch, _verifyECDSASignature,
+    # ...) into Helper2; matchOrders into a Helper3 delegate (lonely-chunk,
+    # bytecode hand-installed at deploy time). The orch's stubs inner-call
+    # each helper via TMPL_<helperName>_APP_ID template-var-substituted
+    # app ids.
     #
-    # PE's compile_all.sh used `--split-config <json> --force-delegate <fn>`;
-    # those flags are PE-only. Main's `--uros-splitter <list>` is the
-    # equivalent CLI. (CTFExchange now under 8KB with the AVM-PORT-ADAPTATION
-    # to `_updateOrderStatus` that replaces the EVM packed-slot SLOAD/SSTORE
-    # idiom with plain Solidity field access — see ADAPTATIONS.md #3.)
+    # NB: was --uros-splitter (main's other splitter pipeline) before; PE's
+    # SimpleSplitter is now ported to main and the conftest expects
+    # Helper1/Helper2/Helper3 naming.
     local extra_args=()
     if [[ "$rel" == "exchange/CTFExchange.sol" ]]; then
-        extra_args+=(--uros-splitter "matchOrders")
+        extra_args+=(--split-config "$EXAMPLE/split.json" --force-delegate matchOrders)
         # matchOrders + ECDSA recovers + getCollectionId/getPositionId all
         # blow past the 700-op single-tx budget. Pump via ensure_budget so
         # the runtime opup pool covers two ECDSA recovers (~1700 ea) + body.

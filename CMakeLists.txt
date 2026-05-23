@@ -157,6 +157,8 @@ set(SOURCES
 	src/splitter/UrosSplitter.cpp
 	src/splitter/PureHelperExtractor.cpp
 	src/splitter/AwstWalker.cpp
+	src/splitter/SimpleSplitter.cpp
+	src/splitter/SimpleSplitterRunner.cpp
 )
 
 add_executable(puya-sol ${SOURCES})

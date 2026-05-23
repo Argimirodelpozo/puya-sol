@@ -7,6 +7,7 @@
 #include "runner/PuyaRunner.h"
 #include "splitter/FunctionSplitter.h"
 #include "splitter/PureHelperExtractor.h"
+#include "splitter/SimpleSplitterRunner.h"
 #include "splitter/UrosSplitter.h"
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -156,6 +157,17 @@ struct Options
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
+	// SimpleSplitter (alternative to UrosSplitter): static "extract-named-
+	// subroutines" splitter ported from polymarket-experiment. Moves whole
+	// subroutines from the primary contract into a sibling helper contract
+	// (template-var TMPL_<helperName>_APP_ID for app-id substitution). Used
+	// by polymarket v1+v2's compile_all.sh to keep CTFExchange under the
+	// 8 KB cap. Side-effect: also avoids the puya address-param→uint64
+	// over-elision bug in inner-call ApplicationID (puyabug.md #5) because
+	// the extraction changes the orch's stack layout.
+	std::string splitConfig;       // --split-config <json-path>
+	std::vector<std::string> forceDelegate; // --force-delegate <names>
+
 	// Each --uros-splitter flag invocation is one chunk's method list.
 	// urosSplitGroups[i] is the methods that go into chunk i.
 	std::vector<std::vector<std::string>> urosSplitGroups;
@@ -489,6 +501,36 @@ Options parseArgs(int _argc, char* _argv[])
 					name.pop_back();
 				if (!name.empty())
 					opts.pinnedToMain.push_back(std::move(name));
+				if (comma == std::string::npos) break;
+				start = comma + 1;
+			}
+		}
+		else if (arg == "--split-config" && i + 1 < _argc)
+		{
+			opts.splitConfig = _argv[++i];
+		}
+		else if (arg == "--force-delegate" && i + 1 < _argc)
+		{
+			std::string spec = _argv[++i];
+			size_t start = 0;
+			while (start <= spec.size())
+			{
+				size_t comma = spec.find(',', start);
+				size_t end = (comma == std::string::npos) ? spec.size() : comma;
+				std::string token = spec.substr(start, end - start);
+				while (!token.empty() && std::isspace(static_cast<unsigned char>(token.front())))
+					token.erase(token.begin());
+				while (!token.empty() && std::isspace(static_cast<unsigned char>(token.back())))
+					token.pop_back();
+				if (!token.empty())
+				{
+					if (token == "__postInit")
+						std::cerr << "warning: --force-delegate refuses '__postInit' "
+							"(constructor; the delegate-update mechanism "
+							"cannot be used during deploy)" << std::endl;
+					else
+						opts.forceDelegate.push_back(token);
+				}
 				if (comma == std::string::npos) break;
 				start = comma + 1;
 			}
@@ -1040,6 +1082,48 @@ int main(int _argc, char* _argv[])
 		std::ofstream phout(pureHelpersPath);
 		phout << helpersDoc.dump(2) << std::endl;
 		logger.info("Wrote: " + pureHelpersPath);
+	}
+
+	// ─── --split-config / --force-delegate: SimpleSplitter pipeline ─────
+	// Static "extract-named-subroutines" splitter (alternative to
+	// --uros-splitter). Moves whole subroutines into a sibling helper
+	// contract; orch keeps a stub that inner-calls the helper. Used by
+	// polymarket's compile_all.sh; also avoids the inner-call
+	// address-arg→uint64 over-elision bug (puyabug.md #5) as a
+	// side-effect of the orch's reduced stack pressure. All pipeline
+	// internals are encapsulated in SimpleSplitterRunner — main.cpp
+	// only owns the early-return when the runner took ownership of
+	// output.
+	if (!opts.splitConfig.empty() || !opts.forceDelegate.empty())
+	{
+		if (!opts.urosSplitGroups.empty())
+		{
+			logger.error(
+				"--split-config / --force-delegate and --uros-splitter are "
+				"separate splitter pipelines; pass at most one set per "
+				"invocation.");
+			return 1;
+		}
+		puyasol::splitter::SimpleSplitterRunner::Config cfg;
+		cfg.splitConfigPath = opts.splitConfig;
+		cfg.forceDelegate = opts.forceDelegate;
+		cfg.ensureBudget = opts.ensureBudget;
+		cfg.outputDir = opts.outputDir;
+		cfg.puyaPath = opts.puyaPath;
+		cfg.logLevel = opts.logLevel;
+		cfg.optimizationLevel = opts.optimizationLevel;
+		cfg.outputIr = opts.outputIr;
+		cfg.noPuya = opts.noPuya;
+		cfg.sourceFile = sourceFile;
+		puyasol::splitter::SimpleSplitterRunner runner;
+		auto result = runner.run(cfg, roots);
+		if (result.didSplit)
+		{
+			if (logger.warningCount() > 0)
+				logger.info("Completed with " + std::to_string(
+					logger.warningCount()) + " warning(s)");
+			return result.puyaExitCode;
+		}
 	}
 
 	// ─── --uros-splitter: split AWST into main + N chunks ───────────────
