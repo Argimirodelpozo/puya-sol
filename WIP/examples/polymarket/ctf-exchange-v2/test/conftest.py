@@ -843,18 +843,14 @@ def split_exchange(localnet, admin, universal_mock, uros_orch_id):
     main_client._uros_main_addr = _app_addr(d.main_id)
     _wrap_send_for_dance(main_client)
 
-    # 3. __postInit deferred for now — the call hits an
-    #    `extract_uint64 wanted []byte but got uint64` runtime error at
-    #    pc=4671 inside one of PolyFactoryHelper's constructor inner-calls
-    #    (`IPolyProxyFactory(proxyFactory).getImplementation()` etc.).
-    #    The pattern `itxn_begin; pushint 24; extract_uint64` puya-sol
-    #    emits to extract the app-id from an address arg expects bytes
-    #    on stack, but here gets a uint64. Investigation needed.
+    # 3. __postInit deferred for now — see puyabug.md #5 (address-typed
+    #    parameter held as uint64 on stack before inner-call extract_uint64
+    #    in PolyFactoryHelper's constructor).
     #
     #    Tests that just check deployment (test_split_deploys) work
-    #    without __postInit. Tests that need state-var-initialised
-    #    state (test_split_admin_is_deployer, test_split_admin_is_operator)
-    #    will fail until this is unblocked — track as a separate issue.
+    #    without __postInit. Tests that need state-var-initialised state
+    #    (test_split_admin_is_deployer, test_split_admin_is_operator)
+    #    will fail until the puya optimizer bug is fixed.
 
     return (
         main_client,

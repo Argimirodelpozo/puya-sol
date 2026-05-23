@@ -365,3 +365,104 @@ Stay on puya 5.8.0rc3 (`0d5af6b41`) — bit-identical 1199/1322 on the
 semantic suite (v286 → v290 across 4 verification runs). The puya
 5.9.0rc1 bump is needed for polymarket-experiment compatibility but
 introduces the regressions above.
+
+## 5. address-typed parameter → uint64 over-elision in inner-call ApplicationID
+
+**Status:** Open in puya 5.8.0rc3 AND 5.9.0rc1 (same misbehavior under
+both). Workaround in PE: their SimpleSplitter (added in
+PE commit `f7870b9b1`) auto-extracts subroutines to helpers,
+side-stepping the orch code path that triggers this. No clean
+workaround in main puya-sol yet.
+
+### What
+
+When a Solidity inner-call uses an `address`-typed parameter as the
+receiver — like `IPolyProxyFactory(_proxyFactory).getImplementation()`
+— puya-sol emits the correct AWST chain to extract the app id from the
+address bytes:
+
+```
+ReinterpretCast(application,
+    btoi(
+        extract(bytes, [24, 8],
+            ReinterpretCast(bytes, _proxyFactory:account))))
+```
+
+That's: account → ReinterpretCast(bytes) → extract(24,8) → btoi
+→ ReinterpretCast(application). At runtime, the 32-byte account value
+gets sliced (bytes[24..31]) and converted to uint64 app-id.
+
+puya's optimizer folds `extract 24 8; btoi` into either
+`pushint 24; extract_uint64` (stack form, takes bytes from stack +
+uint64 offset) or `extract_uint64 24` (immediate form, takes bytes from
+stack). Both correct, both faster.
+
+**The bug:** further upstream in the same optimization pass, puya
+elides the outer `ReinterpretCast(bytes, ...)` because account is
+bytes-backed already — but ALSO elides somewhere that causes the value
+on stack to land as **uint64** instead of bytes by the time the
+`extract_uint64` runs. Runtime error:
+
+```
+logic eval error: extract_uint64 arg 0 wanted []byte but got uint64
+Details: app=…, pc=…, opcodes=itxn_begin; pushint 24; extract_uint64
+   (or: dup; pushint 24; extract_uint64)
+   (or: dig 2; pushint 24; extract_uint64)
+```
+
+Variant stack-manipulator opcode (`dup` vs `dig 2` vs nothing) depends
+on surrounding state-var-write context, but the underlying type
+mismatch (uint64 on stack where bytes expected) is constant.
+
+### Where it bites
+
+Polymarket v2 `__postInit` runs `PolyFactoryHelper`'s constructor:
+
+```solidity
+proxyImplementation = IPolyProxyFactory(_proxyFactory).getImplementation();
+address _safeImpl = IPolySafeFactory(_safeFactory).masterCopy();
+```
+
+Both inner-calls trigger the bug. The bug is independent of
+`--uros-splitter` use; standalone v2 CTFExchange compile reproduces
+it.
+
+### Where to look (puya-side)
+
+Likely in puya's IR optimization pass that folds `extract 24 8; btoi`
+into `extract_uint64`. The pass needs to ensure the value on stack
+just before the `extract_uint64` is still bytes-typed; right now it
+allows an earlier elision of the bytes-cast that makes the value
+uint64.
+
+### PE workaround vs main reality
+
+PE puya-sol's SimpleSplitter (commit `f7870b9b1`) auto-extracts pure
+subroutines into helper contracts. The orch's remaining TEAL ends up
+with different stack management around the inner-call (PE generates
+correct `swap; pushint 24; extract_uint64` because the value layout
+in the smaller orch is different). The "fix" in PE is therefore a
+splitter-architecture side-effect, not a targeted puya-or-puya-sol
+patch. Porting SimpleSplitter to main is multi-day work
+(1290 LOC + supporting modules).
+
+### Source-side workaround (tried, didn't help)
+
+Reordered `PolyFactoryHelper` constructor to do inner-calls BEFORE
+state-var writes — generated `dup; pushint 24; extract_uint64` (stack-
+top variant) but the value on top is still uint64. The bug is in the
+type-tracking of the address parameter through puya's IR, not in the
+stack manipulation around the inner-call. Reverted the reorder.
+
+### Reproduction
+
+Compile any contract that calls an inner method via an
+`address`-typed parameter from a constructor or method, e.g.
+`IFoo(addr).bar()` where `addr` is a function param. Deploy and
+invoke. Fails with extract_uint64 error.
+
+### Affected tests
+
+Every polymarket v2 test depending on __postInit-initialised state
+(orch admin/operator/owner roles, factory addresses, EIP-712 cache).
+Blocks ~80% of v2 tests.
