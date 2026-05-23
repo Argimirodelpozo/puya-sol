@@ -14,8 +14,9 @@ mkdir -p "$OUTDIR"
 echo "ctf-exchange v1 compile - $(date)" > "$RESULTS"
 echo "=================================" >> "$RESULTS"
 
-# In-tree subdirs (common/, dev/, exchange/) resolve via --import-path src
-# External libs (openzeppelin/solady/solmate/forge-std) resolve via deps/ symlinks
+# External libs (openzeppelin/solady/solmate/forge-std) resolve via deps/ symlinks.
+# In-tree imports resolve from each file's own dir (relative ./..) — adding
+# --import-path src triggers "ambiguous import" for files that mix styles.
 IMPORT_PATHS=(
     --import-path "$EXAMPLE/deps"
     --import-path "$EXAMPLE/lib"
@@ -29,14 +30,13 @@ compile() {
 
     echo -n "[$rel] "
 
-    # Small mocks (ERC1271Mock, ERC20) fit comfortably under the 8KB cap;
-    # the default extraction list would force-split them and break tests
-    # that deploy them via the simple `deploy_app` helper (which doesn't
-    # know how to substitute helper-app-id template vars).
+    # NOTE: ctf-exchange-v2 puya-sol shipped a `--split-config` flag for
+    # passing a json describing extracted-helper groups. Main puya-sol's
+    # equivalent flag is `--uros-splitter`, but here we don't need any
+    # split at all: default behaviour is "no extraction", which is the
+    # right shape for the small mocks (deploy_app expects a single
+    # contract per file with no template-var substitution).
     local extra_args=()
-    if [[ "$rel" == "dev/mocks/ERC1271Mock.sol" || "$rel" == "dev/mocks/ERC20.sol" ]]; then
-        extra_args+=(--split-config "$EXAMPLE/nosplit.json")
-    fi
 
     local output exit_code
     output=$("$PUYA_SOL" --source "$sol_file" "${IMPORT_PATHS[@]}" --output-dir "$out" --puya-path "$PUYA_PATH" "${extra_args[@]}" 2>&1)

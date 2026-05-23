@@ -14,8 +14,9 @@ mkdir -p "$OUTDIR"
 echo "ctf-exchange v2 compile - $(date)" > "$RESULTS"
 echo "=================================" >> "$RESULTS"
 
-# In-tree subdirs (common/, dev/, exchange/) resolve via --import-path src
-# External libs (openzeppelin/solady/solmate/forge-std) resolve via deps/ symlinks
+# External libs (openzeppelin/solady/solmate/forge-std) resolve via deps/ symlinks.
+# In-tree relative imports resolve from each .sol file's own directory; no --import-path src
+# needed (would cause "ambiguous import" since v2 mixes absolute-from-src and relative styles).
 IMPORT_PATHS=(
     --import-path "$EXAMPLE/deps"
     --import-path "$EXAMPLE/lib"
