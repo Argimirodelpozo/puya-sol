@@ -24,7 +24,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	auto slot = ensureBiguint(_args[0], _loc);
 
 	// Convert slot to uint64 offset: slot * 32
-	auto slotBytes = awst::makeReinterpretCast(std::move(slot), awst::WType::bytesType(), _loc);
+	auto slotBytes = awst::makeAsBytes(std::move(slot), _loc);
 	auto slotU64 = awst::makeBtoi(std::move(slotBytes), _loc);
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
@@ -39,7 +39,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 
 	auto extract = awst::makeExtract3(std::move(loadBlob), std::move(offset), std::move(thirtyTwo2), _loc);
 	// Reinterpret as biguint
-	auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	auto cast = awst::makeAsBiguint(std::move(extract), _loc);
 	return cast;
 }
 
@@ -56,7 +56,7 @@ void AssemblyBuilder::handleTstore(
 	auto value = ensureBiguint(_args[1], _loc);
 
 	// Convert slot to uint64 offset: slot * 32
-	auto slotBytes = awst::makeReinterpretCast(std::move(slot), awst::WType::bytesType(), _loc);
+	auto slotBytes = awst::makeAsBytes(std::move(slot), _loc);
 	auto slotU64 = awst::makeBtoi(std::move(slotBytes), _loc);
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
@@ -64,7 +64,7 @@ void AssemblyBuilder::handleTstore(
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult, std::move(thirtyTwo), _loc);
 
 	// Convert value to 32 bytes: zero-extend to at least 32.
-	auto valueBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), _loc);
+	auto valueBytes = awst::makeAsBytes(std::move(value), _loc);
 
 	auto padded = awst::makeZeroExtendToN(std::move(valueBytes), 32, _loc);
 
@@ -365,13 +365,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	auto fillMask = makeBigUIntBinOp(sub1, awst::BigUIntBinaryOperator::Add, one, _loc);
 
 	// negResult = shr_result | fillMask (using b|)
-	auto shrBytes = awst::makeReinterpretCast(shrResult, awst::WType::bytesType(), _loc);
+	auto shrBytes = awst::makeAsBytes(shrResult, _loc);
 
-	auto fillBytes = awst::makeReinterpretCast(fillMask, awst::WType::bytesType(), _loc);
+	auto fillBytes = awst::makeAsBytes(fillMask, _loc);
 
 	auto orCall = awst::makeBytesOr(std::move(shrBytes), std::move(fillBytes), _loc);
 
-	auto negResult = awst::makeReinterpretCast(std::move(orCall), awst::WType::biguintType(), _loc);
+	auto negResult = awst::makeAsBiguint(std::move(orCall), _loc);
 
 	// posResult = shr (re-compute to avoid sharing)
 	auto posResult = handleShr(coercedArgs, _loc);

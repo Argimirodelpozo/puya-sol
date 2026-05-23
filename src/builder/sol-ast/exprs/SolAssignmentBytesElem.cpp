@@ -45,7 +45,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	else if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes
 		&& _value->wtype != awst::WType::bytesType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), m_loc);
+		auto cast = awst::makeAsBytes(std::move(_value), m_loc);
 		_value = std::move(cast);
 	}
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);

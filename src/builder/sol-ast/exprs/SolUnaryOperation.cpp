@@ -88,7 +88,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		if (operand->wtype == awst::WType::uint64Type())
 		{
 			auto itob = awst::makeItob(std::move(operand), m_loc);
-			operand = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+			operand = awst::makeAsBiguint(std::move(itob), m_loc);
 		}
 
 		// Mask to N bits first (uint64 two's complement may be wider)
@@ -248,7 +248,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	auto expr = std::move(_operand);
 	if (expr->wtype == awst::WType::biguintType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
+		auto cast = awst::makeAsBytes(std::move(expr), m_loc);
 		expr = std::move(cast);
 	}
 	auto const* exprWtype = expr->wtype;
@@ -367,7 +367,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			if (val->wtype == awst::WType::uint64Type())
 			{
 				auto itob = awst::makeItob(std::move(val), m_loc);
-				val = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+				val = awst::makeAsBiguint(std::move(itob), m_loc);
 			}
 
 			// Mask to N bits

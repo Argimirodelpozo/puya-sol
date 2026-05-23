@@ -156,7 +156,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 							makeSelectorExpr(falseSig),
 							awst::WType::bytesType(), m_loc);
 
-						return awst::makeReinterpretCast(std::move(ternary), awst::WType::biguintType(), m_loc);
+						return awst::makeAsBiguint(std::move(ternary), m_loc);
 					}
 				}
 				// Fallback: try identifier
@@ -191,7 +191,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			auto base = buildExpr(baseExpr);
 			// Coerce to bytes if typed as bytes[12].
 			if (base && base->wtype && base->wtype->kind() == awst::WTypeKind::Bytes)
-				base = awst::makeReinterpretCast(std::move(base), awst::WType::bytesType(), m_loc);
+				base = awst::makeAsBytes(std::move(base), m_loc);
 			if (base && base->wtype == awst::WType::bytesType())
 			{
 				// selector is bytes 8..12 of the 12-byte encoding.

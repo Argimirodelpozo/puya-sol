@@ -80,7 +80,7 @@ std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
 		return _expr;
 
 	auto itob = awst::makeItob(std::move(_expr), _loc);
-	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+	return awst::makeAsBiguint(std::move(itob), _loc);
 }
 
 static void emitModByZeroCheck(
@@ -215,7 +215,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto toBytes = [&](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
 		if (expr->wtype != awst::WType::bytesType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+			auto cast = awst::makeAsBytes(std::move(expr), _loc);
 			return cast;
 		}
 		return expr;
@@ -236,7 +236,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	else
 	{
 		// biguint v → bytes → btoi
-		auto vBytes = awst::makeReinterpretCast(std::move(v), awst::WType::bytesType(), _loc);
+		auto vBytes = awst::makeAsBytes(std::move(v), _loc);
 		vUint = awst::makeBtoi(std::move(vBytes), _loc);
 	}
 

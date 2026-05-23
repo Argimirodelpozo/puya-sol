@@ -149,7 +149,7 @@ SolAssignment::trySlotBasedArrayWrite(
 	{
 		auto jConst = awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType());
 		auto slotJ = awst::makeBigUIntBinOp(_target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
-		auto castBytes = awst::makeReinterpretCast(std::move(slotJ), awst::WType::bytesType(), m_loc);
+		auto castBytes = awst::makeAsBytes(std::move(slotJ), m_loc);
 		auto last8 = awst::makeExtractLastN(std::move(castBytes), 8, m_loc);
 		auto btoi = awst::makeBtoi(std::move(last8), m_loc);
 
@@ -170,7 +170,7 @@ SolAssignment::trySlotBasedArrayWrite(
 		else if (elemVal->wtype == awst::WType::uint64Type())
 		{
 			auto itob = awst::makeItob(std::move(elemVal), m_loc);
-			elemVal = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+			elemVal = awst::makeAsBiguint(std::move(itob), m_loc);
 		}
 
 		auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
@@ -395,7 +395,7 @@ SolAssignment::applyArc4EncodeIfNeeded(
 	{
 		static int s_widCounter = 0;
 		std::string tmpName = "__widen_src_" + std::to_string(s_widCounter++);
-		auto srcAsBytes = awst::makeReinterpretCast(_value, awst::WType::bytesType(), m_loc);
+		auto srcAsBytes = awst::makeAsBytes(_value, m_loc);
 		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc);
 		m_ctx.prePendingStatements.push_back(
 			awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));

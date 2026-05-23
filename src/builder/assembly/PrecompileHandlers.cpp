@@ -43,7 +43,7 @@ void AssemblyBuilder::handleEcRecover(
 	);
 
 	// Cast biguint → bytes → btoi → uint64
-	auto vBytes = awst::makeReinterpretCast(std::move(vMinus27), awst::WType::bytesType(), _loc);
+	auto vBytes = awst::makeAsBytes(std::move(vMinus27), _loc);
 	auto recoveryId = awst::makeBtoi(std::move(vBytes), _loc);
 
 	// 3. Call ecdsa_pk_recover Secp256k1
@@ -90,7 +90,7 @@ void AssemblyBuilder::handleEcRecover(
 	auto paddedAddr = awst::makeLeftPad(std::move(addr), 12, _loc);
 
 	// 9. Cast to biguint and store
-	auto addrBiguint = awst::makeReinterpretCast(std::move(paddedAddr), awst::WType::biguintType(), _loc);
+	auto addrBiguint = awst::makeAsBiguint(std::move(paddedAddr), _loc);
 
 	storeResultToMemory(std::move(addrBiguint), _outputOffset, 1, _loc, _out);
 }
@@ -303,7 +303,7 @@ void AssemblyBuilder::handleModExpRT(
 	auto readSlot = [&](uint64_t slotOff) -> std::shared_ptr<awst::Expression>
 	{
 		auto extract = awst::makeExtract3(memoryVar(_loc), plusConst(baseOff(), slotOff), awst::makeIntegerConstant("32", _loc), _loc);
-		return awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+		return awst::makeAsBiguint(std::move(extract), _loc);
 	};
 
 	auto base = readSlot(0x60);

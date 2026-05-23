@@ -787,14 +787,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 	{
 		// uint64 → biguint: itob(expr) then ReinterpretCast bytes→biguint
 		auto itob = awst::makeItob(std::move(_expr), _loc);
-		return awst::makeReinterpretCast(
-			std::move(itob), awst::WType::biguintType(), _loc);
+		return awst::makeAsBiguint(std::move(itob), _loc);
 	}
 
 	if (_expr->wtype->kind() == awst::WTypeKind::Bytes)
 	{
 		// bytes → biguint: ReinterpretCast
-		auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::biguintType(), _loc);
+		auto cast = awst::makeAsBiguint(std::move(_expr), _loc);
 		return cast;
 	}
 

@@ -111,7 +111,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// Coerce non-bytes to bytes via ReinterpretCast — non-bytes shapes
 		// shouldn't reach here per Solidity type rules.
 		if (arg && arg->wtype != awst::WType::bytesType())
-			arg = awst::makeReinterpretCast(std::move(arg), awst::WType::bytesType(), m_loc);
+			arg = awst::makeAsBytes(std::move(arg), m_loc);
 		awst::pushCallArg(call->args, "data", std::move(arg));
 		// Bytes20 result type: reinterpret the 20-byte return from the
 		// subroutine to bytes20 so callers' type expectations match.
@@ -142,7 +142,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// Cast string → bytes if needed (same underlying storage).
 		if (idExpr && idExpr->wtype != awst::WType::bytesType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(idExpr), awst::WType::bytesType(), m_loc);
+			auto cast = awst::makeAsBytes(std::move(idExpr), m_loc);
 			idExpr = std::move(cast);
 		}
 
@@ -150,7 +150,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		auto h1 = awst::makeKeccak256(idExpr, m_loc);
 
 		// h1_int = biguint(h1)
-		auto h1Int = awst::makeReinterpretCast(std::move(h1), awst::WType::biguintType(), m_loc);
+		auto h1Int = awst::makeAsBiguint(std::move(h1), m_loc);
 
 		// minus1 = h1_int - 1
 		auto one = awst::makeOne(m_loc, awst::WType::biguintType());
@@ -158,7 +158,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		auto sub = awst::makeBigUIntBinOp(std::move(h1Int), awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
 
 		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
-		auto minusBytesCast = awst::makeReinterpretCast(std::move(sub), awst::WType::bytesType(), m_loc);
+		auto minusBytesCast = awst::makeAsBytes(std::move(sub), m_loc);
 
 		auto minus1Bytes = awst::makeBytesBinOp(
 			awst::makeBzero(32, m_loc),
@@ -181,7 +181,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		auto masked = awst::makeConcat(std::move(top31), std::move(zeroByte), m_loc);
 
 		// Cast to biguint
-		auto result = awst::makeReinterpretCast(std::move(masked), awst::WType::biguintType(), m_loc);
+		auto result = awst::makeAsBiguint(std::move(masked), m_loc);
 		return result;
 	}
 

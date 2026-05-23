@@ -45,7 +45,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 
 	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(len32), _loc);
 	// Cast bytes → biguint (mload returns uint256)
-	auto result = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	auto result = awst::makeAsBiguint(std::move(extract), _loc);
 	return result;
 }
 
@@ -132,7 +132,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	// Translate the dynamic offset and convert biguint → uint64
 	auto offsetExpr = buildExpression(*offsetExprYul);
 
-	auto offsetBytes = awst::makeReinterpretCast(offsetExpr, awst::WType::bytesType(), _loc);
+	auto offsetBytes = awst::makeAsBytes(offsetExpr, _loc);
 
 	auto offsetU64 = awst::makeBtoi(std::move(offsetBytes), _loc);
 
@@ -142,7 +142,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	// extract3(param, offset, 32)
 	auto extract = awst::makeExtract3(std::move(paramVar), std::move(offsetU64), std::move(lenArg), _loc);
 	// Cast bytes → biguint (mload returns uint256)
-	auto result = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	auto result = awst::makeAsBiguint(std::move(extract), _loc);
 
 	return result;
 }

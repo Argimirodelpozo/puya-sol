@@ -77,7 +77,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		auto blockSeed = awst::makeBlock(
 			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
 
-		auto cast = awst::makeReinterpretCast(std::move(blockSeed), awst::WType::biguintType(), m_loc);
+		auto cast = awst::makeAsBiguint(std::move(blockSeed), m_loc);
 		return cast;
 	}
 
@@ -105,7 +105,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 		// Promote to biguint
 		auto itob = awst::makeItob(std::move(cond), m_loc);
-		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+		return awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
 	// msg.sig → first 4 bytes of msg.data. In ARC4 routing the selector is
@@ -172,7 +172,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		if (intrinsic->wtype == awst::WType::bytesType()
 			&& solType == awst::WType::biguintType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(intrinsic), awst::WType::biguintType(), m_loc);
+			auto cast = awst::makeAsBiguint(std::move(intrinsic), m_loc);
 			return cast;
 		}
 		return intrinsic;

@@ -195,7 +195,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	if (_type == awst::WType::biguintType())
 	{
 		auto raw = extractBytes(absByte, sz, _loc);
-		return awst::makeReinterpretCast(std::move(raw), awst::WType::biguintType(), _loc);
+		return awst::makeAsBiguint(std::move(raw), _loc);
 	}
 
 	// Account: stored as 20 bytes (EVM-compatible offset layout), but AVM
@@ -253,7 +253,7 @@ namespace
 			// Pad to exactly 32 bytes via `b| bzero(32)` (b| yields
 			// max(len(a), len(b)); biguint ≤ 32 bytes so result is 32).
 			// Then extract the trailing `byteSize` bytes at compile-time offset.
-			auto bytesView = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
+			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
 			auto padded = awst::makeZeroExtendToN(std::move(bytesView), 32, _loc);
 			raw = awst::makeExtract(std::move(padded),
 				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
@@ -263,8 +263,7 @@ namespace
 			// AVM account is 32 bytes; Solidity address layout is 20.
 			// Reinterpret as bytes and truncate to the low `byteSize` bytes
 			// (drop the leading 32 - byteSize bytes) to match EVM layout.
-			auto bytesView = awst::makeReinterpretCast(
-				std::move(_value), awst::WType::bytesType(), _loc);
+			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
 			raw = awst::makeExtract(
 				std::move(bytesView),
 				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
@@ -274,8 +273,7 @@ namespace
 			// Already raw bytes (e.g., bytesN). Reinterpret to bytes for
 			// uniform downstream handling; assume width matches.
 			if (_value->wtype != awst::WType::bytesType())
-				_value = awst::makeReinterpretCast(
-					std::move(_value), awst::WType::bytesType(), _loc);
+				_value = awst::makeAsBytes(std::move(_value), _loc);
 			raw = std::move(_value);
 		}
 

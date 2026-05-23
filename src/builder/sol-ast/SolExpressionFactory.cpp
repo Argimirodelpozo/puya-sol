@@ -72,7 +72,7 @@ public:
 		auto fnPtr = m_ctx.buildExpr(m_memberAccess.expression());
 		if (fnPtr->wtype != awst::WType::bytesType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(fnPtr), awst::WType::bytesType(), m_loc);
+			auto cast = awst::makeAsBytes(std::move(fnPtr), m_loc);
 			fnPtr = std::move(cast);
 		}
 		// Extract first 8 bytes = appId (big-endian uint64).

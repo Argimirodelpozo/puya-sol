@@ -31,7 +31,7 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::compare(
 	auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 		if (expr->wtype != awst::WType::bytesType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+			auto cast = awst::makeAsBytes(std::move(expr), _loc);
 			expr = std::move(cast);
 		}
 	};
@@ -82,7 +82,7 @@ std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::compare(
 	auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 		if (expr->wtype != awst::WType::bytesType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+			auto cast = awst::makeAsBytes(std::move(expr), _loc);
 			expr = std::move(cast);
 		}
 	};

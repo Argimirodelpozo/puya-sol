@@ -102,7 +102,7 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 			if (expr->wtype != awst::WType::bytesType()
 				&& expr->wtype != awst::WType::accountType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+				auto cast = awst::makeAsBytes(std::move(expr), _loc);
 				expr = std::move(cast);
 			}
 		};

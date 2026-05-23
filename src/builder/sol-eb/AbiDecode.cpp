@@ -45,7 +45,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	// Integer > 64 bits → biguint (ReinterpretCast)
 	if (wtype == awst::WType::biguintType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(headWord), awst::WType::biguintType(), _loc);
+		auto cast = awst::makeAsBiguint(std::move(headWord), _loc);
 		return cast;
 	}
 

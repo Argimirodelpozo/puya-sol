@@ -33,7 +33,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			auto offArg = offsetToUint64(_args[0], _loc);
 			auto lenArg = awst::makeIntegerConstant("32", _loc);
 			auto extractCall = awst::makeExtract3(std::move(blob), std::move(offArg), std::move(lenArg), _loc);
-			return awst::makeReinterpretCast(std::move(extractCall), awst::WType::biguintType(), _loc);
+			return awst::makeAsBiguint(std::move(extractCall), _loc);
 		}
 		Logger::instance().error(
 			"calldataload with non-constant offset not supported", _loc
@@ -63,7 +63,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			auto lenArg = awst::makeIntegerConstant("32", _loc);
 
 			auto extractCall = awst::makeExtract3(std::move(base), std::move(offArg), std::move(lenArg), _loc);
-			auto cast = awst::makeReinterpretCast(std::move(extractCall), awst::WType::biguintType(), _loc);
+			auto cast = awst::makeAsBiguint(std::move(extractCall), _loc);
 			return cast;
 		}
 
@@ -227,7 +227,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 					}
 
 					auto keccak = awst::makeKeccak256(std::move(data), _loc);
-					return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+					return awst::makeAsBiguint(std::move(keccak), _loc);
 				}
 			}
 		}
@@ -268,7 +268,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 						// keccak256 the concatenated bytes
 						auto keccak = awst::makeKeccak256(std::move(data), _loc);
-						return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+						return awst::makeAsBiguint(std::move(keccak), _loc);
 					}
 				}
 			}
@@ -284,7 +284,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(lenConst), _loc);
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
-			return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+			return awst::makeAsBiguint(std::move(keccak), _loc);
 		}
 
 		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
@@ -310,7 +310,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				std::shared_ptr<awst::Expression> paramBytes;
 				if (paramVar->wtype != awst::WType::bytesType())
 				{
-					auto cast = awst::makeReinterpretCast(std::move(paramVar), awst::WType::bytesType(), _loc);
+					auto cast = awst::makeAsBytes(std::move(paramVar), _loc);
 					paramBytes = std::move(cast);
 				}
 				else
@@ -320,7 +320,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 				auto concat = awst::makeConcat(std::move(paramBytes), std::move(slotPadded), _loc);
 				auto keccak = awst::makeKeccak256(std::move(concat), _loc);
-				return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+				return awst::makeAsBiguint(std::move(keccak), _loc);
 			}
 		}
 	}
@@ -338,7 +338,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		// Hash empty bytes
 		auto emptyBytes = awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown);
 		auto keccak = awst::makeKeccak256(std::move(emptyBytes), _loc);
-		return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+		return awst::makeAsBiguint(std::move(keccak), _loc);
 	}
 	if (numSlots <= 0)
 	{
@@ -352,7 +352,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(lenConst), _loc);
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
-			return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+			return awst::makeAsBiguint(std::move(keccak), _loc);
 		}
 		// Check if offset = calldataParam + 0x20 (string/bytes data region)
 		// Pattern: keccak256(add(param, 0x20), mload(param)) hashes string data
@@ -371,20 +371,20 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				std::shared_ptr<awst::Expression> hashInput;
 				if (paramVar->wtype != awst::WType::bytesType())
 				{
-					auto cast = awst::makeReinterpretCast(std::move(paramVar), awst::WType::bytesType(), _loc);
+					auto cast = awst::makeAsBytes(std::move(paramVar), _loc);
 					hashInput = std::move(cast);
 				}
 				else
 					hashInput = std::move(paramVar);
 
 				auto keccak = awst::makeKeccak256(std::move(hashInput), _loc);
-				return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+				return awst::makeAsBiguint(std::move(keccak), _loc);
 			}
 		}
 		Logger::instance().warning("keccak256 with sub-32-byte length and unknown memory slot, using keccak256(bzero(32))", _loc);
 		// Fallback: hash 32 zero bytes (will produce a deterministic but incorrect hash)
 		auto keccak = awst::makeKeccak256(awst::makeBzero(32, _loc), _loc);
-		return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+		return awst::makeAsBiguint(std::move(keccak), _loc);
 	}
 
 	// Check if the offset range falls within m_calldataMap (function parameters).
@@ -405,7 +405,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				: elem.paramType, _loc);
 
 			// Cast struct to raw bytes for field extraction
-			auto structBytes = awst::makeReinterpretCast(base, awst::WType::bytesType(), _loc);
+			auto structBytes = awst::makeAsBytes(base, _loc);
 
 			std::shared_ptr<awst::Expression> data;
 			int fieldByteOffset = 0;
@@ -420,7 +420,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 				auto extract = awst::makeExtract3(structBytes, std::move(offExpr), std::move(lenExpr), _loc);
 				// Cast to biguint, then pad to 32 bytes
-				auto asBiguint = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+				auto asBiguint = awst::makeAsBiguint(std::move(extract), _loc);
 
 				auto padded = padTo32Bytes(std::move(asBiguint), _loc);
 
@@ -432,7 +432,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			}
 
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
-			return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+			return awst::makeAsBiguint(std::move(keccak), _loc);
 		}
 	}
 
@@ -443,7 +443,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	auto keccak = awst::makeKeccak256(std::move(data), _loc);
 
 	// Convert bytes result to biguint (for Yul's uint256 type)
-	return awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
+	return awst::makeAsBiguint(std::move(keccak), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
@@ -675,8 +675,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			{
 				// biguint as bytes; left-pad to 32 if shorter.
 				auto orOp = awst::makeBytesOr(
-					awst::makeReinterpretCast(
-						std::move(paramVar), awst::WType::bytesType(), _loc),
+					awst::makeAsBytes(std::move(paramVar), _loc),
 					bzeroOf(u64Const(32)), _loc);
 				headWord = std::move(orOp);
 			}
@@ -693,14 +692,12 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			}
 			else if (type == awst::WType::accountType())
 			{
-				headWord = awst::makeReinterpretCast(
-					std::move(paramVar), awst::WType::bytesType(), _loc);
+				headWord = awst::makeAsBytes(std::move(paramVar), _loc);
 			}
 			else
 			{
 				// Fallback: treat as 32-byte bytes (best-effort).
-				headWord = awst::makeReinterpretCast(
-					std::move(paramVar), awst::WType::bytesType(), _loc);
+				headWord = awst::makeAsBytes(std::move(paramVar), _loc);
 			}
 			_out.push_back(awst::makeAssignmentStatement(
 				bytesVar(CD_BLOB_VAR),
@@ -757,11 +754,11 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		// uint16 length header — strip it for the calldata body.
 		std::shared_ptr<awst::Expression> body;
 		if (type == awst::WType::bytesType() || type == awst::WType::stringType())
-			body = awst::makeReinterpretCast(std::move(var2), awst::WType::bytesType(), _loc);
+			body = awst::makeAsBytes(std::move(var2), _loc);
 		else
 		{
 			// ARC4 dynamic array: extract everything after the 2-byte length header.
-			auto bytes = awst::makeReinterpretCast(std::move(var2), awst::WType::bytesType(), _loc);
+			auto bytes = awst::makeAsBytes(std::move(var2), _loc);
 			auto lenCall = awst::makeLen(bytes, _loc);
 			auto sub2 = awst::makeUInt64BinOp(
 				std::move(lenCall), O::Sub, u64Const(2), _loc);

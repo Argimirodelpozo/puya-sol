@@ -78,7 +78,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 		{
 			auto promoted = TypeCoercion::implicitNumericCast(
 				std::move(argExpr), awst::WType::biguintType(), m_loc);
-			auto toBytes = awst::makeReinterpretCast(std::move(promoted), awst::WType::bytesType(), m_loc);
+			auto toBytes = awst::makeAsBytes(std::move(promoted), m_loc);
 
 			auto padded = awst::makeLeftPadToN(std::move(toBytes), 32, m_loc);
 			auto addrCast = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), m_loc);
@@ -161,7 +161,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 		auto expr = std::move(converted);
 		if (expr->wtype != awst::WType::bytesType())
 		{
-			auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
+			auto toBytes = awst::makeAsBytes(std::move(expr), m_loc);
 			expr = std::move(toBytes);
 		}
 		auto btoi = awst::makeBtoi(std::move(expr), m_loc);
@@ -189,10 +189,10 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 		auto expr = std::move(converted);
 		if (expr->wtype != awst::WType::bytesType())
 		{
-			auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
+			auto toBytes = awst::makeAsBytes(std::move(expr), m_loc);
 			expr = std::move(toBytes);
 		}
-		auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::biguintType(), m_loc);
+		auto cast = awst::makeAsBiguint(std::move(expr), m_loc);
 		return cast;
 	}
 
@@ -228,7 +228,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			auto bytesSource = std::move(converted);
 			if (bytesSource->wtype != awst::WType::bytesType())
 			{
-				auto toBytes = awst::makeReinterpretCast(std::move(bytesSource), awst::WType::bytesType(), m_loc);
+				auto toBytes = awst::makeAsBytes(std::move(bytesSource), m_loc);
 				bytesSource = std::move(toBytes);
 			}
 
@@ -291,7 +291,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			auto srcBytes = std::move(converted);
 			if (srcBytes->wtype != awst::WType::bytesType())
 			{
-				auto toBytes = awst::makeReinterpretCast(std::move(srcBytes), awst::WType::bytesType(), m_loc);
+				auto toBytes = awst::makeAsBytes(std::move(srcBytes), m_loc);
 				srcBytes = std::move(toBytes);
 			}
 
@@ -305,7 +305,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			auto expr = std::move(converted);
 			if (expr->wtype != awst::WType::bytesType())
 			{
-				auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
+				auto toBytes = awst::makeAsBytes(std::move(expr), m_loc);
 				expr = std::move(toBytes);
 			}
 
@@ -430,7 +430,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleIntToBytes(
 std::shared_ptr<awst::Expression> SolTypeConversion::handleBiguintToBytes(
 	std::shared_ptr<awst::Expression> _expr, int _byteWidth)
 {
-	auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), m_loc);
+	auto toBytes = awst::makeAsBytes(std::move(_expr), m_loc);
 
 	auto result = awst::makeLeftPadToN(std::move(toBytes), _byteWidth, m_loc);
 	auto* targetType = m_ctx.typeMapper.map(m_call.annotation().type);

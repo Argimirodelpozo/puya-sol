@@ -51,7 +51,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 
 	// itob → ReinterpretCast to biguint
 	auto itob = awst::makeItob(std::move(_expr), _loc);
-	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+	return awst::makeAsBiguint(std::move(itob), _loc);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -415,7 +415,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 				// Promote to biguint for comparison
 				auto itob = awst::makeItob(std::move(masked), _loc);
-				cmpOperand = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+				cmpOperand = awst::makeAsBiguint(std::move(itob), _loc);
 			}
 
 			auto halfConst = awst::makeIntegerConstant(halfNStr, _loc, awst::WType::biguintType());
@@ -433,7 +433,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// AVM `b~` inverts actual bytes; a minimal biguint encoding like 5→0x05 would
 			// invert to 0xFA (250) instead of the full 256-bit complement. Pad to 32 bytes
 			// first so `~` produces a 256-bit result.
-			auto castToBytes = awst::makeReinterpretCast(std::move(operand), awst::WType::bytesType(), _loc);
+			auto castToBytes = awst::makeAsBytes(std::move(operand), _loc);
 
 			auto concatPad = awst::makeLeftPad(std::move(castToBytes), 32, _loc);
 
@@ -446,7 +446,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			auto extract = awst::makeExtract3(concatPad, std::move(startOff), awst::makeIntegerConstant("32", _loc), _loc);
 			auto bitInvert = awst::makeBitInvert(std::move(extract), awst::WType::bytesType(), _loc);
 
-			auto castBack = awst::makeReinterpretCast(std::move(bitInvert), awst::WType::biguintType(), _loc);
+			auto castBack = awst::makeAsBiguint(std::move(bitInvert), _loc);
 
 			auto one = awst::makeBiguintConstant("1", _loc);
 
@@ -465,7 +465,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// Promote to biguint: itob → ReinterpretCast
 			auto itob = awst::makeItob(std::move(operand), _loc);
 
-			auto castBiguint = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+			auto castBiguint = awst::makeAsBiguint(std::move(itob), _loc);
 
 			// 2^64 - x
 			auto pow2_64 = awst::makeBiguintConstant("18446744073709551616", _loc); // 2^64
@@ -493,7 +493,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// with a 32-byte map word right-aligns and silently
 			// clears the high 23 bytes' bits — corrupts mask.
 			// Pattern: extract last 32 bytes of `bzero(32) || biguint`.
-			auto toBytes = awst::makeReinterpretCast(resolve(), awst::WType::bytesType(), _loc);
+			auto toBytes = awst::makeAsBytes(resolve(), _loc);
 
 			auto cat = awst::makeLeftPad(std::move(toBytes), 32, _loc);
 			auto lenCall = awst::makeLen(cat, _loc);
@@ -511,7 +511,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 			auto invert = awst::makeBitInvert(std::move(extract), awst::WType::bytesType(), _loc);
 
-			auto cast = awst::makeReinterpretCast(std::move(invert), awst::WType::biguintType(), _loc);
+			auto cast = awst::makeAsBiguint(std::move(invert), _loc);
 			return wrap(std::move(cast));
 		}
 		// ~x for uint64: XOR with bit-width mask (not always 2^64-1)
@@ -617,7 +617,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	auto setbit = awst::makeSetbit(
 		std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
 
-	auto castPow = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
+	auto castPow = awst::makeAsBiguint(std::move(setbit), _loc);
 
 	auto e = awst::makeBigUIntBinOp(std::move(_value), _isLeftShift ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv, std::move(castPow), _loc);
 

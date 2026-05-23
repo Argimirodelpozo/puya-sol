@@ -360,8 +360,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				{
 					static int s_widCounter = 0;
 					std::string tmpName = "__widen_src_h_" + std::to_string(s_widCounter++);
-					auto srcAsBytes = awst::makeReinterpretCast(
-						assignValue, awst::WType::bytesType(), m_loc);
+					auto srcAsBytes = awst::makeAsBytes(assignValue, m_loc);
 					auto tmpVar = awst::makeVarExpression(
 						tmpName, awst::WType::bytesType(), m_loc);
 					m_ctx.prePendingStatements.push_back(

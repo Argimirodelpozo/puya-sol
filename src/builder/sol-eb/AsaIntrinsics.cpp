@@ -43,7 +43,7 @@ std::shared_ptr<awst::Expression> uint64ToBigUInt(
 	awst::SourceLocation const& _loc)
 {
 	auto itob = awst::makeItob(std::move(_expr), _loc);
-	return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+	return awst::makeAsBiguint(std::move(itob), _loc);
 }
 
 /// Truncate a biguint (or bytes) to uint64. For biguint we first
@@ -58,12 +58,12 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 		return _expr;
 
 	// biguint → bytes (untyped). bytes-typed `extract3` takes the last 8.
-	auto asBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+	auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
 
 	// Pad to ≥ 8 bytes by ORing with bzero(32); biguint addition + zero
 	// preserves value but normalises length to 32 so `extract3 24 8`
 	// always sees the low-order 8 bytes.
-	auto padBack = awst::makeReinterpretCast(asBytes, awst::WType::biguintType(), _loc);
+	auto padBack = awst::makeAsBiguint(asBytes, _loc);
 	auto zeroBig = awst::makeBiguintConstant("0", _loc);
 	// biguint(b) | biguint(0) ≡ left-pad-with-zeros to 32 bytes via puya's
 	// big-int op. We use addition for a similar effect — `Add(b, 0)` yields
@@ -71,8 +71,7 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	auto normalised = awst::makeBigUIntBinOp(
 		std::move(padBack), awst::BigUIntBinaryOperator::Add,
 		std::move(zeroBig), _loc);
-	auto normBytes = awst::makeReinterpretCast(
-		std::move(normalised), awst::WType::bytesType(), _loc);
+	auto normBytes = awst::makeAsBytes(std::move(normalised), _loc);
 
 	// keep last 8 bytes of the normalised 32-byte rep
 	auto extract = awst::makeExtract3(
@@ -99,7 +98,7 @@ std::shared_ptr<awst::Expression> stringToBytes(
 {
 	if (_expr->wtype == awst::WType::bytesType())
 		return _expr;
-	return awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+	return awst::makeAsBytes(std::move(_expr), _loc);
 }
 
 /// Read field 0 of a (value, exists) tuple returned by asset_holding_get

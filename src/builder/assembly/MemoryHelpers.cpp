@@ -22,7 +22,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 	auto len32 = awst::makeIntegerConstant("32", _loc);
 
 	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(len32), _loc);
-	auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	auto cast = awst::makeAsBiguint(std::move(extract), _loc);
 	return cast;
 }
 
@@ -31,7 +31,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 	awst::SourceLocation const& _loc
 )
 {
-	auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+	auto cast = awst::makeAsBytes(std::move(_expr), _loc);
 	auto concatPad = awst::makeLeftPad(std::move(cast), 32, _loc);
 	return awst::makeExtractLastN(std::move(concatPad), 32, _loc);
 }
@@ -87,7 +87,7 @@ void AssemblyBuilder::storeResultToMemory(
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
 		{
-			auto cast = awst::makeReinterpretCast(std::move(storeVal), awst::WType::biguintType(), _loc);
+			auto cast = awst::makeAsBiguint(std::move(storeVal), _loc);
 			storeVal = std::move(cast);
 		}
 
@@ -188,7 +188,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 	{
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
-			storeVal = awst::makeReinterpretCast(std::move(storeVal), awst::WType::biguintType(), _loc);
+			storeVal = awst::makeAsBiguint(std::move(storeVal), _loc);
 		auto padded = padTo32Bytes(std::move(storeVal), _loc);
 
 		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(baseOff), std::move(padded), _loc);

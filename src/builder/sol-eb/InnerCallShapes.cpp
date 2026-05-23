@@ -100,7 +100,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			// post-call if needed. For now, encode simple scalars.
 			if (retType == awst::WType::biguintType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
+				auto cast = awst::makeAsBytes(std::move(call), _loc);
 				dataBytes = std::move(cast);
 			}
 			else if (retType == awst::WType::uint64Type())
@@ -110,7 +110,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			else if (retType == awst::WType::bytesType()
 				|| (retType && retType->kind() == awst::WTypeKind::Bytes))
 			{
-				auto cast = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
+				auto cast = awst::makeAsBytes(std::move(call), _loc);
 				dataBytes = std::move(cast);
 			}
 			else
@@ -198,7 +198,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	// Coerce string-typed data → bytes for ApplicationArgs encoding.
 	if (_dataBytes->wtype == awst::WType::stringType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(_dataBytes), awst::WType::bytesType(), _loc);
+		auto cast = awst::makeAsBytes(std::move(_dataBytes), _loc);
 		_dataBytes = std::move(cast);
 	}
 

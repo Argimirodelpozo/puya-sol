@@ -65,7 +65,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				if (indexExpr && indexExpr->wtype == awst::WType::uint64Type())
 				{
 					auto itob = awst::makeItob(std::move(indexExpr), m_loc);
-					indexExpr = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+					indexExpr = awst::makeAsBiguint(std::move(itob), m_loc);
 				}
 
 				// slot_var holds the base slot (biguint)
@@ -116,7 +116,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 
 					// __storage_read expects uint64 slot, but we have biguint.
 					// Truncate: btoi(add)
-					auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
+					auto castToBytes = awst::makeAsBytes(std::move(add), m_loc);
 
 					auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, m_loc);
 					auto btoi = awst::makeBtoi(std::move(last8), m_loc);
@@ -148,7 +148,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					if (indexExpr->wtype == awst::WType::uint64Type())
 					{
 						auto itob = awst::makeItob(std::move(indexExpr), m_loc);
-						indexExpr = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+						indexExpr = awst::makeAsBiguint(std::move(itob), m_loc);
 					}
 
 					auto add = awst::makeBigUIntBinOp(std::move(baseExpr), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
@@ -156,7 +156,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					// Read: __storage_read(truncated_slot)
 					if (!m_indexAccess.annotation().willBeWrittenTo)
 					{
-						auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
+						auto castToBytes = awst::makeAsBytes(std::move(add), m_loc);
 
 						// Safe truncate biguint to uint64
 						auto last8 = awst::makeExtract(std::move(castToBytes), 24, 8, m_loc);

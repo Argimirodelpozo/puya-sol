@@ -535,7 +535,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				else if (paramType == awst::WType::biguintType())
 				{
 					// bytes → biguint via ReinterpretCast (big-endian, no-op on AVM)
-					auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::biguintType(), method.sourceLocation);
+					auto cast = awst::makeAsBiguint(std::move(readArg), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::uint64Type()
@@ -886,7 +886,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 									boxInitVal = m_exprBuilder->build(*var->value());
 									if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
 									{
-										auto cast = awst::makeReinterpretCast(std::move(boxInitVal), awst::WType::bytesType(), method.sourceLocation);
+										auto cast = awst::makeAsBytes(std::move(boxInitVal), method.sourceLocation);
 										boxInitVal = std::move(cast);
 									}
 								}
@@ -910,9 +910,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 										std::move(initVal), tgtWtype, method.sourceLocation);
 									// Materialise as bytes for box_put.
 									if (initVal->wtype != awst::WType::bytesType())
-										initVal = awst::makeReinterpretCast(
-											std::move(initVal), awst::WType::bytesType(),
-											method.sourceLocation);
+										initVal = awst::makeAsBytes(std::move(initVal), method.sourceLocation);
 									boxInitVal = std::move(initVal);
 								}
 							}

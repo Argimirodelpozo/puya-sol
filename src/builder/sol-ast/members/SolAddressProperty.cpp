@@ -63,7 +63,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			std::shared_ptr<awst::Expression> bytesExpr = std::move(addrExpr);
 			if (bytesExpr->wtype == awst::WType::accountType())
 			{
-				auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), m_loc);
+				auto toBytes = awst::makeAsBytes(std::move(bytesExpr), m_loc);
 				bytesExpr = std::move(toBytes);
 			}
 
@@ -174,8 +174,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					auto bal = awst::makeTupleItem(std::move(acctParams), 0, awst::WType::uint64Type(), m_loc);
 
 					auto itobBal = awst::makeItob(std::move(bal), m_loc);
-					return awst::makeReinterpretCast(
-						std::move(itobBal), awst::WType::biguintType(), m_loc);
+					return awst::makeAsBiguint(std::move(itobBal), m_loc);
 				}
 			}
 		}
@@ -195,7 +194,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		// Solidity returns uint256 for balance — promote uint64 → biguint
 		auto itob = awst::makeItob(std::move(balanceVal), m_loc);
-		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+		return awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
 	if (member == "codehash")

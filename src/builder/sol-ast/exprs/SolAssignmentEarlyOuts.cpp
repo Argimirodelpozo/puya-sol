@@ -200,13 +200,11 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 		auto encode = awst::makeARC4Encode(
 			std::move(valForEncode),
 			const_cast<awst::WType*>(elemArc4Type), m_loc);
-		valueBytes = awst::makeReinterpretCast(
-			std::move(encode), awst::WType::bytesType(), m_loc);
+		valueBytes = awst::makeAsBytes(std::move(encode), m_loc);
 	}
 	else
 	{
-		valueBytes = awst::makeReinterpretCast(
-			std::move(valForEncode), awst::WType::bytesType(), m_loc);
+		valueBytes = awst::makeAsBytes(std::move(valForEncode), m_loc);
 	}
 
 	// box_replace(boxKey, offset, valueBytes)

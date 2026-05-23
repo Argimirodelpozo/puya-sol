@@ -137,7 +137,7 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 	}
 	if (_argExpr->wtype == awst::WType::biguintType())
 	{
-		auto raw = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+		auto raw = awst::makeAsBytes(std::move(_argExpr), _loc);
 		if (dynamic_cast<solidity::frontend::IntegerType const*>(_paramSolType))
 			return awst::makeZeroExtendToN(
 				std::move(raw), static_cast<int>(targetBytes), _loc);
@@ -156,13 +156,13 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 	{
 		// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
 		if (_argExpr->wtype != awst::WType::bytesType())
-			_argExpr = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+			_argExpr = awst::makeAsBytes(std::move(_argExpr), _loc);
 		auto header = awst::makeExtract(awst::makeItob(awst::makeLen(_argExpr, _loc), _loc), 6, 2, _loc);
 		return awst::makeConcat(std::move(header), std::move(_argExpr), _loc);
 	}
 	// Fallback: reinterpret as bytes.
 	if (_argExpr->wtype != awst::WType::bytesType())
-		return awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
+		return awst::makeAsBytes(std::move(_argExpr), _loc);
 	return _argExpr;
 }
 
@@ -337,7 +337,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			else
 			{
 				if (addr->wtype != awst::WType::bytesType())
-					addr = awst::makeReinterpretCast(std::move(addr), awst::WType::bytesType(), _loc);
+					addr = awst::makeAsBytes(std::move(addr), _loc);
 				appIdBytes = awst::makeExtract(std::move(addr), 24, 8, _loc);
 			}
 

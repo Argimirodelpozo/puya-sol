@@ -309,7 +309,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		if (expr->wtype == awst::WType::biguintType())
 			return expr;
 		auto itob = awst::makeItob(std::move(expr), m_loc);
-		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+		return awst::makeAsBiguint(std::move(itob), m_loc);
 	};
 
 	_left = ensureBiguint(std::move(_left));
@@ -377,7 +377,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			if (val->wtype == awst::WType::biguintType())
 				return val;
 			auto itob = awst::makeItob(val, m_loc);
-			return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+			return awst::makeAsBiguint(std::move(itob), m_loc);
 		};
 
 		// isNeg: val >= half  ↔  NOT (val < half)
@@ -525,7 +525,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	if (_base->wtype == awst::WType::uint64Type())
 	{
 		auto itob = awst::makeItob(std::move(_base), m_loc);
-		_base = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+		_base = awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
 	// Mask base to N bits
@@ -548,7 +548,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	if (_exp->wtype == awst::WType::uint64Type())
 	{
 		auto itob = awst::makeItob(std::move(_exp), m_loc);
-		_exp = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+		_exp = awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
 	// Compute abs(base) ^ exp using the standard buildBinaryOp (unsigned exp)
@@ -635,7 +635,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		if (expr->wtype == awst::WType::biguintType())
 			return expr;
 		auto itob = awst::makeItob(std::move(expr), m_loc);
-		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
+		return awst::makeAsBiguint(std::move(itob), m_loc);
 	};
 
 	_left = ensureBiguint(std::move(_left));

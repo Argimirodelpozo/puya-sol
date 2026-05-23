@@ -1306,6 +1306,20 @@ inline std::shared_ptr<ReinterpretCast> makeReinterpretCast(
 	return node;
 }
 
+// Shorthands for the two reinterpret-cast targets that dominate the
+// builder layer (~119 + ~85 call sites): `value` viewed as `bytes` /
+// `biguint`. Pure aliases for `makeReinterpretCast(value, <type>, loc)`.
+inline std::shared_ptr<ReinterpretCast> makeAsBytes(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	return makeReinterpretCast(std::move(expr), WType::bytesType(), std::move(loc));
+}
+inline std::shared_ptr<ReinterpretCast> makeAsBiguint(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	return makeReinterpretCast(std::move(expr), WType::biguintType(), std::move(loc));
+}
+
 // Encode a typed key value to its canonical byte form for storage-key
 // derivation: uint64 → itob (8 B); biguint → left-padded then trimmed
 // to exactly 32 B (matching Solidity uint256 ABI width); anything else

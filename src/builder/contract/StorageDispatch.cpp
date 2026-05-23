@@ -100,7 +100,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto boxExtract = awst::makeBoxExtract(
 				std::move(boxKey), std::move(offset), makeUint64("32"), loc);
 
-			auto cast = awst::makeReinterpretCast(std::move(boxExtract), awst::WType::biguintType(), loc);
+			auto cast = awst::makeAsBiguint(std::move(boxExtract), loc);
 
 			auto ret = awst::makeReturnStatement(std::move(cast), loc);
 			defaultBlock->body.push_back(std::move(ret));
@@ -130,7 +130,7 @@ void ContractBuilder::buildStorageDispatch(
 				// (which can be <32 for short ints).
 				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
 				auto extract = awst::makeExtractLastN(std::move(cat), 32, loc);
-				auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), loc);
+				auto cast = awst::makeAsBiguint(std::move(extract), loc);
 
 				auto ret = awst::makeReturnStatement(std::move(cast), loc);
 				ifBlock->body.push_back(std::move(ret));
@@ -200,7 +200,7 @@ void ContractBuilder::buildStorageDispatch(
 			// value as bytes (pad to 32)
 			auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 
-			auto valBytes = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
+			auto valBytes = awst::makeAsBytes(std::move(valueVar), loc);
 
 			// Pad to 32 bytes
 			auto cat = awst::makeLeftPad(std::move(valBytes), 32, loc);
@@ -245,7 +245,7 @@ void ContractBuilder::buildStorageDispatch(
 				// Pad to 32 bytes to match EVM slot semantics
 				auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 
-				auto cast = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
+				auto cast = awst::makeAsBytes(std::move(valueVar), loc);
 
 				// concat(bzero(32), bytes) → take last 32 bytes
 				auto cat = awst::makeLeftPad(std::move(cast), 32, loc);

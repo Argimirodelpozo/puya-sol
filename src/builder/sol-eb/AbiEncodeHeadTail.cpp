@@ -147,7 +147,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			auto bytesExpr = std::move(_expr);
 			if (bytesExpr->wtype != awst::WType::bytesType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
+				auto cast = awst::makeAsBytes(std::move(bytesExpr), _loc);
 				bytesExpr = std::move(cast);
 			}
 
@@ -233,7 +233,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			if (!elemIsDyn && elemByteSize > 0 && elemByteSize % 32 == 0)
 			{
 				auto arrayExpr = _expr;
-				auto asBytes = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
+				auto asBytes = awst::makeAsBytes(arrayExpr, _loc);
 
 				auto rawLen = awst::makeLen(asBytes, _loc);
 
@@ -248,7 +248,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				auto lenItob = awst::makeItob(std::move(lenExpr), _loc);
 				auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
 
-				auto bytesCast = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
+				auto bytesCast = awst::makeAsBytes(arrayExpr, _loc);
 				auto stripHeader = awst::makeExtract(std::move(bytesCast), 2, 0, _loc);
 
 				return awst::makeConcat(std::move(lenPadded), std::move(stripHeader), _loc);

@@ -41,14 +41,14 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
 			if (!knownSmall)
 			{
-				auto cast = awst::makeReinterpretCast(std::move(operand), awst::WType::biguintType(), _loc);
+				auto cast = awst::makeAsBiguint(std::move(operand), _loc);
 				operand = std::move(cast);
 				return;
 			}
 			auto expr = std::move(operand);
 			if (expr->wtype != awst::WType::bytesType())
 			{
-				auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+				auto toBytes = awst::makeAsBytes(std::move(expr), _loc);
 				expr = std::move(toBytes);
 			}
 			operand = awst::makeBtoi(std::move(expr), _loc);
@@ -81,7 +81,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			}
 
 			auto itob = awst::makeItob(std::move(operand), _loc);
-			operand = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+			operand = awst::makeAsBiguint(std::move(itob), _loc);
 		}
 	};
 
@@ -108,7 +108,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				auto castToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 					if (expr->wtype != awst::WType::bytesType())
 					{
-						auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
+						auto cast = awst::makeAsBytes(std::move(expr), _loc);
 						expr = std::move(cast);
 					}
 				};
@@ -227,7 +227,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
 
 			// Cast bytes → biguint
-			auto castToBigUInt = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
+			auto castToBigUInt = awst::makeAsBiguint(std::move(setbit), _loc);
 
 			auto shiftBigOp = (_op == Token::SHL || _op == Token::AssignShl)
 				? awst::BigUIntBinaryOperator::Mult

@@ -215,7 +215,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
 						{
 							auto expr = std::move(stmt->value);
-							auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
+							auto toBytes = awst::makeAsBytes(std::move(expr), m_loc);
 							std::shared_ptr<awst::Expression> result;
 							if (dstLen > srcLen)
 							{
@@ -278,7 +278,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							int dstLen = (dstBytes && dstBytes->length()) ? *dstBytes->length() : 0;
 							if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
 							{
-								auto toBytes = awst::makeReinterpretCast(std::move(tupleExpr->items[i]), awst::WType::bytesType(), m_loc);
+								auto toBytes = awst::makeAsBytes(std::move(tupleExpr->items[i]), m_loc);
 								std::shared_ptr<awst::Expression> widened;
 								if (dstLen > srcLen)
 								{

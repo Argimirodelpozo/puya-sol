@@ -126,7 +126,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 	// biguint→uint64 extraction path.
 	if (srcWType == awst::WType::accountType())
 	{
-		auto asBiguint = awst::makeReinterpretCast(std::move(_arg), awst::WType::biguintType(), _loc);
+		auto asBiguint = awst::makeAsBiguint(std::move(_arg), _loc);
 		// Apply target-bit-width masking if narrower than 256 bits.
 		if (targetIsBigUInt && targetBits < 256)
 		{
@@ -159,12 +159,12 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 			bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
 		if (!knownSmall)
 		{
-			auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::biguintType(), _loc);
+			auto cast = awst::makeAsBiguint(std::move(_arg), _loc);
 			auto result = TypeCoercion::implicitNumericCast(std::move(cast), _targetWType, _loc);
 			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 		}
 		// bytes[N≤8] → btoi → uint64/biguint
-		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
+		auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
 		auto btoi = awst::makeBtoi(std::move(toBytes), _loc);
 		auto result = TypeCoercion::implicitNumericCast(std::move(btoi), _targetWType, _loc);
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
@@ -225,7 +225,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 	{
 		auto promoted = TypeCoercion::implicitNumericCast(
 			std::move(_arg), awst::WType::biguintType(), _loc);
-		auto toBytes = awst::makeReinterpretCast(std::move(promoted), awst::WType::bytesType(), _loc);
+		auto toBytes = awst::makeAsBytes(std::move(promoted), _loc);
 
 		auto padded = awst::makeLeftPadToN(std::move(toBytes), 32, _loc);
 
@@ -296,7 +296,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 	if (srcWType == awst::WType::biguintType())
 	{
 		unsigned byteWidth = fbType->numBytes();
-		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
+		auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
 
 		auto padded = awst::makeLeftPadToN(std::move(toBytes), byteWidth, _loc);
 
@@ -314,7 +314,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		if (srcLen > 0 && tgtLen > 0 && srcLen != tgtLen)
 		{
 			// Convert to raw bytes first
-			auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
+			auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
 
 			std::shared_ptr<awst::Expression> result;
 			if (tgtLen > srcLen)

@@ -313,7 +313,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	awst::SourceLocation const& _loc
 )
 {
-	auto castToBytes = awst::makeReinterpretCast(_slotExpr, awst::WType::bytesType(), _loc);
+	auto castToBytes = awst::makeAsBytes(_slotExpr, _loc);
 	auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, _loc);
 	return awst::makeBtoi(std::move(last8), _loc);
 }

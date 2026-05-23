@@ -78,7 +78,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	std::shared_ptr<awst::Expression> bytesExpr = std::move(_receiver);
 	if (bytesExpr->wtype == awst::WType::accountType())
 	{
-		auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
+		auto toBytes = awst::makeAsBytes(std::move(bytesExpr), _loc);
 		bytesExpr = std::move(toBytes);
 	}
 
@@ -100,7 +100,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	{
 		// AVM biguint is variable-length minimal big-endian; ABI uint256 is
 		// exactly 32 bytes. Pad-then-trim via dynamic-offset extract3.
-		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
+		auto cast = awst::makeAsBytes(std::move(_arg), _loc);
 		return awst::makeLeftPadToN(std::move(cast), 32, _loc);
 	}
 
@@ -115,12 +115,12 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::accountType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
+		auto cast = awst::makeAsBytes(std::move(_arg), _loc);
 		return cast;
 	}
 
 	// Fallback: reinterpret as bytes
-	auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
+	auto cast = awst::makeAsBytes(std::move(_arg), _loc);
 	return cast;
 }
 
@@ -426,8 +426,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								}
 								if (v->wtype == awst::WType::biguintType())
 								{
-									auto bytes = awst::makeReinterpretCast(
-										std::move(v), awst::WType::bytesType(), _loc);
+									auto bytes = awst::makeAsBytes(std::move(v), _loc);
 									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
 								}
 								if (v->wtype == awst::WType::boolType())
@@ -448,15 +447,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 									// untouched and right gets zeros, total 32).
 									auto bw = dynamic_cast<awst::BytesWType const*>(v->wtype);
 									int len = bw && bw->length() ? *bw->length() : 32;
-									auto bytes = awst::makeReinterpretCast(
-										std::move(v), awst::WType::bytesType(), _loc);
+									auto bytes = awst::makeAsBytes(std::move(v), _loc);
 									if (len < 32)
 										return awst::makeRightPad(std::move(bytes), 32 - len, _loc);
 									return bytes;
 								}
 								// Fallback — leave as-is.
-								return awst::makeReinterpretCast(
-									std::move(v), awst::WType::bytesType(), _loc);
+								return awst::makeAsBytes(std::move(v), _loc);
 							};
 
 							size_t nReturns = target->returnParameters().size();
@@ -582,7 +579,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			auto dataExpr = _ctx.buildExpr(dataArg);
 			if (dataExpr->wtype == awst::WType::stringType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(dataExpr), awst::WType::bytesType(), _loc);
+				auto cast = awst::makeAsBytes(std::move(dataExpr), _loc);
 				dataExpr = std::move(cast);
 			}
 

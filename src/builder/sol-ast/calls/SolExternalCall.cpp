@@ -130,7 +130,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	else if (_argExpr->wtype == awst::WType::biguintType())
 	{
 		// biguint → 32 bytes, left-padded
-		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
+		auto cast = awst::makeAsBytes(std::move(_argExpr), m_loc);
 		return awst::makeLeftPadToN(std::move(cast), 32, m_loc);
 	}
 	else if (_argExpr->wtype == awst::WType::boolType())
@@ -159,7 +159,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 		{
 			auto encode = awst::makeARC4Encode(std::move(_argExpr), arc4ArrayType, m_loc);
 
-			auto rcast = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), m_loc);
+			auto rcast = awst::makeAsBytes(std::move(encode), m_loc);
 			return rcast;
 		}
 	}
@@ -168,12 +168,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Struct
 		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Tuple)
 	{
-		auto rcast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
+		auto rcast = awst::makeAsBytes(std::move(_argExpr), m_loc);
 		return rcast;
 	}
 	else
 	{
-		auto rcast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
+		auto rcast = awst::makeAsBytes(std::move(_argExpr), m_loc);
 		return rcast;
 	}
 }
@@ -204,7 +204,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 	std::shared_ptr<awst::Expression> bytesExpr = std::move(_addrExpr);
 	if (bytesExpr->wtype == awst::WType::accountType())
 	{
-		auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), m_loc);
+		auto toBytes = awst::makeAsBytes(std::move(bytesExpr), m_loc);
 		bytesExpr = std::move(toBytes);
 	}
 
@@ -236,7 +236,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 
 	if (_returnType == awst::WType::biguintType())
 	{
-		auto cast = awst::makeReinterpretCast(std::move(stripPrefix), awst::WType::biguintType(), m_loc);
+		auto cast = awst::makeAsBiguint(std::move(stripPrefix), m_loc);
 		return cast;
 	}
 	else if (_returnType == awst::WType::uint64Type())
@@ -295,7 +295,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			std::shared_ptr<awst::Expression> decoded;
 			if (fieldType == awst::WType::biguintType())
 			{
-				auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), m_loc);
+				auto cast = awst::makeAsBiguint(std::move(extract), m_loc);
 				decoded = std::move(cast);
 			}
 			else if (fieldType == awst::WType::uint64Type())
@@ -457,7 +457,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 				elem = builder::TypeCoercion::implicitNumericCast(
 					std::move(elem), awst::WType::biguintType(), m_loc);
 
-				auto cast = awst::makeReinterpretCast(std::move(elem), awst::WType::bytesType(), m_loc);
+				auto cast = awst::makeAsBytes(std::move(elem), m_loc);
 				auto extracted = awst::makeLeftPadToN(std::move(cast), 32, m_loc);
 
 				if (!acc)

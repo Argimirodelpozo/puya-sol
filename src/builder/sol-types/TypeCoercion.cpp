@@ -41,7 +41,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	if (_expr->wtype == awst::WType::uint64Type() && _targetType == awst::WType::biguintType())
 	{
 		auto itob = awst::makeItob(std::move(_expr), _loc);
-		return awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
+		return awst::makeAsBiguint(std::move(itob), _loc);
 	}
 
 	// biguint → uint64: safely extract lower 64 bits
@@ -50,7 +50,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	if (_expr->wtype == awst::WType::biguintType() && _targetType == awst::WType::uint64Type())
 	{
 		// reinterpret biguint → bytes
-		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+		auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
 
 		// concat(bzero(8), bytes) → padded; then extract3 last 8 → btoi.
 		auto padded = awst::makeLeftPad(std::move(toBytes), 8, _loc);
@@ -747,7 +747,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 
 					auto encode = awst::makeARC4Encode(std::move(nativeVal), dynArr->elementType(), _loc);
 
-					auto encBytes = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), _loc);
+					auto encBytes = awst::makeAsBytes(std::move(encode), _loc);
 
 					if (!bodyBytes)
 						bodyBytes = std::move(encBytes);
@@ -784,8 +784,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				std::shared_ptr<awst::Expression> bodyBytes;
 				for (auto const& elem : newArr->values)
 				{
-					auto elemBytes = awst::makeReinterpretCast(
-						elem, awst::WType::bytesType(), _loc);
+					auto elemBytes = awst::makeAsBytes(elem, _loc);
 					auto signByte = awst::makeExtract3(
 						elemBytes,
 						awst::makeIntegerConstant(0, _loc),
@@ -841,7 +840,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					int64_t diffElems = targetStat->arraySize() - srcStat->arraySize();
 					int64_t diffBytes = diffElems * elemSize;
 
-					auto srcBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+					auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
 					auto cat = awst::makeRightPad(std::move(srcBytes), diffBytes, _loc);
 					return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 				}
@@ -904,8 +903,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				for (auto const& elem : newArr->values)
 				{
 					// elem is an arc4.intM literal (BytesConstant of srcBytes).
-					auto elemBytes = awst::makeReinterpretCast(
-						elem, awst::WType::bytesType(), _loc);
+					auto elemBytes = awst::makeAsBytes(elem, _loc);
 					// Sign-extend per element by inspecting bit 7 of byte 0.
 					auto signByte = awst::makeExtract3(
 						elemBytes,
@@ -997,7 +995,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 							sourceWidth = static_cast<int>(*sw->length());
 					if (sourceWidth > 0 && sourceWidth < targetWidth)
 					{
-						auto srcBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+						auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
 						int padBytes = targetWidth - sourceWidth;
 						auto cat = awst::makeRightPad(std::move(srcBytes), padBytes, _loc);
 						return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
@@ -1045,7 +1043,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_targetType == awst::WType::applicationType()
 		&& _expr->wtype == awst::WType::accountType())
 	{
-		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
+		auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
 		auto btoi = awst::makeWord32ToUInt64(std::move(toBytes), _loc);
 		return awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
 	}

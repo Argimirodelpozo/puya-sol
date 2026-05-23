@@ -178,7 +178,7 @@ void AssemblyBuilder::buildStatement(
 
 				if (useBytesMatch)
 				{
-					auto cast = awst::makeReinterpretCast(switchExpr, awst::WType::bytesType(), loc);
+					auto cast = awst::makeAsBytes(switchExpr, loc);
 
 					// Normalise to a fixed 32-byte big-endian encoding —
 					// biguint ABI decoding may produce 64-byte values (our
@@ -465,7 +465,7 @@ void AssemblyBuilder::buildAssignment(
 							std::shared_ptr<awst::Expression> rhsBytes =
 								(rhs->wtype == awst::WType::bytesType())
 								? rhs
-								: awst::makeReinterpretCast(rhs, awst::WType::bytesType(), loc);
+								: awst::makeAsBytes(rhs, loc);
 							auto rhsBytesForLen = rhsBytes;
 
 							auto lenCall = awst::makeIntrinsicCall(
@@ -510,8 +510,7 @@ void AssemblyBuilder::buildAssignment(
 						}
 
 						auto baseVar = awst::makeVarExpression(baseName, fullIt->second, loc);
-						auto baseAsBytes = awst::makeReinterpretCast(
-							std::move(baseVar), awst::WType::bytesType(), loc);
+						auto baseAsBytes = awst::makeAsBytes(std::move(baseVar), loc);
 
 						auto replaceCall = awst::makeIntrinsicCall(
 							"replace3", awst::WType::bytesType(), loc);
@@ -550,13 +549,12 @@ void AssemblyBuilder::buildAssignment(
 				if (slotExpr->wtype == awst::WType::uint64Type())
 				{
 					auto itob = awst::makeItob(std::move(slotExpr), loc);
-					slotExpr = awst::makeReinterpretCast(
-						std::move(itob), awst::WType::biguintType(), loc);
+					slotExpr = awst::makeAsBiguint(std::move(itob), loc);
 				}
 				else if (slotExpr->wtype != awst::WType::biguintType())
 				{
 					// bytes[N] or other non-biguint → reinterpret as biguint
-					auto cast = awst::makeReinterpretCast(std::move(slotExpr), awst::WType::biguintType(), loc);
+					auto cast = awst::makeAsBiguint(std::move(slotExpr), loc);
 					slotExpr = std::move(cast);
 				}
 
@@ -676,7 +674,7 @@ void AssemblyBuilder::buildAssignment(
 			if (value->wtype == awst::WType::biguintType())
 			{
 				// biguint → bytes → account
-				auto toBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), loc);
+				auto toBytes = awst::makeAsBytes(std::move(value), loc);
 
 				auto toAccount = awst::makeReinterpretCast(std::move(toBytes), awst::WType::accountType(), loc);
 				value = std::move(toAccount);

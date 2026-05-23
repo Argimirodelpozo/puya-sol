@@ -43,8 +43,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
 	auto gasCall = awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
 	auto itobCall = awst::makeItob(std::move(gasCall), _loc);
-	return awst::makeReinterpretCast(
-		std::move(itobCall), awst::WType::biguintType(), _loc);
+	return awst::makeAsBiguint(std::move(itobCall), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
@@ -54,8 +53,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
 	// timestamp() → global LatestTimestamp (uint64) → itob → reinterpret as biguint
 	auto tsCall = awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
 	auto itobCall = awst::makeItob(std::move(tsCall), _loc);
-	return awst::makeReinterpretCast(
-		std::move(itobCall), awst::WType::biguintType(), _loc);
+	return awst::makeAsBiguint(std::move(itobCall), _loc);
 }
 
 // ─── New Yul builtins for Uniswap V4 ────────────────────────────────────────
@@ -73,7 +71,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	if (shiftAmt->wtype != awst::WType::uint64Type())
 	{
 		// Cast biguint → bytes first
-		auto cast = awst::makeReinterpretCast(std::move(shiftAmt), awst::WType::bytesType(), _loc);
+		auto cast = awst::makeAsBytes(std::move(shiftAmt), _loc);
 
 		// Safe btoi: pad to 8 then extract last 8 (btoi requires ≤8 bytes).
 		auto cat = awst::makeLeftPad(std::move(cast), 8, _loc);
@@ -100,7 +98,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 		std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
 
 	// Cast bytes → biguint
-	auto castToBigUInt = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
+	auto castToBigUInt = awst::makeAsBiguint(std::move(setbit), _loc);
 
 	return castToBigUInt;
 }
@@ -219,7 +217,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 
 	auto extract = awst::makeExtract3(std::move(padded), std::move(nExpr), std::move(one), _loc);
 	// Cast bytes → biguint for Yul semantics (all values are uint256)
-	auto castResult = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
+	auto castResult = awst::makeAsBiguint(std::move(extract), _loc);
 	return castResult;
 }
 
@@ -306,13 +304,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	auto highMask = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, lowMask, _loc);
 
 	// Negative case: x | highMask (set all bits above bitPos)
-	auto xCastNeg = awst::makeReinterpretCast(x, awst::WType::bytesType(), _loc);
+	auto xCastNeg = awst::makeAsBytes(x, _loc);
 
-	auto highMaskBytes = awst::makeReinterpretCast(highMask, awst::WType::bytesType(), _loc);
+	auto highMaskBytes = awst::makeAsBytes(highMask, _loc);
 
 	auto orCall = awst::makeBytesOr(std::move(xCastNeg), std::move(highMaskBytes), _loc);
 
-	auto negResult = awst::makeReinterpretCast(std::move(orCall), awst::WType::biguintType(), _loc);
+	auto negResult = awst::makeAsBiguint(std::move(orCall), _loc);
 
 	// Positive case: x & lowMask (clear all bits above bitPos)
 	// Re-create lowMask (can't reuse shared_ptr after move)
@@ -324,15 +322,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto lowMask2 = makeBigUIntBinOp(pow2BitPos2, awst::BigUIntBinaryOperator::Sub, oneBI2, _loc);
 
-	auto xCastPos = awst::makeReinterpretCast(x, awst::WType::bytesType(), _loc);
+	auto xCastPos = awst::makeAsBytes(x, _loc);
 
-	auto lowMask2Bytes = awst::makeReinterpretCast(lowMask2, awst::WType::bytesType(), _loc);
+	auto lowMask2Bytes = awst::makeAsBytes(lowMask2, _loc);
 
 	auto andCall = awst::makeIntrinsicCall("b&", awst::WType::bytesType(), _loc);
 	andCall->stackArgs.push_back(std::move(xCastPos));
 	andCall->stackArgs.push_back(std::move(lowMask2Bytes));
 
-	auto posResult = awst::makeReinterpretCast(std::move(andCall), awst::WType::biguintType(), _loc);
+	auto posResult = awst::makeAsBiguint(std::move(andCall), _loc);
 
 	// Conditional: isNeg ? negResult : posResult
 	return awst::makeConditional(

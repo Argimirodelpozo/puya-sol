@@ -1,7 +1,19 @@
-# Semantic Test Status — v284
+# Semantic Test Status — v285
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
 **1199/1322 (90.7%)**.
+
+## v285 — refactor: makeAsBytes / makeAsBiguint reinterpret aliases
+
+Pure refactor — totals bit-identical to v284 (1199/103/20; 0 recovered,
+0 new).
+
+`makeReinterpretCast(x, bytesType, loc)` and `makeReinterpretCast(x,
+biguintType, loc)` are the two reinterpret targets that dominate the
+builder layer. Added `awst::makeAsBytes` and `awst::makeAsBiguint` as
+pure aliases and swept the call sites: 137 + 90 = 227 sites across 49
+files. Each call produces the same `ReinterpretCast` AWST node — no
+codegen change, just readability.
 
 ## v284 — refactor: consolidate the two inlineModifiers (−478 lines)
 
