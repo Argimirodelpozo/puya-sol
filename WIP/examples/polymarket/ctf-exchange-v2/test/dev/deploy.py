@@ -177,11 +177,17 @@ def create_app(
     if extra_pages is None:
         extra_pages = max(0, (max(len(approval), len(clear)) - 1) // 2048)
     sp = algod.suggested_params()
+    # puya-sol's reported arc56 state schema underestimates actual runtime
+    # writes (e.g. v2 CTFExchange.arc56.json reports {ints:3, bytes:19} but
+    # __postInit's actual app_global_put count exceeds both). Bump up to a
+    # comfortable minimum; AVM ignores over-provisioned schema slots.
     txn = ApplicationCreateTxn(
         sender=sender.address, sp=sp,
         on_complete=OnComplete.NoOpOC,
         approval_program=approval, clear_program=clear,
-        global_schema=StateSchema(num_uints=schema.ints, num_byte_slices=schema.bytes),
+        global_schema=StateSchema(
+            num_uints=max(schema.ints, 16),
+            num_byte_slices=max(schema.bytes, 24)),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         extra_pages=extra_pages,
         app_args=app_args or [],

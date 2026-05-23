@@ -620,128 +620,13 @@ def negrisk_adapter(localnet, admin, universal_mock):
 
 # ── Split CTFExchange (orchestrator + helpers) ────────────────────────────
 
-# After the v288/v289 puya-sol fixes + the AVM-PORT-ADAPTATION #10 to
-# `_updateOrderStatus`, v2 CTFExchange.sol compiles cleanly. The
-# splitter was switched from PE-only `--split-config + --force-delegate`
-# to main puya-sol's `--uros-splitter matchOrders`, which uses the
-# 3-contract UROS dance (main + orch + __storage) instead of PE's
-# lonely-chunk-on-orch dance. Test infrastructure now uses
-# `uros_dance.deploy_split_app` (ported from morpho-blue) for deployment.
 SPLIT_DIR = OUT_DIR / "exchange" / "CTFExchange"
-# Legacy PE-helper paths kept only for tests that haven't migrated yet:
-H1_DIR = SPLIT_DIR / "CTFExchange__Helper1"  # legacy — never written by main
-H2_DIR = SPLIT_DIR / "CTFExchange__Helper2"  # legacy — never written by main
-ORCH_DIR = SPLIT_DIR / "CTFExchange"  # NB: under main's UROS this is the main contract
+H1_DIR = SPLIT_DIR / "CTFExchange__Helper1"
+H2_DIR = SPLIT_DIR / "CTFExchange__Helper2"
+ORCH_DIR = SPLIT_DIR / "CTFExchange"
 TMPL_H1 = "TMPL_CTFExchange__Helper1_APP_ID"
 TMPL_H2 = "TMPL_CTFExchange__Helper2_APP_ID"
 TMPL_H3 = "TMPL_CTFExchange__Helper3_APP_ID"
-
-
-# ── UROS dance: main's UROS architecture deployment + shim ────────────────
-import sys
-sys.path.insert(0, str(Path(__file__).parent))
-from uros_dance import (
-    deploy_orchestrator,
-    deploy_split_app,
-    _app_addr,
-)
-
-
-def _wrap_send_for_dance(client: au.AppClient) -> None:
-    """Patch a split-contract AppClient's `.send.call` so every call
-    transparently adds:
-      1. `account_references = [main_addr]` (chunks emit inner txns with
-         Sender=main_addr override; AVM needs main in the foreign
-         accounts pool).
-      2. `send_params = SendParams(populate_app_call_resources=True,
-         cover_app_call_inner_transaction_fees=True)` — the dance burns
-         many inner txns + dance boxes; let algokit's simulate-driven
-         resource populator distribute them across the group.
-
-    Mirrors morpho-blue/test/conftest.py:_wrap_send_for_dance (line 22).
-    Tests can still pass their own resource refs; we union them with the
-    dance refs so nothing is dropped.
-    """
-    storage_id = client._uros_storage_id
-    orch_id = client._uros_orch_id
-    main_addr = client._uros_main_addr
-    sender_accessor = client.send
-    original_call = sender_accessor.call
-
-    def _merge_refs(existing, extras):
-        merged = list(existing or [])
-        for x in extras:
-            if x not in merged:
-                merged.append(x)
-        return merged
-
-    def patched_call(params, send_params=None):
-        from dataclasses import replace
-        params = replace(
-            params,
-            account_references=_merge_refs(
-                params.account_references, [main_addr]),
-            max_fee=params.max_fee or au.AlgoAmount(micro_algo=100_000),
-        )
-        send_params = au.SendParams(
-            populate_app_call_resources=True,
-            cover_app_call_inner_transaction_fees=True,
-        )
-        return original_call(params, send_params=send_params)
-
-    sender_accessor.call = patched_call
-
-
-@pytest.fixture(scope="session")
-def uros_orch_id(localnet, admin):
-    """Compile + deploy the shared UROS orchestrator app (one per test
-    session). Every split contract created via `deploy_split_app` shares
-    this orch; the orch's role is generic chunk install/restore on a
-    per-call basis via UpdateApplication itxns."""
-    return deploy_orchestrator(localnet.client.algod, admin)
-
-
-class _OrchProxy:
-    """Backwards-compat shim so tests written for PE's 3-helper layout
-    (`_, _, orch = split_exchange; orch.send.call(method="isAdmin", ...)`)
-    keep working under main's UROS layout, where business methods live
-    on `main` and the real `orch` is a generic dispatcher.
-
-    Reads route to the real orch (.app_id, .app_spec for distinctness
-    checks); calls route to main (which has the actual business methods
-    like isAdmin / registerToken / hashOrder / etc.)."""
-
-    def __init__(self, main_client: au.AppClient, real_orch_app_id: int):
-        self._main = main_client
-        self._real_orch_app_id = real_orch_app_id
-
-    @property
-    def app_id(self) -> int:
-        return self._real_orch_app_id
-
-    @property
-    def send(self):
-        return self._main.send
-
-    @property
-    def params(self):
-        return self._main.params
-
-    @property
-    def app_spec(self):
-        return self._main.app_spec
-
-    @property
-    def algorand(self):
-        return self._main.algorand
-
-
-class _StorageProxy:
-    """Thin app_id holder for the __storage contract slot in
-    backwards-compat tuples — tests typically only check .app_id."""
-
-    def __init__(self, storage_app_id: int):
-        self.app_id = storage_app_id
 
 DELEGATE_DIR = Path(__file__).parent.parent / "delegate"
 LONELY_CHUNK_OUT = DELEGATE_DIR / "out"
@@ -795,68 +680,90 @@ def helper1(localnet, admin):
 
 
 @pytest.fixture(scope="function")
-def split_exchange(localnet, admin, universal_mock, uros_orch_id):
-    """Deploy CTFExchange via main puya-sol's UROS dance and call
-    __postInit with the standard test fixture's universal-mock-as-every-
-    address init params.
+def split_exchange(localnet, admin, universal_mock):
+    """Deploy helper1 + helper2 + orchestrator. Returns (h1, h2, orch).
 
-    Returns a backwards-compat tuple `(main, storage, orch)` where:
-      - `main`: the user-facing main contract AppClient (wrapped with
-        dance-aware send semantics — `populate_app_call_resources` +
-        `cover_app_call_inner_transaction_fees` always on; every call
-        gets `main_addr` added to account refs so the chunk's emitted
-        inner txns with Sender=main_addr are admitted).
-      - `storage`: a `_StorageProxy` holding just `storage.app_id` (the
-        per-deploy state-holder app — receives chunk installs via
-        UpdateApplication on each call).
-      - `orch`: an `_OrchProxy` whose `.app_id` is the real shared UROS
-        orchestrator id, but whose `.send` / `.params` route to `main`
-        for backwards compat with tests written for PE's layout
-        (`_, _, orch = split_exchange; orch.send.call(method="isAdmin"…)`
-        — `isAdmin` lives on `main` in the UROS architecture; the real
-        orch only has set_storage/dispatch/etc.).
-
-    Three distinct app IDs so `len({h1.app_id, h2.app_id, orch.app_id})
-    == 3` still holds for backwards-compat assertions.
+    matchOrders is delegated to a hand-crafted lonely chunk that isn't
+    fully wired yet — that path xfails per-test until the runtime lands.
+    Auth / registration / hashOrder paths work normally.
     """
     algod = localnet.client.algod
-    contract_dir = OUT_DIR / "exchange" / "CTFExchange"
 
-    # 1. Deploy main + __storage via uros_dance — orch is shared
-    #    (session-scoped via uros_orch_id fixture). Pass app_args=[] so
-    #    deploy_split_app doesn't try to call __postInit at AppCreate
-    #    time — we want to call it via the wrapped main client so the
-    #    dance-aware refs/fees auto-resolve.
-    d = deploy_split_app(
-        algod, admin, "CTFExchange",
-        orch_id=uros_orch_id, app_args=[],
-        contract_dir=contract_dir,
-    )
+    h1_spec = load_arc56(H1_DIR / "CTFExchange__Helper1.arc56.json")
+    h1_teal = inject_memory_init(
+        (H1_DIR / "CTFExchange__Helper1.approval.teal").read_text())
+    h1_app_id = create_app(
+        localnet, admin,
+        compile_teal(algod, h1_teal),
+        compile_teal(algod, (H1_DIR / "CTFExchange__Helper1.clear.teal").read_text()),
+        h1_spec.state.schema.global_state)
 
-    # 2. Build wrapped main AppClient
-    main_spec = load_arc56(contract_dir / "CTFExchange.arc56.json")
-    main_client = au.AppClient(au.AppClientParams(
-        algorand=localnet, app_spec=main_spec, app_id=d.main_id,
+    h2_spec = load_arc56(H2_DIR / "CTFExchange__Helper2.arc56.json")
+    h2_teal = inject_memory_init(
+        (H2_DIR / "CTFExchange__Helper2.approval.teal").read_text())
+    h2_teal = h2_teal.replace(TMPL_H1, str(h1_app_id))
+    h2_app_id = create_app(
+        localnet, admin,
+        compile_teal(algod, h2_teal),
+        compile_teal(algod, (H2_DIR / "CTFExchange__Helper2.clear.teal").read_text()),
+        h2_spec.state.schema.global_state)
+
+    orch_spec = load_arc56(ORCH_DIR / "CTFExchange.arc56.json")
+    orch_teal = (ORCH_DIR / "CTFExchange.approval.teal").read_text()
+    orch_teal = orch_teal.replace(TMPL_H1, str(h1_app_id))
+    orch_teal = orch_teal.replace(TMPL_H2, str(h2_app_id))
+    orch_teal = orch_teal.replace(TMPL_H3, "0")
+
+    orch_approval = compile_teal(algod, orch_teal)
+    orch_clear = compile_teal(
+        algod, (ORCH_DIR / "CTFExchange.clear.teal").read_text())
+
+    # extra_pages=3 so the lonely chunk can install up to 8KB onto orch
+    # via UpdateApplication later.
+    orch_app_id = create_app(localnet, admin, orch_approval, orch_clear,
+                             orch_spec.state.schema.global_state,
+                             extra_pages=3)
+
+    h1_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=h1_spec, app_id=h1_app_id,
         default_sender=admin.address))
-    main_client._uros_storage_id = d.storage_id
-    main_client._uros_orch_id = d.orch_id
-    main_client._uros_main_addr = _app_addr(d.main_id)
-    _wrap_send_for_dance(main_client)
+    h2_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=h2_spec, app_id=h2_app_id,
+        default_sender=admin.address))
+    orch_client = au.AppClient(au.AppClientParams(
+        algorand=localnet, app_spec=orch_spec, app_id=orch_app_id,
+        default_sender=admin.address))
 
-    # 3. __postInit deferred for now — see puyabug.md #5 (address-typed
-    #    parameter held as uint64 on stack before inner-call extract_uint64
-    #    in PolyFactoryHelper's constructor).
-    #
-    #    Tests that just check deployment (test_split_deploys) work
-    #    without __postInit. Tests that need state-var-initialised state
-    #    (test_split_admin_is_deployer, test_split_admin_is_operator)
-    #    will fail until the puya optimizer bug is fixed.
+    # NB: algokit upgraded its ABI Address encoder — list-of-ints (PE's
+    # original shape) no longer accepted; pass base32 strings instead.
+    from algosdk import encoding as _alg_enc
+    admin_b32 = _alg_enc.encode_address(addr(admin))
+    tok_b32 = _alg_enc.encode_address(app_id_to_address(universal_mock.app_id))
+    init_params = [
+        admin_b32,
+        tok_b32,    # collateral
+        tok_b32,    # ctf
+        tok_b32,    # ctfCollateral
+        tok_b32,    # outcomeTokenFactory
+        tok_b32,    # proxyFactory
+        tok_b32,    # safeFactory
+        admin_b32,  # feeReceiver
+    ]
 
-    return (
-        main_client,
-        _StorageProxy(d.storage_id),
-        _OrchProxy(main_client, d.orch_id),
-    )
+    composer = localnet.new_group()
+    for i in range(6):
+        composer.add_app_call_method_call(orch_client.params.call(
+            au.AppClientMethodCallParams(
+                method="isAdmin", args=[ZERO_ADDR],
+                note=f"pad-{i}".encode())))
+    composer.add_app_call_method_call(orch_client.params.call(
+        au.AppClientMethodCallParams(
+            method="__postInit",
+            args=[init_params],
+            extra_fee=au.AlgoAmount(micro_algo=50_000),
+            app_references=[h1_app_id, h2_app_id, universal_mock.app_id])))
+    composer.send(AUTO_POPULATE)
+    return h1_client, h2_client, orch_client
 
 
 H3_DIR = SPLIT_DIR / "CTFExchange__Helper3"
