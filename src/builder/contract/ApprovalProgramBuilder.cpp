@@ -1114,6 +1114,43 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					postInitBody->body.push_back(std::move(stmt));
 			}
 
+			// Honor `--ensure-budget __postInit:N` for the synthesized
+			// post-init method. The regular ABI-method path in `FunctionBuilder`
+			// handles ensure_budget injection per-function (see
+			// FunctionBuilder.cpp's `if (budgetForFunc > 0)` block), but
+			// __postInit is built here as a ContractMethod and never goes
+			// through that path — so its budget config has to be wired in
+			// explicitly. The opup pump goes at the *very top* of the body
+			// so any downstream box-init / inline-asm / EIP-712 hashing
+			// has the expanded pool to draw from.
+			if (auto it = m_ensureBudget.find("__postInit");
+				it != m_ensureBudget.end() && it->second > 0)
+			{
+				auto budgetVal = awst::makeIntegerConstant(
+					it->second, postInit.sourceLocation);
+				// fee_source=1 (AppAccount): each itxn the pump fires pays
+				// its own min_txn_fee from the contract's escrow balance.
+				// Why not fee_source=0 (GroupCredit) like ABI methods use?
+				// ABI methods run as part of a user-driven group that
+				// usually pads extra_fee on the outer call. __postInit is
+				// invoked through plain `deploy_app`'s `client.send.call`
+				// which doesn't pad the group, so its outer fee can't
+				// cover the inner-tx pumps. The contract's fund (set by
+				// `deploy_app(fund_amount=...)`) easily covers the few
+				// ITxnCreate fees the EIP-712 setup needs.
+				auto feeSource = awst::makeIntegerConstant(
+					"1", postInit.sourceLocation);
+				auto call = awst::makePuyaLibCall("ensure_budget",
+					{
+						awst::CallArg{std::string("required_budget"), std::move(budgetVal)},
+						awst::CallArg{std::string("fee_source"), std::move(feeSource)},
+					},
+					awst::WType::voidType(), postInit.sourceLocation);
+				auto stmt = awst::makeExpressionStatement(
+					std::move(call), postInit.sourceLocation);
+				postInitBody->body.insert(postInitBody->body.begin(), std::move(stmt));
+			}
+
 			postInit.body = postInitBody;
 			m_postInitMethod = std::move(postInit);
 		}

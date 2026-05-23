@@ -797,6 +797,19 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 		return cast;
 	}
 
+	// account → biguint: AVM addresses are 32 raw bytes — reinterpret through
+	// `bytes` (biguint is variable-length-bytes-backed). Without this the
+	// non-scalar fallback below would zero the value, silently miscompiling
+	// every assembly read of an `address` parameter (e.g. Solady's
+	// `or(newOwner, shl(255, iszero(newOwner)))` in `_setOwner`, which makes
+	// `owner()` read back zero across every Solady-Ownable-derived contract).
+	if (_expr->wtype == awst::WType::accountType())
+	{
+		auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
+		auto asBiguint = awst::makeAsBiguint(std::move(asBytes), _loc);
+		return asBiguint;
+	}
+
 	// Non-scalar type (array, struct, tuple) used in assembly arithmetic.
 	// This happens in EVM memory pointer operations like add(array, 0x20)
 	// which have no meaning on AVM. Coerce to biguint(0).

@@ -363,6 +363,18 @@ private:
 		bool _isCall
 	);
 
+	/// Lowering for runtime-address `call`/`staticcall` — emits an inner
+	/// app call against the address-encoded app id, splitting the EVM
+	/// calldata into args[0]=selector(4B) + args[1]=body. Solady's
+	/// SafeTransferLib.safeTransferFrom and similar take this path.
+	void handleAppCall(
+		solidity::yul::FunctionCall const& _call,
+		std::string const& _assignTarget,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		bool _isCall
+	);
+
 	// ── Individual precompile handlers ─────────────────────────────────
 
 	/// 0x01: ecRecover — ECDSA public key recovery + keccak256 → address
