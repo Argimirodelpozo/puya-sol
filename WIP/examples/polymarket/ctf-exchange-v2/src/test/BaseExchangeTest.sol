@@ -1,0 +1,258 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import { TestHelper } from "./dev/TestHelper.sol";
+
+import { USDC } from "./dev/mocks/USDC.sol";
+import { ERC1271Mock } from "./dev/mocks/ERC1271Mock.sol";
+import { MockProxyFactory } from "./dev/mocks/MockProxyFactory.sol";
+import { MockSafeFactory } from "./dev/mocks/MockSafeFactory.sol";
+
+import { Deployer } from "./dev/util/Deployer.sol";
+
+import { ERC1155 } from "@solady/src/tokens/ERC1155.sol";
+
+import { CTFExchange } from "../exchange/CTFExchange.sol";
+import { IAuthEE } from "../exchange/interfaces/IAuth.sol";
+import { IFeesEE } from "../exchange/interfaces/IFees.sol";
+import { ITradingEE } from "../exchange/interfaces/ITrading.sol";
+import { IPausableEE } from "../exchange/interfaces/IPausable.sol";
+import { ISignaturesEE } from "../exchange/interfaces/ISignatures.sol";
+import { IUserPausableEE } from "../exchange/interfaces/IUserPausable.sol";
+
+import { IConditionalTokens } from "../exchange/interfaces/IConditionalTokens.sol";
+
+import { CalculatorHelper } from "../exchange/libraries/CalculatorHelper.sol";
+import {
+    ExchangeInitParams,
+    Order,
+    Side,
+    SignatureType,
+    ORDER_TYPEHASH
+} from "../exchange/libraries/Structs.sol";
+
+contract BaseExchangeTest is TestHelper, IAuthEE, IFeesEE, IPausableEE, ITradingEE, ISignaturesEE, IUserPausableEE {
+    USDC public usdc;
+    IConditionalTokens public ctf;
+    CTFExchange public exchange;
+
+    bytes32 public constant questionID = hex"1234";
+    bytes32 public conditionId;
+    uint256 public yes;
+    uint256 public no;
+
+    address public admin = alice;
+    uint256 internal bobPK = 0xB0B;
+    uint256 internal carlaPK = 0xCA414;
+    uint256 internal dylanPK = 0xD14A4;
+    address public bob;
+    address public carla;
+    address public dylanAddr;
+    address public feeReceiver = address(9);
+
+    address public proxyFactory;
+    address public safeFactory;
+
+    ERC1271Mock public contractWallet;
+
+    // ERC20 transfer event
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    // ERC1155 transfer event
+    event TransferSingle(
+        address indexed operator, address indexed from, address indexed to, uint256 id, uint256 amount
+    );
+
+    function setUp() public virtual {
+        vm.label(admin, "admin");
+        bob = vm.addr(bobPK);
+        vm.label(bob, "bob");
+        carla = vm.addr(carlaPK);
+        vm.label(carla, "carla");
+        dylanAddr = vm.addr(dylanPK);
+        vm.label(dylanAddr, "dylan");
+        vm.label(feeReceiver, "feeReceiver");
+
+        usdc = new USDC();
+        vm.label(address(usdc), "USDC");
+        ctf = IConditionalTokens(Deployer.deployConditionalTokens());
+        vm.label(address(ctf), "CTF");
+
+        conditionId = _prepareCondition(admin, questionID);
+        yes = _getPositionId(2);
+        no = _getPositionId(1);
+
+        // Deploy a 1271 contract and set carla as the signer
+        contractWallet = new ERC1271Mock(carla);
+
+        // Deploy mock factories
+        proxyFactory = address(new MockProxyFactory());
+        safeFactory = address(new MockSafeFactory());
+
+        vm.startPrank(admin);
+        ExchangeInitParams memory p = ExchangeInitParams({
+            admin: admin,
+            collateral: address(usdc),
+            ctf: address(ctf),
+            ctfCollateral: address(usdc),
+            outcomeTokenFactory: address(ctf),
+            proxyFactory: proxyFactory,
+            safeFactory: safeFactory,
+            feeReceiver: feeReceiver
+        });
+
+        exchange = new CTFExchange(p);
+        exchange.addOperator(bob);
+        exchange.addOperator(carla);
+        exchange.addOperator(dylanAddr);
+        vm.stopPrank();
+    }
+
+    function _prepareCondition(address oracle, bytes32 _questionId) internal returns (bytes32) {
+        ctf.prepareCondition(oracle, _questionId, 2);
+        return ctf.getConditionId(oracle, _questionId, 2);
+    }
+
+    function _getPositionId(uint256 indexSet) internal view returns (uint256) {
+        return ctf.getPositionId(address(usdc), ctf.getCollectionId(bytes32(0), conditionId, indexSet));
+    }
+
+    function _createAndSignOrder(uint256 pk, uint256 tokenId, uint256 makerAmount, uint256 takerAmount, Side side)
+        internal
+        view
+        returns (Order memory)
+    {
+        address maker = vm.addr(pk);
+        Order memory order = _createOrder(maker, tokenId, makerAmount, takerAmount, side);
+        order.signature = _signMessage(pk, exchange.hashOrder(order));
+        return order;
+    }
+
+    function _createAndSign1271Order(
+        uint256 signerPk,
+        address wallet,
+        uint256 tokenId,
+        uint256 makerAmount,
+        uint256 takerAmount,
+        Side side
+    ) internal view returns (Order memory) {
+        Order memory order = _createOrder(wallet, tokenId, makerAmount, takerAmount, side);
+        order.signatureType = SignatureType.POLY_1271;
+        order.signature = _signMessage(signerPk, exchange.hashOrder(order));
+        return order;
+    }
+
+    function _createOrder(address maker, uint256 tokenId, uint256 makerAmount, uint256 takerAmount, Side side)
+        internal
+        pure
+        returns (Order memory)
+    {
+        Order memory order = Order({
+            salt: 1,
+            signer: maker,
+            maker: maker,
+            tokenId: tokenId,
+            makerAmount: makerAmount,
+            takerAmount: takerAmount,
+            signatureType: SignatureType.EOA,
+            side: side,
+            timestamp: 0,
+            metadata: bytes32(0),
+            builder: bytes32(0),
+            signature: new bytes(0)
+        });
+        return order;
+    }
+
+    function _signMessage(uint256 pk, bytes32 message) internal pure returns (bytes memory sig) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(pk, message);
+        sig = abi.encodePacked(r, s, v);
+    }
+
+    /// @dev Re-signs the order with a wrong key so isValidSignature returns false
+    ///      without reverting. The order hash is unchanged (signature is not part of the hash).
+    function _invalidateSignature(Order memory order) internal view {
+        order.signature = _signMessage(0xDEAD, exchange.hashOrder(order));
+    }
+
+    function _generateOrderHash(address exchangeAddress, Order memory order) internal view returns (bytes32) {
+        bytes32 structHash = _getExpectedStructHash(order);
+        bytes32 domainSeparator = _getDomainSeparator(exchangeAddress);
+        bytes32 orderHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        return orderHash;
+    }
+
+    function _getDomainSeparator(address exchangeAddress) internal view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes("Polymarket CTF Exchange")),
+                keccak256(bytes("2")),
+                block.chainid,
+                exchangeAddress
+            )
+        );
+    }
+
+    function _getExpectedStructHash(Order memory order) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                ORDER_TYPEHASH,
+                order.salt,
+                order.maker,
+                order.signer,
+                order.tokenId,
+                order.makerAmount,
+                order.takerAmount,
+                order.side,
+                order.signatureType,
+                order.timestamp,
+                order.metadata,
+                order.builder
+            )
+        );
+    }
+
+    function dealUsdcAndApprove(address to, address spender, uint256 amount) internal {
+        vm.startPrank(to);
+        dealAndApprove(address(usdc), to, spender, amount);
+        vm.stopPrank();
+    }
+
+    function dealOutcomeTokensAndApprove(address to, address spender, uint256 tokenId, uint256 amount) internal {
+        vm.startPrank(admin);
+        approve(address(usdc), address(ctf), type(uint256).max);
+        deal(address(usdc), admin, amount);
+
+        uint256[] memory partition = new uint256[](2);
+        partition[0] = 1;
+        partition[1] = 2;
+
+        IConditionalTokens(ctf).splitPosition(address(usdc), bytes32(0), conditionId, partition, amount);
+        ERC1155(address(ctf)).safeTransferFrom(admin, to, tokenId, amount, "");
+        vm.stopPrank();
+
+        vm.prank(to);
+        ERC1155(address(ctf)).setApprovalForAll(spender, true);
+    }
+
+    function assertCollateralBalance(address _who, uint256 _amount) public view {
+        assertBalance(address(usdc), _who, _amount);
+    }
+
+    function assertCTFBalance(address _who, uint256 _tokenId, uint256 _amount) public view {
+        assertEq(getCTFBalance(_who, _tokenId), _amount);
+    }
+
+    function getCTFBalance(address _who, uint256 _tokenId) public view returns (uint256) {
+        return ERC1155(address(ctf)).balanceOf(_who, _tokenId);
+    }
+
+    function _getTakingAmount(uint256 _making, uint256 _makerAmount, uint256 _takerAmount)
+        internal
+        pure
+        returns (uint256)
+    {
+        return _making * _takerAmount / _makerAmount;
+    }
+}

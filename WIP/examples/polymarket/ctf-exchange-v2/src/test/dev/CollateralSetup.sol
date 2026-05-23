@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.34;
+
+import { LibClone } from "@solady/src/utils/LibClone.sol";
+
+import { vm } from "./util/vm.sol";
+import { USDC } from "./mocks/USDC.sol";
+import { USDCe } from "./mocks/USDCe.sol";
+
+import { CollateralVault } from "./mocks/CollateralVault.sol";
+import { CollateralToken } from "../../collateral/CollateralToken.sol";
+import { CollateralOnramp } from "../../collateral/CollateralOnramp.sol";
+import { CollateralOfframp } from "../../collateral/CollateralOfframp.sol";
+import { PermissionedRamp } from "../../collateral/PermissionedRamp.sol";
+
+struct Collateral {
+    CollateralToken token;
+    CollateralOnramp onramp;
+    CollateralOfframp offramp;
+    PermissionedRamp permissionedRamp;
+    USDC usdc;
+    USDCe usdce;
+    address vault;
+}
+
+library CollateralSetup {
+    uint256 internal constant ADMIN_ROLE = 1 << 0;
+
+    function _deploy(address _admin) internal returns (Collateral memory) {
+        return _deploy(_admin, _admin);
+    }
+
+    function _deploy(address _owner, address _admin) internal returns (Collateral memory) {
+        Collateral memory collateral;
+
+        collateral.usdc = new USDC();
+        collateral.usdce = new USDCe();
+
+        collateral.vault = address(new CollateralVault(_owner));
+
+        address collateralImplementation = address(
+            new CollateralToken(address(collateral.usdc), address(collateral.usdce), address(collateral.vault))
+        );
+
+        address collateralProxy = LibClone.deployERC1967(collateralImplementation);
+
+        vm.label(collateralImplementation, "CollateralTokenImplementation");
+        vm.label(collateralProxy, "CollateralToken");
+
+        collateral.token = CollateralToken(collateralProxy);
+        collateral.token.initialize(_owner);
+
+        collateral.onramp = new CollateralOnramp(_owner, _admin, address(collateral.token));
+        collateral.offramp = new CollateralOfframp(_owner, _admin, address(collateral.token));
+        collateral.permissionedRamp = new PermissionedRamp(_owner, _admin, address(collateral.token));
+
+        vm.startPrank(_owner);
+        collateral.token.addWrapper(address(collateral.onramp));
+        collateral.token.addWrapper(address(collateral.offramp));
+        collateral.token.addWrapper(address(collateral.permissionedRamp));
+        vm.stopPrank();
+
+        vm.startPrank(_owner);
+        CollateralVault(collateral.vault)
+            .approve(address(collateral.usdc), address(collateral.token), type(uint256).max);
+        CollateralVault(collateral.vault)
+            .approve(address(collateral.usdce), address(collateral.token), type(uint256).max);
+        vm.stopPrank();
+
+        return collateral;
+    }
+}
