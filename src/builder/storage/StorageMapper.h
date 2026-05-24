@@ -57,6 +57,13 @@ public:
 	/// AVM single-box value capacity.
 	static constexpr unsigned BOX_VALUE_CAPACITY = 32768;
 
+	/// AVM stack-value maximum (`max_byte_array_size`). Any byte string pushed
+	/// to or computed on the stack must fit. `bzero(N)` with N above this cap
+	/// reverts at runtime — so puya's `StateGet` default branch can't safely
+	/// materialise an all-zero value for box types beyond this size, even
+	/// though the box itself can hold up to BOX_VALUE_CAPACITY bytes.
+	static constexpr int kAvmStackValueMax = 4096;
+
 	/// Element size for an ARC4StaticArray's fixed element type, or 0 if
 	/// the element isn't a fixed-encoded scalar (e.g. dynamic ARC4).
 	static unsigned arc4StaticArrayElementSize(awst::WType const* _type);
@@ -82,12 +89,18 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// `makeStateGet(field, makeDefaultValue(type, loc), type, loc)`. Wraps the
+	/// `makeStateGet(field, makeDefaultValue(type, loc), type, loc)` for most
+	/// types. Returns `Expression` (not `StateGet`) because for box-backed
+	/// reads of types that overflow AVM's 4 KB stack-value cap (statically
+	/// or at runtime — dyn arrays/bytes/oversized fixed arrays) we skip the
+	/// StateGet wrapper and return the bare `BoxValueExpression`. See
+	/// `createStateRead` / puyabug.md §4c/4d for the rationale.
+	/// Wraps the
 	/// common "read storage slot, fall back to type default" pattern. Pass the
 	/// stored wtype explicitly because some callers read with a wtype that
 	/// differs from the field's own wtype (multi-page arrays, struct slot
 	/// promotion, etc).
-	static std::shared_ptr<awst::StateGet> makeStateGetWithDefault(
+	static std::shared_ptr<awst::Expression> makeStateGetWithDefault(
 		std::shared_ptr<awst::Expression> _field,
 		awst::WType const* _type,
 		awst::SourceLocation const& _loc

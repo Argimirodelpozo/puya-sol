@@ -43,12 +43,39 @@ std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(
 	return TypeCoercion::makeDefaultValue(_type, _loc);
 }
 
-std::shared_ptr<awst::StateGet> StorageMapper::makeStateGetWithDefault(
+std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	std::shared_ptr<awst::Expression> _field,
 	awst::WType const* _type,
 	awst::SourceLocation const& _loc
 )
 {
+	// puya's StateGet lowering for a BoxValueExpression materialises the
+	// typed zero default of `_type` via the AWST default-value helper. For
+	// fixed-size types whose encoded size exceeds AVM's 4 KB stack value
+	// cap (e.g. `Data[1024]` = 65 536 B), that default is `bzero(N)` with
+	// N > 4096 — reverts at runtime before any slice extract runs. Skip
+	// the StateGet wrapper for these so puya emits a bare `BoxRead`
+	// (asserts the box exists; safe because ApprovalProgramBuilder
+	// eagerly box_create's oversized fixed arrays in `__postInit` —
+	// they're listed in `m_boxArrayVarNames`). The bare `BoxRead` then
+	// folds with a subsequent `extract` into a direct `box_extract`
+	// (single-slice read — no whole-box load).
+	//
+	// We deliberately do NOT extend this to dynamic types
+	// (ARC4DynamicArray / ReferenceArray / dynamic bytes), even though
+	// they can grow > 4 KB at runtime: ApprovalProgramBuilder skips
+	// `box_create` for uninitialised dynamic bytes (so the StateGet
+	// empty-default path returns `0x` on the first read), and switching
+	// them to a bare `BoxRead` would assert on that first read.
+	// Dynamic state vars whose box content actually grows past 4 KB hit
+	// a different puya 5.9 issue (whole-box `box_get`) tracked
+	// separately. See puyabug.md §4c/4d.
+	if (std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
+	{
+		int encodedSize = computeEncodedElementSize(_type);
+		if (encodedSize > kAvmStackValueMax)
+			return _field;
+	}
 	auto def = makeDefaultValue(_type, _loc);
 	return awst::makeStateGet(std::move(_field), std::move(def), _type, _loc);
 }
@@ -263,10 +290,11 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	}
 	case awst::AppStorageKind::Box:
 	{
-		// Use StateGet with a default value so that missing boxes return the
-		// Solidity default (0/false/empty) instead of asserting existence.
+		// makeStateGetWithDefault gates on AVM's 4 KB stack-value cap and
+		// returns the bare BoxValueExpression for oversized / dynamic
+		// types — see the comment inside that helper.
 		auto boxExpr = awst::makeBoxValueExpression(key, _type, _loc);
-		return makeStateGetWithDefault(boxExpr, _type, _loc);
+		return makeStateGetWithDefault(std::move(boxExpr), _type, _loc);
 	}
 	default:
 	{

@@ -275,21 +275,37 @@ Alternatively, prevent the upstream fold from merging an exit edge
 into a loop header when that makes the block self-targeting — but
 the validator guard is the smaller fix and keeps the optimisation.
 
-## 4. puya 5.9.0rc1 optimizer regressions (4 tests)
+## 4. puya 5.9.0rc1 surfaces 4 latent puya-sol AWST bugs
 
-**Status:** Open in puya 5.9.0rc1. Workaround: stay on puya 5.8.0rc3 OR
-accept the 4-test regression (1199→1196). Discovered while bumping puya
-5.8→5.9 to chase a separate stack-emission issue (see #5 below).
+**Status (after follow-up triage):** Not puya-side bugs. The 4 cases
+below are **puya-sol AWST shapes that puya 5.8 was tolerant of and
+puya 5.9 surfaces as runtime errors** under its stricter optimizer.
+3 of 4 fixed in puya-sol (4a + 4b: AbiEncoder/Pow paths;
+4c: StorageMapper/PublicGetterBuilder skip the StateGet-default
+branch for **statically oversized** box-backed types so puya stops
+emitting `bzero(N)` with N > 4096).
+4d (`uint[]` growing past 4 KB at runtime) remains open — same
+`StateGet` issue but for dynamic types that we can't statically
+classify as "always oversized". Tried extending the skip to all
+dynamic types in v294; that broke 3 tests that rely on the
+StateGet empty-default for first-read-before-write on dynamic
+bytes/arrays (puya-sol intentionally skips eager `box_create` for
+those — see `ApprovalProgramBuilder.cpp:790`). Needs a different
+approach (explicit `box_exists` check around the slice read, or
+eager `box_create` for those types + bare BoxValueExpression).
+
+Original framing ("puya optimizer regressions") was wrong — puya was
+faithfully executing the AWST puya-sol asked for; 5.9's new optimization
+passes just stopped masking puya-sol's mistakes.
 
 ### What
 
 Bumping puya 5.8.0rc3 → 5.9.0rc1 + the corresponding AWSTSerializer
 compat changes (ARC4Struct.fields as JSON array of WTypeField,
-BoxPrefixedKeyExpression → IntrinsicCall(concat) inline) introduces 4
-runtime regressions in the semantic test suite, all looking like
-puya-5.9 optimizer over-aggressiveness:
+BoxPrefixedKeyExpression → IntrinsicCall(concat) inline) introduced 4
+runtime regressions in the semantic test suite:
 
-#### 4a. `test_create_random` — `extract 7 1` on 1-byte buffer
+#### 4a. `test_create_random` — `extract 7 1` on 1-byte buffer — **FIXED**
 
 Solidity source (`tests/various/contracts/create_random.sol`):
 ```solidity
@@ -310,7 +326,21 @@ Details: extract3; pushbytes 0xff // 0xff; extract 7 1
 puya 5.9 emits `pushbytes 0xff; extract 7 1` — extract 1 byte at offset
 7 from a 1-byte literal `0xff`. Overflows. Worked on 5.8.
 
-#### 4b. `test_exp_cleanup_smaller_base` — `exp` overflow on `uint8 ** uint16`
+**Root cause:** `AbiEncoderBuilder::packArgPacked` (line ~125) emits
+`extract(bytesExpr, 8 - packedWidth, packedWidth)` unconditionally for
+`packedWidth ∈ [1, 7]` — assuming `bytesExpr` is 8 bytes (from `itob`
+of a uint64). For uint64/bool inputs that holds. For `bytes1(0xff)`
+inputs the FixedBytesType lowering ALREADY produced a 1-byte value, so
+the second extract `extract 7 1` overflows the 1-byte buffer. puya 5.8
+tolerated the no-op redundancy; 5.9's optimizer folds the inner extract
+into a constant + keeps the buggy outer extract.
+
+**Fix:** capture `inputAlreadyByteshaped` BEFORE the wtype-dispatched
+moves in `packArgPacked`; gate the truncation `extract` on
+`!inputAlreadyByteshaped`. Bytes-typed inputs skip the redundant slice.
+Test recovered (v292 → v293).
+
+#### 4b. `test_exp_cleanup_smaller_base` — `exp` overflow on `uint8 ** uint16` — **FIXED**
 
 Solidity source (`tests/cleanup/contracts/exp_cleanup_smaller_base.sol`):
 ```solidity
@@ -325,18 +355,85 @@ puya 5.9 lowers this to AVM's `exp` opcode (uint64-only), which
 overflows on `2**256`. puya 5.8 used a wider biguint path. Expected
 return: 0; actual: revert.
 
-#### 4c. `test_fixed_arrays_in_storage` — abi_return = None
+**Root cause:** `SolIntegerBuilder` uint64 Pow case emitted AVM `exp`
+(uint64-only, asserts on overflow) unconditionally, then for unchecked
+sub-uint64 widths applied a post-mod 2^m_bits — but the intermediate
+`exp` already overflowed before the mod could fire.
 
-Test calls `c.getID` / `c.getData` on a contract with a 2**10-sized
-storage array. Returns `None` (revert) under puya 5.9; returned the
-expected `(8, 9)` tuple under 5.8.
+**Fix:** for `m_scope.isUnchecked() && !m_signed && m_bits < 64`,
+route through `buildBigUIntExp` (biguint square-and-multiply, no
+overflow), then mod `2^m_bits` and cast back to uint64. Other
+combinations (checked OR full uint64 OR signed) keep AVM `exp`.
+Test recovered (v292 → v293).
 
-#### 4d. `test_array_storage_index_boundary_test` — out-of-bounds revert
-expected but didn't fire
+#### 4c. `test_fixed_arrays_in_storage` — abi_return = None — **FIXED**
 
-Test calls `test_boundary_check(uint256,uint256)` with various
-in-bounds vs out-of-bounds index pairs. Expects revert on OOB access;
-under puya 5.9 one of the boundary cases doesn't revert.
+#### 4d. `test_array_storage_index_boundary_test` — out-of-bounds
+revert expected but didn't fire — **OPEN**
+
+Tested case: `test_boundary_check(uint256, uint256)` grows
+`uint[] storageArray` to 256 elements (8194 B encoded) then reads
+`storageArray[255]`. The read goes through `StateGet(BoxValue, default)`
+which lowers to `box_get` (whole-box load — bounded at AVM 4096-byte
+stack value cap, so an 8194 B box reverts).
+
+Cannot reuse 4c's fix because for dynamic types like `uint[]` we can't
+statically prove the box exists at first read — puya-sol intentionally
+skips eager box_create for dynamic bytes (see
+`ApprovalProgramBuilder.cpp:790`). Switching dynamic-type reads to
+bare `BoxValueExpression` asserts on missing-box and regresses tests
+that rely on the empty-default-on-first-read semantics
+(`byte_array_transitional_2`, `mappings_array2d_pop_delete`,
+`internal_types_in_library`).
+
+Next steps for 4d:
+- (a) Lift the "skip box_create for dynamic bytes" optimisation —
+  always eagerly create the empty box in __postInit, then bare
+  `BoxValueExpression` is safe. Cost: one extra `box_create 0` per
+  dynamic-bytes/dynamic-array state var.
+- (b) Emit an explicit `box_exists(key)` check around dynamic-array
+  reads; on miss, materialise an empty-bytes / `0x0000` default
+  (small — safe on stack); on hit, route through `box_extract` for
+  slice reads.
+- (c) Stay on puya 5.8.0rc3 for this specific test (already an XFAIL
+  candidate).
+
+---
+
+(legacy 4c+4d combined notes from initial framing — superseded by
+the per-test notes above)
+
+
+**Root cause (both):** puya-sol's `StorageMapper::createStateRead`
+wraps every box read in a `StateGet` with a typed zero-default —
+intended so that reading an uninitialized box returns the Solidity
+default (0/false/empty). Under puya 5.9, `StateGet`'s default branch
+materialises the full encoded zero of the storage type via
+`bzero(N)`. For `Data[1024]` (1024 × 64 = 65536 B), `bzero(65536)`
+exceeds AVM's 4096 B stack-value cap and the contract reverts at
+runtime — before the actual `extract3` ever runs. puya 5.8 lowered
+`box_extract` more directly and never tried to materialise the full
+zero default.
+
+For 4d (`test_boundary_check`), the same revert fires inside the
+in-bounds check before puya can reach the synthetic OOB check, so the
+test reports "no revert at the boundary" — which is really "wrong
+revert at the bzero".
+
+**Fix:** in `StorageMapper::createStateRead` (and the equivalent path
+in `PublicGetterBuilder` for synthetic public state-var getters),
+when the box-backed type's `computeEncodedElementSize > 4096`, skip
+the `StateGet+default` wrapper and return `BoxValueExpression`
+directly. puya lowers a bare `BoxValueExpression` via `BoxRead` (no
+big zero materialisation; asserts the box exists on miss). Since
+puya-sol eagerly `box_create`s these state vars in `__postInit` (see
+`m_boxArrayVarNames` in `ApprovalProgramBuilder`), the assert never
+fires in practice. Threshold lives as
+`StorageMapper::kAvmStackValueMax = 4096`.
+
+Trade-off: oversized box types lose default-on-missing-box semantics,
+but those types couldn't be read at all under puya 5.9 before the
+fix, so this is strictly more permissive.
 
 ### Where to look (puya-side)
 
@@ -359,12 +456,12 @@ variant selection going wrong on a literal too short to slice.
 - `tests/array/test_array.py::test_fixed_arrays_in_storage`
 - `tests/array/test_array.py::test_array_storage_index_boundary_test`
 
-### Workaround
+### Workaround (partial)
 
-Stay on puya 5.8.0rc3 (`0d5af6b41`) — bit-identical 1199/1322 on the
-semantic suite (v286 → v290 across 4 verification runs). The puya
-5.9.0rc1 bump is needed for polymarket-experiment compatibility but
-introduces the regressions above.
+Stay on puya 5.8.0rc3 (`0d5af6b41`) for the 4d-specific case
+(dynamic array growing past 4 KB). 4a + 4b + 4c are fixed on the
+puya-sol side; the puya 5.9 bump now passes them cleanly. Only 4d
+remains regressed under 5.9 vs the 5.8 baseline.
 
 ## 5. address-typed parameter → uint64 over-elision in inner-call ApplicationID
 
@@ -466,3 +563,53 @@ invoke. Fails with extract_uint64 error.
 Every polymarket v2 test depending on __postInit-initialised state
 (orch admin/operator/owner roles, factory addresses, EIP-712 cache).
 Blocks ~80% of v2 tests.
+
+### 4c + 4d follow-up (deferred)
+
+Both `test_fixed_arrays_in_storage` and `test_array_storage_index_boundary_test`
+fail at runtime under puya 5.9 with the same root cause:
+
+puya 5.9 changed how it lowers `box_extract` AWST nodes. Old (5.8):
+
+  bytec "data"; <offset>; <length>; box_extract
+
+emits a single `box_extract` opcode that asserts if the box doesn't
+exist (Solidity-incompatible: returns the bytes if exists, reverts
+otherwise).
+
+New (5.9): wraps with a zero-default-on-missing fallback:
+
+  pushint <full_logical_size>
+  bzero                       ← `bzero(N)` default buffer
+  bytec "data"; box_get       ← (value, exists)
+  select                      ← box value if exists, else default
+  <offset>; <length>; extract3 ← extract from chosen buffer
+
+This is correct in spirit (matches EVM storage semantics where
+uninitialized slots are zero). But it breaks for `box_extract` where
+`<full_logical_size>` exceeds AVM's per-stack-value cap of 4096
+bytes. The `bzero(N)` itself reverts at runtime.
+
+In our two failing tests:
+- `Data[2**10] data` (struct array): 1024 × 64 = 65536 byte logical
+  buffer → `bzero(65536)` overflows the 4096 cap.
+- `uint[] storageArray` followed by index access with bounds-check:
+  similar dynamic-length codegen via `box_extract` with full-buffer
+  default.
+
+Puya-sol-side options:
+- Implement multi-box storage for fixed-size STRUCT arrays (currently
+  only scalar arrays use multi-box per `[[multi-box-storage]]`). This
+  splits the 65536-byte buffer into 2 × 32768-byte boxes that fit
+  individually and don't trigger the bzero(>4096).
+- Emit the box-read via a custom IntrinsicCall chain (raw `box_get` +
+  manual extract) that bypasses puya 5.9's box_extract lowering.
+
+Puya-side options:
+- Cap the `bzero(N)` default at 4096 bytes (AVM's stack-value max)
+  and let the extract handle the boundary.
+- Restore the old `box_extract` direct emission as an alternative
+  lowering when the logical buffer size is large.
+
+Deferred: multi-day work in either layer. Accept the -2 cost vs v290
+for now.

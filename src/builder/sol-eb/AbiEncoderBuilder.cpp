@@ -82,6 +82,15 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 
 	std::shared_ptr<awst::Expression> bytesExpr;
 
+	// Capture the input-was-already-bytes-typed flag BEFORE the moves
+	// below mutate _expr. Used by the packed-width truncation pass below
+	// to skip the `extract 8-N N` slice when the input already arrives
+	// at the right N-byte length (e.g. `bytes1(0xff)` lowers in
+	// FixedBytesType to a 1-byte value; re-extracting would `extract 7 1`
+	// on a 1-byte buffer and overflow).
+	bool inputAlreadyByteshaped = (_expr->wtype == awst::WType::bytesType()
+		|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes));
+
 	if (_expr->wtype == awst::WType::bytesType())
 		bytesExpr = std::move(_expr);
 	else if (_expr->wtype == awst::WType::stringType()
@@ -122,8 +131,21 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		bytesExpr = std::move(cast);
 	}
 
-	// Packed width truncation/padding
-	if (packedWidth > 0 && packedWidth != 8)
+	// Packed width truncation/padding.
+	//
+	// The `extract(8 - N, N)` form below assumes `bytesExpr` is exactly 8
+	// bytes (came from `itob` of a uint64), so we slice off the last N
+	// to drop the high-zero padding. That assumption holds for the
+	// uint64 / bool input branches (lines 93-118) but NOT for the
+	// bytes-typed branches (85-92) where the input is already the right
+	// length (e.g. `bytes1(0xff)` → 1 byte via FixedBytesType lowering's
+	// own `extract 7 1`). Doing the extract again on a 1-byte value runs
+	// `extract 7 1` over a 1-byte buffer → AVM `extraction start 7 is
+	// beyond length: 1` revert. (Puya 5.8 was tolerant of this shape;
+	// puya 5.9 surfaces it as a runtime error — see puyabug.md #4a.)
+	//
+	// `inputAlreadyByteshaped` was captured before the moves above.
+	if (packedWidth > 0 && packedWidth != 8 && !inputAlreadyByteshaped)
 	{
 		if (packedWidth <= 8)
 		{

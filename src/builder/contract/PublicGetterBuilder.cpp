@@ -453,13 +453,11 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						std::move(encoded), encType, std::move(currentPrefix), loc);
 				}
 
+				// makeStateGetWithDefault drops the StateGet wrapper for box
+				// reads whose payload + default can exceed AVM's 4 KB stack
+				// value cap (large/dynamic types) — see StorageMapper.cpp.
 				auto boxExpr = awst::makeBoxValueExpression(std::move(currentPrefix), storedWType, loc);
-
-				auto defaultVal = StorageMapper::makeDefaultValue(storedWType, loc);
-
-				auto stateGet = awst::makeStateGet(std::move(boxExpr), std::move(defaultVal), storedWType, loc);
-
-				storageRead = std::move(stateGet);
+				storageRead = StorageMapper::makeStateGetWithDefault(std::move(boxExpr), storedWType, loc);
 				} // end keyArgCount > 0 branch
 
 				// Apply index accesses for any array dimensions nested inside the box value

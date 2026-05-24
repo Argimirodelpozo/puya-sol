@@ -188,6 +188,42 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	case BuilderBinaryOp::Mod: e->op = awst::UInt64BinaryOperator::Mod; break;
 	case BuilderBinaryOp::Pow:
 	{
+		// For unchecked sub-uint64 types, the intermediate `base**exp`
+		// value can exceed uint64 (e.g. `uint16 e = 0x100; uint8 b = 2;
+		// b ** e` = 2**256, then mod 2**16 = 0). AVM's `exp` opcode is
+		// uint64-only and asserts on overflow, so we can't compute the
+		// intermediate there and then mod down. Route through biguint
+		// `exp` (square-and-multiply, no overflow) then mod 2**m_bits.
+		// (Was: AVM uint64 `exp` unconditionally; under puya 5.9's
+		// stricter optimizer this surfaced as a `2**256 overflows uint64`
+		// runtime revert in test_exp_cleanup_smaller_base —
+		// puyabug.md #4b.)
+		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
+		{
+			auto biguintResult = buildBigUIntExp(e->left, e->right, _loc);
+
+			// Mask to 2**m_bits and cast back to uint64.
+			std::string modValStr;
+			{
+				uint64_t modVal = uint64_t(1) << m_bits;
+				modValStr = std::to_string(modVal);
+			}
+			auto modConst = awst::makeIntegerConstant(modValStr, _loc, awst::WType::biguintType());
+			auto masked = awst::makeBigUIntBinOp(std::move(biguintResult),
+				awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
+			// biguint → bytes → uint64 (low 8 bytes).
+			auto asBytes = awst::makeAsBytes(std::move(masked), _loc);
+			auto leftPadded = awst::makeLeftPad(std::move(asBytes), 8, _loc);
+			auto sub8 = awst::makeUInt64BinOp(
+				awst::makeLen(leftPadded, _loc),
+				awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant("8", _loc), _loc);
+			auto last8 = awst::makeExtract3(leftPadded, std::move(sub8),
+				awst::makeIntegerConstant("8", _loc), _loc);
+			auto u64 = awst::makeBtoi(std::move(last8), _loc);
+			return wrap(std::move(u64));
+		}
+
 		// AVM `exp` asserts on 0^0. Solidity defines 0**0 = 1.
 		e->op = awst::UInt64BinaryOperator::Pow;
 
@@ -199,15 +235,6 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 		std::shared_ptr<awst::Expression> powResult = awst::makeConditional(
 			std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);
-
-		// Apply unchecked sub-type wrapping for Pow (can't fall through to general wrapping)
-		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
-		{
-			uint64_t modVal = uint64_t(1) << m_bits;
-			auto modConst = awst::makeIntegerConstant(modVal, _loc);
-			auto masked = awst::makeUInt64BinOp(std::move(powResult), awst::UInt64BinaryOperator::Mod, std::move(modConst), _loc);
-			powResult = std::move(masked);
-		}
 
 		return wrap(emitOverflowCheck(std::move(powResult), _op, _loc));
 	}
