@@ -37,12 +37,25 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				isCustomError = true;
 			}
 			// Solidity evaluates require's args eagerly — even on the
-			// success path. Build each error-arg expression so its side
-			// effects (e.g. an inner call that short-circuits via Yul
-			// return) actually run.
+			// success path. Build each error-arg expression AND emit it
+			// as a pre-pending ExpressionStatement so its side effects
+			// (e.g. an inner call that short-circuits via Yul `return`)
+			// actually land in the function body BEFORE the assert. A
+			// bare `buildExpr` returns the expression value but doesn't
+			// put it in the body — for a pure expression that's fine
+			// (the discarded value has no effect), but for a function
+			// call we'd lose the callsub entirely.
+			// See errors/require_error_evaluation_order_1.sol.
 			if (isCustomError)
 				for (auto const& a : errorCall->arguments())
-					(void)buildExpr(*a);
+				{
+					auto argExpr = buildExpr(*a);
+					if (argExpr && argExpr->wtype && argExpr->wtype != awst::WType::voidType())
+					{
+						auto stmt = awst::makeExpressionStatement(std::move(argExpr), m_loc);
+						m_ctx.prePendingStatements.push_back(std::move(stmt));
+					}
+				}
 		}
 		if (!isCustomError)
 		{
