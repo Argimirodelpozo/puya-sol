@@ -79,25 +79,11 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	//       StateGet+empty-default pattern for them.
 	if (auto bv = std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
 	{
-		int encodedSize = computeEncodedElementSize(_type);
-		if (encodedSize > kAvmStackValueMax)
+		// (a) Statically oversized fixed types — always eagerly created.
+		if (computeEncodedElementSize(_type) > kAvmStackValueMax)
 			return _field;
-
-		auto kind = _type ? _type->kind() : awst::WTypeKind::Basic;
-		bool dynamicSized =
-			kind == awst::WTypeKind::ARC4DynamicArray
-			|| kind == awst::WTypeKind::ReferenceArray
-			|| (kind == awst::WTypeKind::Bytes
-				&& !dynamic_cast<awst::BytesWType const*>(_type)->length().has_value());
-
-		// Top-level state var iff the box key is a literal name
-		// (BytesConstant). Mapping values derive the key via runtime
-		// concat with a hash of the keys — those go through the
-		// StateGet path.
-		bool topLevelStateVar =
-			bv->key && std::dynamic_pointer_cast<awst::BytesConstant>(bv->key);
-
-		if (dynamicSized && topLevelStateVar)
+		// (b) Top-level dynamic state vars — eagerly created in __postInit.
+		if (isTopLevelDynamicBox(bv.get()))
 			return _field;
 	}
 	auto def = makeDefaultValue(_type, _loc);
@@ -107,6 +93,24 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
 {
 	return TypeCoercion::computeEncodedElementSize(_type);
+}
+
+bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
+{
+	if (!_box || !_box->wtype) return false;
+	auto kind = _box->wtype->kind();
+	bool dynamicSized =
+		kind == awst::WTypeKind::ARC4DynamicArray
+		|| kind == awst::WTypeKind::ReferenceArray
+		|| (kind == awst::WTypeKind::Bytes
+			&& !dynamic_cast<awst::BytesWType const*>(_box->wtype)->length().has_value());
+	if (!dynamicSized) return false;
+	// Top-level state var iff the box key is a literal name
+	// (BytesConstant). Mapping values derive the key via runtime
+	// concat with a hash of the keys — those go through the
+	// StateGet path.
+	return _box->key
+		&& std::dynamic_pointer_cast<awst::BytesConstant>(_box->key) != nullptr;
 }
 
 // ── Multi-box helpers ──

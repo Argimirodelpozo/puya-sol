@@ -112,6 +112,22 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// True iff `_box` is a top-level state-var box of a dynamic-sized
+	/// type (ARC4DynamicArray / ReferenceArray / dynamic bytes). These
+	/// are the boxes that are eagerly `box_create`d in `__postInit`
+	/// (see `m_boxArrayVarNames` in ApprovalProgramBuilder), so a bare
+	/// `BoxValueExpression` read is safe (the implicit assert-on-missing
+	/// inside puya's BoxRead never fires). "Top-level" = key is a literal
+	/// `BytesConstant` — mapping values (key = runtime `concat(name,
+	/// hash(args))`) are lazy boxes and don't qualify.
+	///
+	/// Used by both the read path (StateGet→BoxValue skip in
+	/// `makeStateGetWithDefault`) and the delete path
+	/// (SolUnaryOperation::handleDelete — emit `a = default` via
+	/// box_put instead of `box_del` so the eagerly-created box stays
+	/// alive). Both sites must agree, hence the shared helper.
+	static bool isTopLevelDynamicBox(awst::BoxValueExpression const* _box);
+
 private:
 	TypeMapper& m_typeMapper;
 
