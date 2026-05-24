@@ -3,6 +3,7 @@
 /// Mirrors solidity/libsolidity/ast/Types.cpp StorageOffsets::computeOffsets().
 
 #include "builder/storage/StorageLayout.h"
+#include "builder/contract/StateVarWalker.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -42,28 +43,24 @@ void StorageLayout::computeLayout(
 	unsigned currentOffset = 0; // bytes used in current slot
 
 	// Walk linearized base contracts (most-base first = reverse of linearization)
-	auto const& linearized = _contract.annotation().linearizedBaseContracts;
 	std::vector<VariableDeclaration const*> allVars;
 
 	// Collect in correct order: base-first
-	for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+	forEachStateVarReverse(_contract, [&](auto const* var)
 	{
-		for (auto const* var: (*it)->stateVariables())
-		{
-			if (var->isConstant() || var->immutable())
-				continue;
-			// Transient vars have their own independent slot namespace (EIP-1153);
-			// TransientStorage computes that layout separately.
-			if (var->referenceLocation() == VariableDeclaration::Location::Transient)
-				continue;
-			// Skip if already seen (inherited and not overridden)
-			bool alreadySeen = false;
-			for (auto const* existing: allVars)
-				if (existing->name() == var->name()) { alreadySeen = true; break; }
-			if (alreadySeen) continue;
-			allVars.push_back(var);
-		}
-	}
+		if (var->isConstant() || var->immutable())
+			return;
+		// Transient vars have their own independent slot namespace (EIP-1153);
+		// TransientStorage computes that layout separately.
+		if (var->referenceLocation() == VariableDeclaration::Location::Transient)
+			return;
+		// Skip if already seen (inherited and not overridden)
+		bool alreadySeen = false;
+		for (auto const* existing: allVars)
+			if (existing->name() == var->name()) { alreadySeen = true; break; }
+		if (alreadySeen) return;
+		allVars.push_back(var);
+	});
 
 	for (auto const* var: allVars)
 	{

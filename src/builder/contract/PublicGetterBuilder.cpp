@@ -1,5 +1,6 @@
 #include "builder/ContractBuilder.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -17,21 +18,20 @@ void ContractBuilder::buildPublicStateVariableGetters(
 	auto* contract = &_contractNode;
 	auto const& contractName = _contractName;
 	auto& translatedFunctions = _translatedFunctions;
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	forEachStateVar(_contract, [&](auto const* var)
 	{
-		for (auto const* var: base->stateVariables())
 		{
 			if (!var->isPartOfExternalInterface())
-				continue;
+				return;
 			if (translatedFunctions.count(var->name()))
-				continue; // explicit getter already exists
+				return; // explicit getter already exists
 
 			// Get the Solidity-computed getter function type.
 			// This gives us parameter types (mapping keys, array indices)
 			// and return types (struct field filtering).
 			auto getterFuncType = var->functionType(/*_internal=*/false);
 			if (!getterFuncType)
-				continue;
+				return;
 
 			translatedFunctions.insert(var->name());
 
@@ -104,7 +104,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			else
 			{
 				// No return types — shouldn't happen for getters, skip.
-				continue;
+				return;
 			}
 
 			// Build body: return value
@@ -697,7 +697,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 			contract->methods.push_back(std::move(getter));
 		}
-	}
+	});
 }
 
 } // namespace puyasol::builder

@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 2144-2304.
 
 #include "builder/sol-ast/calls/SolNewExpression.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageMapper.h"
@@ -313,10 +314,12 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				};
 				MsgRefChecker checker;
 				childCtor->body().accept(checker);
-				auto const& lin = contractType->contractDefinition().annotation().linearizedBaseContracts;
-				for (auto const* base: lin)
-					for (auto const* var: base->stateVariables())
+				builder::forEachStateVar(
+					contractType->contractDefinition(),
+					[&](auto const* var)
+					{
 						if (var->value()) var->value()->accept(checker);
+					});
 				childHasPostInit = checker.found;
 			}
 

@@ -1,4 +1,5 @@
 #include "builder/storage/StorageMapper.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include "Logger.h"
@@ -232,27 +233,25 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 	std::set<std::string> seen; // avoid duplicates from inheritance
 
 	// Iterate all contracts in linearization order (includes base contracts)
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	forEachStateVar(_contract, [&](auto const* var)
 	{
-		for (auto const* var: base->stateVariables())
+		if (var->isConstant())
+			return;
+		if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
+			return;
+		if (seen.count(var->name()))
+			return;
+		seen.insert(var->name());
+
+		awst::AppStorageDefinition def;
+		def.sourceLocation = makeLoc(var->location(), _sourceFile);
+		def.memberName = var->name();
+
+		if (shouldUseBoxStorage(*var))
 		{
-			if (var->isConstant())
-				continue;
-			if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
-				continue;
-			if (seen.count(var->name()))
-				continue;
-			seen.insert(var->name());
+			def.storageKind = awst::AppStorageKind::Box;
 
-			awst::AppStorageDefinition def;
-			def.sourceLocation = makeLoc(var->location(), _sourceFile);
-			def.memberName = var->name();
-
-			if (shouldUseBoxStorage(*var))
-			{
-				def.storageKind = awst::AppStorageKind::Box;
-
-				// For mappings, the value type is the storage type.
+			// For mappings, the value type is the storage type.
 			// For nested mappings (e.g. mapping(address => mapping(address => bool))),
 			// unwrap recursively to find the final non-mapping value type.
 			if (auto const* mappingType = dynamic_cast<solidity::frontend::MappingType const*>(var->type()))
@@ -263,33 +262,32 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 				def.storageWType = m_typeMapper.map(valueType);
 				def.isMap = true;
 			}
-				else if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type()))
-				{
-					// Dynamic state array → box-backed ARC4 dynamic array.
-					def.storageWType = m_typeMapper.map(arrType);
-					def.isMap = false;
-				}
-				else
-				{
-					def.storageWType = m_typeMapper.map(var->type());
-				}
+			else if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type()))
+			{
+				// Dynamic state array → box-backed ARC4 dynamic array.
+				def.storageWType = m_typeMapper.map(arrType);
+				def.isMap = false;
 			}
 			else
 			{
-				def.storageKind = awst::AppStorageKind::AppGlobal;
 				def.storageWType = m_typeMapper.map(var->type());
-
-				if (def.storageWType == awst::WType::stringType())
-					Logger::instance().info(
-						"string state variable '" + var->name()
-						+ "' uses Algorand global state (limited to ~64 bytes)"
-					);
 			}
-
-			def.key = makeKeyExpr(var->name(), def.sourceLocation, def.storageKind);
-			defs.push_back(std::move(def));
 		}
-	}
+		else
+		{
+			def.storageKind = awst::AppStorageKind::AppGlobal;
+			def.storageWType = m_typeMapper.map(var->type());
+
+			if (def.storageWType == awst::WType::stringType())
+				Logger::instance().info(
+					"string state variable '" + var->name()
+					+ "' uses Algorand global state (limited to ~64 bytes)"
+				);
+		}
+
+		def.key = makeKeyExpr(var->name(), def.sourceLocation, def.storageKind);
+		defs.push_back(std::move(def));
+	});
 
 	return defs;
 }

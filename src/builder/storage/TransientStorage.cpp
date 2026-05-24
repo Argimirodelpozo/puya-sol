@@ -1,5 +1,6 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/contract/StateVarWalker.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/Types.h>
@@ -21,23 +22,19 @@ void TransientStorage::collectVars(
 	// Collect transient vars across the linearization, most-base first,
 	// de-duplicating by name (inherited-not-overridden handled like in
 	// StorageLayout).
-	auto const& linearized = _contract.annotation().linearizedBaseContracts;
 	std::vector<VariableDeclaration const*> allVars;
-	for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+	forEachStateVarReverse(_contract, [&](auto const* var)
 	{
-		for (auto const* var: (*it)->stateVariables())
-		{
-			if (var->isConstant() || var->immutable())
-				continue;
-			if (var->referenceLocation() != VariableDeclaration::Location::Transient)
-				continue;
-			bool alreadySeen = false;
-			for (auto const* existing: allVars)
-				if (existing->name() == var->name()) { alreadySeen = true; break; }
-			if (alreadySeen) continue;
-			allVars.push_back(var);
-		}
-	}
+		if (var->isConstant() || var->immutable())
+			return;
+		if (var->referenceLocation() != VariableDeclaration::Location::Transient)
+			return;
+		bool alreadySeen = false;
+		for (auto const* existing: allVars)
+			if (existing->name() == var->name()) { alreadySeen = true; break; }
+		if (alreadySeen) return;
+		allVars.push_back(var);
+	});
 
 	unsigned currentSlot = 0;
 	unsigned currentOffset = 0;
