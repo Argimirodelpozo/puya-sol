@@ -95,6 +95,15 @@ int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
 	return TypeCoercion::computeEncodedElementSize(_type);
 }
 
+std::shared_ptr<awst::BoxValueExpression> StorageMapper::makeTopLevelBoxExpr(
+	std::string const& _varName,
+	awst::WType const* _type,
+	awst::SourceLocation const& _loc)
+{
+	auto key = awst::makeUtf8BytesConstant(_varName, _loc, awst::WType::boxKeyType());
+	return awst::makeBoxValueExpression(std::move(key), _type, _loc);
+}
+
 bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
 {
 	if (!_box || !_box->wtype) return false;

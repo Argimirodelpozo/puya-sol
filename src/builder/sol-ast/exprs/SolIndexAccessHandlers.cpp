@@ -35,9 +35,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
 		arrayVarName = ident->name();
 
-	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
-
-	auto boxExpr = awst::makeBoxValueExpression(boxKey, arrWType, m_loc);
+	auto boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
 
 	std::shared_ptr<awst::Expression> baseExprForRead = boxExpr;
 	if (!m_indexAccess.annotation().willBeWrittenTo)

@@ -112,6 +112,17 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Build `BoxValueExpression(makeUtf8BytesConstant(_varName,
+	/// loc, boxKeyType()), _type, loc)` — the canonical "top-level
+	/// state var box" shape. Replaces the 2-line idiom at half a
+	/// dozen call sites and pairs with `isTopLevelDynamicBox` so
+	/// readers can recognise the shape.
+	static std::shared_ptr<awst::BoxValueExpression> makeTopLevelBoxExpr(
+		std::string const& _varName,
+		awst::WType const* _type,
+		awst::SourceLocation const& _loc
+	);
+
 	/// True iff `_box` is a top-level state-var box of a dynamic-sized
 	/// type (ARC4DynamicArray / ReferenceArray / dynamic bytes). These
 	/// are the boxes that are eagerly `box_create`d in `__postInit`

@@ -648,9 +648,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		return handleMappingElementArrayLengthOp(_memberName, _varDecl, arrayVarName);
 
 	// Build BoxValueExpression
-	auto boxKey = awst::makeUtf8BytesConstant(arrayVarName, m_loc, awst::WType::boxKeyType());
-
-	auto boxExpr = awst::makeBoxValueExpression(boxKey, arrWType, m_loc);
+	auto boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
 
 	// StateGet wrapper for reads (returns empty array if box missing)
 	auto emptyArr = awst::makeNewArray(arrWType, m_loc);
