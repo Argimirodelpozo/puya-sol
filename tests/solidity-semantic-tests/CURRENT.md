@@ -1,7 +1,46 @@
-# Semantic Test Status — v295
+# Semantic Test Status — v296
 
-**Totals (pytest)**: 1198 PASS / 104 FAIL / 20 xfailed =
-**1198/1322 (90.6%)**.
+**Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
+**1199/1322 (90.7%)** — bit-identical to puya 5.8.0rc3 baseline.
+
+## v296 — fix(puya-5.9): close 4d — top-level dynamic state vars
+
+Closes the last puya 5.9 regression
+(`test_array_storage_index_boundary_test`). Reaches parity with
+the puya 5.8 baseline pass count.
+
+Three coordinated changes safely extend v295's
+statically-oversized-type StateGet-skip to dynamic-sized types
+(ARC4DynamicArray, ReferenceArray, dynamic bytes) when they're
+top-level state vars (not mapping values):
+
+- **`ApprovalProgramBuilder.cpp`** — lift the historical dyn-bytes
+  `box_create` skip; emit `box_create(varName, 0)` (empty 0-byte
+  box) for raw dynamic bytes without initialiser. Was previously
+  skipped because pre-creating with 2 zero bytes corrupted the
+  empty case (reader saw spurious length header); an empty 0-byte
+  box has no such ambiguity.
+- **`StorageMapper::makeStateGetWithDefault`** — extend the
+  skip-StateGet branch to ARC4DynamicArray / ReferenceArray /
+  dynamic bytes when the BoxValueExpression's key is a literal
+  `BytesConstant`. Mapping values (key = runtime `concat(name,
+  hash(args))`) keep StateGet+empty-default since their boxes
+  remain lazy.
+- **`SolUnaryOperation::handleDelete`** — for top-level dynamic
+  state vars, emit `a = default` (box_put with empty encoding —
+  `0x0000` for ARC4 dyn array, `0x` for raw bytes) instead of
+  `box_del`. Box deletion would orphan the eagerly-created box
+  and leave subsequent reads asserting on "box exists".
+
+### Suite progression
+
+| Run | Description | Passed | Failed |
+|-----|-------------|--------|--------|
+| v286 | puya 5.8 baseline | 1199 | 103 |
+| v295 | puya 5.9 + 4a/4b/4c (statically-oversized only) | 1198 | 104 |
+| **v296 | puya 5.9 + 4a/4b/4c + 4d (this commit)** | **1199** | **103** |
+
+Net vs 5.8 baseline: ±0. All four 5.9 regressions closed.
 
 ## v295 — fix(puya-5.9): unblock 3 of 4 latent puya-sol AWST bugs surfaced by 5.9
 

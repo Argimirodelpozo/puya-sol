@@ -277,22 +277,21 @@ the validator guard is the smaller fix and keeps the optimisation.
 
 ## 4. puya 5.9.0rc1 surfaces 4 latent puya-sol AWST bugs
 
-**Status (after follow-up triage):** Not puya-side bugs. The 4 cases
-below are **puya-sol AWST shapes that puya 5.8 was tolerant of and
-puya 5.9 surfaces as runtime errors** under its stricter optimizer.
-3 of 4 fixed in puya-sol (4a + 4b: AbiEncoder/Pow paths;
-4c: StorageMapper/PublicGetterBuilder skip the StateGet-default
-branch for **statically oversized** box-backed types so puya stops
-emitting `bzero(N)` with N > 4096).
-4d (`uint[]` growing past 4 KB at runtime) remains open — same
-`StateGet` issue but for dynamic types that we can't statically
-classify as "always oversized". Tried extending the skip to all
-dynamic types in v294; that broke 3 tests that rely on the
-StateGet empty-default for first-read-before-write on dynamic
-bytes/arrays (puya-sol intentionally skips eager `box_create` for
-those — see `ApprovalProgramBuilder.cpp:790`). Needs a different
-approach (explicit `box_exists` check around the slice read, or
-eager `box_create` for those types + bare BoxValueExpression).
+**Status:** All 4 fixed in puya-sol. v296 = 1199/1322, matching the
+puya 5.8 baseline. The 4 cases below are **puya-sol AWST shapes that
+puya 5.8 was tolerant of and puya 5.9 surfaces as runtime errors**
+under its stricter optimizer.
+
+- 4a + 4b: AbiEncoder/Pow paths (commit `ba07b58e1`)
+- 4c: StorageMapper/PublicGetterBuilder skip the StateGet-default
+  branch for **statically oversized** box-backed types so puya stops
+  emitting `bzero(N)` with N > 4096 (commit `ba07b58e1`)
+- 4d: extended to **dynamic-sized** types (ARC4DynamicArray,
+  ReferenceArray, dynamic bytes) but ONLY when the box key is a
+  literal `BytesConstant` (top-level state var, not mapping value).
+  Made safe by lifting the dyn-bytes box_create skip + redirecting
+  `delete a;` to box-put-empty instead of box_del (commit
+  `f59621904`).
 
 Original framing ("puya optimizer regressions") was wrong — puya was
 faithfully executing the AWST puya-sol asked for; 5.9's new optimization
@@ -369,34 +368,42 @@ Test recovered (v292 → v293).
 #### 4c. `test_fixed_arrays_in_storage` — abi_return = None — **FIXED**
 
 #### 4d. `test_array_storage_index_boundary_test` — out-of-bounds
-revert expected but didn't fire — **OPEN**
+revert expected but didn't fire — **FIXED** (v296, commit `f59621904`)
 
-Tested case: `test_boundary_check(uint256, uint256)` grows
-`uint[] storageArray` to 256 elements (8194 B encoded) then reads
-`storageArray[255]`. The read goes through `StateGet(BoxValue, default)`
-which lowers to `box_get` (whole-box load — bounded at AVM 4096-byte
-stack value cap, so an 8194 B box reverts).
+`test_boundary_check(uint256, uint256)` grows `uint[] storageArray`
+to 256 elements (8194 B encoded) then reads `storageArray[255]`. The
+read went through `StateGet(BoxValue, default)`, whose `box_get` half
+of the select loads the whole box content as a single stack value
+and reverts on AVM's 4096-byte cap.
 
-Cannot reuse 4c's fix because for dynamic types like `uint[]` we can't
-statically prove the box exists at first read — puya-sol intentionally
-skips eager box_create for dynamic bytes (see
-`ApprovalProgramBuilder.cpp:790`). Switching dynamic-type reads to
-bare `BoxValueExpression` asserts on missing-box and regresses tests
-that rely on the empty-default-on-first-read semantics
-(`byte_array_transitional_2`, `mappings_array2d_pop_delete`,
-`internal_types_in_library`).
+Cannot reuse 4c's static-size threshold because for `uint[]` we
+can't statically prove the box exists at first read — puya-sol
+historically skipped eager `box_create` for dynamic bytes (see
+`ApprovalProgramBuilder.cpp:790`). The v294 attempt of just
+extending the skip to all dynamic types broke 3 tests that rely on
+the StateGet empty-default for first-read-before-write on dynamic
+bytes/arrays (`byte_array_transitional_2`,
+`mappings_array2d_pop_delete`, `internal_types_in_library`).
 
-Next steps for 4d:
-- (a) Lift the "skip box_create for dynamic bytes" optimisation —
-  always eagerly create the empty box in __postInit, then bare
-  `BoxValueExpression` is safe. Cost: one extra `box_create 0` per
-  dynamic-bytes/dynamic-array state var.
-- (b) Emit an explicit `box_exists(key)` check around dynamic-array
-  reads; on miss, materialise an empty-bytes / `0x0000` default
-  (small — safe on stack); on hit, route through `box_extract` for
-  slice reads.
-- (c) Stay on puya 5.8.0rc3 for this specific test (already an XFAIL
-  candidate).
+Three coordinated changes made the extension safe:
+
+1. **Lift the dyn-bytes box_create skip** in `ApprovalProgramBuilder`
+   — emit `box_create(varName, 0)` (empty 0-byte box) for raw
+   dynamic bytes without initialiser. The historical reason for the
+   skip was that pre-creating with 2 zero bytes corrupted the empty
+   case (reader saw a length header where none should be); an empty
+   0-byte box has no such ambiguity.
+2. **Extend the StateGet-skip** in
+   `StorageMapper::makeStateGetWithDefault` to ARC4DynamicArray /
+   ReferenceArray / dynamic bytes, but ONLY when the
+   BoxValueExpression's key is a literal `BytesConstant` (top-level
+   state var, not mapping value — mapping keys are runtime
+   `concat(name, hash(args))` IntrinsicCalls). Top-level boxes
+   always exist; mapping values keep StateGet+empty-default.
+3. **Redirect `delete a;`** in `SolUnaryOperation::handleDelete` —
+   for top-level dynamic state vars, emit `a = default` (box_put
+   with empty encoding) instead of `box_del`, so the eagerly-
+   created box stays alive and subsequent reads don't assert.
 
 ---
 
@@ -456,12 +463,10 @@ variant selection going wrong on a literal too short to slice.
 - `tests/array/test_array.py::test_fixed_arrays_in_storage`
 - `tests/array/test_array.py::test_array_storage_index_boundary_test`
 
-### Workaround (partial)
+### Workaround (no longer needed)
 
-Stay on puya 5.8.0rc3 (`0d5af6b41`) for the 4d-specific case
-(dynamic array growing past 4 KB). 4a + 4b + 4c are fixed on the
-puya-sol side; the puya 5.9 bump now passes them cleanly. Only 4d
-remains regressed under 5.9 vs the 5.8 baseline.
+All 4 cases now fixed in puya-sol. v296 = 1199/1322, bit-identical
+to the puya 5.8.0rc3 baseline pass count.
 
 ## 5. address-typed parameter → uint64 over-elision in inner-call ApplicationID
 
