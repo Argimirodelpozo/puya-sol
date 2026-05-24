@@ -547,8 +547,36 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			m_scope.eraseFuncPtrTarget(varDecl->id());
 	}
 
-	if (dynamic_cast<awst::BoxValueExpression const*>(target.get()))
+	if (auto const* boxExpr = dynamic_cast<awst::BoxValueExpression const*>(target.get()))
 	{
+		// For top-level dynamic state vars (BoxValueExpression whose key
+		// is a literal BytesConstant, of type ARC4DynamicArray /
+		// ReferenceArray / dynamic bytes), do NOT emit `box_del`:
+		// ApprovalProgramBuilder eagerly box_create's these in __postInit
+		// and StorageMapper::makeStateGetWithDefault now reads them via
+		// bare BoxValueExpression (asserts box exists). Box deletion
+		// would leave subsequent reads asserting — Solidity's `delete a;`
+		// expects empty/zero, not "doesn't exist". Emit `a = default`
+		// instead (box_put with empty encoding — `0x0000` length header
+		// for ARC4 dyn array, `0x` for raw dynamic bytes) so the box
+		// stays alive. Mapping values (key = concat) keep the box_del
+		// path — their boxes are lazy and re-created on next write.
+		auto kind = boxExpr->wtype ? boxExpr->wtype->kind() : awst::WTypeKind::Basic;
+		bool dynamicSized =
+			kind == awst::WTypeKind::ARC4DynamicArray
+			|| kind == awst::WTypeKind::ReferenceArray
+			|| (kind == awst::WTypeKind::Bytes
+				&& boxExpr->wtype
+				&& !dynamic_cast<awst::BytesWType const*>(boxExpr->wtype)->length().has_value());
+		bool topLevel = boxExpr->key
+			&& std::dynamic_pointer_cast<awst::BytesConstant>(boxExpr->key);
+		if (dynamicSized && topLevel)
+		{
+			auto def = builder::StorageMapper::makeDefaultValue(boxExpr->wtype, m_loc);
+			auto put = awst::makeAssignmentExpression(target, std::move(def), m_loc, boxExpr->wtype);
+			m_ctx.queueStmt(std::move(put), m_loc);
+			return _operand;
+		}
 		auto stateDelete = awst::makeStateDelete(target, m_loc);
 		m_ctx.queueStmt(std::move(stateDelete), m_loc);
 		return _operand;

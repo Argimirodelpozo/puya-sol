@@ -791,15 +791,19 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			{
 				auto boxKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
 
-				// Uninitialised dynamic `bytes` state vars: skip the
-				// box_create so the reader's `box_get → select` fallback
-				// returns zero-length bytes. The raw box content is the
-				// bytes value stripped of the ARC4 length header, so
-				// pre-creating with 2 zero bytes would mean the reader
-				// sees 2 bytes of raw data and wraps them with a fresh
-				// length header — producing `0x0002 0x0000` instead of
-				// an empty `0x0000`. Deferring box creation to the first
-				// write fixes the empty case without breaking writes.
+				// Uninitialised dynamic `bytes` state vars: eagerly
+				// box_create with 0 bytes (empty box). The raw box content
+				// is the bytes value with no length header, so an empty box
+				// reads as empty bytes — matching Solidity's default
+				// semantics. Historical behaviour: skip the box_create and
+				// rely on the reader's `box_get → select` fallback for
+				// zero-length bytes. We lift that skip now so the reader
+				// can use a bare `BoxValueExpression` (asserts box exists,
+				// then folds `extract` into `box_extract` — single-slice,
+				// no whole-box load), which is essential for dynamic state
+				// arrays that grow > 4 KB at runtime (the old `box_get`
+				// path reverts on AVM's stack-value cap). See
+				// StorageMapper::makeStateGetWithDefault.
 				bool isDynamicBytesWithoutInit = false;
 				{
 					auto const& lin = _contract.annotation().linearizedBaseContracts;
@@ -816,7 +820,17 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					}
 				}
 				if (isDynamicBytesWithoutInit)
+				{
+					// Empty raw bytes — no length header, so size = 0.
+					auto sizeZero = awst::makeIntegerConstant(0, method.sourceLocation);
+					auto boxCreate = awst::makeBoxCreate(
+						std::move(boxKey), std::move(sizeZero),
+						method.sourceLocation);
+					auto boxStmt = awst::makeExpressionStatement(
+						std::move(boxCreate), method.sourceLocation);
+					postInitBody->body.push_back(std::move(boxStmt));
 					continue;
+				}
 
 				// Compute box size: 2 bytes for ARC4 length header (empty dynamic array),
 				// or string literal size for bytes/string initializers, or

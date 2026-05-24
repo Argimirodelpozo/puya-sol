@@ -49,31 +49,54 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	awst::SourceLocation const& _loc
 )
 {
-	// puya's StateGet lowering for a BoxValueExpression materialises the
-	// typed zero default of `_type` via the AWST default-value helper. For
-	// fixed-size types whose encoded size exceeds AVM's 4 KB stack value
-	// cap (e.g. `Data[1024]` = 65 536 B), that default is `bzero(N)` with
-	// N > 4096 — reverts at runtime before any slice extract runs. Skip
-	// the StateGet wrapper for these so puya emits a bare `BoxRead`
-	// (asserts the box exists; safe because ApprovalProgramBuilder
-	// eagerly box_create's oversized fixed arrays in `__postInit` —
-	// they're listed in `m_boxArrayVarNames`). The bare `BoxRead` then
-	// folds with a subsequent `extract` into a direct `box_extract`
-	// (single-slice read — no whole-box load).
+	// puya's StateGet lowering for a BoxValueExpression has two failure
+	// modes against AVM's 4 KB stack-value cap:
+	//   1. The typed zero default materialises as `bzero(N)` with N > 4096
+	//      for fixed-size types whose encoded size exceeds the cap (e.g.
+	//      `Data[1024]` = 65 536 B — see puyabug.md §4c).
+	//   2. The `box_get` half of the `select` returns the FULL box content
+	//      as a single stack value — reverts when the box has grown past
+	//      4 KB at runtime (e.g. `uint[256]` = 8194 B — see puyabug.md §4d).
 	//
-	// We deliberately do NOT extend this to dynamic types
-	// (ARC4DynamicArray / ReferenceArray / dynamic bytes), even though
-	// they can grow > 4 KB at runtime: ApprovalProgramBuilder skips
-	// `box_create` for uninitialised dynamic bytes (so the StateGet
-	// empty-default path returns `0x` on the first read), and switching
-	// them to a bare `BoxRead` would assert on that first read.
-	// Dynamic state vars whose box content actually grows past 4 KB hit
-	// a different puya 5.9 issue (whole-box `box_get`) tracked
-	// separately. See puyabug.md §4c/4d.
-	if (std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
+	// Both failure modes go away if we skip the StateGet wrapper entirely
+	// and emit a bare `BoxValueExpression`: puya lowers it as `BoxRead`,
+	// then `add_box_extract_replace` folds a subsequent `extract` into a
+	// direct `box_extract` opcode (single-slice read, no whole-box load,
+	// no large default materialisation). The trade-off is that a bare
+	// `BoxRead` asserts the box exists — so this is safe ONLY for boxes
+	// that ApprovalProgramBuilder eagerly `box_create`s in `__postInit`.
+	//
+	// Eligibility:
+	//   (a) Statically oversized fixed types: always safe (always eagerly
+	//       box_created — `m_boxArrayVarNames`).
+	//   (b) Dynamic-sized types (ARC4DynamicArray, ReferenceArray,
+	//       dynamic bytes): safe ONLY when the box key is a direct
+	//       `BytesConstant` (top-level state var, listed in
+	//       `m_boxArrayVarNames`). Mapping values (key = concat(name,
+	//       hash(args)) — IntrinsicCall `concat`) are lazy: their boxes
+	//       only exist after the first write to that key, so we keep the
+	//       StateGet+empty-default pattern for them.
+	if (auto bv = std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
 	{
 		int encodedSize = computeEncodedElementSize(_type);
 		if (encodedSize > kAvmStackValueMax)
+			return _field;
+
+		auto kind = _type ? _type->kind() : awst::WTypeKind::Basic;
+		bool dynamicSized =
+			kind == awst::WTypeKind::ARC4DynamicArray
+			|| kind == awst::WTypeKind::ReferenceArray
+			|| (kind == awst::WTypeKind::Bytes
+				&& !dynamic_cast<awst::BytesWType const*>(_type)->length().has_value());
+
+		// Top-level state var iff the box key is a literal name
+		// (BytesConstant). Mapping values derive the key via runtime
+		// concat with a hash of the keys — those go through the
+		// StateGet path.
+		bool topLevelStateVar =
+			bv->key && std::dynamic_pointer_cast<awst::BytesConstant>(bv->key);
+
+		if (dynamicSized && topLevelStateVar)
 			return _field;
 	}
 	auto def = makeDefaultValue(_type, _loc);
