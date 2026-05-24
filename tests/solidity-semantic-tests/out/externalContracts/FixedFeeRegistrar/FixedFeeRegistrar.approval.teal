@@ -1,0 +1,1075 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/FixedFeeRegistrar.sol.FixedFeeRegistrar.approval_program() -> uint64:
+main:
+    intcblock 128 0 1 2
+    bytecblock "m_recordData" 0x185198bd0002 0x151f7c75 0x
+    intc_1 // 0
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "m_recordData"
+    bytec_3 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa821c942 0xa9ab241c 0xc2aab3a1 0x41a490e2 0x82610078 0xeb66e00c 0x46d4a8f4 0x8ce43f7f 0x6ce596b8 0x49256607 0xa3b852de // method "reserve(string)void", method "disown(string,address)void", method "transfer(string,address)void", method "setAddr(string,address)void", method "setSubRegistrar(string,address)void", method "setContent(string,byte[32])void", method "record(string)(address,address,byte[32],address)", method "addr(string)address", method "subRegistrar(string)address", method "content(string)byte[32]", method "owner(string)address"
+    txna ApplicationArgs 0
+    match main_reserve_route@5 main_disown_route@6 main_transfer_route@7 main_setAddr_route@8 main_setSubRegistrar_route@9 main_setContent_route@10 main_record_route@11 main_addr_route@12 main_subRegistrar_route@13 main_content_route@14 main_owner_route@15
+    err
+
+main_owner_route@15:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_content_route@14:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@26:
+    intc_1 // 0
+    b main_ternary_merge@27
+
+main_subRegistrar_route@13:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_addr_route@12:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main_record_route@11:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    dup
+    cover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 3
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    uncover 4
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42
+
+main_setContent_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bnz main_if_body@50
+    global CallerApplicationID
+    bz main_after_if_else@95
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bz main_after_if_else@95
+
+main_if_body@50:
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    dup
+    cover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 3
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    uncover 2
+    swap
+    concat
+    dig 7
+    concat
+    swap
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    uncover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "m_recordData"
+    swap
+    app_global_put
+    bytec_1 // 0x185198bd0002
+    dig 2
+    concat
+    log
+
+main_after_if_else@95:
+    intc_2 // 1
+    return
+
+main_ternary_false@46:
+    intc_1 // 0
+    b main_ternary_merge@47
+
+main_setSubRegistrar_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bnz main_if_body@59
+    global CallerApplicationID
+    bz main_after_if_else@95
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bz main_after_if_else@95
+
+main_if_body@59:
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    dup
+    cover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 3
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    uncover 2
+    dig 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    uncover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "m_recordData"
+    swap
+    app_global_put
+    bytec_1 // 0x185198bd0002
+    dig 2
+    concat
+    log
+    b main_after_if_else@95
+
+main_ternary_false@55:
+    intc_1 // 0
+    b main_ternary_merge@56
+
+main_setAddr_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@64
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@65:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bnz main_if_body@68
+    global CallerApplicationID
+    bz main_after_if_else@95
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bz main_after_if_else@95
+
+main_if_body@68:
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    dup
+    cover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 3
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    dig 4
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    uncover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "m_recordData"
+    swap
+    app_global_put
+    bytec_1 // 0x185198bd0002
+    dig 2
+    concat
+    log
+    b main_after_if_else@95
+
+main_ternary_false@64:
+    intc_1 // 0
+    b main_ternary_merge@65
+
+main_transfer_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@73
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@74:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bnz main_if_body@77
+    global CallerApplicationID
+    bz main_after_if_else@95
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bz main_after_if_else@95
+
+main_if_body@77:
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    dup
+    cover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 3
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    dig 2
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    uncover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "m_recordData"
+    swap
+    app_global_put
+    bytec_1 // 0x185198bd0002
+    dig 2
+    concat
+    log
+    b main_after_if_else@95
+
+main_ternary_false@73:
+    intc_1 // 0
+    b main_ternary_merge@74
+
+main_disown_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@82
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@83:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bnz main_if_body@86
+    global CallerApplicationID
+    bz main_after_if_else@95
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 5
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    ==
+    bz main_after_if_else@95
+
+main_if_body@86:
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    pushint 8
+    bzero
+    dig 5
+    keccak256
+    pushbytes 0x08
+    b/
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 128
+    *
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "m_recordData"
+    swap
+    app_global_put
+    itxn_begin
+    intc_2 // 1
+    itxn_field TypeEnum
+    dig 2
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 13659767778871345152
+    itxn_field Amount
+    itxn_submit
+    bytec_1 // 0x185198bd0002
+    dig 2
+    concat
+    log
+    b main_after_if_else@95
+
+main_ternary_false@82:
+    intc_1 // 0
+    b main_ternary_merge@83
+
+main_reserve_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    bury 5
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    swap
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 96 32
+    bytec_3 // 0x
+    ==
+    bz main_after_if_else@95
+    txn GroupIndex
+    bz main_ternary_false@92
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@93:
+    itob
+    pushbytes 0x03bd913e6c1df40000
+    b>=
+    bz main_after_if_else@95
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    dup
+    cover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 2
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 32
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    dig 4
+    callsub m_record
+    intc_0 // 128
+    *
+    intc_0 // 128
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    uncover 3
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    intc_1 // 0
+    bytec_0 // "m_recordData"
+    app_global_get_ex
+    assert // check m_recordData exists
+    uncover 2
+    callsub m_record
+    intc_0 // 128
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "m_recordData"
+    swap
+    app_global_put
+    bytec_1 // 0x185198bd0002
+    dig 2
+    concat
+    log
+    b main_after_if_else@95
+
+main_ternary_false@92:
+    intc_1 // 0
+    b main_ternary_merge@93
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/FixedFeeRegistrar.sol.FixedFeeRegistrar.m_record(_name: bytes) -> uint64:
+m_record:
+    proto 1 1
+    pushint 8
+    bzero
+    frame_dig -1
+    keccak256
+    pushbytes 0x08
+    b/
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    retsub

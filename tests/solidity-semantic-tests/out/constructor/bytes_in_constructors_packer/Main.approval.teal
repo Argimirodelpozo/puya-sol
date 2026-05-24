@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_packer.sol.Main.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8
-    bytecblock "__ctor_pending" "m_s" 0x151f7c75 "m_x"
+    bytecblock "m_s" "__ctor_pending" 0x151f7c75 "m_x"
     intc_1 // 0
     pushint 4096
     bzero
@@ -17,7 +17,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -52,22 +52,19 @@ main_part_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    bytec_1 // "m_s"
-    box_get
-    pushbytes 0x
-    cover 2
-    select
     intc_3 // 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
+    bytec_0 // "m_s"
+    swap
     intc_0 // 1
-    extract3
+    box_extract
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -157,12 +154,16 @@ main___postInit_route@5:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "m_s"
+    intc_1 // 0
+    box_create
+    pop
     bytec_3 // "m_x"
     pushbytes 0x
     app_global_put
@@ -171,17 +172,17 @@ main___postInit_route@5:
     bytec_3 // "m_x"
     uncover 2
     app_global_put
-    bytec_1 // "m_s"
+    bytec_0 // "m_s"
     box_del
     pop
-    bytec_1 // "m_s"
+    bytec_0 // "m_s"
     swap
     box_put
     intc_0 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Main.f(s: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_packer.sol.Main.f(s: bytes) -> bytes:
 f:
     proto 1 1
     txn GroupIndex

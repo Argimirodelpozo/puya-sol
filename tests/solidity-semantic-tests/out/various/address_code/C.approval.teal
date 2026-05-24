@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending" "initCode" 0x 0x151f7c75
+    bytecblock "initCode" "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -44,18 +44,16 @@ main_initCode_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    bytec_1 // "initCode"
+    bytec_0 // "initCode"
     box_get
-    bytec_2 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -121,7 +119,7 @@ main_ternary_merge@31:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -133,27 +131,31 @@ main_ternary_false@30:
     b main_ternary_merge@31
 
 main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "initCode"
+    intc_1 // 0
+    box_create
+    pop
     global CurrentApplicationID
     app_params_get AppApprovalProgram
     pop
     len
     itob
-    bytec_2 // 0x
+    pushbytes 0x
     b==
     assert
     global CurrentApplicationID
     app_params_get AppApprovalProgram
     pop
-    bytec_1 // "initCode"
+    bytec_0 // "initCode"
     box_del
     pop
-    bytec_1 // "initCode"
+    bytec_0 // "initCode"
     swap
     box_put
     intc_0 // 1

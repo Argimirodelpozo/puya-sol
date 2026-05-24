@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/string_and_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75 "__ctor_pending" "c" 0x "b" "a"
+    bytecblock 0x151f7c75 "c" "__ctor_pending" "b" "a"
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -76,11 +76,9 @@ main_c_route@8:
 main_ternary_merge@21:
     !
     assert // not payable
-    bytec_2 // "c"
+    bytec_1 // "c"
     box_get
-    bytec_3 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
@@ -110,7 +108,7 @@ main_ternary_merge@26:
     !
     assert // not payable
     intc_1 // 0
-    bytec 4 // "b"
+    bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
     dup
@@ -142,7 +140,7 @@ main_ternary_merge@31:
     !
     assert // not payable
     intc_1 // 0
-    bytec 5 // "a"
+    bytec 4 // "a"
     app_global_get_ex
     assert // check a exists
     dup
@@ -163,30 +161,34 @@ main_ternary_false@30:
     b main_ternary_merge@31
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec 5 // "a"
-    bytec_3 // 0x
+    bytec_1 // "c"
+    intc_1 // 0
+    box_create
+    pop
+    bytec 4 // "a"
+    pushbytes 0x
     app_global_put
-    bytec 4 // "b"
-    bytec_3 // 0x
+    bytec_3 // "b"
+    pushbytes 0x
     app_global_put
     pushbytess "d" "abcd"
     app_global_put
-    bytec 5 // "a"
+    bytec 4 // "a"
     pushbytes "hello world"
     app_global_put
-    bytec 4 // "b"
+    bytec_3 // "b"
     pushbytes 0x41424344
     app_global_put
-    bytec_2 // "c"
+    bytec_1 // "c"
     box_del
     pop
-    bytec_2 // "c"
+    bytec_1 // "c"
     pushbytes 0xff077fff
     box_put
     intc_0 // 1

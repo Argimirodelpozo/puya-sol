@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/public_state_overridding_mapping_to_dynamic_struct.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf "__ctor_pending" "test" 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    intcblock 1 32 0 64
+    bytecblock 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4 "__ctor_pending" "test" 0x000000000000000000000000000000000000000000000000000000000000000000220000
     intc_2 // 0
     pushint 4096
     bzero
@@ -62,10 +62,9 @@ main_ternary_merge@14:
     -
     intc_1 // 32
     extract3
-    sha256
     bytec_2 // "test"
-    swap
     concat
+    sha256
     box_get
     bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
@@ -81,7 +80,12 @@ main_ternary_merge@14:
     cover 2
     substring3
     extract 2 0
-    pushint 64
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 2
     b|
@@ -118,7 +122,7 @@ main_set_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_0 // 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4
     box_get
     bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
@@ -132,19 +136,19 @@ main_ternary_merge@19:
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000020022
     swap
     concat
-    bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_0 // 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4
     box_del
     pop
-    bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_0 // 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4
     dig 1
     box_put
     extract 0 32
     pushbytes 0x002200087374617465766172
     concat
-    bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_0 // 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4
     box_del
     pop
-    bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_0 // 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4
     swap
     box_put
     intc_0 // 1

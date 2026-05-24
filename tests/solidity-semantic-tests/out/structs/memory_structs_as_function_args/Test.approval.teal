@@ -1,10 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_as_function_args.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x0100020000000000000000000000000000000000000000000000000000000000000003
     pushint 4096
     bzero
     dup
@@ -61,29 +60,29 @@ main_ternary_merge@9:
     bzero
     intc_2 // 0
     itob
-    bytec_0 // 0x0100020000000000000000000000000000000000000000000000000000000000000003
+    pushbytes 0x0100020000000000000000000000000000000000000000000000000000000000000003
     swap
     callsub extract
-    bytec_0 // 0x0100020000000000000000000000000000000000000000000000000000000000000003
     uncover 4
     callsub extract
-    bytec_0 // 0x0100020000000000000000000000000000000000000000000000000000000000000003
     uncover 4
     callsub extract
-    dig 2
+    pop
+    cover 2
+    dig 1
     len
     intc_1 // 32
     <=
     assert // overflow
-    uncover 2
+    swap
     dig 3
     b|
-    dig 2
+    dig 1
     len
     intc_1 // 32
     <=
     assert // overflow
-    uncover 2
+    swap
     dig 3
     b|
     dig 2
@@ -110,9 +109,9 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_as_function_args.sol.Test.extract(s: bytes, which: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
 extract:
-    proto 2 1
+    proto 2 2
     frame_dig -1
     pushbytes 0x
     b==
@@ -121,6 +120,7 @@ extract:
     intc_2 // 0
     getbyte
     itob
+    frame_dig -2
     retsub
 
 extract_else_body@2:
@@ -132,9 +132,11 @@ extract_else_body@2:
     intc_0 // 1
     extract_uint16
     itob
+    frame_dig -2
     retsub
 
 extract_else_body@4:
     frame_dig -2
     extract 3 32
+    frame_dig -2
     retsub

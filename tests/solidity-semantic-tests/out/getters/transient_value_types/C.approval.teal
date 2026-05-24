@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1 0 31
+    intcblock 1 0 8 64
     bytecblock 0xff 0x151f7c75 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -17,9 +17,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -37,24 +37,24 @@ main_x_route@6:
     callsub x
     dup
     len
-    pushint 64
+    intc_3 // 64
     <=
     assert // overflow
-    pushint 64
+    intc_3 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_f_route@5:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -62,10 +62,9 @@ main_ternary_merge@15:
     !
     assert // not payable
     load 5
-    intc_0 // 8
+    intc_2 // 8
     bzero
-    dup
-    uncover 2
+    swap
     bytec_0 // 0xff
     replace2 31
     store 5
@@ -78,30 +77,16 @@ main_ternary_merge@15:
     swap
     concat
     len
-    intc_0 // 8
+    intc_2 // 8
     -
-    intc_0 // 8
+    intc_2 // 8
     extract3
     bytec_0 // 0xff
     b&
+    dup
     bytec_2 // 0x80
     b>=
     bz main_ternary_false@17
-    callsub x
-    dig 1
-    swap
-    concat
-    callsub x
-    uncover 2
-    swap
-    concat
-    len
-    intc_0 // 8
-    -
-    intc_0 // 8
-    extract3
-    bytec_0 // 0xff
-    b&
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -120,38 +105,23 @@ main_ternary_merge@18:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@17:
-    callsub x
-    dig 1
-    swap
-    concat
-    callsub x
-    uncover 2
-    swap
-    concat
-    len
-    intc_0 // 8
-    -
-    intc_0 // 8
-    extract3
-    bytec_0 // 0xff
-    b&
     b main_ternary_merge@18
 
 main_ternary_false@14:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@15
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types.sol.C.x() -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol.C.x() -> bytes:
 x:
     txn GroupIndex
     bz x_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -159,20 +129,15 @@ x_ternary_merge@3:
     !
     assert // not payable
     load 5
-    intc_3 // 31
+    pushint 31
     getbyte
     itob
     bytec_0 // 0xff
     b&
+    dup
     bytec_2 // 0x80
     b>=
     bz x_ternary_false@5
-    load 5
-    intc_3 // 31
-    getbyte
-    itob
-    bytec_0 // 0xff
-    b&
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -180,14 +145,8 @@ x_ternary_merge@3:
     retsub
 
 x_ternary_false@5:
-    load 5
-    intc_3 // 31
-    getbyte
-    itob
-    bytec_0 // 0xff
-    b&
     retsub
 
 x_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b x_ternary_merge@3

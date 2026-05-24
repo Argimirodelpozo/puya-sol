@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/conversion_abicoderv1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 0 32 255
+    intcblock 1 8 0 255
     bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     pushbytes ""
@@ -52,7 +52,7 @@ main_ternary_merge@18:
     !
     assert // not payable
     dup
-    intc 4 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -86,7 +86,7 @@ main_ternary_merge@23:
     !
     assert // not payable
     dup
-    intc 4 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -120,10 +120,10 @@ main_ternary_merge@28:
     !
     assert // not payable
     dup
-    intc 4 // 255
+    intc_3 // 255
     &
     itob
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -157,7 +157,7 @@ main_ternary_merge@33:
     !
     assert // not payable
     dup
-    intc 4 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -191,7 +191,7 @@ main_ternary_merge@38:
     !
     assert // not payable
     dup
-    intc 4 // 255
+    intc_3 // 255
     &
     itob
     bytec_1 // 0xff
@@ -208,10 +208,10 @@ main_ternary_merge@38:
 main_ternary_merge@41:
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -233,7 +233,7 @@ main_g_route@6:
     dup
     bury 3
     len
-    intc_3 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -254,8 +254,10 @@ main_ternary_merge@46:
     len
     intc_1 // 8
     -
-    intc_1 // 8
-    extract3
+    extract_uint64
+    intc_3 // 255
+    &
+    itob
     bytec_1 // 0xff
     b&
     dup
@@ -270,10 +272,10 @@ main_ternary_merge@46:
 main_ternary_merge@49:
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -295,7 +297,7 @@ main_f_route@5:
     dup
     bury 3
     len
-    intc_3 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -317,7 +319,7 @@ main_ternary_merge@54:
     intc_1 // 8
     -
     extract_uint64
-    intc 4 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75

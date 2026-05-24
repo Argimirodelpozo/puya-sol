@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" 0x "y" 0x151f7c75 "__ctor_pending" "1234567890123456789012345678901234567" "abc" "__dyn_storage"
+    bytecblock "x" "y" 0x151f7c75 "__ctor_pending" "1234567890123456789012345678901234567" "abc" "__dyn_storage"
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -44,18 +44,16 @@ main_y_route@22:
 main_ternary_merge@29:
     !
     assert // not payable
-    bytec_2 // "y"
+    bytec_1 // "y"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -79,16 +77,14 @@ main_ternary_merge@34:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +110,7 @@ main_ternary_merge@39:
     box_del
     pop
     bytec_0 // "x"
-    bytec_1 // 0x
+    pushbytes 0x
     box_put
     intc_0 // 1
     return
@@ -136,9 +132,7 @@ main_ternary_merge@44:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     pushbytes 0x00
     concat
     bytec_0 // "x"
@@ -167,9 +161,7 @@ main_ternary_merge@49:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     pushbytes 0x74
     concat
     bytec_0 // "x"
@@ -197,17 +189,14 @@ main_ternary_merge@54:
     !
     assert // not payable
     bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dup
-    len
+    box_len
+    pop
     intc_0 // 1
     -
+    bytec_0 // "x"
     intc_1 // 0
-    swap
-    extract3
+    uncover 2
+    box_extract
     bytec_0 // "x"
     box_del
     pop
@@ -232,17 +221,17 @@ main_copyFromStorageLong_route@16:
 main_ternary_merge@59:
     !
     assert // not payable
-    bytec_2 // "y"
+    bytec_1 // "y"
     box_del
     pop
-    bytec_2 // "y"
-    bytec 5 // "1234567890123456789012345678901234567"
+    bytec_1 // "y"
+    bytec 4 // "1234567890123456789012345678901234567"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 5 // "1234567890123456789012345678901234567"
+    bytec 4 // "1234567890123456789012345678901234567"
     box_put
     intc_0 // 1
     return
@@ -262,17 +251,17 @@ main_copyFromStorageShort_route@15:
 main_ternary_merge@64:
     !
     assert // not payable
-    bytec_2 // "y"
+    bytec_1 // "y"
     box_del
     pop
-    bytec_2 // "y"
-    bytec 6 // "abc"
+    bytec_1 // "y"
+    bytec 5 // "abc"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 6 // "abc"
+    bytec 5 // "abc"
     box_put
     intc_0 // 1
     return
@@ -294,13 +283,11 @@ main_ternary_merge@69:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    bytec_2 // "y"
+    assert // box exists
+    bytec_1 // "y"
     box_del
     pop
-    bytec_2 // "y"
+    bytec_1 // "y"
     swap
     box_put
     intc_0 // 1
@@ -325,7 +312,7 @@ main_ternary_merge@74:
     box_del
     pop
     bytec_0 // "x"
-    bytec 5 // "1234567890123456789012345678901234567"
+    bytec 4 // "1234567890123456789012345678901234567"
     box_put
     intc_0 // 1
     return
@@ -370,12 +357,10 @@ main_ternary_merge@84:
     !
     assert // not payable
     bytec_0 // "x"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    extract 0 1
-    bytec_3 // 0x151f7c75
+    intc_1 // 0
+    intc_0 // 1
+    box_extract
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -399,16 +384,14 @@ main_ternary_merge@89:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -432,16 +415,14 @@ main_ternary_merge@94:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -465,16 +446,14 @@ main_ternary_merge@99:
     assert // not payable
     bytec_0 // "x"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -501,11 +480,11 @@ main_ternary_merge@104:
     pushbytes 0x05
     callsub __storage_write
     store 0
-    bytec_2 // "y"
+    bytec_1 // "y"
     box_del
     pop
-    bytec_2 // "y"
-    bytec_1 // 0x
+    bytec_1 // "y"
+    pushbytes 0x
     box_put
     intc_0 // 1
     return
@@ -530,11 +509,11 @@ main_ternary_merge@109:
     pushbytes 0x40
     callsub __storage_write
     store 0
-    bytec_2 // "y"
+    bytec_1 // "y"
     box_del
     pop
-    bytec_2 // "y"
-    bytec_1 // 0x
+    bytec_1 // "y"
+    pushbytes 0x
     box_put
     intc_0 // 1
     return
@@ -544,10 +523,10 @@ main_ternary_false@108:
     b main_ternary_merge@109
 
 main___postInit_route@5:
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "x"
@@ -555,8 +534,12 @@ main___postInit_route@5:
     box_create
     pop
     bytec_0 // "x"
-    bytec 6 // "abc"
+    bytec 5 // "abc"
     box_put
+    bytec_1 // "y"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     return
 
@@ -578,7 +561,7 @@ __storage_write:
     -
     intc_2 // 32
     extract3
-    bytec_2 // "y"
+    bytec_1 // "y"
     swap
     app_global_put
     retsub
@@ -602,7 +585,7 @@ __storage_write_else_body@2:
     retsub
 
 __storage_write_else_body@4:
-    bytec 7 // "__dyn_storage"
+    bytec 6 // "__dyn_storage"
     pushint 8192
     box_create
     pop
@@ -621,7 +604,7 @@ __storage_write_else_body@4:
     -
     intc_2 // 32
     extract3
-    bytec 7 // "__dyn_storage"
+    bytec 6 // "__dyn_storage"
     cover 2
     box_replace
     retsub

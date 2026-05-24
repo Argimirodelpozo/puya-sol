@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_for_storage_structs.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
     bytecblock "s" 0x0000000000000000000000000000000000000000000000000000000000000007
@@ -51,6 +51,7 @@ main_ternary_merge@9:
     app_global_put
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000007
     callsub L.f
+    pop
     dup
     len
     intc_1 // 32
@@ -63,6 +64,7 @@ main_ternary_merge@9:
     app_global_get_ex
     assert // check s exists
     callsub L.f
+    pop
     dup
     len
     intc_1 // 32
@@ -83,9 +85,10 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol.L.f(_x: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_for_storage_structs.sol.L.f(_x: bytes) -> bytes, bytes:
 L.f:
-    proto 1 1
+    proto 1 2
     frame_dig -1
     extract 0 32
+    frame_dig -1
     retsub

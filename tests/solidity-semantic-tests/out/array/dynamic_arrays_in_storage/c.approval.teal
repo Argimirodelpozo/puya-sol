@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_arrays_in_storage.sol.c.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
     intcblock 2 1 32 0
     bytecblock "data" "ids" "__ctor_pending" 0x151f7c75
@@ -238,7 +238,7 @@ main_ternary_merge@46:
     bytec_0 // "data"
     swap
     pushint 64
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     dup
     extract 0 32
     swap
@@ -289,7 +289,7 @@ main_ternary_merge@51:
     bytec_1 // "ids"
     swap
     intc_2 // 32
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -344,28 +344,24 @@ main_ternary_merge@56:
     extract_uint64
     pushint 64
     *
-    dup
     intc_0 // 2
     +
     bytec_0 // "data"
     dig 1
     pushint 64
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     extract 32 32
-    dig 5
+    dig 4
     swap
     concat
-    intc_0 // 2
-    uncover 3
-    +
     bytec_0 // "data"
-    dig 1
-    uncover 3
+    dig 2
+    uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "data"
-    uncover 2
+    dig 1
     pushint 64
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     extract 0 32
     dig 3
     concat

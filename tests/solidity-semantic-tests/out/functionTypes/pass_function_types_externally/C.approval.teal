@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/pass_function_types_externally.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x151f7c75 0xc14ad39f 0x0000000000000000c14ad39f
+    bytecblock 0xc14ad39f 0x151f7c75
     intc_2 // 0
     pushint 4096
     bzero
@@ -26,8 +26,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x8a6e0768 0x97c650d1 // method "f(uint256)uint256", method "f2(uint256)uint256", method "eval(uint8[12],uint256)uint256"
-    bytec_1 // method "g(uint256)uint256"
+    pushbytess 0x1928cd24 0x8a6e0768 0x82e26298 // method "f(uint256)uint256", method "f2(uint256)uint256", method "eval(byte[12],uint256)uint256"
+    bytec_0 // method "g(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_f2_route@6 main_eval_route@7 main_g_route@8
     err
@@ -40,7 +40,7 @@ main_g_route@8:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub g
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -62,7 +62,7 @@ main_eval_route@7:
     assert // invalid number of bytes for arc4.uint256
     callsub eval
     pop
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -87,7 +87,10 @@ main_f2_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_2 // 0x0000000000000000c14ad39f
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "g(uint256)uint256"
+    concat
     dig 1
     callsub eval
     pop
@@ -99,7 +102,7 @@ main_ternary_merge@19:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -128,7 +131,10 @@ main_f_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    bytec_2 // 0x0000000000000000c14ad39f
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "g(uint256)uint256"
+    concat
     dig 1
     callsub eval
     pop
@@ -140,7 +146,7 @@ main_ternary_merge@24:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -152,7 +158,7 @@ main_ternary_false@23:
     b main_ternary_merge@24
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.eval(__arc4_x: bytes, __arc4_a: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/pass_function_types_externally.sol.C.eval(__arc4_x: bytes, __arc4_a: bytes) -> bytes, bytes:
 eval:
     proto 2 2
     pushbytes ""
@@ -171,10 +177,12 @@ eval_ternary_merge@3:
     extract_uint64
     dup
     frame_bury 0
-    bnz eval_else_body@5
+    global CurrentApplicationID
+    ==
+    bz eval_else_body@5
     frame_dig -2
     extract 8 4
-    bytec_1 // method "g(uint256)uint256"
+    bytec_0 // method "g(uint256)uint256"
     ==
     assert // unknown function selector in self-call dispatch
     frame_dig -1
@@ -222,7 +230,7 @@ eval_ternary_false@2:
     b eval_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_externally.sol.C.g(__arc4_x: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/pass_function_types_externally.sol.C.g(__arc4_x: bytes) -> bytes:
 g:
     proto 1 1
     txn GroupIndex

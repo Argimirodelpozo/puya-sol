@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_neg_overflow.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/exp_neg_overflow.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x02 0x0100 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0xff 0x151f7c75
+    bytecblock 0x 0x02 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x0100 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     intc_2 // 0
     dupn 7
     bytec_0 // ""
@@ -59,15 +59,15 @@ main_g_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     bury 4
     dig 10
     bytec 6 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
-    bury 4
+    bury 3
     bnz main_ternary_false@15
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 11
     b-
     bury 8
@@ -82,7 +82,7 @@ main_while_top@17:
     b>
     bz main_after_while@21
     dig 5
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -104,7 +104,7 @@ main_after_if_else@20:
     b main_while_top@17
 
 main_after_while@21:
-    dig 2
+    dig 1
     bnz main_ternary_false@24
     dig 9
     bytec_1 // 0x02
@@ -119,7 +119,7 @@ main_after_while@21:
 
 main_ternary_merge@25:
     assert // signed exp overflow
-    dig 2
+    dig 1
     bnz main_ternary_false@29
     dig 9
     bytec_1 // 0x02
@@ -131,10 +131,10 @@ main_ternary_merge@25:
     bytec_0 // 0x
     b==
     bnz main_ternary_false@29
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 4
     b-
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@30:
@@ -146,7 +146,7 @@ main_ternary_merge@30:
     intc_0 // 32
     bzero
     b|
-    bytec 8 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -212,19 +212,19 @@ main_bool_true@37:
 
 main_bool_merge@39:
     assert // ABI validation
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     bury 5
     dup
     itob
-    bytec_2 // 0x0100
+    bytec 4 // 0x0100
     b%
     dup
     bytec 5 // 0x80
     b<
     dup
-    bury 4
+    bury 5
     bnz main_ternary_false@41
-    bytec_2 // 0x0100
+    bytec 4 // 0x0100
     swap
     b-
     bury 9
@@ -239,7 +239,7 @@ main_while_top@43:
     b>
     bz main_after_while@47
     dig 6
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -261,7 +261,7 @@ main_after_if_else@46:
     b main_while_top@43
 
 main_after_while@47:
-    dig 1
+    dig 2
     bnz main_ternary_false@50
     dig 9
     bytec_1 // 0x02
@@ -276,7 +276,7 @@ main_after_while@47:
 
 main_ternary_merge@51:
     assert // signed exp overflow
-    dig 1
+    dig 2
     bnz main_ternary_false@55
     dig 9
     bytec_1 // 0x02
@@ -288,45 +288,25 @@ main_ternary_merge@51:
     bytec_0 // 0x
     b==
     bnz main_ternary_false@55
-    bytec_2 // 0x0100
+    bytec 4 // 0x0100
     dig 5
     b-
-    bytec_2 // 0x0100
+    bytec 4 // 0x0100
     b%
 
 main_ternary_merge@56:
-    bytec 7 // 0xff
+    pushbytes 0xff
     b&
+    dup
     bytec 5 // 0x80
     b>=
-    bz main_ternary_false@63
-    dig 1
-    bnz main_ternary_false@61
-    dig 9
-    bytec_1 // 0x02
-    b%
-    bytec_0 // 0x
-    b!=
-    bz main_ternary_false@61
-    dig 4
-    bytec_0 // 0x
-    b==
-    bnz main_ternary_false@61
-    bytec_2 // 0x0100
-    dig 5
-    b-
-    bytec_2 // 0x0100
-    b%
-
-main_ternary_merge@62:
-    bytec 7 // 0xff
-    b&
+    bz main_ternary_false@58
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-main_ternary_merge@69:
+main_ternary_merge@59:
     dup
     len
     intc_0 // 32
@@ -335,44 +315,15 @@ main_ternary_merge@69:
     intc_0 // 32
     bzero
     b|
-    bytec 8 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@61:
-    dig 4
-    b main_ternary_merge@62
-
-main_ternary_false@63:
-    dig 1
-    bnz main_ternary_false@67
-    dig 9
-    bytec_1 // 0x02
-    b%
-    bytec_0 // 0x
-    b!=
-    bz main_ternary_false@67
-    dig 4
-    bytec_0 // 0x
-    b==
-    bnz main_ternary_false@67
-    bytec_2 // 0x0100
-    dig 5
-    b-
-    bytec_2 // 0x0100
-    b%
-
-main_ternary_merge@68:
-    bytec 7 // 0xff
-    b&
-    b main_ternary_merge@69
-
-main_ternary_false@67:
-    dig 4
-    b main_ternary_merge@68
+main_ternary_false@58:
+    b main_ternary_merge@59
 
 main_ternary_false@55:
     dig 4

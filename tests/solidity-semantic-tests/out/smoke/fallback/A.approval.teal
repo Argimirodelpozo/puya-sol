@@ -1,11 +1,11 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/fallback.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock 0x "data" "__ctor_pending" "externalData" 0x151f7c75 "balance"
-    bytec_0 // ""
+    bytecblock "externalData" "data" 0x "__ctor_pending" 0x151f7c75 "balance"
+    bytec_2 // ""
     dup
     pushint 4096
     bzero
@@ -18,7 +18,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -66,11 +66,9 @@ main_externalData_route@13:
 main_ternary_merge@20:
     !
     assert // not payable
-    bytec_3 // "externalData"
+    bytec_0 // "externalData"
     box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
@@ -166,24 +164,28 @@ main___fallback_route@10:
     b main_switch_case_next@14
 
 main___postInit_route@9:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 0
     app_global_put
+    bytec_0 // "externalData"
+    intc_0 // 0
+    box_create
+    pop
     bytec_1 // "data"
-    bytec_0 // 0x
+    bytec_2 // 0x
     app_global_put
     bytec 5 // "balance"
-    bytec_0 // 0x
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     bury 2
     b main_switch_case_next@14
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__fallback() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/fallback.sol.A.__fallback() -> void:
 __fallback:
     proto 0 0
     intc_0 // 0
@@ -382,10 +384,10 @@ __fallback_ternary_merge@52:
     concat
 
 __fallback_ternary_merge@54:
-    bytec_3 // "externalData"
+    bytec_0 // "externalData"
     box_del
     pop
-    bytec_3 // "externalData"
+    bytec_0 // "externalData"
     swap
     box_put
     retsub

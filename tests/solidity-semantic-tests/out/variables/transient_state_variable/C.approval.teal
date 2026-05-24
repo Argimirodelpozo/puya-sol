@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -45,7 +45,12 @@ main_ternary_merge@15:
     assert // not payable
     load 5
     extract 0 32
-    intc_2 // 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -56,7 +61,7 @@ main_ternary_merge@15:
     return
 
 main_ternary_false@14:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
 main_h_route@7:
@@ -72,7 +77,12 @@ main_ternary_merge@20:
     assert // not payable
     load 5
     extract 0 32
-    intc_2 // 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -83,7 +93,7 @@ main_ternary_merge@20:
     return
 
 main_ternary_false@19:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@20
 
 main_g_route@6:
@@ -104,7 +114,12 @@ main_ternary_merge@25:
     callsub f
     load 5
     extract 0 32
-    intc_2 // 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -115,7 +130,7 @@ main_ternary_merge@25:
     return
 
 main_ternary_false@24:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@25
 
 main_f_route@5:
@@ -124,7 +139,7 @@ main_f_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_variable.sol.C.f() -> void:
 f:
     txn GroupIndex
     bz f_ternary_false@2
@@ -143,5 +158,5 @@ f_ternary_merge@3:
     retsub
 
 f_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@3

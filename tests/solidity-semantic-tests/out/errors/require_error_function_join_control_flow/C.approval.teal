@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_function_join_control_flow.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_function_join_control_flow.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" "y"
+    bytecblock "y" "x"
     intc_0 // 0
     pushbytes ""
     pushint 4096
@@ -20,12 +20,12 @@ main:
     bnz main_after_if_else@2
     intc_0 // 0
     itob
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     pushint 42
     itob
-    bytec_1 // "y"
+    bytec_0 // "y"
     swap
     app_global_put
     intc_1 // 1
@@ -67,13 +67,13 @@ main_ternary_merge@9:
     <=
     assert // ABI bool validation
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     swap
     bury 3
     assert // check x exists
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     pushbytes 0x2a
@@ -81,22 +81,22 @@ main_ternary_merge@9:
     bz main_else_body@11
     pushint 21
     itob
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
 
 main_after_if_else@12:
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
     pushbytes 0x02
     b/
-    bytec_1 // "y"
+    bytec_0 // "y"
     dig 1
     app_global_put
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -137,6 +137,11 @@ main_after_if_else@12:
     return
 
 main_else_body@11:
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    bury 1
+    assert // check y exists
     dup
     assert // E
     b main_after_if_else@12

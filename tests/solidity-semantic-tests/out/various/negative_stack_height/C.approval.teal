@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/negative_stack_height.sol.C.approval_program() -> uint64:
 main:
     intcblock 88 16000 0 1 48000 32000
     bytecblock 0x00 0x151f7c75 "__ctor_pending" "invoices"
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xbc67fd12 0xe47e0ec8 0x644db31c 0xc5fdb625 // method "__postInit()void", method "nredit(uint256)(uint256[500],uint256[500],uint256[500],bool[500],uint256[500])", method "return500InvoicesByDates(uint256,uint256,uint256)(uint256[500],bool[500],uint256[500],uint8[32][3][500],uint8[32][3][500],uint8[32][2][500],uint256[500],bool[500],bool[500])", method "return500PaymentsByDates(uint256,uint256,uint256)(uint256[500],uint256[500],uint256[500],bool[500],uint8[32][3][500],uint8[32][2][500],uint256[500],bool[500])", method "invoices(uint256)(uint512,bool,bool,bool)"
+    pushbytess 0xbacc49e3 0xbc67fd12 0xbcbdf386 0xd56bca95 0xc5fdb625 // method "__postInit()void", method "nredit(uint256)(uint256[500],uint256[500],uint256[500],bool[500],uint256[500])", method "return500InvoicesByDates(uint256,uint256,uint256)(uint256[500],bool[500],uint256[500],byte[32][3][500],byte[32][3][500],byte[32][2][500],uint256[500],bool[500],bool[500])", method "return500PaymentsByDates(uint256,uint256,uint256)(uint256[500],uint256[500],uint256[500],bool[500],byte[32][3][500],byte[32][2][500],uint256[500],bool[500])", method "invoices(uint256)(uint512,bool,bool,bool)"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_nredit_route@6 main_return500InvoicesByDates_route@7 main_return500PaymentsByDates_route@8 main_invoices_route@9
     err
@@ -62,10 +62,9 @@ main_ternary_merge@16:
     -
     pushint 32
     extract3
-    sha256
     bytec_3 // "invoices"
-    swap
     concat
+    sha256
     box_get
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -99,6 +98,11 @@ main_ternary_merge@16:
     setbit
     intc_2 // 0
     getbit
+    dig 3
+    len
+    pushint 64
+    <=
+    assert // overflow
     pushint 64
     bzero
     uncover 4

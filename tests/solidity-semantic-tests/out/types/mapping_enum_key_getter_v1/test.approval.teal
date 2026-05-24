@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/mapping_enum_key_getter_v1.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 8 255
     bytecblock "__ctor_pending" "table" 0x151f7c75
@@ -74,6 +74,10 @@ main_ternary_merge@17:
     dig 1
     intc_3 // 255
     &
+    dup
+    pushint 2
+    <=
+    assert // ABI enum validation
     callsub table
     intc_3 // 255
     &
@@ -122,12 +126,15 @@ main_ternary_merge@22:
     dig 1
     intc_3 // 255
     &
+    dig 1
+    pushint 2
+    <=
+    assert // ABI enum validation
     swap
     itob
-    sha256
     bytec_1 // "table"
-    swap
     concat
+    sha256
     swap
     itob
     box_put
@@ -153,7 +160,7 @@ main___postInit_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.table(key0: uint64) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/mapping_enum_key_getter_v1.sol.test.table(key0: uint64) -> uint64:
 table:
     proto 1 1
     txn GroupIndex
@@ -168,10 +175,9 @@ table_ternary_merge@3:
     assert // not payable
     frame_dig -1
     itob
-    sha256
     bytec_1 // "table"
-    swap
     concat
+    sha256
     box_get
     swap
     btoi

@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/swap_in_storage_overwrite.sol.c.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/swap_in_storage_overwrite.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1 64
     bytecblock "x" "y" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
@@ -55,11 +55,21 @@ main_ternary_merge@15:
     extract 0 32
     swap
     extract 32 32
+    dig 1
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     intc_2 // 64
     bzero
     uncover 2
     dig 1
     b|
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat
@@ -93,11 +103,21 @@ main_ternary_merge@20:
     extract 0 32
     swap
     extract 32 32
+    dig 1
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     intc_2 // 64
     bzero
     uncover 2
     dig 1
     b|
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat

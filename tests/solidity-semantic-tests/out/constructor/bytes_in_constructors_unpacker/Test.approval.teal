@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_unpacker.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "__ctor_pending" "m_s" 0x151f7c75 "m_x"
+    bytecblock "m_s" "__ctor_pending" 0x151f7c75 "m_x"
     pushint 4096
     bzero
     dup
@@ -16,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -44,11 +44,9 @@ main_m_s_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    bytec_1 // "m_s"
+    bytec_0 // "m_s"
     box_get
-    pushbytes 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
@@ -118,19 +116,23 @@ main___postInit_route@5:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "m_s"
+    intc_1 // 0
+    box_create
+    pop
     bytec_3 // "m_x"
     uncover 2
     app_global_put
-    bytec_1 // "m_s"
+    bytec_0 // "m_s"
     box_del
     pop
-    bytec_1 // "m_s"
+    bytec_0 // "m_s"
     swap
     box_put
     intc_0 // 1

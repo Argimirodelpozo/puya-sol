@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/store_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
     bytecblock "ev" "x" 0x151f7c75 TMPL_APPROVAL_Other TMPL_CLEAR_Other
@@ -31,7 +31,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa8d5d029 0x96d36cc7 0x3e9a707a // method "store(uint8[12])void", method "eval(uint8[12])uint256", method "t()uint256"
+    pushbytess 0x68f8fb19 0xf503abcb 0x3e9a707a // method "store(byte[12])void", method "eval(byte[12])uint256", method "t()uint256"
     txna ApplicationArgs 0
     match main_store_route@5 main_eval_route@6 main_t_route@7
     err
@@ -138,7 +138,7 @@ main_store_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.store(__arc4_y: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/store_function.sol.C.store(__arc4_y: bytes) -> bytes:
 store:
     proto 1 1
     txn GroupIndex
@@ -162,7 +162,7 @@ store_ternary_false@2:
     b store_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/store_function.sol.C.eval(__arc4_y: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/store_function.sol.C.eval(__arc4_y: bytes) -> bytes, bytes:
 eval:
     proto 1 2
     txn GroupIndex
@@ -179,6 +179,9 @@ eval_ternary_merge@3:
     intc_0 // 0
     extract_uint64
     dup
+    global CurrentApplicationID
+    ==
+    !
     assert // unknown function selector in self-call dispatch
     itxn_begin
     frame_dig -1

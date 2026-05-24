@@ -1,12 +1,12 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/mapping_state.sol.Ballot.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
     bytecblock "__ctor_pending" "canVote" "voteCount" "voted" 0x151f7c75
     intc_1 // 0
-    dupn 4
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -61,12 +61,9 @@ main_ternary_merge@15:
     !
     assert // not payable
     dup
-    sha256
-    dup
-    bury 4
     bytec_1 // "canVote"
-    swap
     concat
+    sha256
     box_get
     swap
     btoi
@@ -75,11 +72,12 @@ main_ternary_merge@15:
     uncover 2
     select
     bz main_if_body@17
-    bytec_3 // "voted"
-    dig 3
-    concat
     dup
-    bury 5
+    bytec_3 // "voted"
+    concat
+    sha256
+    dup
+    bury 4
     box_get
     swap
     btoi
@@ -92,7 +90,7 @@ main_ternary_merge@15:
 main_if_body@17:
     intc_1 // 0
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@19:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/mapping_state.sol.Ballot.vote@19:
     pushbytes 0x00
     intc_1 // 0
     uncover 2
@@ -107,14 +105,13 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
 main_after_if_else@18:
     intc_0 // 1
     itob
-    dig 4
+    dig 3
     swap
     box_put
     dig 1
-    sha256
     bytec_2 // "voteCount"
-    swap
     concat
+    sha256
     dup
     box_get
     pushbytes 0x
@@ -127,7 +124,7 @@ main_after_if_else@18:
     pop
     box_put
     intc_0 // 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@19
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/mapping_state.sol.Ballot.vote@19
 
 main_ternary_false@14:
     intc_1 // 0
@@ -136,7 +133,7 @@ main_ternary_false@14:
 main_grantVoteRight_route@7:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 5
     len
     intc_2 // 32
     ==
@@ -151,11 +148,10 @@ main_grantVoteRight_route@7:
 main_ternary_merge@24:
     !
     assert // not payable
-    dig 4
-    sha256
+    dig 3
     bytec_1 // "canVote"
-    swap
     concat
+    sha256
     intc_0 // 1
     itob
     box_put
@@ -169,7 +165,7 @@ main_ternary_false@23:
 main_getVoteCount_route@6:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 5
     len
     intc_2 // 32
     ==
@@ -184,11 +180,10 @@ main_getVoteCount_route@6:
 main_ternary_merge@29:
     !
     assert // not payable
-    dig 4
-    sha256
+    dig 3
     bytec_2 // "voteCount"
-    swap
     concat
+    sha256
     box_get
     pushbytes 0x
     cover 2

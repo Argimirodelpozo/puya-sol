@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "__ctor_pending" "s" "n"
+    bytecblock "s" 0x151f7c75 "__ctor_pending" "n"
     intc_2 // 0
     dupn 2
     pushbytes ""
@@ -19,7 +19,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -49,8 +49,6 @@ main_f_storage_route@9:
     +
     swap
     len
-    dup
-    bury 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
@@ -70,10 +68,10 @@ main_f_storage_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    bytec_2 // "s"
+    bytec_0 // "s"
     box_del
     pop
-    bytec_2 // "s"
+    bytec_0 // "s"
     dig 3
     dup
     cover 2
@@ -83,7 +81,9 @@ main_ternary_merge@16:
     app_global_put
     intc_0 // 32
     bzero
-    dig 2
+    bytec_0 // "s"
+    box_len
+    pop
     intc_3 // 2
     -
     intc_0 // 32
@@ -108,7 +108,7 @@ main_ternary_merge@16:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -203,7 +203,7 @@ main_ternary_merge@21:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -278,7 +278,7 @@ main_ternary_merge@26:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -338,7 +338,7 @@ main_ternary_merge@31:
     concat
     dig 3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -350,13 +350,13 @@ main_ternary_false@30:
     b main_ternary_merge@31
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_2 // "s"
+    bytec_0 // "s"
     intc_3 // 2
     box_create
     pop

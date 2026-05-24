@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_evaluation_order_1.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_1.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
@@ -40,6 +40,8 @@ main_g_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
+    callsub r
+    pop
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     log
     intc_0 // 1
@@ -60,8 +62,21 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
+    callsub r
+    pop
     err // E
 
 main_ternary_false@17:
     intc_1 // 0
     b main_ternary_merge@18
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_1.sol.C.r() -> bytes:
+r:
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    replace2 0
+    dup
+    store 0
+    extract 0 32
+    retsub

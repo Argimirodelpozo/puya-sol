@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock "__ctor_pending" "locked" "rooms" 0x726f6f6d7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "Empty" 0x726f6f6d73ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x726f6f6d739267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x726f6f6d73d9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
+    bytecblock "__ctor_pending" "locked" "rooms" 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87 "Empty" 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
     intc_1 // 0
     dupn 2
     pushint 4096
@@ -63,14 +63,13 @@ main_ternary_merge@14:
     -
     intc_2 // 32
     extract3
+    dup
+    bury 3
+    bytec_1 // "locked"
+    concat
     sha256
     dup
     bury 2
-    bytec_1 // "locked"
-    swap
-    concat
-    dup
-    bury 3
     box_get
     swap
     btoi
@@ -81,7 +80,7 @@ main_ternary_merge@14:
     bz main_after_if_else@16
     pushbytes "Locked"
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open@17:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.open@17:
     dup
     len
     itob
@@ -96,7 +95,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     return
 
 main_after_if_else@16:
-    dig 1
+    dup
     box_get
     swap
     btoi
@@ -106,14 +105,15 @@ main_after_if_else@16:
     select
     !
     assert
-    bytec_2 // "rooms"
     dig 1
+    bytec_2 // "rooms"
     concat
+    sha256
     box_get
     pushbytes 0x
     cover 2
     select
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_mapping.sol.C.open@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.open@17
 
 main_ternary_false@13:
     intc_1 // 0
@@ -132,42 +132,42 @@ main_ternary_merge@22:
     assert // not payable
     intc_0 // 1
     itob
-    pushbytes 0x6c6f636b656466687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    pushbytes 0x5d8d2f172e6d8ae4dd89369dfd1340c3f0fece333bb9abf29f922b771e55d176
     dig 1
     box_put
     intc_1 // 0
     itob
-    pushbytes 0x6c6f636b6564ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    pushbytes 0xda58e73fb23e6f428aaa11db828c3acb6f10686afb59fd57771b7a3fa676f07e
     dig 1
     box_put
-    pushbytes 0x6c6f636b65649267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    pushbytes 0x3a55d6ddd15410623eb498fa90381f0bc44d02082aeccb9d7385876eab5304f6
     uncover 2
     box_put
-    pushbytes 0x6c6f636b6564d9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
+    pushbytes 0x8ae38631cd5c17ddc7297630d37acdf765f34ec14d650dab89c7b549acf5817c
     swap
     box_put
-    bytec_3 // 0x726f6f6d7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_3 // 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87
     box_del
     pop
-    bytec_3 // 0x726f6f6d7366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_3 // 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87
     bytec 4 // "Empty"
     box_put
-    bytec 5 // 0x726f6f6d73ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec 5 // 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4
     box_del
     pop
-    bytec 5 // 0x726f6f6d73ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec 5 // 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4
     pushbytes "Monster"
     box_put
-    bytec 6 // 0x726f6f6d739267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 6 // 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2
     box_del
     pop
-    bytec 6 // 0x726f6f6d739267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 6 // 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2
     pushbytes "Treasure"
     box_put
-    bytec 7 // 0x726f6f6d73d9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
+    bytec 7 // 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
     box_del
     pop
-    bytec 7 // 0x726f6f6d73d9147961436944f43cd99d28b2bbddbf452ef872b30c8279e255e7daafc7f946
+    bytec 7 // 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
     bytec 4 // "Empty"
     box_put
     intc_0 // 1

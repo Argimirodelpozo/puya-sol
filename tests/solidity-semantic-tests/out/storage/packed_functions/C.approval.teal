@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock "b" 0x151f7c75 "a" "x" 0x000000000000000000000000 0x4b2c0376 0xafedb2e5 0x0000000000000000afedb2e5
+    bytecblock "b" 0x151f7c75 "a" 0xafedb2e5 "x" 0x000000000000000000000000 0x4b2c0376
     pushint 4096
     bzero
     dup
@@ -20,15 +20,15 @@ main:
     intc_0 // 0
     app_global_put
     bytec_0 // "b"
-    bytec 4 // 0x000000000000000000000000
+    bytec 5 // 0x000000000000000000000000
     app_global_put
     pushbytes "c"
-    bytec 4 // 0x000000000000000000000000
+    bytec 5 // 0x000000000000000000000000
     app_global_put
     pushbytes "d"
     intc_0 // 0
     app_global_put
-    bytec_3 // "x"
+    bytec 4 // "x"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -41,8 +41,8 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0x0f76205a 0x3a80de26 0x80ee83e3 0x46cfaea3 0x852d088d // method "set()void", method "t1()uint256", method "t2()uint256", method "t3()uint256", method "t4()uint256"
-    bytec 5 // method "g()uint256"
-    bytec 6 // method "h()uint256"
+    bytec 6 // method "g()uint256"
+    bytec_3 // method "h()uint256"
     pushbytes 0xdf01cac5 // method "x()uint64"
     txna ApplicationArgs 0
     match main_set_route@5 main_t1_route@6 main_t2_route@7 main_t3_route@8 main_t4_route@9 main_g_route@10 main_h_route@11 main_x_route@12
@@ -60,7 +60,7 @@ main_ternary_merge@19:
     !
     assert // not payable
     intc_0 // 0
-    bytec_3 // "x"
+    bytec 4 // "x"
     app_global_get_ex
     assert // check x exists
     itob
@@ -110,7 +110,9 @@ main_ternary_merge@28:
     assert // check b exists
     intc_0 // 0
     extract_uint64
-    bnz main_else_body@30
+    global CurrentApplicationID
+    ==
+    bz main_else_body@30
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
@@ -215,7 +217,9 @@ main_ternary_merge@41:
     assert // check b exists
     intc_0 // 0
     extract_uint64
-    bnz main_else_body@43
+    global CurrentApplicationID
+    ==
+    bz main_else_body@43
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
@@ -314,17 +318,25 @@ main_set_route@5:
 main_ternary_merge@54:
     !
     assert // not payable
-    bytec_3 // "x"
+    bytec 4 // "x"
     intc_3 // 2
     app_global_put
     pushbytes "d"
     intc_1 // 1
     app_global_put
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "h()uint256"
+    concat
     pushbytes "c"
-    bytec 7 // 0x0000000000000000afedb2e5
+    swap
     app_global_put
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "h()uint256"
+    concat
     bytec_0 // "b"
-    bytec 7 // 0x0000000000000000afedb2e5
+    swap
     app_global_put
     bytec_2 // "a"
     intc_1 // 1
@@ -337,7 +349,7 @@ main_ternary_false@53:
     b main_ternary_merge@54
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.g() -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.g() -> bytes:
 g:
     txn GroupIndex
     bz g_ternary_false@2
@@ -357,7 +369,7 @@ g_ternary_false@2:
     b g_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.h() -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.h() -> bytes:
 h:
     txn GroupIndex
     bz h_ternary_false@2
@@ -377,7 +389,7 @@ h_ternary_false@2:
     b h_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.__funcptr_dispatch_ret_u256(__funcptr_id: uint64) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.__funcptr_dispatch_ret_u256(__funcptr_id: uint64) -> bytes:
 __funcptr_dispatch_ret_u256:
     proto 1 1
     frame_dig -1
@@ -396,11 +408,11 @@ __funcptr_dispatch_ret_u256_else_body@2:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_functions.sol.C.__sel_to_id___funcptr_dispatch_ret_u256(__sel: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.__sel_to_id___funcptr_dispatch_ret_u256(__sel: bytes) -> uint64:
 __sel_to_id___funcptr_dispatch_ret_u256:
     proto 1 1
     frame_dig -1
-    bytec 6 // method "h()uint256"
+    bytec_3 // method "h()uint256"
     ==
     bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@2
     intc_3 // 2
@@ -408,7 +420,7 @@ __sel_to_id___funcptr_dispatch_ret_u256:
 
 __sel_to_id___funcptr_dispatch_ret_u256_else_body@2:
     frame_dig -1
-    bytec 5 // method "g()uint256"
+    bytec 6 // method "g()uint256"
     ==
     assert // unknown function selector in self-call dispatch
     intc_1 // 1

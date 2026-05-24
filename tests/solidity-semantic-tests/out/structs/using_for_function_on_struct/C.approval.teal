@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/using_for_function_on_struct.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/using_for_function_on_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
     bytecblock "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -94,6 +94,7 @@ main_ternary_merge@18:
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
     dig 2
     callsub D.mul
+    pop
     bytec_0 // "x"
     swap
     app_global_put
@@ -115,9 +116,9 @@ main_ternary_false@17:
     b main_ternary_merge@18
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/using_for_function_on_struct.sol.D.mul(self: bytes, x: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/using_for_function_on_struct.sol.D.mul(self: bytes, x: bytes) -> bytes, bytes, bytes:
 D.mul:
-    proto 2 2
+    proto 2 3
     frame_dig -2
     extract 0 32
     frame_dig -1
@@ -134,4 +135,5 @@ D.mul:
     frame_bury -2
     extract 0 32
     frame_dig -2
+    dup
     retsub

@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/mapping_getters.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
     bytecblock "__ctor_pending" "m2" "m1" 0x 0x151f7c75
@@ -63,7 +63,7 @@ main_ternary_merge@16:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    dig 3
     concat
     dup
     len
@@ -72,7 +72,7 @@ main_ternary_merge@16:
     intc_0 // 32
     extract3
     dig 1
-    dig 4
+    dig 5
     concat
     dup
     len
@@ -80,11 +80,11 @@ main_ternary_merge@16:
     -
     intc_0 // 32
     extract3
+    bytec_1 // "m2"
     concat
     sha256
-    bytec_1 // "m2"
-    swap
     concat
+    sha256
     box_get
     bytec_3 // 0x
     cover 2
@@ -135,10 +135,9 @@ main_ternary_merge@21:
     -
     intc_0 // 32
     extract3
-    sha256
     bytec_2 // "m1"
-    swap
     concat
+    sha256
     box_get
     bytec_3 // 0x
     cover 2
@@ -195,15 +194,6 @@ main_ternary_merge@26:
     intc_0 // 32
     bzero
     dup
-    dig 6
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
     dig 5
     concat
     dup
@@ -212,11 +202,20 @@ main_ternary_merge@26:
     -
     intc_0 // 32
     extract3
+    swap
+    dig 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "m2"
     concat
     sha256
-    bytec_1 // "m2"
-    swap
     concat
+    sha256
     dup
     box_del
     pop
@@ -264,10 +263,9 @@ main_ternary_merge@31:
     -
     intc_0 // 32
     extract3
-    sha256
     bytec_2 // "m1"
-    swap
     concat
+    sha256
     dup
     box_del
     pop

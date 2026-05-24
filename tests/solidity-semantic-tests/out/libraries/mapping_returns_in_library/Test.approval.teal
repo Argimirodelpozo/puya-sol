@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/mapping_returns_in_library.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
     bytecblock 0x "b" 0x151f7c75 "a" "__ctor_pending"
@@ -65,10 +65,9 @@ main_ternary_merge@16:
     -
     intc_0 // 32
     extract3
-    sha256
     bytec_1 // "b"
-    swap
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -119,10 +118,9 @@ main_ternary_merge@21:
     -
     intc_0 // 32
     extract3
-    sha256
     bytec_3 // "a"
-    swap
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -175,10 +173,6 @@ main_ternary_merge@26:
     intc_1 // 1
     <=
     assert // ABI bool validation
-    bytec_3 // "a"
-    bytec_1 // "b"
-    uncover 2
-    callsub Lib.choose_mapping
     intc_0 // 32
     bzero
     dup
@@ -190,10 +184,12 @@ main_ternary_merge@26:
     -
     intc_0 // 32
     extract3
-    sha256
-    uncover 2
-    swap
+    bytec_3 // "a"
+    bytec_1 // "b"
+    uncover 4
+    callsub Lib.choose_mapping
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -268,10 +264,9 @@ main_ternary_merge@31:
     -
     intc_0 // 32
     extract3
-    sha256
     uncover 2
-    swap
     concat
+    sha256
     dup
     box_get
     bytec_0 // 0x
@@ -319,7 +314,7 @@ main___postInit_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Lib.choose_mapping(a: bytes, b: bytes, c: uint64) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/mapping_returns_in_library.sol.Lib.choose_mapping(a: bytes, b: bytes, c: uint64) -> bytes:
 Lib.choose_mapping:
     proto 3 1
     frame_dig -2

@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/mapping_storage_end.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "__ctor_pending" "m" 0x03e8 0x01 0x068101
+    bytecblock "__ctor_pending" "m" 0x03e8 0x01
     intc_0 // 0
     pushint 4096
     bzero
@@ -66,10 +66,9 @@ main_while_top@15:
     -
     intc_2 // 32
     extract3
-    sha256
     bytec_1 // "m"
-    swap
     concat
+    sha256
     box_get
     pushbytes 0x
     cover 2
@@ -102,27 +101,6 @@ main_init_route@6:
 main_ternary_merge@22:
     !
     assert // not payable
-
-main_while_top@27:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz main_after_while@32
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec 4 // 0x068101
-    itxn_field ApprovalProgram
-    bytec 4 // 0x068101
-    itxn_field ClearStateProgram
-    intc_0 // 0
-    itxn_field Fee
-    itxn_submit
-    b main_while_top@27
-
-main_after_while@32:
     intc_0 // 0
     itob
     bury 1
@@ -145,10 +123,9 @@ main_while_top@23:
     -
     intc_2 // 32
     extract3
-    sha256
     bytec_1 // "m"
-    swap
     concat
+    sha256
     dup
     box_del
     pop

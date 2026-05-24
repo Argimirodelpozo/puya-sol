@@ -1,11 +1,11 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument_to_storage.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x "__ctor_pending" "x" 0x151f7c75
-    bytec_0 // ""
+    bytecblock "x" 0x "__ctor_pending" 0x151f7c75
+    bytec_1 // ""
     dup
     pushint 4096
     bzero
@@ -18,7 +18,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -27,7 +27,7 @@ main:
 main_after_if_else@2:
     txn NumAppArgs
     bnz main_after_if_else@4
-    bytec_0 // 0x
+    bytec_1 // 0x
     callsub __fallback
     pop
     intc_0 // 1
@@ -70,11 +70,9 @@ main_x_route@12:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_2 // "x"
+    bytec_0 // "x"
     box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
@@ -152,18 +150,22 @@ main___fallback_route@10:
     b main_switch_case_next@13
 
 main___postInit_route@9:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "x"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     bury 2
     b main_switch_case_next@13
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.__fallback(_input: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument_to_storage.sol.A.__fallback(_input: bytes) -> bytes:
 __fallback:
     proto 1 1
     txn GroupIndex
@@ -176,13 +178,13 @@ __fallback:
 __fallback_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // "x"
+    bytec_0 // "x"
     box_del
     pop
-    bytec_2 // "x"
+    bytec_0 // "x"
     frame_dig -1
     box_put
-    bytec_0 // ""
+    bytec_1 // ""
     retsub
 
 __fallback_ternary_false@2:

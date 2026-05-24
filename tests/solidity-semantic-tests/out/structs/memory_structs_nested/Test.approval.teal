@@ -1,10 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_nested.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x010200030000000000000000000000000000000000000000000000000000000000000004
     pushint 4096
     bzero
     dup
@@ -63,48 +62,47 @@ main_ternary_merge@9:
     bzero
     intc_2 // 0
     itob
-    bytec_0 // 0x010200030000000000000000000000000000000000000000000000000000000000000004
+    pushbytes 0x010200030000000000000000000000000000000000000000000000000000000000000004
     swap
     callsub extract
-    bytec_0 // 0x010200030000000000000000000000000000000000000000000000000000000000000004
     uncover 5
     callsub extract
-    bytec_0 // 0x010200030000000000000000000000000000000000000000000000000000000000000004
     uncover 5
     callsub extract
-    bytec_0 // 0x010200030000000000000000000000000000000000000000000000000000000000000004
     uncover 5
     callsub extract
-    dig 3
+    pop
+    cover 4
+    dig 2
     len
     intc_1 // 32
     <=
     assert // overflow
-    uncover 3
-    dig 4
+    uncover 2
+    dig 3
     b|
-    dig 3
+    dig 2
     len
     intc_1 // 32
     <=
     assert // overflow
-    uncover 3
-    dig 4
+    uncover 2
+    dig 3
     b|
-    dig 3
+    dig 2
     len
     intc_1 // 32
     <=
     assert // overflow
-    uncover 3
-    dig 4
+    uncover 2
+    dig 3
     b|
-    dig 3
+    dig 4
     len
     intc_1 // 32
     <=
     assert // overflow
-    uncover 3
+    uncover 4
     uncover 4
     b|
     uncover 3
@@ -126,9 +124,9 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested.sol.Test.extract(s: bytes, which: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_nested.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
 extract:
-    proto 2 1
+    proto 2 2
     frame_dig -1
     pushbytes 0x
     b==
@@ -137,6 +135,7 @@ extract:
     intc_2 // 0
     getbyte
     itob
+    frame_dig -2
     retsub
 
 extract_else_body@2:
@@ -149,6 +148,7 @@ extract_else_body@2:
     intc_2 // 0
     getbyte
     itob
+    frame_dig -2
     retsub
 
 extract_else_body@4:
@@ -161,10 +161,12 @@ extract_else_body@4:
     intc_0 // 1
     extract_uint16
     itob
+    frame_dig -2
     retsub
 
 extract_else_body@6:
     frame_dig -2
     extract 1 35
     extract 3 32
+    frame_dig -2
     retsub

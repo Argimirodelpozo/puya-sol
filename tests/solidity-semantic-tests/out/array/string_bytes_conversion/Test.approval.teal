@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/string_bytes_conversion.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8
-    bytecblock "__ctor_pending" "s" 0x151f7c75 "b"
+    bytecblock "__ctor_pending" "s" "b" 0x151f7c75
     intc_1 // 0
     dup
     pushint 4096
@@ -55,7 +55,7 @@ main_ternary_merge@14:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -96,10 +96,10 @@ main_f_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_3 // "b"
+    bytec_2 // "b"
     box_del
     pop
-    bytec_3 // "b"
+    bytec_2 // "b"
     dig 1
     dup
     cover 2
@@ -118,7 +118,7 @@ main_ternary_merge@19:
     extract_uint64
     intc_0 // 1
     extract3
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -136,6 +136,10 @@ main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_2 // "b"
+    intc_1 // 0
+    box_create
+    pop
     bytec_1 // "s"
     pushbytes 0x
     app_global_put

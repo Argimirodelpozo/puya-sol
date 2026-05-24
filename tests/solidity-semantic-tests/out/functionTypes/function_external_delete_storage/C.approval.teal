@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/function_external_delete_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "x" 0x000000000000000000000000 0x151f7c75 0x00 0x00000000000000002d4970c7
+    bytecblock "x" 0x000000000000000000000000 0x2d4970c7 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,7 +28,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0x0f76205a 0xcbdac6d6 0x65514ada 0xcc3adfed 0xe2a086c6 // method "f()void", method "set()void", method "isF()bool", method "isZero()bool", method "deleteFunction()void", method "x()byte[12]"
+    bytec_2 // method "f()void"
+    pushbytess 0x0f76205a 0xcbdac6d6 0x65514ada 0xcc3adfed 0xe2a086c6 // method "set()void", method "isF()bool", method "isZero()bool", method "deleteFunction()void", method "x()byte[12]"
     txna ApplicationArgs 0
     match main_f_route@5 main_set_route@6 main_isF_route@7 main_isZero_route@8 main_deleteFunction_route@9 main_x_route@10
     err
@@ -48,7 +49,7 @@ main_ternary_merge@17:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -102,11 +103,11 @@ main_ternary_merge@27:
     assert // check x exists
     bytec_1 // 0x000000000000000000000000
     ==
-    bytec_3 // 0x00
+    pushbytes 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -132,13 +133,16 @@ main_ternary_merge@32:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    bytec 4 // 0x00000000000000002d4970c7
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "f()void"
+    concat
     ==
-    bytec_3 // 0x00
+    pushbytes 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -160,8 +164,12 @@ main_set_route@6:
 main_ternary_merge@37:
     !
     assert // not payable
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "f()void"
+    concat
     bytec_0 // "x"
-    bytec 4 // 0x00000000000000002d4970c7
+    swap
     app_global_put
     intc_0 // 1
     return

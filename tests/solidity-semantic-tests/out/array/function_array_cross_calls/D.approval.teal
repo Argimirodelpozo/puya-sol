@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/function_array_cross_calls.sol.D.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_array_cross_calls.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 6
     intc_0 // 0
@@ -20,7 +20,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x78cd3a23 // method "f(uint8[12][])uint8[12][3]"
+    pushbytes 0x41fa3b78 // method "f(byte[12][])byte[12][3]"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -73,6 +73,9 @@ main_ternary_merge@9:
     intc_0 // 0
     extract_uint64
     dup
+    global CurrentApplicationID
+    ==
+    !
     assert // unknown function selector in self-call dispatch
     itxn_begin
     swap
@@ -97,6 +100,9 @@ main_ternary_merge@9:
     intc_0 // 0
     extract_uint64
     dup
+    global CurrentApplicationID
+    ==
+    !
     assert // unknown function selector in self-call dispatch
     itxn_begin
     swap
@@ -119,6 +125,9 @@ main_ternary_merge@9:
     intc_0 // 0
     extract_uint64
     dup
+    global CurrentApplicationID
+    ==
+    !
     assert // unknown function selector in self-call dispatch
     itxn_begin
     swap

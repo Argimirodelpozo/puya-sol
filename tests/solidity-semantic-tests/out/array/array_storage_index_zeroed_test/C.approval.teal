@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 32 0 1
-    bytecblock "storageArray" 0x 0x01 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x068101 "__dyn_storage"
+    bytecblock "storageArray" 0x 0x01 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "__dyn_storage"
     intc_2 // 0
     dupn 5
     bytec_1 // ""
@@ -54,25 +54,6 @@ main_test_zeroed_indices_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-
-main_while_top@60:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz main_while_top@14
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec 5 // 0x068101
-    itxn_field ApprovalProgram
-    bytec 5 // 0x068101
-    itxn_field ClearStateProgram
-    intc_2 // 0
-    itxn_field Fee
-    itxn_submit
-    b main_while_top@60
 
 main_while_top@14:
     bytec_0 // "storageArray"
@@ -293,7 +274,7 @@ main_after_inlined___puyasol___storage_read@58:
     b main_while_top@39
 
 main_else_body@57:
-    bytec 6 // "__dyn_storage"
+    bytec 5 // "__dyn_storage"
     pushint 8192
     box_create
     pop
@@ -302,7 +283,7 @@ main_else_body@57:
     %
     intc_1 // 32
     *
-    bytec 6 // "__dyn_storage"
+    bytec 5 // "__dyn_storage"
     swap
     intc_1 // 32
     box_extract
@@ -389,7 +370,7 @@ main_while_top@52:
     bytec_0 // "storageArray"
     swap
     intc_1 // 32
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     bytec_1 // 0x
     b==
     dup

@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_div_overflow.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/detect_div_overflow.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8 18446744073709551488
     bytecblock 0x0100 0x 0x80 0x151f7c75
@@ -141,7 +141,7 @@ main_bool_merge@27:
     bytec_0 // 0x0100
     b%
     dup
-    bury 7
+    bury 10
     bytec_1 // 0x
     b!=
     assert // division by zero
@@ -150,11 +150,11 @@ main_bool_merge@27:
     bytec_0 // 0x0100
     b%
     dup
-    bury 10
+    bury 9
     bytec_2 // 0x80
     b==
     bz main_bool_false@30
-    dig 5
+    dig 8
     pushbytes 0xff
     b==
     bz main_bool_false@30
@@ -165,14 +165,14 @@ main_bool_merge@31:
     assert // signed division overflow
     intc_3 // 8
     bzero
-    bury 8
-    dig 8
+    bury 7
+    dig 7
     bytec_2 // 0x80
     b<
     dup
     bury 4
     !
-    dig 6
+    dig 9
     bytec_2 // 0x80
     b<
     dup
@@ -185,7 +185,7 @@ main_bool_merge@31:
     dig 2
     bnz main_ternary_false@34
     bytec_0 // 0x0100
-    dig 9
+    dig 8
     b-
     bury 13
 
@@ -193,7 +193,7 @@ main_ternary_merge@35:
     dig 1
     bnz main_ternary_false@37
     bytec_0 // 0x0100
-    dig 6
+    dig 9
     b-
 
 main_ternary_merge@38:
@@ -206,7 +206,7 @@ main_ternary_merge@38:
     dig 2
     bnz main_ternary_false@41
     bytec_0 // 0x0100
-    dig 9
+    dig 8
     b-
     bury 12
 
@@ -214,7 +214,7 @@ main_ternary_merge@42:
     dig 1
     bnz main_ternary_false@44
     bytec_0 // 0x0100
-    dig 6
+    dig 9
     b-
 
 main_ternary_merge@45:
@@ -228,16 +228,16 @@ main_ternary_merge@45:
     b%
 
 main_ternary_merge@53:
-    dig 8
+    dig 7
     swap
     concat
-    bury 7
+    bury 6
     dup
     bz main_ternary_false@68
     dig 2
     bnz main_ternary_false@56
     bytec_0 // 0x0100
-    dig 9
+    dig 8
     b-
     bury 10
 
@@ -245,7 +245,7 @@ main_ternary_merge@57:
     dig 1
     bnz main_ternary_false@59
     bytec_0 // 0x0100
-    dig 6
+    dig 9
     b-
 
 main_ternary_merge@60:
@@ -258,7 +258,7 @@ main_ternary_merge@60:
     dig 2
     bnz main_ternary_false@63
     bytec_0 // 0x0100
-    dig 9
+    dig 8
     b-
     bury 15
 
@@ -266,7 +266,7 @@ main_ternary_merge@64:
     dig 1
     bnz main_ternary_false@66
     bytec_0 // 0x0100
-    dig 6
+    dig 9
     b-
 
 main_ternary_merge@67:
@@ -280,13 +280,13 @@ main_ternary_merge@67:
     b%
 
 main_ternary_merge@75:
-    dig 8
+    dig 7
     swap
     concat
     len
     intc_3 // 8
     -
-    dig 7
+    dig 6
     swap
     intc_3 // 8
     extract3
@@ -321,11 +321,11 @@ main_ternary_false@77:
     b main_ternary_merge@78
 
 main_ternary_false@66:
-    dig 5
+    dig 8
     b main_ternary_merge@67
 
 main_ternary_false@63:
-    dig 8
+    dig 7
     bury 15
     b main_ternary_merge@64
 
@@ -333,7 +333,7 @@ main_ternary_false@68:
     dig 2
     bnz main_ternary_false@70
     bytec_0 // 0x0100
-    dig 9
+    dig 8
     b-
     bury 14
 
@@ -341,7 +341,7 @@ main_ternary_merge@71:
     dig 1
     bnz main_ternary_false@73
     bytec_0 // 0x0100
-    dig 6
+    dig 9
     b-
 
 main_ternary_merge@74:
@@ -351,29 +351,29 @@ main_ternary_merge@74:
     b main_ternary_merge@75
 
 main_ternary_false@73:
-    dig 5
+    dig 8
     b main_ternary_merge@74
 
 main_ternary_false@70:
-    dig 8
+    dig 7
     bury 14
     b main_ternary_merge@71
 
 main_ternary_false@59:
-    dig 5
+    dig 8
     b main_ternary_merge@60
 
 main_ternary_false@56:
-    dig 8
+    dig 7
     bury 10
     b main_ternary_merge@57
 
 main_ternary_false@44:
-    dig 5
+    dig 8
     b main_ternary_merge@45
 
 main_ternary_false@41:
-    dig 8
+    dig 7
     bury 12
     b main_ternary_merge@42
 
@@ -381,7 +381,7 @@ main_ternary_false@46:
     dig 2
     bnz main_ternary_false@48
     bytec_0 // 0x0100
-    dig 9
+    dig 8
     b-
     bury 11
 
@@ -389,7 +389,7 @@ main_ternary_merge@49:
     dig 1
     bnz main_ternary_false@51
     bytec_0 // 0x0100
-    dig 6
+    dig 9
     b-
 
 main_ternary_merge@52:
@@ -399,20 +399,20 @@ main_ternary_merge@52:
     b main_ternary_merge@53
 
 main_ternary_false@51:
-    dig 5
+    dig 8
     b main_ternary_merge@52
 
 main_ternary_false@48:
-    dig 8
+    dig 7
     bury 11
     b main_ternary_merge@49
 
 main_ternary_false@37:
-    dig 5
+    dig 8
     b main_ternary_merge@38
 
 main_ternary_false@34:
-    dig 8
+    dig 7
     bury 13
     b main_ternary_merge@35
 

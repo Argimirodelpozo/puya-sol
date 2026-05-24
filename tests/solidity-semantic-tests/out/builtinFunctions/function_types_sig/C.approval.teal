@@ -1,9 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/function_types_sig.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/function_types_sig.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
+    bytecblock "x" 0x4bb8a92a 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -15,7 +16,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
+    bytec_0 // "x"
+    pushbytes 0x
     app_global_put
     intc_0 // 1
     return
@@ -26,7 +28,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4bb8a92a 0x886e1470 0xd63ef4f0 0x4e620b13 0x7c1072af // method "f()byte[4]", method "g()byte[4]", method "h()byte[4]", method "i()byte[4]", method "x()uint256"
+    bytec_1 // method "f()byte[4]"
+    pushbytess 0x886e1470 0xd63ef4f0 0x4e620b13 0x7c1072af // method "g()byte[4]", method "h()byte[4]", method "i()byte[4]", method "x()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8 main_x_route@9
     err
@@ -43,7 +46,7 @@ main_ternary_merge@16:
     !
     assert // not payable
     intc_1 // 0
-    pushbytes "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -54,7 +57,7 @@ main_ternary_merge@16:
     intc_2 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +99,14 @@ main_h_route@7:
 main_ternary_merge@31:
     !
     assert // not payable
-    pushbytes 0x151f7c754bb8a92a
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "f()byte[4]"
+    concat
+    extract 8 4
+    bytec_2 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return

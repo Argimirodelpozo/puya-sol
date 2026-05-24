@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/mapping_to_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "__ctor_pending" "x" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
+    intcblock 32 1 0 64
+    bytecblock "__ctor_pending" "x" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
     intc_2 // 0
     dup
     pushint 4096
@@ -63,15 +63,6 @@ main_ternary_merge@13:
     intc_0 // 32
     bzero
     dup
-    dig 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
     dig 2
     concat
     dup
@@ -80,11 +71,20 @@ main_ternary_merge@13:
     -
     intc_0 // 32
     extract3
+    swap
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "x"
     concat
     sha256
-    bytec_1 // "x"
-    swap
     concat
+    sha256
     box_get
     bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -104,7 +104,12 @@ main_ternary_merge@13:
     uncover 3
     itob
     concat
-    pushint 64
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 3
     dig 1
@@ -112,6 +117,11 @@ main_ternary_merge@13:
     uncover 2
     swap
     concat
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
     cover 2
     b|
     concat
@@ -137,7 +147,7 @@ main___postInit_route@5:
     pushint 2
     box_create
     pop
-    bytec_3 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
+    bytec_3 // 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
     box_get
     bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -192,7 +202,7 @@ main___postInit_route@5:
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
     concat
-    bytec_3 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
+    bytec_3 // 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
     swap
     box_put
     intc_1 // 1

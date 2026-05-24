@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x "_allowances" 0x151f7c7580 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 "_totalSupply" 0x9ac8d3f1 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x "_allowances" 0x151f7c7580 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 "_totalSupply" 0x28918861 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     dupn 6
     pushint 4096
@@ -62,14 +62,14 @@ main_ternary_merge@20:
     assert // not payable
     txn Sender
     dup
-    dig 3
-    dup
-    cover 2
+    bytec_1 // "_allowances"
     concat
     sha256
-    bytec_1 // "_allowances"
-    swap
+    dig 3
+    dup
+    uncover 2
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -113,14 +113,14 @@ main_ternary_merge@25:
     assert // not payable
     txn Sender
     dup
-    dig 3
-    dup
-    cover 2
+    bytec_1 // "_allowances"
     concat
     sha256
-    bytec_1 // "_allowances"
-    swap
+    dig 3
+    dup
+    uncover 2
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -177,13 +177,13 @@ main_ternary_merge@30:
     cover 4
     callsub _transfer
     txn Sender
-    dig 1
-    txn Sender
+    dup
+    dig 2
+    bytec_1 // "_allowances"
     concat
     sha256
-    bytec_1 // "_allowances"
-    swap
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -302,12 +302,13 @@ main_ternary_merge@45:
     !
     assert // not payable
     dig 2
-    dig 2
+    bytec_1 // "_allowances"
     concat
     sha256
-    bytec_1 // "_allowances"
+    dig 2
     swap
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -350,10 +351,9 @@ main_ternary_merge@50:
     !
     assert // not payable
     dig 2
-    sha256
     bytec_3 // "_balances"
-    swap
     concat
+    sha256
     box_get
     bytec_0 // 0x
     cover 2
@@ -440,10 +440,9 @@ main___postInit_route@5:
     swap
     app_global_put
     dig 1
-    sha256
     bytec_3 // "_balances"
-    swap
     concat
+    sha256
     dup
     box_get
     bytec_0 // 0x
@@ -460,7 +459,7 @@ main___postInit_route@5:
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
     concat
-    bytec 8 // method "Transfer(uint8[32],uint8[32],uint256)"
+    bytec 8 // method "Transfer(address,address,uint256)"
     swap
     concat
     log
@@ -468,7 +467,7 @@ main___postInit_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.FixedMath.add(a: bytes, b: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.FixedMath.add(a: bytes, b: bytes) -> bytes:
 FixedMath.add:
     proto 2 1
     frame_dig -2
@@ -477,7 +476,7 @@ FixedMath.add:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.FixedMath.sub(a: bytes, b: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.FixedMath.sub(a: bytes, b: bytes) -> bytes:
 FixedMath.sub:
     proto 2 1
     frame_dig -2
@@ -494,7 +493,7 @@ FixedMath.sub:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
 _transfer:
     proto 3 0
     frame_dig -2
@@ -502,10 +501,9 @@ _transfer:
     !=
     assert // ERC20: transfer to the zero address
     frame_dig -3
-    sha256
     bytec_3 // "_balances"
-    swap
     concat
+    sha256
     dup
     box_get
     bytec_0 // 0x
@@ -518,10 +516,9 @@ _transfer:
     pop
     box_put
     frame_dig -2
-    sha256
     bytec_3 // "_balances"
-    swap
     concat
+    sha256
     dup
     box_get
     bytec_0 // 0x
@@ -547,14 +544,14 @@ _transfer:
     concat
     swap
     concat
-    bytec 8 // method "Transfer(uint8[32],uint8[32],uint256)"
+    bytec 8 // method "Transfer(address,address,uint256)"
     swap
     concat
     log
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
 _approve:
     proto 3 0
     frame_dig -3
@@ -566,13 +563,13 @@ _approve:
     !=
     assert // ERC20: approve to the zero address
     frame_dig -3
-    frame_dig -2
-    concat
-    dup
-    sha256
     bytec_1 // "_allowances"
+    concat
+    sha256
+    frame_dig -2
     swap
     concat
+    sha256
     dup
     box_del
     pop
@@ -587,8 +584,12 @@ _approve:
     bzero
     frame_dig -1
     b|
+    frame_dig -3
+    frame_dig -2
     concat
-    pushbytes 0x050d5a90 // method "Approval(uint8[32],uint8[32],uint256)"
+    swap
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
     swap
     concat
     log

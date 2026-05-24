@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_memory_index_access.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
-    bytecblock 0x01 0x0000 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x068101
+    bytecblock 0x01 0x0000 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     intc_1 // 0
     dupn 9
     pushbytes ""
@@ -187,27 +187,6 @@ main_index_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-
-main_while_top@35:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz main_after_while@40
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec 4 // 0x068101
-    itxn_field ApprovalProgram
-    bytec 4 // 0x068101
-    itxn_field ClearStateProgram
-    intc_1 // 0
-    itxn_field Fee
-    itxn_submit
-    b main_while_top@35
-
-main_after_while@40:
     intc_1 // 0
     itob
     bury 7

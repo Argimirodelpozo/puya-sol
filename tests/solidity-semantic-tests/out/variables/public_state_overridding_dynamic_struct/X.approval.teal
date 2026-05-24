@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_dynamic_struct.sol.X.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/public_state_overridding_dynamic_struct.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 32 64
     bytecblock "test"
     pushint 4096
     bzero
@@ -59,7 +59,12 @@ main_ternary_merge@13:
     cover 2
     substring3
     extract 2 0
-    pushint 64
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 2
     b|

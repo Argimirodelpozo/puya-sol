@@ -1,12 +1,11 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/storage_array_encoding.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 64
-    bytecblock "tmp_i" "__ctor_pending" "tmp_h" 0x151f7c75
+    bytecblock "tmp_h" "__ctor_pending" "tmp_i" 0x151f7c75
     intc_2 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -38,7 +37,7 @@ main_after_if_else@2:
 main_i_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
+    bury 2
     len
     pushint 128
     ==
@@ -53,15 +52,15 @@ main_i_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    bytec_0 // "tmp_i"
-    dig 2
+    bytec_2 // "tmp_i"
+    dig 1
+    dup
+    cover 2
     box_put
     intc_0 // 32
     bzero
-    bytec_0 // "tmp_i"
-    intc_2 // 0
-    intc_3 // 64
-    box_extract // on error: index access is out of bounds
+    dig 1
+    extract 0 64 // on error: index access is out of bounds
     dig 1
     swap
     concat
@@ -71,10 +70,8 @@ main_ternary_merge@14:
     -
     intc_0 // 32
     extract3
-    bytec_0 // "tmp_i"
-    intc_3 // 64
-    dup
-    box_extract // on error: index access is out of bounds
+    uncover 2
+    extract 64 64 // on error: index access is out of bounds
     uncover 2
     swap
     concat
@@ -105,7 +102,7 @@ main_ternary_false@13:
 main_h_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
+    bury 2
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
@@ -115,8 +112,6 @@ main_h_route@6:
     +
     swap
     len
-    dup
-    bury 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>
     txn GroupIndex
@@ -129,17 +124,19 @@ main_h_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_2 // "tmp_h"
+    bytec_0 // "tmp_h"
     box_del
     pop
-    bytec_2 // "tmp_h"
-    dig 2
+    bytec_0 // "tmp_h"
+    dig 1
     dup
     cover 2
     box_put
     intc_0 // 32
     bzero
-    dig 2
+    bytec_0 // "tmp_h"
+    box_len
+    pop
     pushint 2
     -
     intc_3 // 64
@@ -182,11 +179,11 @@ main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_2 // "tmp_h"
+    bytec_0 // "tmp_h"
     pushint 2
     box_create
     pop
-    bytec_0 // "tmp_i"
+    bytec_2 // "tmp_i"
     intc_3 // 64
     box_create
     pop

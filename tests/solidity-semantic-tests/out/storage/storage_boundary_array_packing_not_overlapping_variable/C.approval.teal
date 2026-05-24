@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_packing_not_overlapping_variable.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_packing_not_overlapping_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8 18446744073709551615
-    bytecblock 0x "__dyn_storage"
+    bytecblock 0x 0x000000000000000b000000000000000c000000000000000d000000000000000e000000000000000f "__dyn_storage"
     bytec_0 // ""
     pushint 4096
     bzero
@@ -78,11 +78,11 @@ main_ternary_merge@21:
     store 0
     load 0
     store 0
-    bytec_1 // "__dyn_storage"
+    bytec_2 // "__dyn_storage"
     pushint 8192
     box_create
     pop
-    bytec_1 // "__dyn_storage"
+    bytec_2 // "__dyn_storage"
     pushint 8160
     intc_2 // 32
     box_extract
@@ -175,20 +175,30 @@ main_ternary_merge@31:
     pushint 3
     pushbytes 0x000000000000000f
     callsub __storage_write
+    bytec_1 // 0x000000000000000b000000000000000c000000000000000d000000000000000e000000000000000f
+    extract 40 8 // on error: index access is out of bounds
     pushint 4
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_1 // 0x000000000000000b000000000000000c000000000000000d000000000000000e000000000000000f
+    extract 48 8 // on error: index access is out of bounds
     pushint 5
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_1 // 0x000000000000000b000000000000000c000000000000000d000000000000000e000000000000000f
+    extract 56 8 // on error: index access is out of bounds
     pushint 6
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_1 // 0x000000000000000b000000000000000c000000000000000d000000000000000e000000000000000f
+    extract 64 8 // on error: index access is out of bounds
     pushint 7
-    bytec_0 // 0x
+    swap
     callsub __storage_write
+    bytec_1 // 0x000000000000000b000000000000000c000000000000000d000000000000000e000000000000000f
+    extract 72 8 // on error: index access is out of bounds
     intc_3 // 8
-    bytec_0 // 0x
+    swap
     callsub __storage_write
     intc_0 // 1
     return
@@ -246,7 +256,7 @@ main_ternary_false@35:
 // __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
 __storage_write:
     proto 2 0
-    bytec_1 // "__dyn_storage"
+    bytec_2 // "__dyn_storage"
     pushint 8192
     box_create
     pop
@@ -265,7 +275,7 @@ __storage_write:
     -
     intc_2 // 32
     extract3
-    bytec_1 // "__dyn_storage"
+    bytec_2 // "__dyn_storage"
     cover 2
     box_replace
     retsub

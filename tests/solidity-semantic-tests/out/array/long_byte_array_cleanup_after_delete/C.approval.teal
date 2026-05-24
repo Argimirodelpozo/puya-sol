@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 8 64
     bytecblock "testArray" "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "__dyn_storage"
@@ -100,9 +100,7 @@ main_while_top@29:
     bz main_after_while@31
     bytec_0 // "testArray"
     box_get
-    pushbytes 0x
-    cover 2
-    select
+    assert // box exists
     intc_2 // 8
     bzero
     dig 2
@@ -317,6 +315,10 @@ main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "testArray"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     return
 
@@ -356,7 +358,7 @@ __storage_read_else_body@2:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot() -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot() -> bytes:
 getArrayDataAreaSlot:
     txn GroupIndex
     bz getArrayDataAreaSlot_ternary_false@2

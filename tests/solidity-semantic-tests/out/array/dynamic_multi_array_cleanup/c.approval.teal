@@ -1,14 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_multi_array_cleanup.sol.c.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_multi_array_cleanup.sol.c.approval_program() -> uint64:
 main:
-    intcblock 0 2 1 6
-    bytecblock "data" 0x0000 "__ctor_pending" 0x068101
-    intc_0 // 0
-    dup
-    pushbytes ""
-    dupn 2
+    intcblock 2 0 1 6
+    bytecblock "data" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -20,7 +16,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -52,13 +48,13 @@ main_ternary_merge@14:
     box_del
     pop
     bytec_0 // "data"
-    bytec_1 // 0x0000
+    pushbytes 0x0000
     box_put
     intc_2 // 1
     return
 
 main_ternary_false@13:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@14
 
 main_fill_route@6:
@@ -73,25 +69,6 @@ main_ternary_merge@19:
     !
     assert // not payable
 
-main_while_top@29:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz main_while_top@20
-    itxn_begin
-    intc_3 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_3 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_3 // 0x068101
-    itxn_field ClearStateProgram
-    intc_0 // 0
-    itxn_field Fee
-    itxn_submit
-    b main_while_top@29
-
 main_while_top@20:
     bytec_0 // "data"
     box_len
@@ -100,7 +77,7 @@ main_while_top@20:
     bytec_0 // "data"
     box_get
     pop
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
 
 main_ternary_merge@23:
@@ -111,87 +88,9 @@ main_ternary_merge@23:
     bytec_0 // "data"
     box_get
     assert // box exists
-    dup
-    intc_0 // 0
-    extract_uint16
-    dup
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    bury 6
-    swap
-    extract 2 0
-    bury 6
-    intc_1 // 2
-    *
-    bury 3
-    intc_0 // 0
-    bury 1
-
-main_for_header@32:
-    dup
-    dig 3
-    <
-    bz main_after_for@34
-    dig 4
-    dig 1
-    dup
-    cover 2
-    extract_uint16
-    intc_1 // 2
-    +
-    itob
-    extract 6 0
-    dig 5
-    swap
-    concat
-    bury 5
-    intc_1 // 2
-    +
-    bury 1
-    b main_for_header@32
-
-main_after_for@34:
-    dig 4
-    len
-    bury 2
-    intc_0 // 0
-    bury 1
-
-main_for_header@35:
-    dup
-    intc_1 // 2
-    <
-    bz main_after_for@37
     pushbytes 0x000200020000
-    dig 1
-    dup
-    cover 2
-    extract_uint16
-    dig 3
-    +
-    itob
-    extract 6 0
-    dig 5
-    swap
-    concat
-    bury 5
-    intc_1 // 2
-    +
-    bury 1
-    b main_for_header@35
-
-main_after_for@37:
-    dig 4
-    dig 3
-    dig 3
-    substring3
-    dig 4
-    swap
-    concat
-    pushbytes 0x00020000
-    concat
+    intc_2 // 1
+    callsub dynamic_array_concat_dynamic_element
     bytec_0 // "data"
     box_del
     pop
@@ -202,91 +101,205 @@ main_after_for@37:
 
 main_while_top@25:
     bytec_0 // "data"
-    box_get
-    bytec_1 // 0x0000
-    cover 2
-    select
-    intc_1 // 2
-    callsub dynamic_array_read_dynamic_element
-    dup
-    intc_0 // 0
-    extract_uint16
-    dig 1
-    len
-    substring3
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
+    intc_3 // 6
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 4
+    +
+    bytec_0 // "data"
+    swap
+    intc_0 // 2
+    box_extract
+    btoi
     itob
     pushbytes 0x04
     b<
-    bnz main_while_top@25
-
-main_while_top@26:
+    bz main_while_top@27
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x0000
-    cover 2
-    select
-    intc_1 // 2
+    assert // box exists
+    dup
+    intc_0 // 2
     callsub dynamic_array_read_dynamic_element
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     len
     substring3
+    pushbytes 0x00020000
+    intc_2 // 1
+    callsub dynamic_array_concat_dynamic_element
+    dig 1
+    intc_0 // 2
+    callsub dynamic_array_read_dynamic_element
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
-    pushint 3
-    >
-    assert // index out of bounds
-    extract 2 0
-    dup
-    intc_3 // 6
-    extract_uint16
-    dup2
-    extract_uint16
-    pushint 32
-    *
-    intc_1 // 2
-    +
+    intc_1 // 0
+    swap
     extract3
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    pushbytes 0x05
-    b<
-    bnz main_while_top@26
+    swap
+    concat
+    intc_0 // 2
+    callsub dynamic_array_replace_dynamic_element
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
+    b main_while_top@25
+
+main_while_top@27:
     bytec_0 // "data"
     intc_3 // 6
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     pushint 4
     +
     bytec_0 // "data"
     dig 1
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     pushint 3
     >
     assert // index out of bounds
-    intc_1 // 2
+    intc_0 // 2
     +
     dup
     intc_3 // 6
     +
     bytec_0 // "data"
     swap
-    intc_1 // 2
+    intc_0 // 2
+    box_extract
+    btoi
+    +
+    bytec_0 // "data"
+    swap
+    intc_0 // 2
+    box_extract
+    btoi
+    itob
+    pushbytes 0x05
+    b<
+    bz main_after_while@29
+    bytec_0 // "data"
+    box_get
+    assert // box exists
+    bytec_0 // "data"
+    intc_3 // 6
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 4
+    +
+    bytec_0 // "data"
+    dig 1
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 3
+    >
+    assert // index out of bounds
+    intc_0 // 2
+    +
+    dup
+    intc_3 // 6
+    +
+    bytec_0 // "data"
+    swap
+    intc_0 // 2
     box_extract
     btoi
     +
     bytec_0 // "data"
     dig 1
-    intc_1 // 2
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 32
+    *
+    intc_0 // 2
+    +
+    bytec_0 // "data"
+    cover 2
+    box_extract
+    dup
+    intc_1 // 0
+    extract_uint16
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    dig 1
+    intc_0 // 2
+    callsub dynamic_array_read_dynamic_element
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    len
+    dig 2
+    dig 2
+    uncover 2
+    substring3
+    uncover 3
+    pushint 3
+    callsub dynamic_array_replace_dynamic_element
+    uncover 2
+    intc_1 // 0
+    uncover 3
+    extract3
+    swap
+    concat
+    intc_0 // 2
+    callsub dynamic_array_replace_dynamic_element
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
+    b main_while_top@27
+
+main_after_while@29:
+    bytec_0 // "data"
+    intc_3 // 6
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 4
+    +
+    bytec_0 // "data"
+    dig 1
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 3
+    >
+    assert // index out of bounds
+    intc_0 // 2
+    +
+    dup
+    intc_3 // 6
+    +
+    bytec_0 // "data"
+    swap
+    intc_0 // 2
+    box_extract
+    btoi
+    +
+    bytec_0 // "data"
+    dig 1
+    intc_0 // 2
     box_extract
     btoi
     pushint 4
@@ -299,36 +312,45 @@ main_while_top@26:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     bytec_0 // "data"
-    box_get
-    bytec_1 // 0x0000
-    cover 2
-    select
-    intc_1 // 2
-    callsub dynamic_array_read_dynamic_element
-    dup
-    intc_0 // 0
-    extract_uint16
+    intc_3 // 6
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 4
+    +
+    bytec_0 // "data"
     dig 1
-    len
-    substring3
-    dup
-    intc_0 // 0
-    extract_uint16
+    intc_0 // 2
+    box_extract
+    btoi
     pushint 3
     >
     assert // index out of bounds
-    extract 2 0
+    intc_0 // 2
+    +
     dup
     intc_3 // 6
-    extract_uint16
-    dup2
-    extract_uint16
-    pushint 32
-    *
-    intc_1 // 2
     +
-    extract3
-    extract 130 32
+    bytec_0 // "data"
+    swap
+    intc_0 // 2
+    box_extract
+    btoi
+    +
+    bytec_0 // "data"
+    dig 1
+    intc_0 // 2
+    box_extract
+    btoi
+    pushint 4
+    >
+    assert // index out of bounds
+    pushint 130
+    +
+    bytec_0 // "data"
+    swap
+    pushint 32
+    box_extract // on error: index out of bounds
     pushbytes 0x151f7c75
     swap
     concat
@@ -337,22 +359,22 @@ main_while_top@26:
     return
 
 main_ternary_false@22:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@23
 
 main_ternary_false@18:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@19
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
-    intc_0 // 0
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
     bytec_0 // "data"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_2 // 1
@@ -365,10 +387,10 @@ dynamic_array_read_dynamic_element:
     frame_dig -2
     extract 2 0
     frame_dig -2
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
     frame_dig -1
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 2
     swap
@@ -379,7 +401,7 @@ dynamic_array_read_dynamic_element:
     intc_2 // 1
     +
     dup
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 5
     swap
@@ -389,4 +411,189 @@ dynamic_array_read_dynamic_element:
     -
     select
     substring3
+    retsub
+
+
+// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
+dynamic_array_concat_dynamic_element:
+    proto 3 1
+    pushbytes ""
+    frame_dig -3
+    intc_1 // 0
+    extract_uint16
+    dup
+    frame_dig -1
+    +
+    itob
+    extract 6 0
+    swap
+    frame_dig -3
+    extract 2 0
+    swap
+    intc_0 // 2
+    *
+    frame_dig -1
+    intc_0 // 2
+    *
+    intc_1 // 0
+
+dynamic_array_concat_dynamic_element_for_header@1:
+    frame_dig 5
+    frame_dig 3
+    <
+    bz dynamic_array_concat_dynamic_element_after_for@4
+    frame_dig 2
+    frame_dig 5
+    dup
+    cover 2
+    extract_uint16
+    frame_dig 4
+    +
+    itob
+    extract 6 0
+    frame_dig 1
+    swap
+    concat
+    frame_bury 1
+    intc_0 // 2
+    +
+    frame_bury 5
+    b dynamic_array_concat_dynamic_element_for_header@1
+
+dynamic_array_concat_dynamic_element_after_for@4:
+    frame_dig 2
+    len
+    frame_bury 0
+    intc_1 // 0
+    frame_bury 5
+
+dynamic_array_concat_dynamic_element_for_header@5:
+    frame_dig 5
+    frame_dig 4
+    <
+    bz dynamic_array_concat_dynamic_element_after_for@8
+    frame_dig -2
+    frame_dig 5
+    dup
+    cover 2
+    extract_uint16
+    frame_dig 0
+    +
+    itob
+    extract 6 0
+    frame_dig 1
+    swap
+    concat
+    frame_bury 1
+    intc_0 // 2
+    +
+    frame_bury 5
+    b dynamic_array_concat_dynamic_element_for_header@5
+
+dynamic_array_concat_dynamic_element_after_for@8:
+    frame_dig 2
+    frame_dig 3
+    frame_dig 0
+    substring3
+    frame_dig 1
+    swap
+    concat
+    frame_dig -2
+    len
+    frame_dig -2
+    frame_dig 4
+    uncover 2
+    substring3
+    concat
+    frame_bury 0
+    retsub
+
+
+// _puya_lib.arc4.dynamic_array_replace_dynamic_element(source: bytes, new_item: bytes, index: uint64) -> bytes:
+dynamic_array_replace_dynamic_element:
+    proto 3 1
+    frame_dig -3
+    substring 0 2
+    dup
+    btoi
+    frame_dig -3
+    extract 2 0
+    frame_dig -2
+    len
+    cover 2
+    dup
+    len
+    frame_dig -1
+    intc_2 // 1
+    +
+    intc_0 // 2
+    *
+    dig 2
+    dig 1
+    extract_uint16
+    dig 4
+    frame_dig -1
+    -
+    intc_2 // 1
+    -
+    dig 3
+    cover 2
+    select
+    frame_dig -1
+    intc_0 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    dup2
+    -
+    cover 6
+    dig 4
+    intc_1 // 0
+    uncover 2
+    substring3
+    frame_dig -2
+    concat
+    uncover 4
+    uncover 2
+    uncover 4
+    substring3
+    concat
+    cover 2
+    swap
+    intc_0 // 2
+    *
+    swap
+
+dynamic_array_replace_dynamic_element_for_header@2:
+    frame_dig 5
+    frame_dig 4
+    <
+    bz dynamic_array_replace_dynamic_element_after_for@5
+    frame_dig 3
+    dup
+    frame_dig 5
+    dup
+    cover 3
+    extract_uint16
+    frame_dig 1
+    +
+    frame_dig 2
+    -
+    itob
+    extract 6 0
+    dig 2
+    swap
+    replace3
+    frame_bury 3
+    intc_0 // 2
+    +
+    frame_bury 5
+    b dynamic_array_replace_dynamic_element_for_header@2
+
+dynamic_array_replace_dynamic_element_after_for@5:
+    frame_dig 0
+    frame_dig 3
+    concat
+    frame_bury 0
     retsub

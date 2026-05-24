@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_library_inheritance.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_library_inheritance.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32 0
     bytecblock "s"
     pushint 4096
     bzero
@@ -44,15 +44,17 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "s"
     app_global_get_ex
     assert // check s exists
     callsub L.libFun
+    pop
     bytec_0 // "s"
     dig 1
     app_global_put
     callsub L.libFun
+    pop
     bytec_0 // "s"
     dig 1
     app_global_put
@@ -65,25 +67,41 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_library_inheritance.sol.L.libFun(s: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_library_inheritance.sol.L.libFun(s: bytes) -> bytes, bytes:
 L.libFun:
-    proto 1 1
+    proto 1 2
     frame_dig -1
+    extract 0 32
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    frame_dig -1
+    swap
+    replace2 0
+    dup
+    frame_bury -1
     extract 0 32
     pushbytes 0x0100
     b+
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
-    bzero
     b|
-    dup
+    dupn 2
     frame_bury -1
     retsub

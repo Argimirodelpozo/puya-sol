@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_internal_argument.sol.test.approval_program() -> uint64:
 main:
     intcblock 255 1 0 8
     bytecblock "__ctor_pending" "a" "b" 0x151f7c75
@@ -62,10 +62,10 @@ main_ternary_merge@14:
     intc_0 // 255
     &
     itob
-    sha256
+    dup
     bytec_1 // "a"
-    dig 1
     concat
+    sha256
     box_get
     swap
     btoi
@@ -75,9 +75,10 @@ main_ternary_merge@14:
     select
     intc_0 // 255
     &
+    swap
     bytec_2 // "b"
-    uncover 2
     concat
+    sha256
     box_get
     swap
     btoi
@@ -208,7 +209,7 @@ main___postInit_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.set_internal(m: bytes, key: uint64, value: uint64) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_internal_argument.sol.test.set_internal(m: bytes, key: uint64, value: uint64) -> uint64:
 set_internal:
     proto 3 1
     frame_dig -2
@@ -229,10 +230,9 @@ set_internal:
     frame_bury -1
     frame_dig -2
     itob
-    sha256
     frame_dig -3
-    swap
     concat
+    sha256
     dup
     box_get
     swap

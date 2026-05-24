@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_array.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
     bytecblock "array" "__ctor_pending"
@@ -69,7 +69,7 @@ main_ternary_merge@15:
     bytec_0 // "array"
     swap
     intc_2 // 32
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     pushbytes 0x151f7c75
     swap
     concat
@@ -116,7 +116,17 @@ main_while_top@23:
     dup
     pushbytes 0x0a
     b<
-    bz main_after_while@25
+    bz main_after_while@27
+    bytec_0 // "array"
+    box_len
+    bury 1
+    bnz main_after_if_else@26
+    bytec_0 // "array"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@26:
     dup
     pushbytes 0x01
     b+
@@ -173,7 +183,7 @@ main_while_top@23:
     box_splice
     b main_while_top@23
 
-main_after_while@25:
+main_after_while@27:
     intc_1 // 1
     return
 

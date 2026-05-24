@@ -1,9 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address_assignment.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/external_function_pointer_address_assignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 8
+    bytecblock 0x89aac53b
     intc_1 // 0
     pushbytes ""
     pushint 4096
@@ -26,7 +27,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x89aac53b 0xe20fc281 // method "testFunction()void", method "testYul(address)address"
+    bytec_0 // method "testFunction()void"
+    pushbytes 0xe20fc281 // method "testYul(address)address"
     txna ApplicationArgs 0
     match main_testFunction_route@5 main_testYul_route@6
     err
@@ -51,15 +53,19 @@ main_testYul_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "testFunction()void"
+    concat
     load 0
-    dig 1
+    dig 2
     intc_2 // 8
     -
-    dig 3
+    dig 4
     swap
     intc_2 // 8
     extract3
-    pushbytes 0x000000000000000089aac53b
+    uncover 2
     swap
     replace2 0
     swap

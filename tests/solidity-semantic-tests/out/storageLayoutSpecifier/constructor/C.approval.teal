@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/constructor.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/constructor.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 8 32
-    bytecblock "y" "x" "z" 0x0100 0x80 0x151f7c75 0xff
+    bytecblock "x" "y" "z" 0x0100 0x80 0x151f7c75
     intc_0 // 0
     pushbytes ""
     dup
@@ -32,10 +32,10 @@ main:
     -
     extract_uint64
     bury 5
-    bytec_1 // "x"
+    bytec_0 // "x"
     pushbytes 0x
     app_global_put
-    bytec_0 // "y"
+    bytec_1 // "y"
     intc_0 // 0
     app_global_put
     bytec_2 // "z"
@@ -44,7 +44,7 @@ main:
     uncover 2
     pushbytes 0x01
     b+
-    bytec_1 // "x"
+    bytec_0 // "x"
     swap
     app_global_put
     intc_2 // 8
@@ -89,7 +89,7 @@ main_bool_merge@5:
     intc_2 // 8
     -
     extract_uint64
-    bytec_0 // "y"
+    bytec_1 // "y"
     swap
     app_global_put
     dig 1
@@ -132,7 +132,7 @@ main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -166,22 +166,16 @@ main_ternary_merge@23:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "y"
+    bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
     itob
-    bytec 6 // 0xff
+    pushbytes 0xff
     b&
+    dup
     bytec 4 // 0x80
     b>=
     bz main_ternary_false@25
-    intc_0 // 0
-    bytec_0 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec 6 // 0xff
-    b&
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -204,13 +198,6 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    intc_0 // 0
-    bytec_0 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec 6 // 0xff
-    b&
     b main_ternary_merge@26
 
 main_ternary_false@22:

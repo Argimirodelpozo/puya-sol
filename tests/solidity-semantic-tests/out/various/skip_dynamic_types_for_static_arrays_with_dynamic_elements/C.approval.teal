@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
-    bytecblock 0x151f7c75 0x 0x0002
+    intcblock 1 32 64 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -42,10 +42,8 @@ main_ternary_merge@13:
     !
     assert // not payable
     callsub f
-    popn 3
-    callsub f
-    cover 4
-    popn 3
+    cover 3
+    popn 2
     dup
     len
     intc_1 // 32
@@ -72,17 +70,17 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@13
 
 main_f_route@5:
     callsub f
     dig 3
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 64
     bzero
     uncover 4
     dig 1
@@ -98,7 +96,7 @@ main_f_route@5:
     concat
     dig 2
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
     cover 2
@@ -116,7 +114,7 @@ main_f_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f() -> bytes, bytes, bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f() -> bytes, bytes, bytes, bytes:
 f:
     txn GroupIndex
     bz f_ternary_false@2
@@ -130,53 +128,13 @@ f_ternary_merge@3:
     assert // not payable
     pushint 5
     itob
-    bytec_1 // 0x
-    intc_2 // 0
-    getbit
-    bytec_1 // 0x
-    intc_0 // 1
-    dig 2
-    setbit
-    bytec_2 // 0x0002
-    dig 1
-    concat
     pushint 6
     itob
-    pushbytes 0x000400060001
-    dig 2
-    concat
-    bytec_2 // 0x0002
+    swap
+    pushbytess 0x00040007000100000200 0x0004000900020002000002000500
     uncover 3
-    concat
-    uncover 3
-    pushint 2
-    dig 5
-    setbit
-    pushint 3
-    dig 5
-    setbit
-    pushint 4
-    uncover 5
-    setbit
-    pushbytes 0x00020005
-    swap
-    concat
-    dig 1
-    len
-    pushint 4
-    +
-    itob
-    extract 6 2
-    pushbytes 0x0004
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 2
     retsub
 
 f_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b f_ternary_merge@3

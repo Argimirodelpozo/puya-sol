@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/dirty_uint8_read.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 64
-    bytecblock "x" 0xff 0x151f7c75
+    bytecblock "x" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -49,18 +49,12 @@ main_ternary_merge@14:
     app_global_get_ex
     assert // check x exists
     itob
-    bytec_1 // 0xff
+    pushbytes 0xff
     b&
+    dup
     pushbytes 0x80
     b>=
     bz main_ternary_false@16
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_1 // 0xff
-    b&
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -75,7 +69,7 @@ main_ternary_merge@17:
     intc_3 // 64
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -83,13 +77,6 @@ main_ternary_merge@17:
     return
 
 main_ternary_false@16:
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    itob
-    bytec_1 // 0xff
-    b&
     b main_ternary_merge@17
 
 main_ternary_false@13:
@@ -126,7 +113,7 @@ main_ternary_merge@22:
     extract 0 32
     swap
     store 0
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

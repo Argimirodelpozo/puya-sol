@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 64 32
     bytecblock 0x 0x15
@@ -46,7 +46,7 @@ main_ternary_merge@14:
     intc_1 // 0
     itob
     dup
-    bury 3
+    bury 2
     callsub get
     bytec_0 // 0x
     b==
@@ -63,7 +63,7 @@ main_bool_merge@18:
     assert
     pushint 21
     itob
-    dig 2
+    dig 1
     dup
     uncover 2
     callsub set
@@ -84,16 +84,16 @@ main_bool_merge@22:
     pushint 42
     itob
     dup
-    bury 2
+    bury 3
     pushint 131
     itob
     callsub set
-    dig 1
+    dup
     callsub get
     bytec_1 // 0x15
     b==
     bz main_bool_false@25
-    dup
+    dig 1
     callsub get
     pushbytes 0x83
     b==
@@ -162,7 +162,7 @@ main_get_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get(addr: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.get(addr: bytes) -> bytes:
 get:
     proto 1 1
     txn GroupIndex
@@ -192,7 +192,7 @@ get_ternary_false@2:
     b get_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.set(addr: bytes, x: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.set(addr: bytes, x: bytes) -> void:
 set:
     proto 2 0
     txn GroupIndex

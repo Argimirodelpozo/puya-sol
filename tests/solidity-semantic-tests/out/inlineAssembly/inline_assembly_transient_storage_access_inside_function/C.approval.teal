@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_transient_storage_access_inside_function.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_transient_storage_access_inside_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 32 64
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -51,7 +51,12 @@ main_ternary_merge@14:
     assert // not payable
     load 5
     extract 32 32
-    pushint 32
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -110,7 +115,12 @@ main_ternary_merge@24:
     store 0
     load 5
     extract 32 32
-    pushint 64
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

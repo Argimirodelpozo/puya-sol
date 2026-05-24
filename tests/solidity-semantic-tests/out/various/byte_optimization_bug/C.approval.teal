@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/byte_optimization_bug.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/byte_optimization_bug.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 64 0 32
     bytecblock 0x151f7c75
@@ -63,6 +63,11 @@ main_ternary_merge@13:
     extract 31 1
     swap
     store 0
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
     intc_1 // 64
     bzero
     b|

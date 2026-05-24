@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 4
+    intcblock 0 1 4 6
     bytecblock "savedData" 0x "__ctor_pending" "rec" 0x151f7c7580 TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
     intc_0 // 0
     dup
@@ -76,7 +76,7 @@ main_ternary_merge@20:
     assert // check rec exists
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -148,34 +148,36 @@ main_ternary_merge@30:
     assert // not payable
     bytec_0 // "savedData"
     box_get
-    bytec_1 // 0x
-    cover 2
-    select
-    dup
+    swap
     bury 7
+    assert // box exists
     itxn_begin
-    len
+    bytec_0 // "savedData"
+    box_len
+    pop
     dup
     bury 3
-    intc_3 // 4
+    intc_2 // 4
     >=
     dup
     bury 2
     bz main_ternary_false@32
-    dig 5
-    extract 0 4
+    bytec_0 // "savedData"
+    intc_0 // 0
+    intc_2 // 4
+    box_extract
     bury 5
 
 main_ternary_merge@33:
     dup
     bz main_ternary_false@35
     dig 1
-    intc_3 // 4
+    intc_2 // 4
     -
-    dig 6
-    intc_3 // 4
+    bytec_0 // "savedData"
+    intc_2 // 4
     uncover 2
-    extract3
+    box_extract
 
 main_ternary_merge@36:
     intc_0 // 0
@@ -184,7 +186,7 @@ main_ternary_merge@36:
     assert // check rec exists
     pushint 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -227,10 +229,14 @@ main___postInit_route@9:
     bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
+    bytec_0 // "savedData"
+    intc_0 // 0
+    box_create
+    pop
     itxn_begin
     bytec 5 // TMPL_APPROVAL_receiver
     bytec 6 // TMPL_CLEAR_receiver
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -269,7 +275,7 @@ main___postInit_route@9:
     b main_switch_case_next@14
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback() -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__fallback() -> void:
 __fallback:
     proto 0 0
     intc_0 // 0
@@ -326,7 +332,7 @@ __fallback_ternary_merge@16:
     concat
     frame_bury 3
     txn NumAppArgs
-    intc_3 // 4
+    intc_2 // 4
     >
     bz __fallback_ternary_false@18
     txna ApplicationArgs 4
@@ -348,7 +354,7 @@ __fallback_ternary_merge@22:
     concat
     frame_bury 5
     txn NumAppArgs
-    intc_2 // 6
+    intc_3 // 6
     >
     bz __fallback_ternary_false@24
     txna ApplicationArgs 6

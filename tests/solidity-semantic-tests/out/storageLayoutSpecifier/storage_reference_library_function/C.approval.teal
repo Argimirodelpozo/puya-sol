@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_library_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 256
+    intcblock 0 1 256 64
     bytecblock "s" 0x00
     pushint 4096
     bzero
@@ -59,7 +59,12 @@ main_ternary_merge@13:
     setbit
     intc_0 // 0
     getbit
-    pushint 64
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
     bzero
     uncover 2
     b|
@@ -110,6 +115,7 @@ main_ternary_merge@18:
     dig 1
     app_global_put
     callsub L.validate
+    pop
     intc_1 // 1
     return
 
@@ -118,9 +124,9 @@ main_ternary_false@17:
     b main_ternary_merge@18
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.L.validate(ptr: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_library_function.sol.L.validate(ptr: bytes) -> bytes:
 L.validate:
-    proto 1 0
+    proto 1 1
     frame_dig -1
     extract 0 32
     pushbytes 0x02
@@ -136,4 +142,5 @@ L.validate:
     intc_0 // 0
     getbit
     assert
+    frame_dig -1
     retsub

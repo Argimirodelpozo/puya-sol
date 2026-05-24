@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/cleanup_abicoderv1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 255 8 511
+    intcblock 1 0 255 511
     bytecblock 0x151f7c75 "a" "c" "b"
     pushbytes ""
     pushint 4096
@@ -57,7 +57,7 @@ main_ternary_merge@15:
     bytec_2 // "c"
     pushint 2
     app_global_put
-    intc 4 // 511
+    intc_3 // 511
     itob
     callsub wrap
     bytec_3 // "b"
@@ -108,15 +108,10 @@ main_mem_route@7:
 main_ternary_merge@20:
     !
     assert // not payable
-    intc 4 // 511
+    intc_3 // 511
     itob
     callsub wrap
     itob
-    dup
-    bitlen
-    intc_3 // 8
-    <=
-    assert // overflow
     extract 7 1
     pushbytes 0x00020000
     swap
@@ -125,11 +120,6 @@ main_ternary_merge@20:
     itob
     callsub wrap
     itob
-    dup
-    bitlen
-    intc_3 // 8
-    <=
-    assert // overflow
     extract 7 1
     replace2 3 // on error: index access is out of bounds
     dup
@@ -170,7 +160,7 @@ main_f_route@6:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -211,7 +201,7 @@ main_ret_route@5:
 main_ternary_merge@30:
     !
     assert // not payable
-    intc 4 // 511
+    intc_3 // 511
     itob
     callsub wrap
     intc_2 // 255
@@ -229,11 +219,11 @@ main_ternary_false@29:
     b main_ternary_merge@30
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.wrap(x: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/cleanup_abicoderv1.sol.wrap(x: bytes) -> uint64:
 wrap:
     proto 1 1
     load 0
-    intc_3 // 8
+    pushint 8
     bzero
     frame_dig -1
     pushbytes 0xff
@@ -241,7 +231,7 @@ wrap:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -249,7 +239,7 @@ wrap:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.unwrap(x: uint64) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/cleanup_abicoderv1.sol.unwrap(x: uint64) -> uint64:
 unwrap:
     proto 1 1
     load 0

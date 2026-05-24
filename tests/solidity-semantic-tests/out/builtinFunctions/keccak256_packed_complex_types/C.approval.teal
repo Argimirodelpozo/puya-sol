@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 15 1 0
     bytecblock "x"
@@ -44,19 +44,17 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    intc_2 // 0
-    assert // overflow
     intc_0 // 15
     bzero
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffe
+    pushbytes 0xfffffffffffffffffffffffffffffe
     replace2 0 // on error: index access is out of bounds
-    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd
+    pushbytes 0xfffffffffffffffffffffffffffffd
     replace2 15 // on error: index access is out of bounds
-    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
+    pushbytes 0xfffffffffffffffffffffffffffffc
     replace2 30 // on error: index access is out of bounds
     bytec_0 // "x"
     dig 1
@@ -97,7 +95,7 @@ main_ternary_merge@9:
     extract3
     concat
     keccak256
-    pushbytes 0x1444f059fd7a076e31357cb59d0e76c61d9d0e60b208ef23276b847fc4788d60e321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
+    pushbytes 0xf3ed94453839016594195213862043a45afef6b72cf9af39746fed7b77793c60e321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
     concat
     pushbytes 0x151f7c75
     swap

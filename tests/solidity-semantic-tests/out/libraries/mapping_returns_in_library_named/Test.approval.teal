@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Test.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/mapping_returns_in_library_named.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x "__ctor_pending" "a" "b" 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2 0x151f7c75 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytecblock 0x "__ctor_pending" "a" "b" 0x0000000000000000000000000000000000000000000000000000000000000002 0x41a0370c3d9f42773a59e8e01651911cf43b1e3f66944cbb690029debc4eb647 0x543441c05ca1dcbd368bf756a88914b11da578b14a6b0ce699202bff475e7eb3 0xd2c5ed2465fc21cc80cf7ea0ce7d4077c0ceff5d034f869315cdd8359b6b8ee9 0x7ec8020a087ee17266b18fe5a9518759e60d782a249c2b5aab02f2f7fef41e0d 0xc72a588da2f1ff75cf3cbd9f80914bdd48ae1312d699ca33aa0888694f211fac 0x5605b79b8b4b8068b3d9271fa47d52111adbc6b627c5d0a6411da798e2ab82a7 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -49,15 +49,16 @@ main_ternary_merge@14:
     callsub Lib.f
     pushint 17
     itob
-    swap
-    bytec 4 // 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    uncover 2
     concat
+    sha256
     dup
     box_del
     pop
     swap
     box_put
-    bytec 5 // 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec 5 // 0x41a0370c3d9f42773a59e8e01651911cf43b1e3f66944cbb690029debc4eb647
     box_get
     bytec_0 // 0x
     cover 2
@@ -72,7 +73,7 @@ main_ternary_merge@14:
     swap
     dig 1
     b|
-    bytec 6 // 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec 6 // 0x543441c05ca1dcbd368bf756a88914b11da578b14a6b0ce699202bff475e7eb3
     box_get
     bytec_0 // 0x
     cover 2
@@ -84,7 +85,7 @@ main_ternary_merge@14:
     assert // overflow
     dig 2
     b|
-    bytec 7 // 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 7 // 0xd2c5ed2465fc21cc80cf7ea0ce7d4077c0ceff5d034f869315cdd8359b6b8ee9
     box_get
     bytec_0 // 0x
     cover 2
@@ -96,7 +97,7 @@ main_ternary_merge@14:
     assert // overflow
     dig 3
     b|
-    bytec 8 // 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec 8 // 0x7ec8020a087ee17266b18fe5a9518759e60d782a249c2b5aab02f2f7fef41e0d
     box_get
     bytec_0 // 0x
     cover 2
@@ -108,7 +109,7 @@ main_ternary_merge@14:
     assert // overflow
     dig 4
     b|
-    bytec 9 // 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec 9 // 0xc72a588da2f1ff75cf3cbd9f80914bdd48ae1312d699ca33aa0888694f211fac
     box_get
     bytec_0 // 0x
     cover 2
@@ -120,7 +121,7 @@ main_ternary_merge@14:
     assert // overflow
     dig 5
     b|
-    bytec 10 // 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 10 // 0x5605b79b8b4b8068b3d9271fa47d52111adbc6b627c5d0a6411da798e2ab82a7
     box_get
     bytec_0 // 0x
     cover 2
@@ -170,14 +171,16 @@ main_ternary_merge@19:
     bytec_2 // "a"
     bytec_3 // "b"
     callsub Lib.f
-    bytec 4 // 0x9267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    swap
     concat
+    sha256
     dup
     box_del
     pop
     swap
     box_put
-    bytec 5 // 0x6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec 5 // 0x41a0370c3d9f42773a59e8e01651911cf43b1e3f66944cbb690029debc4eb647
     box_get
     bytec_0 // 0x
     cover 2
@@ -192,7 +195,7 @@ main_ternary_merge@19:
     swap
     dig 1
     b|
-    bytec 6 // 0x61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec 6 // 0x543441c05ca1dcbd368bf756a88914b11da578b14a6b0ce699202bff475e7eb3
     box_get
     bytec_0 // 0x
     cover 2
@@ -204,7 +207,7 @@ main_ternary_merge@19:
     assert // overflow
     dig 2
     b|
-    bytec 7 // 0x619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 7 // 0xd2c5ed2465fc21cc80cf7ea0ce7d4077c0ceff5d034f869315cdd8359b6b8ee9
     box_get
     bytec_0 // 0x
     cover 2
@@ -216,7 +219,7 @@ main_ternary_merge@19:
     assert // overflow
     dig 3
     b|
-    bytec 8 // 0x6266687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec 8 // 0x7ec8020a087ee17266b18fe5a9518759e60d782a249c2b5aab02f2f7fef41e0d
     box_get
     bytec_0 // 0x
     cover 2
@@ -228,7 +231,7 @@ main_ternary_merge@19:
     assert // overflow
     dig 4
     b|
-    bytec 9 // 0x62ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    bytec 9 // 0xc72a588da2f1ff75cf3cbd9f80914bdd48ae1312d699ca33aa0888694f211fac
     box_get
     bytec_0 // 0x
     cover 2
@@ -240,7 +243,7 @@ main_ternary_merge@19:
     assert // overflow
     dig 5
     b|
-    bytec 10 // 0x629267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec 10 // 0x5605b79b8b4b8068b3d9271fa47d52111adbc6b627c5d0a6411da798e2ab82a7
     box_get
     bytec_0 // 0x
     cover 2
@@ -293,14 +296,15 @@ main___postInit_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library_named.sol.Lib.f(a: bytes, b: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/mapping_returns_in_library_named.sol.Lib.f(a: bytes, b: bytes) -> bytes:
 Lib.f:
     proto 2 1
     pushint 42
     itob
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000001
     frame_dig -2
-    bytec 12 // 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     concat
+    sha256
     dup
     box_del
     pop
@@ -308,9 +312,10 @@ Lib.f:
     box_put
     pushint 21
     itob
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000001
     frame_dig -1
-    bytec 12 // 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
     concat
+    sha256
     dup
     box_del
     pop

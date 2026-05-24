@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/struct_with_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 34 36
-    bytecblock "s" "__ctor_pending" 0x000000000000000000000000000000000000000000000000000000000000000000260028002a000000000000 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytecblock "s" "__ctor_pending" 0x000000000000000000000000000000000000000000000000000000000000000000260028002a000000000000 0x78264fe52752bd2ff6deb06515d3f8a08030ec95d4d46d0b1074f32ef702c3d4
     pushint 4096
     bzero
     dup
@@ -61,6 +61,11 @@ main_ternary_merge@13:
     cover 2
     substring3
     extract 2 0
+    dig 1
+    len
+    pushint 64
+    <=
+    assert // overflow
     pushint 64
     bzero
     uncover 2
@@ -209,10 +214,10 @@ main___postInit_route@5:
     box_put
     pushint 9
     itob
-    bytec_3 // 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_3 // 0x78264fe52752bd2ff6deb06515d3f8a08030ec95d4d46d0b1074f32ef702c3d4
     box_del
     pop
-    bytec_3 // 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_3 // 0x78264fe52752bd2ff6deb06515d3f8a08030ec95d4d46d0b1074f32ef702c3d4
     swap
     box_put
     bytec_0 // "s"

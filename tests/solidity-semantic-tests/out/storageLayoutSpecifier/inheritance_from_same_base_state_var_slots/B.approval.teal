@@ -1,11 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.B.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
-    bytecblock "x" 0x "y" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
-    intc_1 // 0
+    intcblock 1 0 32
+    bytecblock "x" 0x "y" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -50,7 +49,7 @@ main_ternary_merge@15:
     assert // not payable
     load 0
     store 0
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
     log
     intc_0 // 1
     return
@@ -82,7 +81,7 @@ main_ternary_merge@20:
     intc_2 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -116,7 +115,7 @@ main_ternary_merge@25:
     intc_2 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -128,8 +127,6 @@ main_ternary_false@24:
     b main_ternary_merge@25
 
 main_xAndYSlots_route@5:
-    intc_1 // 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -142,18 +139,7 @@ main_ternary_merge@30:
     assert // not payable
     load 0
     store 0
-    intc_3 // 64
-    bzero
-    dig 1
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    b|
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006
     log
     intc_0 // 1
     return

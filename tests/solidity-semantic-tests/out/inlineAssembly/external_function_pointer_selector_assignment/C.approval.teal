@@ -1,9 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/external_function_pointer_selector_assignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 4294967295 8 0
+    bytecblock 0x89aac53b
     pushbytes ""
     pushint 4096
     bzero
@@ -25,7 +26,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x89aac53b 0x8c829a67 // method "testFunction()void", method "testYul(uint64)uint64"
+    bytec_0 // method "testFunction()void"
+    pushbytes 0x8c829a67 // method "testYul(uint64)uint64"
     txna ApplicationArgs 0
     match main_testFunction_route@5 main_testYul_route@6
     err
@@ -55,11 +57,15 @@ main_ternary_merge@13:
     assert // ABI validation
     intc_1 // 4294967295
     &
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "testFunction()void"
+    concat
     load 0
-    swap
+    uncover 2
     itob
     extract 4 4
-    pushbytes 0x000000000000000089aac53b
+    uncover 2
     swap
     replace2 8
     swap

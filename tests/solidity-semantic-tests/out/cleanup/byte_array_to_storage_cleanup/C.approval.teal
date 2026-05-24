@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/byte_array_to_storage_cleanup.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 63
     bytecblock "s" "__ctor_pending" 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -47,9 +47,7 @@ main_ternary_merge@16:
     assert // not payable
     bytec_0 // "s"
     box_get
-    pushbytes 0x
-    cover 2
-    select
+    assert // box exists
     dup
     len
     itob
@@ -204,5 +202,9 @@ main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "s"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     return

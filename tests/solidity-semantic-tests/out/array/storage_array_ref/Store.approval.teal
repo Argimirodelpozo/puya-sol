@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.approval_program() -> uint64:
 main:
     intcblock 32 2 0 1
     bytecblock "data" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
@@ -55,14 +55,14 @@ main_ternary_merge@14:
     assert // not payable
     bytec_0 // "data"
     box_get
-    pushbytes 0x0000
-    cover 2
-    select
+    assert // box exists
     intc_2 // 0
     itob
-    dig 1
+    bytec_0 // "data"
     intc_2 // 0
-    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    box_extract
+    btoi
     itob
     dig 5
     callsub find(23,u256,u256,u256)
@@ -256,7 +256,7 @@ main___postInit_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.find(23,u256,u256,u256)(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.find(23,u256,u256,u256)(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes, bytes:
 find(23,u256,u256,u256):
     proto 4 2
     intc_2 // 0

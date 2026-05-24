@@ -1,9 +1,9 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_assignment.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_variable_cleanup_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 64
     pushint 4096
     bzero
     dup
@@ -54,7 +54,12 @@ main_ternary_merge@9:
     extract 0 32
     swap
     store 0
-    pushint 64
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

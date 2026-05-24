@@ -1,7 +1,7 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 2 0 8
     bytecblock 0x151f7c75 "l" "small" "__ctor_pending"
@@ -30,7 +30,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xb2de52c9 0xb1e95096 0xc1043203 0xfc9b39cb 0x7e7f32eb 0xea2a632a // method "__postInit()void", method "f((uint8,uint16,uint8[2],uint8))void", method "g(uint16[])uint16[]", method "h(uint8[2][])uint8[2][]", method "s()(uint64,uint64,byte[2],uint64)", method "small(uint256)uint64", method "l(uint256)byte[2]"
+    pushbytess 0xbacc49e3 0x1a149e1d 0xb1e95096 0x65503158 0xfc9b39cb 0x7e7f32eb 0xea2a632a // method "__postInit()void", method "f((uint8,uint16,byte[2],uint8))void", method "g(uint16[])uint16[]", method "h(byte[2][])byte[2][]", method "s()(uint64,uint64,byte[2],uint64)", method "small(uint256)uint64", method "l(uint256)byte[2]"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_f_route@6 main_g_route@7 main_h_route@8 main_s_route@9 main_small_route@10 main_l_route@11
     err
@@ -69,7 +69,7 @@ main_ternary_merge@18:
     bytec_1 // "l"
     swap
     intc_1 // 2
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -115,7 +115,7 @@ main_ternary_merge@23:
     bytec_2 // "small"
     swap
     intc_1 // 2
-    box_extract // on error: index access is out of bounds
+    box_extract // on error: index out of bounds
     btoi
     itob
     bytec_0 // 0x151f7c75

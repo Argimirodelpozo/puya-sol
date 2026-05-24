@@ -1,10 +1,10 @@
-#pragma version 10
+#pragma version 12
 #pragma typetrack false
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable.sol.C.approval_program() -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/transient_storage_state_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 16777215 64
-    bytecblock "y" 0xffffff "w" 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "y" "w" 0xffffff 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 0
     pushbytes ""
     dup
@@ -25,7 +25,7 @@ main:
     bytec_0 // "y"
     intc_0 // 0
     app_global_put
-    bytec_2 // "w"
+    bytec_1 // "w"
     intc_0 // 0
     app_global_put
     pushbytes "z"
@@ -81,7 +81,7 @@ main_ternary_merge@9:
     swap
     app_global_put
     intc_0 // 0
-    bytec_2 // "w"
+    bytec_1 // "w"
     app_global_get_ex
     assert // check w exists
     pushint 3
@@ -90,7 +90,7 @@ main_ternary_merge@9:
     intc_2 // 16777215
     <=
     assert // overflow
-    bytec_2 // "w"
+    bytec_1 // "w"
     swap
     app_global_put
     load 5
@@ -114,18 +114,12 @@ main_ternary_merge@9:
     app_global_get_ex
     assert // check y exists
     itob
-    bytec_1 // 0xffffff
+    bytec_2 // 0xffffff
     b&
+    dup
     bytec_3 // 0x800000
     b>=
     bz main_ternary_false@11
-    intc_0 // 0
-    bytec_0 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec_1 // 0xffffff
-    b&
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
     bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -134,7 +128,7 @@ main_ternary_merge@9:
 
 main_ternary_merge@12:
     intc_0 // 0
-    bytec_2 // "w"
+    bytec_1 // "w"
     app_global_get_ex
     assert // check w exists
     intc_2 // 16777215
@@ -144,17 +138,12 @@ main_ternary_merge@12:
     extract 26 3
     btoi
     itob
-    bytec_1 // 0xffffff
+    bytec_2 // 0xffffff
     b&
+    dup
     bytec_3 // 0x800000
     b>=
     bz main_ternary_false@14
-    load 5
-    extract 26 3
-    btoi
-    itob
-    bytec_1 // 0xffffff
-    b&
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
     bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -197,22 +186,9 @@ main_ternary_merge@15:
     return
 
 main_ternary_false@14:
-    load 5
-    extract 26 3
-    btoi
-    itob
-    bytec_1 // 0xffffff
-    b&
     b main_ternary_merge@15
 
 main_ternary_false@11:
-    intc_0 // 0
-    bytec_0 // "y"
-    app_global_get_ex
-    assert // check y exists
-    itob
-    bytec_1 // 0xffffff
-    b&
     bury 3
     b main_ternary_merge@12
 
