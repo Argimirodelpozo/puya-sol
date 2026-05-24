@@ -208,6 +208,17 @@ private:
 		std::string const& _contractName
 	);
 
+	/// Emit `box_create` (or `box_put` for initialised vars) for every
+	/// state variable listed in `m_boxArrayVarNames`. Appends to
+	/// `_postInitBody`. Extracted from `buildApprovalProgram` for
+	/// readability — the box-creation phase is ~230 lines of
+	/// type-aware emission logic that doesn't share local state with the
+	/// rest of the __postInit body assembly.
+	void emitBoxCreateForStateVars(
+		solidity::frontend::ContractDefinition const& _contract,
+		awst::Block& _postInitBody,
+		awst::SourceLocation const& _loc);
+
 	/// Build the clear-state program.
 	awst::ContractMethod buildClearProgram(
 		solidity::frontend::ContractDefinition const& _contract,
