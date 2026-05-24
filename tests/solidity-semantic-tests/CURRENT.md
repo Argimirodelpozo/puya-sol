@@ -1,7 +1,65 @@
-# Semantic Test Status — v286
+# Semantic Test Status — v295
 
-**Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
-**1199/1322 (90.7%)**.
+**Totals (pytest)**: 1198 PASS / 104 FAIL / 20 xfailed =
+**1198/1322 (90.6%)**.
+
+## v295 — fix(puya-5.9): unblock 3 of 4 latent puya-sol AWST bugs surfaced by 5.9
+
+puya 5.9.0rc1's stricter optimizer turned three previously-tolerated
+puya-sol AWST shapes into runtime reverts. All three are puya-sol-side
+mistakes that 5.8 happened to mask. 4th case (4d) is a related but
+distinct dynamic-array issue tracked open in `puyabug.md`.
+
+- **4a `test_create_random`**: `AbiEncoderBuilder::packArgPacked`
+  unconditionally emitted `extract(bytes, 8-w, w)` for w ≤ 7, assuming
+  the input was 8-byte itob output. For `bytes1` inputs that input was
+  already 1 byte → overflow. Fix: gate the truncation extract on
+  `!inputAlreadyByteshaped`.
+- **4b `test_exp_cleanup_smaller_base`**: uint64 `Pow` lowering used
+  AVM `exp` opcode (uint64-only, asserts on overflow) for unchecked
+  sub-uint64 widths too — `2**256` overflowed before the post-mod
+  could fire. Fix: route unchecked sub-uint64 through
+  `buildBigUIntExp` + mod 2^bits + cast back.
+- **4c `test_fixed_arrays_in_storage`**: puya 5.9's StateGet default
+  branch materialises the FULL encoded zero of the storage type as
+  `bzero(N)`. For `Data[1024]` (65 536 B), `bzero(65536)` exceeds
+  AVM's 4 KB stack-value cap → revert. Fix: in
+  `StorageMapper::makeStateGetWithDefault`, when the box-backed type's
+  `computeEncodedElementSize > 4096`, skip the StateGet wrapper and
+  return the bare `BoxValueExpression`. Safe because
+  `ApprovalProgramBuilder` eagerly box_create's oversized fixed
+  arrays in `__postInit`.
+
+### Plus, separately:
+
+- **fix(require)**: error-arg side effects now land in body as
+  pre-pending ExpressionStatements (was: `(void)buildExpr(...)` —
+  discarded the call). Independently-valuable correctness fix even
+  though `test_require_error_evaluation_order_1` still fails (needs a
+  separate Yul `return(...)` halt-contract fix for non-void return
+  types — `AssemblyBuilder::handleReturn` only halts for void).
+
+### Suite progression
+
+| Run | Description | Passed | Failed |
+|-----|-------------|--------|--------|
+| v286 | puya 5.8 baseline | 1199 | 103 |
+| v293 | puya 5.9 + 4a/4b only | 1197 | 105 |
+| v294 | puya 5.9 + over-aggressive box fix (regressed 3 dyn-bytes tests) | 1191 | 111 |
+| v295 | puya 5.9 + narrowed box fix + require side-effect fix | **1198** | **104** |
+
+Net vs 5.8 baseline: -1 (just open 4d).
+
+### Open puya 5.9 regressions (1)
+
+- **4d `test_array_storage_index_boundary_test`**: `uint[]` growing
+  past 4 KB at runtime hits same `StateGet` cap but can't be statically
+  classified as "always oversized". Tried extending the v295 skip to
+  dynamic types; that broke 3 tests relying on
+  StateGet-empty-default-on-first-read. Needs either eager
+  `box_create` for dynamic-bytes/array state vars (lift the
+  ApprovalProgramBuilder:790 skip) or explicit `box_exists` guard
+  around slice reads. See `puyabug.md` §4d.
 
 ## v286 — refactor: complete the makeAs* reinterpret alias family
 
