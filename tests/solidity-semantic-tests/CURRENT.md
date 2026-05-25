@@ -1,7 +1,50 @@
-# Semantic Test Status — v296
+# Semantic Test Status — v297
 
 **Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
-**1199/1322 (90.7%)** — bit-identical to puya 5.8.0rc3 baseline.
+**1199/1322 (90.7%)** — bit-identical to puya 5.8.0rc3 baseline AND
+to v296. Fail-set diff vs v296 = empty.
+
+## v297 — refactor: 4 pure-readability passes (bit-identical to v296)
+
+Four refactors landed in sequence, each verified bit-identical to
+v296 via smoke-test and the final full suite. No outcome change;
+codebase shrinks and stays self-documenting.
+
+- **`9fe919c03` forEachStateVar / forEachStateVarReverse helpers**
+  (12 sites, −26 LOC): collapse the hand-rolled
+  `linearizedBaseContracts → stateVariables()` double-for loop into
+  a small templated helper in `src/builder/contract/StateVarWalker.h`.
+  Replaces 10 forward-walk and 2 reverse-walk sites across
+  ApprovalProgramBuilder, PublicGetterBuilder, SolNewExpression,
+  StorageMapper, StorageLayout, TransientStorage.
+
+- **`9abd088e8` `StorageMapper::isTopLevelDynamicBox`** (2 sites,
+  −20 LOC): extract the "dynamic-sized type AND box key is literal
+  BytesConstant" check shared by the 4d read path (StorageMapper)
+  and the 4d delete path (SolUnaryOperation::handleDelete). Single
+  source of truth — the two sites can't drift.
+
+- **`971099ddb` `StorageMapper::makeTopLevelBoxExpr`** (2 sites):
+  wrap the `makeUtf8BytesConstant(name, loc, boxKeyType()) +
+  makeBoxValueExpression(key, type, loc)` 2-line idiom at
+  SolIndexAccessHandlers + SolArrayMethod. Pairs naturally with
+  isTopLevelDynamicBox.
+
+- **`5d1297ae7` extract `emitBoxCreateForStateVars`** (`buildApprovalProgram`
+  −234 LOC, −18%): peel the type-aware box-creation phase
+  (~230 lines walking `m_boxArrayVarNames` and emitting
+  `box_create` / `box_put`) out of the 1308-line monolith. First step
+  toward splitting ApprovalProgramBuilder.cpp.
+
+### Suite progression
+
+| Run | Description | Passed | Failed |
+|-----|-------------|--------|--------|
+| v286 | puya 5.8 baseline | 1199 | 103 |
+| v296 | puya 5.9 + 4a/4b/4c + 4d | 1199 | 103 |
+| **v297 | + 4 pure refactors (this commit)** | **1199** | **103** |
+
+Fail set vs v296: empty diff (bit-identical).
 
 ## v296 — fix(puya-5.9): close 4d — top-level dynamic state vars
 
