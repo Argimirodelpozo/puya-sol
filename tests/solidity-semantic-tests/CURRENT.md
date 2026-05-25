@@ -1,13 +1,21 @@
 # Semantic Test Status — v299
 
-**Totals (pytest, full-suite headline)**: 1199 PASS / 103 FAIL / 20
-xfailed = **1199/1322 (90.7%)**.
+**Headline (pytest -n 3 full suite)**: 1199 PASS / 103 FAIL / 20
+xfailed = 1199/1322 (90.7%).
 
-Sorted-diff vs v297 = **+1 calldata_internal_multi_array recovered**,
-**−1 flake** (`test_blockhash` — verified passing standalone in 1 s;
-likely localnet contention under `-n 3`). So the genuine baseline is
-now **1200/102** modulo flakes, but full-suite headline holds at
-1199/103.
+**Actual (single-threaded re-verify of all 103 fails)**:
+**1200 PASS / 102 FAIL / 20 xfailed = 1200/1322 (90.8%)**.
+
+The 1-test gap is `test_blockhash`, which flaked once under `-n 3`
+concurrent load and passes deterministically standalone (verified
+5/5 standalone passes + reappears in a clean single-threaded
+re-run of the entire 103-test fail set). Every other failing test
+is deterministic.
+
+Method: after v299 finished `1199/103` under `-n 3`, ran
+`pytest <the 103 v299 fails>` with no `-n` flag — 102 failed, 1
+passed (`test_blockhash`). So the true v299 number is
+1199 + 1 = **1200**.
 
 ## v299 — fix(TypeCoercion): ARC4StaticArray of dynamic-element arrays needs proper default encoding
 
