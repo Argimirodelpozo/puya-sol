@@ -391,6 +391,31 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		if (encodedSize > kLargeBytesRuntimeThreshold)
 			return makeZeroBytesRuntime(encodedSize, _type, _loc);
 
+		// For static arrays of DYNAMIC-content elements (e.g.
+		// `uint[][2]` — fixed[2] of `uint[]`), `computeEncodedElementSize`
+		// returns 0 because the element size isn't statically fixed. A
+		// zero-byte default crashes the `static_array_replace_dynamic_element`
+		// helper at the first push (it tries to read uint16 offset from
+		// position 2 of an empty buffer). Build the proper ARC4 default:
+		// N×2-byte offset header pointing at each inner element's default
+		// encoding, followed by the inner defaults concatenated as the
+		// tail.
+		//
+		// Gate on `arc4IsDynamic`, NOT on `encodedSize == 0` — the size
+		// helper also returns 0 for some fixed-content cases that
+		// `computeEncodedElementSize` doesn't enumerate (notably
+		// `bool[N]` where the element is `arc4.bool`, which is
+		// bit-packed and never appears in the switch). Those still want
+		// the existing empty-bytes default; applying the dyn-encoding
+		// shape would corrupt storage shape and break round-trip
+		// (regresses `storage/delete_overlapping_transient_*_storage_array_delete_different_base_type`).
+		if (arc4IsDynamic(_type))
+		{
+			if (auto enc = arc4DefaultEncoding(_type))
+				return awst::makeBytesConstant(
+					std::move(*enc), _loc, awst::BytesEncoding::Base16, _type);
+		}
+
 		std::vector<uint8_t> val;
 		if (encodedSize > 0)
 			val.resize(static_cast<size_t>(encodedSize), 0);
