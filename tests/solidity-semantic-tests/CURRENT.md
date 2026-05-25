@@ -1,8 +1,48 @@
-# Semantic Test Status — v297
+# Semantic Test Status — v299
 
-**Totals (pytest)**: 1199 PASS / 103 FAIL / 20 xfailed =
-**1199/1322 (90.7%)** — bit-identical to puya 5.8.0rc3 baseline AND
-to v296. Fail-set diff vs v296 = empty.
+**Totals (pytest, full-suite headline)**: 1199 PASS / 103 FAIL / 20
+xfailed = **1199/1322 (90.7%)**.
+
+Sorted-diff vs v297 = **+1 calldata_internal_multi_array recovered**,
+**−1 flake** (`test_blockhash` — verified passing standalone in 1 s;
+likely localnet contention under `-n 3`). So the genuine baseline is
+now **1200/102** modulo flakes, but full-suite headline holds at
+1199/103.
+
+## v299 — fix(TypeCoercion): ARC4StaticArray of dynamic-element arrays needs proper default encoding
+
+`uint[][2]` (fixed[2] of `uint[]`) and similar nested dynamic shapes:
+`computeEncodedElementSize` returns 0 because the element size isn't
+statically fixed. The default-value generator emitted
+`BytesConstant('')`, which crashes the
+`static_array_replace_dynamic_element` puya-lib helper at the first
+push (helper reads `extract_uint16` at offset 2 of an empty buffer —
+runtime error `extraction start 2 is beyond length: 0`).
+
+Fix in `TypeCoercion::makeDefaultValue` ARC4StaticArray branch
+(commit `482d191f0`): when `arc4IsDynamic(_type)` is true, delegate
+to the existing `arc4DefaultEncoding(_type)` helper to get the
+proper N×2-byte offset header + concatenated inner defaults as the
+tail. For `uint[][2]` that's `0x0004 0006 0000 0000`.
+
+Narrowing gate is `arc4IsDynamic`, not just `encodedSize == 0` — the
+size helper also returns 0 for `bool[N]` (arc4.bool isn't enumerated
+in the switch), and applying the dyn-encoding shape to fixed-bool
+arrays would corrupt storage round-trip and regress the
+`storage/delete_overlapping_transient_*_storage_array_delete_different_base_type`
+pair. v298 (first attempt with `encodedSize == 0` gate) confirmed
+exactly that regression; v299 with the narrower gate is +1/-0.
+
+### Suite progression
+
+| Run | Description | Passed | Failed |
+|-----|-------------|--------|--------|
+| v297 | 5.9 + 4a/b/c/d + 4 refactors | 1199 | 103 |
+| v298 | + calldata fix (too-wide gate) | 1198 | 104 |
+| **v299 | + narrowed gate (arc4IsDynamic)** | **1199** | **103** |
+
+Headline equal because of `test_blockhash` flake; real fail-set
+delta vs v297 is +1/-0.
 
 ## v297 — refactor: 4 pure-readability passes (bit-identical to v296)
 
