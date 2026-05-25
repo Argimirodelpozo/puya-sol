@@ -1,10 +1,44 @@
-# Semantic Test Status — v299
+# Semantic Test Status — v300
+
+**Totals**: **1201 PASS / 101 FAIL / 20 xfailed = 1201/1322
+(90.85%)**. Headline equals actual — single-threaded re-verify of
+all 101 v300 fails: 101/101 fail deterministically, zero flakes.
+
+## v300 — fix(immutable): pre-write type default before initializer
+
+Solidity allows self-referencing immutable initializers
+(`uint immutable x = x + 1` — the read of x evaluates to 0 before
+the assignment lands, matching EVM "storage is zero-initialised
+before constructor"). puya-sol's `emitStateVarInit` built the
+initializer directly, but the read of x routes through
+`createStateRead`'s `app_global_get_ex; assert exists` path —
+crashes at deploy because x hasn't been written yet.
+
+Fix (commit `e0b12d235`): in `emitStateVarInit`, when the var is
+`immutable` AND has an initializer, emit `app_global_put(key,
+type_default)` BEFORE the initializer-value put. Adds one cheap
+extra `app_global_put` per immutable; the existing read path then
+finds the var with value 0 and the initializer evaluates correctly.
+
+Recovers `immutable/test_multiple_initializations` (which expects
+`get() → 0xff` from a cumulative `x = x + 1` → ... chain through
+modifiers + base-ctor args summing to 255).
+
+### Suite progression
+
+| Run | Description | Headline | Actual |
+|-----|-------------|----------|--------|
+| v297 | 5.9 + 4a/b/c/d + 4 refactors | 1199/103 | 1199/103 |
+| v299 | + calldata fix | 1199/103 | 1200/102 (1 -n 3 flake) |
+| **v300 | + immutable pre-write** | **1201/101** | **1201/101** |
+
+## v299 (superseded summary)
 
 **Headline (pytest -n 3 full suite)**: 1199 PASS / 103 FAIL / 20
 xfailed = 1199/1322 (90.7%).
 
 **Actual (single-threaded re-verify of all 103 fails)**:
-**1200 PASS / 102 FAIL / 20 xfailed = 1200/1322 (90.8%)**.
+1200 PASS / 102 FAIL / 20 xfailed.
 
 The 1-test gap is `test_blockhash`, which flaked once under `-n 3`
 concurrent load and passes deterministically standalone (verified
