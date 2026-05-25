@@ -347,6 +347,36 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				std::shared_ptr<awst::Expression> defaultVal;
 				if (var->value())
 				{
+					// Pre-write the type's default (0/empty) BEFORE the
+					// initializer runs, so an initializer that references
+					// itself (Solidity allows e.g. `uint immutable x = x + 1`
+					// — x reads as 0 before the assignment lands) finds
+					// the var via the standard `app_global_get_ex; assert
+					// exists` read path without crashing. Mirrors EVM
+					// "storage is zero-initialised before constructor"
+					// semantics. Only fires for immutables because non-
+					// immutable state vars are handled by the no-initializer
+					// fall-through below (which already emits the zero).
+					if (var->immutable())
+					{
+						std::shared_ptr<awst::Expression> zeroVal;
+						if (wtype == awst::WType::accountType())
+							zeroVal = awst::makeAddressConstant(
+								"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+								method.sourceLocation);
+						else if (wtype == awst::WType::biguintType())
+							zeroVal = awst::makeZero(method.sourceLocation, awst::WType::biguintType());
+						else if (wtype == awst::WType::boolType() || wtype == awst::WType::uint64Type())
+							zeroVal = awst::makeZero(method.sourceLocation);
+						else
+							zeroVal = StorageMapper::makeDefaultValue(wtype, method.sourceLocation);
+						auto preKey = awst::makeUtf8BytesConstant(var->name(), method.sourceLocation);
+						auto prePut = awst::makeAppGlobalPut(
+							preKey, std::move(zeroVal), method.sourceLocation);
+						targetBody.push_back(
+							awst::makeExpressionStatement(std::move(prePut), method.sourceLocation));
+					}
+
 					// Translate the initializer expression (e.g. `= 'Wrapped Ether'`)
 					defaultVal = m_exprBuilder->build(*var->value());
 					if (defaultVal)
