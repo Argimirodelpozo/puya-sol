@@ -4,7 +4,7 @@
 
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-eb/AbiEncoderBuilder.h"
-#include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"

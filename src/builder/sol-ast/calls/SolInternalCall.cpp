@@ -9,6 +9,7 @@
 #include "builder/sol-eb/AsaIntrinsics.h"
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"

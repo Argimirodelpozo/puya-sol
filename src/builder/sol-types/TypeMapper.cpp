@@ -1,5 +1,5 @@
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/FunctionPointerKind.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
