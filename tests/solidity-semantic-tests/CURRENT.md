@@ -1,8 +1,20 @@
-# Semantic Test Status — v301
+# Semantic Test Status — v302
 
 **Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
-(90.92%)**. Headline equals actual — single-threaded re-verify of
-all 100 v301 fails: 100/100 fail deterministically, zero flakes.
+(90.92%)**. v302 raw run was 1199/103 under `-n 3`; standalone
+re-verify confirmed all 3 deltas are flakes (test_string_tuples,
+test_assert_, test_detect_add_overflow_signed all PASS standalone).
+Deterministic count unchanged vs v301.
+
+## v302 — fix(AbiEncoder): pad array elements to 32 bytes in abi.encodePacked
+
+`abi.encodePacked(array)` had a `!_isPacked` gate that skipped the
+32-byte element padding for static arrays — wrong per the EVM ABI
+spec: packed encoding still pads array elements to 32 bytes.
+Fix (commit `f0c3e2315`): drop the `!_isPacked` gate so element
+padding always applies. Suite bit-identical to v301 (no regressions,
+no recoveries) — fix unblocks `keccak256_packed_complex_types` at
+the AWST level but the test still fails on a separate codec issue.
 
 ## v301 — fix(TypeCoercion): implicitNumericCast biguint→bytes[N] left-pads
 
