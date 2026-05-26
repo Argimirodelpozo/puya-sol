@@ -44,6 +44,7 @@ set(SOURCES
 	src/builder/contract/ModifierInliner.cpp
 	src/builder/contract/FunctionBuilder.cpp
 	src/builder/contract/ApprovalProgramBuilder.cpp
+	src/builder/contract/ParamABIValidator.cpp
 	src/builder/contract/PostInitTriggers.cpp
 	src/builder/contract/PublicGetterBuilder.cpp
 	src/builder/contract/ReturnRewriter.cpp

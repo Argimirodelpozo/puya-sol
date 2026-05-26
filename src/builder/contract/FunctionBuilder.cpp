@@ -2,6 +2,7 @@
 #include "awst/Termination.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/contract/ParamABIValidator.h"
 #include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -701,160 +702,24 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// a single insertion point we always defer to post-inline below.
 		}
 
-		// Mask sub-64-bit unsigned parameters at function entry.
-		// EVM truncates ABI-decoded values to parameter type width;
-		// AVM uint64 preserves the full value, so we must mask explicitly.
+		// Mask / range-validate sub-64-bit and bool/enum parameters at
+		// function entry — EVM cleans ABI-decoded values automatically;
+		// AVM uint64 preserves the full value, so the guard is explicit.
 		{
-			std::vector<std::shared_ptr<awst::Statement>> maskStmts;
-			for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-			{
-				auto const& param = _func.parameters()[pi];
-				auto const* solType = param->annotation().type;
-				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-					solType = &udvt->underlyingType();
-				auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
-				// Enums have uint8 ABI encoding
-				if (!intType)
-					if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType))
-						intType = dynamic_cast<solidity::frontend::IntegerType const*>(
-							enumType->encodingType());
-				if (!intType || intType->numBits() >= 64)
-					continue;
-
-				unsigned bits = intType->numBits();
-				auto loc = makeLoc(param->location());
-
-				// ABI v2: assert param fits in type (revert on overflow)
-				// ABI v1: silently truncate (mask only)
-				bool useV2 = true; // default in 0.8+
-				if (m_currentContract)
-				{
-					auto const& ann = m_currentContract->sourceUnit().annotation();
-					if (ann.useABICoderV2.set())
-						useV2 = *ann.useABICoderV2;
-				}
-
-				if (intType->isSigned())
-				{
-					// Signed sub-64-bit types: validate range but don't mask
-					// Valid: value <= maxPos || value >= minNeg
-					// maxPos = 2^(n-1) - 1, minNeg = 2^64 - 2^(n-1)
-					if (useV2)
-					{
-						uint64_t maxPos = (uint64_t(1) << (bits - 1)) - 1;
-						uint64_t minNeg = ~((uint64_t(1) << (bits - 1)) - 1); // 2^64 - 2^(n-1)
-
-						auto paramCheck1 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-						auto maxPosConst = awst::makeIntegerConstant(maxPos, loc);
-						auto cmpPos = awst::makeNumericCompare(paramCheck1, awst::NumericComparison::Lte, std::move(maxPosConst), loc);
-
-						auto paramCheck2 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-						auto minNegConst = awst::makeIntegerConstant(minNeg, loc);
-						auto cmpNeg = awst::makeNumericCompare(paramCheck2, awst::NumericComparison::Gte, std::move(minNegConst), loc);
-
-						// OR the two conditions
-						auto orExpr = awst::makeBoolBinOp(std::move(cmpPos), awst::BinaryBooleanOperator::Or, std::move(cmpNeg), loc);
-
-						auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(orExpr), loc, "ABI validation"), loc);
-						maskStmts.push_back(std::move(assertStmt));
-					}
-					// No masking for signed types
-					continue;
-				}
-
-				uint64_t mask = (uint64_t(1) << bits) - 1;
-
-				if (useV2)
-				{
-					auto paramCheck = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-
-					auto maxVal = awst::makeIntegerConstant(mask, loc);
-
-					auto cmp = awst::makeNumericCompare(paramCheck, awst::NumericComparison::Lte, std::move(maxVal), loc);
-
-					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI validation"), loc);
-					maskStmts.push_back(std::move(assertStmt));
-				}
-
-				auto paramVar = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-
-				auto maskConst = awst::makeIntegerConstant(mask, loc);
-
-				auto bitAnd = awst::makeUInt64BinOp(paramVar, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), loc);
-
-				auto target = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
-
-				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(bitAnd), loc);
-				maskStmts.push_back(std::move(assign));
-			}
-			// ABI v2 validation for bool params: assert value <= 1
-			bool useV2ForBool = true;
+			bool useV2 = true; // default in 0.8+
 			if (m_currentContract)
 			{
 				auto const& ann = m_currentContract->sourceUnit().annotation();
 				if (ann.useABICoderV2.set())
-					useV2ForBool = *ann.useABICoderV2;
+					useV2 = *ann.useABICoderV2;
 			}
-			if (useV2ForBool)
-			{
-				for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-				{
-					auto const& param = _func.parameters()[pi];
-					auto const* solType = param->annotation().type;
-					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-						solType = &udvt->underlyingType();
-					if (!dynamic_cast<solidity::frontend::BoolType const*>(solType))
-						continue;
-					auto loc = makeLoc(param->location());
-
-					auto paramVar = awst::makeVarExpression(param->name().empty()
-						? "_param" + std::to_string(pi)
-						: param->name(), awst::WType::uint64Type(), loc);
-
-					auto one = awst::makeOne(loc);
-
-					auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(one), loc);
-
-					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI bool validation"), loc);
-					maskStmts.push_back(std::move(assertStmt));
-				}
-			}
-
-			// Enum range check fires regardless of abicoder version. Solidity
-			// semantics: any read of an enum value with `numericValue >= numberOfMembers`
-			// panics (0x21). For abicoder v2 the check is at the dispatch
-			// boundary; for v1 solc inserts it at the first use site. We emit
-			// it at the boundary for both versions — equivalent for params
-			// that are read at least once in the body, and a strict superset
-			// otherwise (the panic happens earlier, which is still correct).
-			for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-			{
-				auto const& param = _func.parameters()[pi];
-				auto const* solType = param->annotation().type;
-				auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType);
-				if (!enumType)
-					continue;
-				auto loc = makeLoc(param->location());
-				unsigned memberCount = enumType->numberOfMembers();
-
-				auto paramVar = awst::makeVarExpression(param->name().empty()
-					? "_param" + std::to_string(pi)
-					: param->name(), awst::WType::uint64Type(), loc);
-
-				auto maxVal = awst::makeIntegerConstant(memberCount - 1, loc);
-
-				auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(maxVal), loc);
-
-				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI enum validation"), loc);
-				maskStmts.push_back(std::move(assertStmt));
-			}
-
-			if (!maskStmts.empty())
+			auto entryChecks = buildABIEntryChecks(_func, useV2, m_sourceFile);
+			if (!entryChecks.empty())
 			{
 				method.body->body.insert(
 					method.body->body.begin(),
-					std::make_move_iterator(maskStmts.begin()),
-					std::make_move_iterator(maskStmts.end())
+					std::make_move_iterator(entryChecks.begin()),
+					std::make_move_iterator(entryChecks.end())
 				);
 			}
 		}
