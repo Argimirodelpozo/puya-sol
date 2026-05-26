@@ -44,7 +44,9 @@ set(SOURCES
 	src/builder/contract/ModifierInliner.cpp
 	src/builder/contract/FunctionBuilder.cpp
 	src/builder/contract/ApprovalProgramBuilder.cpp
+	src/builder/contract/PostInitTriggers.cpp
 	src/builder/contract/PublicGetterBuilder.cpp
+	src/builder/contract/SelectorRouter.cpp
 	src/builder/contract/SuperCallResolution.cpp
 
 	# Builtin support (algorithms with no AVM opcode counterpart)
