@@ -78,6 +78,7 @@ set(SOURCES
 	src/builder/sol-intrinsics/IntrinsicMapper.cpp
 
 	# Expression builder helpers (sol-eb/)
+	src/builder/sol-eb/BigUIntMathHelpers.cpp
 	src/builder/sol-eb/BinaryOpBuilder.cpp
 	src/builder/sol-eb/ContractContext.cpp
 	src/builder/sol-eb/BuiltinCallables.cpp

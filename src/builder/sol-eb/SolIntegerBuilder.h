@@ -74,37 +74,6 @@ private:
 		BuilderBinaryOp _op,
 		awst::SourceLocation const& _loc);
 
-	/// Build biguint shift: x * 2^n or x / 2^n using setbit(bzero(32), 255-n, 1).
-	std::shared_ptr<awst::Expression> buildBigUIntShift(
-		std::shared_ptr<awst::Expression> _value,
-		std::shared_ptr<awst::Expression> _shiftAmt,
-		bool _isLeftShift,
-		awst::SourceLocation const& _loc);
-
-	/// Build biguint exponentiation via square-and-multiply loop.
-	std::shared_ptr<awst::Expression> buildBigUIntExp(
-		std::shared_ptr<awst::Expression> _base,
-		std::shared_ptr<awst::Expression> _exp,
-		awst::SourceLocation const& _loc);
-
-	/// Build wrapping biguint subtraction: (a + 2^256 - b) % 2^256.
-	std::shared_ptr<awst::Expression> buildWrappingSubtract(
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		awst::SourceLocation const& _loc);
-
-	/// Wrap biguint result mod 2^256 (for unchecked blocks).
-	std::shared_ptr<awst::Expression> wrapMod256(
-		std::shared_ptr<awst::Expression> _expr,
-		awst::SourceLocation const& _loc);
-
-	/// Build signed modulo or division: operate on abs values, apply sign.
-	std::shared_ptr<awst::Expression> buildSignedModDiv(
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		BuilderBinaryOp _op,
-		awst::SourceLocation const& _loc);
-
 };
 
 } // namespace puyasol::builder::eb
