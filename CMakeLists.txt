@@ -41,6 +41,7 @@ set(SOURCES
 	src/builder/SubroutineReachability.cpp
 	src/builder/ContractBuilder.cpp
 	src/builder/contract/StorageDispatch.cpp
+	src/builder/contract/ModifierBodyInliner.cpp
 	src/builder/contract/ModifierInliner.cpp
 	src/builder/contract/FunctionBuilder.cpp
 	src/builder/contract/ApprovalProgramBuilder.cpp
