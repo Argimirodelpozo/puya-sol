@@ -1,14 +1,21 @@
-# Semantic Test Status — v307 (overnight refactor batch)
+# Semantic Test Status — v308 (overnight refactor batch + AbiSelector)
 
 **Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
-(90.92%)**. Six consecutive full-suite runs (v302-v307) all came in
-with the same deterministic 1202/100; the only deltas under `-n 3`
-parallel load were flakes confirmed by standalone re-verify.
+(90.92%)**. Seven consecutive full-suite runs (v302-v308) all came
+in with the same deterministic 1202/100; the only deltas under
+`-n 3` parallel load were flakes confirmed by standalone re-verify.
 
-## Overnight session 2026-05-26 — 5 pure-refactor commits
+## Overnight session 2026-05-26 — 6 pure-refactor commits
 
-All 5 commits are bit-identical to v301 at the suite level. Total
-LOC moved out: ~1144 across 6 new TUs.
+All 6 commits are bit-identical to v301 at the suite level. Total
+LOC moved out: ~1370 across 7 new TUs.
+
+- v308 (`48f0a5869`): `AbiSelectorCalldataBuilder` (226 LOC) — 3
+  selector+calldata handlers (handleEncodeCall/WithSelector/WithSignature)
+  extracted from `AbiEncoderBuilder.cpp`. Prep work: `GenericAbiResult`
+  moved to header; 3 private statics (`encodeArgAsARC4Bytes`,
+  `concatByteExprs`, `encodeArgsHeadTail`) promoted to public.
+  Net: AbiEncoderBuilder 865 → 638 (−26.2%).
 
 - v303 (`494c3a122`): `forEachDefinedFunction` + `forEachFunctionModifier`
   MRO-walk templates added to `StateVarWalker.h`; 8 sites swept
