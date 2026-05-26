@@ -347,12 +347,19 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					auto indexExpr = awst::makeIndexExpression(arrayExpr, std::move(idx), indexWtype, _loc);
 
 					auto elemBytes = toPackedBytes(_ctx, std::move(indexExpr), elemSolType, _isPacked, _loc);
-					// abi.encode (non-packed) requires each element in
-					// arrays to occupy a full 32-byte word, but the ARC4
-					// element access for small uintN returns only N/8 raw
-					// bytes. Left-pad to 32 so the resulting blob matches
-					// EVM's head/tail layout.
-					if (!_isPacked && elemBytes)
+					// EVM packs each array element to a full 32-byte word
+					// in BOTH `abi.encode` AND `abi.encodePacked` modes.
+					// (The Solidity docs on non-standard packed are
+					// misleading — they say "each element encoded as if a
+					// single value, no padding", but the actual EVM
+					// implementation pads array elements regardless.) For
+					// scalar packed values, sub-32-byte types stay at
+					// their natural width; only when used INSIDE an
+					// array do they pad. Without this, e.g.
+					// `abi.encodePacked(uint120[3])` produces 45 bytes
+					// instead of EVM's 96, breaking the keccak hash
+					// (see builtinFunctions/keccak256_packed_complex_types).
+					if (elemBytes)
 						elemBytes = leftPadBytes(std::move(elemBytes), 32, _loc);
 					if (!packed)
 						packed = std::move(elemBytes);
