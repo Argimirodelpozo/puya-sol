@@ -76,6 +76,21 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 						std::move(val), _loc, awst::BytesEncoding::Base16, _targetType);
 				}
 			}
+			// biguint → bytes[N]: cast to bytes (strips leading zeros for
+			// minimal encoding) then LEFT-pad to N bytes, preserving the
+			// integer value's big-endian representation. Mirrors Solidity's
+			// implicit hex-literal → bytesN conversion (e.g. passing
+			// `0x000...ca35...` to a `bytes32` parameter). Without this,
+			// biguint args flow through unchanged and downstream `concat`/
+			// `extract` operations read the wrong byte width — the
+			// minimal-encoding form (often <32 B). See
+			// ecrecover/failing_ecrecover_invalid_input_proper.sol.
+			if (_expr->wtype == awst::WType::biguintType())
+			{
+				auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
+				auto padded = awst::makeLeftPadToN(std::move(toBytes), n, _loc);
+				return awst::makeReinterpretCast(std::move(padded), _targetType, _loc);
+			}
 		}
 	}
 
