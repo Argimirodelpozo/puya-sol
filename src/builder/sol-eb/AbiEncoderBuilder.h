@@ -12,6 +12,18 @@
 namespace puyasol::builder::eb
 {
 
+/// Thin InstanceBuilder wrapper around a bare AWST expression — used as
+/// the return shape for abi.* handlers that have already produced the
+/// final bytes expression and just need an InstanceBuilder envelope.
+/// Defined in the header so sibling abi.* handler TUs can construct it.
+class GenericAbiResult: public InstanceBuilder
+{
+public:
+	GenericAbiResult(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
+		: InstanceBuilder(_ctx, std::move(_expr)) {}
+	solidity::frontend::Type const* solType() const override { return nullptr; }
+};
+
 /// Handles abi.encode*, abi.decode functions.
 ///
 /// Dispatched from visit(FunctionCall) when the callee is a MemberAccess on
@@ -29,35 +41,21 @@ public:
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
-private:
-	// ── Encoding helpers ──
-
-	/// Convert expression to bytes, respecting packed byte width from Solidity type.
-	/// For encodePacked: uint8 → 1 byte, uint256 → 32 bytes, etc.
-	/// For encode: always 32-byte ABI words.
-	static std::shared_ptr<awst::Expression> toPackedBytes(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _expr,
-		solidity::frontend::Type const* _solType,
-		bool _isPacked,
-		awst::SourceLocation const& _loc);
-
 	/// Encode a single expression as ARC4 bytes (32-byte padded for most types).
+	/// Public because the selector+calldata handler TU calls it directly.
 	static std::shared_ptr<awst::Expression> encodeArgAsARC4Bytes(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _argExpr,
 		awst::SourceLocation const& _loc);
 
-public:
 	/// Build ARC4 method selector from a FunctionDefinition.
 	/// Exposed for fn-pointer dispatch (cross-contract inner txn).
 	static std::string buildARC4MethodSelector(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef);
 
-private:
-
 	/// Concatenate a list of byte expressions using concat intrinsics.
+	/// Public because the selector+calldata handler TU calls it directly.
 	static std::shared_ptr<awst::Expression> concatByteExprs(
 		std::vector<std::shared_ptr<awst::Expression>> _parts,
 		awst::SourceLocation const& _loc);
@@ -72,6 +70,19 @@ private:
 		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		size_t _startIdx,
+		awst::SourceLocation const& _loc);
+
+private:
+	// ── Encoding helpers ──
+
+	/// Convert expression to bytes, respecting packed byte width from Solidity type.
+	/// For encodePacked: uint8 → 1 byte, uint256 → 32 bytes, etc.
+	/// For encode: always 32-byte ABI words.
+	static std::shared_ptr<awst::Expression> toPackedBytes(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _expr,
+		solidity::frontend::Type const* _solType,
+		bool _isPacked,
 		awst::SourceLocation const& _loc);
 
 	/// Left-pad bytes to exactly N bytes.
@@ -169,21 +180,6 @@ private:
 		std::shared_ptr<awst::Expression> _expr,
 		solidity::frontend::Type const* _elemSolType,
 		unsigned _n,
-		awst::SourceLocation const& _loc);
-
-	static std::unique_ptr<InstanceBuilder> handleEncodeCall(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		awst::SourceLocation const& _loc);
-
-	static std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		awst::SourceLocation const& _loc);
-
-	static std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleDecode(
