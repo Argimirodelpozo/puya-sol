@@ -46,6 +46,7 @@ set(SOURCES
 	src/builder/contract/ApprovalProgramBuilder.cpp
 	src/builder/contract/PostInitTriggers.cpp
 	src/builder/contract/PublicGetterBuilder.cpp
+	src/builder/contract/ReturnRewriter.cpp
 	src/builder/contract/SelectorRouter.cpp
 	src/builder/contract/SuperCallResolution.cpp
 
