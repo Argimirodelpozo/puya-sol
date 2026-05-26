@@ -21,6 +21,58 @@ from .paths import CACHE_DIR, COMPILER, PUYA, PUYA_BACKEND_SRC
 _COMPILER_STACK_SIG: str | None = None
 
 
+def _puya_backend_sig() -> str:
+    """Stable signature of the puya backend source tree.
+
+    Hashes `git rev-parse HEAD:` of the puya submodule (content-
+    addressable), plus a content hash of any locally-modified files
+    so dirty work-in-progress still invalidates the cache. Replaces
+    the prior `max mtime over all .py files` scheme — that
+    over-invalidated on every `git stash` / `git checkout` of the
+    submodule (file mtimes bump even when content is unchanged),
+    forcing a full re-compile of all ~1322 semantic tests after any
+    submodule switch.
+
+    Returns the empty string if `puya/` isn't a git checkout (e.g.
+    fresh tarball); the caller's fallback isn't worth the
+    complexity — full re-compile is correct in that case.
+    """
+    import subprocess
+    puya_dir = PUYA_BACKEND_SRC.parent  # puya/
+    if not (puya_dir / ".git").exists():
+        return ""
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(puya_dir), capture_output=True, text=True, timeout=5
+        ).stdout.strip()
+    except Exception:
+        return ""
+    parts = [f"head:{head}"]
+    # If any tracked file under src/ is modified locally, mix its
+    # content into the signature so iterating on puya code without
+    # committing still invalidates the cache.
+    try:
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--", "src/"],
+            cwd=str(puya_dir), capture_output=True, text=True, timeout=5
+        ).stdout
+        for line in dirty.splitlines():
+            # Format: "XY <path>"
+            if len(line) < 4:
+                continue
+            relpath = line[3:].strip()
+            fpath = puya_dir / relpath
+            try:
+                content = fpath.read_bytes()
+                parts.append(f"dirty:{relpath}:{hashlib.sha256(content).hexdigest()}")
+            except (FileNotFoundError, IsADirectoryError):
+                pass
+    except Exception:
+        pass
+    return "|".join(parts)
+
+
 def _compiler_stack_sig() -> str:
     global _COMPILER_STACK_SIG
     if _COMPILER_STACK_SIG is not None:
@@ -33,18 +85,10 @@ def _compiler_stack_sig() -> str:
         h.update(f"compiler:{st.st_mtime_ns}:{st.st_size}".encode())
     except FileNotFoundError:
         h.update(b"compiler:missing")
-    # puya backend source tree: max mtime over all .py files. Walking ~500
-    # files takes <50 ms on warm cache.
-    max_mtime = 0
-    if PUYA_BACKEND_SRC.exists():
-        for p in PUYA_BACKEND_SRC.rglob("*.py"):
-            try:
-                m = p.stat().st_mtime_ns
-                if m > max_mtime:
-                    max_mtime = m
-            except FileNotFoundError:
-                pass
-    h.update(f"puya_src:{max_mtime}".encode())
+    # puya backend source tree: git HEAD of the puya submodule + dirty
+    # file content hashes. Stable across `git stash`/`git checkout`
+    # round-trips, unlike the prior mtime walk.
+    h.update(f"puya_src:{_puya_backend_sig()}".encode())
     _COMPILER_STACK_SIG = h.hexdigest()
     return _COMPILER_STACK_SIG
 

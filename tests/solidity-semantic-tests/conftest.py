@@ -72,6 +72,42 @@ def pytest_configure(config):
             config.addinivalue_line("markers", f"cat_{d.name}: tests under tests/{d.name}/")
 
 
+def pytest_sessionstart(session):
+    """Optionally reset the algokit localnet before the suite runs.
+
+    Opt in by setting `PUYASOL_LOCALNET_RESET=1`. Useful for full-suite
+    runs because the algorand localnet's app-id space grows
+    monotonically across the run — by the time test 1300 deploys, the
+    app id is ~1300+ higher than at test 1. Resetting before each run
+    keeps the id space small and makes timing comparisons stable.
+
+    No-op under pytest-xdist worker processes (only the master should
+    reset; workers see the already-reset state). Skipped if the user
+    didn't opt in, so default behaviour is unchanged.
+    """
+    import os, subprocess
+    if os.environ.get("PUYASOL_LOCALNET_RESET") != "1":
+        return
+    # xdist: only the master invokes this once before forking workers.
+    # `workerinput` attr is present on worker sessions; skip there.
+    if hasattr(session.config, "workerinput"):
+        return
+    try:
+        r = subprocess.run(
+            ["algokit", "localnet", "reset"],
+            capture_output=True, text=True, timeout=120,
+        )
+        if r.returncode != 0:
+            print(f"[pytest_sessionstart] algokit localnet reset failed "
+                  f"(rc={r.returncode}): {r.stderr[:200]}", flush=True)
+        else:
+            print(f"[pytest_sessionstart] algokit localnet reset OK", flush=True)
+    except FileNotFoundError:
+        print("[pytest_sessionstart] algokit not on PATH; skip reset", flush=True)
+    except subprocess.TimeoutExpired:
+        print("[pytest_sessionstart] algokit localnet reset timed out", flush=True)
+
+
 def pytest_collection_modifyitems(config, items):
     """Tag tests by category for filtering with -m cat_<name>."""
     for item in items:
