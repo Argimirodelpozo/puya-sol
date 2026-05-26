@@ -1,12 +1,32 @@
-# Semantic Test Status — v303 (refactor only)
+# Semantic Test Status — v307 (overnight refactor batch)
 
 **Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
-(90.92%)**. v303 ran after the StateVarWalker helper-extension
-sweep (`494c3a122`) — fail-set diff vs v301 = empty, 0
-regressions. v304 (after PostInitTriggers + SelectorRouter
-extraction, `073194fea`) is pending verify.
+(90.92%)**. Six consecutive full-suite runs (v302-v307) all came in
+with the same deterministic 1202/100; the only deltas under `-n 3`
+parallel load were flakes confirmed by standalone re-verify.
 
-## v303 — refactor(builder): forEachDefinedFunction + forEachFunctionModifier helpers
+## Overnight session 2026-05-26 — 5 pure-refactor commits
+
+All 5 commits are bit-identical to v301 at the suite level. Total
+LOC moved out: ~1144 across 6 new TUs.
+
+- v303 (`494c3a122`): `forEachDefinedFunction` + `forEachFunctionModifier`
+  MRO-walk templates added to `StateVarWalker.h`; 8 sites swept
+  (4 `goto label;` early-exits converted to lambda-return).
+- v304 (`073194fea`): `PostInitTriggers` (250 LOC) + `SelectorRouter`
+  (138 LOC) extracted from `ApprovalProgramBuilder.cpp`.
+  Net: ApprovalProgramBuilder 1605 → 1243 (−22.6%).
+- v305 (`48c65822c`): `ReturnRewriter` (372 LOC) — 5 post-translation
+  ARC4 return-rewrite passes — extracted from `FunctionBuilder.cpp`.
+- v306 (`7a991c371`): `ParamABIValidator` (148 LOC) — 4 param entry
+  guards — extracted from `FunctionBuilder.cpp`.
+  Net: FunctionBuilder 1368 → 876 (−36.0%).
+- v307 (`5ffcd0e5d`): `BigUIntMathHelpers` (236 LOC) — 5 256-bit
+  biguint math helpers — extracted from `SolIntegerBuilder.cpp` as
+  free functions (stateful ones take `ContractContext&` directly).
+  Net: SolIntegerBuilder 882 → 640 (−27.4%).
+
+## v302 — fix(AbiEncoder): pad array elements to 32 bytes in abi.encodePacked
 
 Extended `StateVarWalker.h` with two new MRO-walk templates
 (`forEachDefinedFunction`, `forEachFunctionModifier`) mirroring
