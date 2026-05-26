@@ -1,10 +1,27 @@
-# Semantic Test Status — v302
+# Semantic Test Status — v303 (refactor only)
 
 **Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
-(90.92%)**. v302 raw run was 1199/103 under `-n 3`; standalone
-re-verify confirmed all 3 deltas are flakes (test_string_tuples,
-test_assert_, test_detect_add_overflow_signed all PASS standalone).
-Deterministic count unchanged vs v301.
+(90.92%)**. v303 ran after the StateVarWalker helper-extension
+sweep (`494c3a122`) — fail-set diff vs v301 = empty, 0
+regressions. v304 (after PostInitTriggers + SelectorRouter
+extraction, `073194fea`) is pending verify.
+
+## v303 — refactor(builder): forEachDefinedFunction + forEachFunctionModifier helpers
+
+Extended `StateVarWalker.h` with two new MRO-walk templates
+(`forEachDefinedFunction`, `forEachFunctionModifier`) mirroring
+the existing `forEachStateVar`. Swept 8 sites (6 definedFunctions
+across ContractBuilder/ApprovalProgramBuilder/StorageDispatch/
+InnerCallHandlers; 2 functionModifiers in ModifierInliner). Four
+sites used `goto label;` for nested-loop early-exit — converted to
+"capture pointer + return-from-lambda" (one extra iteration past
+match on hit, observably identical). Suite bit-identical.
+
+Follow-on (`073194fea`, not yet full-suite verified): extracted
+PostInitTriggers (250 LOC, 4 post-init detectors) and
+SelectorRouter (138 LOC, approval-tail dispatch) into their own
+TUs. ApprovalProgramBuilder.cpp: 1605 → 1243 LOC (−23%). Both
+extractions are pure file moves with zero class-member coupling.
 
 ## v302 — fix(AbiEncoder): pad array elements to 32 bytes in abi.encodePacked
 
