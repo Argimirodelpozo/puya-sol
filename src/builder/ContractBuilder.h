@@ -1,7 +1,6 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/FunctionMaps.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolStatement.h"
@@ -12,15 +11,27 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace puyasol::builder
 {
+
+/// Maps "LibraryName.functionName" → subroutine ID string.
+using LibraryFunctionIdMap = std::unordered_map<std::string, std::string>;
+
+/// Maps AST node ID → subroutine ID for free functions (used by operator overloading).
+using FreeFunctionIdMap = std::unordered_map<int64_t, std::string>;
+
+/// Set of function names that have overloads (multiple definitions with same name).
+using OverloadedNamesSet = std::unordered_set<std::string>;
 
 /// Per-function translation state. Bundles everything `buildBlock` and
 /// `inlineModifiers` need so the contract-method path (`ContractBuilder`)
