@@ -1,8 +1,45 @@
-# Semantic Test Status — v300
+# Semantic Test Status — v301
 
-**Totals**: **1201 PASS / 101 FAIL / 20 xfailed = 1201/1322
-(90.85%)**. Headline equals actual — single-threaded re-verify of
-all 101 v300 fails: 101/101 fail deterministically, zero flakes.
+**Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
+(90.92%)**. Headline equals actual — single-threaded re-verify of
+all 100 v301 fails: 100/100 fail deterministically, zero flakes.
+
+## v301 — fix(TypeCoercion): implicitNumericCast biguint→bytes[N] left-pads
+
+Solidity allows implicit conversion of exact-width hex integer
+literals to `bytesN` parameters (e.g. passing `0x000...ca35...` as
+`bytes32 salt`). puya-sol's call-site arg coercion routes through
+`TypeCoercion::implicitNumericCast`, which had branches for
+uint64↔biguint and string/BytesConstant→bytes[N] but NO biguint→
+bytes[N] case. So the biguint literal flowed through unchanged, and
+the callee's bytes-shape operations (concat/extract) treated the
+biguint as raw bytes — which strips leading zeros (biguint's
+minimal-byte encoding). A bytes32 value with 12 leading-zero bytes
+ended up as 20 bytes, breaking `abi.encodePacked + keccak256`
+round-trip → require failed.
+
+Fix (commit `11c8965fb`): extend `implicitNumericCast`'s bytes[N]
+branch with a biguint case — `makeAsBytes` then `makeLeftPadToN(_, n)`
+then `makeReinterpretCast` to the target. Mirrors the same
+conversion already in `convertToFixedBytes` (used by explicit
+`bytesN(value)` casts).
+
+Recovers `ecrecover/test_failing_ecrecover_invalid_input_proper`,
+which uses `abi.encodePacked(uint blockExpired, bytes32 salt)` +
+`keccak256` to verify a pre-image hash before calling ecrecover.
+Both args were hex literals; salt was being passed as 20 bytes
+(stripped) instead of 32.
+
+### Session progression
+
+| Run | Description | Headline | Actual |
+|-----|-------------|----------|--------|
+| v297 | 5.9 + 4a/b/c/d + 4 refactors | 1199/103 | 1199/103 |
+| v299 | + calldata fix | 1199/103 | 1200/102 (1 -n 3 flake) |
+| v300 | + immutable pre-write | 1201/101 | 1201/101 |
+| **v301 | + bytes32 left-pad** | **1202/100** | **1202/100** |
+
+Today: +3 deterministic recoveries (calldata, immutable, ecrecover).
 
 ## v300 — fix(immutable): pre-write type default before initializer
 
