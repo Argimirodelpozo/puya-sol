@@ -3,6 +3,7 @@
 /// and precompile routing.
 
 #include "builder/sol-eb/InnerCallHandlers.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-eb/InnerCallInternal.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -376,20 +377,14 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 						FunctionDefinition const* target = nullptr;
 						if (_ctx.currentContract)
 						{
-							for (auto const* base : _ctx.currentContract->annotation().linearizedBaseContracts)
+							forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
 							{
-								for (auto const* func : base->definedFunctions())
-								{
-									if (func->isImplemented() && func->name() == fnName
-										&& func->parameters().size() == nArgs)
-									{
-										target = func;
-										goto foundEwSTarget;
-									}
-								}
-							}
+								if (target) return;
+								if (func->isImplemented() && func->name() == fnName
+									&& func->parameters().size() == nArgs)
+									target = func;
+							});
 						}
-						foundEwSTarget:;
 						if (target)
 						{
 							// AVM can't self-call (no recursive inner-txn into
@@ -588,19 +583,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
 			if (_ctx.currentContract)
 			{
-				for (auto const* base : _ctx.currentContract->annotation().linearizedBaseContracts)
+				forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
 				{
-					for (auto const* func : base->definedFunctions())
-					{
-						if (func->isImplemented() && func->isFallback())
-						{
-							fallbackFunc = func;
-							goto foundFallback;
-						}
-					}
-				}
+					if (fallbackFunc) return;
+					if (func->isImplemented() && func->isFallback())
+						fallbackFunc = func;
+				});
 			}
-			foundFallback:;
 
 			if (!fallbackFunc)
 			{

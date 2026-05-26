@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
@@ -30,13 +31,12 @@ void ContractBuilder::buildStorageDispatch(
 	layout.computeLayout(_contract, m_typeMapper);
 
 	InlineAsmDetector asmDetector;
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		for (auto const* func: base->definedFunctions())
-			if (func->isImplemented())
-			{
-				func->body().accept(asmDetector);
-				if (asmDetector.found) break;
-			}
+	forEachDefinedFunction(_contract, [&](auto const* func)
+	{
+		if (asmDetector.found) return;
+		if (func->isImplemented())
+			func->body().accept(asmDetector);
+	});
 
 	if (layout.totalSlots() == 0 && !asmDetector.found)
 		return;

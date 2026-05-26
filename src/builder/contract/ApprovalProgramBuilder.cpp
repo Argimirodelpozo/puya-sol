@@ -112,16 +112,15 @@ bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _c
 	// Indirect: collect AST IDs of non-constructor functions that touch
 	// box-stored vars, then re-walk constructors looking for calls to them.
 	std::set<int64_t> boxWriteFuncIds;
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		for (auto const* func: base->definedFunctions())
-		{
-			if (func->isConstructor() || !func->isImplemented())
-				continue;
-			BoxVarRefChecker fnCheck(boxVarIds);
-			func->body().accept(fnCheck);
-			if (fnCheck.found())
-				boxWriteFuncIds.insert(func->id());
-		}
+	forEachDefinedFunction(_contract, [&](auto const* func)
+	{
+		if (func->isConstructor() || !func->isImplemented())
+			return;
+		BoxVarRefChecker fnCheck(boxVarIds);
+		func->body().accept(fnCheck);
+		if (fnCheck.found())
+			boxWriteFuncIds.insert(func->id());
+	});
 	if (boxWriteFuncIds.empty())
 		return false;
 

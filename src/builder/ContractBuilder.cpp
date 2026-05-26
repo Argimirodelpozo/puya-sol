@@ -2,6 +2,7 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageLayout.h"
@@ -211,31 +212,25 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		// Collect unique function signatures (name + param types) after override resolution.
 		// The most-derived version wins — skip base functions that are overridden.
 		std::set<int64_t> overriddenIds; // AST IDs of base functions that have been overridden
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		forEachDefinedFunction(_contract, [&](auto const* func)
 		{
-			for (auto const* func: base->definedFunctions())
-			{
-				if (func->isConstructor() || !func->isImplemented())
-					continue;
-				// Mark all base functions of this override as overridden
-				for (auto const* baseFunc: func->annotation().baseFunctions)
-					overriddenIds.insert(baseFunc->id());
-			}
-		}
+			if (func->isConstructor() || !func->isImplemented())
+				return;
+			// Mark all base functions of this override as overridden
+			for (auto const* baseFunc: func->annotation().baseFunctions)
+				overriddenIds.insert(baseFunc->id());
+		});
 
 		std::unordered_map<std::string, int> nameCount;
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		forEachDefinedFunction(_contract, [&](auto const* func)
 		{
-			for (auto const* func: base->definedFunctions())
-			{
-				if (func->isConstructor() || !func->isImplemented())
-					continue;
-				// Skip functions that have been overridden by a more-derived version
-				if (overriddenIds.count(func->id()))
-					continue;
-				nameCount[func->name()]++;
-			}
-		}
+			if (func->isConstructor() || !func->isImplemented())
+				return;
+			// Skip functions that have been overridden by a more-derived version
+			if (overriddenIds.count(func->id()))
+				return;
+			nameCount[func->name()]++;
+		});
 		for (auto const& [name, count]: nameCount)
 		{
 			if (count > 1)

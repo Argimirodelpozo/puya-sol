@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -246,10 +247,13 @@ void inlineModifiers(
 			if (m_currentContract && !isExplicit)
 			{
 				std::string modName = modDef->name();
-				for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
-					for (auto const* mod: base->functionModifiers())
-						if (mod->name() == modName) { modDef = mod; goto modResolved; }
-				modResolved:;
+				solidity::frontend::ModifierDefinition const* resolved = nullptr;
+				forEachFunctionModifier(*m_currentContract, [&](auto const* mod)
+				{
+					if (resolved) return;
+					if (mod->name() == modName) resolved = mod;
+				});
+				if (resolved) modDef = resolved;
 			}
 		}
 
@@ -650,10 +654,13 @@ void ContractBuilder::buildModifierChain(
 		if (m_currentContract && !isExplicitBaseModifier)
 		{
 			std::string modName = modDef->name();
-			for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
-				for (auto const* mod: base->functionModifiers())
-					if (mod->name() == modName) { modDef = mod; goto foundMostDerived; }
-			foundMostDerived:;
+			solidity::frontend::ModifierDefinition const* resolved = nullptr;
+			forEachFunctionModifier(*m_currentContract, [&](auto const* mod)
+			{
+				if (resolved) return;
+				if (mod->name() == modName) resolved = mod;
+			});
+			if (resolved) modDef = resolved;
 		}
 
 		std::string modSubName = baseName + "__mod" + std::to_string(i) + "_" + std::to_string(chainId);
