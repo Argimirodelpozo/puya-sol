@@ -129,6 +129,7 @@ set(SOURCES
 	src/builder/sol-ast/calls/SolAbiEncode.cpp
 	src/builder/sol-ast/calls/SolAbiDecode.cpp
 	src/builder/sol-ast/calls/SolArrayMethod.cpp
+	src/builder/sol-ast/calls/SolArrayMethodHandlers.cpp
 	src/builder/sol-ast/calls/SolInternalCall.cpp
 	src/builder/sol-ast/calls/SolExternalCall.cpp
 	src/builder/sol-ast/calls/SolNewExpression.cpp
