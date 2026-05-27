@@ -136,6 +136,34 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	// ── Control flow ────────────────────────────────────────────────────
+	// (implementations in ControlFlowOps.cpp)
+
+	void buildIfStatement(
+		solidity::yul::If const& _node,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void buildForLoop(
+		solidity::yul::ForLoop const& _node,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void buildBreakStatement(
+		solidity::yul::Break const& _node,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void buildContinueStatement(
+		solidity::yul::Continue const& _node,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void buildLeaveStatement(
+		solidity::yul::Leave const& _node,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+	void buildSwitchStatement(
+		solidity::yul::Switch const& _node,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	// ── Builtin handlers ────────────────────────────────────────────────
 
 	std::shared_ptr<awst::Expression> handleMulmod(

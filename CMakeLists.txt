@@ -60,6 +60,7 @@ set(SOURCES
 	src/builder/assembly/CoreTranslation.cpp
 	src/builder/assembly/ArithmeticOps.cpp
 	src/builder/assembly/BitwiseShiftOps.cpp
+	src/builder/assembly/ControlFlowOps.cpp
 	src/builder/assembly/SignedOps.cpp
 	src/builder/assembly/DataOps.cpp
 	src/builder/assembly/MemoryHelpers.cpp
