@@ -8,7 +8,6 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 

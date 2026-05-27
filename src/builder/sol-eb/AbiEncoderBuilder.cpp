@@ -6,7 +6,6 @@
 #include "builder/sol-eb/AbiSelectorCalldataBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
 

@@ -5,7 +5,6 @@
 #include "builder/sol-ast/calls/SolTypeConversion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
 

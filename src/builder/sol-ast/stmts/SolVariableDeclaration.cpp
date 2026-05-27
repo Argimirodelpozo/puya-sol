@@ -7,7 +7,6 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
-#include "Logger.h"
 
 namespace puyasol::builder::sol_ast
 {

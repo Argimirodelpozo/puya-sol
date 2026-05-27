@@ -11,7 +11,6 @@
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 

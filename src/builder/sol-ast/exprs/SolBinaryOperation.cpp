@@ -6,7 +6,6 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/Numeric.h>

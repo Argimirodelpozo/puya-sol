@@ -6,7 +6,6 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "Logger.h"
 
 namespace puyasol::builder::sol_ast
 {

@@ -5,7 +5,6 @@
 /// variant arm to one of these.
 
 #include "builder/assembly/AssemblyBuilder.h"
-#include "Logger.h"
 
 #include <libsolutil/Numeric.h>
 

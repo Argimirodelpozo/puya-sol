@@ -28,7 +28,6 @@
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-ast/members/SolAddressProperty.h"
 #include "builder/sol-ast/members/SolConstantAccess.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/ASTAnnotations.h>
 

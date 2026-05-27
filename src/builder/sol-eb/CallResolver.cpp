@@ -3,7 +3,6 @@
 
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
-#include "Logger.h"
 
 namespace puyasol::builder::eb
 {

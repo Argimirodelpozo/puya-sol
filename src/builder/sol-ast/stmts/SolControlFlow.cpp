@@ -5,7 +5,6 @@
 
 #include "builder/sol-ast/stmts/SolControlFlow.h"
 #include "builder/sol-eb/ContractContext.h"
-#include "Logger.h"
 
 namespace puyasol::builder::sol_ast
 {

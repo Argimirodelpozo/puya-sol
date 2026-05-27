@@ -3,7 +3,6 @@
 /// All operations work on the __evm_memory bytes blob backed by scratch slots.
 
 #include "builder/assembly/AssemblyBuilder.h"
-#include "Logger.h"
 
 #include <sstream>
 

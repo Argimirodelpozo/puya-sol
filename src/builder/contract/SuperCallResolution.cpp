@@ -12,7 +12,6 @@
 
 #include "builder/ContractBuilder.h"
 #include "builder/sol-types/OverloadSuffix.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 

@@ -11,7 +11,6 @@
 #include "builder/sol-eb/AbiCodecHelpers.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
 
