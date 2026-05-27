@@ -67,16 +67,11 @@ private:
 	std::vector<solidity::frontend::FunctionDefinition const*> m_internalizableLibFuncs;
 
 	// ── Build phases (executed in order from build()) ──
-
-	/// Phase 1: walk every source unit and register every library function and
-	/// every file-level free function in `m_libraryFunctionIds` and
-	/// `m_freeFunctionById`. Disambiguates overloaded names by parameter count.
-	void registerFunctionIds(solidity::frontend::CompilerStack& _compiler, std::string const& _sourceFile);
-
-	/// Phase 1.5: pre-set the function-pointer dispatch cref to the first
-	/// deployable contract — library subroutines need this to construct
-	/// SubroutineIDs for cross-call dispatch tables.
-	void presetDispatchCref(solidity::frontend::CompilerStack& _compiler, std::string const& _sourceFile);
+	// Phase 1: `registerFunctionIds` walks every source unit's library +
+	// file-level functions into `m_libraryFunctionIds` and `m_freeFunctionById`.
+	// Phase 1.5: `presetDispatchCref` pre-sets the function-pointer dispatch
+	// cref to the first deployable contract. Both live in
+	// `builder/FunctionIdRegistry.h`.
 
 	/// Phase 2: translate library functions into Subroutine root nodes.
 	void translateLibraryFunctions(
