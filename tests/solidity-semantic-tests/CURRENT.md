@@ -1,11 +1,53 @@
-# Semantic Test Status — v308 (overnight refactor batch + AbiSelector)
+# Semantic Test Status — v321 (overnight 2026-05-27 batch)
 
 **Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
-(90.92%)**. Seven consecutive full-suite runs (v302-v308) all came
-in with the same deterministic 1202/100; the only deltas under
+(90.92%)**. Twenty consecutive full-suite runs (v302-v321) all
+came in at the same deterministic 1202/100; the only deltas under
 `-n 3` parallel load were flakes confirmed by standalone re-verify.
 
-## Overnight session 2026-05-26 — 6 pure-refactor commits
+## Overnight session 2026-05-27 — 8 pure-refactor commits
+
+All 8 commits bit-identical to v311 at the suite level (fail-set
+diff vs v311 = empty across v314-v321). Total LOC moved out:
+**~1840 across 8 new TUs**.
+
+- v314 (`68f638a2e`): `Arc4ArrayWidening` (227 LOC) — uint64→arc4.uintN
+  narrow + arc4.intM→intN static/dynamic array widening. From
+  TypeCoercion.cpp 1321 → 1103.
+- v315 (`b28908e48`): `Arc4Defaults` (276 LOC) — 5 ARC4 type-analysis
+  + default-value helpers (makeZeroBytesRuntime, prependArc4LengthHeader,
+  arc4IsDynamic, arc4DefaultEncoding, computeEncodedElementSize).
+  TypeCoercion 1103 → 833. Hidden bug fixed:
+  `StorageMapper::computeEncodedElementSize` was a delegating wrapper;
+  the sed rename of TypeCoercion::computeEncodedElementSize → bare
+  caused infinite recursion in the wrapper. Fix: qualify the wrapper's
+  inner call as `builder::computeEncodedElementSize`.
+- v316 (`3a35f4aec`): `CalldataMapOps` (204 LOC) — 4 EVM-calldata
+  mapping helpers (computeFlatElementCount, computeARC4ByteSize,
+  initializeCalldataMap, accessFlatElement). AssemblyBuilder 1065 → 882.
+- v317 (`f685dd9c3`): `FunctionIdRegistry` (137 LOC) — 2 first-pass
+  routines (registerFunctionIds, presetDispatchCref) freed as
+  free functions taking the maps as out-params. AWSTBuilder 930 → 805.
+- v318 (`4067dd90f`): `FunctionPointerDispatchTypes` (130 LOC) — 4
+  pure dispatch-type/encoding helpers (computeReturnType,
+  dispatchPublicArgArc4Type, mapDispatchType, encodeArgForInnerTxn).
+  FunctionPointerBuilder 902 → 766.
+- v319 (`8793ca7eb`): `UserFunctionOps` (206 LOC) — Yul user-function
+  inlining + recursive-subroutine dispatch
+  (buildFunctionDefinition, handleUserFunctionCall). StatementOps 864 → 676.
+- v320 (`0cdea8fe3`): `SolArrayMethodHandlers` (313 LOC) — 4 per-array-
+  kind handlers (handleStructFieldArrayMethod, handleBoxArray,
+  handleMemoryArray, handleMappingElementArrayLengthOp).
+  SolArrayMethod 835 → 543.
+- v321 (`e87c5d03b`): `SyntheticCalldataOps` (347 LOC) — synthetic
+  EVM-ABI calldata blob materialisation (detectDynamicCalldataAccess,
+  buildSyntheticCalldataBlob + 3 anonymous-namespace helpers).
+  DataOps 830 → 492.
+
+Combined across 2026-05-26 + 2026-05-27 sessions: **14 refactor
+commits, ~3200 LOC moved into ~15 new TUs**, all bit-identical.
+
+## Overnight session 2026-05-26 — 6 pure-refactor commits (older)
 
 All 6 commits are bit-identical to v301 at the suite level. Total
 LOC moved out: ~1370 across 7 new TUs.
