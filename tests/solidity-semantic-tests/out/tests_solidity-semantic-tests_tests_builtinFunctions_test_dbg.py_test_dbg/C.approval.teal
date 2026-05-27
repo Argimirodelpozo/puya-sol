@@ -1,0 +1,181 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/kp.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 15 32 0
+    bytecblock "x"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x42a5a11b 0xbd4d3936 0xce2db099 // method "bytesStorage()byte[]", method "bytesMemory()byte[]", method "bytesContract()byte[]"
+    txna ApplicationArgs 0
+    match main_bytesStorage_route@5 main_bytesMemory_route@6 main_bytesContract_route@7
+    err
+
+main_bytesContract_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500200000000000000000000000000000000000000000000000000000000000001234
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_3 // 0
+    b main_ternary_merge@14
+
+main_bytesMemory_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75002f0003fffffffffffffffffffffffffffffefffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffc
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_3 // 0
+    b main_ternary_merge@19
+
+main_bytesStorage_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_1 // 15
+    bzero
+    intc_3 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0xfffffffffffffffffffffffffffffe
+    replace2 0 // on error: index access is out of bounds
+    pushbytes 0xfffffffffffffffffffffffffffffd
+    replace2 15 // on error: index access is out of bounds
+    pushbytes 0xfffffffffffffffffffffffffffffc
+    replace2 30 // on error: index access is out of bounds
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    intc_2 // 32
+    bzero
+    dig 1
+    extract 0 15 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 15
+    -
+    intc_1 // 15
+    extract3
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    dig 2
+    extract 15 15 // on error: index access is out of bounds
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 15
+    -
+    intc_1 // 15
+    extract3
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    uncover 2
+    extract 30 15 // on error: index access is out of bounds
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 15
+    -
+    intc_1 // 15
+    extract3
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_3 // 0
+    b main_ternary_merge@24

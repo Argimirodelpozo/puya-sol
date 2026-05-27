@@ -1,0 +1,103 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/immutable_signed.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "a" "b"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "a"
+    pushint 18446744073709551614
+    app_global_put
+    bytec_1 // "b"
+    pushbytes 0x6162
+    app_global_put
+    pushbytes "f"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xd9d12b48 // method "viaasm()(byte[32],byte[32])"
+    txna ApplicationArgs 0
+    match main_viaasm_route@4
+    err
+
+main_viaasm_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    intc_2 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    load 0
+    intc_0 // 32
+    bzero
+    uncover 3
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    pushint 30
+    bzero
+    uncover 4
+    swap
+    concat
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    uncover 2
+    store 0
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

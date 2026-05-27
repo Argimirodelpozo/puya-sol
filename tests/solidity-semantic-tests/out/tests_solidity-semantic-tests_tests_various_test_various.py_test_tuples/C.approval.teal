@@ -1,0 +1,165 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/tuples.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2 32
+    bytecblock "data" "__ctor_pending" 0x151f7c75
+    intc_1 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x185e9ff4 0xcd78b354 // method "__postInit()void", method "h()(uint256,uint256)", method "f()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_h_route@6 main_f_route@7
+    err
+
+main_f_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_3 // 32
+    +
+    bytec_0 // "data"
+    swap
+    box_resize
+    dup
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "data"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "data"
+    swap
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    box_splice
+    callsub h
+    bury 2
+    pushbytes 0x05
+    b!=
+    bnz main_if_body@16
+    dup
+    pushbytes 0x06
+    b!=
+    bz main_after_if_else@17
+
+main_if_body@16:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/tuples.sol.C.f@25:
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@17:
+    bytec_0 // "data"
+    intc_2 // 2
+    intc_3 // 32
+    box_extract // on error: index out of bounds
+    pushbytes 0x03
+    b!=
+    bz main_after_if_else@21
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/tuples.sol.C.f@25
+
+main_after_if_else@21:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/tuples.sol.C.f@25
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_h_route@6:
+    callsub h
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_2 // 2
+    box_create
+    pop
+    pushbytes "m_c"
+    intc_2 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/tuples.sol.C.h() -> bytes, bytes:
+h:
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000005 0x0000000000000000000000000000000000000000000000000000000000000006
+    retsub
+
+h_ternary_false@2:
+    intc_1 // 0
+    b h_ternary_merge@3

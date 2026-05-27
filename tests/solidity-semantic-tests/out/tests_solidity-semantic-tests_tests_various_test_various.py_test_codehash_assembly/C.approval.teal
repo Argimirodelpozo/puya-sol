@@ -1,0 +1,130 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/codehash_assembly.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    intc_1 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4494bd16 0x3fc82556 0xcddc3345 // method "f()byte[32]", method "g()byte[32]", method "h()bool"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7
+    err
+
+main_h_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    load 0
+    bury 1
+    global CurrentApplicationAddress
+    pushbytes 0x
+    b==
+    bz main_ternary_false@16
+    pushbytes 0x
+
+main_ternary_merge@20:
+    pushbytes 0x
+    b==
+    !
+    dig 1
+    store 0
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@16:
+    global CurrentApplicationAddress
+    pushbytes 0x64
+    b>
+    bz main_ternary_false@18
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    keccak256
+    b main_ternary_merge@20
+
+main_ternary_false@18:
+    pushbytes 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    b main_ternary_merge@20
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c75c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@33:
+    intc_1 // 0
+    b main_ternary_merge@34

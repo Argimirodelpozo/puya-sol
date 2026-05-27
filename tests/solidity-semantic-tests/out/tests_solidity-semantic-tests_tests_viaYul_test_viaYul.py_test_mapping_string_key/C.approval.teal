@@ -1,0 +1,76 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/mapping_string_key.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2
+    bytecblock "__ctor_pending"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1c663589 // method "__postInit()void", method "set(string)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_set_route@6
+    err
+
+main_set_route@6:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "map"
+    intc_2 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return

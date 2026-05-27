@@ -1,0 +1,149 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "x" 0x "z" 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "z"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9481ffde 0x5848be20 0x7c1072af 0xbb0aa89c // method "xAndZSlots()(uint512,uint512)", method "z()uint256", method "x()uint256", method "xSlot()uint512"
+    txna ApplicationArgs 0
+    match main_xAndZSlots_route@5 main_z_route@6 main_x_route@7 main_xSlot_route@8
+    err
+
+main_xSlot_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_x_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_z_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "z"
+    app_global_get_ex
+    assert // check z exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_xAndZSlots_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30

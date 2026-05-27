@@ -1,0 +1,320 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_really_lots_of_data.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    intc_0 // 0
+    dupn 14
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x92e03b1c // method "deposit()void"
+    txna ApplicationArgs 0
+    match main_deposit_route@4
+    err
+
+main_deposit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    txn NumAppArgs
+    bz main_ternary_false@59
+    txn NumAppArgs
+    bz main_ternary_false@12
+    txna ApplicationArgs 0
+    bury 15
+
+main_ternary_merge@13:
+    txn NumAppArgs
+    intc_1 // 1
+    >
+    bz main_ternary_false@15
+    txna ApplicationArgs 1
+
+main_ternary_merge@16:
+    dig 15
+    swap
+    concat
+    bury 14
+    txn NumAppArgs
+    pushint 2
+    >
+    bz main_ternary_false@18
+    txna ApplicationArgs 2
+
+main_ternary_merge@19:
+    dig 14
+    swap
+    concat
+    bury 13
+    txn NumAppArgs
+    pushint 3
+    >
+    bz main_ternary_false@21
+    txna ApplicationArgs 3
+
+main_ternary_merge@22:
+    dig 13
+    swap
+    concat
+    bury 12
+    txn NumAppArgs
+    pushint 4
+    >
+    bz main_ternary_false@24
+    txna ApplicationArgs 4
+
+main_ternary_merge@25:
+    dig 12
+    swap
+    concat
+    bury 11
+    txn NumAppArgs
+    pushint 5
+    >
+    bz main_ternary_false@27
+    txna ApplicationArgs 5
+
+main_ternary_merge@28:
+    dig 11
+    swap
+    concat
+    bury 10
+    txn NumAppArgs
+    pushint 6
+    >
+    bz main_ternary_false@30
+    txna ApplicationArgs 6
+
+main_ternary_merge@31:
+    dig 10
+    swap
+    concat
+    bury 9
+    txn NumAppArgs
+    pushint 7
+    >
+    bz main_ternary_false@33
+    txna ApplicationArgs 7
+
+main_ternary_merge@34:
+    dig 9
+    swap
+    concat
+    bury 8
+    txn NumAppArgs
+    pushint 8
+    >
+    bz main_ternary_false@36
+    txna ApplicationArgs 8
+
+main_ternary_merge@37:
+    dig 8
+    swap
+    concat
+    bury 7
+    txn NumAppArgs
+    pushint 9
+    >
+    bz main_ternary_false@39
+    txna ApplicationArgs 9
+
+main_ternary_merge@40:
+    dig 7
+    swap
+    concat
+    bury 6
+    txn NumAppArgs
+    pushint 10
+    >
+    bz main_ternary_false@42
+    txna ApplicationArgs 10
+
+main_ternary_merge@43:
+    dig 6
+    swap
+    concat
+    bury 5
+    txn NumAppArgs
+    pushint 11
+    >
+    bz main_ternary_false@45
+    txna ApplicationArgs 11
+
+main_ternary_merge@46:
+    dig 5
+    swap
+    concat
+    bury 4
+    txn NumAppArgs
+    pushint 12
+    >
+    bz main_ternary_false@48
+    txna ApplicationArgs 12
+
+main_ternary_merge@49:
+    dig 4
+    swap
+    concat
+    bury 3
+    txn NumAppArgs
+    pushint 13
+    >
+    bz main_ternary_false@51
+    txna ApplicationArgs 13
+
+main_ternary_merge@52:
+    dig 3
+    swap
+    concat
+    bury 2
+    txn NumAppArgs
+    pushint 14
+    >
+    bz main_ternary_false@54
+    txna ApplicationArgs 14
+
+main_ternary_merge@55:
+    dig 2
+    swap
+    concat
+    bury 1
+    txn NumAppArgs
+    pushint 15
+    >
+    bz main_ternary_false@57
+    txna ApplicationArgs 15
+
+main_ternary_merge@58:
+    dig 1
+    swap
+    concat
+
+main_ternary_merge@60:
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x2e670e84000000000000000a0012000000000000000f
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@57:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@58
+
+main_ternary_false@54:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@55
+
+main_ternary_false@51:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@52
+
+main_ternary_false@48:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@49
+
+main_ternary_false@45:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@46
+
+main_ternary_false@42:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@43
+
+main_ternary_false@39:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@40
+
+main_ternary_false@36:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@37
+
+main_ternary_false@33:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@34
+
+main_ternary_false@30:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@28
+
+main_ternary_false@24:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@25
+
+main_ternary_false@21:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@22
+
+main_ternary_false@18:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@19
+
+main_ternary_false@15:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@16
+
+main_ternary_false@12:
+    intc_0 // 0
+    bzero
+    bury 15
+    b main_ternary_merge@13
+
+main_ternary_false@59:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@60
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

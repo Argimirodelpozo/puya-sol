@@ -1,0 +1,200 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/small_types_in_reverse.sol.A.approval_program() -> uint64:
+main:
+    intcblock 0 1 8
+    bytecblock "b" "c" 0x151f7c75 "a" "x"
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "b"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "c"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // "x"
+    pushbytes 0x000000000000
+    app_global_put
+    bytec_1 // "c"
+    pushint 65535
+    app_global_put
+    bytec_0 // "b"
+    pushint 3855
+    app_global_put
+    bytec_3 // "a"
+    pushint 4660
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    extract 6 2
+    intc_0 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    assert // check c exists
+    itob
+    extract 6 2
+    pushbytes 0x1234
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 4 // "x"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf9522e2f 0x8c9379e6 0xd12b3273 0x3894d605 // method "a()uint64", method "b()uint64", method "c()uint64", method "x(uint256)uint64"
+    txna ApplicationArgs 0
+    match main_a_route@5 main_b_route@6 main_c_route@7 main_x_route@8
+    err
+
+main_x_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 4 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_2 // 8
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 2
+    *
+    extract_uint16
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_c_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    assert // check c exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_b_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_a_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_3 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@29:
+    intc_0 // 0
+    b main_ternary_merge@30

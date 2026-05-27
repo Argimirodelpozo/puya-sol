@@ -1,0 +1,229 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_reference_types_slot_offset.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 64
+    bytecblock "__ctor_pending" 0x 0x00
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x90d81de4 0x3916cf32 0x6b4ef949 0x46bbace5 0x4569d009 0x999aa266 // method "__postInit()void", method "s1SlotOffset()(uint512,uint512)", method "dArraySlotOffset()(uint512,uint512)", method "sArraySlotOffset()(uint512,uint512)", method "bArraySlotOffset()(uint512,uint512)", method "strSlotOffset()(uint512,uint512)", method "s1()(uint512,address,bool)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_s1SlotOffset_route@6 main_dArraySlotOffset_route@7 main_sArraySlotOffset_route@8 main_bArraySlotOffset_route@9 main_strSlotOffset_route@10 main_s1_route@11
+    err
+
+main_s1_route@11:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushbytes "s1"
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    pushint 512
+    getbit
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    uncover 3
+    b|
+    uncover 2
+    concat
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+main_strSlotOffset_route@10:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_bArraySlotOffset_route@9:
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main_sArraySlotOffset_route@8:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
+
+main_dArraySlotOffset_route@7:
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@37:
+    intc_1 // 0
+    b main_ternary_merge@38
+
+main_s1SlotOffset_route@6:
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_1 // 0
+    b main_ternary_merge@43
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytess "dArray" 0x000a000c000e0010001200000000000000000000
+    box_put
+    pushbytes "sArray"
+    intc_2 // 64
+    box_create
+    pop
+    pushbytes "bArray"
+    intc_1 // 0
+    box_create
+    pop
+    pushbytes "t1"
+    bytec_1 // 0x
+    app_global_put
+    pushbytes "t2"
+    bytec_1 // 0x
+    app_global_put
+    pushbytes "str"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    return

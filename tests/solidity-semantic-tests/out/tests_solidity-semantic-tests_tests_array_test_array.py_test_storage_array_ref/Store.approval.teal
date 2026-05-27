@@ -1,0 +1,376 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.approval_program() -> uint64:
+main:
+    intcblock 32 2 0 1
+    bytecblock "data" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
+    intc_2 // 0
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_3 // 1
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x8e1be510 0x85d76e5a // method "__postInit()void", method "add(uint256)void", method "find(uint256)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_add_route@6 main_find_route@7
+    err
+
+main_find_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    box_get
+    assert // box exists
+    intc_2 // 0
+    itob
+    bytec_0 // "data"
+    intc_2 // 0
+    intc_1 // 2
+    box_extract
+    btoi
+    itob
+    dig 5
+    callsub find(23,u256,u256,u256)
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_add_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    intc_2 // 0
+    intc_1 // 2
+    box_extract
+    btoi
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_0 // 32
+    +
+    bytec_0 // "data"
+    swap
+    box_resize
+    dup
+    intc_3 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "data"
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    bytec_0 // "data"
+    swap
+    intc_2 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_1 // 2
+    >=
+    bz main_ternary_false@21
+    bytec_0 // "data"
+    box_len
+    pop
+
+main_ternary_merge@22:
+    intc_1 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    bytec_1 // 0x01
+    b>=
+    assert // underflow
+    pushint 8
+    bzero
+    bury 2
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_1 // 2
+    >=
+    bz main_ternary_false@24
+    bytec_0 // "data"
+    box_len
+    pop
+
+main_ternary_merge@25:
+    intc_1 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_1 // 0x01
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    bury 1
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_1 // 2
+    >=
+    bz main_ternary_false@27
+    bytec_0 // "data"
+    box_len
+    pop
+
+main_ternary_merge@28:
+    intc_1 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_1 // 0x01
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    len
+    pushint 8
+    -
+    dig 1
+    swap
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    bytec_0 // "data"
+    swap
+    dig 4
+    box_replace // on error: index out of bounds
+    intc_3 // 1
+    return
+
+main_ternary_false@27:
+    intc_1 // 2
+    b main_ternary_merge@28
+
+main_ternary_false@24:
+    intc_1 // 2
+    b main_ternary_merge@25
+
+main_ternary_false@21:
+    intc_1 // 2
+    b main_ternary_merge@22
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_1 // 2
+    box_create
+    pop
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.find(23,u256,u256,u256)(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes, bytes:
+find(23,u256,u256,u256):
+    proto 4 2
+    intc_2 // 0
+    dupn 2
+    frame_dig -2
+    pushbytes 0x
+    b==
+    bnz find(23,u256,u256,u256)_if_body@3
+    frame_dig -2
+    bytec_1 // 0x01
+    b==
+    bz find(23,u256,u256,u256)_after_if_else@4
+    pushint 8
+    bzero
+    frame_dig -3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -4
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    frame_dig -1
+    b!=
+    bz find(23,u256,u256,u256)_after_if_else@4
+
+find(23,u256,u256,u256)_if_body@3:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -4
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+find(23,u256,u256,u256)_after_if_else@4:
+    frame_dig -2
+    pushbytes 0x02
+    b/
+    dup
+    frame_bury 0
+    pushint 8
+    bzero
+    frame_dig -3
+    uncover 2
+    b+
+    dup
+    frame_bury 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -4
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    frame_bury 2
+    frame_dig -1
+    b>
+    bz find(23,u256,u256,u256)_else_body@8
+    frame_dig -4
+    frame_dig -3
+    frame_dig 0
+    frame_dig -1
+    callsub find(23,u256,u256,u256)
+    dup
+    frame_bury -4
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+find(23,u256,u256,u256)_else_body@8:
+    frame_dig -1
+    frame_dig 2
+    b>
+    bz find(23,u256,u256,u256)_else_body@12
+    frame_dig 0
+    dup
+    bytec_1 // 0x01
+    b>=
+    assert // underflow
+    frame_dig 1
+    bytec_1 // 0x01
+    b+
+    swap
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_1 // 0x01
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -4
+    cover 2
+    frame_dig -1
+    callsub find(23,u256,u256,u256)
+    dup
+    frame_bury -4
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+find(23,u256,u256,u256)_else_body@12:
+    frame_dig 1
+    frame_dig -4
+    frame_bury 1
+    frame_bury 0
+    retsub

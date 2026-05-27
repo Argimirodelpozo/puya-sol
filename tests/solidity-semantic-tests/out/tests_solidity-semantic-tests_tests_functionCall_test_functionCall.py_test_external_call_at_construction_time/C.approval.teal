@@ -1,0 +1,141 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 16 32 1000000
+    bytecblock 0x01 TMPL_APPROVAL_T TMPL_CLEAR_T TMPL_APPROVAL_U TMPL_CLEAR_U
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    dup
+    pushbytes 0x
+    b==
+    bz main_else_body@11
+    itxn_begin
+    bytec_1 // TMPL_APPROVAL_T
+    bytec_2 // TMPL_CLEAR_T
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+
+main_after_if_else@13:
+    bytec_0 // 0x01
+    dig 1
+    b+
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_else_body@11:
+    dup
+    bytec_0 // 0x01
+    b==
+    bz main_after_if_else@13
+    itxn_begin
+    bytec_3 // TMPL_APPROVAL_U
+    bytec 4 // TMPL_CLEAR_U
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    b main_after_if_else@13
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

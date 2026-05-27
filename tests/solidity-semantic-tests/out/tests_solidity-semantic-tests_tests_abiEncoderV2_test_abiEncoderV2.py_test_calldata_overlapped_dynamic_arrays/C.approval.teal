@@ -1,0 +1,367 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock "s" 0x151f7c75 "__ctor_pending" "n"
+    intc_2 // 0
+    dupn 2
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x560ea6a7 0x48f9eced 0x3a06436a 0x82e68c81 // method "__postInit()void", method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint256)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_f_memory_route@6 main_f_encode_route@7 main_f_which_route@8 main_f_storage_route@9
+    err
+
+main_f_storage_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_del
+    pop
+    bytec_0 // "s"
+    dig 3
+    dup
+    cover 2
+    box_put
+    bytec_3 // "n"
+    dig 3
+    app_global_put
+    intc_0 // 32
+    bzero
+    bytec_0 // "s"
+    box_len
+    pop
+    intc_3 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    extract 2 0
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_2 // 0
+    b main_ternary_merge@16
+
+main_f_which_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txna ApplicationArgs 3
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    pushint 8
+    bzero
+    dig 5
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 4
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    extract 32 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@20:
+    intc_2 // 0
+    b main_ternary_merge@21
+
+main_f_encode_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    swap
+    len
+    dup
+    bury 3
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    dig 3
+    concat
+    dig 2
+    intc_3 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    extract 2 0
+    concat
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_2 // 0
+    b main_ternary_merge@26
+
+main_f_memory_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 64
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0x0042
+    dig 2
+    concat
+    dig 3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_2 // 0
+    b main_ternary_merge@31
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "s"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "n"
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return

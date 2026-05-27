@@ -1,0 +1,116 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/stack_height_check_on_adding_gas_variable_to_function.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf2b65f27 0x0a449f0b 0x4f683535 // method "g()void", method "h()void", method "test_function()bool"
+    txna ApplicationArgs 0
+    match main_g_route@5 main_h_route@6 main_test_function_route@7
+    err
+
+main_test_function_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz main_bool_false@17
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz main_bool_false@17
+    intc_0 // 1
+
+main_bool_merge@18:
+    assert
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz main_bool_false@21
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz main_bool_false@21
+    intc_0 // 1
+
+main_bool_merge@22:
+    assert
+    global CurrentApplicationAddress
+    dup
+    ==
+    bz main_bool_false@24
+    intc_0 // 1
+
+main_bool_merge@25:
+    assert
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_bool_false@24:
+    intc_1 // 0
+    b main_bool_merge@25
+
+main_bool_false@21:
+    intc_1 // 0
+    b main_bool_merge@22
+
+main_bool_false@17:
+    intc_1 // 0
+    b main_bool_merge@18
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_h_route@6:
+    intc_0 // 1
+    return
+
+main_g_route@5:
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32

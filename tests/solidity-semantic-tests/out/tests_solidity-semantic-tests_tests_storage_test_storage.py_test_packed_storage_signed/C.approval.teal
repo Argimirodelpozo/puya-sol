@@ -1,0 +1,146 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_signed.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 8 1
+    bytecblock "a" 0x0100 "b" "c"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "b"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "c"
+    intc_0 // 0
+    app_global_put
+    pushbytes "d"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x8ef91fdb // method "test()(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_1 // 8
+    bzero
+    bytec_0 // "a"
+    pushint 18446744073709551614
+    app_global_put
+    bytec_2 // "b"
+    pushint 4
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x0100
+    b%
+    pushbytes 0x78
+    b*
+    bytec_1 // 0x0100
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    intc_1 // 8
+    extract3
+    bytec_1 // 0x0100
+    b%
+    pushbytes 0x79
+    b*
+    bytec_1 // 0x0100
+    b%
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    bytec_3 // "c"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    intc_0 // 0
+    bytec_2 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    uncover 2
+    itob
+    intc_0 // 0
+    pushbytes "d"
+    app_global_get_ex
+    assert // check d exists
+    itob
+    pushint 32
+    bzero
+    uncover 4
+    dig 1
+    b|
+    uncover 4
+    dig 2
+    b|
+    uncover 4
+    dig 3
+    b|
+    uncover 4
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

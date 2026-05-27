@@ -1,0 +1,159 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_for2.sol.C.approval_program() -> uint64:
+main:
+    intcblock 64 32 0 1
+    bytecblock "st" 0x 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "st"
+    bytec_1 // 0x
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xa487db5d // method "f(uint512)(uint512,uint512,uint512)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    bytec_1 // 0x
+    bury 3
+    bytec_1 // 0x
+    bury 2
+    intc_2 // 0
+    itob
+    bytec_0 // "st"
+    swap
+    app_global_put
+    load 0
+    bury 5
+    dig 3
+    bury 1
+
+main_while_top@10:
+    intc_1 // 32
+    bzero
+    bytec_0 // "st"
+    app_global_get
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes 0x02
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // "st"
+    swap
+    app_global_put
+    dup
+    pushbytes 0x01
+    b==
+    bnz main_after_if_else@12
+    dig 4
+    store 0
+    intc_2 // 0
+    bytec_0 // "st"
+    app_global_get_ex
+    assert // check st exists
+    dig 3
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    dig 3
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_after_if_else@12:
+    bytec_1 // 0x
+    dig 2
+    pushbytes 0x03
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 3
+    dig 1
+    bury 4
+    bury 1
+    b main_while_top@10
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

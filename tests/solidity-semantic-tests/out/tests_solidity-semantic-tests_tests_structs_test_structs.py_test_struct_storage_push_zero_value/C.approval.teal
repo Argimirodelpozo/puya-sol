@@ -1,0 +1,247 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_storage_push_zero_value.sol.C.approval_program() -> uint64:
+main:
+    intcblock 2 0 1 23
+    bytecblock "s" 0x "__ctor_pending" "b"
+    intc_1 // 0
+    dup
+    bytec_1 // ""
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x2d4970c7 // method "__postInit()void", method "f()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_get
+    assert // box exists
+    dup
+    intc_1 // 0
+    extract_uint16
+    dup
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
+    bury 6
+    swap
+    extract 2 0
+    bury 6
+    intc_0 // 2
+    *
+    bury 3
+    intc_1 // 0
+    bury 1
+
+main_for_header@15:
+    dup
+    dig 3
+    <
+    bz main_after_for@17
+    dig 4
+    dig 1
+    dup
+    cover 2
+    extract_uint16
+    intc_0 // 2
+    +
+    itob
+    extract 6 0
+    dig 5
+    swap
+    concat
+    bury 5
+    intc_0 // 2
+    +
+    bury 1
+    b main_for_header@15
+
+main_after_for@17:
+    dig 4
+    len
+    bury 2
+    intc_1 // 0
+    bury 1
+
+main_for_header@18:
+    dup
+    intc_0 // 2
+    <
+    bz main_after_for@20
+    pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
+    dig 1
+    dup
+    cover 2
+    extract_uint16
+    dig 3
+    +
+    itob
+    extract 6 0
+    dig 5
+    swap
+    concat
+    bury 5
+    intc_0 // 2
+    +
+    bury 1
+    b main_for_header@18
+
+main_after_for@20:
+    dig 4
+    dig 3
+    dig 3
+    substring3
+    dig 4
+    swap
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
+    concat
+    bytec_0 // "s"
+    box_del
+    pop
+    bytec_0 // "s"
+    swap
+    box_put
+    bytec_0 // "s"
+    intc_0 // 2
+    dup
+    box_extract
+    btoi
+    intc_0 // 2
+    dig 1
+    +
+    bytec_0 // "s"
+    swap
+    pushint 32
+    box_extract // on error: index out of bounds
+    bytec_1 // 0x
+    b==
+    assert
+    dup
+    pushint 34
+    +
+    bytec_0 // "s"
+    swap
+    pushint 16
+    box_extract // on error: index out of bounds
+    bytec_1 // 0x
+    b==
+    assert
+    dup
+    pushint 50
+    +
+    bytec_0 // "s"
+    swap
+    pushint 4
+    box_extract // on error: index out of bounds
+    btoi
+    !
+    assert
+    dup
+    pushint 54
+    +
+    bytec_0 // "s"
+    swap
+    pushint 48
+    box_extract // on error: index out of bounds
+    dup
+    extract 0 16 // on error: index access is out of bounds
+    bytec_1 // 0x
+    b==
+    assert
+    dup
+    extract 16 16 // on error: index access is out of bounds
+    bytec_1 // 0x
+    b==
+    assert
+    extract 32 16 // on error: index access is out of bounds
+    bytec_1 // 0x
+    b==
+    assert
+    pushint 104
+    +
+    bytec_0 // "s"
+    swap
+    intc_0 // 2
+    box_extract
+    btoi
+    itob
+    bytec_1 // 0x
+    b==
+    assert
+    intc_1 // 0
+    bytec_3 // "b"
+    app_global_get_ex
+    assert // check b exists
+    intc_3 // 23
+    ==
+    assert
+    intc_1 // 0
+    pushbytes "a"
+    app_global_get_ex
+    assert // check a exists
+    pushint 17
+    ==
+    assert
+    intc_2 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "s"
+    intc_0 // 2
+    box_create
+    pop
+    bytec_3 // "b"
+    intc_3 // 23
+    app_global_put
+    pushbytes "a"
+    pushint 17
+    app_global_put
+    intc_2 // 1
+    return

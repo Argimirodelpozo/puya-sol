@@ -1,0 +1,139 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/blockhash_basic.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2
+    bytecblock "genesisHash" "currentHash" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "genesisHash"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_1 // "currentHash"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    global Round
+    itob
+    pushbytes 0x01
+    b==
+    assert
+    global Round
+    intc_2 // 2
+    -
+    block BlkSeed
+    bytec_0 // "genesisHash"
+    swap
+    app_global_put
+    global Round
+    intc_2 // 2
+    -
+    block BlkSeed
+    bytec_1 // "currentHash"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc108630f 0x54bb3e66 0x691a451c // method "f(uint256)byte[32]", method "genesisHash()byte[32]", method "currentHash()byte[32]"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_genesisHash_route@6 main_currentHash_route@7
+    err
+
+main_currentHash_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "currentHash"
+    app_global_get_ex
+    assert // check currentHash exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_genesisHash_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "genesisHash"
+    app_global_get_ex
+    assert // check genesisHash exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    global Round
+    intc_2 // 2
+    -
+    block BlkSeed
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

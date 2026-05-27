@@ -1,0 +1,124 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/packing_unpacking_types.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0 4294967295 8
+    intc_1 // 0
+    pushbytes ""
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x579a0d67 // method "run(bool,uint64,uint64)uint256"
+    txna ApplicationArgs 0
+    match main_run_route@4
+    err
+
+main_run_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 3
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    dig 1
+    dup
+    intc_2 // 4294967295
+    <=
+    assert // ABI validation
+    intc_2 // 4294967295
+    &
+    bury 2
+    dig 2
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    pushbytes 0x
+    bury 5
+    bz main_after_if_else@11
+    intc_0 // 1
+    itob
+    bury 4
+
+main_after_if_else@11:
+    dig 3
+    pushbytes 0x0100000000
+    b*
+    dig 2
+    intc_2 // 4294967295
+    ^
+    itob
+    b|
+    pushbytes 0x010000000000000000
+    b*
+    dig 1
+    pushint 18446744073709551615
+    ^
+    itob
+    b|
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

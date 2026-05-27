@@ -1,0 +1,110 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/compound_assign.sol.test.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "value1" "value2" 0x
+    intc_0 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "value1"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "value2"
+    bytec_2 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x2b9082ff // method "f(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "value1"
+    app_global_get_ex
+    assert // check value1 exists
+    dig 2
+    dup
+    cover 2
+    b+
+    bytec_0 // "value1"
+    dig 1
+    app_global_put
+    dig 2
+    uncover 2
+    b*
+    intc_0 // 0
+    bytec_1 // "value2"
+    app_global_get_ex
+    assert // check value2 exists
+    swap
+    uncover 2
+    b+
+    b*
+    pushbytes 0x07
+    b+
+    bytec_1 // "value2"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

@@ -1,0 +1,83 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/modifier_init_return.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    intc_1 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xbf84b9ad // method "f(uint256)uint256[5]"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+    dig 1
+    pushbytes 0x0a
+    b>=
+    bz main_after_if_else@11
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 160
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+
+main_after_if_else@11:
+    pushbytes 0x151f7c75
+    dig 1
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

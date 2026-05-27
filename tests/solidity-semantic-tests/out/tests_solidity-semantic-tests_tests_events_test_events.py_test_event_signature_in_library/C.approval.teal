@@ -1,0 +1,48 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_signature_in_library.sol.C.approval_program() -> uint64:
+main:
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    callsub L.f
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn NumAppArgs
+    !
+    assert
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_signature_in_library.sol.L.f() -> void:
+L.f:
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 3
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0xba06af64000000000000
+    log
+    retsub

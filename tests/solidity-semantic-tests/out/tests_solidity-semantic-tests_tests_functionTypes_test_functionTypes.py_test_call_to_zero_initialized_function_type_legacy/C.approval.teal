@@ -1,0 +1,196 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/call_to_zero_initialized_function_type_legacy.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 6 16
+    bytecblock "x" "ev" TMPL_APPROVAL_Other TMPL_CLEAR_Other
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "ev"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "x"
+    pushbytes 0x000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x68f8fb19 0xf503abcb 0x3e9a707a // method "store(byte[12])void", method "eval(byte[12])uint256", method "t()uint256"
+    txna ApplicationArgs 0
+    match main_store_route@5 main_eval_route@6 main_t_route@7
+    err
+
+main_t_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_2 // TMPL_APPROVAL_Other
+    bytec_3 // TMPL_CLEAR_Other
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    itob
+    pushbytes 0x77a1a0d7 // method "addTwo(uint256)uint256"
+    concat
+    callsub store
+    pop
+    intc_0 // 0
+    bytec_1 // "ev"
+    app_global_get_ex
+    bury 1
+    assert // check ev exists
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    bury 1
+    assert // check x exists
+    err // invalid function pointer
+
+main_ternary_false@13:
+    intc_0 // 0
+    b main_ternary_merge@14
+
+main_eval_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 12
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    !
+    assert // unknown function selector in self-call dispatch
+    itxn_begin
+    swap
+    extract 8 4
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main_store_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 12
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
+    callsub store
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/call_to_zero_initialized_function_type_legacy.sol.C.store(__arc4_y: bytes) -> bytes:
+store:
+    proto 1 1
+    txn GroupIndex
+    bz store_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+store_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "x"
+    frame_dig -1
+    app_global_put
+    frame_dig -1
+    retsub
+
+store_ternary_false@2:
+    intc_0 // 0
+    b store_ternary_merge@3

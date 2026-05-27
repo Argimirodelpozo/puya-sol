@@ -1,0 +1,176 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_dynamic_array_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 2 0 1
+    bytecblock "arr" "__ctor_pending"
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_3 // 1
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7bc493c6 // method "__postInit()void", method "createEvent(uint256)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_createEvent_route@6
+    err
+
+main_createEvent_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+
+main_while_top@14:
+    bytec_0 // "arr"
+    box_len
+    pop
+    intc_1 // 2
+    >=
+    bz main_ternary_false@16
+    bytec_0 // "arr"
+    box_len
+    pop
+
+main_ternary_merge@17:
+    intc_1 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    pushbytes 0x03
+    b<
+    bz main_after_while@19
+    bytec_0 // "arr"
+    intc_2 // 0
+    intc_1 // 2
+    box_extract
+    btoi
+    bytec_0 // "arr"
+    box_len
+    pop
+    intc_0 // 32
+    +
+    bytec_0 // "arr"
+    swap
+    box_resize
+    dup
+    intc_3 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "arr"
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    bytec_0 // "arr"
+    swap
+    intc_2 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
+    b main_while_top@14
+
+main_after_while@19:
+    bytec_0 // "arr"
+    intc_1 // 2
+    dig 2
+    dup
+    cover 3
+    box_replace // on error: index out of bounds
+    dup
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec_0 // "arr"
+    pushint 34
+    uncover 2
+    box_replace // on error: index out of bounds
+    swap
+    pushbytes 0x02
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // "arr"
+    pushint 66
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "arr"
+    box_get
+    pop
+    pushbytes 0xa41861880002
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@16:
+    intc_1 // 2
+    b main_ternary_merge@17
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "arr"
+    intc_1 // 2
+    box_create
+    pop
+    intc_3 // 1
+    return

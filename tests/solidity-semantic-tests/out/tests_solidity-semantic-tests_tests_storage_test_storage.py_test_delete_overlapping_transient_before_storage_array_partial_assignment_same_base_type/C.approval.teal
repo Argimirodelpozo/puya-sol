@@ -1,0 +1,130 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 128
+    bytecblock "__ctor_pending" "large" "small" 0x
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x9939b21d 0x066b7363 // method "__postInit()void", method "setAndClear()void", method "getLarge()uint256[4]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setAndClear_route@6 main_getLarge_route@7
+    err
+
+main_getLarge_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    intc_2 // 128
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    bytec_1 // "large"
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_setAndClear_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    bytec_2 // "small"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014
+    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000063
+    replace2 0
+    store 5
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    bytec_3 // 0x
+    b==
+    assert
+    bytec_1 // "large"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "large"
+    intc_2 // 128
+    box_create
+    pop
+    bytec_2 // "small"
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    pushbytes "t"
+    bytec_3 // 0x
+    app_global_put
+    intc_0 // 1
+    return

@@ -1,0 +1,101 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/blobhash_shadow_resolution.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x922961d1 0x4494bd16 // method "blobhash(uint256)byte[32]", method "f()byte[32]"
+    txna ApplicationArgs 0
+    match main_blobhash_route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    callsub blobhash
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_blobhash_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub blobhash
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/blobhash_shadow_resolution.sol.C.blobhash(__arc4_index: bytes) -> bytes:
+blobhash:
+    proto 1 1
+    txn GroupIndex
+    bz blobhash_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+blobhash_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    retsub
+
+blobhash_ternary_false@2:
+    intc_2 // 0
+    b blobhash_ternary_merge@3

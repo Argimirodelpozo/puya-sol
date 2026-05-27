@@ -1,0 +1,137 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/ecrecover_abiV2.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 255
+    intc_2 // 0
+    dupn 4
+    pushbytes ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xdd79aa2d // method "a(byte[32],uint64,byte[32],byte[32])address"
+    txna ApplicationArgs 0
+    match main_a_route@4
+    err
+
+main_a_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txna ApplicationArgs 3
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    dupn 2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    intc_3 // 255
+    &
+    dup
+    bury 2
+    pushint 27
+    >=
+    dup
+    bury 3
+    bz main_ternary_false@11
+    dup
+    pushint 27
+    -
+
+main_ternary_merge@12:
+    intc_0 // 1
+    &
+    dig 5
+    swap
+    dig 5
+    dig 5
+    ecdsa_pk_recover Secp256k1
+    bury 7
+    bury 7
+    dig 1
+    bz main_ternary_false@15
+    dup
+    pushint 28
+    <=
+    bz main_ternary_false@15
+    pushint 12
+    bzero
+    dig 7
+    dig 7
+    concat
+    keccak256
+    extract 12 20
+    concat
+
+main_ternary_merge@16:
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_1 // 32
+    bzero
+    b main_ternary_merge@16
+
+main_ternary_false@11:
+    intc_2 // 0
+    b main_ternary_merge@12
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

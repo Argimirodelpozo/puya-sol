@@ -1,0 +1,154 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/contracts/prediction_example.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 16
+    bytecblock 0xff 0x010000000000000000000000000000000000000000 TMPL_APPROVAL_D TMPL_CLEAR_D
+    intc_1 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x69525170 // method "createDSalted(byte[32],uint256)void"
+    txna ApplicationArgs 0
+    match main_createDSalted_route@4
+    err
+
+main_createDSalted_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    bytec_0 // 0xff
+    global CurrentApplicationAddress
+    concat
+    dig 2
+    dup
+    cover 3
+    concat
+    dig 1
+    dig 5
+    dup
+    cover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    keccak256
+    swap
+    dig 1
+    concat
+    keccak256
+    bytec_1 // 0x010000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    bytec_0 // 0xff
+    global CurrentApplicationAddress
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    keccak256
+    bytec_1 // 0x010000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    itxn_begin
+    bytec_2 // TMPL_APPROVAL_D
+    bytec_3 // TMPL_CLEAR_D
+    pushint 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_1 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    swap
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_2 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    ==
+    assert // Address mismatch.
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

@@ -1,0 +1,76 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/constant.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x590a1470 0xa4346735 0x6184bbd7 // method "s()uint512", method "t()uint512", method "u()uint512"
+    txna ApplicationArgs 0
+    match main_s_route@5 main_t_route@6 main_u_route@7
+    err
+
+main_u_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_t_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@24
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_s_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@24
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

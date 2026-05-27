@@ -1,0 +1,276 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_memory_as_parameter.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 8
+    bytecblock 0x151f7c75 0x01
+    intc_1 // 0
+    dupn 6
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5b15d901 0xc6fcb306 // method "test(uint256,uint256)uint256", method "receiver(uint256[],uint256)uint256"
+    txna ApplicationArgs 0
+    match main_test_route@5 main_receiver_route@6
+    err
+
+main_receiver_route@6:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub receiver
+    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_test_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    bury 4
+    pushbytes 0x0000
+    bury 6
+    intc_1 // 0
+    bury 1
+
+main_while_top@16:
+    intc_3 // 8
+    bzero
+    dup
+    bury 3
+    dig 7
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 1
+    >
+    bz main_after_while@18
+    dig 5
+    dup
+    intc_1 // 0
+    extract_uint16
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bury 6
+    dup
+    intc_2 // 1
+    +
+    bury 1
+    b main_while_top@16
+
+main_after_while@18:
+    dig 5
+    dig 8
+    callsub receiver
+    bury 6
+    bury 3
+
+main_while_top@19:
+    dig 4
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    dig 4
+    b>
+    bz main_after_while@21
+    dig 1
+    dig 4
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 6
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    swap
+    bytec_1 // 0x01
+    b+
+    dup
+    bury 6
+    b==
+    assert
+    b main_while_top@19
+
+main_after_while@21:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_memory_as_parameter.sol.C.receiver(array: bytes, __arc4_idx: bytes) -> bytes, bytes:
+receiver:
+    proto 2 2
+    intc_1 // 0
+    txn GroupIndex
+    bz receiver_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+receiver_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    frame_bury 0
+
+receiver_while_top@4:
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    frame_dig 0
+    b>
+    bz receiver_after_while@8
+    frame_dig 0
+    dup
+    bytec_1 // 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 1
+    b|
+    intc_3 // 8
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    frame_dig -2
+    swap
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    frame_bury -2
+    frame_bury 0
+    b receiver_while_top@4
+
+receiver_after_while@8:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -2
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    frame_dig -2
+    uncover 2
+    retsub
+
+receiver_ternary_false@2:
+    intc_1 // 0
+    b receiver_ternary_merge@3

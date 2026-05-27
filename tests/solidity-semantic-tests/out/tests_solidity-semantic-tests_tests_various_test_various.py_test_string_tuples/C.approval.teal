@@ -1,0 +1,128 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/string_tuples.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe2a1dff0 0xf3d2904e 0x42d0ae76 // method "f()(string,uint512)", method "g()(string,string)", method "h()string"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7
+    err
+
+main_h_route@7:
+    callsub h
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    callsub h
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    dup
+    len
+    pushint 4
+    +
+    itob
+    extract 6 2
+    pushbytes 0x0004
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0x0003646566
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750042000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080003616263
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/string_tuples.sol.C.h() -> bytes:
+h:
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes "abc"
+    retsub
+
+h_ternary_false@2:
+    intc_1 // 0
+    b h_ternary_merge@3

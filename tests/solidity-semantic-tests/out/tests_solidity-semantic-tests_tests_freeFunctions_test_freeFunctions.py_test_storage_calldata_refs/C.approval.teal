@@ -1,0 +1,164 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/storage_calldata_refs.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 2
+    bytecblock "data" "__ctor_pending"
+    intc_0 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7a2e6430 // method "__postInit()void", method "f(uint256,uint256[])(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushbytes 0x0001
+    dig 2
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "data"
+    intc_0 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // "data"
+    box_len
+    pop
+    dig 2
+    intc_1 // 32
+    *
+    +
+    bytec_0 // "data"
+    swap
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "data"
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "data"
+    swap
+    intc_0 // 0
+    uncover 3
+    box_splice
+    bytec_0 // "data"
+    box_get
+    pop
+    dig 1
+    swap
+    callsub fun
+    popn 2
+    swap
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    swap
+    extract 34 32
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_3 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/storage_calldata_refs.sol.fun(_x: bytes, _y: bytes) -> bytes, bytes, bytes, bytes:
+fun:
+    proto 2 4
+    frame_dig -1
+    extract 2 32
+    frame_dig -2
+    dup
+    frame_dig -1
+    retsub

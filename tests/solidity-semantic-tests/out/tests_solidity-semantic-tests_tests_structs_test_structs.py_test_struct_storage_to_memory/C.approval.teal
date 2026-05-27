@@ -1,0 +1,94 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_storage_to_memory.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending" "x"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xdb4bd076 // method "__postInit()void", method "f()(uint64,uint128,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    bytec_1 // "x"
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 4 52
+    dup
+    intc_1 // 0
+    extract_uint32
+    pushint 4294967295
+    &
+    dig 1
+    extract 4 16
+    uncover 2
+    extract 20 32
+    uncover 2
+    itob
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "arr"
+    pushint 2528
+    box_create
+    pop
+    bytec_1 // "x"
+    pushbytes 0x0000000c0000002a000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000022
+    box_put
+    intc_0 // 1
+    return

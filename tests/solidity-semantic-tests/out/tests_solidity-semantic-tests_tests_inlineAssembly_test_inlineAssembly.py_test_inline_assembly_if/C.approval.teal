@@ -1,0 +1,83 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_if.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 64 0
+    intc_2 // 0
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xf3d5e499 // method "f(uint512)uint512"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    pushbytes 0x
+    bury 1
+    load 0
+    bury 3
+    dig 1
+    pushbytes 0x01
+    b>
+    bz main_after_if_else@11
+    pushbytes 0x02
+    bury 1
+
+main_after_if_else@11:
+    dig 2
+    store 0
+    dupn 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

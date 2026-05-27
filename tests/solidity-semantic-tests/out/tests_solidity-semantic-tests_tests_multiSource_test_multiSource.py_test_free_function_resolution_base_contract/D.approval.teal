@@ -1,0 +1,106 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/multisource_y7z5145_/s2.sol.D.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xafedb2e5 0x4b2c0376 // method "h()uint256", method "g()uint256"
+    txna ApplicationArgs 0
+    match main_h_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    callsub g
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_h_route@5:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub g
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+
+// /tmp/multisource_y7z5145_/s2.sol.f_41() -> bytes:
+f:
+    pushint 1337
+    itob
+    retsub
+
+
+// /tmp/multisource_y7z5145_/s2.sol.D.g() -> bytes:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3

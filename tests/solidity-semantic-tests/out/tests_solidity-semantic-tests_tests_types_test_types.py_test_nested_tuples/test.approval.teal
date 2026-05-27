@@ -1,0 +1,130 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/nested_tuples.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x98411453 0x08d05333 0xed371b95 0x0c192409 0xf777099f // method "f0()(uint512,bool)", method "f1()uint256", method "f2()uint256", method "f3()uint256", method "f4()uint256"
+    txna ApplicationArgs 0
+    match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_f4_route@9
+    err
+
+main_f4_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
+
+main_f3_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_f2_route@7:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_f1_route@6:
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@31
+
+main_f0_route@5:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000280
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36

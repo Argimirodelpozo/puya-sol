@@ -1,0 +1,60 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_post_cancun.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x5ff16da4 // method "terminate()void"
+    txna ApplicationArgs 0
+    match main_terminate_route@4
+    err
+
+main_terminate_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    itxn_begin
+    txn Sender
+    global CurrentApplicationAddress
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field CloseRemainderTo
+    intc_1 // 0
+    itxn_field Amount
+    itxn_submit
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

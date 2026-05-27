@@ -1,0 +1,107 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_variable_slot_inline_assembly.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "y" 0x
+    app_global_put
+    pushbytess "x" 0x
+    app_global_put
+    pushbytes "w"
+    intc_1 // 0
+    app_global_put
+    pushbytess "z" 0x
+    app_global_put
+    pushbytess "a" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // "a", addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6acb2994 0xdd4ba0fa 0x0a2d1be5 // method "f()(uint512,uint512)", method "g()(uint512,uint512)", method "h()(uint512,uint512)"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7
+    err
+
+main_h_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
