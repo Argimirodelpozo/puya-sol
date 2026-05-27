@@ -70,11 +70,22 @@ def test_abi_decode_v2(harness):
     # TODO: verify structural decoding matches expected: 32, 8, 64, 3, 9, 10, 11
     assert not r.reverted
 
-def test_abi_decode_v2_calldata(harness):  # currently fails
-    """abiEncoderV1/contracts/abi_decode_v2_calldata.sol"""
+def test_abi_decode_v2_calldata(harness):
+    """abiEncoderV1/contracts/abi_decode_v2_calldata.sol
+
+    Decodes EVM-ABI bytes into struct S{uint256 a; uint256[] b}.
+    libsolidity test format `f(bytes): 0x20, 0xe0, …` prepends the
+    EVM calldata header (offset=0x20, length=0xe0=224); AVM's
+    ARC4 byte[] passes raw payload so we drop the header and pass
+    only the 7 inner words. Return is the struct; algokit decodes
+    to (a, b_list).
+    """
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_v2_calldata.sol')
-    r = harness.call(app, 'f(bytes)', 0x20, 0xe0, 0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc)
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc,)
+    data = b''.join(v.to_bytes(32, "big") for v in (0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc))
+    r = harness.call(app, 'f(bytes)', data)
+    a, b = r.abi_return
+    assert as_int(a) == 0x21
+    assert [as_int(x) for x in b] == [0xa, 0xb, 0xc]
 
 def test_abi_decode_v2_storage(harness):
     """abiEncoderV1/contracts/abi_decode_v2_storage.sol"""

@@ -1,10 +1,47 @@
-# Semantic Test Status — v322
+# Semantic Test Status — v323
 
-**Totals**: **1204 PASS / 98 FAIL / 20 xfailed = 1204/1322
-(91.07%)**. Twenty-one runs (v302-v322); the v322 bump (+2) is
-the first deterministic recovery since v301. Earlier runs
-v302-v321 all came in at 1202/100; the only deltas under `-n 3`
-parallel load were flakes confirmed by standalone re-verify.
+**Totals (expected)**: **1205 PASS / 97 FAIL / 20 xfailed =
+1205/1322 (91.15%)** pending full-suite confirmation. v323
+recovers one decode test on top of v322's two; second
+deterministic recovery this week.
+
+## v323 — fix(AbiDecode): dynamic-struct decode path
+
+Recovers `test_abi_decode_v2_calldata`. `decodeAbiValue`
+previously fell through to the raw-bytes / `ARC4FromBytes`
+path for any dynamic-struct target, producing invalid ARC4
+bytes (EVM-ABI head/tail layout interpreted as ARC4 packed
+layout). Fix: when the target is a Solidity `StructType`
+that is dynamic and the wtype is `ARC4Struct`, walk the
+fields and assemble a `NewStruct`:
+
+- compute `struct_start = _offset + uint64FromAbiWord(head)`
+- for each field i at `struct_start + i*32`:
+  - static field: recurse `decodeAbiValue` directly
+  - dynamic field: read field-relative offset, compute
+    `absolute_tail = struct_start + field_offset`, then
+    decode at tail (currently only handles
+    `ARC4DynamicArray<32-byte-elem>` inline; other shapes
+    fall back to legacy)
+- if decoded native value differs from ARC4 field type,
+  wrap in `ARC4Encode`
+
+Guarded by "all fields fit in 32-byte EVM head slot" check
+(value-typed + ARC4UIntN + Bytes/string + dynamic — covers
+the common cases). Nested static structs / multi-word static
+arrays in fields skip the new path.
+
+Companion test-side: same harness pattern as v322's
+static-array fix — drop the EVM calldata
+`[offset=0x20][length=0xe0]` header, pass just the 7 payload
+words, and unpack `algokit`'s nested decode of the returned
+struct.
+
+Two follow-on encodeCall tests (`abi_encode_call_declaration`
++ `abi_encode_call_special_args`) remain failing — they
+compare AVM-native sha512_256 selectors against EVM-canonical
+keccak256 golden values; by-design EVM divergence, not a
+tractable codegen fix.
 
 ## v322 — fix(AbiDecode): multi-word static-array decode path
 

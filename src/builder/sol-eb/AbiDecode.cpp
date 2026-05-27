@@ -113,6 +113,144 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		}
 	}
 
+	// ── Dynamic struct: walk fields, build NewStruct ──
+	//
+	// EVM ABI for a dynamic struct (when accessed by value, e.g. as a tuple
+	// element or top-level abi.decode target) places a head pointer at
+	// `_offset`. The struct contents start at `_offset + head_pointer`, with
+	// each field occupying a 32-byte slot in the head section: static fields
+	// hold the value inline, dynamic fields hold an offset (relative to the
+	// struct start) to their tail. Walk each field, decode at the right
+	// offset, and assemble a NewStruct.
+	//
+	// Limitation: head-slot assumed to be 32 bytes per field, which holds
+	// for value-typed and dynamic fields. Nested static structs / multi-word
+	// static arrays (>32 bytes head) fall through to the legacy fallback.
+	if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_solType);
+		structType && _solType->isDynamicallyEncoded()
+		&& wtype->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		using namespace solidity::frontend;
+		auto const* arc4Struct = static_cast<awst::ARC4Struct const*>(wtype);
+		auto const& structDef = structType->structDefinition();
+		auto const& members = structDef.members();
+
+		// All fields must fit in 32-byte head slots (covers value types and
+		// any dynamic type — the head slot is either the value or an offset).
+		bool allFieldsSimple = true;
+		for (auto const& m : members)
+		{
+			auto const* ft = m->type();
+			if (!ft) { allFieldsSimple = false; break; }
+			if (!ft->isDynamicallyEncoded())
+			{
+				// Static field: must fit in one EVM head slot (32 bytes).
+				auto* fwt = _ctx.typeMapper.map(ft);
+				bool oneSlot = fwt == awst::WType::biguintType()
+					|| fwt == awst::WType::uint64Type()
+					|| fwt == awst::WType::boolType()
+					|| fwt == awst::WType::accountType()
+					|| fwt->kind() == awst::WTypeKind::Bytes
+					|| fwt->kind() == awst::WTypeKind::ARC4UIntN;
+				if (!oneSlot) { allFieldsSimple = false; break; }
+			}
+		}
+
+		if (allFieldsSimple && !members.empty())
+		{
+			// struct_start = _offset + read_uint64(_data, _offset, 32 bytes)
+			auto headOffsetWord = awst::makeExtract3(_data, _offset, awst::makeIntegerConstant("32", _loc), _loc);
+			auto headOffset = uint64FromAbiWord(std::move(headOffsetWord), _loc);
+			auto structStart = awst::makeUInt64BinOp(
+				_offset, awst::UInt64BinaryOperator::Add, std::move(headOffset), _loc);
+
+			auto newStruct = awst::makeNewStruct(wtype, _loc);
+			for (size_t i = 0; i < members.size(); ++i)
+			{
+				auto const& memberDecl = members[i];
+				auto const* fieldSolType = memberDecl->type();
+				auto* fieldNativeType = _ctx.typeMapper.map(fieldSolType);
+
+				// Find the ARC4 wtype for this field (if it differs from native).
+				awst::WType const* arc4FieldType = nullptr;
+				for (auto const& [fname, ftype]: arc4Struct->fields())
+					if (fname == memberDecl->name()) { arc4FieldType = ftype; break; }
+				if (!arc4FieldType) arc4FieldType = fieldNativeType;
+
+				auto fieldHeadOffset = awst::makeUInt64BinOp(
+					structStart, awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant(i * 32, _loc), _loc);
+
+				std::shared_ptr<awst::Expression> fieldVal;
+				if (!fieldSolType->isDynamicallyEncoded())
+				{
+					// Static field: head slot IS the value, recurse normally.
+					fieldVal = decodeAbiValue(_ctx, _data, std::move(fieldHeadOffset), fieldSolType, _loc);
+				}
+				else
+				{
+					// Dynamic field: head slot holds offset relative to struct_start.
+					auto fieldOffsetWordExpr = awst::makeExtract3(_data, std::move(fieldHeadOffset),
+						awst::makeIntegerConstant("32", _loc), _loc);
+					auto fieldOffsetWord = uint64FromAbiWord(std::move(fieldOffsetWordExpr), _loc);
+					auto absoluteTail = awst::makeUInt64BinOp(
+						structStart, awst::UInt64BinaryOperator::Add, std::move(fieldOffsetWord), _loc);
+
+					// Inline the dyn-array-tail decode for the common case
+					// (ARC4DynamicArray with 32-byte EVM element width).
+					if (arc4FieldType->kind() == awst::WTypeKind::ARC4DynamicArray)
+					{
+						auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(arc4FieldType);
+						int elemSize = ::puyasol::builder::computeEncodedElementSize(dynArr->elementType());
+						if (elemSize == 32)
+						{
+							// length word at absoluteTail (first 32 bytes)
+							auto lenWord = awst::makeExtract3(_data, absoluteTail,
+								awst::makeIntegerConstant("32", _loc), _loc);
+							auto elemCount = uint64FromAbiWord(std::move(lenWord), _loc);
+							auto dataStart = awst::makeUInt64BinOp(
+								std::move(absoluteTail), awst::UInt64BinaryOperator::Add,
+								awst::makeIntegerConstant("32", _loc), _loc);
+							auto byteCount = awst::makeUInt64BinOp(
+								elemCount, awst::UInt64BinaryOperator::Mult,
+								awst::makeIntegerConstant(elemSize, _loc), _loc);
+							auto elemBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
+							auto itob = awst::makeItob(std::move(elemCount), _loc);
+							auto header = awst::makeExtract3(std::move(itob),
+								awst::makeIntegerConstant("6", _loc),
+								awst::makeIntegerConstant("2", _loc), _loc);
+							auto arc4Bytes = awst::makeConcat(std::move(header), std::move(elemBytes), _loc);
+							fieldVal = awst::makeReinterpretCast(std::move(arc4Bytes), arc4FieldType, _loc);
+						}
+					}
+					// Fallback for unsupported dynamic field shapes: ARC4FromBytes on raw slab.
+					if (!fieldVal)
+					{
+						// Read length at tail then extract; ARC4FromBytes will likely be wrong shape.
+						auto lenWord = awst::makeExtract3(_data, absoluteTail,
+							awst::makeIntegerConstant("32", _loc), _loc);
+						auto byteLen = uint64FromAbiWord(std::move(lenWord), _loc);
+						auto dataStart = awst::makeUInt64BinOp(
+							std::move(absoluteTail), awst::UInt64BinaryOperator::Add,
+							awst::makeIntegerConstant("32", _loc), _loc);
+						auto slab = awst::makeExtract3(_data, std::move(dataStart), std::move(byteLen), _loc);
+						fieldVal = awst::makeARC4FromBytes(std::move(slab), arc4FieldType, _loc);
+					}
+				}
+
+				// If the decoded native value differs from the ARC4 field type,
+				// wrap in ARC4Encode (e.g. biguint → arc4.uint256).
+				if (fieldVal->wtype != arc4FieldType && fieldNativeType != arc4FieldType)
+				{
+					auto encoded = awst::makeARC4Encode(std::move(fieldVal), arc4FieldType, _loc);
+					fieldVal = std::move(encoded);
+				}
+				newStruct->values[memberDecl->name()] = std::move(fieldVal);
+			}
+			return newStruct;
+		}
+	}
+
 	// ── Dynamic types: head word contains offset to tail data ──
 
 	if (_solType->isDynamicallyEncoded())
