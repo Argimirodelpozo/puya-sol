@@ -79,6 +79,40 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		return extractN;
 	}
 
+	// ── Multi-word static types: read N contiguous bytes from _offset ──
+	//
+	// Static arrays / static structs / tuples whose ARC4 byte size > 32 are
+	// stored inline in the EVM ABI: no offset, no length header, just
+	// `total_size` bytes laid out per their structural shape. Because
+	// uint256/intN/bytesN/address/contract all encode to exactly 32 bytes
+	// in BOTH ABI variants, an array like `uint256[2][3]` is byte-identical
+	// (6 × 32 = 192 bytes) under EVM-ABI and ARC4. Extract the slab and
+	// reinterpret it as the target ARC4 type.
+	//
+	// Smaller-element static arrays (e.g. uint16[3]) need per-element
+	// repacking and aren't covered here — fall through to the legacy
+	// fallback below, which gets the wrong shape but matches prior
+	// behaviour (those tests currently fail).
+	if (!_solType->isDynamicallyEncoded())
+	{
+		auto kind = wtype->kind();
+		if (kind == awst::WTypeKind::ARC4StaticArray
+			|| kind == awst::WTypeKind::ARC4Struct
+			|| kind == awst::WTypeKind::ARC4Tuple)
+		{
+			int totalSize = ::puyasol::builder::computeEncodedElementSize(wtype);
+			if (totalSize > 32)
+			{
+				auto slab = awst::makeExtract3(
+					std::move(_data),
+					std::move(_offset),
+					awst::makeIntegerConstant(totalSize, _loc),
+					_loc);
+				return awst::makeReinterpretCast(std::move(slab), wtype, _loc);
+			}
+		}
+	}
+
 	// ── Dynamic types: head word contains offset to tail data ──
 
 	if (_solType->isDynamicallyEncoded())

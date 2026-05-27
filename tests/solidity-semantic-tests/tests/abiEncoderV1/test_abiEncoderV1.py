@@ -33,23 +33,27 @@ def _static_2x3_payload() -> bytes:
 def test_abi_decode_static_array(harness):  # currently fails
     """abiEncoderV1/contracts/abi_decode_static_array.sol
 
-    `abi.decode(data, (uint256[2][3]))` over an EVM-flat head-tail input
-    (0x20 offset + 0xc0 length + 6×32-byte values) doesn't round-trip
-    through puya's ARC4-shaped decode — the input encoding and the
-    decode's expected shape diverge. Architectural.
+    `abi.decode(data, (uint256[2][3]))` over 6×32-byte values. The
+    libsolidity test format `f(bytes): 0x20, 0xc0, 1, 2, …, 6`
+    includes the EVM calldata header (offset + length) the EVM strips
+    on the way in; AVM's ARC4 byte[] passes the raw content so we
+    pass just the 6 payload words.
     """
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_static_array.sol')
-    data = b''.join(v.to_bytes(32, "big") for v in (0x20, 0xc0, 1, 2, 3, 4, 5, 6))
+    data = b''.join(v.to_bytes(32, "big") for v in (1, 2, 3, 4, 5, 6))
     r = harness.call(app, 'f(bytes)', data)
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6,)
+    # algokit returns the static 2D as nested lists [[1,2],[3,4],[5,6]] — flatten.
+    flat = tuple(as_int(x) for row in r.abi_return for x in row)
+    assert flat == (1, 2, 3, 4, 5, 6,)
 
-def test_abi_decode_static_array_v2(harness):  # currently fails
+def test_abi_decode_static_array_v2(harness):
     """abiEncoderV1/contracts/abi_decode_static_array_v2.sol — same as
     test_abi_decode_static_array but with `pragma abicoder v2`."""
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_static_array_v2.sol')
-    data = b''.join(v.to_bytes(32, "big") for v in (0x20, 0xc0, 1, 2, 3, 4, 5, 6))
+    data = b''.join(v.to_bytes(32, "big") for v in (1, 2, 3, 4, 5, 6))
     r = harness.call(app, 'f(bytes)', data)
-    assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6,)
+    flat = tuple(as_int(x) for row in r.abi_return for x in row)
+    assert flat == (1, 2, 3, 4, 5, 6,)
 
 def test_abi_decode_trivial(harness):
     """abiEncoderV1/contracts/abi_decode_trivial.sol"""
