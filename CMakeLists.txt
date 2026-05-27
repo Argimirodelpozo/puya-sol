@@ -70,6 +70,7 @@ set(SOURCES
 	src/builder/assembly/PrecompileHandlers.cpp
 	src/builder/assembly/MemoryOps.cpp
 	src/builder/assembly/StatementOps.cpp
+	src/builder/assembly/SyntheticCalldataOps.cpp
 	src/builder/assembly/UserFunctionOps.cpp
 
 	# Type coercion utilities
