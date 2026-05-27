@@ -109,6 +109,7 @@ set(SOURCES
 	src/builder/sol-eb/AbiEncodeHeadTail.cpp
 	src/builder/sol-eb/AbiEncodeArrays.cpp
 	src/builder/sol-eb/FunctionPointerBuilder.cpp
+	src/builder/sol-eb/FunctionPointerDispatchTypes.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp
 	src/builder/sol-eb/TypeConversions.cpp
 	src/builder/sol-ast/Context.cpp
