@@ -1,9 +1,32 @@
-# Semantic Test Status — v321 (overnight 2026-05-27 batch)
+# Semantic Test Status — v322
 
-**Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
-(90.92%)**. Twenty consecutive full-suite runs (v302-v321) all
-came in at the same deterministic 1202/100; the only deltas under
-`-n 3` parallel load were flakes confirmed by standalone re-verify.
+**Totals**: **1204 PASS / 98 FAIL / 20 xfailed = 1204/1322
+(91.07%)**. Twenty-one runs (v302-v322); the v322 bump (+2) is
+the first deterministic recovery since v301. Earlier runs
+v302-v321 all came in at 1202/100; the only deltas under `-n 3`
+parallel load were flakes confirmed by standalone re-verify.
+
+## v322 — fix(AbiDecode): multi-word static-array decode path
+
+Recovers `test_abi_decode_static_array` + `_v2`. `decodeAbiValue`
+previously had no branch for ARC4StaticArray / ARC4Struct /
+ARC4Tuple targets whose total encoded size exceeded 32 bytes —
+they fell through to the 32-byte ReinterpretCast fallback and
+got truncated. Fix: when the target is a non-dynamic ARC4
+container with `computeEncodedElementSize(wtype) > 32`, extract
+the full slab and ReinterpretCast. EVM-ABI and ARC4 are
+byte-identical for nested static arrays of 32-byte-element types
+(uint256/intN/bytesN/address/contract), so no per-element
+repacking is needed.
+
+Companion test-side: the libsolidity-derived test data included
+the EVM calldata header (`[offset=0x20][length=0xc0]`) the EVM
+strips on the way in; AVM's ARC4 byte[] passes raw content so
+the test now sends just the 6 payload words and flattens the
+algokit nested-list result.
+
+Smaller-element static arrays (uint16[3]) still need per-element
+repacking and remain failing — out of scope here.
 
 ## Overnight session 2026-05-27 — 8 pure-refactor commits
 
