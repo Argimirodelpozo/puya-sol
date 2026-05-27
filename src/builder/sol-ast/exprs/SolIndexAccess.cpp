@@ -5,6 +5,7 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "awst/WType.h"
 
@@ -331,7 +332,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 			headerBytes = 0;
 		}
 
-		int elemSize = elemType ? builder::TypeCoercion::computeEncodedElementSize(elemType) : 0;
+		int elemSize = elemType ? builder::computeEncodedElementSize(elemType) : 0;
 
 		if (elemSize > 0)
 		{

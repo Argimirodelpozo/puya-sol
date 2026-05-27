@@ -106,48 +106,7 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Compute the fixed encoded byte size of an ARC4 type.
-	/// Returns 0 for variable-length types.
-	static int computeEncodedElementSize(awst::WType const* _type);
-
-	/// True if the ARC4 encoding of T contains any dynamic (variable-length)
-	/// component (DynamicArray, dynamic-length Bytes, or any container of
-	/// such). Static arrays/structs are themselves dynamic if any element/field
-	/// is dynamic.
-	static bool arc4IsDynamic(awst::WType const* _type);
-
-	/// Default ARC4 encoding (the byte sequence representing the zero/empty
-	/// value of T). Returns std::nullopt for types whose default encoding is
-	/// not statically computable (e.g. Bytes with no fixed length used outside
-	/// a structured ARC4 context). Used to initialise box-stored static arrays
-	/// of dynamic-element types so that subsequent splice writes operate on a
-	/// valid ARC4 head/tail layout instead of all-zero garbage.
-	static std::optional<std::vector<uint8_t>> arc4DefaultEncoding(
-		awst::WType const* _type
-	);
-
 private:
-	/// Emit `bzero(_n)` wrapped in a ReinterpretCast to _targetType so the
-	/// zero region is allocated at runtime instead of baked into a pushbytes
-	/// constant. Used for default values of large ARC4 static arrays and
-	/// fixed-size byte arrays, whose bytecode-inlined form would exceed
-	/// puya's ~4KB bytes constant limit.
-	static std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
-		int _n,
-		awst::WType const* _targetType,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Convert a fixed-size ARC4 static array to a dynamic ARC4 array by
-	/// prepending a 2-byte big-endian length header with the statically
-	/// known element count.
-	static std::shared_ptr<awst::Expression> prependArc4LengthHeader(
-		std::shared_ptr<awst::Expression> _expr,
-		int64_t _length,
-		awst::WType const* _targetType,
-		awst::SourceLocation const& _loc
-	);
-
 	/// Threshold (bytes) above which default zero values are emitted as
 	/// runtime `bzero(N)` instead of a baked-in BytesConstant. Chosen under
 	/// the AVM/puya ~4KB pushbytes cap with headroom for surrounding ops.

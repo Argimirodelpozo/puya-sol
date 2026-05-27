@@ -5,6 +5,7 @@
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
 
@@ -194,7 +195,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		if (!initialValue
 			&& decl.referenceLocation() == VariableDeclaration::Location::Memory)
 		{
-			int sz = builder::TypeCoercion::computeEncodedElementSize(type);
+			int sz = builder::computeEncodedElementSize(type);
 			if (sz > 0)
 				for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
 						sz, m_loc, static_cast<int>(decl.id())))

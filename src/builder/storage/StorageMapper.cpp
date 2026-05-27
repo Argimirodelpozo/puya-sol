@@ -1,5 +1,6 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/contract/StateVarWalker.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include "Logger.h"
@@ -80,7 +81,7 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	if (auto bv = std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
 	{
 		// (a) Statically oversized fixed types — always eagerly created.
-		if (computeEncodedElementSize(_type) > kAvmStackValueMax)
+		if (builder::computeEncodedElementSize(_type) > kAvmStackValueMax)
 			return _field;
 		// (b) Top-level dynamic state vars — eagerly created in __postInit.
 		if (isTopLevelDynamicBox(bv.get()))
@@ -92,7 +93,7 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 
 int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
 {
-	return TypeCoercion::computeEncodedElementSize(_type);
+	return builder::computeEncodedElementSize(_type);
 }
 
 std::shared_ptr<awst::BoxValueExpression> StorageMapper::makeTopLevelBoxExpr(

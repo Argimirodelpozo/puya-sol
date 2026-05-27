@@ -6,6 +6,7 @@
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -1067,9 +1068,9 @@ void ContractBuilder::emitBoxCreateForStateVars(
 				auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(varWtype);
 				if (sa && sa->arraySize() > 0)
 				{
-					if (TypeCoercion::arc4IsDynamic(sa))
+					if (arc4IsDynamic(sa))
 					{
-						if (auto enc = TypeCoercion::arc4DefaultEncoding(sa))
+						if (auto enc = arc4DefaultEncoding(sa))
 							if (enc->size() > 0 && enc->size() <= 32768)
 								dynArc4Default = std::move(*enc);
 					}

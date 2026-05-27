@@ -7,6 +7,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
@@ -181,10 +182,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 			{
 				bool dynamicArc4 = false;
 				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
-					dynamicArc4 = builder::TypeCoercion::arc4IsDynamic(sa);
+					dynamicArc4 = builder::arc4IsDynamic(sa);
 				if (dynamicArc4)
 				{
-					if (auto enc = builder::TypeCoercion::arc4DefaultEncoding(bv->wtype))
+					if (auto enc = builder::arc4DefaultEncoding(bv->wtype))
 					{
 						if (enc->size() > 0 && enc->size() <= 32768)
 						{
@@ -202,7 +203,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 					uint64_t totalSize = 0;
 					if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
 					{
-						int elemSize = builder::TypeCoercion::computeEncodedElementSize(sa->elementType());
+						int elemSize = builder::computeEncodedElementSize(sa->elementType());
 						if (elemSize > 0 && sa->arraySize() > 0)
 							totalSize = static_cast<uint64_t>(elemSize) * static_cast<uint64_t>(sa->arraySize());
 					}

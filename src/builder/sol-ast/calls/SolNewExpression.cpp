@@ -5,6 +5,7 @@
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
@@ -102,9 +103,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			// per-iteration template) which keeps each pushbytes small.
 			auto estimateEncodedSize = [](unsigned long long _n, awst::WType const* _resultType, awst::WType const* _elemType) -> uint64_t {
 				uint64_t elemSize = 0;
-				if (auto encoded = builder::TypeCoercion::arc4DefaultEncoding(_elemType))
+				if (auto encoded = builder::arc4DefaultEncoding(_elemType))
 					elemSize = encoded->size();
-				bool elemIsDynamic = builder::TypeCoercion::arc4IsDynamic(_elemType);
+				bool elemIsDynamic = builder::arc4IsDynamic(_elemType);
 				uint64_t headPerElem = elemIsDynamic ? 2 : elemSize;
 				uint64_t tailPerElem = elemIsDynamic ? elemSize : 0;
 				uint64_t outerHeader =

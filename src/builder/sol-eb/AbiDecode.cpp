@@ -5,6 +5,7 @@
 ///     32-byte ABI word
 #include "builder/sol-eb/AbiEncoderBuilder.h"
 #include "builder/sol-eb/AbiCodecHelpers.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -105,7 +106,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		{
 			auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(wtype);
 			auto const* elemType = dynArr->elementType();
-			int elemSize = ::puyasol::builder::TypeCoercion::computeEncodedElementSize(elemType);
+			int elemSize = ::puyasol::builder::computeEncodedElementSize(elemType);
 			// Only safe when EVM encoded size (always 32 bytes per slot for
 			// value-typed elements) matches the ARC4 encoded size — i.e., 32.
 			// Covers uint256/int256/bytes32/address/contract arrays. Smaller

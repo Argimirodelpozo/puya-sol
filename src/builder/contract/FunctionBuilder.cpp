@@ -8,6 +8,7 @@
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -520,7 +521,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					!= solidity::frontend::VariableDeclaration::Location::Memory)
 					continue;
 				auto* rpType = m_typeMapper.map(rp->type());
-				int sz = TypeCoercion::computeEncodedElementSize(rpType);
+				int sz = computeEncodedElementSize(rpType);
 				if (sz <= 0)
 					continue;
 				for (auto& s: AssemblyBuilder::emitFreeMemoryBump(

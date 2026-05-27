@@ -10,6 +10,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4ArrayWidening.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
@@ -472,10 +473,10 @@ void SolAssignment::maybePrePopulateBox(
 	// "wrong size N != M".
 	bool dynamicArc4 = false;
 	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
-		dynamicArc4 = TypeCoercion::arc4IsDynamic(sa);
+		dynamicArc4 = arc4IsDynamic(sa);
 	if (dynamicArc4)
 	{
-		auto enc = TypeCoercion::arc4DefaultEncoding(bv->wtype);
+		auto enc = arc4DefaultEncoding(bv->wtype);
 		if (!enc || enc->size() == 0 || enc->size() > 32768) return;
 
 		auto putCall = awst::makeBoxPut(
