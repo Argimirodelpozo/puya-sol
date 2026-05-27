@@ -70,6 +70,7 @@ set(SOURCES
 	src/builder/assembly/StatementOps.cpp
 
 	# Type coercion utilities
+	src/builder/sol-types/Arc4ArrayWidening.cpp
 	src/builder/sol-types/TypeCoercion.cpp
 
 	# Storage, type, and intrinsic mappers

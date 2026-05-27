@@ -9,6 +9,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
@@ -404,10 +405,10 @@ SolAssignment::applyArc4EncodeIfNeeded(
 		};
 		std::shared_ptr<awst::Expression> widened;
 		if (_target->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-			widened = builder::TypeCoercion::tryWidenArc4StaticArrayInt(
+			widened = builder::tryWidenArc4StaticArrayInt(
 				sourceType, _target->wtype, mkSrc, m_loc);
 		else
-			widened = builder::TypeCoercion::tryWidenArc4DynamicArrayInt(
+			widened = builder::tryWidenArc4DynamicArrayInt(
 				sourceType, _target->wtype, mkSrc,
 				[this](std::shared_ptr<awst::Statement> _s) {
 					m_ctx.prePendingStatements.push_back(std::move(_s));
@@ -417,7 +418,7 @@ SolAssignment::applyArc4EncodeIfNeeded(
 	}
 
 	// Narrowing: uint64 → arc4.uintN where N < 64.
-	if (auto narrowed = builder::TypeCoercion::tryNarrowUInt64ToArc4UIntN(
+	if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
 			_value, _target->wtype, m_loc))
 		return narrowed;
 
