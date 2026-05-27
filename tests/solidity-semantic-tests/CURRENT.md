@@ -1,9 +1,9 @@
 # Semantic Test Status — v323
 
-**Totals (expected)**: **1205 PASS / 97 FAIL / 20 xfailed =
-1205/1322 (91.15%)** pending full-suite confirmation. v323
-recovers one decode test on top of v322's two; second
-deterministic recovery this week.
+**Totals**: **1205 PASS / 97 FAIL / 20 xfailed = 1205/1322
+(91.15%)**. Full-suite confirmed (26m13s, `-n 2`, no
+flakes). Diff vs v322: +1 (`test_abi_decode_v2_calldata`),
+zero regressions. Second deterministic recovery this week.
 
 ## v323 — fix(AbiDecode): dynamic-struct decode path
 
