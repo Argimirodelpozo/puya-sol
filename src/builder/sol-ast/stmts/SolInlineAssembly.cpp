@@ -186,6 +186,44 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		}
 	}
 
+	// Build a map of local storage aliases: local_var_name → state_var_declaration.
+	// Needed because `uint256[] storage x = a;` stores the initializer in the
+	// VariableDeclarationStatement, NOT in VariableDeclaration::value().
+	// For each external reference that is a local variable with a .slot suffix,
+	// find its scope block and walk its statements to find the initialiser.
+	std::map<std::string, VariableDeclaration const*> storageLocalAliases;
+	{
+		for (auto const& [yulId, extInfo]: annotation.externalReferences)
+		{
+			if (extInfo.suffix != "slot") continue;
+			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+			if (!varDecl || !varDecl->isLocalVariable()) continue;
+
+			// Walk the scope block containing this local var to find its initialiser.
+			auto const* block = dynamic_cast<Block const*>(varDecl->scope());
+			if (!block) continue;
+
+			for (auto const& stmt: block->statements())
+			{
+				auto const* vds = dynamic_cast<VariableDeclarationStatement const*>(stmt.get());
+				if (!vds || !vds->initialValue()) continue;
+				bool declaresVar = false;
+				for (auto const& vd: vds->declarations())
+					if (vd && vd->name() == varDecl->name()) declaresVar = true;
+				if (!declaresVar) continue;
+
+				// Found the declaration statement. Extract the initialiser.
+				auto const* initId = dynamic_cast<Identifier const*>(vds->initialValue());
+				if (!initId) break;
+				auto const* sv = dynamic_cast<VariableDeclaration const*>(
+					initId->annotation().referencedDeclaration);
+				if (sv && sv->isStateVariable())
+					storageLocalAliases[varDecl->name()] = sv;
+				break;
+			}
+		}
+	}
+
 	// Extract storage slot/offset references using StorageLayout.
 	// Computes EVM-compatible (slot, offset) pairs for state variables.
 	std::map<std::string, std::string> storageSlotVars;
@@ -218,7 +256,24 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			{
 				if (!extInfo.declaration) continue;
 				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-				if (!varDecl || varDecl->isConstant() || !varDecl->isStateVariable()) continue;
+				if (!varDecl || varDecl->isConstant()) continue;
+
+				// For local storage references (`uint256[] storage x = a`), the
+				// declaration is the local var, not the state var. Follow the
+				// initial value to find the underlying state var.
+				if (!varDecl->isStateVariable())
+				{
+					if (!varDecl->isLocalVariable()) continue;
+					// Local storage references: `uint256[] storage x = a;`
+					// The initialiser lives in the parent VariableDeclarationStatement,
+					// not in VariableDeclaration::value(). We must look it up from the
+					// storageLocalAliases map built by traversing the function body.
+					auto aliasIt = storageLocalAliases.find(varDecl->name());
+					if (aliasIt == storageLocalAliases.end()) continue;
+					VariableDeclaration const* sv = aliasIt->second;
+					if (!sv || !sv->isStateVariable()) continue;
+					varDecl = sv;
+				}
 
 				std::string yulName = yulId->name.str();
 				std::string suffix = extInfo.suffix;

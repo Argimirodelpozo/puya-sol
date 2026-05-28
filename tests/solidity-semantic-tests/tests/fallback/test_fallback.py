@@ -7,21 +7,49 @@ from framework import (
 )
 
 
-def test_call_forward_bytes(harness):  # currently fails
-    """fallback/contracts/call_forward_bytes.sol"""
-    app = harness.compile_and_deploy('fallback/contracts/call_forward_bytes.sol')
-    r = harness.call(app, 'recv(uint256)', 7)
+def test_call_forward_bytes(harness):
+    """fallback/contracts/call_forward_bytes.sol
+
+    The sender contract stores msg.data (ApplicationArgs[0]) in savedData when
+    an unknown selector hits its fallback(), then forward() replays that raw
+    calldata to the inner receiver contract via address(rec).call(savedData).
+
+    On AVM, msg.data == ApplicationArgs[0], so we must pack the full EVM
+    calldata (selector + abi-encoded args) into a single ApplicationArgs[0]
+    blob using call_raw.
+
+    receiver.recv(uint256) ARC4 selector: sha512_256("recv(uint256)void")[:4]
+    = 0x3bd31555.  The uint256 arg is ABI-encoded as 32 bytes big-endian.
+    receiver.fallback() is triggered when savedData holds no matching selector
+    (e.g. after clear() which stores empty bytes).
+    """
+    import hashlib
+    recv_sel = hashlib.new('sha512_256', b'recv(uint256)void').digest()[:4]
+
+    app = harness.compile_and_deploy('fallback/contracts/call_forward_bytes.sol',
+                                     postinit_inner_txns=2)
+
+    # Send recv(uint256):7 as raw calldata to sender's fallback — stores it in savedData.
+    # selector(4) + uint256(7) as 32-byte big-endian = 36 bytes in ApplicationArgs[0].
+    raw_call = recv_sel + (7).to_bytes(32, 'big')
+    harness.call_raw(app, raw_call, extra_fee=2000)
+
     r = harness.call(app, 'val()')
     assert as_int(r.abi_return) == 0
-    r = harness.call(app, 'forward()')
+
+    # forward() replays savedData to receiver → receiver.recv(7) → received = 7+1 = 8
+    r = harness.call(app, 'forward()', extra_fee=2000)
     assert r.abi_return is True
     r = harness.call(app, 'val()')
     assert as_int(r.abi_return) == 8
+
     r = harness.call(app, 'clear()')
     assert r.abi_return is True
     r = harness.call(app, 'val()')
     assert as_int(r.abi_return) == 8
-    r = harness.call(app, 'forward()')
+
+    # forward() with savedData cleared (empty) → receiver's fallback() → received = 0x80
+    r = harness.call(app, 'forward()', extra_fee=2000)
     assert r.abi_return is True
     r = harness.call(app, 'val()')
     assert as_int(r.abi_return) == 0x80
