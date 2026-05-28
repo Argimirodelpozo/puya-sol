@@ -1,4 +1,30 @@
-# Semantic Test Status — v328
+# Semantic Test Status — v329
+
+**Totals**: **1197 PASS / 79 FAIL / 46 xfailed = 1197/1322
+(90.54%)**. Full-suite confirmed (32m22s, `-n 2`, zero regressions).
+
+## v329 — fix(assembly): x.slot for storage-typed local variable aliases
+
+`uint256[] storage x = a; assembly { sstore(x.slot, 7) }` — the
+`x.slot` Yul identifier previously fell through the storage-slot
+resolver because `storageSlotVars` only covered state variables.
+Fix: before building `storageSlotVars`, scan `externalReferences` for
+`.slot`-suffixed local variables, locate the `VariableDeclarationStatement`
+in the enclosing scope block, extract the initialiser, and if it's a
+state-variable identifier map `x.slot → slot_of(underlying_state_var)`.
+Implemented in `SolInlineAssembly.cpp`.
+
+Recovers **+2** (32m22s, -n 2, zero regressions):
+- `test_inline_assembly_storage_access_via_pointer` (direct target)
+- `test_slot_access_via_mapping_pointer` (same fix, struct storage local)
+
+`test_inline_assembly_storage_access_local_var` still fails — that
+contract uses `sstore(x.slot, 7)` to write a uint256 array's LENGTH
+slot, which in EVM packs as raw uint256 but in AVM the dynamic-array
+header uses ARC4 uint16 length encoding; bridging the two requires
+dedicated array-length write support beyond plain sstore.
+
+## v328
 
 **Totals**: **1195 PASS / 81 FAIL / 46 xfailed = 1195/1322
 (90.39%)**. Full-suite confirmed (28m47s, `-n 2`, zero regressions).
