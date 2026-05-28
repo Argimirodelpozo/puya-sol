@@ -1,4 +1,31 @@
-# Semantic Test Status — v327
+# Semantic Test Status — v328
+
+**Totals**: **1195 PASS / 81 FAIL / 46 xfailed = 1195/1322
+(90.39%)**. Full-suite confirmed (28m47s, `-n 2`, zero regressions).
+46 xfailed = 20 tryCatch + 26 delegatecall/create2.
+
+## v328 — fix(assembly): mcopy with bytes memory variables
+
+`tryHandleBytesMemoryMcopy` added to `MemoryOps.cpp` — detects
+`mcopy(add(add(bytes_var, 0x20), dstOff), add(add(bytes_var, 0x20), srcOff), len)`
+in raw Yul (before args are built) and translates to
+`var = replace3(var, dstOff, extract3(var, srcOff, len))`.
+The `0x20` skip corresponds to the EVM length-word that doesn't exist
+in AVM bytes — stripped so we work directly at the data offset.
+
+Recovers `test_mcopy_overlap` (+1 codegen fix).
+`test_call_forward_bytes` also passes (+1): the `call_raw` harness
+approach committed earlier works end-to-end. `val()` calls
+`rec.received()` which is a public getter — these use `uint256` in the
+selector (via `PublicGetterBuilder`), not `uint512`, so there's no
+selector mismatch for this specific case.
+
+Pure-Solidity gaps remaining (32 of the 81 fails): see TODO.md for the
+uint512/uint256 cross-contract selector fix which would address
+`call_forward_bytes`-style tests where the called method returns
+`uint` from its body.
+
+## v327
 
 **Totals**: **1193 PASS / 86 FAIL / 43 xfailed = 1193/1322
 (90.24%)**. Full-suite confirmed (4m36s, `-n 2`, no flakes).
