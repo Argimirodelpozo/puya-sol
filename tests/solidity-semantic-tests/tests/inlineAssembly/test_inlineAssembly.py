@@ -534,19 +534,40 @@ def test_mcopy_empty(harness):
     r = harness.call(app, "mcopy_zero(bytes)", arg)
     assert bytes(r.abi_return) == arg
 
-def test_mcopy_overlap(harness):  # currently fails
-    """inlineAssembly/contracts/mcopy_overlap.sol"""
+def test_mcopy_overlap(harness):
+    """inlineAssembly/contracts/mcopy_overlap.sol
+
+    Each function returns bytes memory (96 bytes = 3 × 32-byte words). The
+    libsolidity format includes EVM calldata header [offset=0x20][length=0x60]
+    that the EVM strips on entry; AVM returns raw bytes. We compare as
+    3 big-endian uint256 words (parse 32 bytes at a time).
+    """
+    def words(r):
+        raw = bytes(r.abi_return)
+        assert len(raw) == 96, f"expected 96 bytes, got {len(raw)}"
+        return tuple(int.from_bytes(raw[i:i+32], 'big') for i in range(0, 96, 32))
+
     app = harness.compile_and_deploy('inlineAssembly/contracts/mcopy_overlap.sol')
-    r = harness.call(app, 'mcopy_to_right_overlap()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x60, 0x2222222222222222333333333333333344444444444444445555555555555555, 0x4444444444444444555555555555555566666666666666667777777777777777, 0x88888888888888889999999999999999ccccccccccccccccdddddddddddddddd,)
-    r = harness.call(app, 'mcopy_to_left_overlap()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x60, 0x2222222222222222333333333333333366666666666666667777777777777777, 0x88888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb, 0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd,)
-    r = harness.call(app, 'mcopy_in_place()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x60, 0x2222222222222222333333333333333344444444444444445555555555555555, 0x6666666666666666777777777777777788888888888888889999999999999999, 0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd,)
-    r = harness.call(app, 'mcopy_to_right_no_overlap()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x60, 0x2222222222222222333333333333333344444444444444445555555555555555, 0x6666666666666666777777777777777744444444444444445555555555555555, 0x66666666666666667777777777777777ccccccccccccccccdddddddddddddddd,)
-    r = harness.call(app, 'mcopy_to_left_no_overlap()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x60, 0x2222222222222222333333333333333388888888888888889999999999999999, 0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb88888888888888889999999999999999, 0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd,)
+    assert words(harness.call(app, 'mcopy_to_right_overlap()')) == (
+        0x2222222222222222333333333333333344444444444444445555555555555555,
+        0x4444444444444444555555555555555566666666666666667777777777777777,
+        0x88888888888888889999999999999999ccccccccccccccccdddddddddddddddd,)
+    assert words(harness.call(app, 'mcopy_to_left_overlap()')) == (
+        0x2222222222222222333333333333333366666666666666667777777777777777,
+        0x88888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb,
+        0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd,)
+    assert words(harness.call(app, 'mcopy_in_place()')) == (
+        0x2222222222222222333333333333333344444444444444445555555555555555,
+        0x6666666666666666777777777777777788888888888888889999999999999999,
+        0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd,)
+    assert words(harness.call(app, 'mcopy_to_right_no_overlap()')) == (
+        0x2222222222222222333333333333333344444444444444445555555555555555,
+        0x6666666666666666777777777777777744444444444444445555555555555555,
+        0x66666666666666667777777777777777ccccccccccccccccdddddddddddddddd,)
+    assert words(harness.call(app, 'mcopy_to_left_no_overlap()')) == (
+        0x2222222222222222333333333333333388888888888888889999999999999999,
+        0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb88888888888888889999999999999999,
+        0xaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd,)
 
 def test_optimize_memory_store_multi_block(harness):
     """inlineAssembly/contracts/optimize_memory_store_multi_block.sol"""

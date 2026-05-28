@@ -239,6 +239,109 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	return true;
 }
 
+// ── tryHandleBytesMemoryMcopy ──────────────────────────────────────────────
+//
+// Matches: mcopy(add(add(bytes_var, 0x20), dstOff),
+//                add(add(bytes_var, 0x20), srcOff),
+//                len)
+//
+// In EVM, `bytes memory x` has layout [uint256_len][data...] at pointer x.
+// `add(x, 0x20)` skips the 32-byte length header to reach the data region.
+// `add(add(x, 0x20), offset)` points to data[offset].
+//
+// In AVM, `x` is stored as raw bytes with NO length header, so `data[offset]`
+// is at position `offset` directly. The translation is:
+//   extract3(src_var, srcOff, len)  →  the source bytes
+//   replace3(dst_var, dstOff, ...)  →  write into dst at dstOff
+//
+// Supports both same-variable (intra-buffer overlap copy) and
+// cross-variable (inter-buffer) copies.
+
+bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	if (_call.arguments.size() != 3)
+		return false;
+
+	// Match add(add(bytes_var, 0x20), dynOffset) in raw Yul.
+	// Returns {varName, dynOffsetExpr*} or {"", nullptr} if no match.
+	auto matchPtr = [&](solidity::yul::Expression const& _expr)
+		-> std::pair<std::string, solidity::yul::Expression const*>
+	{
+		auto const* outerAdd = std::get_if<solidity::yul::FunctionCall>(&_expr);
+		if (!outerAdd) return {};
+		if (getFunctionName(outerAdd->functionName) != "add"
+			|| outerAdd->arguments.size() != 2)
+			return {};
+
+		for (int innerIdx = 0; innerIdx < 2; ++innerIdx)
+		{
+			auto const* innerAdd = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[innerIdx]);
+			if (!innerAdd) continue;
+			if (getFunctionName(innerAdd->functionName) != "add"
+				|| innerAdd->arguments.size() != 2)
+				continue;
+
+			// Inner add must have one arg = literal 32 (0x20)
+			for (int litIdx = 0; litIdx < 2; ++litIdx)
+			{
+				auto constVal = resolveConstantYulValue(innerAdd->arguments[litIdx]);
+				if (!constVal || *constVal != 32) continue;
+
+				// The other arg is the bytes_var identifier
+				auto const* varId = std::get_if<solidity::yul::Identifier>(&innerAdd->arguments[1 - litIdx]);
+				if (!varId) continue;
+
+				// dynOffset is the other arg of the outer add
+				auto const* dynOff = &outerAdd->arguments[1 - innerIdx];
+				return {varId->name.str(), dynOff};
+			}
+		}
+		return {};
+	};
+
+	// Match dst and src pointers
+	auto [dstVar, dstOffYul] = matchPtr(_call.arguments[0]);
+	auto [srcVar, srcOffYul] = matchPtr(_call.arguments[1]);
+
+	if (dstVar.empty() || srcVar.empty())
+		return false;
+
+	// Both must be known bytes/string locals
+	auto dstIt = m_locals.find(dstVar);
+	auto srcIt = m_locals.find(srcVar);
+	if (dstIt == m_locals.end() || srcIt == m_locals.end())
+		return false;
+	if (dstIt->second != awst::WType::bytesType() && dstIt->second != awst::WType::stringType())
+		return false;
+	if (srcIt->second != awst::WType::bytesType() && srcIt->second != awst::WType::stringType())
+		return false;
+
+	Logger::instance().debug(
+		"mcopy bytes memory: replace3(" + dstVar + ", dstOff, extract3(" + srcVar + ", srcOff, len))", _loc);
+
+	// Translate offsets and length from Yul
+	auto dstOffExpr = offsetToUint64(buildExpression(*dstOffYul), _loc);
+	auto srcOffExpr = offsetToUint64(buildExpression(*srcOffYul), _loc);
+	auto lenExpr    = offsetToUint64(buildExpression(_call.arguments[2]), _loc);
+
+	// src_bytes = extract3(src_var, srcOff, len)
+	auto srcVarRef = awst::makeVarExpression(srcVar, srcIt->second, _loc);
+	auto srcBytes  = awst::makeExtract3(std::move(srcVarRef), std::move(srcOffExpr), std::move(lenExpr), _loc);
+
+	// dst_var = replace3(dst_var, dstOff, src_bytes)
+	auto dstVarRef  = awst::makeVarExpression(dstVar, dstIt->second, _loc);
+	auto replaced   = awst::makeReplace3(std::move(dstVarRef), std::move(dstOffExpr), std::move(srcBytes), _loc);
+
+	auto dstTarget  = awst::makeVarExpression(dstVar, dstIt->second, _loc);
+	auto assign     = awst::makeAssignmentStatement(std::move(dstTarget), std::move(replaced), _loc);
+	_out.push_back(std::move(assign));
+	return true;
+}
+
 void AssemblyBuilder::handleMstore(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc,

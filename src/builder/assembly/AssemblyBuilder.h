@@ -556,6 +556,17 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// Try to match mcopy(add(add(bytes_var, 0x20), dstOff), add(add(bytes_var, 0x20), srcOff), len).
+	/// Translates intra-buffer (and cross-buffer) bytes memory copies to
+	/// replace3(dst_var, dstOff, extract3(src_var, srcOff, len)).
+	/// Returns true and emits the replacement if the pattern matches; returns
+	/// false to fall through to the generic mcopy handler.
+	bool tryHandleBytesMemoryMcopy(
+		solidity::yul::FunctionCall const& _call,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	// ── Memory blob model ──────────────────────────────────────────────
 
 	/// Name of the local bytes variable used as memory staging area within

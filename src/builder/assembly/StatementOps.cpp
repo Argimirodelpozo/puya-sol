@@ -543,6 +543,12 @@ void AssemblyBuilder::buildExpressionStatement(
 			if (tryHandleBytesMemoryWrite(*call, loc, _out))
 				return;
 		}
+		if (funcName == "mcopy")
+		{
+			// Try to detect mcopy(add(add(bytes_var, 0x20), dstOff), ...) pattern
+			if (tryHandleBytesMemoryMcopy(*call, loc, _out))
+				return;
+		}
 
 		// Translate arguments (stored in source order)
 		std::vector<std::shared_ptr<awst::Expression>> args;
