@@ -256,12 +256,18 @@ def test_internal_types_in_library(harness):
     r = harness.call(app, "f()")
     assert tuple(as_int(x) for x in r.abi_return) == (4, 17)
 
-def test_library_address(harness):  # currently fails
+def test_library_address(harness):
     """libraries/contracts/library_address.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_address.sol')
 
-def test_library_address_homestead(harness):  # currently fails
+def test_library_address_homestead(harness):
     """libraries/contracts/library_address_homestead.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_address_homestead.sol')
 
 def test_library_address_via_module(harness):  # currently fails
@@ -277,20 +283,32 @@ def test_library_call_in_homestead(harness):
     r = harness.call(app, "sender()")
     assert r.abi_return == harness.localnet.account.address
 
-def test_library_delegatecall_guard_pure(harness):  # currently fails
+def test_library_delegatecall_guard_pure(harness):
     """libraries/contracts/library_delegatecall_guard_pure.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_pure.sol')
 
-def test_library_delegatecall_guard_view_needed(harness):  # currently fails
+def test_library_delegatecall_guard_view_needed(harness):
     """libraries/contracts/library_delegatecall_guard_view_needed.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_needed.sol')
 
-def test_library_delegatecall_guard_view_not_needed(harness):  # currently fails
+def test_library_delegatecall_guard_view_not_needed(harness):
     """libraries/contracts/library_delegatecall_guard_view_not_needed.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_not_needed.sol')
 
-def test_library_delegatecall_guard_view_staticcall(harness):  # currently fails
+def test_library_delegatecall_guard_view_staticcall(harness):
     """libraries/contracts/library_delegatecall_guard_view_staticcall.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_delegatecall_guard_view_staticcall.sol')
 
 def test_library_enum_as_an_expression(harness):
@@ -300,12 +318,18 @@ def test_library_enum_as_an_expression(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 1
 
-def test_library_function_selectors(harness):  # currently fails
+def test_library_function_selectors(harness):
     """libraries/contracts/library_function_selectors.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_function_selectors.sol')
 
-def test_library_function_selectors_struct(harness):  # currently fails
+def test_library_function_selectors_struct(harness):
     """libraries/contracts/library_function_selectors_struct.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_function_selectors_struct.sol')
 
 def test_library_references_preserve(harness):

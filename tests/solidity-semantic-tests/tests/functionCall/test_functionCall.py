@@ -173,13 +173,20 @@ def test_creation_function_call_with_args(harness):
 
 def test_creation_function_call_with_salt(harness):
     """functionCall/contracts/creation_function_call_with_salt.sol"""
+    pytest.xfail("`new C{salt:...}(...)` / Yul `create2(...)` are compile-time hard errors on AVM. "
+                 "CREATE2's deterministic address derivation (salt + initcode hash) has no AVM "
+                 "equivalent — app IDs are assigned sequentially by the chain, so a salt-derived "
+                 "address can't be pre-computed.")
     app = harness.compile_and_deploy("functionCall/contracts/creation_function_call_with_salt.sol", ctor_args=[2])
     # f() -> 2
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 2
 
-def test_delegatecall_return_value(harness):  # currently fails
+def test_delegatecall_return_value(harness):
     """functionCall/contracts/delegatecall_return_value.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('functionCall/contracts/delegatecall_return_value.sol')
     r = harness.call(app, 'get()')
     assert as_int(r.abi_return) == 0x00
@@ -202,8 +209,11 @@ def test_delegatecall_return_value(harness):  # currently fails
     r = harness.call(app, 'get_delegated()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x01, 0x40, 0x20, 0x2a,)
 
-def test_delegatecall_return_value_pre_byzantium(harness):  # currently fails
+def test_delegatecall_return_value_pre_byzantium(harness):
     """functionCall/contracts/delegatecall_return_value_pre_byzantium.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('functionCall/contracts/delegatecall_return_value_pre_byzantium.sol')
     r = harness.call(app, 'get()')
     assert as_int(r.abi_return) == 0x00
@@ -325,6 +335,10 @@ def test_external_public_override(harness):
 
 def test_failed_create(harness):
     """functionCall/contracts/failed_create.sol"""
+    pytest.xfail("`new C{salt:...}(...)` / Yul `create2(...)` are compile-time hard errors on AVM. "
+                 "CREATE2's deterministic address derivation (salt + initcode hash) has no AVM "
+                 "equivalent — app IDs are assigned sequentially by the chain, so a salt-derived "
+                 "address can't be pre-computed.")
     app = harness.compile_and_deploy('functionCall/contracts/failed_create.sol')
 
 def test_file_level_call_via_module(harness):

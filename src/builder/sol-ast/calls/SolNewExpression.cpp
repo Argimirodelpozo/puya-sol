@@ -270,6 +270,29 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	// new Contract(...) — deploy child contract via inner app creation transaction.
 	// Uses minimal stub programs since we can't embed the child's compiled bytecode
 	// at this stage. The created app won't be functional but the address is valid.
+
+	// Detect `new C{salt: s}(...)` — this is CREATE2 in Solidity. The salt option
+	// is visible on the FunctionCallOptions wrapper before funcExpression() strips it.
+	// CREATE2's deterministic address derivation (salt + initcode hash) has no AVM
+	// equivalent — app IDs are assigned sequentially by the chain. Fail loud rather
+	// than silently dropping the salt and producing a wrong-semantic program.
+	if (auto const* opts = dynamic_cast<FunctionCallOptions const*>(&m_call.expression()))
+	{
+		for (auto const& name : opts->names())
+			if (name && *name == "salt")
+			{
+				Logger::instance().error(
+					"`new C{salt: ...}(...)` (CREATE2) is not supported on AVM. "
+					"CREATE2's deterministic address derivation (salt + initcode "
+					"hash) has no AVM equivalent — app IDs are assigned "
+					"sequentially by the chain at inner-app-create time, so a "
+					"salt-derived address can't be pre-computed. Use plain "
+					"`new C(...)` if you don't need address prediction.",
+					m_loc);
+				break;
+			}
+	}
+
 	auto const& funcExpr = funcExpression();
 	if (auto const* newExpr = dynamic_cast<NewExpression const*>(&funcExpr))
 	{

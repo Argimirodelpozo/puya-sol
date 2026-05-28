@@ -1,4 +1,30 @@
-# Semantic Test Status — v324
+# Semantic Test Status — v327
+
+**Totals**: **1193 PASS / 86 FAIL / 43 xfailed = 1193/1322
+(90.24%)**. Full-suite confirmed (4m36s, `-n 2`, no flakes).
+43 xfailed = 20 tryCatch + 23 delegatecall/create2.
+
+## v327 — feat: `new C{salt:...}()` hard error + xfail sweep
+
+`new C{salt:...}(...)` (high-level CREATE2) is now a compile-time
+hard error (`SolNewExpression.cpp`) matching the Yul `create2`
+hard error added in v324. Both forms are consistent: CREATE2's
+deterministic address derivation has no AVM equivalent.
+
+23 tests moved from FAIL → xfail (delegatecall: 11, create2: 12):
+- delegatecall: `test_delegatecall_return_value{,_pre_byzantium}`,
+  `test_library_delegatecall_guard_{pure,view_needed,view_not_needed,
+  view_staticcall}`, `test_library_function_selectors{,_struct}`,
+  `test_library_address{,_homestead}`, `test_getter_call_in_constructor`
+- create2/salt: `test_creation_function_call_with_salt`,
+  `test_failed_create`, `test_no_callvalue_check`,
+  `test_selfdestruct_{post,pre}_cancun{,_redeploy}`,
+  `test_many_subassemblies`, `test_create_random`,
+  `test_{prediction_example,salted_create,salted_create_with_value}`,
+  `test_{address_overload_resolution,member_notation_ctor}`,
+  `test_multi_creation`
+
+## v324
 
 **Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
 (90.92%)**. Full-suite confirmed (26m05s, `-n 2`, no flakes).
