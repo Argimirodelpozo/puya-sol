@@ -689,13 +689,27 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return one;
 	}
 
-	// create2(value, offset, size, salt) → stub: return 0 (no EVM contract deployment on AVM)
+	// create2(value, offset, size, salt) → hard error. CREATE2 derives a
+	// deterministic contract address from salt + initcode hash; the AVM has
+	// no such opcode — contracts are apps whose IDs are assigned sequentially
+	// by the chain at inner-app-create time, so there is no address to
+	// pre-compute. Silently returning a zero address would produce
+	// wrong-semantic code (callers depending on the predicted address would
+	// misbehave), so refuse to compile rather than stub.
 	if (funcName == "create2")
 	{
-		Logger::instance().warning(
-			"create2() has no AVM equivalent (requires inner app creation txn), returning zero address",
+		Logger::instance().error(
+			"`create2(...)` is not supported on AVM. CREATE2's deterministic "
+			"address derivation (salt + initcode hash) has no AVM equivalent — "
+			"app IDs are assigned sequentially by the chain at inner-app-create "
+			"time, so an address can't be pre-computed from a salt. Use "
+			"high-level `new C(...)` (lowered to an inner app-create txn) if you "
+			"don't need address prediction; CREATE2-style counterfactual "
+			"deployment can't be honored.",
 			loc
 		);
+		// Return a valid stub so AWST building completes and the error above is
+		// surfaced cleanly at the end (matches the delegatecall hard-error path).
 		auto zero = awst::makeZero(loc, awst::WType::biguintType());
 		return zero;
 	}

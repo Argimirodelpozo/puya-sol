@@ -1,9 +1,45 @@
-# Semantic Test Status — v323
+# Semantic Test Status — v324
 
-**Totals**: **1205 PASS / 97 FAIL / 20 xfailed = 1205/1322
-(91.15%)**. Full-suite confirmed (26m13s, `-n 2`, no
-flakes). Diff vs v322: +1 (`test_abi_decode_v2_calldata`),
-zero regressions. Second deterministic recovery this week.
+**Totals**: **1202 PASS / 100 FAIL / 20 xfailed = 1202/1322
+(90.92%)**. Full-suite confirmed (26m05s, `-n 2`, no flakes).
+Diff vs v323: **−3, all deliberate** — Yul `create2` is now a
+hard compile error (was warn+stub-to-0), so the 3 tests that
+used the opcode flip to compile-error. **Accepted as honest
+failures** (user directive: "anything using create2 should
+fail loudly"), same treatment as the delegatecall tests — not
+masked/xfail'd.
+
+## v324 — feat: Yul `create2` is a hard error
+
+`create2(value, offset, size, salt)` in inline assembly
+previously emitted a warning and returned a zero address.
+CREATE2's deterministic address derivation (salt + initcode
+hash) has no AVM equivalent — app IDs are assigned
+sequentially by the chain at inner-app-create time, so an
+address can't be pre-computed from a salt. Silently returning
+0 produced wrong-semantic code, so `CoreTranslation.cpp` now
+`Logger::instance().error(...)` (consistent with the
+`.delegatecall(...)` hard error).
+
+Newly failing (were passing only via the removed stub; all
+EVM-fundamental):
+- `various/test_create_random` — used `create2(0,0,5,address())`;
+  the test had been adapted to a weak "just don't revert" pass.
+- `various/test_selfdestruct_post_cancun_redeploy`
+- `various/test_selfdestruct_pre_cancun_redeploy`
+
+Note: `selfdestruct_post_cancun` / `_pre_cancun` (non-redeploy)
+reference `create2` only in **function names**, not the Yul
+opcode, so they still compile and pass.
+
+High-level `new C{salt:...}()` is a separate path that lowers
+to an inner app-create txn and silently **drops** the salt —
+not hard-errored here (only the low-level Yul opcode is).
+
+## v323 — fix(AbiDecode): dynamic-struct decode path
+
+**Totals (v323)**: 1205 PASS / 97 FAIL / 20 xfailed. Diff vs
+v322: +1 (`test_abi_decode_v2_calldata`), zero regressions.
 
 ## v323 — fix(AbiDecode): dynamic-struct decode path
 
