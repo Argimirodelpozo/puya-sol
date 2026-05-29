@@ -270,8 +270,11 @@ def test_library_address_homestead(harness):
                  "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_address_homestead.sol')
 
-def test_library_address_via_module(harness):  # currently fails
+def test_library_address_via_module(harness):
     """libraries/contracts/library_address_via_module.sol"""
+    pytest.xfail("`.delegatecall(...)` is a compile-time hard error on AVM. DELEGATECALL's "
+                 "shared-storage / caller-preservation semantics have no AVM equivalent — each "
+                 "app has isolated storage and inner-txn callers are the calling app, not its caller.")
     app = harness.compile_and_deploy('libraries/contracts/library_address_via_module.sol')
 
 def test_library_call_in_homestead(harness):
