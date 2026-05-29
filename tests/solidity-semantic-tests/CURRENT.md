@@ -1,7 +1,38 @@
-# Semantic Test Status — v329
+# Semantic Test Status — v330
 
-**Totals**: **1197 PASS / 79 FAIL / 46 xfailed = 1197/1322
-(90.54%)**. Full-suite confirmed (32m22s, `-n 2`, zero regressions).
+**Totals**: **1198 PASS / 75 FAIL / 49 xfailed = 1198/1322
+(90.62%)**. Full-suite confirmed (27m17s, `-n 2`, zero regressions).
+HEAD `e2e1101d6`.
+
+## v330 — fix(ReturnRewriter): asm biguint returns expose uint256 (gated wrap)
+
+Assembly-bodied ARC4 methods returning `uint` (biguint) used to expose
+`f()uint512` (puya's default biguint→64B), mismatching cross-contract
+callers that build `f()uint256`. Key insight: EVM inline assembly is ALWAYS
+unchecked — every Yul op wraps mod 2^256 — so wrapping an assembly return
+`% 2^N` before ARC4Encode is EVM-faithful, NOT overflow-swallowing.
+
+Fix (`a26746deb`): drop the `!funcHasInlineAssembly` guard from
+ReturnRewriter's single-biguint + WTuple-biguint passes; route all 3 encode
+sites through a new `encodeRet` helper — wrap `% 2^N` IFF
+`funcHasInlineAssembly`, else identical bare encode (so a genuine *checked*
+overflow still trips the `len ≤ N/8` assert and reverts). The 3 prior
+attempts truncated ALL functions and broke 6 checked-overflow tests
+(detect_add/mul_overflow, exp_overflow/literals, fixedpoint,
+erc7201_overflow_expression); gating on assembly leaves those bit-identical.
+
+Recovers **+1**: `storageLayoutSpecifier/test_inheritance_from_same_base_state_var_slots`
+(parameterless asm getters' selectors now match cross-contract callers; test
+also needed `postinit_inner_txns=6` for its 3 child deploys). Diff vs v329:
+failed 79→75, passed 1197→1198, xfailed 46→49 (−4 failures = 3 prior xfail
+commits now counted as xfailed + 1 genuine fix). **Regression set (v330 not
+in v329) verified EMPTY.**
+
+`inline_assembly_for2` is the canary — already passing at v329 (old guard
+left it uint512; harness resolves type from arc56), kept green by the fix
+(now uint256). **Still open — param side**: an asm fn *with* params still
+exposes `f(uint512)` (FunctionBuilder.cpp:375 skips param remap for asm
+bodies) → `library_on_interface`, `call_forward_bytes`.
 
 ## v329 — fix(assembly): x.slot for storage-typed local variable aliases
 
