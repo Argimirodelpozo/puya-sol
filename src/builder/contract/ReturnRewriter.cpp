@@ -2,6 +2,8 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 #include <functional>
 #include <string>
 
@@ -58,11 +60,40 @@ void rewriteARC4Returns(
 		}
 	}
 
+	// EVM inline assembly is UNCHECKED: every Yul opcode (add/mul/exp/...)
+	// wraps mod 2^256, so an assembly-produced value can never exceed its
+	// declared width in EVM. AVM biguint does NOT wrap, so an assembly
+	// computation can grow past 2^N here. To match EVM semantics we wrap
+	// (val % 2^N) before ARC4Encode for assembly-bodied functions — this is
+	// the deferred equivalent of EVM's per-opcode wrapping, NOT an overflow
+	// being swallowed. For non-assembly (checked) functions we leave the bare
+	// ARC4Encode, whose `len <= N/8` assert correctly REVERTS on a genuine
+	// overflow (e.g. checked add/mul/exp that a test expects to trap).
+	auto pow2Str = [](unsigned bits) -> std::string {
+		boost::multiprecision::cpp_int v = 1;
+		v <<= bits;
+		return v.str();
+	};
+	auto encodeRet = [&](std::shared_ptr<awst::Expression> val, unsigned bits,
+		awst::WType const* arc4Ty, awst::SourceLocation const& loc)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (funcHasInlineAssembly)
+		{
+			auto mod = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod,
+				awst::makeIntegerConstant(pow2Str(bits), loc, awst::WType::biguintType()), loc);
+			return awst::makeARC4Encode(std::move(mod), arc4Ty, loc);
+		}
+		return awst::makeARC4Encode(std::move(val), arc4Ty, loc);
+	};
+
 	// For ARC4 methods returning biguint, wrap return values in ARC4Encode
 	// with the correct bit width (e.g., uint256 not uint512).
-	// Skip signed returns, functions with modifiers, and functions with inline assembly.
+	// Skip signed returns and functions with modifiers. Inline-assembly bodies
+	// are handled too (their returns are wrapped mod 2^N via encodeRet so the
+	// ABI exposes arc4.uintN, matching cross-contract callers' uint256 selectors).
 	if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
-		&& signedReturns.empty() && _func.modifiers().empty() && !funcHasInlineAssembly)
+		&& signedReturns.empty() && _func.modifiers().empty())
 	{
 		// Get original Solidity bit width for the return type
 		unsigned retBits = 256;
@@ -89,8 +120,8 @@ void rewriteARC4Returns(
 				{
 					if (ret->value && ret->value->wtype == awst::WType::biguintType())
 					{
-						auto encode = awst::makeARC4Encode(std::move(ret->value), arc4RetType, ret->value->sourceLocation);
-						ret->value = std::move(encode);
+						auto loc = ret->value->sourceLocation;
+						ret->value = encodeRet(std::move(ret->value), retBits, arc4RetType, loc);
 					}
 				}
 				else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
@@ -110,9 +141,10 @@ void rewriteARC4Returns(
 
 	// For ARC4 methods returning tuples with biguint elements,
 	// wrap each biguint element in ARC4Encode with correct bit width.
+	// Inline-assembly bodies handled too (encodeRet wraps mod 2^N per element).
 	if (method.arc4MethodConfig.has_value() && method.returnType
 		&& method.returnType->kind() == awst::WTypeKind::WTuple
-		&& signedReturns.empty() && _func.modifiers().empty() && !funcHasInlineAssembly)
+		&& signedReturns.empty() && _func.modifiers().empty())
 	{
 		auto const* tupleType = static_cast<awst::WTuple const*>(method.returnType);
 		// Only wrap when ALL elements are biguint or uint64/bool (simple scalars).
@@ -158,8 +190,10 @@ void rewriteARC4Returns(
 					if (tuple->items[i]->wtype == awst::WType::biguintType()
 						&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
 					{
-						auto encode = awst::makeARC4Encode(std::move(tuple->items[i]), arc4Types[i], tuple->items[i]->sourceLocation);
-						tuple->items[i] = std::move(encode);
+						unsigned bits = static_cast<unsigned>(
+							static_cast<awst::ARC4UIntN const*>(arc4Types[i])->n());
+						auto loc = tuple->items[i]->sourceLocation;
+						tuple->items[i] = encodeRet(std::move(tuple->items[i]), bits, arc4Types[i], loc);
 					}
 				}
 				tuple->wtype = new awst::WTuple(
@@ -213,8 +247,10 @@ void rewriteARC4Returns(
 								if (subTupleType->types()[i] == awst::WType::biguintType()
 									&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
 								{
-									auto encode = awst::makeARC4Encode(std::move(item), arc4Types[i], assign->sourceLocation);
-									newTuple->items.push_back(std::move(encode));
+									unsigned bits = static_cast<unsigned>(
+										static_cast<awst::ARC4UIntN const*>(arc4Types[i])->n());
+									newTuple->items.push_back(
+										encodeRet(std::move(item), bits, arc4Types[i], assign->sourceLocation));
 								}
 								else
 									newTuple->items.push_back(std::move(item));
