@@ -7,8 +7,12 @@ from framework import (
 )
 
 
-def test_evmone_support(harness):  # currently fails
+def test_evmone_support(harness):
     """shanghai/contracts/evmone_support.sol"""
+    pytest.xfail("`address.code` / raw EVM bytecode calls have no AVM equivalent. "
+                 "ShortReturn deploys a 4-byte EVM bytecode blob via assembly return(0,4); "
+                 "bytecode() uses address.code (EXTCODECOPY) and isPush0Supported() calls "
+                 "into that raw EVM blob — neither operation is possible on AVM.")
     app = harness.compile_and_deploy('shanghai/contracts/evmone_support.sol')
     r = harness.call(app, 'bytecode()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 4, 0x60205ff300000000000000000000000000000000000000000000000000000000,)
