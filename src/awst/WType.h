@@ -34,7 +34,6 @@ class WType
 public:
 	virtual ~WType() = default;
 
-	virtual std::string typeName() const { return m_name; }
 	virtual std::string jsonType() const { return "WType"; }
 	virtual bool immutable() const { return m_immutable; }
 	std::string const& name() const { return m_name; }
