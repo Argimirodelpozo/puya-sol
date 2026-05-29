@@ -130,9 +130,12 @@ def test_inheritance_from_interface(harness):
     r = harness.call(app, "y()")
     assert as_int(r.abi_return) == 6
 
-def test_inheritance_from_same_base_state_var_slots(harness):  # currently fails
+def test_inheritance_from_same_base_state_var_slots(harness):
     """storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol"""
-    app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol')
+    # Test ctor deploys 3 child contracts (new A/B/C), each app-create + fund
+    # payment = 6 inner txns at postInit.
+    app = harness.compile_and_deploy('storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol',
+                                     postinit_inner_txns=6)
     r = harness.call(app, 'contractASlots()')
     assert as_int(r.abi_return) == 0
     r = harness.call(app, 'contractBSlots()')
