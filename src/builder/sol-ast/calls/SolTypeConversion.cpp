@@ -29,8 +29,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 	auto* targetType = m_ctx.typeMapper.map(m_call.annotation().type);
 
 	// Enum range check: EnumType(x) must assert x < numMembers
-	if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(
-			m_call.annotation().type))
+	if (dynamic_cast<solidity::frontend::EnumType const*>(m_call.annotation().type))
 		return handleEnumConversion();
 
 	// Try TypeConversionRegistry first (handles integer, bool, address, fixedbytes, enum)

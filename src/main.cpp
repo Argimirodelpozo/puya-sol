@@ -875,7 +875,6 @@ int main(int _argc, char* _argv[])
 			}
 
 			// Use formattedMessage for detailed error with source location
-			auto const* secondaryLoc = error->secondarySourceLocation();
 			std::string detail = msg;
 			if (auto const* srcLoc = error->sourceLocation())
 			{

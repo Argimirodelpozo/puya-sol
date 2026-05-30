@@ -91,17 +91,6 @@ std::string boolBinOpToString(awst::BinaryBooleanOperator _op)
 	return "and";
 }
 
-std::string storageKindToString(awst::AppStorageKind _kind)
-{
-	switch (_kind)
-	{
-	case awst::AppStorageKind::AppGlobal: return "app_global";
-	case awst::AppStorageKind::AccountLocal: return "account_local";
-	case awst::AppStorageKind::Box: return "box";
-	}
-	return "app_global";
-}
-
 std::string bytesBinOpToString(awst::BytesBinaryOperator _op)
 {
 	switch (_op)

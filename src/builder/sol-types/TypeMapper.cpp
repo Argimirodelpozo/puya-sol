@@ -337,7 +337,7 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 	}
 
 	// Enums → ARC4UIntN(8) (enums are always uint8 in Solidity ABI)
-	if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(_solType))
+	if (dynamic_cast<solidity::frontend::EnumType const*>(_solType))
 		return createType<awst::ARC4UIntN>(8);
 
 	// Default: map through raw type → ARC4

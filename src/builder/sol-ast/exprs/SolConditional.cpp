@@ -24,7 +24,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	// emit the side effect as a statement so it executes even if the
 	// enclosing expression is discarded (e.g., (flag=true ? a : b).selector).
 	e->condition = buildExpr(m_conditional.condition());
-	if (auto* assignExpr = dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
+	if (dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
 	{
 		// Emit: flag = true; (as statement)
 		// shared_ptr copy on e->condition so both stmt and condition reference it

@@ -32,11 +32,6 @@ std::string getAvmStdlibLibraryName(MemberAccess const& _memberAccess)
 	return "";
 }
 
-bool isAvmLibraryAccess(MemberAccess const& _memberAccess)
-{
-	return !getAvmStdlibLibraryName(_memberAccess).empty();
-}
-
 /// Promote a uint64-typed value to biguint via itob + reinterpret.
 std::shared_ptr<awst::Expression> uint64ToBigUInt(
 	std::shared_ptr<awst::Expression> _expr,

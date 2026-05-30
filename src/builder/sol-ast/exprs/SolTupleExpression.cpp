@@ -58,7 +58,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 						// Bytes-backed value targeting an ARC4 aggregate (fn-ptr as
 						// ARC4StaticArray<uint8,N>): reinterpret via ARC4FromBytes
 						// rather than ARC4Encode which would expect a tuple.
-						if (auto const* bw = dynamic_cast<awst::BytesWType const*>(val->wtype))
+						if (dynamic_cast<awst::BytesWType const*>(val->wtype))
 						{
 							bool isArc4Aggregate =
 								dynamic_cast<awst::ARC4StaticArray const*>(elementType)
