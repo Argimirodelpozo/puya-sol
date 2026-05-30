@@ -11,6 +11,25 @@ compile-time hard error), never silently stub to a wrong value. Already enforced
 this way: `create2`, `new C{salt:}()`, high-level `.delegatecall`, public-library
 delegatecall.
 
+> **STATUS 2026-05-30 — all 8 recommended hard-errors LANDED.** 9
+> `warning()`→`error()` swaps across 7 files. Full -n2 suite after the change:
+> 1192 passed / 81 failed / 49 xfailed. The +6 vs the v330 baseline (75 failed)
+> are **honest flips** — 6 tests whose contracts genuinely hit a now-hardened
+> path and so fail to compile (verified individually: all 6 are
+> `puya-sol exited 1` compile errors with the new messages, not runtime/flake
+> failures). They are **xfailed** in this change (create2-sweep style), so the
+> net pass count is unchanged. The flips and their trigger:
+> - `constructor::test_callvalue_check` — Yul `create`
+> - `events::test_event` — Yul `log3`
+> - `inlineAssembly::test_optimize_memory_store_multi_block_bugreport` — Yul `log0`
+> - `various::test_codebalance_assembly` — Yul `balance`
+> - `inlineAssembly::test_keccak256_optimization` — `calldataload` unresolvable offset
+> - `inlineAssembly::test_keccak256_optimizer_bug_different_memory_location` — same
+>
+> (4 of the 6 hit hard-error #8, the catch-all unknown-Yul-builtin guard; 2 hit
+> #7, calldataload-unknown-offset.) The remaining **6 FIX** and **12 FINE** items
+> below are unchanged.
+
 **Mechanism.** `Logger::error()` increments an error count; `main.cpp:1254`
 (`if (logger.hasErrors()) return 1;`) runs **before** the puya backend, so any
 `error()` aborts the build with no TEAL emitted. `Logger::warning()` only prints
@@ -34,28 +53,34 @@ consistency gap: `create2` / salt / high-level `.delegatecall` are already hard
 errors, but their **Yul/assembly-level twins and the precompile/staticcall
 fallbacks are not** — that is where remaining silent divergence concentrates.
 
-1. **`PrecompileHandlers.cpp:232` — `ec_pairing` (0x08) dynamic input size →
+All ✅ LANDED in this change (2026-05-30). Line numbers below are
+pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
+
+1. ✅ **`PrecompileHandlers.cpp:232` — `ec_pairing` (0x08) dynamic input size →
    stores `true`.** A zk/Groth16/pairing verifier on this path *always verifies*
    → any proof accepted. **Highest fund-theft potential.** (Constant-size path is
    correctly implemented; only the dynamic fallback is unsound.) *Verified.*
-2. **`CoreTranslation.cpp:687` + `StatementOps.cpp:619` — Yul `delegatecall` →
+2. ✅ **`CoreTranslation.cpp:687` + `StatementOps.cpp:619` — Yul `delegatecall` →
    returns success-1 / no-op.** The high-level form is already hard-errored; the
    assembly twins leak through. Proxy/upgrade patterns silently no-op. *Verified.*
-3. **`PrecompileDispatch.cpp:101` — precompile call, dynamic offsets, no runtime
+3. ✅ **`PrecompileDispatch.cpp:101` — precompile call, dynamic offsets, no runtime
    handler (0x01/0x03/0x09/0x0a) → success=1, no output written.** Code reads
    uninitialized output as if ecRecover/modexp ran; gates crypto checks.
-4. **`InnerCallHandlers.cpp:690` (+ feed-in `InnerCallShapes.cpp:395`) —
-   `address.staticcall(data)` fallback → `(true, "")`.** `require(ok)` passes
-   spuriously; decoded returndata is all zeros. (Precompiles 0x01–0x08 *are*
-   handled; only the genuine fallthrough is unsound.)
-5. **`DataOps.cpp:397` — `keccak256` sub-32B, unknown memory slot →
+4. ✅ **`InnerCallHandlers.cpp:690` — `address.staticcall(data)` fallback →
+   `(true, "")`.** `require(ok)` passes spuriously; decoded returndata is all
+   zeros. (Precompiles 0x01–0x08 *are* handled; only the genuine fallthrough is
+   unsound.) NOTE: the feed-in `InnerCallShapes.cpp:395` (unimplemented-precompile
+   path) was left as a `warning()` — it returns `nullptr` which funnels into this
+   `:690` site, so the hard error already covers it; promoting it too is a
+   harmless future cleanup.
+5. ✅ **`DataOps.cpp:397` — `keccak256` sub-32B, unknown memory slot →
    `keccak256(bzero(32))`.** Wrong-but-deterministic hash poisons
    commitments / EIP-712 digests / Merkle leaves / mapping keys.
-6. **`MemoryOps.cpp:505` — assembly `return` of a scalar where the fn returns an
+6. ✅ **`MemoryOps.cpp:505` — assembly `return` of a scalar where the fn returns an
    array → empty array.** Caller silently gets `[]`.
-7. **`DataOps.cpp:73` — `calldataload` at unknown offset (no synthetic blob) →
+7. ✅ **`DataOps.cpp:73` — `calldataload` at unknown offset (no synthetic blob) →
    0.** Silently zeros a real input word (amount/recipient/selector).
-8. **`CoreTranslation.cpp:757` — unknown Yul builtin (fallthrough) → 0.**
+8. ✅ **`CoreTranslation.cpp:757` — unknown Yul builtin (fallthrough) → 0.**
    Catch-all silent-zero; hard-error to surface every future gap.
 
 ---
@@ -101,9 +126,9 @@ Confirmed observability-only (correctly FINE, not tabled): the `block.*` / `tx.*
 
 ## Next steps
 
-1. Land the 8 hard-errors (8 localized `warning`→`error` swaps + xfail any tests
-   that were only passing via the stub, as honest failures — same treatment as
-   the create2 sweep). Each needs a one-line rationale in the error message.
+1. ✅ DONE — landed the 8 hard-errors (9 `warning`→`error` swaps, each with a
+   one-line rationale in the error message) + xfailed the 6 honest flips they
+   produced (see status note up top).
 2. Tighten the 6 FIX sites where a real AVM mapping exists
    (`PrecompileDispatch.cpp:194` → `handleAppCall` is the highest-value).
 3. Longer arc: generative **differential testing** (compile → run on evmone +

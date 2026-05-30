@@ -1,8 +1,21 @@
-# Semantic Test Status — v330
+# Semantic Test Status — v331
 
-**Totals**: **1198 PASS / 75 FAIL / 49 xfailed = 1198/1322
-(90.62%)**. Full-suite confirmed (27m17s, `-n 2`, zero regressions).
-HEAD `e2e1101d6`.
+**Totals**: **1192 PASS / 75 FAIL / 55 xfailed = 1322 total.** The −6 pass /
++6 xfail vs v330 are the 6 honest flips from the EVM-divergence hard-errors
+(now xfailed). No regressions. `-n 2`.
+
+## v331 — feat(safety): hard-error 8 silent EVM-divergence stubs
+
+Landed the 8 EVM_DIVERGENCE.md hard-errors (9 `warning()`→`error()` swaps, 7
+files): ec_pairing dyn-size (a pairing/zk verifier on that path had accepted
+ANY proof — top finding), Yul `delegatecall` (expr+stmt), precompile
+dyn-offset, `address.staticcall` fallback `(true,"")`, `keccak256` sub-32B
+unknown slot, asm `return` scalar→array, `calldataload` unknown offset, unknown
+Yul builtin. Normal contracts still compile + emit TEAL; the divergent path now
+hard-errors (no TEAL, exit 1). 6 tests flip to honest compile-error failures
+(Yul `create`/`log3`/`log0`/`balance` + 2× calldataload-unknown-offset) and are
+xfailed in the same change. Also this session: −11 dead-code sites
+(`5c52c8776`, `e27cc7436`) + the EVM↔AVM divergence audit (`cf7b3b72a`).
 
 ## v330 — fix(ReturnRewriter): asm biguint returns expose uint256 (gated wrap)
 
