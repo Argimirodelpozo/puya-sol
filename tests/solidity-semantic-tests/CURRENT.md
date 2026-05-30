@@ -1,8 +1,9 @@
 # Semantic Test Status — v331
 
-**Totals**: **1192 PASS / 75 FAIL / 55 xfailed = 1322 total.** The −6 pass /
-+6 xfail vs v330 are the 6 honest flips from the EVM-divergence hard-errors
-(now xfailed). No regressions. `-n 2`.
+**Totals (measured, v332 single-threaded, 8m11s):** **1192 PASS / 75 FAIL /
+55 xfailed.** The +6 xfail vs v330 (49→55) are the 6 honest flips from the
+EVM-divergence hard-errors. Verified clean: sorted FAILED-name diff v330→v332
+= 0 new / 0 gone, 0 xpassed. No regressions.
 
 ## v331 — feat(safety): hard-error 8 silent EVM-divergence stubs
 
