@@ -22,6 +22,7 @@ def test_emit_two_identical_events(harness):
     r = harness.call(app, "terminate()")
     # (void return — call succeeding is the assertion)
 
+@pytest.mark.xfail(reason="Yul `log3` has no AVM equivalent; now a hard compile error per EVM_DIVERGENCE.md (was a silent stub-to-0)", strict=False)
 def test_event(harness):
     """events/contracts/event.sol"""
     app = harness.compile_and_deploy("events/contracts/event.sol")

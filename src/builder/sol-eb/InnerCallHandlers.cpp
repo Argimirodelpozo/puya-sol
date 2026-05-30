@@ -684,10 +684,19 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			if (result) return result;
 		}
 
-		// Fallback stub
+		// Fallback — HARD ERROR. Only precompiles 0x01–0x08 are handled; any
+		// other target (or an unimplemented precompile, which reaches here via
+		// handleStaticCallPrecompile returning nullptr) would be stubbed as
+		// `(true, "")`, making `require(ok)` pass spuriously and decoding the
+		// returndata as all-zero. Refuse to compile rather than emit a
+		// silently-wrong call.
 		for (auto const& arg : _callNode.arguments())
 			_ctx.buildExpr(*arg);
-		Logger::instance().warning("address.staticcall(data) stubbed — returns (true, empty).", _loc);
+		Logger::instance().error(
+			"`address.staticcall(data)` to this target is not supported on AVM. "
+			"Only precompile addresses 0x01–0x08 are handled; any other target "
+			"would be stubbed as `(true, \"\")`, which makes `require(ok)` pass "
+			"spuriously and yields all-zero returndata.", _loc);
 		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 	}
 

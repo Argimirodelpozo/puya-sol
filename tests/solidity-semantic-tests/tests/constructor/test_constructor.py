@@ -34,6 +34,7 @@ def test_bytes_in_constructors_unpacker(harness):
     assert as_int(harness.call(app, "m_x()").abi_return) == 7
     assert bytes(harness.call(app, "m_s()").abi_return) == s
 
+@pytest.mark.xfail(reason="Yul `create` has no AVM equivalent; now a hard compile error per EVM_DIVERGENCE.md (was a silent stub-to-0)", strict=False)
 def test_callvalue_check(harness):
     """constructor/contracts/callvalue_check.sol"""
     app = harness.compile_and_deploy('constructor/contracts/callvalue_check.sol')

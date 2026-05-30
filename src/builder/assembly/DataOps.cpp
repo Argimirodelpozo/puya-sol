@@ -70,8 +70,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 		return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
 	}
 
-	Logger::instance().warning(
-		"calldataload at unknown offset " + std::to_string(*offset) + ", returning 0", _loc
+	// HARD ERROR — stubbing 0 silently zeros a real input word (amount /
+	// recipient / selector). Refuse to compile rather than substitute 0.
+	Logger::instance().error(
+		"calldataload at unresolvable offset " + std::to_string(*offset) +
+		" is not supported on AVM — the calldata word can't be located, so it "
+		"would be stubbed as 0, silently zeroing a real input value.", _loc
 	);
 	auto zero = awst::makeBiguintConstant("0", _loc);
 	return zero;
@@ -394,8 +398,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				return awst::makeAsBiguint(std::move(keccak), _loc);
 			}
 		}
-		Logger::instance().warning("keccak256 with sub-32-byte length and unknown memory slot, using keccak256(bzero(32))", _loc);
-		// Fallback: hash 32 zero bytes (will produce a deterministic but incorrect hash)
+		// HARD ERROR — hashing 32 zero bytes yields a deterministic but WRONG
+		// digest that poisons commitments / EIP-712 / Merkle leaves / mapping
+		// keys. Refuse to compile rather than emit a wrong hash.
+		Logger::instance().error(
+			"keccak256 over a sub-32-byte length at an unresolvable memory offset "
+			"is not supported on AVM — the actual bytes can't be recovered, so the "
+			"hash would be computed over 32 zero bytes instead, a deterministic but "
+			"wrong digest.", _loc);
+		// Stub so AWST building completes; the error above aborts before bytecode.
 		auto keccak = awst::makeKeccak256(awst::makeBzero(32, _loc), _loc);
 		return awst::makeAsBiguint(std::move(keccak), _loc);
 	}

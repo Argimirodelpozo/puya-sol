@@ -615,9 +615,15 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "delegatecall")
 		{
-			// delegatecall has no AVM equivalent — stub as no-op
-			Logger::instance().warning(
-				"delegatecall() has no AVM equivalent — stubbed as no-op",
+			// delegatecall has no AVM equivalent — HARD ERROR. Stubbing it as a
+			// no-op would silently drop the call. Matches the hard error on
+			// high-level `.delegatecall(...)`.
+			Logger::instance().error(
+				"`delegatecall(...)` in inline assembly is not supported on AVM. "
+				"It runs another contract's code in the caller's storage context, "
+				"which has no AVM equivalent; stubbing it as a no-op would silently "
+				"drop the call. This matches the hard error on high-level "
+				"`.delegatecall(...)`.",
 				loc
 			);
 			return;

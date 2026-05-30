@@ -502,9 +502,13 @@ void AssemblyBuilder::handleReturn(
 	if (m_returnType && dynamic_cast<awst::ReferenceArray const*>(m_returnType)
 		&& !dynamic_cast<awst::ReferenceArray const*>(returnValue->wtype))
 	{
-		Logger::instance().warning(
-			"assembly return produces scalar but function returns array; "
-			"returning empty array (EVM memory layout not translatable)", _loc
+		// HARD ERROR — returning an empty array would silently hand the caller
+		// `[]` instead of the real ABI-encoded data the assembly built in EVM
+		// memory. Refuse to compile rather than emit a wrong return value.
+		Logger::instance().error(
+			"assembly `return(offset, size)` builds an ABI-encoded array in EVM "
+			"memory, which has no AVM translation here; returning an empty array "
+			"would silently hand the caller `[]` instead of the real data.", _loc
 		);
 		auto emptyArr = awst::makeNewArray(m_returnType, _loc);
 		returnValue = std::move(emptyArr);

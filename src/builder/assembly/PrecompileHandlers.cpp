@@ -224,11 +224,17 @@ void AssemblyBuilder::handleEcPairingRT(
 		return;
 	}
 
-	// Fully-dynamic input size: not currently supported (would need a
-	// runtime loop emitting one ec_pairing_check). Fall back to stub.
-	Logger::instance().warning(
-		"ec_pairing with dynamic input size — stubbing as success (no runtime "
-		"pair-count loop yet)", _loc);
+	// Fully-dynamic input size: not currently supported (would need a runtime
+	// loop emitting one ec_pairing_check per pair). HARD ERROR — stubbing as
+	// success would make a pairing/zk (e.g. Groth16) verifier on this path
+	// accept ANY proof, a direct fund-theft vector. Refuse to compile rather
+	// than emit an unsound verifier; use a compile-time-known pair count.
+	Logger::instance().error(
+		"ec_pairing (bn256 pairing precompile 0x08) with a dynamic input size "
+		"is not supported on AVM — there is no runtime pair-count loop yet, so "
+		"the check cannot be computed. Stubbing it as success would make a "
+		"pairing/zk verifier accept any proof. Use a constant (compile-time) "
+		"number of pairs.", _loc);
 	storeResultToMemoryRT(awst::makeTrue(_loc),
 		std::move(_outputOffset), 1, _loc, _out, /*isBool=*/true);
 }

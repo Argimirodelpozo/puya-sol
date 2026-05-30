@@ -468,6 +468,7 @@ def test_keccak256_assembly(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 89477152217924674838424037953991966239322087453347756267410168184682657981552
 
+@pytest.mark.xfail(reason="Yul calldataload at an unresolvable offset; now a hard compile error per EVM_DIVERGENCE.md (was a silent stub-to-0 that zeroed a real input)", strict=False)
 def test_keccak256_optimization(harness):
     """inlineAssembly/contracts/keccak256_optimization.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/keccak256_optimization.sol")
@@ -475,6 +476,7 @@ def test_keccak256_optimization(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
+@pytest.mark.xfail(reason="Yul calldataload at an unresolvable offset; now a hard compile error per EVM_DIVERGENCE.md (was a silent stub-to-0 that zeroed a real input)", strict=False)
 def test_keccak256_optimizer_bug_different_memory_location(harness):
     """inlineAssembly/contracts/keccak256_optimizer_bug_different_memory_location.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/keccak256_optimizer_bug_different_memory_location.sol")
@@ -579,6 +581,7 @@ def test_optimize_memory_store_multi_block(harness):
     r = harness.call(app, "g()")
     assert bool(as_int(r.abi_return)) is True
 
+@pytest.mark.xfail(reason="Yul `log0` has no AVM equivalent; now a hard compile error per EVM_DIVERGENCE.md (was a silent stub-to-0)", strict=False)
 def test_optimize_memory_store_multi_block_bugreport(harness):
     """inlineAssembly/contracts/optimize_memory_store_multi_block_bugreport.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/optimize_memory_store_multi_block_bugreport.sol")

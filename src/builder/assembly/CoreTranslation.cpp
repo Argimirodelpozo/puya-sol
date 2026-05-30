@@ -681,10 +681,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return awst::makeVoidConstant(loc);
 	}
 
-	// delegatecall → stub: return 1 (success)
+	// delegatecall → HARD ERROR. delegatecall runs another contract's code in
+	// the caller's storage context, which has no AVM equivalent; returning 1
+	// (success) would silently no-op the delegated call. Matches the hard error
+	// on high-level `.delegatecall(...)`.
 	if (funcName == "delegatecall")
 	{
-		Logger::instance().warning("delegatecall() stubbed as success (1)", loc);
+		Logger::instance().error(
+			"`delegatecall(...)` in inline assembly is not supported on AVM. It "
+			"runs another contract's code in the caller's storage context, which "
+			"has no AVM equivalent; stubbing it as success (1) would silently "
+			"no-op the delegated call. This matches the hard error on high-level "
+			"`.delegatecall(...)`.", loc);
 		auto one = awst::makeOne(loc, awst::WType::biguintType());
 		return one;
 	}
@@ -754,8 +762,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return zero;
 	}
 
-	Logger::instance().warning(
-		"unsupported Yul builtin function: " + funcName + ", returning 0", loc
+	// HARD ERROR — an unrecognized opcode stubbed as 0 is a silent wrong value.
+	// Fail loudly so every future gap surfaces at compile time.
+	Logger::instance().error(
+		"unsupported Yul builtin function `" + funcName + "`: no AVM translation "
+		"exists, so it would be stubbed as 0 — a silent wrong value.", loc
 	);
 	auto fallbackZero = awst::makeZero(loc, awst::WType::biguintType());
 	return fallbackZero;

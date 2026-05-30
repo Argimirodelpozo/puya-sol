@@ -98,9 +98,15 @@ void AssemblyBuilder::handlePrecompileCall(
 		}
 		if (!rtDispatched)
 		{
-			Logger::instance().warning(
-				"precompile call with non-constant memory offsets/sizes — stubbing as success "
-				"(no runtime-offset handler for this precompile)", _loc
+			// HARD ERROR — stubbing success here lets the caller read
+			// uninitialized output memory as if the precompile (ecRecover,
+			// modexp, …) had run, silently passing crypto/fund-guard checks.
+			Logger::instance().error(
+				"precompile call with non-constant memory offsets/sizes is not "
+				"supported on AVM — there is no runtime-offset handler for this "
+				"precompile, so its output buffer cannot be produced. Stubbing it "
+				"as success would let the caller read uninitialized output as if "
+				"the precompile had run.", _loc
 			);
 		}
 		// Set success variable.
