@@ -250,12 +250,44 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	// Ensure x is biguint
 	auto x = ensureBiguint(_args[1], _loc);
 
-	// For constant b values, we can optimize
-	auto bConst = resolveConstantOffset(_args[0]);
+	// For constant b values, we can optimize. NOTE: use a STRICT literal check,
+	// not resolveConstantOffset — that helper is for memory offsets and recurses
+	// into a runtime arg's ABI-decode expression, wrongly folding `b` to the
+	// calldata selector offset (4). That made the constant path run for runtime
+	// `b`, baking garbage masks. Every real Solidity intN narrowing passes a
+	// literal IntegerConstant here, so this still hits the fast path.
+	std::optional<uint64_t> bConst;
+	if (auto* lit = dynamic_cast<awst::IntegerConstant*>(_args[0].get()))
+		bConst = std::stoull(lit->value);
 	if (!bConst.has_value())
 	{
-		Logger::instance().warning("signextend with non-constant b, returning x unchanged", _loc);
-		return x;
+		// Runtime (non-constant) b. signextend(b, x) == sar(s, shl(s, x)) with
+		// s = 248 - 8*min(b, 31). shl moves byte b's sign bit (8*b+7) up to bit
+		// 255 (higher bits dropped by shl's mod-2^256 wrap); sar shifts it back,
+		// replicating the sign. min(b,31) gives the EVM b>=31 no-op for free
+		// (s=0 => sar(0,shl(0,x))=x) and prevents 248-8*b from underflowing.
+		// Reuses the on-chain-verified shl/sar lowerings; fresh s per consumer.
+		auto biguint = awst::WType::biguintType();
+		auto buildS = [&]() -> std::shared_ptr<awst::Expression> {
+			auto cmp = awst::makeNumericCompare(
+				ensureBiguint(_args[0], _loc), awst::NumericComparison::Lt,
+				awst::makeIntegerConstant("31", _loc, biguint), _loc);
+			auto bc = awst::makeConditional(
+				std::move(cmp), ensureBiguint(_args[0], _loc),
+				awst::makeIntegerConstant("31", _loc, biguint), biguint, _loc);
+			auto eightBc = makeBigUIntBinOp(
+				std::move(bc), awst::BigUIntBinaryOperator::Mult,
+				awst::makeIntegerConstant("8", _loc, biguint), _loc);
+			return makeBigUIntBinOp(
+				awst::makeIntegerConstant("248", _loc, biguint),
+				awst::BigUIntBinaryOperator::Sub, std::move(eightBc), _loc);
+		};
+		std::vector<std::shared_ptr<awst::Expression>> shlArgs{
+			buildS(), ensureBiguint(_args[1], _loc)};
+		auto shifted = handleShl(shlArgs, _loc);
+		std::vector<std::shared_ptr<awst::Expression>> sarArgs{
+			buildS(), std::move(shifted)};
+		return handleSar(sarArgs, _loc);
 	}
 
 	uint64_t b = *bConst;

@@ -605,6 +605,23 @@ def test_selfbalance(harness):
     r = harness.call(app, "f()", payment_wei=254)
     assert as_int(r.abi_return) - app.balance_baseline == 254
 
+def test_signextend_runtime(harness):
+    """inlineAssembly/contracts/signextend_runtime.sol — signextend(b, x) with a
+    runtime (non-constant) b, lowered as sar(s, shl(s, x)), s = 248 - 8*min(b,31).
+    Verified against canonical EVM signextend."""
+    app = harness.compile_and_deploy("inlineAssembly/contracts/signextend_runtime.sol")
+    M = (1 << 256) - 1
+    def evm_se(b, x):
+        x &= M
+        if b >= 31:
+            return x
+        tb = b * 8 + 7
+        return (x | (M ^ ((1 << (tb + 1)) - 1))) & M if (x >> tb) & 1 else x & ((1 << (tb + 1)) - 1)
+    for b, x in [(0, 0x7f), (0, 0x80), (0, 0xff), (0, 0x1ff), (1, 0x80),
+                 (1, 0x8000), (2, 0x123456), (31, 0xff), (32, 0x80), (40, 0xdead)]:
+        r = harness.call(app, "se(uint256,uint256)", b, x)
+        assert as_int(r.abi_return) == evm_se(b, x), f"signextend({b}, {hex(x)})"
+
 def test_shadowing_local_function_opcode(harness):
     """inlineAssembly/contracts/shadowing_local_function_opcode.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/shadowing_local_function_opcode.sol")
