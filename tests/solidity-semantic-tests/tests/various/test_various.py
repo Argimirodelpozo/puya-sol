@@ -20,6 +20,7 @@ def test_address_code(harness):  # currently fails
     r = harness.call(app, 'h()')
     assert as_int(r.abi_return) == 0
 
+@pytest.mark.xfail(reason="`address(other).code` is a compile-time hard error per EVM_DIVERGENCE.md — arbitrary-address code introspection can't be reliably dereferenced on AVM", strict=False)
 def test_address_code_complex(harness):  # currently fails
     """various/contracts/address_code_complex.sol"""
     app = harness.compile_and_deploy('various/contracts/address_code_complex.sol')
@@ -53,6 +54,7 @@ def test_byte_optimization_bug(harness):
     r = harness.call(app, "g(uint256)", 2)
     assert as_int(r.abi_return) == 2
 
+@pytest.mark.xfail(reason="Yul `codecopy` is a compile-time hard error on AVM — no AVM translation exists, so it would be a silent wrong value", strict=False)
 def test_code_access_content(harness):  # currently fails
     """various/contracts/code_access_content.sol"""
     app = harness.compile_and_deploy('various/contracts/code_access_content.sol')
@@ -61,6 +63,7 @@ def test_code_access_content(harness):  # currently fails
     r = harness.call(app, 'testCreation()')
     assert r.abi_return is True
 
+@pytest.mark.xfail(reason="Yul `create` is a compile-time hard error on AVM — contract creation from raw bytecode has no AVM translation (would be a silent wrong value)", strict=False)
 def test_code_access_create(harness):  # currently fails
     """various/contracts/code_access_create.sol"""
     app = harness.compile_and_deploy('various/contracts/code_access_create.sol')
@@ -75,12 +78,14 @@ def test_code_access_padding(harness):
     # TODO: verify expected: 0 # This checks that the allocation function pads to multiples of 32 bytes #
     assert not r.reverted
 
+@pytest.mark.xfail(reason="`extcodehash(addr)` is a compile-time hard error per EVM_DIVERGENCE.md — an arbitrary address can't be dereferenced to its code on AVM", strict=False)
 def test_code_access_runtime(harness):  # currently fails
     """various/contracts/code_access_runtime.sol"""
     app = harness.compile_and_deploy('various/contracts/code_access_runtime.sol')
     r = harness.call(app, 'test()')
     assert as_int(r.abi_return) == 42
 
+@pytest.mark.xfail(reason="`address(other).code` is a compile-time hard error per EVM_DIVERGENCE.md — arbitrary-address code introspection can't be reliably dereferenced on AVM", strict=False)
 def test_code_length(harness):  # currently fails
     """various/contracts/code_length.sol"""
     app = harness.compile_and_deploy('various/contracts/code_length.sol')

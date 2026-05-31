@@ -483,6 +483,7 @@ def test_named_args_overload(harness):
     r = harness.call(app, "call(uint256)", 5)
     assert as_int(r.abi_return) == 500
 
+@pytest.mark.xfail(reason="`extcodesize(addr)` is a compile-time hard error per EVM_DIVERGENCE.md — AVM can't query whether an arbitrary address has code", strict=False)
 def test_precompile_extcodesize_check(harness):  # currently fails
     """functionCall/contracts/precompile_extcodesize_check.sol"""
     app = harness.compile_and_deploy('functionCall/contracts/precompile_extcodesize_check.sol')
