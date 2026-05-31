@@ -29,9 +29,12 @@ of the machinery needed to *trust any output*:
 - **No provenance / immutable release.** A deployed contract's TEAL cannot be
   reproduced from, or attributed to, any named compiler version. The ARC56 stamp
   records only a mislabeled, version-mismatched backend.
-- **A residue of silent approximations** (extcodesize→1, unmapped-type→bytes,
-  blockhash→wrong-round, selfdestruct-approx, msg.sender→Txn.Sender) that still
-  ship bytecode and contradict the project's own fail-loud rule.
+- **A residue of silent approximations** — mostly closed as of 2026-05-31:
+  ~~extcodesize→1~~ and ~~blockhash→wrong-round~~ are now hard errors
+  (`d383b4921`, `b4c24ba1c`); chainid→1 now warns. Still open: `unmapped-type→bytes`
+  (needs a *selective* hard error — see EVM_DIVERGENCE.md Next-steps 2b).
+  By-design (not violations): selfdestruct-approx (faithful post-Cancun) and
+  msg.sender→Txn.Sender (correct AVM analog of the immediate caller).
 
 The just-landed 8 hard-errors (the `ec_pairing` "accept-any-proof" bug was the
 scariest) prove the discipline works and is the right model — it simply hasn't
@@ -92,10 +95,12 @@ v1 is *"a trustworthy compiler for the supported subset,"* not *"a complete EVM.
    the fund-loss class is empty.
 2. **No differential oracle** — correctness vs hand-authored Python goldens. A
    systematic codegen error the author *also* mis-modeled in Python passes green.
-3. **Known silent approximations still ship bytecode** — `extcodesize→1` (every
-   EOA-vs-contract guard becomes "contract"), `unmapped-type→bytes` (wrong
-   storage/ABI layout), `blockhash→wrong-round`, selfdestruct-approx. Each can
-   gate fund-transfer or access-control logic the wrong way.
+3. **Known silent approximations** — mostly closed 2026-05-31. ~~`extcodesize→1`~~
+   and ~~`blockhash→wrong-round`~~ are now hard errors; `chainid→1` now warns. The
+   one remaining silent-wrong is `unmapped-type→bytes` (wrong storage/ABI layout),
+   which needs a *selective* hard error (value-carrying types only — ~27 harmless
+   meta-types must stay; see EVM_DIVERGENCE.md 2b). selfdestruct-approx is by-design
+   (faithful post-Cancun).
 4. **No CI + stale baseline** — any commit can quietly change emitted TEAL with no
    automated catch.
 5. **No provenance / immutable release** — an unverifiable deployment is an
@@ -181,10 +186,13 @@ the logging-independent silent-stub sweep — step 3.)*
 ## Caveat on "flip the silent approximations"
 
 The audit listed several `warning()→error()` swaps as quick wins. Treat with care:
-unlike create2 (which had **zero** passing tests, so flipping was free),
-`extcodesize` (3 contracts), `blockhash` (4), and `selfdestruct` (6) are exercised
-by **currently-passing** contracts and several are classified **FINE/by-design** in
-`EVM_DIVERGENCE.md` (no AVM analog exists — the stub is the only possible answer).
+unlike create2 (which had **zero** passing tests, so flipping was free), some are
+exercised by **currently-passing** contracts. UPDATE 2026-05-31: `extcodesize`
+(arbitrary-addr) and `blockhash` were flipped anyway — the affected contracts were
+xfailed in the same commits (`d383b4921`, `b4c24ba1c`), the create2 pattern. The
+caution still holds for the rest, esp. `selfdestruct` (6 contracts) which is
+classified **FINE/by-design** in `EVM_DIVERGENCE.md` (no AVM analog exists — the
+stub is the only possible answer).
 Flipping those would cause regressions AND is a **product decision** ("refuse
 `Address.isContract()`-style code, or support it with a documented caveat?"), not a
 safety no-brainer. Each candidate must be checked individually against (a) its
