@@ -68,10 +68,10 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		return cast;
 	}
 
-	// ripemd160(bytes memory) — AVM has no RIPEMD-160 opcode. Return the
-	// 20-byte zero hash as a stub. Tests that treat the digest as opaque
-	// (e.g. comparing with another ripemd160 call on the same input) still
-	// compile, though most cryptographic uses will produce wrong output.
+	// ripemd160(bytes memory) — AVM has no RIPEMD-160 opcode, so we lower to a
+	// real synthesized RIPEMD-160 subroutine (Ripemd160Builder) that returns
+	// the correct 20-byte digest. The canonical empty-input digest is folded
+	// at compile time below as a fast path.
 	if (m_builtinName == "ripemd160")
 	{
 		// Compile-time fold the canonical empty-input digest

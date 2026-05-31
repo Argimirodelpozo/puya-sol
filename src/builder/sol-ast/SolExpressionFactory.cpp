@@ -410,9 +410,9 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		// so route to SolBuiltinCall, which returns bzero(32) as a stub.
 		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "blobhash");
 	case Kind::RIPEMD160:
-		// AVM lacks a RIPEMD-160 opcode. Stub via SolBuiltinCall which
-		// returns zero bytes20 — Solidity tests that use ripemd160 as an
-		// opaque digest won't pass, but compilation at least succeeds.
+		// AVM lacks a RIPEMD-160 opcode, so SolBuiltinCall lowers ripemd160()
+		// to a real synthesized RIPEMD-160 subroutine (Ripemd160Builder),
+		// returning the correct 20-byte digest.
 		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "ripemd160");
 
 	// ── Misc ──
