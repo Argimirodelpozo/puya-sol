@@ -60,15 +60,22 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		if (!appId)
 		{
-			std::shared_ptr<awst::Expression> bytesExpr = std::move(addrExpr);
-			if (bytesExpr->wtype == awst::WType::accountType())
-			{
-				auto toBytes = awst::makeAsBytes(std::move(bytesExpr), m_loc);
-				bytesExpr = std::move(toBytes);
-			}
-
-			auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), m_loc);
-			appId = awst::makeAsApplication(std::move(btoi), m_loc);
+			// Arbitrary (non-`this`) address → HARD ERROR. Deriving the app id
+			// from the last 8 bytes of the address only works for some
+			// app-derived addresses and breaks under different network
+			// configurations, so `address(other).code` would silently read the
+			// wrong app's program (or panic on a non-existent app). The
+			// `address(this).code` self case above is computed correctly and is
+			// unaffected; compile-time `address(N).code` literals are handled
+			// earlier. Refuse the arbitrary-address case rather than guess.
+			Logger::instance().error(
+				"`address(addr).code` for a non-`this` address is not supported "
+				"on AVM — an arbitrary address can't be reliably dereferenced to "
+				"its application program. `address(this).code` is supported.", m_loc);
+			// Stub appId so AWST building completes; the error aborts the build
+			// before any TEAL is emitted.
+			auto idCall = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
+			appId = awst::makeAsApplication(std::move(idCall), m_loc);
 		}
 
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
@@ -261,10 +268,16 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				return hash;
 			}
 		}
-		// Fallback: bytes32(0) for non-this addresses.
-		Logger::instance().warning(
-			"address(other).codehash returns bytes32(0) on AVM — no way to "
-			"dereference an arbitrary address to its application code.", m_loc);
+		// Arbitrary (non-`this`, non-literal) address → HARD ERROR. The old
+		// stub returned bytes32(0), a wrong-but-deterministic value that would
+		// corrupt any codehash-based identity/commitment check. The
+		// `address(this).codehash` self case above and compile-time
+		// `address(N).codehash` literals are computed correctly and unaffected.
+		Logger::instance().error(
+			"`address(addr).codehash` for a non-`this` address is not supported "
+			"on AVM — an arbitrary address can't be dereferenced to its code, so "
+			"the old stub returned bytes32(0). `address(this).codehash` is "
+			"supported.", m_loc);
 		return awst::makeBytesConstant(
 			std::vector<uint8_t>(32, 0), m_loc, awst::BytesEncoding::Base16,
 			m_ctx.typeMapper.createType<awst::BytesWType>(32));

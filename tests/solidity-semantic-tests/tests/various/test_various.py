@@ -113,6 +113,7 @@ def test_codehash(harness):
     r = harness.call(app, "h()")
     assert bool(as_int(r.abi_return)) is True
 
+@pytest.mark.xfail(reason="Yul extcodehash(addr) is now a hard compile error per EVM_DIVERGENCE.md — AVM can't dereference an arbitrary address to its code; the old stub used an addr>100 heuristic + a wrong-but-deterministic hash. Use address(this).codehash for the self case", strict=False)
 def test_codehash_assembly(harness):
     """various/contracts/codehash_assembly.sol"""
     app = harness.compile_and_deploy("various/contracts/codehash_assembly.sol")

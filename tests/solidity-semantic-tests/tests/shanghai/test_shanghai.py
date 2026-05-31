@@ -7,6 +7,7 @@ from framework import (
 )
 
 
+@pytest.mark.xfail(reason="uses address(other).code (arbitrary address) — now a hard compile error per EVM_DIVERGENCE.md; AVM can't dereference an arbitrary address to its application program. address(this).code is supported", strict=False)
 def test_evmone_support(harness):
     """shanghai/contracts/evmone_support.sol"""
     pytest.xfail("`address.code` / raw EVM bytecode calls have no AVM equivalent. "

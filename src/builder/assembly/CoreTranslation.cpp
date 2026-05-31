@@ -366,95 +366,39 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return handleGas(loc);
 	if (funcName == "extcodesize")
 	{
-		// extcodesize(addr) → on AVM, return 1 (treat all addresses as having code)
-		Logger::instance().warning("extcodesize() stubbed as 1 (no AVM equivalent)", loc);
+		// extcodesize(addr) → HARD ERROR. AVM cannot dereference an arbitrary
+		// address to ask whether it has code; the old stub returned 1
+		// ("everything is a contract"), which silently makes EOA-vs-contract
+		// guards like `extcodesize(a) > 0` always true. Refuse rather than
+		// emit a vacuous guard. (EVM code-introspection family — see also
+		// extcodehash/extcodecopy and high-level address.code/.codehash.)
+		Logger::instance().error(
+			"`extcodesize(addr)` is not supported on AVM — there is no way to "
+			"query whether an arbitrary address has code, so the old stub "
+			"returned 1 ('everything is a contract'), silently making "
+			"`extcodesize(a) > 0` EOA-vs-contract guards always true.", loc);
 		auto one = awst::makeOne(loc, awst::WType::biguintType());
 		return one;
 	}
 	if (funcName == "extcodehash")
 	{
-		// extcodehash(addr) — keccak256 of the account's code on EVM.
-		// On AVM we only have the current app's approval program and
-		// can't dereference an arbitrary address to its app bytes.
-		// Strategy: return keccak256(this.approval) when the address
-		// arg is large (i.e. looks like `address(this)`), and 0 for
-		// small arg values (0, 1, 2, ...) so tests that check
-		// `address(0).codehash == 0` keep passing.
-		Logger::instance().warning(
-			"extcodehash(addr) stubbed: 0 for small addresses, "
-			"keccak256(this.code) for large ones.", loc);
-
-		if (args.empty())
-		{
-			auto zero = awst::makeZero(loc, awst::WType::biguintType());
-			return zero;
-		}
-
-		auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), loc);
-		auto appIdCast = awst::makeAsApplication(std::move(appId), loc);
-
-		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
-			std::vector<awst::WType const*>{
-				awst::WType::bytesType(), awst::WType::boolType()});
-		auto appParamsGet = awst::makeAppParamsGet(
-			"AppApprovalProgram", std::move(appIdCast), tupleType, loc);
-
-		auto bytesOut = awst::makeTupleItem(std::move(appParamsGet), 0, awst::WType::bytesType(), loc);
-
-		auto hash = awst::makeKeccak256(std::move(bytesOut), loc);
-
-		auto hashBigUint = awst::makeAsBiguint(std::move(hash), loc);
-
-		// arg > 2 → return hash, else 0. Empty/small addresses (0, 1,
-		// 2) match the "no code" EVM semantics; real contract addresses
-		// are always larger than that.
-		auto threshold = awst::makeIntegerConstant("100", loc, awst::WType::biguintType());
-
-		auto addrExpr = args[0];
-		// addrExpr may be account / application / biguint — coerce to
-		// biguint for the comparison. NumericComparisonExpression only
-		// accepts uint64/biguint/bool/asset/application.
-		if (addrExpr->wtype == awst::WType::accountType())
-		{
-			auto cast = awst::makeAsBiguint(std::move(addrExpr), loc);
-			addrExpr = std::move(cast);
-		}
-		else if (addrExpr->wtype == awst::WType::uint64Type())
-		{
-			auto itob = awst::makeItob(std::move(addrExpr), loc);
-			addrExpr = awst::makeAsBiguint(std::move(itob), loc);
-		}
-		// Compute three-way: addr == 0 → 0, 0 < addr ≤ 100 → keccak256(""),
-		// else → keccak256(this.approval). EVM convention: precompile
-		// addresses (1..10) have no code and return keccak256("").
-		auto addrExprForZero = addrExpr;
-		auto addrExprForLarge = addrExpr;
-
+		// extcodehash(addr) → HARD ERROR. On EVM this is keccak256 of the
+		// account's code. AVM can only fetch the CURRENT app's approval
+		// program; an arbitrary address can't be dereferenced to its app
+		// bytes. The old stub used a fragile `addr > 100` heuristic to guess
+		// "is this address(this)?" and otherwise returned keccak256("") / 0 —
+		// a wrong-but-deterministic hash that would corrupt any commitment or
+		// identity check. Refuse rather than emit a wrong hash. (For the
+		// genuine self case, use the high-level `address(this).codehash`,
+		// which is computed correctly via app_params_get on the current app.)
+		Logger::instance().error(
+			"`extcodehash(addr)` is not supported on AVM — an arbitrary address "
+			"can't be dereferenced to its code, so the old stub guessed via an "
+			"`addr > 100` heuristic and otherwise returned a wrong-but-"
+			"deterministic hash. Use the high-level `address(this).codehash` for "
+			"the current app's own code hash.", loc);
 		auto zero = awst::makeZero(loc, awst::WType::biguintType());
-
-		// keccak256 of empty bytes (EVM constant)
-		auto emptyHash = awst::makeBytesConstant(
-			std::vector<uint8_t>{
-				0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c,
-				0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03, 0xc0,
-				0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
-				0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70},
-			loc);
-		auto emptyHashBigUint = awst::makeAsBiguint(std::move(emptyHash), loc);
-
-		auto isLarge = awst::makeNumericCompare(std::move(addrExprForLarge), awst::NumericComparison::Gt, std::move(threshold), loc);
-
-		auto zeroLit = awst::makeZero(loc, awst::WType::biguintType());
-		auto isZero = awst::makeNumericCompare(std::move(addrExprForZero), awst::NumericComparison::Eq, std::move(zeroLit), loc);
-
-		// small (0 < addr <= 100) → emptyHash; large (addr > 100) → hash(self); addr == 0 → 0
-		auto smallOrLarge = awst::makeConditional(
-			std::move(isLarge), std::move(hashBigUint), std::move(emptyHashBigUint),
-			awst::WType::biguintType(), loc);
-
-		return awst::makeConditional(
-			std::move(isZero), std::move(zero), std::move(smallOrLarge),
-			awst::WType::biguintType(), loc);
+		return zero;
 	}
 	if (funcName == "address")
 	{

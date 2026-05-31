@@ -99,6 +99,29 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
    (including the cross-contract case, where it is the calling app's account).
    Flips one test (xfailed): `state::test_tx_origin`.
 
+10. ✅ **EVM code-introspection family → hard-errored (both high-level & Yul-asm),
+   EXCEPT the self case.** `extcodesize` (asm) returned 1 ("everything is a
+   contract" — silently makes `extcodesize(a) > 0` EOA-vs-contract guards always
+   true); `extcodehash` (asm) used a fragile `addr > 100` heuristic to guess
+   "is this `address(this)`?" and otherwise returned a wrong-but-deterministic
+   hash; `address(other).code` derived an app id from address bytes
+   (unreliable / panics on non-existent app); `address(other).codehash`
+   returned `bytes32(0)`. All four arbitrary-address paths are now hard errors.
+   **Deliberately KEPT working** (verified, unaffected): `address(this).code`,
+   `address(this).codehash` (computed correctly via `app_params_get` on the
+   current app), compile-time `address(N).code/.codehash` literals, and Yul
+   `caller()`. `extcodecopy` has no handler → already hits the unknown-builtin
+   hard error (#8). Flips two tests (xfailed): `various::test_codehash_assembly`
+   (asm `extcodehash`), `shanghai::test_evmone_support` (`address(other).code`).
+
+11. ↔ **`selfdestruct` — deliberately KEPT (not a hard error).** Unlike the
+   above, it is *not* a silent-wrong stub: `BuiltinCallables.cpp::handleSelfdestruct`
+   emits a real inner payment with `CloseRemainderTo = beneficiary`, sweeping
+   the app's balance — a faithful model of **post-Cancun** `selfdestruct`, which
+   only transfers funds and does **not** delete the contract. The one divergence
+   is that the AVM app is likewise not deleted (matches post-Cancun EVM). Left
+   working by design; classified **FINE**.
+
 ---
 
 ## Full verdict table
