@@ -375,6 +375,7 @@ def test_selfdestruct_post_cancun(harness):
                  "address can't be pre-computed.")
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun.sol")
 
+@pytest.mark.xfail(reason="`address(other).code` is a compile-time hard error per EVM_DIVERGENCE.md — this contract's `exists()` uses `address(c).code.length != 0` (the Address.isContract() pattern) on a non-`this` address, which AVM can't reliably dereference", strict=False)
 def test_selfdestruct_post_cancun_multiple_beneficiaries(harness):
     """various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_post_cancun_multiple_beneficiaries.sol")
@@ -395,6 +396,7 @@ def test_selfdestruct_pre_cancun(harness):
                  "address can't be pre-computed.")
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun.sol")
 
+@pytest.mark.xfail(reason="`address(other).code` is a compile-time hard error per EVM_DIVERGENCE.md — this contract's `exists()` uses `address(c).code.length != 0` (the Address.isContract() pattern) on a non-`this` address, which AVM can't reliably dereference", strict=False)
 def test_selfdestruct_pre_cancun_multiple_beneficiaries(harness):
     """various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol"""
     app = harness.compile_and_deploy("various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol")
