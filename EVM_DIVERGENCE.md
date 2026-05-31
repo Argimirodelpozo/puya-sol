@@ -29,6 +29,13 @@ delegatecall.
 > (4 of the 6 hit hard-error #8, the catch-all unknown-Yul-builtin guard; 2 hit
 > #7, calldataload-unknown-offset.) The remaining **6 FIX** and **12 FINE** items
 > below are unchanged.
+>
+> **UPDATE 2026-05-31 — four more hard-errors landed since (items 9–12 below):**
+> `tx.origin` (`d3fc60bdb`), the code-introspection family incl. `extcodesize`/
+> `extcodehash` (`d383b4921`), and `blockhash(n)` (`b4c24ba1c`). `block.chainid`
+> and computed-slot storage aliasing were made **warn-level** (`9443b5150`). One
+> warn-level item remains a pending decision: the unmapped-type fallback (see
+> Next steps 2b). Verdict-table rows below updated accordingly.
 
 **Mechanism.** `Logger::error()` increments an error count; `main.cpp:1254`
 (`if (logger.hasErrors()) return 1;`) runs **before** the puya backend, so any
@@ -122,6 +129,20 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
    is that the AVM app is likewise not deleted (matches post-Cancun EVM). Left
    working by design; classified **FINE**.
 
+12. ✅ **`blockhash(n)` → hard-errored (both high-level & Yul-asm).** Both paths
+   (`SolBuiltinCall.cpp::handleBlockhash` and the Yul `blockhash` builtin in
+   `CoreTranslation.cpp`, split out from the shared `blockhash`/`blobhash`
+   branch) mapped to `block BlkSeed(Round-2)` — a per-round VRF seed that
+   **ignores the round argument `n`** and panics for out-of-window rounds. That
+   is a wrong value *and* a wrong failure mode, so a `blockhash`-based
+   commitment or RNG silently diverges. AVM has no block-hash opcode and no
+   faithful equivalent → refuse to compile. `blobhash` is **deliberately kept**
+   as a stand-in (this change was scoped to `blockhash`). Flips three tests
+   (xfailed): `builtinFunctions::test_blockhash`, `state::test_blockhash_basic`,
+   `state::test_uncalled_blockhash`. NOT flipped: `test_blockhash_shadow_resolution`
+   — its contract defines a user `blockhash` that shadows the builtin, so it
+   never reaches the builtin lowering and still compiles.
+
 ---
 
 ## Full verdict table
@@ -142,8 +163,8 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
 | `InnerCallShapes.cpp:395` | `staticcall` to 0x09 etc. | nullptr → 690 stub | runs precompile | **FIX/hard-err** | Medium |
 | `MemoryOps.cpp:452` | void fn asm `return(off,sz>0)` | emits as log | raw return bytes | **FIX** | Low/Med |
 | `SolInternalCall.cpp:547` | uninit/unsupported fn-ptr call | `assert(false)` (reverts) | reverts (uninit) | **FIX** (support dispatch) | Low (fails loud, not silent) |
-| `CoreTranslation.cpp:370` | `extcodesize` | returns 1 | code size (0=EOA) | **FINE/borderline** | Low-Med (`>0` always true) |
-| `CoreTranslation.cpp:383` | `extcodehash` | 0 / keccak("") / self | keccak(code) | **FINE** (stub) | Low |
+| `CoreTranslation.cpp:367` | `extcodesize` (arbitrary addr) | — (refused; was 1) | code size (0=EOA) | ✅ **HARD-ERROR** (#10) | — |
+| `CoreTranslation.cpp:383` | `extcodehash` (arbitrary addr) | — (refused; was 0/keccak("")) | keccak(code) | ✅ **HARD-ERROR** (#10) | — |
 | `CoreTranslation.cpp:586/521/528` | `codesize`/`difficulty`/`prevrandao` | harness sentinels | real values | **FINE** (test shim) | Low |
 | `CoreTranslation.cpp:555` | `coinbase`/`gasprice`/`basefee`/`blobbasefee` | 0 | real values | **FINE** | Low (no AVM analog) |
 | `CoreTranslation.cpp:727/752` | `calldatasize`/`calldatacopy` no-blob path | 0 / no-op | real calldata | **FINE** in no-blob path | Low-Med |
@@ -153,12 +174,14 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
 | `AssemblyBuilder.cpp:633` | non-scalar in asm arithmetic | → biguint(0) | EVM pointer math | **FINE** (no AVM meaning) | Low |
 | `SolMetaTypeAccess.cpp:123` | `type(C).creationCode/runtimeCode` | 32 zero bytes | bytecode | **FINE** (consumers hard-errored) | Low |
 | `SolAddressProperty.cpp:265/273` | `.codehash` / other addr props | 0 / empty | real codehash | **FINE** (`this.codehash` correct) | Low |
-| `TypeMapper.cpp:173` | unmapped Solidity type | falls back to `bytes` | (n/a) | **FINE/latent FIX** | Low |
+| `SolBuiltinCall.cpp` / `CoreTranslation.cpp` | `blockhash(n)` | — (refused; was BlkSeed(Round-2), ignored `n`) | hash of block n | ✅ **HARD-ERROR** (#12) | — |
+| `TypeMapper.cpp:173` | unmapped Solidity type | falls back to `bytes` | (n/a) | **FIX (selective, PENDING)** | Med (slices) / Low (meta-types) |
 
 Confirmed observability-only (correctly FINE, not tabled): the `block.*` / `tx.*`
 / `address.balance` network-semantics warning family (`SolIntrinsicAccess.cpp`,
-`IntrinsicMapper.cpp`, `SolBuiltinCall.cpp`), `blockhash` / `blobhash` /
-`ripemd160` documented cross-chain approximations, and all `splitter/*`,
+`IntrinsicMapper.cpp`, `SolBuiltinCall.cpp`), `blobhash` /
+`ripemd160` documented cross-chain approximations (`blockhash` is now a
+hard error — see #12), and all `splitter/*`,
 `NodeBuilder`, `AsaIntrinsics`, `AwstWalker` compiler-internal diagnostics.
 
 ---
@@ -170,6 +193,15 @@ Confirmed observability-only (correctly FINE, not tabled): the `block.*` / `tx.*
    produced (see status note up top).
 2. Tighten the 6 FIX sites where a real AVM mapping exists
    (`PrecompileDispatch.cpp:194` → `handleAppCall` is the highest-value).
+2b. **Unmapped-type selective hard-error (DECISION PENDING).** `TypeMapper.cpp:173`
+   currently warns + falls back to `bytes` for any unmapped type. A blanket
+   `warning`→`error` flip regresses ~58 tests: ~27 are harmless **meta-types**
+   that carry no runtime value (`type(library L)`, `type(struct …)`, `type(enum …)`,
+   `type(contract D)`, `module "…"`, `abi`, `inaccessible dynamic type` — real ops
+   on these go through dedicated paths), and 31 are value-carrying **slice** types
+   (`bytes slice`, `uint256[] slice` from `x[a:b]`). The safe fix errors only on
+   genuinely value-carrying unmapped categories (or special-cases the meta-types
+   above the catch-all). Needs maintainer sign-off on scope.
 3. Longer arc: generative **differential testing** (compile → run on evmone +
    AVM → diff, with an allowlist for the by-design FINE divergences above) to
    catch the silent-divergence class systematically rather than one incident at
