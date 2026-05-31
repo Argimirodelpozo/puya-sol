@@ -202,11 +202,11 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 {
-	Logger::instance().warning(
-		"blockhash() mapped to AVM 'block BlkSeed' on round (global.Round - 2). "
-		"AVM has no block hash — BlkSeed (VRF output) is used as the closest equivalent. "
-		"The caller's round argument is ignored because `block` only accepts a narrow "
-		"window of recent rounds on AVM, which rarely overlaps EVM-style round numbers.",
+	Logger::instance().error(
+		"`blockhash(n)` is not supported on AVM. EVM returns the hash of a recent "
+		"block (or 0 outside the last 256); AVM has no block-hash opcode. `block "
+		"BlkSeed` is a per-round VRF seed for a narrow recent window, so the round "
+		"argument is ignored and the value is wrong, with no faithful equivalent.",
 		m_loc);
 
 	// Evaluate the argument for side effects, but ignore the value: `block`

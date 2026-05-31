@@ -438,11 +438,28 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "timestamp")
 		return handleTimestamp(loc);
-	if (funcName == "blockhash" || funcName == "blobhash")
+	if (funcName == "blockhash")
 	{
-		// Map Yul blockhash / blobhash to AVM BlkSeed(Round - 2). The
-		// caller's round/index is ignored (blockhash) or used only for
-		// index < 2 (blobhash, emulating the EVM test harness's 2-mock
+		// blockhash(n) -> HARD ERROR. EVM blockhash(n) is the hash of a recent
+		// block (last 256, else 0). AVM has no block-hash opcode; `block
+		// BlkSeed` is a per-round VRF seed for a narrow recent window that
+		// ignores the round argument and panics out-of-window -- a different
+		// value AND failure mode, so a blockhash-based commitment/RNG silently
+		// diverges. Refuse to compile rather than emit a wrong value. (blobhash
+		// below is left as a stand-in; the maintainer scoped this to blockhash.)
+		Logger::instance().error(
+			"`blockhash(n)` is not supported on AVM. EVM returns the hash of a "
+			"recent block (or 0 outside the last 256); AVM has no block-hash "
+			"opcode. `block BlkSeed` is a per-round VRF seed for a narrow recent "
+			"window, so the round argument is ignored and the value is wrong, "
+			"with no faithful equivalent.", loc);
+		// Stub so AWST building completes; the error aborts the build first.
+		return awst::makeZero(loc, awst::WType::biguintType());
+	}
+	if (funcName == "blobhash")
+	{
+		// Map Yul blobhash to AVM BlkSeed(Round - 2). The caller's index is
+		// used only for index < 2 (emulating the EVM test harness's 2-mock
 		// blobs). Any further index returns bytes32(0). See the
 		// SolBuiltinCall counterparts for details.
 		Logger::instance().warning(

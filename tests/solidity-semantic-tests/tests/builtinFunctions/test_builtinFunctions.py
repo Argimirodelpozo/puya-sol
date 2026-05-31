@@ -31,6 +31,7 @@ def test_blobhash_shadow_resolution(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 3
 
+@pytest.mark.xfail(reason="blockhash(n) is now a hard compile error per EVM_DIVERGENCE.md — AVM has no block-hash opcode; `block BlkSeed` is a per-round VRF seed that ignores the round argument, with no faithful equivalent", strict=False)
 def test_blockhash(harness):
     """builtinFunctions/contracts/blockhash.sol"""
     app = harness.compile_and_deploy("builtinFunctions/contracts/blockhash.sol")

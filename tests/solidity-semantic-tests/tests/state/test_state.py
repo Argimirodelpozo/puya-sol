@@ -146,7 +146,8 @@ def test_block_timestamp(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
-def test_blockhash_basic(harness):  # currently fails
+@pytest.mark.xfail(reason="blockhash(n) is now a hard compile error per EVM_DIVERGENCE.md — AVM has no block-hash opcode; `block BlkSeed` is a per-round VRF seed that ignores the round argument and panics out-of-window, with no faithful equivalent", strict=False)
+def test_blockhash_basic(harness):
     """state/contracts/blockhash_basic.sol"""
     app = harness.compile_and_deploy('state/contracts/blockhash_basic.sol')
     r = harness.call(app, 'genesisHash()')
@@ -253,6 +254,7 @@ def test_uncalled_blobhash(harness):
     app = harness.compile_and_deploy("state/contracts/uncalled_blobhash.sol")
     assert not harness.call(app, "f()").reverted
 
+@pytest.mark.xfail(reason="blockhash(n) is now a hard compile error per EVM_DIVERGENCE.md — every function is translated (no pre-translation DCE), so even an uncalled blockhash is rejected at compile time", strict=False)
 def test_uncalled_blockhash(harness):
     """state/contracts/uncalled_blockhash.sol — EVM blockhash; verify success."""
     app = harness.compile_and_deploy("state/contracts/uncalled_blockhash.sol")
