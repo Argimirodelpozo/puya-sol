@@ -464,9 +464,29 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto cast = awst::makeAsBiguint(std::move(addr), loc);
 		return cast;
 	}
-	if (funcName == "caller" || funcName == "origin")
+	if (funcName == "origin")
 	{
-		// caller() / origin() → txn Sender (32 bytes) → reinterpret as biguint
+		// origin() (EVM tx.origin) → HARD ERROR. It denotes the EOA that
+		// started the transaction, distinct from caller()/msg.sender (the
+		// immediate caller). AVM has no transaction-origin concept; the only
+		// available value is `txn Sender` = caller(), so origin() would
+		// silently alias caller() and make `origin == caller` access guards
+		// vacuous. Refuse rather than emit a wrong guard. (caller() below is
+		// sound — `txn Sender` is the correct analog of the immediate caller.)
+		Logger::instance().error(
+			"Yul `origin()` (EVM tx.origin) is not supported on AVM. It denotes "
+			"the EOA that started the transaction, distinct from `caller()`; AVM "
+			"has no such concept, so it would silently alias `caller()` and make "
+			"`origin == caller` checks vacuous. Use `caller()` (maps to txn Sender).",
+			loc);
+		// Stub so AWST building completes; the error aborts before any TEAL.
+		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
+		return awst::makeAsBiguint(std::move(sender), loc);
+	}
+	if (funcName == "caller")
+	{
+		// caller() (EVM CALLER = msg.sender) → txn Sender (32 bytes) → biguint.
+		// Sound: txn Sender is the correct AVM analog of the immediate caller.
 		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
 
 		auto cast = awst::makeAsBiguint(std::move(sender), loc);

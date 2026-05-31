@@ -83,6 +83,22 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
 8. ✅ **`CoreTranslation.cpp:757` — unknown Yul builtin (fallthrough) → 0.**
    Catch-all silent-zero; hard-error to surface every future gap.
 
+### Additional hard-error landed later
+
+9. ✅ **`tx.origin` → was silently aliased to `msg.sender` (`txn Sender`).** Two
+   paths, both now hard-errored: the high-level intrinsic
+   (`IntrinsicMapper.cpp`) and the Yul-assembly `origin()` builtin
+   (`CoreTranslation.cpp`, previously sharing a branch with `caller()`). On EVM
+   `tx.origin` is the EOA that started the transaction, distinct from
+   `msg.sender`/`caller()` (the immediate caller); AVM has no
+   transaction-origin concept, so the only value available is `txn Sender` =
+   `msg.sender`. The old mapping made `tx.origin == msg.sender` (the classic
+   "reject contract callers" guard) **always true** and `!=` always false —
+   silently inverting access-control logic. **`msg.sender`/`caller()` are NOT
+   affected** — `txn Sender` is the correct AVM analog of the immediate caller
+   (including the cross-contract case, where it is the calling app's account).
+   Flips one test (xfailed): `state::test_tx_origin`.
+
 ---
 
 ## Full verdict table

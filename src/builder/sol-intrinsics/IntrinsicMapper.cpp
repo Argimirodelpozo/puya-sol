@@ -46,7 +46,27 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 	else if (_objectName == "tx")
 	{
 		if (_memberName == "origin")
+		{
+			// tx.origin → HARD ERROR. On EVM, tx.origin is the EOA that
+			// started the whole transaction, distinct from msg.sender (the
+			// immediate caller). AVM has no transaction-origin concept; the
+			// only available value is `txn Sender`, which equals msg.sender —
+			// so tx.origin would silently alias msg.sender. That makes
+			// `tx.origin == msg.sender` (the classic "reject contract callers"
+			// guard) ALWAYS true and `tx.origin != msg.sender` always false,
+			// silently inverting access-control logic. Refuse to compile
+			// rather than emit a vacuous guard. (msg.sender itself IS sound:
+			// `txn Sender` is the correct AVM analog of the immediate caller.)
+			Logger::instance().error(
+				"`tx.origin` is not supported on AVM. It denotes the EOA that "
+				"started the transaction, distinct from `msg.sender`; AVM has no "
+				"such concept, so `tx.origin` would silently alias `msg.sender` "
+				"and make `tx.origin (==|!=) msg.sender` access checks vacuous. "
+				"Use `msg.sender` (which maps correctly to `txn Sender`).", _loc);
+			// Stub so AWST building completes; the error above aborts the build
+			// before any TEAL is emitted (same pattern as create2/delegatecall).
 			return awst::makeTxn("Sender", awst::WType::accountType(), _loc);
+		}
 		if (_memberName == "gasprice")
 		{
 			// tx.gasprice → txn Fee (in microAlgos).

@@ -233,6 +233,7 @@ def test_tx_gasprice(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
+@pytest.mark.xfail(reason="tx.origin is now a hard compile error per EVM_DIVERGENCE.md — on AVM it would silently alias msg.sender, making tx.origin (==|!=) msg.sender guards vacuous", strict=False)
 def test_tx_origin(harness):
     """state/contracts/tx_origin.sol"""
     app = harness.compile_and_deploy("state/contracts/tx_origin.sol")
