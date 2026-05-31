@@ -23,6 +23,16 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// code should read global GenesisHash in assembly instead.
 	if (baseName == "block" && member == "chainid")
 	{
+		// Fail-loud (its block.* siblings warn; this one used to be silent):
+		// the constant 1 is folded into EIP-712 / permit domain separators
+		// identically on EVERY Algorand network, so a signature or permit
+		// minted for one network can be replayed on another. Value kept at 1
+		// for compatibility; warn so the cross-network replay risk is visible.
+		Logger::instance().warning(
+			"block.chainid returns the constant 1 on AVM (no per-chain id). "
+			"EIP-712/permit domain separators will be identical across Algorand "
+			"networks — signatures may be replayable cross-network. Read global "
+			"GenesisHash in assembly to distinguish networks.", m_loc);
 		auto c = awst::makeOne(m_loc, awst::WType::biguintType());
 		return c;
 	}

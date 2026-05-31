@@ -81,6 +81,17 @@ void ContractBuilder::buildStorageDispatch(
 			// Use a single large box "__dyn_storage" for all dynamic slots.
 			// Each slot occupies 32 bytes at offset (slot % 256) * 32.
 			// This avoids per-slot box reference limits (max 8 per txn).
+			// FAIL-LOUD: reducing the 256-bit EVM slot mod 256 means two
+			// distinct computed/keccak-derived slots congruent mod 256 alias
+			// the same 32 bytes. Fine for a handful of well-separated slots but
+			// can silently corrupt hand-rolled-mapping / proxy storage. Warn so
+			// the divergence is visible (durable fix: box-per-slot keyed by the
+			// full 256-bit slot).
+			Logger::instance().warning(
+				"dynamic/computed storage slots (assembly .slot / sload) are "
+				"folded mod 256 into a single __dyn_storage box; distinct slots "
+				"congruent mod 256 will ALIAS. Verify computed-slot storage "
+				"(proxies, hand-rolled mappings) is collision-free.", loc);
 			auto boxKey = makeBytes("__dyn_storage");
 
 			// Compute offset: (__slot % 256) * 32
@@ -187,7 +198,14 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto key = awst::makeConcat(std::move(prefix), std::move(slotItob), loc);
 
-			// Use single "__dyn_storage" box, same as read
+			// Use single "__dyn_storage" box, same as read.
+			// FAIL-LOUD: see __storage_read — slot is reduced mod 256, so
+			// distinct computed slots congruent mod 256 alias the same bytes.
+			Logger::instance().warning(
+				"dynamic/computed storage slots (assembly .slot / sstore) are "
+				"folded mod 256 into a single __dyn_storage box; distinct slots "
+				"congruent mod 256 will ALIAS. Verify computed-slot storage "
+				"(proxies, hand-rolled mappings) is collision-free.", loc);
 			auto boxKey = makeBytes("__dyn_storage");
 
 			// Compute offset: (__slot % 256) * 32
