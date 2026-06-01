@@ -288,6 +288,7 @@ def test_dirty_slot(harness):  # currently fails
     r = harness.call(app, 'get_b(uint256)', 2, expect_revert=True)
     assert r.reverted
 
+@pytest.mark.xfail(reason="depends on EVM keeping dirty (non-masked) high bits in a uint8 read — AVM biguint values are always clean, so the dirty bits aren't observable. EVM-fundamental.", strict=False)
 def test_dirty_uint8_read(harness):
     """userDefinedValueType/contracts/dirty_uint8_read.sol
 
