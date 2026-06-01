@@ -474,6 +474,50 @@ void AssemblyBuilder::handleReturn(
 		return;
 	}
 
+	// EIP-2330 batch-read idiom (Extsload/Exttload): assembly hand-builds an
+	// EVM-ABI-encoded `bytes32[]` in memory and returns it with a runtime
+	// offset/size — `return(start, sub(end, start))`. The memory region is full
+	// EVM ABI:  [0x00] 0x20 offset word | [0x20] uint256 length | [0x40..] elems.
+	// The AVM method return type is an ARC4 dynamic array of `byte[32]`, whose
+	// layout is `uint16 length ++ elements` (elements are 32-byte static, so no
+	// per-element offset table). Convert by stitching the ARC4 length prefix
+	// (the low 2 bytes of the EVM length word) onto the element bytes, then
+	// reinterpret as the return type. Guarded to `byte[32]` elements only — any
+	// other element type falls through to the errors below rather than emitting
+	// a silently-wrong layout.
+	if (auto const* dynArr = dynamic_cast<awst::ARC4DynamicArray const*>(m_returnType);
+		dynArr && dynArr->elementType()->name() == "byte[32]"
+		&& !resolveConstantOffset(_args[0]))
+	{
+		// count (ARC4 uint16) = last 2 bytes of the EVM length word at start+0x20
+		auto countOff = awst::makeUInt64BinOp(
+			offsetToUint64(_args[0], _loc),
+			awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(uint64_t{0x3E}, _loc), _loc);
+		auto countBytes = awst::makeExtract3(
+			memoryVar(_loc), std::move(countOff),
+			awst::makeIntegerConstant(uint64_t{2}, _loc), _loc);
+
+		// elements = region[start+0x40 .. start+size)  → (size - 0x40) bytes
+		auto elemsOff = awst::makeUInt64BinOp(
+			offsetToUint64(_args[0], _loc),
+			awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(uint64_t{0x40}, _loc), _loc);
+		auto elemsLen = awst::makeUInt64BinOp(
+			offsetToUint64(_args[1], _loc),
+			awst::UInt64BinaryOperator::Sub,
+			awst::makeIntegerConstant(uint64_t{0x40}, _loc), _loc);
+		auto elemsBytes = awst::makeExtract3(
+			memoryVar(_loc), std::move(elemsOff), std::move(elemsLen), _loc);
+
+		auto arc4Bytes = awst::makeConcat(std::move(countBytes), std::move(elemsBytes), _loc);
+		auto returnValue = awst::makeReinterpretCast(std::move(arc4Bytes), m_returnType, _loc);
+
+		flushMemoryToScratch(_loc, _out);
+		_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
+		return;
+	}
+
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)
 	{
