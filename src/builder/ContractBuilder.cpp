@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "builder/NatSpecTags.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -294,7 +295,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Description from NatSpec
 	if (_contract.documentation())
-		contract->description = *_contract.documentation()->text();
+	{
+		std::string const& doc = *_contract.documentation()->text();
+		contract->description = doc;
+		// uros splitter opt-in: `@custom:uros-splitter <selector>` (e.g. "uros").
+		contract->splitter = natSpecTagValue(doc, "custom:uros-splitter");
+	}
 
 	// Method resolution order (linearized base contracts)
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
@@ -476,6 +482,26 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		auto yulSubs = AssemblyBuilder::takePendingSubroutines();
 		for (auto& sub: yulSubs)
 			m_dispatchSubroutines.push_back(std::move(sub));
+	}
+
+	// uros splitter: the backend requires EVERY ABI method to declare a chunk
+	// when the contract opts in. User methods get theirs from @custom:uros-chunk,
+	// but compiler-synthesized ABI methods (public-state-var getters, __postInit,
+	// __fallback, __receive) have none. Assign any still-unchunked ABI method to
+	// a default "shell" chunk so the backend can place them. No effect unless the
+	// contract set @custom:uros-splitter, so non-split contracts are unchanged.
+	if (!contract->splitter.empty())
+	{
+		for (auto& m: contract->methods)
+		{
+			if (!m.arc4MethodConfig.has_value())
+				continue;
+			if (auto* abi = std::get_if<awst::ARC4ABIMethodConfig>(&*m.arc4MethodConfig))
+			{
+				if (abi->chunk.empty())
+					abi->chunk = "shell";
+			}
+		}
 	}
 
 	return contract;

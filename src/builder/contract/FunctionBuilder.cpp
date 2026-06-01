@@ -1,6 +1,7 @@
 #include "builder/ContractBuilder.h"
 #include "awst/Termination.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/NatSpecTags.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/contract/ReturnRewriter.h"
@@ -869,6 +870,10 @@ std::optional<awst::ARC4MethodConfig> ContractBuilder::buildARC4Config(
 	{
 		config.readonly = true;
 	}
+
+	// uros splitter chunk assignment: `@custom:uros-chunk <name>` on the method.
+	if (_func.documentation())
+		config.chunk = natSpecTagValue(*_func.documentation()->text(), "custom:uros-chunk");
 
 	return awst::ARC4MethodConfig(config);
 }

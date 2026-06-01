@@ -172,6 +172,10 @@ struct ARC4ABIMethodConfig
 	std::string name;
 	bool readonly = false;
 	std::map<std::string, std::string> defaultArgs;
+	// uros splitter: named chunk this method belongs to; empty = not split.
+	// Set from the `@custom:uros-chunk` NatSpec tag. Maps to puya's
+	// ARC4ABIMethodConfig.chunk (optional, defaults to None in the backend).
+	std::string chunk;
 };
 
 using ARC4MethodConfig = std::variant<ARC4BareMethodConfig, ARC4ABIMethodConfig>;
@@ -2135,6 +2139,10 @@ struct Contract: RootNode
 	std::optional<StateTotals> stateTotals;
 	std::vector<int> reservedScratchSpace;
 	std::optional<int> avmVersion;
+	// uros splitter selector (e.g. "uros"); empty = no in-contract splitter.
+	// Set from the `@custom:uros-splitter` NatSpec tag. Maps to puya's
+	// Contract.splitter (optional, defaults to None in the backend).
+	std::string splitter;
 };
 
 struct Subroutine: RootNode
