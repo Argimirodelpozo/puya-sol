@@ -28,6 +28,18 @@ inline bool containsMappingType(solidity::frontend::Type const* _t)
 	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
 	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
 		return containsMappingType(arr->baseType());
+	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_t))
+	{
+		// A storage struct that carries nested mappings (e.g. Uniswap V4
+		// Pool.State { ...; mapping positions; mapping tickBitmap }) cannot be
+		// materialised by value — it must travel as a storage-key reference
+		// (bytes prefix), the same scheme used for plain mapping storage refs.
+		// Recurse into members so such structs are recognised here.
+		for (auto const& member: st->members(nullptr))
+			if (containsMappingType(member.type))
+				return true;
+		return false;
+	}
 	return false;
 }
 

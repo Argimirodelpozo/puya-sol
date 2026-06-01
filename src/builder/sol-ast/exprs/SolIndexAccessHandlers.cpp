@@ -241,6 +241,30 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 	{
 		out.varName = ma->memberName();
 		out.rootMappingType = ma->annotation().type;
+
+		// Nested mapping inside a struct-storage-ref: `self.inner[k]` where
+		// `self` is a struct-storage-ref param carrying the box-key PREFIX in
+		// bytes (e.g. Uniswap V4 `Pool.State storage self; self.positions[k]`).
+		// The inner mapping's per-layer key chain must START from
+		// `self_prefix ++ fieldName`, so entries are isolated per struct
+		// instance (i.e. per mapping-of-struct key). Without this the prefix
+		// defaults to `utf8(fieldName)` — a constant — and every instance's
+		// `self.inner[*]` aliases to one shared set of boxes.
+		if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
+			if (auto const* decl = baseId->annotation().referencedDeclaration)
+			{
+				auto const& selfPrefix = m_scope.findMappingKeyParam(decl->id());
+				if (!selfPrefix.empty())
+				{
+					auto selfBytes = awst::makeVarExpression(
+						selfPrefix, awst::WType::bytesType(), m_loc);
+					auto fieldBytes = awst::makeUtf8BytesConstant(ma->memberName(), m_loc);
+					auto combined = awst::makeConcat(
+						std::move(selfBytes), std::move(fieldBytes), m_loc);
+					out.aliasOverridePrefix = awst::makeReinterpretCast(
+						std::move(combined), awst::WType::boxKeyType(), m_loc);
+				}
+			}
 	}
 	// `f()[k]` — mapping-pointer-returning call indexed directly. The call
 	// result (bytes — the holder name) is the runtime key prefix.

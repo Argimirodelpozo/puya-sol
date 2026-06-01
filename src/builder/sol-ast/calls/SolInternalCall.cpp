@@ -154,6 +154,24 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	auto extractMappingKeyPrefix = [&](Expression const& argExpr)
 		-> std::shared_ptr<awst::Expression>
 	{
+		// Mapping-of-struct element passed as a storage-ref receiver, e.g.
+		// `_pools[id].initialize(...)` where `_pools` is
+		// `mapping(PoolId => Pool.State)`. The prefix must be the ACTUAL runtime
+		// box key for that element (`_pools ++ hash(id)`), NOT a static name —
+		// otherwise every key aliases to the same box. Build the element access
+		// and lift its box key; the callee reinterprets it straight back to a
+		// box_key (see SolIdentifier struct-storage-ref handling), so the same
+		// box is read/written as a direct `_pools[id]` access would.
+		if (dynamic_cast<IndexAccess const*>(&argExpr))
+		{
+			auto built = buildExpr(argExpr);
+			if (auto const* sg = dynamic_cast<awst::StateGet const*>(built.get()))
+				built = sg->field;
+			if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(built.get()))
+				return awst::makeReinterpretCast(
+					box->key, awst::WType::bytesType(), m_loc);
+		}
+
 		std::string name;
 		if (auto const* ident = dynamic_cast<Identifier const*>(&argExpr))
 			name = ident->name();
@@ -311,7 +329,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto const& p = _funcDef->parameters()[pi];
 			if (p->referenceLocation() != VariableDeclaration::Location::Storage)
 				continue;
-			if (dynamic_cast<MappingType const*>(p->type()))
+			// Exclude mapping storage refs AND structs that carry nested
+			// mappings (e.g. Uniswap V4 `Pool.State storage self`): those
+			// travel as a bytes key-prefix (mappingStorageParamIndices above)
+			// and write directly to box storage, so they get NO return
+			// write-back slot. Must use the same predicate as the callee
+			// (AWSTBuilder.cpp:253 `containsMappingType`) or the caller's
+			// return-tuple arity diverges from the callee's.
+			if (builder::containsMappingType(p->type()))
 				continue;
 			storageParamIndices.push_back(pi);
 		}

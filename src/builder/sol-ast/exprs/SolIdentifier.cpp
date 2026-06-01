@@ -50,6 +50,30 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
+		// Struct storage-ref param (e.g. Uniswap V4 `Pool.State storage self`):
+		// the param travels as the box-key PREFIX in bytes (Layer-1
+		// mapping-storage-ref handling, since the struct carries nested
+		// mappings). When used as a struct VALUE — `self.field` read or write —
+		// resolve it to a box-backed struct keyed by that runtime prefix, so the
+		// existing ARC4Struct field machinery (FieldExpression on a StateGet /
+		// write-back via NewStruct→box_put) handles member access. The other
+		// uses of `self` bypass this: passing `self` to a function goes through
+		// SolInternalCall::extractMappingKeyPrefix, and `self.nestedMap[k]` goes
+		// through SolIndexAccess::buildInitialPrefix (both consult
+		// findMappingKeyParam directly).
+		if (!m_scope.findMappingKeyParam(varDecl->id()).empty()
+			&& varDecl->type()
+			&& varDecl->type()->category() == solidity::frontend::Type::Category::Struct)
+		{
+			auto* structType = m_ctx.typeMapper.map(varDecl->type());
+			auto key = awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
+			auto boxKey = awst::makeReinterpretCast(
+				std::move(key), awst::WType::boxKeyType(), m_loc);
+			auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), structType, m_loc);
+			return builder::StorageMapper::makeStateGetWithDefault(
+				std::move(boxExpr), structType, m_loc);
+		}
+
 		// Constants: inline the value (known at compile time).
 		// Immutables: DO NOT inline — the constructor may mutate them
 		// (e.g. `int immutable x = 1; constructor() { x--; }`), so the
