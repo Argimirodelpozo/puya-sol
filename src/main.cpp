@@ -8,7 +8,6 @@
 #include "splitter/FunctionSplitter.h"
 #include "splitter/PureHelperExtractor.h"
 #include "splitter/SimpleSplitterRunner.h"
-#include "splitter/UrosSplitter.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
@@ -168,12 +167,6 @@ struct Options
 	std::string splitConfig;       // --split-config <json-path>
 	std::vector<std::string> forceDelegate; // --force-delegate <names>
 
-	// Each --uros-splitter flag invocation is one chunk's method list.
-	// urosSplitGroups[i] is the methods that go into chunk i.
-	std::vector<std::vector<std::string>> urosSplitGroups;
-	int64_t urosOrchAppId = 0; // orchestrator app id baked into stub guards
-	int64_t urosStorageAppId = 0; // __storage app id for Sender override path
-
 	// --pin-to-main: methods that MUST stay on the main contract and never
 	// be moved into a uros chunk. The validator below rejects any
 	// --uros-splitter group that includes one of these names. Reasons a
@@ -282,16 +275,6 @@ void printUsage(char const* _progName)
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
-		<< "  --uros-splitter <list> Comma-separated method names to split out into a sidecar\n"
-		<< "                         contract. Main keeps stubs; <Name>__split.approval.bin\n"
-		<< "                         is emitted alongside <Name>.approval.bin. Run-time swap\n"
-		<< "                         is performed by a separate orchestrator app (see\n"
-		<< "                         src/splitter/uros_orchestrator.py).\n"
-		<< "  --uros-orch-app-id <N> Substitute TMPL_UROS_ORCH_APP_ID with N at compile time.\n"
-		<< "                         Required for splitter stubs' next-txn-is-orch.dispatch()\n"
-		<< "                         guard to admit calls. Typically set on a SECOND compile\n"
-		<< "                         pass after the orchestrator is deployed and its app id\n"
-		<< "                         is known.\n"
 		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
 		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>[:cross]\n"
 		<< "                           SubName  — name of the awst::Subroutine to split\n"
@@ -309,9 +292,7 @@ void printUsage(char const* _progName)
 		<< "  --pin-to-main <list>   Comma-separated method names that MUST stay on the main\n"
 		<< "                         contract and never be split into a chunk. Use for methods\n"
 		<< "                         that read msg.sender or address(this) (chunks see orch as\n"
-		<< "                         sender / __storage as this). Repeatable. The compiler\n"
-		<< "                         errors out if any --uros-splitter group lists a pinned\n"
-		<< "                         name.\n"
+		<< "                         sender / __storage as this). Repeatable.\n"
 		<< "  --deploy-pure-helpers  Lift each pure (Solidity `pure`) Subroutine into its own\n"
 		<< "                         one-method sidecar Contract. Call sites in the rest of\n"
 		<< "                         the contract set are rewritten to inner-txn ApplicationCall\n"
@@ -378,10 +359,6 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.viaYulBehavior = true;
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
-		else if (arg == "--uros-orch-app-id" && i + 1 < _argc)
-			opts.urosOrchAppId = std::stoll(_argv[++i]);
-		else if (arg == "--uros-storage-app-id" && i + 1 < _argc)
-			opts.urosStorageAppId = std::stoll(_argv[++i]);
 		else if (arg == "--deploy-pure-helpers")
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)
@@ -534,32 +511,6 @@ Options parseArgs(int _argc, char* _argv[])
 				if (comma == std::string::npos) break;
 				start = comma + 1;
 			}
-		}
-		else if (arg == "--uros-splitter" && i + 1 < _argc)
-		{
-			// Comma-separated method names. The flag is repeatable —
-			// each invocation defines one CHUNK's method list. e.g.
-			//   --uros-splitter "fooA,fooB" --uros-splitter "fooC,fooD"
-			// produces 2 chunks. Single invocation = 1 chunk.
-			std::string spec = _argv[++i];
-			std::vector<std::string> group;
-			size_t start = 0;
-			while (start <= spec.size())
-			{
-				size_t comma = spec.find(',', start);
-				size_t end = (comma == std::string::npos) ? spec.size() : comma;
-				std::string name = spec.substr(start, end - start);
-				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.front())))
-					name.erase(name.begin());
-				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back())))
-					name.pop_back();
-				if (!name.empty())
-					group.push_back(std::move(name));
-				if (comma == std::string::npos) break;
-				start = comma + 1;
-			}
-			if (!group.empty())
-				opts.urosSplitGroups.push_back(std::move(group));
 		}
 		else if (arg == "--help")
 		{
@@ -1095,14 +1046,6 @@ int main(int _argc, char* _argv[])
 	// output.
 	if (!opts.splitConfig.empty() || !opts.forceDelegate.empty())
 	{
-		if (!opts.urosSplitGroups.empty())
-		{
-			logger.error(
-				"--split-config / --force-delegate and --uros-splitter are "
-				"separate splitter pipelines; pass at most one set per "
-				"invocation.");
-			return 1;
-		}
 		puyasol::splitter::SimpleSplitterRunner::Config cfg;
 		cfg.splitConfigPath = opts.splitConfig;
 		cfg.forceDelegate = opts.forceDelegate;
@@ -1126,47 +1069,6 @@ int main(int _argc, char* _argv[])
 	}
 
 	// ─── --uros-splitter: split AWST into main + N chunks ───────────────
-	// Each --uros-splitter flag invocation defines one chunk's method
-	// list. The splitter returns mainRoots (replaces `roots`) plus per-
-	// chunk root sets that are emitted later via emitChunkAwsts and
-	// compileChunksAndEmitDeployTemplate. All chunk-specific machinery
-	// lives in UrosSplitter — main.cpp only orchestrates.
-	puyasol::splitter::UrosSplitter::Result splitResult;
-	if (!opts.urosSplitGroups.empty())
-	{
-		// Validate --pin-to-main: a pinned method must NOT appear in any
-		// chunk group. Pinned methods read msg.sender / address(this) and
-		// would silently misbehave if relocated to a chunk (the chunk runs
-		// as an itxn from orch, so Txn.Sender = orch and address(this) =
-		// __storage). Catching this at parse time prevents shipping broken
-		// auth / balance-keyed logic.
-		std::set<std::string> pinnedSet(
-			opts.pinnedToMain.begin(), opts.pinnedToMain.end());
-		for (size_t gi = 0; gi < opts.urosSplitGroups.size(); ++gi)
-		{
-			for (auto const& methodName : opts.urosSplitGroups[gi])
-			{
-				if (pinnedSet.count(methodName))
-				{
-					logger.error(
-						"--pin-to-main: method '" + methodName +
-						"' is pinned to main but appears in --uros-splitter "
-						"chunk " + std::to_string(gi) + ". Pinned methods "
-						"read msg.sender or address(this) — moving them to a "
-						"chunk would silently break their semantics. Remove "
-						"the method from the chunk list, or drop the pin if "
-						"chunk-side semantics are acceptable.");
-					return 1;
-				}
-			}
-		}
-
-		std::vector<std::set<std::string>> splitGroups;
-		for (auto const& g : opts.urosSplitGroups)
-			splitGroups.emplace_back(g.begin(), g.end());
-		splitResult = puyasol::splitter::UrosSplitter::split(roots, splitGroups);
-		roots = std::move(splitResult.mainRoots);
-	}
 
 	// ─── Serialization and output ─────────────────────────────────────────
 
@@ -1200,22 +1102,7 @@ int main(int _argc, char* _argv[])
 	// Write options.json (with template var declarations for child contracts)
 	auto const& childContracts = puyasol::builder::sol_ast::SolNewExpression::childContracts();
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
-	// When --uros-splitter is active, the stub bodies reference a
-	// TemplateVar(UROS_ORCH_APP_ID); declare it as an integer template
-	// var so puya doesn't reject the AWST. Default 0 acts as a placeholder
-	// — the deploy harness substitutes the real orchestrator app id.
 	std::map<std::string, int64_t> intTemplateVars;
-	if (!splitResult.chunks.empty())
-	{
-		intTemplateVars["UROS_ORCH_APP_ID"] = opts.urosOrchAppId;
-		// Main's stub computes __storage's address via
-		// app_params_get(UROS_STORAGE_APP_ID, AppAddress) for the
-		// Sender=storage_addr override (bidirectional rekey design).
-		// Default 0 is a placeholder — the deploy harness can either
-		// pass --uros-storage-app-id explicitly OR (for the AAVE dance)
-		// post-process the TEAL/bytes to substitute the real id.
-		intTemplateVars["UROS_STORAGE_APP_ID"] = opts.urosStorageAppId;
-	}
 	// Each --deploy-pure-helpers extraction injects a TemplateVar at
 	// every rewritten call site. Declare each as an int placeholder
 	// so puya doesn't reject the AWST; the deploy harness substitutes
@@ -1232,17 +1119,6 @@ int main(int _argc, char* _argv[])
 		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, intTemplateVars);
 	}
 	logger.info("Wrote: " + optionsPath);
-
-	// ─── --uros-splitter: emit per-chunk AWST + options eagerly ─────────
-	// Done before the --no-puya gate so inspection/manual puya runs
-	// work even when puya invocation is skipped.
-	std::map<std::string, int64_t> chunkExtraTemplateVars;
-	for (auto const& h : pureHelperResult.extracted)
-		chunkExtraTemplateVars[h.templateVarName] = 0;
-	auto chunkPaths = puyasol::splitter::UrosSplitter::emitChunkAwsts(
-		opts.outputDir, splitResult,
-		opts.optimizationLevel, opts.outputIr, opts.urosOrchAppId,
-		chunkExtraTemplateVars);
 
 	// Summary
 	if (logger.warningCount() > 0)
@@ -1305,23 +1181,6 @@ int main(int _argc, char* _argv[])
 			tf << tmpl.dump(2);
 			logger.info("Wrote: " + tmplPath);
 			puyasol::builder::sol_ast::SolNewExpression::resetChildContracts();
-		}
-
-		// ─── --uros-splitter: per-chunk puya pass + deploy template ─────
-		if (!splitResult.chunks.empty() && exitCode == 0)
-		{
-			// Match UrosSplitter::findPrimaryContract — iterate in
-			// reverse to pick the LAST Contract (the deployable target,
-			// per Solidity convention).
-			std::string mainBareName;
-			for (auto it = roots.rbegin(); it != roots.rend(); ++it)
-				if (auto const* c = dynamic_cast<puyasol::awst::Contract const*>(it->get()))
-					{ mainBareName = c->name; break; }
-
-			int rc = puyasol::splitter::UrosSplitter::compileChunksAndEmitDeployTemplate(
-				opts.outputDir, mainBareName, splitResult, chunkPaths,
-				opts.puyaPath, opts.logLevel);
-			if (rc != 0) return rc;
 		}
 
 		return exitCode;
