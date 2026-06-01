@@ -17,6 +17,7 @@ def test_account(harness):
         r = harness.call(app, "who_am_i()")
         assert r.abi_return == harness.localnet.account.address
 
+@pytest.mark.xfail(reason="constructor does `payable(address(0x1234)).transfer(500)` — sends to a bare literal EVM address with no AVM account. EVM auto-creates the account on transfer; AVM rejects it ('unavailable Account') since the 32-byte account isn't in the ledger / resource array. EVM-fundamental address-model divergence.", strict=False)
 def test_balance_other_contract(harness):  # currently fails
     """isoltestTesting/contracts/balance_other_contract.sol"""
     app = harness.compile_and_deploy('isoltestTesting/contracts/balance_other_contract.sol')
