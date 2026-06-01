@@ -17,7 +17,7 @@ def test_account(harness):
         r = harness.call(app, "who_am_i()")
         assert r.abi_return == harness.localnet.account.address
 
-@pytest.mark.xfail(reason="constructor does `payable(address(0x1234)).transfer(500)` — sends to a bare literal EVM address with no AVM account. EVM auto-creates the account on transfer; AVM rejects it ('unavailable Account') since the 32-byte account isn't in the ledger / resource array. EVM-fundamental address-model divergence.", strict=False)
+@pytest.mark.xfail(reason="constructor does `payable(address(0x1234)).transfer(500)`. Two AVM walls: (1) the inner-payment Receiver (0x..1234) must be in the txn's foreign-accounts resource array — the create txn doesn't list it, hence 'unavailable Account'; (2) AVM requires every account hold >=100000 microAlgos min-balance, so a fresh account receiving 500 can't exist anyway. The 500-microAlgo transfer to an unreferenced address is not expressible on AVM as written.", strict=False)
 def test_balance_other_contract(harness):  # currently fails
     """isoltestTesting/contracts/balance_other_contract.sol"""
     app = harness.compile_and_deploy('isoltestTesting/contracts/balance_other_contract.sol')
