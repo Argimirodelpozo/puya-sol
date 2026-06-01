@@ -2140,7 +2140,7 @@ struct Contract: RootNode
 	std::vector<int> reservedScratchSpace;
 	std::optional<int> avmVersion;
 	// uros splitter selector (e.g. "uros"); empty = no in-contract splitter.
-	// Set from the `@custom:uros-splitter` NatSpec tag. Maps to puya's
+	// Set from the `@custom:splitter` NatSpec tag. Maps to puya's
 	// Contract.splitter (optional, defaults to None in the backend).
 	std::string splitter;
 };

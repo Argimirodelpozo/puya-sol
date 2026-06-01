@@ -298,8 +298,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	{
 		std::string const& doc = *_contract.documentation()->text();
 		contract->description = doc;
-		// uros splitter opt-in: `@custom:uros-splitter <selector>` (e.g. "uros").
-		contract->splitter = natSpecTagValue(doc, "custom:uros-splitter");
+		// uros splitter opt-in: `@custom:splitter <selector>` (e.g. "uros").
+		contract->splitter = natSpecTagValue(doc, "custom:splitter");
 	}
 
 	// Method resolution order (linearized base contracts)
@@ -489,7 +489,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// but compiler-synthesized ABI methods (public-state-var getters, __postInit,
 	// __fallback, __receive) have none. Assign any still-unchunked ABI method to
 	// a default "shell" chunk so the backend can place them. No effect unless the
-	// contract set @custom:uros-splitter, so non-split contracts are unchanged.
+	// contract set @custom:splitter, so non-split contracts are unchanged.
 	if (!contract->splitter.empty())
 	{
 		for (auto& m: contract->methods)
