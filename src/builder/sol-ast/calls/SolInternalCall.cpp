@@ -17,6 +17,9 @@
 #include "Logger.h"
 
 #include <functional>
+#include <map>
+#include <set>
+#include <vector>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -25,6 +28,29 @@ namespace puyasol::builder::sol_ast
 {
 
 using namespace solidity::frontend;
+
+namespace {
+// Peel index/field/tuple-item layers to the underlying referable variable name,
+// mirroring puya's `_is_referable_expression`. Returns the variable name an
+// expression ultimately aliases, or "" if it is not a referable lvalue
+// (literal, fresh allocation, call result, …).
+std::string referableVarName(awst::Expression const* e)
+{
+	while (e)
+	{
+		if (auto const* v = dynamic_cast<awst::VarExpression const*>(e))
+			return v->name;
+		if (auto const* ix = dynamic_cast<awst::IndexExpression const*>(e))
+		{ e = ix->base.get(); continue; }
+		if (auto const* ti = dynamic_cast<awst::TupleItemExpression const*>(e))
+		{ e = ti->base.get(); continue; }
+		if (auto const* fa = dynamic_cast<awst::FieldExpression const*>(e))
+		{ e = fa->base.get(); continue; }
+		break;
+	}
+	return "";
+}
+} // namespace
 
 awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _funcDef)
 {
@@ -174,6 +200,75 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					std::move(ca.value), paramTypes[paramIdx], m_loc);
 		}
 		call->args.push_back(std::move(ca));
+	}
+
+	// Aliasing guard: if the SAME referable variable is passed to more than one
+	// argument position and the parameter type is mutable (non-immutable WType),
+	// puya threads it as an implicit-return ("pass-by-reference") arg and rejects
+	// the duplicate ("mutable values cannot be passed more than once to a
+	// subroutine"). This bites e.g. `s.concat(s)` where a `slice memory` is both
+	// `self` and `other`.
+	//
+	// We may break the alias by wrapping the duplicate in `Copy` (a fresh value)
+	// ONLY when it preserves Solidity semantics: in EVM, two memory-reference
+	// args bound to the same variable ARE the same memory, so a write through one
+	// is observable through the other. Copying is therefore safe iff NONE of the
+	// callee parameters that share the aliased variable are mutated by the callee
+	// — then the aliasing is unobservable (pure reads, e.g. stringutils' concat).
+	// If any sharing param IS mutated, the EVM aliasing is semantically live and
+	// has no faithful AVM lowering, so we deliberately do NOT copy and let puya's
+	// loud error stand rather than silently change behaviour.
+	if (_funcDef)
+	{
+		// Which tracked params does the callee write to?
+		ParamMutationDetector mutDet;
+		for (auto const& p : _funcDef->parameters())
+			mutDet.paramIds.insert(p->id());
+		if (_funcDef->isImplemented())
+			_funcDef->body().accept(mutDet);
+
+		// Map each arg position → callee parameter index (receiver is param 0
+		// for using-for calls), then → "is this param mutated?".
+		auto paramMutatedForArg = [&](size_t argIdx) -> bool {
+			size_t pIdx = argIdx; // using-for receiver already occupies arg 0 == param 0
+			if (pIdx >= _funcDef->parameters().size())
+				return false;
+			return mutDet.mutated.count(_funcDef->parameters()[pIdx]->id()) != 0;
+		};
+
+		// First pass: group arg positions by the variable they alias, and note
+		// whether ANY position in the group hits a mutated param.
+		std::map<std::string, std::vector<size_t>> positionsByVar;
+		std::set<std::string> varTouchesMutatedParam;
+		for (size_t ai = 0; ai < call->args.size(); ++ai)
+		{
+			auto& ca = call->args[ai];
+			if (!ca.value || !ca.value->wtype || ca.value->wtype->immutable())
+				continue;
+			std::string vn = referableVarName(ca.value.get());
+			if (vn.empty())
+				continue;
+			positionsByVar[vn].push_back(ai);
+			if (paramMutatedForArg(ai))
+				varTouchesMutatedParam.insert(vn);
+		}
+
+		// Second pass: for each variable aliased across >1 position AND not
+		// touching any mutated param, Copy every occurrence after the first.
+		for (auto const& [vn, positions] : positionsByVar)
+		{
+			if (positions.size() < 2 || varTouchesMutatedParam.count(vn))
+				continue;
+			for (size_t k = 1; k < positions.size(); ++k)
+			{
+				auto& ca = call->args[positions[k]];
+				auto copy = std::make_shared<awst::Copy>();
+				copy->sourceLocation = m_loc;
+				copy->wtype = ca.value->wtype;
+				copy->value = std::move(ca.value);
+				ca.value = std::move(copy);
+			}
+		}
 	}
 
 	// Storage write-back for calls whose first parameter is a storage
