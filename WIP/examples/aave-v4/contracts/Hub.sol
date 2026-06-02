@@ -18,6 +18,7 @@ import {IHubBase, IHub} from './IHub.sol';
 /// @title Hub
 /// @author Aave Labs
 /// @notice A liquidity hub that manages assets and spokes.
+/// @custom:splitter uros
 contract Hub is IHub, AccessManaged {
   using EnumerableSet for EnumerableSet.AddressSet;
   using SafeCast for *;
@@ -63,6 +64,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk addasset
   function addAsset(
     address underlying,
     uint8 decimals,
@@ -131,6 +133,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk cfg1
   function updateAssetConfig(
     uint256 assetId,
     AssetConfig calldata config,
@@ -174,6 +177,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk cfg1
   function addSpoke(
     uint256 assetId,
     address spoke,
@@ -186,6 +190,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk cfg2
   function updateSpokeConfig(
     uint256 assetId,
     address spoke,
@@ -197,6 +202,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk cfg2
   function setInterestRateData(uint256 assetId, bytes calldata irData) external restricted {
     require(assetId < _assetCount, AssetNotListed());
     Asset storage asset = _assets[assetId];
@@ -206,6 +212,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk shares
   function mintFeeShares(uint256 assetId) external restricted returns (uint256) {
     require(assetId < _assetCount, AssetNotListed());
     Asset storage asset = _assets[assetId];
@@ -216,6 +223,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk addremove
   function add(uint256 assetId, uint256 amount) external returns (uint256) {
     Asset storage asset = _assets[assetId];
     SpokeData storage spoke = _spokes[assetId][msg.sender];
@@ -240,6 +248,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk addremove
   function remove(uint256 assetId, uint256 amount, address to) external returns (uint256) {
     Asset storage asset = _assets[assetId];
     SpokeData storage spoke = _spokes[assetId][msg.sender];
@@ -265,6 +274,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk drawrestore
   function draw(uint256 assetId, uint256 amount, address to) external returns (uint256) {
     Asset storage asset = _assets[assetId];
     SpokeData storage spoke = _spokes[assetId][msg.sender];
@@ -290,6 +300,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk drawrestore
   function restore(
     uint256 assetId,
     uint256 drawnAmount,
@@ -320,6 +331,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk sweep
   function reportDeficit(
     uint256 assetId,
     uint256 drawnAmount,
@@ -349,6 +361,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk deficit
   function eliminateDeficit(
     uint256 assetId,
     uint256 amount,
@@ -377,6 +390,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk shares
   function refreshPremium(uint256 assetId, PremiumDelta calldata premiumDelta) external {
     Asset storage asset = _assets[assetId];
     SpokeData storage spoke = _spokes[assetId][msg.sender];
@@ -392,6 +406,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk shares
   function payFeeShares(uint256 assetId, uint256 shares) external {
     Asset storage asset = _assets[assetId];
     address feeReceiver = _assets[assetId].feeReceiver;
@@ -407,6 +422,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk shares
   function transferShares(uint256 assetId, uint256 shares, address toSpoke) external {
     Asset storage asset = _assets[assetId];
     SpokeData storage sender = _spokes[assetId][msg.sender];
@@ -421,6 +437,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk sweep
   function sweep(uint256 assetId, uint256 amount) external {
     require(assetId < _assetCount, AssetNotListed());
     Asset storage asset = _assets[assetId];
@@ -442,6 +459,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk sweep
   function reclaim(uint256 assetId, uint256 amount) external {
     require(assetId < _assetCount, AssetNotListed());
     Asset storage asset = _assets[assetId];
@@ -461,83 +479,99 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk previews
   function isUnderlyingListed(address underlying) public view returns (bool) {
     return _assets[_underlyingToAssetId[underlying]].underlying == underlying;
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk previews
   function getAssetId(address underlying) external view returns (uint256) {
     require(isUnderlyingListed(underlying), AssetNotListed());
     return _underlyingToAssetId[underlying];
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk previews
   function getAssetCount() external view returns (uint256) {
     return _assetCount;
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewAddByAssets(uint256 assetId, uint256 assets) external view returns (uint256) {
     return _assets[assetId].toAddedSharesDown(assets);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewAddByShares(uint256 assetId, uint256 shares) external view returns (uint256) {
     return _assets[assetId].toAddedAssetsUp(shares);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewRemoveByAssets(uint256 assetId, uint256 assets) external view returns (uint256) {
     return _assets[assetId].toAddedSharesUp(assets);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewRemoveByShares(uint256 assetId, uint256 shares) external view returns (uint256) {
     return _assets[assetId].toAddedAssetsDown(shares);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewDrawByAssets(uint256 assetId, uint256 assets) external view returns (uint256) {
     return _assets[assetId].toDrawnSharesUp(assets);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewDrawByShares(uint256 assetId, uint256 shares) external view returns (uint256) {
     return _assets[assetId].toDrawnAssetsDown(shares);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewRestoreByAssets(uint256 assetId, uint256 assets) external view returns (uint256) {
     return _assets[assetId].toDrawnSharesDown(assets);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk previews
   function previewRestoreByShares(uint256 assetId, uint256 shares) external view returns (uint256) {
     return _assets[assetId].toDrawnAssetsUp(shares);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetUnderlyingAndDecimals(uint256 assetId) external view returns (address, uint8) {
     Asset storage asset = _assets[assetId];
     return (asset.underlying, asset.decimals);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetDrawnIndex(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].getDrawnIndex();
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAddedAssets(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].totalAddedAssets();
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAddedShares(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].addedShares;
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetOwed(uint256 assetId) external view returns (uint256, uint256) {
     Asset storage asset = _assets[assetId];
     uint256 drawnIndex = asset.getDrawnIndex();
@@ -545,12 +579,14 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetTotalOwed(uint256 assetId) external view returns (uint256) {
     Asset storage asset = _assets[assetId];
     return asset.totalOwed(asset.getDrawnIndex());
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetPremiumRay(uint256 assetId) external view returns (uint256) {
     Asset storage asset = _assets[assetId];
     return
@@ -562,32 +598,38 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetDrawnShares(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].drawnShares;
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetPremiumData(uint256 assetId) external view returns (uint256, int256) {
     Asset storage asset = _assets[assetId];
     return (asset.premiumShares, asset.premiumOffsetRay);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetLiquidity(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].liquidity;
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk assetviews
   function getAssetDeficitRay(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].deficitRay;
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk assetviews
   function getAsset(uint256 assetId) external view returns (Asset memory) {
     return _assets[assetId];
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk assetviews
   function getAssetConfig(uint256 assetId) external view returns (AssetConfig memory) {
     Asset storage asset = _assets[assetId];
     return
@@ -600,38 +642,45 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk assetviews
   function getAssetAccruedFees(uint256 assetId) external view returns (uint256) {
     Asset storage asset = _assets[assetId];
     return asset.realizedFees + asset.getUnrealizedFees(asset.getDrawnIndex());
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk assetviews
   function getAssetSwept(uint256 assetId) external view returns (uint256) {
     return _assets[assetId].swept;
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk assetviews
   function getAssetDrawnRate(uint256 assetId) external view returns (uint256) {
     Asset storage asset = _assets[assetId];
     return asset.getDrawnRate(assetId, asset.getDrawnIndex());
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk spokeviews
   function getSpokeCount(uint256 assetId) external view returns (uint256) {
     return _assetToSpokes[assetId].length();
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokeAddedAssets(uint256 assetId, address spoke) external view returns (uint256) {
     return _assets[assetId].toAddedAssetsDown(_spokes[assetId][spoke].addedShares);
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokeAddedShares(uint256 assetId, address spoke) external view returns (uint256) {
     return _spokes[assetId][spoke].addedShares;
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokeOwed(uint256 assetId, address spoke) external view returns (uint256, uint256) {
     Asset storage asset = _assets[assetId];
     SpokeData storage spokeData = _spokes[assetId][spoke];
@@ -639,6 +688,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokeTotalOwed(uint256 assetId, address spoke) external view returns (uint256) {
     Asset storage asset = _assets[assetId];
     SpokeData storage spokeData = _spokes[assetId][spoke];
@@ -646,6 +696,7 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokePremiumRay(uint256 assetId, address spoke) external view returns (uint256) {
     Asset storage asset = _assets[assetId];
     SpokeData storage spokeData = _spokes[assetId][spoke];
@@ -653,11 +704,13 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokeDrawnShares(uint256 assetId, address spoke) external view returns (uint256) {
     return _spokes[assetId][spoke].drawnShares;
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokePremiumData(
     uint256 assetId,
     address spoke
@@ -667,26 +720,31 @@ contract Hub is IHub, AccessManaged {
   }
 
   /// @inheritdoc IHubBase
+  /// @custom:uros-chunk spokeviews
   function getSpokeDeficitRay(uint256 assetId, address spoke) external view returns (uint256) {
     return _spokes[assetId][spoke].deficitRay;
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk previews
   function isSpokeListed(uint256 assetId, address spoke) external view returns (bool) {
     return _assetToSpokes[assetId].contains(spoke);
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk spokeviews
   function getSpokeAddress(uint256 assetId, uint256 index) external view returns (address) {
     return _assetToSpokes[assetId].at(index);
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk spokeviews
   function getSpoke(uint256 assetId, address spoke) external view returns (SpokeData memory) {
     return _spokes[assetId][spoke];
   }
 
   /// @inheritdoc IHub
+  /// @custom:uros-chunk spokeviews
   function getSpokeConfig(
     uint256 assetId,
     address spoke

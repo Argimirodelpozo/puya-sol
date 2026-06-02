@@ -136,7 +136,7 @@ library SafeERC20 {
     uint256 value,
     bytes memory data
   ) internal {
-    if (to.code.length == 0) {
+    if (true /* AVM: address.code unqueryable; ERC1363 relaxed path unused by Hub */) {
       safeTransfer(token, to, value);
     } else if (!token.transferAndCall(to, value, data)) {
       revert SafeERC20FailedOperation(address(token));
@@ -157,7 +157,7 @@ library SafeERC20 {
     uint256 value,
     bytes memory data
   ) internal {
-    if (to.code.length == 0) {
+    if (true /* AVM: address.code unqueryable; ERC1363 relaxed path unused by Hub */) {
       safeTransferFrom(token, from, to, value);
     } else if (!token.transferFromAndCall(from, to, value, data)) {
       revert SafeERC20FailedOperation(address(token));
@@ -181,7 +181,7 @@ library SafeERC20 {
     uint256 value,
     bytes memory data
   ) internal {
-    if (to.code.length == 0) {
+    if (true /* AVM: address.code unqueryable; ERC1363 relaxed path unused by Hub */) {
       forceApprove(token, to, value);
     } else if (!token.approveAndCall(to, value, data)) {
       revert SafeERC20FailedOperation(address(token));
@@ -222,7 +222,7 @@ library SafeERC20 {
         // if the return value is not true, then the call is only successful if:
         // - the token address has code
         // - the returndata is empty
-        success := and(success, and(iszero(returndatasize()), gt(extcodesize(token), 0)))
+        success := and(success, and(iszero(returndatasize()), 1))
       }
       mstore(0x40, fmp)
     }
@@ -265,7 +265,7 @@ library SafeERC20 {
         // if the return value is not true, then the call is only successful if:
         // - the token address has code
         // - the returndata is empty
-        success := and(success, and(iszero(returndatasize()), gt(extcodesize(token), 0)))
+        success := and(success, and(iszero(returndatasize()), 1))
       }
       mstore(0x40, fmp)
       mstore(0x60, 0)
@@ -306,7 +306,7 @@ library SafeERC20 {
         // if the return value is not true, then the call is only successful if:
         // - the token address has code
         // - the returndata is empty
-        success := and(success, and(iszero(returndatasize()), gt(extcodesize(token), 0)))
+        success := and(success, and(iszero(returndatasize()), 1))
       }
       mstore(0x40, fmp)
     }

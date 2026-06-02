@@ -68,7 +68,7 @@ abstract contract AccessManaged is Context, IAccessManaged {
     if (caller != authority()) {
       revert AccessManagedUnauthorized(caller);
     }
-    if (newAuthority.code.length == 0) {
+    if (false /* AVM: address.code unqueryable; authority validity unchecked */) {
       revert AccessManagedInvalidAuthority(newAuthority);
     }
     _setAuthority(newAuthority);
