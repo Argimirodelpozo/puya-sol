@@ -236,7 +236,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// function returns only the uint64 index; call sites reconstitute
 		// the storage location as IndexExpression(<stateVar>, <call>).
 		else if (storageRefPointerReturn(&_func))
-			method.returnType = awst::WType::uint64Type();
+			// Box-keyed mapping-of-struct storage ref (e.g. `return _pools[id]`
+			// returning `Pool.State storage`): the function returns the bytes
+			// box-key prefix. Array/slot refs still return the uint64 index.
+			method.returnType = containsMappingType(returnParams[0]->type())
+				? awst::WType::bytesType()
+				: awst::WType::uint64Type();
 		// For signed integer returns ≤64 bits, promote to biguint for proper
 		// 256-bit two's complement ARC4 encoding.
 		// Unwrap UserDefinedValueType/EnumType to find the underlying IntegerType.

@@ -91,7 +91,12 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 		// index of the location; buildSubroutineCall wraps the call in an
 		// IndexExpression to reconstitute the storage reference.
 		if (builder::storageRefPointerReturn(_funcDef))
-			return awst::WType::uint64Type();
+			// Box-keyed mapping-of-struct storage ref (e.g. `return _pools[id]`
+			// returning `Pool.State storage`) returns the bytes box-key prefix;
+			// array/slot refs return the uint64 index.
+			return builder::containsMappingType(_funcDef->returnParameters()[0]->type())
+				? awst::WType::bytesType()
+				: awst::WType::uint64Type();
 		return mapReturnType(_funcDef->returnParameters()[0]->type());
 	}
 
@@ -116,6 +121,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		auto const* indexAccess = builder::storageRefPointerReturn(_funcDef);
 		if (!indexAccess)
+			return _result;
+		// Box-keyed mapping-of-struct storage ref: the callee already returns the
+		// bytes box-key prefix (see mapReturnType / the return-body handling). Pass
+		// it through unchanged — the caller binds it as a struct-storage-ref
+		// (SolVariableDeclaration) — rather than reconstituting an IndexExpression,
+		// which here would be the invalid `bytes[idx] -> Struct`.
+		if (builder::containsMappingType(_funcDef->returnParameters()[0]->type()))
 			return _result;
 		auto base = m_ctx.buildExpr(indexAccess->baseExpression());
 		auto* elemType = m_ctx.typeMapper.map(

@@ -2,6 +2,7 @@
 /// Migrated from VariableDeclarationBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
+#include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -153,8 +154,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				//    SolIndexAccess builds box keys with `m` as runtime prefix.
 				// 2. `T storage m = ...` with a slot-int (biguint) return —
 				//    register as slotStorageRef for __storage_read/write paths.
+				// A `mapping(K=>V) storage` ref, OR a struct-storage ref whose
+				// struct carries nested mappings (e.g. `Pool.State storage pool =
+				// _getPool(id)`). Both travel as a bytes box-key prefix; bind the
+				// local as a mappingKeyParam so `pool.field` / `pool.map[k]`
+				// resolve against that prefix (see SolIdentifier struct-ref read).
 				bool isMappingPtr = decl.type()
-					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping;
+					&& (decl.type()->category() == solidity::frontend::Type::Category::Mapping
+						|| builder::containsMappingType(decl.type()));
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
 					m_blk.setMappingKeyParam(decl.id(), decl.name());

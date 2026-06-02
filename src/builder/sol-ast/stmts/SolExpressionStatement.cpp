@@ -2,6 +2,7 @@
 /// ExpressionStatement, RevertStatement, ReturnStatement.
 
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
+#include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -119,6 +120,39 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	}
 	else if (m_node.expression())
 	{
+		// Box-keyed mapping-of-struct storage-ref RETURN, e.g.
+		// `_getPool(id) -> Pool.State storage { return _pools[id]; }`. Return the
+		// bytes box-key prefix of the indexed element (not its struct value); the
+		// caller binds the result as a struct-storage-ref (SolVariableDeclaration),
+		// and the return type is bytes (FunctionBuilder / mapReturnType).
+		bool storageRefMapReturn = false;
+		if (auto const* retAnn =
+				dynamic_cast<ReturnAnnotation const*>(&m_node.annotation()))
+			if (retAnn->functionReturnParameters)
+			{
+				auto const& rps = retAnn->functionReturnParameters->parameters();
+				if (rps.size() == 1
+					&& rps[0]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage
+					&& builder::containsMappingType(rps[0]->type()))
+					storageRefMapReturn = true;
+			}
+		if (storageRefMapReturn
+			&& dynamic_cast<solidity::frontend::IndexAccess const*>(m_node.expression()))
+		{
+			auto built = m_blk.builderCtx().build(*m_node.expression());
+			if (auto* sg = dynamic_cast<awst::StateGet*>(built.get()))
+				built = sg->field;
+			if (auto* box = dynamic_cast<awst::BoxValueExpression*>(built.get()))
+				stmt->value = awst::makeReinterpretCast(
+					box->key, awst::WType::bytesType(), m_loc);
+			else
+				stmt->value = std::move(built);
+			m_blk.builderCtx().appendPendingTo(result); // pending before the return
+			result.push_back(std::move(stmt));
+			return result;
+		}
+
 		stmt->value = m_blk.builderCtx().build(*m_node.expression());
 
 		// `return foo();` where foo is void: Solidity allows this when the
