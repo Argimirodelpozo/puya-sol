@@ -3,6 +3,7 @@
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/storage/StorageMapper.h" // makeStateGetWithDefault (box-keyed struct sstore)
 #include "Logger.h"
 
 #include <sstream>
@@ -392,6 +393,19 @@ void AssemblyBuilder::handleSstore(
 		return;
 	}
 
+	// Box-keyed struct slot write (`sstore(info.slot, packedWord)` where `info`
+	// aliases an ARC4 struct in a box — e.g. Uniswap V4 Pool.updateTick). The
+	// slot resolves to a BoxValueExpression sentinel with the struct wtype (see
+	// buildIdentifier / m_boxKeyedStructSlots); EVM packs several fields into one
+	// 256-bit slot, so rebuild the struct's box bytes field-by-field rather than
+	// writing the raw word (the box holds ARC4 layout, not EVM slot layout).
+	if (auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(_args[0]))
+		if (dynamic_cast<awst::ARC4Struct const*>(box->wtype))
+		{
+			handleBoxKeyedStructSlotStore(box, _args[1], _loc, _out);
+			return;
+		}
+
 	// Convert slot arg to uint64 for __storage_write(slot, value)
 	auto slotArg = _args[0];
 	if (slotArg->wtype == awst::WType::biguintType())
@@ -408,6 +422,99 @@ void AssemblyBuilder::handleSstore(
 
 	auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
 	_out.push_back(std::move(stmt));
+}
+
+
+void AssemblyBuilder::handleBoxKeyedStructSlotStore(
+	std::shared_ptr<awst::BoxValueExpression> const& _slotBox,
+	std::shared_ptr<awst::Expression> const& _packed,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	auto const* st = dynamic_cast<awst::ARC4Struct const*>(_slotBox->wtype);
+	if (!st) return; // guaranteed by caller; defensive
+
+	// Per-field layout: ARC4 byte offset/width (the box layout) and EVM slot +
+	// in-slot bit offset (the packed-word layout). EVM packs each value-type
+	// field into the current 256-bit slot, spilling to the next when it no
+	// longer fits. We only support byte-aligned value (ARC4UIntN) fields — the
+	// only shape that can be sliced losslessly at the byte level.
+	struct FieldInfo { int arc4Off; int byteW; int evmSlot; int evmBit; };
+	std::vector<FieldInfo> fields;
+	int arc4Off = 0, curSlot = 0, curBit = 0;
+	for (auto const& [fname, fwt]: st->fields())
+	{
+		(void)fname;
+		auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(fwt);
+		if (!uintN || (uintN->n() % 8) != 0)
+		{
+			Logger::instance().error(
+				"sstore to a box-keyed struct slot requires byte-aligned integer "
+				"fields", _loc);
+			return;
+		}
+		int const bits = uintN->n();
+		if (curBit + bits > 256) { curSlot++; curBit = 0; }
+		fields.push_back({arc4Off, bits / 8, curSlot, curBit});
+		curBit += bits;
+		if (curBit == 256) { curSlot++; curBit = 0; }
+		arc4Off += bits / 8;
+	}
+
+	// A bare `info.slot` addresses slot 0 of the struct. (`add(info.slot, k)`
+	// would arrive as a binop, not this sentinel, and so never reaches here.)
+	int const targetSlot = 0;
+
+	// The 256-bit packed word as 32 big-endian bytes (biguint's AVM repr is
+	// bytes, so reinterpret is valid only after coercing a uint64 word up).
+	auto packedBytes = awst::makeLeftPadToN(
+		awst::makeAsBytes(ensureBiguint(_packed, _loc), _loc), 32, _loc);
+
+	// Existing box value as bytes (zero struct when the box is absent).
+	auto existing = awst::makeAsBytes(
+		builder::StorageMapper::makeStateGetWithDefault(
+			awst::makeBoxValueExpression(_slotBox->key, _slotBox->wtype, _loc),
+			_slotBox->wtype, _loc),
+		_loc);
+
+	// Rebuild the full struct bytes in field order: fields in the written slot
+	// are sliced out of the packed word (by their EVM byte range within the
+	// 32-byte slot), every other field is copied from the existing box value
+	// (by its ARC4 byte range).
+	std::shared_ptr<awst::Expression> rebuilt;
+	for (auto const& fi: fields)
+	{
+		std::shared_ptr<awst::Expression> chunk;
+		if (fi.evmSlot == targetSlot)
+		{
+			// Big-endian byte range of the field within the 32-byte slot word:
+			// [32 - (bit + width)/8, 32 - bit/8).
+			int const byteOffInSlot = (256 - fi.evmBit - fi.byteW * 8) / 8;
+			chunk = awst::makeExtract3(
+				packedBytes,
+				awst::makeIntegerConstant(static_cast<uint64_t>(byteOffInSlot), _loc),
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.byteW), _loc),
+				_loc);
+		}
+		else
+			chunk = awst::makeExtract3(
+				existing,
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Off), _loc),
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.byteW), _loc),
+				_loc);
+
+		rebuilt = rebuilt
+			? awst::makeConcat(std::move(rebuilt), std::move(chunk), _loc)
+			: std::move(chunk);
+	}
+	if (!rebuilt) return;
+
+	// Write the rebuilt struct back to the box.
+	auto target = awst::makeBoxValueExpression(_slotBox->key, _slotBox->wtype, _loc);
+	auto newVal = awst::makeReinterpretCast(std::move(rebuilt), _slotBox->wtype, _loc);
+	auto assign = awst::makeAssignmentExpression(std::move(target), std::move(newVal), _loc);
+	_out.push_back(awst::makeExpressionStatement(std::move(assign), _loc));
 }
 
 

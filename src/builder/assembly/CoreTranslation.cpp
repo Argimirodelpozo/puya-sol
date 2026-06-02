@@ -128,6 +128,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 				auto node = awst::makeVarExpression("__slot_" + it->second, awst::WType::biguintType(), loc);
 				return node;
 			}
+			// Box-keyed struct storage pointer (`info.slot` where `info =
+			// self.ticks[tick]` aliases an ARC4 struct living in a box):
+			// resolve to that box. handleSstore detects this BoxValueExpression
+			// sentinel (struct wtype) and performs a field-aware write
+			// (EVM slot packing → ARC4 fields). See m_boxKeyedStructSlots.
+			auto bks = m_boxKeyedStructSlots.find(name);
+			if (bks != m_boxKeyedStructSlots.end())
+				return awst::makeBoxValueExpression(
+					bks->second.key, bks->second.structType, loc);
 		}
 		else if (suffix == "offset")
 		{

@@ -227,6 +227,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// Extract storage slot/offset references using StorageLayout.
 	// Computes EVM-compatible (slot, offset) pairs for state variables.
 	std::map<std::string, std::string> storageSlotVars;
+	// Box-keyed struct storage pointers surfaced via `.slot` (a struct-in-box
+	// alias such as `TickInfo storage info = self.ticks[tick]`). Distinct from
+	// storageSlotVars (numeric EVM slots) — keyed on the dotted yul name.
+	// Resolved from the storage-alias registry (ScopeState), independent of the
+	// state-var StorageLayout below: these aliases live in a box, not an EVM
+	// slot, and appear in library functions that reference no state variable
+	// (so the `if (contractDef)` block below never runs for them).
+	std::map<std::string, AssemblyBuilder::BoxKeyedSlot> boxKeyedStructSlots;
+	for (auto const& [yulId, extInfo]: annotation.externalReferences)
+	{
+		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
+		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+		if (!varDecl || !varDecl->isLocalVariable()) continue;
+		auto const* alias = m_blk.findStorageAlias(varDecl->id());
+		if (!alias || !alias->expr || alias->kind != StorageAlias::Kind::StateRead)
+			continue;
+		awst::Expression const* e = alias->expr.get();
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(e))
+			e = sg->field.get();
+		if (auto const* boxv = dynamic_cast<awst::BoxValueExpression const*>(e))
+			if (dynamic_cast<awst::ARC4Struct const*>(boxv->wtype))
+				boxKeyedStructSlots[yulId->name.str()] = {boxv->key, boxv->wtype};
+	}
 	{
 		// Prefer the currently-being-built contract — its layout reflects the
 		// derived class's `layout at N` annotation and inherited-var ordering.
@@ -356,7 +379,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		m_blk.fn.returnType,
 		constants,
 		paramBitWidths,
-		storageSlotVars);
+		storageSlotVars,
+		boxKeyedStructSlots);
 }
 
 } // namespace puyasol::builder::sol_ast

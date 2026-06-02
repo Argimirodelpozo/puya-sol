@@ -53,6 +53,18 @@ public:
 		std::string const& _contextName
 	);
 
+	/// A box-keyed struct storage pointer surfaced into assembly via `.slot`
+	/// (e.g. `TickInfo storage info = self.ticks[tick]; sstore(info.slot, …)`,
+	/// as in Uniswap V4 Pool.updateTick). Unlike a state-var slot — a numeric
+	/// EVM slot — this aliases an ARC4 struct living in a box. We carry the box
+	/// key and struct type so `info.slot` resolves to that box and `sstore`
+	/// performs a field-aware box write (EVM slot packing → ARC4 fields).
+	struct BoxKeyedSlot
+	{
+		std::shared_ptr<awst::Expression> key; ///< box_key expression
+		awst::WType const* structType = nullptr; ///< ARC4Struct stored in the box
+	};
+
 	/// Translate a Yul Block into AWST statements.
 	/// @param _block         The Yul block to translate
 	/// @param _params        Function parameters (name, type) for memory-based access
@@ -64,7 +76,8 @@ public:
 		awst::WType const* _returnType,
 		std::map<std::string, std::string> const& _constants = {},
 		std::map<std::string, unsigned> const& _paramBitWidths = {},
-		std::map<std::string, std::string> const& _storageSlotVars = {}
+		std::map<std::string, std::string> const& _storageSlotVars = {},
+		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {}
 	);
 
 	/// Extract function name string from a Yul FunctionName variant.
@@ -325,9 +338,24 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Yul sstore(slot, value): raw EVM storage write — stub as no-op.
+	/// Yul sstore(slot, value): EVM storage write via __storage_write, or — when
+	/// the slot aliases a box-keyed ARC4 struct — a field-aware box write.
 	void handleSstore(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Lower `sstore(structRef.slot, packedWord)` where `structRef` aliases an
+	/// ARC4 struct living in a box (slot 0 of the struct). EVM packs several
+	/// fields into one 256-bit slot; rebuild the struct's box bytes taking the
+	/// written slot's fields from `_packed` (by EVM byte range) and the rest
+	/// from the existing box value, then write it back. Correct because every
+	/// packed field is byte-aligned. Only slot 0 (bare `.slot`, no offset) is
+	/// handled; other forms fall through to the numeric-slot path.
+	void handleBoxKeyedStructSlotStore(
+		std::shared_ptr<awst::BoxValueExpression> const& _slotBox,
+		std::shared_ptr<awst::Expression> const& _packed,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
@@ -686,6 +714,11 @@ private:
 	/// When sstore is called with a constant whose value starts with "__slot_",
 	/// the actual storage key is the variable name after the prefix.
 	std::map<std::string, std::string> m_storageSlotVars;
+
+	/// Box-keyed struct storage pointers (`info.slot` for a struct-in-box
+	/// alias). Keyed on the dotted yul name ("info.slot"); the value carries
+	/// the box key + struct type for the field-aware sstore lowering.
+	std::map<std::string, BoxKeyedSlot> m_boxKeyedStructSlots;
 
 	// ── Assembly function support ───────────────────────────────────────
 

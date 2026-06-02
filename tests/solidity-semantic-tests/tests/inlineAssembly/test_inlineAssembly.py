@@ -757,3 +757,26 @@ def test_tstore_hidden_staticcall(harness):  # currently fails
     app = harness.compile_and_deploy('inlineAssembly/contracts/tstore_hidden_staticcall.sol')
     r = harness.call(app, 'test()', expect_revert=True)
     assert r.reverted
+
+def test_sstore_box_struct_slot(harness):
+    """inlineAssembly/contracts/sstore_box_struct_slot.sol
+
+    `sstore(ref.slot, packedWord)` where `ref = m[k]` aliases a struct-valued
+    mapping element packs two 128-bit fields into EVM slot 0 — the Uniswap V4
+    Pool.updateTick idiom. Verifies the box-keyed-struct sstore lowering writes
+    the correct ARC-4 fields (incl. a signed int128) and leaves the slot-1
+    field untouched.
+    """
+    app = harness.compile_and_deploy("inlineAssembly/contracts/sstore_box_struct_slot.sol")
+    # c lives in slot 1; set it first to prove the slot-0 sstore preserves it.
+    assert not harness.call(app, "setC(uint256,uint256)", 7, 0xdeadbeef).reverted
+    # pack a (low 128) and b (high 128, signed) into slot 0 via inline-assembly
+    # sstore. b is negative to exercise signed int128 packing (V4 liquidityNet)
+    # — this also covers the shl(128, negativeInt128) path, which overflows the
+    # AVM 64-byte bigint limit without the wrapMod256-before-multiply fix.
+    assert not harness.call(app, "setPacked(uint256,uint128,int128)", 7, 111, -222).reverted
+    assert as_int(harness.call(app, "getA(uint256)", 7).abi_return) == 111
+    # int128 -222 round-trips as its 256-bit two's-complement (signed >64-bit
+    # returns are exposed as the unsigned 256-bit bit-pattern).
+    assert as_int(harness.call(app, "getB(uint256)", 7).abi_return) == (1 << 256) - 222
+    assert as_int(harness.call(app, "getC(uint256)", 7).abi_return) == 0xdeadbeef
