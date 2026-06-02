@@ -342,3 +342,25 @@ library Global {
         revert("Global.balance: requires puya-sol");
     }
 }
+
+/// @title Bits
+/// @dev Bit-twiddling backed by native AVM opcodes. Unlike the stub libraries
+/// above (which puya-sol intercepts at call-resolution), this is REAL Solidity:
+/// the Yul `clz` builtin lowers to the AVM `bitlen` opcode inside puya-sol, so
+/// no compiler intercept is needed. `clz` is an Osaka EVM builtin, so callers
+/// must compile with `--evm-version osaka`.
+///
+/// The EVM has no bit-length / count-leading-zeros opcode (pre-Osaka), so EVM
+/// libraries hand-roll most/least-significant-bit with a 256-bit binary search
+/// + a de Bruijn byte table — which lowers to ~1000 lines of byte-array ops on
+/// the AVM. `bitlen` is one opcode. See EVMfun.md.
+library Bits {
+    /// Bit length of x: index of the highest set bit + 1, or 0 when x == 0.
+    /// msb(x) = bitlen(x) - 1; lsb(x) = bitlen(x & -x) - 1.
+    function bitlen(uint256 x) internal pure returns (uint256 r) {
+        // clz(x) == 256 - bitlen(x); puya-sol emits AVM `bitlen` for clz.
+        assembly ("memory-safe") {
+            r := sub(256, clz(x))
+        }
+    }
+}
