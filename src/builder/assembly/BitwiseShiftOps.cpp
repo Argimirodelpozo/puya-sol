@@ -136,7 +136,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 		return nullptr;
 	}
 	auto shift = ensureBiguint(_args[0], _loc);
-	auto value = _args[1];
+	// Reduce the value to its low 256 bits before shifting. EVM shl operates on
+	// a 256-bit word, so (v * 2^s) % 2^256 == ((v % 2^256) * 2^s) % 2^256. Our
+	// biguint may carry a wider value — up to 512 bits — e.g. a negative
+	// int128 decoded as arc4.uint512 is 2^512 - x; then `v * 2^s` overflows the
+	// AVM 64-byte bigint limit *before* the trailing mod can reduce it (the
+	// Uniswap V4 Pool.updateTick `shl(128, liquidityNet)` case). Reducing first
+	// both bounds the multiply and recovers the correct 256-bit value
+	// (2^512 - x ≡ 2^256 - x (mod 2^256)). A no-op for values already <2^256.
+	auto value = wrapMod256(ensureBiguint(_args[1], _loc), _loc);
 	auto power = buildPowerOf2(shift, _loc);
 	auto product = makeBigUIntBinOp(
 		value, awst::BigUIntBinaryOperator::Mult, std::move(power), _loc
