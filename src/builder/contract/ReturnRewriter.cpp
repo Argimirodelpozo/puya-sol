@@ -403,6 +403,73 @@ void rewriteARC4Returns(
 		};
 		walkMask(method.body->body);
 	}
+
+	// Final safety pass: when method.returnType is a NATIVE int (uint64 or
+	// biguint), every return value must be that exact native int. Some paths
+	// leave a uint64<->biguint mismatch that puya rejects ("invalid return
+	// type"): a stored sub-word value read as biguint, a uint64 value returned
+	// from a biguint-typed method, or a signed sub-word return that the block
+	// above sign-extended to biguint while a modifier later moves it into the
+	// uint64 named-return var (the latter produced V4 PoolManager.initialize's
+	// `int24 tick` phi mismatch). Coerce native-int return values to match.
+	// ARC-4 return types are left exactly as the dedicated handling produced
+	// them (the router still encodes the native value to arc4.intN).
+	if (method.returnType
+		&& (method.returnType == awst::WType::uint64Type()
+			|| method.returnType == awst::WType::biguintType()))
+	{
+		auto isNativeInt = [](awst::WType const* t) {
+			return t == awst::WType::uint64Type() || t == awst::WType::biguintType();
+		};
+		// Name of the single named-return var, if any. A modifier moves the
+		// return value into this var (so the body ends with `<name> = <value>`
+		// instead of `return <value>`); we must coerce that assignment too.
+		std::string const namedRet =
+			returnParams.size() == 1 ? returnParams[0]->name() : std::string{};
+		std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walkCoerce;
+		walkCoerce = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+		{
+			for (auto& stmt: stmts)
+			{
+				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+				{
+					if (ret->value && ret->value->wtype && isNativeInt(ret->value->wtype)
+						&& ret->value->wtype != method.returnType)
+					{
+						auto loc = ret->value->sourceLocation;
+						ret->value = TypeCoercion::implicitNumericCast(
+							std::move(ret->value), method.returnType, loc);
+					}
+				}
+				else if (auto* as = dynamic_cast<awst::AssignmentStatement*>(stmt.get()))
+				{
+					// Assignment into the named-return var (modifier-inlined
+					// return): coerce the value AND retype the target so every
+					// def of the var shares method.returnType's avm_type.
+					if (auto* tv = dynamic_cast<awst::VarExpression*>(as->target.get()))
+						if (!namedRet.empty() && tv->name == namedRet && as->value
+							&& as->value->wtype && isNativeInt(as->value->wtype)
+							&& as->value->wtype != method.returnType)
+						{
+							auto loc = as->value->sourceLocation;
+							as->value = TypeCoercion::implicitNumericCast(
+								std::move(as->value), method.returnType, loc);
+							tv->wtype = method.returnType;
+						}
+				}
+				else if (auto* ie = dynamic_cast<awst::IfElse*>(stmt.get()))
+				{
+					if (ie->ifBranch) walkCoerce(ie->ifBranch->body);
+					if (ie->elseBranch) walkCoerce(ie->elseBranch->body);
+				}
+				else if (auto* b = dynamic_cast<awst::Block*>(stmt.get()))
+					walkCoerce(b->body);
+				else if (auto* wl = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+					if (wl->loopBody) walkCoerce(wl->loopBody->body);
+			}
+		};
+		walkCoerce(method.body->body);
+	}
 }
 
 } // namespace puyasol::builder

@@ -1239,15 +1239,12 @@ struct ARC4Decode: Expression
 };
 
 // Wrap an expression in an ARC4Encode (native → ARC4-encoded bytes).
-inline std::shared_ptr<ARC4Encode> makeARC4Encode(
-	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc)
-{
-	auto node = std::make_shared<ARC4Encode>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	node->value = std::move(value);
-	return node;
-}
+// makeARC4Encode is defined further down, after the reinterpret-cast helpers
+// (makeAsBiguint / makeItob) it uses to convert a native uint64 source into a
+// biguint when the target is a signed sub-word ARC4 int (arc4.intN). puya's
+// uint64→arc4.intN encode path is rejected ("cannot encode uint64 to uintN"),
+// whereas its biguint codec handles it — same path the working int-arithmetic
+// case takes.
 
 // Wrap an expression in an ARC4Decode (ARC4-encoded bytes → native).
 inline std::shared_ptr<ARC4Decode> makeARC4Decode(
@@ -1336,6 +1333,50 @@ inline std::shared_ptr<ReinterpretCast> makeAsUInt64(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
 	return makeReinterpretCast(std::move(expr), WType::uint64Type(), std::move(loc));
+}
+
+// Wrap an expression in an ARC4Encode (native value → ARC4-encoded bytes).
+//
+// Special case: when the target is a SIGNED sub-word ARC4 int (arc4.intN, e.g.
+// `int24`) and the source is a native `uint64`, puya rejects the encode
+// ("cannot encode uint64 to uintN"). Its biguint codec handles the same
+// encoding, so convert the uint64 to biguint first (itob → reinterpret). The
+// uint64 holds the value in its low N bits (two's-complement), and biguint
+// encoding takes the low N bytes, preserving the int24 representation. This is
+// the path the working int-arithmetic case already produces.
+inline std::shared_ptr<ARC4Encode> makeARC4Encode(
+	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc)
+{
+	if (value && value->wtype == WType::uint64Type())
+		if (auto const* uintN = dynamic_cast<ARC4UIntN const*>(wtype))
+		{
+			std::string const& alias = uintN->arc4Alias();
+			bool const isSigned = alias.rfind("int", 0) == 0; // "int24" yes, "uint24" no
+			if (isSigned)
+			{
+				std::shared_ptr<Expression> bi = makeAsBiguint(makeItob(std::move(value), loc), loc);
+				// Mask to N bits: a signed sub-word value may arrive
+				// sign-extended within the uint64 (high bits set for negatives).
+				// arc4.intN encoding takes exactly N bits (two's complement), so
+				// trim the high bits or the biguint codec's `len <= N/8` overflow
+				// check would wrongly revert on negative values.
+				int const n = uintN->n();
+				if (n < 64)
+				{
+					auto maskC = makeIntegerConstant(
+						(std::uint64_t{1} << n) - 1, loc, WType::biguintType());
+					bi = makeBigUIntBinOp(
+						std::move(bi), BigUIntBinaryOperator::BitAnd, std::move(maskC), loc);
+				}
+				value = std::move(bi);
+			}
+		}
+
+	auto node = std::make_shared<ARC4Encode>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = std::move(value);
+	return node;
 }
 
 // Encode a typed key value to its canonical byte form for storage-key
