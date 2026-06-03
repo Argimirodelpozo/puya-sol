@@ -141,38 +141,69 @@ def main() -> None:
                   for b in algorand.client.algod.application_boxes(main_id).get("boxes", [])]
     print(f"pool state boxes on main: {len(pool_boxes)}")
 
-    # 2) [unlock, modifyLiquidity] — does the liquidity math run?
-    mod_params = [60, 120, 1_000_000, bytes(32)]  # POSITIVE ticks (avoid neg-tick signextend); +liquidity
-    print("=== group: [opup*10, prepare,unlock, prepare,modifyLiquidity(+1e6 liq)] ===")
-    try:
-        g2 = algorand.new_group()
-        for k in range(10):
-            g2.add_app_call(au.AppCallParams(sender=sender, app_id=opup_id, note=f"m{k}".encode(),
-                on_complete=algosdk.transaction.OnComplete.NoOpOC, static_fee=au.AlgoAmount.from_micro_algo(1000)))
-        g2.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(method="unlock",
-            args=[prep("unlock"), b""], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(2000))))
-        g2.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(method="modifyLiquidity",
-            args=[prep("modifyLiquidity"), pool_key, mod_params, b""],
-            app_references=[helper1_id], box_references=[*pool_boxes, *empties(6 - len(pool_boxes))],
-            static_fee=au.AlgoAmount.from_micro_algo(8000))))
-        r = g2.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
-        print(f"  modifyLiquidity RETURNED (unexpected without settlement): {[x.value for x in (r.returns or [])]}")
-    except Exception as e:
-        msg = " ".join(str(e).split())
-        print(f"  reverted: {msg[:200]}")
-        # FINDING (2026-06-03): reverts at a NO-ARG CustomRevert (pc=1562, proto 1 0)
-        # BEFORE the tick math — confirmed because misordered ticks (120,60) revert at
-        # the SAME pc (so Pool.modifyLiquidity's checkTicks/TicksMisordered is never
-        # reached). Not a missing box ref (passing the pool box doesn't change it) and
-        # not ManagerLocked (phase-2 proved _unlocked persists across the chunk swap).
-        # => checkPoolInitialized reads _pools[id] as UNINITIALISED: the struct-mapping
-        # storage-ref READ of the pool state (written by initialize) isn't seen by
-        # modifyLiquidity across the dance — a pool-state read/layout issue (see
-        # struct-storage-ref-model). So modliq is CALLABLE (int24+Helper1+dance OK) but
-        # the V4 liquidity math doesn't run yet; next blocker = the pool-state read,
-        # then multi-currency deltas, then token-movement settlement.
-        print("  => reverts EARLY (PoolNotInitialized: pool-state read not seen across the "
-              "dance); liquidity math NOT reached. See memory uniswap-v4-fresh-compile.")
+    # 2) [unlock, modifyLiquidity] — TRACE exactly where it reverts (definitive).
+    # allow_unnamed_resources rules out box-ref issues; high extra budget rules out
+    # budget; the exec trace + chunk_modliq source map pinpoint the failing line.
+    from algosdk.source_map import SourceMap
+    from algosdk.v2client import models as _m
+    mod_teal = (PMDIR / "PoolManager__chunk_modliq.approval.teal").read_text().replace(
+        "TMPL_PoolManager__Helper1_APP_ID", str(helper1_id))
+    mod_sm = SourceMap(algorand.client.algod.compile(mod_teal, source_map=True)["sourcemap"])
+    mod_lines = mod_teal.splitlines()
+
+    mod_params = [60, 120, 1_000_000, bytes(32)]  # positive ticks, +liquidity
+    print("=== traced simulate: [opup*10, prepare,unlock, prepare,modifyLiquidity] ===")
+    g2 = algorand.new_group()
+    for k in range(10):
+        g2.add_app_call(au.AppCallParams(sender=sender, app_id=opup_id, note=f"m{k}".encode(),
+            on_complete=algosdk.transaction.OnComplete.NoOpOC, static_fee=au.AlgoAmount.from_micro_algo(1000)))
+    g2.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(method="unlock",
+        args=[prep("unlock"), b""], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(2000))))
+    g2.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(method="modifyLiquidity",
+        args=[prep("modifyLiquidity"), pool_key, mod_params, b""],
+        app_references=[helper1_id], box_references=[*pool_boxes, *empties(6 - len(pool_boxes))],
+        static_fee=au.AlgoAmount.from_micro_algo(8000))))
+    # raw ATC.simulate does NOT raise on app revert (algokit's g2.simulate does);
+    # it returns the response with the exec trace so we can map the failing pc.
+    g2.build()  # populates g2._atc with signed-context txns + group id
+    req = _m.SimulateRequest(txn_groups=[], allow_unnamed_resources=True,
+                             extra_opcode_budget=100000,
+                             exec_trace_config=_m.SimulateTraceConfig(enable=True, stack_change=True))
+    resp = g2._atc.simulate(algorand.client.algod, req)
+    sr = resp.simulate_response
+    grp = sr["txn-groups"][0]
+    fa_path = grp.get("failed-at") or [len(grp["txn-results"]) - 1]
+    fa = fa_path[0]
+    print("  failure-message:", grp.get("failure-message"), "| failed-at:", fa_path)
+    tr = grp["txn-results"][fa].get("exec-trace", {}).get("approval-program-trace", [])
+    print(f"  failed txn[{fa}] top-level trace: {len(tr)} ops; last 24 mapped to source:")
+    for u in tr[-24:]:
+        pc = u.get("pc")
+        ln = mod_sm.get_line_for_pc(pc) if pc is not None else None
+        src = mod_lines[ln].strip()[:80] if ln is not None and ln < len(mod_lines) else "?"
+        print(f"    pc={pc:5} L{ln}: {src}")
+
+    # KEY COMPARISON: the box key checkPoolInitialized read is its arg (frame_dig -1
+    # at pc 4337). Capture it from the trace stack and compare to the box init wrote.
+    def _sval(v: dict):
+        if v.get("bytes"):
+            return base64.b64decode(v["bytes"])
+        return v.get("uint")
+    read_key = None
+    for u in tr:
+        if u.get("pc") == 4337:  # frame_dig -1 in checkPoolInitialized -> pushes the key
+            adds = u.get("stack-additions", [])
+            if adds:
+                read_key = _sval(adds[-1])
+    print("\n  KEY DIAGNOSIS:")
+    print(f"  checkPoolInitialized read key = "
+          f"{read_key.hex() if isinstance(read_key, bytes) else read_key}")
+    for b in algorand.client.algod.application_boxes(main_id).get("boxes", []):
+        name = base64.b64decode(b["name"])
+        val = base64.b64decode(algorand.client.algod.application_box_by_name(main_id, name)["value"])
+        match = "  <== MATCHES read key" if name == read_key else ""
+        print(f"  box init WROTE: name={name.hex()} ({len(name)}B) "
+              f"val={val.hex()[:80]} ({len(val)}B){match}")
 
 
 if __name__ == "__main__":

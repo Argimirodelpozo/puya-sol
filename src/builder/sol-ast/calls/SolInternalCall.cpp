@@ -186,7 +186,21 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 
 		std::string name;
 		if (auto const* ident = dynamic_cast<Identifier const*>(&argExpr))
+		{
 			name = ident->name();
+			// If the identifier refers to a storage-ref LOCAL or PARAM (registered
+			// as a mapping-key ref), the runtime box-key prefix lives in that
+			// variable's VALUE, not its name — e.g. the Uniswap V4 pattern
+			//   `Pool.State storage pool = _getPool(id); pool.checkPoolInitialized();`
+			// where the local `pool` holds `sha256(id ++ "_pools")` (the actual
+			// element key). Reading the variable makes the callee key off that real
+			// element rather than a constant "pool" box. A bare state mapping passed
+			// by name is NOT registered, so it correctly falls through to the
+			// constant-name prefix below.
+			if (auto const* d = ident->annotation().referencedDeclaration;
+				d && !m_scope.findMappingKeyParam(d->id()).empty())
+				return awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
+		}
 		else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
 			name = ma->memberName();
 		if (name.empty())

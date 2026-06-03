@@ -921,3 +921,42 @@ def test_struct_accessor(harness):
     app = harness.compile_and_deploy("storage/contracts/struct_accessor.sol", postinit_budget_pool=5)
     r = harness.call(app, "data(uint256)", 7)
     assert tuple(as_int(x) if not isinstance(x, bool) else x for x in r.abi_return) == (1, 2, True)
+
+def test_struct_storage_ref_local(harness):
+    """storage/contracts/struct_storage_ref_local.sol
+
+    Storage-ref to `mapping(K => Struct-with-nested-mapping)` accessed through a
+    LOCAL storage-ref variable bound from a getter (the Uniswap V4
+    `Pool.State storage pool = _getPool(id); pool.checkPoolInitialized()` shape).
+    The local must key off the element's runtime box (sha256(id ++ "_m")), not its
+    own name, so it reads/writes the SAME box a direct `_m[id]` access does.
+    """
+    app = harness.compile_and_deploy("storage/contracts/struct_storage_ref_local.sol")
+
+    # write _m[1] via the DIRECT path: a=1, b=100, inner[7]=100
+    harness.call(app, "bumpDirect(uint256,uint256,uint256)", 1, 7, 100)
+    sig_get = "getDirect(uint256,uint256)"
+    sig_getL = "getLocal(uint256,uint256)"
+
+    # control: direct read
+    r = harness.call(app, sig_get, 1, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100, 100)
+    # THE FIX: the local-var read must hit the SAME box (was (0,0,0) before the fix)
+    r = harness.call(app, sig_getL, 1, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100, 100)
+    # inner-mapping key isolation: inner[9] untouched
+    r = harness.call(app, sig_getL, 1, 9)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100, 0)
+    # id isolation: _m[2] is uninitialised
+    r = harness.call(app, sig_getL, 2, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0)
+
+    # write _m[1] via the LOCAL path (checkInit passes, then bump): a=2, b=55, inner[7]=55
+    harness.call(app, "bumpLocal(uint256,uint256,uint256)", 1, 7, 55)
+    # local WRITE must be visible to the direct path
+    r = harness.call(app, sig_get, 1, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (2, 55, 55)
+
+    # checkInit() via the local must revert for a genuinely uninitialised id
+    # (this is exactly the checkPoolInitialized -> PoolNotInitialized case)
+    harness.call(app, "bumpLocal(uint256,uint256,uint256)", 9, 1, 1, expect_revert=True)
