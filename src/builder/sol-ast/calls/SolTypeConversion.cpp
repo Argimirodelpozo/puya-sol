@@ -67,12 +67,28 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 			{
 				auto const* tgtInt = dynamic_cast<solidity::frontend::IntegerType const*>(
 					m_call.annotation().type);
-				if (tgtInt && srcInt->isSigned()
-					&& srcInt->numBits() <= 64 && tgtInt->numBits() > 64
-					&& result->wtype == awst::WType::biguintType())
+				if (tgtInt && result->wtype == awst::WType::biguintType())
 				{
-					result = TypeCoercion::signExtendToUint256(
-						std::move(result), srcInt->numBits(), m_loc);
+					if (srcInt->isSigned()
+						&& srcInt->numBits() <= 64 && tgtInt->numBits() > 64)
+					{
+						result = TypeCoercion::signExtendToUint256(
+							std::move(result), srcInt->numBits(), m_loc);
+					}
+					else if (tgtInt->isSigned() && srcInt->numBits() > 64
+						&& tgtInt->numBits() > 64 && tgtInt->numBits() < 256)
+					{
+						// biguint -> SIGNED biguint conversion to intN (e.g.
+						// `int128(int256)`, the SafeCast.toIntN downcast). The
+						// registry/applyNarrowingMask masked to N bits, giving the
+						// low-N-bit value (2^N-|v| for negatives); sign-extend from
+						// N to the canonical 256-bit two's-complement so a negative
+						// that fits intN round-trips (`downcasted != value` holds)
+						// instead of wrongly reverting. Also re-canonicalises a
+						// biguint->biguint WIDEN whose high sign bits were masked.
+						result = TypeCoercion::signExtendToUint256(
+							std::move(result), tgtInt->numBits(), m_loc);
+					}
 				}
 			}
 			return result;

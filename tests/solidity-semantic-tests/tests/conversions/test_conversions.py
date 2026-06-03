@@ -3,8 +3,24 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_signed_int, as_bytes,
 )
+
+
+def test_signed_narrowing_toint128(harness):
+    """conversions/contracts/signed_narrowing.sol
+
+    SafeCast-style signed narrowing int256 -> int128 must produce the canonical
+    256-bit two's-complement so in-range negatives round-trip (downcasted==value);
+    out-of-range still reverts. Regression guard for the V4 SafeCast.toInt128 path.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/signed_narrowing.sol")
+    for v in (-2987, -1, 0, 60, -(2 ** 127), 2 ** 127 - 1):
+        assert as_signed_int(harness.call(app, "narrow(int256)", v).abi_return) == v
+        assert as_signed_int(harness.call(app, "toI128(int256)", v).abi_return) == v
+    # out of int128 range -> revert
+    harness.call(app, "toI128(int256)", 2 ** 130, expect_revert=True)
+    harness.call(app, "toI128(int256)", -(2 ** 130), expect_revert=True)
 
 
 def test_function_type_array_to_storage(harness):
