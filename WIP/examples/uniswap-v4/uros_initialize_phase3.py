@@ -10,15 +10,13 @@ that template var in the chunk_init TEAL with Helper1's real app id; compile +
 load it as the chunk; and pass Helper1 in the initialize call's app references so
 the inner call can reach it.
 
-CAVEAT: this harness loads the arc56 via algokit (algosdk's STRICT ABIType
-parser), which rejects Algorand-invalid `int24`. It was proven green with a
-puya-side int24->uint24 ABI-name normalization, but that was REVERTED because it
-regressed signed-int decoding in the semantic suite (a signed return decoded as
-unsigned — Algorand ABI has no signed type). The `initialize` LOGIC is proven;
-to run this as-is again you need either an int{N}-aware ABI client (like the
-semantic-test framework, which decodes int{N} client-side) or to build the calls
-manually with the int{N}-based selector from deploy.uros.json. See memory
-[[uniswap-v4-fresh-compile]].
+int24 handling (NO compiler change): PoolManager's arc56 carries the honest signed
+`int24` (Algorand ABI is uint-only, but puya-sol emits intN by design). Plain
+algosdk rejects "int24"; the semantic-test framework ships an algosdk monkeypatch
+(framework/_algosdk_patch.py) that teaches it intN — parse + two's-complement
+encode/decode. This harness loads that patch at import (see top), so it calls
+int24 methods with the int-based selector the deployed router uses, exactly like
+the semantic suite. Same client-side approach for swap/modifyLiquidity later.
 
 Requires: PoolManager compiled with --split-config (Helper1 sidecar).
 
@@ -28,12 +26,23 @@ Requires: PoolManager compiled with --split-config (Helper1 sidecar).
 from __future__ import annotations
 
 import base64
+import importlib.util as _ilu
 import json
 import math
 from pathlib import Path
 
 import algokit_utils as au
 import algosdk
+
+# int{N} (signed) ABI support — NO compiler change. puya-sol intentionally emits a
+# Solidity `intN` as the honest signed "intN" in the arc56 (Algorand ABI itself is
+# uint-only); the semantic-test framework ships an algosdk monkeypatch that teaches
+# algosdk to parse "intN" + two's-complement encode/decode. Loading it lets this
+# harness call int24 methods (PoolKey.tickSpacing etc.) with the int-based selector
+# the deployed router uses — exactly how the semantic suite handles signed ints.
+_patch = Path(__file__).resolve().parents[3] / "tests/solidity-semantic-tests/framework/_algosdk_patch.py"
+_spec = _ilu.spec_from_file_location("_algosdk_int_patch", _patch)
+_spec.loader.exec_module(_ilu.module_from_spec(_spec))
 
 OUT = Path("/tmp/pm_full")          # puya-sol --split-config output (PoolManager/ subdir)
 PMDIR = OUT / "PoolManager"
@@ -102,12 +111,13 @@ def main() -> None:
     main_app_id = main_create.app_id
     print(f"setup={setup_app_id} main={main_app_id} (extra pages={main_extra_pages})")
 
-    spec_dict = json.loads((PMDIR / "PoolManager.arc56.json").read_text())
-    KEEP = {"uros_set_setup", "initialize"}
-    spec_dict["methods"] = [m for m in spec_dict["methods"] if m["name"] in KEEP]
+    # Full arc56 — the algosdk int{N} patch (loaded above) lets it parse the signed
+    # int24 in PoolKey, so no method filtering needed; the selector stays int-based
+    # and matches the deployed router.
     main_client = au.AppClient(au.AppClientParams(
         app_id=main_app_id, algorand=algorand,
-        app_spec=au.Arc56Contract.from_dict(spec_dict), default_sender=sender))
+        app_spec=au.Arc56Contract.from_json((PMDIR / "PoolManager.arc56.json").read_text()),
+        default_sender=sender))
 
     main_client.send.call(au.AppClientMethodCallParams(method="uros_set_setup", args=[setup_app_id]))
     setup_client.send.call(au.AppClientMethodCallParams(method="set_main", args=[main_app_id]))
