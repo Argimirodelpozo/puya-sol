@@ -542,3 +542,23 @@ def test_int24_struct_literal_negative(harness):
     # (-60,120,1000), spacing=-30 -> 1000 + (-60) + 120 + (-30) = 1030
     r = harness.call(app, "fs((int24,int24,int128),int24)", (-60, 120, 1000), -30)
     assert as_signed_int(r.abi_return) == 1030
+
+def test_int24_field_decode(harness):
+    """structs/contracts/int24_field_decode.sol
+
+    A negative signed sub-word (int24) struct field must sign-extend on DECODE so
+    casts / widening / comparison / arithmetic see the correct negative value.
+    S = (a=-60, b=120).
+    """
+    app = harness.compile_and_deploy("structs/contracts/int24_field_decode.sol")
+    sig = "(int24,int24)"
+    # implicit widening of field reads to int128: -60 + 120 = 60
+    assert as_signed_int(harness.call(app, f"implWiden({sig})", (-60, 120)).abi_return) == 60
+    # int64(field): int64(-60) = -60
+    assert as_signed_int(harness.call(app, f"to64({sig})", (-60, 120)).abi_return) == -60
+    # signed comparison: -60 < 120
+    assert harness.call(app, f"cmpLt({sig})", (-60, 120)).abi_return is True
+    # signed int24 arithmetic: -60 + 120 = 60
+    assert as_signed_int(harness.call(app, f"sum24({sig})", (-60, 120)).abi_return) == 60
+    # explicit widening int256(field): -60
+    assert as_signed_int(harness.call(app, f"to256({sig})", (-60, 120)).abi_return) == -60

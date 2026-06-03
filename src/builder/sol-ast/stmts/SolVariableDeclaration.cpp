@@ -90,6 +90,22 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 
 			value = builder::TypeCoercion::coerceForAssignment(std::move(value), type, m_loc);
+
+			// Signed sub-word -> wider-int IMPLICIT widening, e.g.
+			// `int128 x = someInt24;`. coerceForAssignment widens uint64 ->
+			// biguint by zero-extension, dropping the sign. If the initializer
+			// is a signed intN (N<=64) and the declared type a wider int (M>64),
+			// re-extend from the SOURCE width (signExtendToUint256 masks to N
+			// bits first, so it is correct for the 64-bit two's-complement value
+			// too). No-op for non-negative values; unsigned sources skipped.
+			if (auto const* srcInt = dynamic_cast<IntegerType const*>(
+					initialValue->annotation().type))
+				if (auto const* tgtInt = dynamic_cast<IntegerType const*>(decl.type()))
+					if (srcInt->isSigned() && srcInt->numBits() <= 64
+						&& tgtInt->numBits() > 64
+						&& value->wtype == awst::WType::biguintType())
+						value = builder::TypeCoercion::signExtendToUint256(
+							std::move(value), srcInt->numBits(), m_loc);
 		}
 		else
 			value = StorageMapper::makeDefaultValue(type, m_loc);
