@@ -50,6 +50,31 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 			// widening reads inspects the source-width MSB of the masked
 			// value, so masking does not strip that information.
 			result = applyNarrowingMask(std::move(result), targetType);
+
+			// Signed sub-word WIDENING into biguint, e.g. `int128(someInt24)`.
+			// The registry widens uint64->biguint by zero-extension (itob +
+			// reinterpret), which DROPS the sign for negative source values
+			// (-60 int24 -> +16777156 instead of -60). When the SOURCE is a
+			// signed intN (N<=64) and the TARGET is a wider int (M>64, biguint),
+			// re-extend from the SOURCE width: signExtendToUint256 masks to N
+			// bits first, so it recovers the low N bits whether the uint64 held
+			// the raw sub-word value (struct-field read) or a 64-bit
+			// sign-extended form (ABI arg), and yields the correct 256-bit
+			// two's-complement. No-op for non-negative values (< 2^(N-1)) and
+			// skipped for unsigned sources, so it only corrects negatives.
+			if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+					m_call.arguments()[0]->annotation().type))
+			{
+				auto const* tgtInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+					m_call.annotation().type);
+				if (tgtInt && srcInt->isSigned()
+					&& srcInt->numBits() <= 64 && tgtInt->numBits() > 64
+					&& result->wtype == awst::WType::biguintType())
+				{
+					result = TypeCoercion::signExtendToUint256(
+						std::move(result), srcInt->numBits(), m_loc);
+				}
+			}
 			return result;
 		}
 	}

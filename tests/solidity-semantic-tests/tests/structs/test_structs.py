@@ -530,15 +530,13 @@ def test_int24_struct_literal(harness):
     r = harness.call(app, "fu((uint24,uint24,uint128),uint24)", (60, 120, 1000), 60)
     assert as_int(r.abi_return) == 1240
 
-@pytest.mark.xfail(reason="negative int24 widening int128(int24) not sign-extended on "
-                          "DECODE — pre-existing sign-extension gap; encode is correct "
-                          "(two's-complement). Tracked as the next int24 task.")
 def test_int24_struct_literal_negative(harness):
     """structs/contracts/int24_struct_literal.sol — NEGATIVE int24 round-trip.
 
-    The struct-literal ENCODE is correct (stores 0xffffc4 for -60); the failure
-    is the DECODE widening int24->int128 reading 0xffffc4 as +16777156 (no sign
-    extension). XFAIL until the decode sign-extension fix lands.
+    The struct-literal ENCODE stores the two's-complement (0xffffc4 for -60); the
+    DECODE widening int24->int128 must sign-extend it back. Both directions now
+    correct (signed sub-word -> biguint widening sign-extends from the source
+    width); previously the widening zero-extended and read -60 as +16777156.
     """
     app = harness.compile_and_deploy("structs/contracts/int24_struct_literal.sol")
     # (-60,120,1000), spacing=-30 -> 1000 + (-60) + 120 + (-30) = 1030
