@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -30,7 +31,28 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		auto* nativeType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 		if (arc4FieldType && arc4FieldType != nativeType)
 		{
-			auto decode = awst::makeARC4Decode(std::move(field), nativeType, m_loc);
+			std::shared_ptr<awst::Expression> decode =
+				awst::makeARC4Decode(std::move(field), nativeType, m_loc);
+			// A packed signed sub-word field (arc4.intN, N<64) decodes
+			// (extract + btoi) to the RAW N-bit value, dropping the sign
+			// (-60 int24 -> +16777156). Sign-extend to the 64-bit two's-
+			// complement so widening / int64 casts / signed arithmetic on the
+			// field read see the correct negative value. (No-op for
+			// non-negative values; unsigned fields are skipped.)
+			//
+			// ONLY for rvalue reads: when this member access is an assignment
+			// TARGET (willBeWrittenTo), the write-back path
+			// (SolAssignment::tryStructOrNamedTupleFieldAssignment) must see the
+			// bare ARC4Decode/FieldExpression, so leave it unwrapped.
+			if (!m_memberAccess.annotation().willBeWrittenTo)
+				if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+						m_memberAccess.annotation().type))
+				{
+					if (fieldInt->isSigned() && fieldInt->numBits() < 64
+						&& nativeType == awst::WType::uint64Type())
+						decode = TypeCoercion::signExtendToUint64(
+							std::move(decode), fieldInt->numBits(), m_loc);
+				}
 			return decode;
 		}
 		return field;

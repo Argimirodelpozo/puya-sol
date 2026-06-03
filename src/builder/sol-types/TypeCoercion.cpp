@@ -176,6 +176,51 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	return comma;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
+	std::shared_ptr<awst::Expression> _value,
+	unsigned _bits,
+	awst::SourceLocation const& _loc
+)
+{
+	// Full-width or invalid: nothing to extend (int64 decode is already the
+	// 8-byte two's-complement; >=64 has no high bits to fill).
+	if (_bits == 0 || _bits >= 64)
+		return _value;
+
+	// Bind the (possibly side-effecting, e.g. box-backed) source to a temp so
+	// the two reads below evaluate it once.
+	static int s_signExt64TempId = 0;
+	std::string tempName = "__signext64_tmp_" + std::to_string(++s_signExt64TempId);
+	auto bind = awst::makeAssignmentExpression(
+		awst::makeVarExpression(tempName, awst::WType::uint64Type(), _loc),
+		std::move(_value), _loc, awst::WType::uint64Type());
+	auto tempRead = [&]() {
+		return awst::makeVarExpression(tempName, awst::WType::uint64Type(), _loc);
+	};
+
+	// value ∈ [0, 2^bits-1]; reinterpret as signed: if the N-bit sign bit is
+	// set, add (2^64 - 2^bits) to fill the high bits. value + (2^64 - 2^bits)
+	// stays < 2^64 for every value in range, so the add never overflows even if
+	// both conditional arms are evaluated.
+	std::uint64_t threshold = std::uint64_t(1) << (_bits - 1);
+	std::uint64_t offset = ~((std::uint64_t(1) << _bits) - 1); // 2^64 - 2^bits
+
+	auto cond = awst::makeNumericCompare(
+		tempRead(), awst::NumericComparison::Gte,
+		awst::makeIntegerConstant(threshold, _loc), _loc);
+	auto extended = awst::makeUInt64BinOp(
+		tempRead(), awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant(offset, _loc), _loc);
+	auto conditional = awst::makeConditional(
+		std::move(cond), std::move(extended), tempRead(),
+		awst::WType::uint64Type(), _loc);
+
+	auto comma = awst::makeCommaExpression(awst::WType::uint64Type(), _loc);
+	comma->expressions.push_back(std::move(bind));
+	comma->expressions.push_back(std::move(conditional));
+	return comma;
+}
+
 // ── Bytes ────────────────────────────────────────────────────────
 
 std::shared_ptr<awst::BytesConstant> TypeCoercion::stringToBytesN(

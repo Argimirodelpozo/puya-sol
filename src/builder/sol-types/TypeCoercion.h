@@ -56,6 +56,16 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Sign-extend an N-bit (N<64) signed value held in a uint64 to the 64-bit
+	/// two's-complement form. Input must be in [0, 2^N-1] (e.g. the raw result
+	/// of decoding a packed arc4.intN field). If the N-bit sign bit is set, adds
+	/// (2^64 − 2^N) to set the high bits; the sum stays < 2^64 for all inputs.
+	static std::shared_ptr<awst::Expression> signExtendToUint64(
+		std::shared_ptr<awst::Expression> _value,
+		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
 	// ── Bytes ────────────────────────────────────────────────────
 
 	/// Convert a StringConstant to a right-padded BytesConstant of length _n.
