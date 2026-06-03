@@ -1354,21 +1354,28 @@ inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 			bool const isSigned = alias.rfind("int", 0) == 0; // "int24" yes, "uint24" no
 			if (isSigned)
 			{
-				std::shared_ptr<Expression> bi = makeAsBiguint(makeItob(std::move(value), loc), loc);
-				// Mask to N bits: a signed sub-word value may arrive
-				// sign-extended within the uint64 (high bits set for negatives).
-				// arc4.intN encoding takes exactly N bits (two's complement), so
-				// trim the high bits or the biguint codec's `len <= N/8` overflow
-				// check would wrongly revert on negative values.
 				int const n = uintN->n();
-				if (n < 64)
+				if (n < 64 && n % 8 == 0)
 				{
-					auto maskC = makeIntegerConstant(
-						(std::uint64_t{1} << n) - 1, loc, WType::biguintType());
-					bi = makeBigUIntBinOp(
-						std::move(bi), BigUIntBinaryOperator::BitAnd, std::move(maskC), loc);
+					// A signed sub-word value may arrive sign-extended within the
+					// uint64 (high bits set for negatives). arc4.intN takes exactly
+					// N bits (two's complement) = the LOW n/8 bytes of the itob'd
+					// value. Extract those bytes directly: this yields a minimal
+					// n/8-byte biguint so the downstream biguint->arc4.intN
+					// `len <= n/8` overflow check passes for BOTH signs.
+					//
+					// (Masking the high BITS via biguint `b&` — the obvious
+					// approach — does NOT shrink the byte width: AVM `b&` keeps the
+					// LONGER operand's length, i.e. itob's 8 bytes, so the len
+					// check would still wrongly revert, even for positive values.)
+					auto itob = makeItob(std::move(value), loc);
+					auto low = makeExtract(std::move(itob), 8 - n / 8, n / 8, loc);
+					value = makeAsBiguint(std::move(low), loc);
 				}
-				value = std::move(bi);
+				else
+				{
+					value = makeAsBiguint(makeItob(std::move(value), loc), loc);
+				}
 			}
 		}
 

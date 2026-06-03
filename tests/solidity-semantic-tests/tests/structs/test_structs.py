@@ -3,7 +3,7 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_signed_int, as_bytes,
 )
 
 
@@ -512,3 +512,35 @@ def test_using_for_function_on_struct(harness):
     # x() -> 0x15
     r = harness.call(app, "x()")
     assert as_int(r.abi_return) == 21
+
+def test_int24_struct_literal(harness):
+    """structs/contracts/int24_struct_literal.sol
+
+    Signed/unsigned sub-word int in a STRUCT LITERAL (the Uniswap V4
+    `Pool.ModifyLiquidityParams({tickLower: params.tickLower, ...})` shape).
+    Positive int24 + unsigned uint24 must encode correctly — previously reverted
+    at a bogus `len<=3` overflow check (makeARC4Encode masked high bits via AVM
+    `b&`, which keeps the 8-byte itob width instead of shrinking it).
+    """
+    app = harness.compile_and_deploy("structs/contracts/int24_struct_literal.sol")
+    # fs((int24,int24,int128),int24): (60,120,1000), spacing=60 -> 1000+60+120+60
+    r = harness.call(app, "fs((int24,int24,int128),int24)", (60, 120, 1000), 60)
+    assert as_signed_int(r.abi_return) == 1240
+    # fu((uint24,uint24,uint128),uint24): (60,120,1000), spacing=60 -> 1240
+    r = harness.call(app, "fu((uint24,uint24,uint128),uint24)", (60, 120, 1000), 60)
+    assert as_int(r.abi_return) == 1240
+
+@pytest.mark.xfail(reason="negative int24 widening int128(int24) not sign-extended on "
+                          "DECODE — pre-existing sign-extension gap; encode is correct "
+                          "(two's-complement). Tracked as the next int24 task.")
+def test_int24_struct_literal_negative(harness):
+    """structs/contracts/int24_struct_literal.sol — NEGATIVE int24 round-trip.
+
+    The struct-literal ENCODE is correct (stores 0xffffc4 for -60); the failure
+    is the DECODE widening int24->int128 reading 0xffffc4 as +16777156 (no sign
+    extension). XFAIL until the decode sign-extension fix lands.
+    """
+    app = harness.compile_and_deploy("structs/contracts/int24_struct_literal.sol")
+    # (-60,120,1000), spacing=-30 -> 1000 + (-60) + 120 + (-30) = 1030
+    r = harness.call(app, "fs((int24,int24,int128),int24)", (-60, 120, 1000), -30)
+    assert as_signed_int(r.abi_return) == 1030
