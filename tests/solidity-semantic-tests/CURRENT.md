@@ -1,5 +1,14 @@
 # Semantic Test Status — v331
 
+> **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-03):** this branch
+> diverged from the v33x EVM-divergence line below and tracks its baseline via
+> `RESULTS_<sha>.txt`, not these version totals. Latest run **c43f434e3 =
+> 1190 PASS / 59 FAIL / 76 xfailed** (RESULTS_c43f434e3.txt), **zero regressions**
+> vs RESULTS_e2c8ff9a7. Newest fix: storage-ref LOCAL var keyed off its runtime
+> value (Uniswap V4 `Pool.State storage pool = _getPool(id)` shape) →
+> PoolManager modliq now passes checkPoolInitialized through the uros dance. New
+> guard: `tests/storage/struct_storage_ref_local`.
+
 **Totals (measured, v332 single-threaded, 8m11s):** **1192 PASS / 75 FAIL /
 55 xfailed.** The +6 xfail vs v330 (49→55) are the 6 honest flips from the
 EVM-divergence hard-errors. Verified clean: sorted FAILED-name diff v330→v332
