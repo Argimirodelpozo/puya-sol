@@ -2,16 +2,22 @@
 
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-03):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
-> `RESULTS_<sha>.txt`, not these version totals. Latest run **f3326fc4b =
-> 1191 PASS / 59 FAIL / 76 xfailed** (RESULTS_f3326fc4b.txt), **zero regressions**
-> vs RESULTS_e2c8ff9a7 (identical fail set). Recent fixes:
-> - **c43f434e3** storage-ref LOCAL var keyed off its runtime value (V4
->   `Pool.State storage pool = _getPool(id)`) → modliq passes checkPoolInitialized
->   through the uros dance. Guard: `tests/storage/struct_storage_ref_local`.
-> - **f3326fc4b** signed sub-word (int24) ARC4 **encode** = minimal two's-complement
->   bytes (was `itob; b& mask; len<=n/8 assert`, always reverted) → V4 modliq passes
->   the int24 re-encode. Guard: `tests/structs/int24_struct_literal` (negative
->   int24 widening xfailed — open decode sign-extension gap).
+> `RESULTS_<sha>.txt`, not these version totals. Latest run **c275eaf20 =
+> 1195 PASS / 59 FAIL / 76 xfailed** (RESULTS_c275eaf20.txt), **zero regressions**
+> vs RESULTS_e2c8ff9a7 (identical fail set throughout; +5 = new guard tests).
+> Session landed the full signed-int / V4-modliq fix chain (each isolated, zero-reg):
+> - **c43f434e3** storage-ref LOCAL var keyed off runtime value (V4
+>   `Pool.State storage pool = _getPool(id)`) → modliq passes checkPoolInitialized.
+> - **f3326fc4b** signed sub-word (int24) ARC4 **encode** = minimal two's-complement.
+> - **1cf254737** signed sub-word **decode** field-read sign-extension (+signExtendToUint64).
+> - **1c9795ab1** signed **implicit widening** (`int128 x = int24`).
+> - **2d8b6b398** signed **explicit-cast widening** (`int128(int24)`).
+> - **c275eaf20** signed **narrowing** (`int128(int256)`, SafeCast.toInt128).
+> Net: V4 modliq's entire compute path now executes through the uros dance (2571
+> ops), stopping only at `CurrencyNotSettled` (the correct token-settlement
+> boundary — a runtime/token-movement frontier, not a compiler issue). Guards:
+> `tests/{storage/struct_storage_ref_local, structs/int24_struct_literal(+_negative),
+> structs/int24_field_decode, conversions/signed_narrowing}`.
 
 **Totals (measured, v332 single-threaded, 8m11s):** **1192 PASS / 75 FAIL /
 55 xfailed.** The +6 xfail vs v330 (49→55) are the 6 honest flips from the
