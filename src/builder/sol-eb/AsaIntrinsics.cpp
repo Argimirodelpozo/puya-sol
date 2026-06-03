@@ -27,7 +27,7 @@ std::string getAvmStdlibLibraryName(MemberAccess const& _memberAccess)
 		return "";
 	std::string const& name = contractDef->name();
 	if (name == "AVM" || name == "Crypto" || name == "Group"
-		|| name == "Txn" || name == "Global")
+		|| name == "Txn" || name == "Global" || name == "Scratch")
 		return name;
 	return "";
 }
@@ -165,9 +165,102 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		return dispatchTxn(_ctx, method, args, _loc);
 	else if (lib == "Global")
 		return dispatchGlobal(_ctx, method, args, _loc);
+	else if (lib == "Scratch")
+		return dispatchScratch(_ctx, method, args, _loc);
 
 	Logger::instance().warning(
 		"unknown AVM stdlib intrinsic '" + lib + "." + method + "'", _loc);
+	return std::nullopt;
+}
+
+// AVM scratch space (see AVM.sol library Scratch). Stack-form ops:
+//   store(slot, value)        -> `stores`   [slot, value]    (write own scratch)
+//   loadSelf(slot)            -> `loads`    [slot]   -> value (read own scratch)
+//   load(groupIndex, slot)    -> `gloadss`  [gidx, slot] -> value (read an EARLIER
+//                                group txn's scratch; AVM asserts gidx < GroupIndex)
+// uint64-valued (slots default to 0); see the AVM.sol note re: biguint future work.
+std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchScratch(
+	ContractContext& _ctx,
+	std::string const& _method,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	(void)_ctx;
+	if (_method == "store")
+	{
+		if (_args.size() != 2)
+		{
+			Logger::instance().error("Scratch.store expects 2 args (slot, value)", _loc);
+			return nullptr;
+		}
+		auto ic = awst::makeIntrinsicCall("stores", awst::WType::voidType(), _loc);
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc)); // slot
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[1]), _loc)); // value
+		return std::shared_ptr<awst::Expression>(std::move(ic));
+	}
+	if (_method == "loadSelf")
+	{
+		if (_args.size() != 1)
+		{
+			Logger::instance().error("Scratch.loadSelf expects 1 arg (slot)", _loc);
+			return nullptr;
+		}
+		auto ic = awst::makeIntrinsicCall("loads", awst::WType::uint64Type(), _loc);
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc)); // slot
+		return std::shared_ptr<awst::Expression>(std::move(ic));
+	}
+	if (_method == "load")
+	{
+		if (_args.size() != 2)
+		{
+			Logger::instance().error("Scratch.load expects 2 args (groupIndex, slot)", _loc);
+			return nullptr;
+		}
+		auto ic = awst::makeIntrinsicCall("gloadss", awst::WType::uint64Type(), _loc);
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc)); // group index
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[1]), _loc)); // slot
+		return std::shared_ptr<awst::Expression>(std::move(ic));
+	}
+
+	// bytes-valued variants — same AVM ops (stores/loads/gloadss accept `any`),
+	// but the value/result is a bytes blob (no uint64 coercion).
+	if (_method == "storeBytes")
+	{
+		if (_args.size() != 2)
+		{
+			Logger::instance().error("Scratch.storeBytes expects 2 args (slot, value)", _loc);
+			return nullptr;
+		}
+		auto ic = awst::makeIntrinsicCall("stores", awst::WType::voidType(), _loc);
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc)); // slot
+		ic->stackArgs.push_back(std::move(_args[1]));                        // value (bytes)
+		return std::shared_ptr<awst::Expression>(std::move(ic));
+	}
+	if (_method == "loadBytesSelf")
+	{
+		if (_args.size() != 1)
+		{
+			Logger::instance().error("Scratch.loadBytesSelf expects 1 arg (slot)", _loc);
+			return nullptr;
+		}
+		auto ic = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc)); // slot
+		return std::shared_ptr<awst::Expression>(std::move(ic));
+	}
+	if (_method == "loadBytes")
+	{
+		if (_args.size() != 2)
+		{
+			Logger::instance().error("Scratch.loadBytes expects 2 args (groupIndex, slot)", _loc);
+			return nullptr;
+		}
+		auto ic = awst::makeIntrinsicCall("gloadss", awst::WType::bytesType(), _loc);
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc)); // group index
+		ic->stackArgs.push_back(bigUIntToUint64(std::move(_args[1]), _loc)); // slot
+		return std::shared_ptr<awst::Expression>(std::move(ic));
+	}
+
+	Logger::instance().warning("unknown Scratch." + _method, _loc);
 	return std::nullopt;
 }
 

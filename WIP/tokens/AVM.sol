@@ -364,3 +364,61 @@ library Bits {
         }
     }
 }
+
+/// @title Scratch
+/// @dev AVM scratch space: 256 slots per transaction, ephemeral (cleared after
+/// the txn), and a LATER txn in the same atomic group can READ (not write) an
+/// EARLIER txn's slots via `gload`. This is the AVM analogue of EVM transient
+/// storage (TSTORE), but scoped to the group — perfect for flash-accounting
+/// deltas that must net to zero across a group of top-level calls and then
+/// vanish. There is NO Yul/EVM equivalent (EVM "scratch" is memory 0x00-0x40,
+/// unrelated), so these are stub bodies that puya-sol intercepts by library name
+/// (AsaIntrinsics dispatchScratch): store->`stores`, loadSelf->`loads`,
+/// load->`gloadss`.
+///
+/// NOTE: this minimal API is uint64-valued (slots default to 0). uint128/uint256
+/// deltas need a biguint-bytes variant with explicit zero-init — future work.
+library Scratch {
+    /// Store `value` into THIS txn's scratch slot `slot`.
+    function store(uint64 slot, uint64 value) internal {
+        slot; value;
+        revert("Scratch.store: requires puya-sol");
+    }
+
+    /// Read THIS txn's scratch slot `slot` (0 if never written).
+    function loadSelf(uint64 slot) internal view returns (uint64) {
+        slot;
+        revert("Scratch.loadSelf: requires puya-sol");
+    }
+
+    /// Read scratch slot `slot` of group txn `groupIndex` (must be < this txn's
+    /// group index — you can only read earlier txns). 0 if that txn never wrote it.
+    function load(uint64 groupIndex, uint64 slot) internal view returns (uint64) {
+        groupIndex; slot;
+        revert("Scratch.load: requires puya-sol");
+    }
+
+    // ── bytes-valued variants ──
+    // Scratch slots hold either a uint64 or a bytes value. The bytes variants let
+    // a slot carry an arbitrary blob (e.g. a list of (currency, delta) entries for
+    // multi-currency flash accounting). A slot never written returns empty bytes.
+
+    /// Store a bytes blob into THIS txn's scratch slot `slot`.
+    function storeBytes(uint64 slot, bytes memory value) internal {
+        slot; value;
+        revert("Scratch.storeBytes: requires puya-sol");
+    }
+
+    /// Read THIS txn's scratch slot `slot` as bytes (empty if never written).
+    function loadBytesSelf(uint64 slot) internal view returns (bytes memory) {
+        slot;
+        revert("Scratch.loadBytesSelf: requires puya-sol");
+    }
+
+    /// Read group txn `groupIndex`'s scratch slot `slot` as bytes (must be an
+    /// earlier txn; empty if it never wrote the slot).
+    function loadBytes(uint64 groupIndex, uint64 slot) internal view returns (bytes memory) {
+        groupIndex; slot;
+        revert("Scratch.loadBytes: requires puya-sol");
+    }
+}

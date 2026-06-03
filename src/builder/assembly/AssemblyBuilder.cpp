@@ -348,6 +348,10 @@ std::vector<int> AssemblyBuilder::reservedScratchSlots()
 	for (int i = MEMORY_SLOT_FIRST; i <= MEMORY_SLOT_LAST; ++i)
 		slots.push_back(i);
 	slots.push_back(TRANSIENT_SLOT);
+	// AVM.sol `Scratch` library slots (flash-accounting deltas) — reserved so the
+	// puya backend never reuses them for its own temps.
+	for (int i = FLASH_SCRATCH_FIRST; i <= FLASH_SCRATCH_LAST; ++i)
+		slots.push_back(i);
 	return slots;
 }
 

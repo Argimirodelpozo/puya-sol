@@ -99,6 +99,16 @@ public:
 	/// are per-txn), matching Solidity's per-transaction transient semantics.
 	static constexpr int TRANSIENT_SLOT = 5;
 
+	/// Scratch slots exposed to Solidity via the AVM.sol `Scratch` library
+	/// (Scratch.store/loadSelf/load -> stores/loads/gloadss). Used for
+	/// group-scoped flash-accounting deltas (a later group txn reads an earlier
+	/// txn's slot via gload). Reserved so puya's temp allocator never reuses
+	/// them, and placed ABOVE the memory/transient blobs so they don't clobber
+	/// EVM memory. Scratch callers must use slots in [FIRST, LAST]; 0-5 are
+	/// off-limits.
+	static constexpr int FLASH_SCRATCH_FIRST = 6;
+	static constexpr int FLASH_SCRATCH_LAST = 15;
+
 	/// Get the set of scratch slots to reserve on the Contract node.
 	static std::vector<int> reservedScratchSlots();
 

@@ -110,6 +110,14 @@ private:
 		std::string const& _method,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
+
+	// AVM scratch space (AVM.sol library Scratch): store/loadSelf/load ->
+	// stores/loads/gloadss. Group-scoped ephemeral storage for flash deltas.
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchScratch(
+		ContractContext& _ctx,
+		std::string const& _method,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::eb
