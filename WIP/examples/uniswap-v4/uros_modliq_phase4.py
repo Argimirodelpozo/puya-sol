@@ -176,34 +176,34 @@ def main() -> None:
     fa = fa_path[0]
     print("  failure-message:", grp.get("failure-message"), "| failed-at:", fa_path)
     tr = grp["txn-results"][fa].get("exec-trace", {}).get("approval-program-trace", [])
-    print(f"  failed txn[{fa}] top-level trace: {len(tr)} ops; last 24 mapped to source:")
+    def _sval(v: dict):
+        if v.get("bytes"):
+            return base64.b64decode(v["bytes"]).hex()
+        return v.get("uint")
+    print(f"  failed txn[{fa}] top-level trace: {len(tr)} ops; last 24 (with pushed values):")
     for u in tr[-24:]:
         pc = u.get("pc")
         ln = mod_sm.get_line_for_pc(pc) if pc is not None else None
-        src = mod_lines[ln].strip()[:80] if ln is not None and ln < len(mod_lines) else "?"
-        print(f"    pc={pc:5} L{ln}: {src}")
+        src = mod_lines[ln].strip()[:58] if ln is not None and ln < len(mod_lines) else "?"
+        adds = ",".join(str(_sval(a)) for a in u.get("stack-additions", []))
+        print(f"    pc={pc:5} L{ln}: {src}{(' -> ' + adds) if adds else ''}")
 
-    # KEY COMPARISON: the box key checkPoolInitialized read is its arg (frame_dig -1
-    # at pc 4337). Capture it from the trace stack and compare to the box init wrote.
-    def _sval(v: dict):
-        if v.get("bytes"):
-            return base64.b64decode(v["bytes"])
-        return v.get("uint")
-    read_key = None
+    # SafeCast.toInt128(x) reverts iff (x % 2^128) != x. Capture the arg x (pushed by
+    # the `frame_dig -1` units inside toInt128) to see whether it's a NEGATIVE int256
+    # (2^256-|v|, high bits set) that the unsigned-style check wrongly rejects.
+    print("\n  toInt128 ARG DIAGNOSIS:")
+    args = []
     for u in tr:
-        if u.get("pc") == 4337:  # frame_dig -1 in checkPoolInitialized -> pushes the key
-            adds = u.get("stack-additions", [])
-            if adds:
-                read_key = _sval(adds[-1])
-    print("\n  KEY DIAGNOSIS:")
-    print(f"  checkPoolInitialized read key = "
-          f"{read_key.hex() if isinstance(read_key, bytes) else read_key}")
-    for b in algorand.client.algod.application_boxes(main_id).get("boxes", []):
-        name = base64.b64decode(b["name"])
-        val = base64.b64decode(algorand.client.algod.application_box_by_name(main_id, name)["value"])
-        match = "  <== MATCHES read key" if name == read_key else ""
-        print(f"  box init WROTE: name={name.hex()} ({len(name)}B) "
-              f"val={val.hex()[:80]} ({len(val)}B){match}")
+        ln = mod_sm.get_line_for_pc(u.get("pc"))
+        if ln is not None and ln < len(mod_lines) and mod_lines[ln].strip() == "frame_dig -1":
+            for a in u.get("stack-additions", []):
+                args.append(_sval(a))
+    last = args[-1] if args else None
+    print(f"  last frame_dig -1 value (toInt128 arg) = {last}")
+    if isinstance(last, str) and last:
+        iv = int(last, 16)
+        neg = iv >= (1 << 255)
+        print(f"  as int256 = {iv - (1 << 256) if neg else iv}  (negative={neg}, {len(last)//2} bytes)")
 
 
 if __name__ == "__main__":
