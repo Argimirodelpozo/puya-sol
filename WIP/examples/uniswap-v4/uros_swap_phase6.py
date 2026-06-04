@@ -84,6 +84,17 @@ def main() -> None:
     # opup budget app (int 1)
     opup_c = base64.b64decode(algorand.client.algod.compile("#pragma version 10\nint 1\nreturn\n")["result"])
     opup_id = algorand.send.app_create(au.AppCreateParams(sender=sender, approval_program=opup_c, clear_state_program=opup_c)).app_id
+    # opcode-budget booster: a no-arg call issues 40 cheap inner self-calls (each a
+    # 1-arg NoOp that just approves), pooling ~40*700 opcode budget into the group —
+    # needed for the swap's biguint b*/b% math + the chunk-swap preps. (The measure
+    # uses extra_opcode_budget; a real send must source budget from app calls.)
+    boost_src = ("#pragma version 10\ntxn ApplicationID\nbz ok\n"
+                 "int 0\nloop:\ndup\nint 40\n<\nbz ok\nitxn_begin\nint 6\nitxn_field TypeEnum\n"
+                 f"int {opup_id}\nitxn_field ApplicationID\nint 0\nitxn_field Fee\n"
+                 "itxn_submit\nint 1\n+\nb loop\nok:\nint 1\nreturn\n")
+    boost_c = base64.b64decode(algorand.client.algod.compile(boost_src)["result"])
+    boost_id = algorand.send.app_create(au.AppCreateParams(sender=sender, approval_program=boost_c, clear_state_program=boost_c)).app_id
+    algorand.send.payment(au.PaymentParams(sender=sender, receiver=algosdk.logic.get_application_address(boost_id), amount=au.AlgoAmount.from_algo(1)))
 
     # setup + main
     sf = au.AppFactory(au.AppFactoryParams(algorand=algorand,
@@ -156,6 +167,14 @@ def main() -> None:
                 on_complete=algosdk.transaction.OnComplete.NoOpOC,
                 static_fee=au.AlgoAmount.from_micro_algo(6000)))
 
+    def add_boost(g, n):
+        # each booster call pools ~40*700 opcode budget via inner self-calls;
+        # high static_fee covers its 40 inner txns (cover also handles it).
+        for k in range(n):
+            g.add_app_call(au.AppCallParams(sender=sender, app_id=boost_id, note=f"b{k}".encode(),
+                on_complete=algosdk.transaction.OnComplete.NoOpOC,
+                static_fee=au.AlgoAmount.from_micro_algo(45000)))
+
     def unlock_op(g):
         g.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
             method="unlock", args=[prep("unlock"), b""], box_references=empties(4),
@@ -212,15 +231,9 @@ def main() -> None:
     amtIn, amtOut, fm = measure(lambda g: (unlock_op(g), swap_op(g)))
     print(f"=== SWAP zeroForOne exact-in {SWAP_IN}: DEBIT amountIn={amtIn} CREDIT amountOut={amtOut} (fm={fm}) ===")
     if amtIn == 0 or amtOut == 0:
-        # DOCUMENTED FRONTIER (2026-06-04): the swap COMPUTE runs (uint160 width
-        # checks pass after the biguint trim) but Pool.swap's step-loop hits the
-        # AVM 256-inner-txn cap — getSqrtPriceAtTick/computeSwapStep are Helper1
-        # inner txns (chunk_swap is full) and the loop does not terminate. Seed
-        # liquidity above works E2E; this is the remaining swap blocker.
-        print("⚠️  SWAP E2E BLOCKED at the 256-inner-txn cap (non-terminating "
-              "Pool.swap loop). Seed liquidity works; swap is the documented frontier.")
+        print("⚠️  swap measure returned no delta (unexpected) — fm above")
         return
-    gw = algorand.new_group(); add_opup(gw, 5); unlock_op(gw); swap_op(gw)
+    gw = algorand.new_group(); add_boost(gw, 2); unlock_op(gw); swap_op(gw)
     gw.add_payment(au.PaymentParams(sender=sender, receiver=main_client.app_address, amount=au.AlgoAmount.from_micro_algo(amtIn)))
     gw.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
         method="settle", args=[prep("settle")], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(3000))))
