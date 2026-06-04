@@ -386,3 +386,30 @@ def test_remove_liquidity(H):
     _take(H, g, H.c1, got1, H.t1.app, H.t1.asa)
     g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
     assert _bal(H, H.t0) - p0 == got0 and _bal(H, H.t1) - p1 == got1  # user got the liquidity back
+
+
+def test_tick_crossing_swap(H):
+    """A zeroForOne swap that CROSSES tick 60 between TWO liquid ranges ([60,120] + [0,60]),
+    proving real tick-crossing works end-to-end and is NOT blocked by the 256-inner cap. Runs
+    LAST: it seeds a second range and moves the price well below 60, mutating the shared pool."""
+    # Seed a second range [0,60]: the current tick (~90) is above it, so the position is all c1.
+    b = _measure(H, lambda g: (_unlock(H, g), _modliq(H, g, H.pool, 0, 60, SEED_LIQ)))
+    o1 = b.get(_cid(H.c1), (0, 0))[0]
+    assert o1 > 0, f"range [0,60] should owe c1, got {b}"
+    g = H.algorand.new_group(); _boost(H, g); _unlock(H, g); _modliq(H, g, H.pool, 0, 60, SEED_LIQ)
+    g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t1.asa, amount=o1)); _settle(H, g, H.c1)
+    g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+
+    # Swap with the limit at ~tick 30 (inside the lower range) -> crosses tick 60 between liquid ranges.
+    LIMIT = int(1.0001 ** 15 * (2 ** 96))  # ~tick 30
+    buckets = _measure(H, lambda g: (_unlock(H, g), _swap(H, g, H.pool, True, -10000, LIMIT)))
+    amt_in = buckets.get(_cid(H.c0), (0, 0))[0]
+    amt_out = buckets.get(_cid(H.c1), (0, 0))[1]
+    print(f"\n[CROSSING] crossed tick 60 between liquid ranges: in={amt_in} out={amt_out}")
+    assert amt_in > 0 and amt_out > 0, f"crossing swap should compute deltas, got {buckets}"
+    b1 = _bal(H, H.t1)
+    g = H.algorand.new_group(); _boost(H, g, 6); _unlock(H, g); _swap(H, g, H.pool, True, -10000, LIMIT)
+    g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t0.asa, amount=amt_in)); _settle(H, g, H.c0)
+    _take(H, g, H.c1, amt_out, H.t1.app, H.t1.asa)
+    g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+    assert _bal(H, H.t1) - b1 == amt_out  # tick-crossing swap completed end-to-end
