@@ -168,29 +168,56 @@ contract ARC20 {
         revert("arc20: asset_config not yet implemented (54c)");
     }
 
-    /// 4. asset_transfer
+    /// 4. asset_transfer — the one mover. Every transfer is an app-mediated clawback
+    /// (the app is the underlying ASA's clawback), branching on who the sender/receiver
+    /// is, mirroring the reference:
+    ///   * mint  (asset_sender == app):   reserve-authorized; receiver must be unfrozen.
+    ///   * burn  (asset_receiver == app): reserve-authorized; sender must be unfrozen.
+    ///   * clawback (caller == clawbackAddr): bypasses freeze (admin recovery).
+    ///   * regular: caller must be the sender; asset + both parties must be unfrozen.
     function asset_transfer(
         uint64 xfer_asset,
         uint64 asset_amount,
         address asset_sender,
         address asset_receiver
     ) external {
-        xfer_asset; asset_amount; asset_sender; asset_receiver;
-        revert("arc20: asset_transfer not yet implemented (54b)");
+        require(xfer_asset == smartAsaId, "arc20: bad asset");
+
+        if (asset_sender == address(this)) {
+            // mint: distribute from the app's reserve holding
+            require(msg.sender == reserveAddr, "arc20: not reserve");
+            require(!accountFrozen[asset_receiver], "arc20: receiver frozen");
+        } else if (asset_receiver == address(this)) {
+            // burn: pull back into the app's reserve holding
+            require(msg.sender == reserveAddr, "arc20: not reserve");
+            require(!accountFrozen[asset_sender], "arc20: sender frozen");
+        } else if (msg.sender == clawbackAddr) {
+            // clawback: admin recovery, intentionally bypasses freeze checks
+        } else {
+            // regular holder-initiated transfer
+            require(msg.sender == asset_sender, "arc20: not sender");
+            require(!globalFrozen, "arc20: asset frozen");
+            require(!accountFrozen[asset_sender], "arc20: sender frozen");
+            require(!accountFrozen[asset_receiver], "arc20: receiver frozen");
+        }
+
+        AVM.asaTransfer(smartAsaId, asset_sender, asset_receiver, asset_amount);
     }
 
-    /// 5. asset_freeze
+    /// 5. asset_freeze — toggle the whole-asset freeze (freeze admin only).
     function asset_freeze(uint64 freeze_asset, bool asset_frozen) external {
-        freeze_asset; asset_frozen;
-        revert("arc20: asset_freeze not yet implemented (54b)");
+        require(freeze_asset == smartAsaId, "arc20: bad asset");
+        require(msg.sender == freezeAddr, "arc20: not freeze admin");
+        globalFrozen = asset_frozen;
     }
 
-    /// 6. account_freeze
+    /// 6. account_freeze — toggle one account's freeze (freeze admin only).
     function account_freeze(uint64 freeze_asset, address freeze_account, bool asset_frozen)
         external
     {
-        freeze_asset; freeze_account; asset_frozen;
-        revert("arc20: account_freeze not yet implemented (54b)");
+        require(freeze_asset == smartAsaId, "arc20: bad asset");
+        require(msg.sender == freezeAddr, "arc20: not freeze admin");
+        accountFrozen[freeze_account] = asset_frozen;
     }
 
     /// 7. asset_close_out
