@@ -103,7 +103,7 @@ def H():
             return base64.b64decode(algod.compile(teal)["result"])
         return (PMDIR / f"PoolManager__chunk_{name}.approval.bin").read_bytes()
 
-    chunks = {n: chunk_bytes(n) for n in ("init", "modliq", "swap", "shell")}
+    chunks = {n: chunk_bytes(n) for n in ("init", "modliq", "swap", "shell", "donate")}
     max_pages = max(math.ceil(len(p) / 2048) for p in chunks.values()) - 1
 
     opup_c = base64.b64decode(algod.compile("#pragma version 10\nint 1\nreturn\n")["result"])
@@ -143,7 +143,7 @@ def H():
         for off in range(0, len(data), WRITE_CHUNK):
             setup_client.send.call(au.AppClientMethodCallParams(method="write_box", args=[key, off, data[off:off + WRITE_CHUNK]],
                 box_references=[key], static_fee=au.AlgoAmount.from_micro_algo(2000)))
-    for name in ("initialize", "unlock", "modifyLiquidity", "swap", "settleCurrency", "take", "optInAsset"):
+    for name in ("initialize", "unlock", "modifyLiquidity", "swap", "settleCurrency", "take", "optInAsset", "donate"):
         s = sel[name]
         setup_client.send.call(au.AppClientMethodCallParams(method="map_method", args=[s, mchunk[name].encode()],
             box_references=[b"m" + s], static_fee=au.AlgoAmount.from_micro_algo(2000)))
@@ -225,6 +225,13 @@ def _take(H, g, currency, amount, app, asa):
     g.add_app_call_method_call(H.main_client.params.call(au.AppClientMethodCallParams(
         method="take", args=[_prep(H, "take"), currency, H.sender, amount], app_references=[app],
         asset_references=[asa], box_references=_empties(4), note=_nxt(H), static_fee=au.AlgoAmount.from_micro_algo(6000))))
+
+
+def _donate(H, g, key, a0, a1):
+    g.add_app_call_method_call(H.main_client.params.call(au.AppClientMethodCallParams(
+        method="donate", args=[_prep(H, "donate"), key, a0, a1, b""],
+        app_references=[H.helper1_id], box_references=[*_boxes(H), *_empties(6 - len(_boxes(H)))],
+        note=_nxt(H), static_fee=au.AlgoAmount.from_micro_algo(8000))))
 
 
 def _measure(H, build):
@@ -316,6 +323,20 @@ def test_cross_currency_cheat_reverts(H):
         _take(H, g, H.c1, 100, H.t1.app, H.t1.asa)
         g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t0.asa, amount=100)); _settle(H, g, H.c0)
         g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+
+
+def test_donate(H):
+    """donate(amount0, amount1) adds both currencies to the pool's reserves (user pays them in)."""
+    a0 = a1 = 1000
+    p0, p1 = _bal_of(H, H.t0, H.main_addr), _bal_of(H, H.t1, H.main_addr)
+    buckets = _measure(H, lambda g: (_unlock(H, g), _donate(H, g, H.pool, a0, a1)))
+    owe0, owe1 = buckets.get(_cid(H.c0), (0, 0))[0], buckets.get(_cid(H.c1), (0, 0))[0]
+    assert owe0 == a0 and owe1 == a1, f"donate should owe exactly the donated amounts, got {buckets}"
+    g = H.algorand.new_group(); _boost(H, g); _unlock(H, g); _donate(H, g, H.pool, a0, a1)
+    g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t0.asa, amount=a0)); _settle(H, g, H.c0)
+    g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t1.asa, amount=a1)); _settle(H, g, H.c1)
+    g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+    assert _bal_of(H, H.t0, H.main_addr) == p0 + a0 and _bal_of(H, H.t1, H.main_addr) == p1 + a1
 
 
 @pytest.mark.xfail(reason="modliq with a NEGATIVE liquidityDelta (remove) hits an int128 sign "
