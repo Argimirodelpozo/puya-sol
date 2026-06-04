@@ -92,7 +92,7 @@ def main() -> None:
                 "local_ints": sch["local"]["ints"], "local_byte_slices": sch["local"]["bytes"]})).app_id
     main_addr = algosdk.logic.get_application_address(main_id)
     spec = json.loads((PMDIR / "PoolManager.arc56.json").read_text())
-    spec["methods"] = [m for m in spec["methods"] if m["name"] in {"uros_set_setup", "unlock", "take", "settle", "optInAsset"}]
+    spec["methods"] = [m for m in spec["methods"] if m["name"] in {"uros_set_setup", "unlock", "take", "settleCurrency", "optInAsset"}]
     main_client = au.AppClient(au.AppClientParams(app_id=main_id, algorand=algorand,
         app_spec=au.Arc56Contract.from_dict(spec), default_sender=sender))
     main_client.send.call(au.AppClientMethodCallParams(method="uros_set_setup", args=[setup_id]))
@@ -106,7 +106,7 @@ def main() -> None:
         for off in range(0, len(data), WRITE_CHUNK):
             setup_client.send.call(au.AppClientMethodCallParams(method="write_box", args=[key, off, data[off:off + WRITE_CHUNK]],
                 box_references=[key], static_fee=au.AlgoAmount.from_micro_algo(2000)))
-    for name in ("unlock", "take", "settle", "optInAsset"):
+    for name in ("unlock", "take", "settleCurrency", "optInAsset"):
         setup_client.send.call(au.AppClientMethodCallParams(method="map_method", args=[sel[name], b"shell"],
             box_references=[b"m" + sel[name]], static_fee=au.AlgoAmount.from_micro_algo(2000)))
     print(f"deployed V4: setup={setup_id} main={main_id} opup={opup_id}")
@@ -162,7 +162,7 @@ def main() -> None:
         asset_references=[asa], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(6000))))
     g.add_asset_transfer(au.AssetTransferParams(sender=sender, receiver=main_addr, asset_id=asa, amount=FLASH))  # repay
     g.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
-        method="settle", args=[prep("settle")], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(3000))))
+        method="settleCurrency", args=[prep("settleCurrency"), currency], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(3000))))
     g.send({"populate_app_call_resources": True})
     pool1 = int(token.send.call(au.AppClientMethodCallParams(method="balanceOf", args=[main_addr])).abi_return)
     user1 = int(token.send.call(au.AppClientMethodCallParams(method="balanceOf", args=[sender])).abi_return)

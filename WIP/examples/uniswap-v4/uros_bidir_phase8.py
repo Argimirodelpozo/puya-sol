@@ -56,6 +56,12 @@ def empties(n: int) -> list[au.BoxReference]:
     return [au.BoxReference(0, b"") for _ in range(n)]
 
 
+def cid(currency: str) -> int:
+    """The 64-bit currency id the pool buckets flash deltas by: the low 8 bytes of the
+    address (an AERC20's controlling-app id; native address(0) => 0)."""
+    return int.from_bytes(algosdk.encoding.decode_address(currency)[24:], "big")
+
+
 def deploy_aerc20(algorand, sender, label):
     """Deploy a MyToken AERC20 instance; return (app_id, asa_id, currency_addr)."""
     algod = algorand.client.algod
@@ -156,7 +162,7 @@ def main() -> None:
         for off in range(0, len(data), WRITE_CHUNK):
             setup_client.send.call(au.AppClientMethodCallParams(method="write_box", args=[key, off, data[off:off + WRITE_CHUNK]],
                 box_references=[key], static_fee=au.AlgoAmount.from_micro_algo(2000)))
-    for name in ("initialize", "unlock", "modifyLiquidity", "swap", "settle", "take", "optInAsset"):
+    for name in ("initialize", "unlock", "modifyLiquidity", "swap", "settleCurrency", "take", "optInAsset"):
         s = sel[name]
         setup_client.send.call(au.AppClientMethodCallParams(method="map_method", args=[s, mchunk[name].encode()],
             box_references=[b"m" + s], static_fee=au.AlgoAmount.from_micro_algo(2000)))
@@ -221,14 +227,17 @@ def main() -> None:
         grp = g._atc.simulate(algod, req).simulate_response["txn-groups"][0]
         fa = (grp.get("failed-at") or [len(grp["txn-results"]) - 1])[0]
         tr = grp["txn-results"][fa].get("exec-trace", {}).get("approval-program-trace", [])
-        steps6, last7 = [], 0
+        slots = {}
         for u in tr:
             for sc in u.get("scratch-changes", []):
                 nv = sc.get("new-value", {})
                 v = nv.get("uint", 0) if not nv.get("bytes") else int.from_bytes(base64.b64decode(nv["bytes"]), "big")
-                if sc.get("slot") == 6: steps6.append(v)
-                if sc.get("slot") == 7: last7 = v
-        return steps6, last7, grp.get("failure-message")
+                slots[sc.get("slot")] = v
+        # reconstruct the per-currency buckets: count@6, then {currId,debit,credit} at 7+3b
+        buckets = {}  # currId -> (debit, credit)
+        for b in range(slots.get(6, 0)):
+            buckets[slots.get(7 + 3 * b, 0)] = (slots.get(8 + 3 * b, 0), slots.get(9 + 3 * b, 0))
+        return buckets, grp.get("failure-message")
 
     def modliq_op(g):
         g.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
@@ -236,20 +245,20 @@ def main() -> None:
             app_references=[helper1_id], box_references=[*boxes_now(), *empties(6 - len(boxes_now()))],
             note=nxt(), static_fee=au.AlgoAmount.from_micro_algo(8000))))
 
-    def settle_op(g):
+    def settle_op(g, currency):
         g.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
-            method="settle", args=[prep("settle")], box_references=empties(4), note=nxt(), static_fee=au.AlgoAmount.from_micro_algo(3000))))
+            method="settleCurrency", args=[prep("settleCurrency"), currency], box_references=empties(4), note=nxt(), static_fee=au.AlgoAmount.from_micro_algo(3000))))
 
     # ── 2) SEED: modliq owes BOTH c0 and c1; split the conflated DEBIT trace steps ──
-    steps6, _c, fm = measure(lambda g: (unlock_op(g), modliq_op(g)))
-    assert len(steps6) >= 2, f"expected 2 debit steps (c0,c1) from modliq, got {steps6} (fm={fm})"
-    owe0, owe1 = steps6[0], steps6[-1] - steps6[0]
-    print(f"=== SEED: modliq [60,120] owes c0={owe0} c1={owe1} (debit steps {steps6}) ===")
+    buckets, fm = measure(lambda g: (unlock_op(g), modliq_op(g)))
+    owe0, owe1 = buckets.get(cid(c0), (0, 0))[0], buckets.get(cid(c1), (0, 0))[0]
+    assert owe0 > 0 and owe1 > 0, f"modliq should owe both currencies; got c0={owe0} c1={owe1} (fm={fm})"
+    print(f"=== SEED: modliq [60,120] owes c0={owe0} c1={owe1} (per-currency buckets {buckets}) ===")
     gs = algorand.new_group(); add_boost(gs, 2); unlock_op(gs); modliq_op(gs)
     gs.add_asset_transfer(au.AssetTransferParams(sender=sender, receiver=main_addr, asset_id=asa0, amount=owe0))
-    settle_op(gs)
+    settle_op(gs, c0)
     gs.add_asset_transfer(au.AssetTransferParams(sender=sender, receiver=main_addr, asset_id=asa1, amount=owe1))
-    settle_op(gs)
+    settle_op(gs, c1)
     gs.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
     pool_c0 = int(tok0.send.call(au.AppClientMethodCallParams(method="balanceOf", args=[main_addr])).abi_return)
     pool_c1 = int(tok1.send.call(au.AppClientMethodCallParams(method="balanceOf", args=[main_addr])).abi_return)
@@ -264,21 +273,22 @@ def main() -> None:
     def bal(tok):
         return int(tok.send.call(au.AppClientMethodCallParams(method="balanceOf", args=[sender])).abi_return)
 
-    def do_swap(zfo, in_asa, in_tok, out_currency, out_app, out_asa, out_tok, limit, label):
+    def do_swap(zfo, in_asa, in_currency, in_tok, out_currency, out_app, out_asa, out_tok, limit, label):
         def swap_op(g):
             g.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
                 method="swap", args=[prep("swap"), pool_key, [zfo, -SWAP_IN, limit], b""],
                 app_references=[helper1_id], box_references=[*boxes_now(), *empties(6 - len(boxes_now()))],
                 note=nxt(), static_fee=au.AlgoAmount.from_micro_algo(500000))))
-        steps6, out_amt, fm = measure(lambda g: (unlock_op(g), swap_op(g)))
-        in_amt = steps6[-1] if steps6 else 0
+        buckets, fm = measure(lambda g: (unlock_op(g), swap_op(g)))
+        in_amt = buckets.get(cid(in_currency), (0, 0))[0]    # input currency: debit
+        out_amt = buckets.get(cid(out_currency), (0, 0))[1]  # output currency: credit
         print(f"=== SWAP {label}: in={in_amt} out={out_amt} (fm={fm}) ===")
         assert in_amt == SWAP_IN, f"exact-in must consume {SWAP_IN}, got {in_amt} (fm={fm})"
         assert SWAP_IN // 2 < out_amt < SWAP_IN * 2, f"out {out_amt} out of sane range (fm={fm})"
         ib, ob = bal(in_tok), bal(out_tok)
         g = algorand.new_group(); add_boost(g, 2); unlock_op(g); swap_op(g)
         g.add_asset_transfer(au.AssetTransferParams(sender=sender, receiver=main_addr, asset_id=in_asa, amount=in_amt))
-        settle_op(g)
+        settle_op(g, in_currency)
         g.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
             method="take", args=[prep("take"), out_currency, sender, out_amt], app_references=[out_app],
             asset_references=[out_asa], box_references=empties(4), note=nxt(), static_fee=au.AlgoAmount.from_micro_algo(6000))))
@@ -287,8 +297,26 @@ def main() -> None:
         assert bal(out_tok) - ob == out_amt, f"{label}: user should receive exactly {out_amt}"
         print(f"  {label} ✓ paid {in_amt}, received {out_amt} — real AERC20 on both legs")
 
-    do_swap(True, asa0, tok0, c1, tok1_app, asa1, tok1, LIMIT_DOWN, "zeroForOne (c0->c1)")
-    do_swap(False, asa1, tok1, c0, tok0_app, asa0, tok0, LIMIT_UP, "oneForZero (c1->c0)")
+    do_swap(True, asa0, c0, tok0, c1, tok1_app, asa1, tok1, LIMIT_DOWN, "zeroForOne (c0->c1)")
+    do_swap(False, asa1, c1, tok1, c0, tok0_app, asa0, tok0, LIMIT_UP, "oneForZero (c1->c0)")
+
+    # ── SECURITY: a CROSS-CURRENCY CHEAT must revert under per-currency net-zero (#44).
+    #    Take c1 out but "settle" with c0 — equal amounts, so the OLD conflated model
+    #    (sum across currencies) would have passed it, letting the user walk off with c1.
+    #    Per-currency requires c1's own debit==credit, so this reverts and the take rolls back.
+    cheated = False
+    try:
+        gx = algorand.new_group(); add_boost(gx, 2); unlock_op(gx)
+        gx.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
+            method="take", args=[prep("take"), c1, sender, 100], app_references=[tok1_app],
+            asset_references=[asa1], box_references=empties(4), note=nxt(), static_fee=au.AlgoAmount.from_micro_algo(6000))))
+        gx.add_asset_transfer(au.AssetTransferParams(sender=sender, receiver=main_addr, asset_id=asa0, amount=100))  # pay c0 — WRONG currency
+        settle_op(gx, c0)
+        gx.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+    except Exception as e:  # noqa: BLE001
+        cheated = any(s in str(e) for s in ("assert", "logic eval", "CurrencyNotSettled", "err opcode"))
+    assert cheated, "SECURITY: cross-currency cheat (take c1, settle c0) MUST revert under per-currency net-zero"
+    print("✅ cross-currency cheat (take c1 / settle c0) correctly REVERTED — per-currency net-zero holds")
 
     print("\n✅ PHASE 8 PASS: bidirectional V4 swap with TWO real AERC20 currencies — both legs "
           "moved real tokens (settle the input axfer, take the output via clawback), per-currency "
