@@ -574,11 +574,11 @@ static solidity::frontend::FileReader setupFileReader(
 		fileReader.allowDirectory(nodeModules);
 	}
 
-	// puya-sol stdlib: locate `WIP/tokens/` relative to the executable
-	// (build/puya-sol → ../WIP/tokens/) so user contracts can `import
-	// "tokens/AERC20.sol"` regardless of where they live in the tree.
-	// Resolved via /proc/self/exe; falls back to a no-op on platforms
-	// without procfs.
+	// puya-sol stdlib, located relative to the executable (build/puya-sol →
+	// repo root) and resolved via /proc/self/exe; a no-op on platforms without
+	// procfs. Two bases:
+	//   <root>/src/  — bundled Solidity libraries: `import "libs/AVM.sol"`.
+	//   <root>/WIP/  — example contracts: `import "tokens/AERC20.sol"`.
 	try
 	{
 		char execPathBuf[4096];
@@ -586,7 +586,16 @@ static solidity::frontend::FileReader setupFileReader(
 		if (len > 0)
 		{
 			execPathBuf[len] = '\0';
-			fs::path stdlibBase = fs::path(execPathBuf).parent_path().parent_path() / "WIP";
+			fs::path root = fs::path(execPathBuf).parent_path().parent_path();
+			// Bundled libraries (libs/AVM.sol etc.).
+			fs::path libsBase = root / "src";
+			if (fs::exists(libsBase / "libs"))
+			{
+				fileReader.addIncludePath(libsBase);
+				fileReader.allowDirectory(libsBase);
+			}
+			// Example contracts (tokens/, examples/).
+			fs::path stdlibBase = root / "WIP";
 			if (fs::exists(stdlibBase / "tokens"))
 			{
 				fileReader.addIncludePath(stdlibBase);

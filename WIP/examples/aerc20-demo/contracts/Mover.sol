@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "tokens/AVM.sol";
+import "libs/AVM.sol";
 
 // De-risk for V4 "take" with AERC20 currencies: a contract holding AERC20 (an
 // ASA-backed ERC20) moving it via an EXTERNAL call (V4's CurrencyLibrary.transfer

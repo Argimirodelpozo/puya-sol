@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./AVM.sol";
+import "libs/AVM.sol";
 
 /// @notice Algorand-native ERC20: standard Solidity surface, ASA-backed
 /// balances and total supply via clawback inner transactions.
