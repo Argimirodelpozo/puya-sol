@@ -258,9 +258,10 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (_args.size() != 4)
+	if (_args.size() != 4 && _args.size() != 5)
 	{
-		Logger::instance().error("AVM.asaCreate expects 4 args (total, decimals, name, symbol)", _loc);
+		Logger::instance().error(
+			"AVM.asaCreate expects 4 or 5 args (total, decimals, name, symbol[, defaultFrozen])", _loc);
 		return nullptr;
 	}
 
@@ -268,6 +269,11 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	auto decimals = std::move(_args[1]);
 	auto name = stringToBytes(std::move(_args[2]), _loc);
 	auto symbol = stringToBytes(std::move(_args[3]), _loc);
+	// Optional 5th arg: default_frozen (bool). Omitted => unfrozen (the AVM default,
+	// so the existing 4-arg AERC20 path is unchanged).
+	std::shared_ptr<awst::Expression> defaultFrozen;
+	if (_args.size() == 5)
+		defaultFrozen = std::move(_args[4]);
 
 	static awst::WInnerTransactionFields s_acfgFieldsType(3);
 	auto create = awst::makeCreateInnerTransaction(&s_acfgFieldsType, _loc);
@@ -282,6 +288,8 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	create->fields["ConfigAssetReserve"] = currentAppAddress(_loc);
 	create->fields["ConfigAssetClawback"] = currentAppAddress(_loc);
 	create->fields["ConfigAssetFreeze"] = currentAppAddress(_loc);
+	if (defaultFrozen)
+		create->fields["ConfigAssetDefaultFrozen"] = std::move(defaultFrozen);
 
 	static awst::WInnerTransaction s_acfgTxnType(3);
 	auto submit = awst::makeSubmitInnerTransaction(&s_acfgTxnType, _loc);

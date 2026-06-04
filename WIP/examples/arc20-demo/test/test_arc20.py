@@ -17,6 +17,7 @@ import algokit_utils as au
 import pytest
 from algosdk.transaction import (
     ApplicationCreateTxn,
+    AssetTransferTxn,
     OnComplete,
     StateSchema,
     wait_for_confirmation,
@@ -89,11 +90,11 @@ def deploy_arc20(localnet, account, name: str = "MyArc20", fund: int = 2_000_000
     return client, app_id
 
 
-def _create(client, account):
+def _create(client, account, default_frozen: bool = False):
     """asset_create with the account as all four admin roles. Returns the ASA id."""
     return int(client.send.call(au.AppClientMethodCallParams(
         method="asset_create",
-        args=[TOTAL, DECIMALS, False, UNIT, NAME, URL, b"",
+        args=[TOTAL, DECIMALS, default_frozen, UNIT, NAME, URL, b"",
               account.address, account.address, account.address, account.address],
         extra_fee=au.AlgoAmount.from_micro_algo(3_000),
     )).abi_return)
@@ -237,3 +238,26 @@ def test_asset_opt_in_validates_asset(localnet, account):
     client.send.call(au.AppClientMethodCallParams(method="asset_opt_in", args=[asa]))
     with pytest.raises(Exception):
         client.send.call(au.AppClientMethodCallParams(method="asset_opt_in", args=[asa + 99_999]))
+
+
+# ── 54d: default_frozen — the underlying ASA is created frozen (tamper-proof) ──
+
+def test_default_frozen_blocks_direct_transfer(localnet, account):
+    """Created default_frozen, holders cannot transfer the ASA directly — every move
+    must route through the app's clawback (true Smart ASA tamper-proofing)."""
+    client, app_id = deploy_arc20(localnet, account)
+    asa = _create(client, account, default_frozen=True)
+    opt_in_to_asa(localnet, account, asa)
+    acct2 = localnet.account.random()
+    fund_account(localnet, account, acct2.address, 1_000_000)
+    opt_in_to_asa(localnet, acct2, asa)  # opt-in itself works even when default_frozen
+    _xfer(client, asa, 1000, app_address(app_id), acct2.address)  # app mint via clawback
+    assert _asa_bal(localnet, acct2.address, asa) == 1000
+    # a DIRECT axfer by the frozen holder (bypassing the app) must fail
+    with pytest.raises(Exception):
+        sp = localnet.client.algod.suggested_params()
+        txn = AssetTransferTxn(acct2.address, sp, account.address, 100, asa)
+        localnet.client.algod.send_transaction(txn.sign(acct2.private_key))
+    # the app's clawback still moves the frozen holder's units
+    _xfer(client, asa, 300, acct2.address, account.address)
+    assert _asa_bal(localnet, acct2.address, asa) == 700

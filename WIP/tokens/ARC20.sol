@@ -77,8 +77,10 @@ contract ARC20 {
         require(msg.sender == Global.creatorAddress(), "arc20: only creator");
         require(smartAsaId == 0, "arc20: already created");
 
-        // Underlying ASA: the app is every role, so only the app can move units.
-        smartAsaId = AVM.asaCreate(total, uint8(decimals), name, unitName);
+        // Underlying ASA: the app is every role, so only the app can move units. When
+        // defaultFrozen is set the ASA is created frozen, so holders cannot transfer
+        // directly — every move must route through the app's clawback (true Smart ASA).
+        smartAsaId = AVM.asaCreate(total, uint8(decimals), name, unitName, defaultFrozen);
 
         cfgTotal = total;
         cfgDecimals = decimals;

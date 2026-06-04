@@ -1511,22 +1511,25 @@ main_bool_merge@140:
     itxn_field ConfigAssetName
     itxn_field ConfigAssetManager
     itxn_field ConfigAssetFreeze
-    swap
+    dig 10
+    dup
+    itxn_field ConfigAssetDefaultFrozen
+    uncover 2
     itxn_field ConfigAssetDecimals
-    swap
+    uncover 2
     itxn_field ConfigAssetClawback
     itxn_submit
     bytec_0 // "smartAsaId"
     itxn CreatedAssetID
     app_global_put
     bytec 6 // "cfgTotal"
-    swap
+    uncover 2
     app_global_put
     bytec 11 // "cfgDecimals"
-    uncover 3
+    uncover 4
     app_global_put
     bytec 12 // "cfgDefaultFrozen"
-    dig 7
+    swap
     app_global_put
     bytec 13 // "cfgUnitName"
     uncover 2

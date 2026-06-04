@@ -33,6 +33,20 @@ library AVM {
         revert("AVM.asaCreate: requires puya-sol");
     }
 
+    /// As above, but create the ASA `default_frozen` — every holder is frozen on
+    /// opt-in, so units can only move via the contract's clawback (the Smart ASA /
+    /// ARC-20 tamper-proofing pattern). The contract is still all four ASA roles.
+    function asaCreate(
+        uint64 total,
+        uint8 decimals,
+        string memory name,
+        string memory symbol,
+        bool defaultFrozen
+    ) internal returns (uint64) {
+        total; decimals; name; symbol; defaultFrozen;
+        revert("AVM.asaCreate: requires puya-sol");
+    }
+
     /// Permanently destroy `assetId`. The contract must hold all units and
     /// be the asset's manager.
     function asaDestroy(uint64 assetId) internal {
