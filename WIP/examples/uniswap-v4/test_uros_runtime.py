@@ -143,7 +143,7 @@ def H():
         for off in range(0, len(data), WRITE_CHUNK):
             setup_client.send.call(au.AppClientMethodCallParams(method="write_box", args=[key, off, data[off:off + WRITE_CHUNK]],
                 box_references=[key], static_fee=au.AlgoAmount.from_micro_algo(2000)))
-    for name in ("initialize", "unlock", "modifyLiquidity", "swap", "settleCurrency", "take", "optInAsset", "donate"):
+    for name in ("initialize", "unlock", "modifyLiquidity", "swap", "settleCurrency", "take", "optInAsset", "donate", "mint", "burn"):
         s = sel[name]
         setup_client.send.call(au.AppClientMethodCallParams(method="map_method", args=[s, mchunk[name].encode()],
             box_references=[b"m" + s], static_fee=au.AlgoAmount.from_micro_algo(2000)))
@@ -232,6 +232,18 @@ def _donate(H, g, key, a0, a1):
         method="donate", args=[_prep(H, "donate"), key, a0, a1, b""],
         app_references=[H.helper1_id], box_references=[*_boxes(H), *_empties(6 - len(_boxes(H)))],
         note=_nxt(H), static_fee=au.AlgoAmount.from_micro_algo(8000))))
+
+
+def _mint(H, g, id_, amount):  # ERC6909 claims mint (id = currency.toId())
+    g.add_app_call_method_call(H.main_client.params.call(au.AppClientMethodCallParams(
+        method="mint", args=[_prep(H, "mint"), H.sender, id_, amount], box_references=_empties(4),
+        note=_nxt(H), static_fee=au.AlgoAmount.from_micro_algo(3000))))
+
+
+def _burn(H, g, id_, amount):  # ERC6909 claims burn
+    g.add_app_call_method_call(H.main_client.params.call(au.AppClientMethodCallParams(
+        method="burn", args=[_prep(H, "burn"), H.sender, id_, amount], box_references=_empties(4),
+        note=_nxt(H), static_fee=au.AlgoAmount.from_micro_algo(3000))))
 
 
 def _measure(H, build):
@@ -337,6 +349,26 @@ def test_donate(H):
     g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t1.asa, amount=a1)); _settle(H, g, H.c1)
     g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
     assert _bal_of(H, H.t0, H.main_addr) == p0 + a0 and _bal_of(H, H.t1, H.main_addr) == p1 + a1
+
+
+def test_erc6909_claims(H):
+    """Take a swap output as ERC6909 claims (mint) instead of real tokens, then redeem (burn + take)."""
+    toid1 = int.from_bytes(algosdk.encoding.decode_address(H.c1)[12:], "big")  # currency.toId()
+    buckets = _measure(H, lambda g: (_unlock(H, g), _swap(H, g, H.pool, True, -2000, LIMIT_DOWN)))
+    amt_in, amt_out = buckets.get(_cid(H.c0), (0, 0))[0], buckets.get(_cid(H.c1), (0, 0))[1]
+    assert amt_in == 2000 and amt_out > 0
+    b1 = _bal(H, H.t1)
+    # 1) swap output -> ERC6909 claims (mint), NOT a real take
+    g = H.algorand.new_group(); _boost(H, g); _unlock(H, g); _swap(H, g, H.pool, True, -2000, LIMIT_DOWN)
+    g.add_asset_transfer(au.AssetTransferParams(sender=H.sender, receiver=H.main_addr, asset_id=H.t0.asa, amount=amt_in)); _settle(H, g, H.c0)
+    _mint(H, g, toid1, amt_out)
+    g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+    assert _bal(H, H.t1) == b1, "output went to ERC6909 claims; real c1 unchanged"
+    # 2) redeem: burn the claims + take the real token
+    g = H.algorand.new_group(); _boost(H, g); _unlock(H, g); _burn(H, g, toid1, amt_out)
+    _take(H, g, H.c1, amt_out, H.t1.app, H.t1.asa)
+    g.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+    assert _bal(H, H.t1) == b1 + amt_out, "claims redeemed for the real token"
 
 
 @pytest.mark.xfail(reason="modliq with a NEGATIVE liquidityDelta (remove) hits an int128 sign "
