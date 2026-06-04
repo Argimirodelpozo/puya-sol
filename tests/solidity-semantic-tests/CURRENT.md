@@ -2,9 +2,9 @@
 
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-03):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
-> `RESULTS_<sha>.txt`, not these version totals. Latest run **c275eaf20 =
-> 1195 PASS / 59 FAIL / 76 xfailed** (RESULTS_c275eaf20.txt), **zero regressions**
-> vs RESULTS_e2c8ff9a7 (identical fail set throughout; +5 = new guard tests).
+> `RESULTS_<sha>.txt`, not these version totals. Latest run **2266bc286 =
+> 1195 PASS / 59 FAIL / 76 xfailed** (RESULTS_2266bc286.txt), **zero regressions**
+> vs RESULTS_c275eaf20 (identical fail set; +1 guard `conversions/asm_uintn_mask`).
 > Session landed the full signed-int / V4-modliq fix chain (each isolated, zero-reg):
 > - **c43f434e3** storage-ref LOCAL var keyed off runtime value (V4
 >   `Pool.State storage pool = _getPool(id)`) → modliq passes checkPoolInitialized.
@@ -13,15 +13,24 @@
 > - **1c9795ab1** signed **implicit widening** (`int128 x = int24`).
 > - **2d8b6b398** signed **explicit-cast widening** (`int128(int24)`).
 > - **c275eaf20** signed **narrowing** (`int128(int256)`, SafeCast.toInt128).
+> - **2266bc286** UNSIGNED width: `makeARC4Encode` trims a non-minimal biguint
+>   (from a `b&` mask) to its low n/8 bytes before `biguint->arc4.uintN` so the
+>   `len<=n/8` overflow assert passes. Unblocked the V4 swap uint160 sqrtPrice math.
 > Net: 🎉 **V4 modifyLiquidity now completes END-TO-END on the AVM** (harness
 > `uros_settle_phase5.py`, commit 77876ae53): full path init→tick math→BalanceDelta→
 > scratch delta-accounting→**native settle**→atomic-group net-zero close, pool state
 > updates (liquidity added). Settlement unblocked via local PoolManager `_settle`
 > (read the native payment grouped at GroupIndex-2 since msg.value=0 in the dance) +
-> `_settleIfLast` skipping non-app-call txns. Single-currency native; multi-currency
-> (#44) + swap (#51) remain. Guards: `tests/{storage/struct_storage_ref_local,
+> `_settleIfLast` skipping non-app-call txns. **swap (#51):** compute now runs
+> (uint160 width OK after 2266bc286 + local Slot0.sqrtPriceX96 cast) + seed
+> liquidity works E2E, but blocked on the AVM 256-inner-txn cap — `Pool.swap`'s
+> step-loop doesn't terminate (`computeSwapStep` no-progress); each iteration does
+> 1 inner getSqrtPriceAtTick. **#44 multi-currency** is coupled to per-currency
+> token movement (ASA frontier) — landing it alone would break the working
+> conflated native-settle. Both are multi-day frontiers (harness uros_swap_phase6).
+> Guards: `tests/{storage/struct_storage_ref_local,
 > structs/int24_struct_literal(+_negative), structs/int24_field_decode,
-> conversions/signed_narrowing}`.
+> conversions/signed_narrowing, conversions/asm_uintn_mask}`.
 
 **Totals (measured, v332 single-threaded, 8m11s):** **1192 PASS / 75 FAIL /
 55 xfailed.** The +6 xfail vs v330 (49→55) are the 6 honest flips from the
