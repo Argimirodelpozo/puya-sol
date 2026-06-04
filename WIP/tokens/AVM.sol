@@ -304,6 +304,12 @@ library Global {
         revert("Global.currentApplicationAddress: requires puya-sol");
     }
 
+    /// Address of the account that created this application (`global CreatorAddress`).
+    /// Immutable for the life of the app; the canonical owner/admin for access control.
+    function creatorAddress() internal view returns (address) {
+        revert("Global.creatorAddress: requires puya-sol");
+    }
+
     /// 32-byte group id of the current atomic group.
     function groupId() internal view returns (bytes32) {
         revert("Global.groupId: requires puya-sol");

@@ -687,6 +687,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGlobal(
 
 	if (_method == "currentApplicationId") return globalField("CurrentApplicationID", awst::WType::uint64Type());
 	if (_method == "currentApplicationAddress") return globalField("CurrentApplicationAddress", awst::WType::accountType());
+	if (_method == "creatorAddress") return globalField("CreatorAddress", awst::WType::accountType());
 	if (_method == "groupId") return globalField("GroupID", awst::WType::bytesType());
 	if (_method == "latestTimestamp") return globalField("LatestTimestamp", awst::WType::uint64Type());
 	if (_method == "round") return globalField("Round", awst::WType::uint64Type());

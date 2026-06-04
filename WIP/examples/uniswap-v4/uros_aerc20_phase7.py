@@ -125,6 +125,24 @@ def main() -> None:
     algorand.send.payment(au.PaymentParams(sender=sender, receiver=main_addr, amount=au.AlgoAmount.from_algo(1)))  # MBR for the ASA
     main_client.send.call(au.AppClientMethodCallParams(method="optInAsset", args=[prep("optInAsset"), asa],
         box_references=empties(4), asset_references=[asa], static_fee=au.AlgoAmount.from_micro_algo(5000)))
+
+    # ── SECURITY: a non-creator must NOT be able to optInAsset. Unguarded, anyone could
+    #    force the pool into arbitrary ASAs, locking 0.1 ALGO MBR each (a balance-drain /
+    #    DoS). The guard is `msg.sender == Global.creatorAddress()` (the same check the
+    #    uros infra uses). Prove it on-chain: a funded non-creator's optInAsset reverts.
+    attacker = algorand.account.random()
+    algorand.send.payment(au.PaymentParams(sender=sender, receiver=attacker.address, amount=au.AlgoAmount.from_algo(1)))
+    atk_client = au.AppClient(au.AppClientParams(app_id=main_id, algorand=algorand,
+        app_spec=au.Arc56Contract.from_dict(spec), default_sender=attacker.address))
+    rejected = False
+    try:
+        atk_client.send.call(au.AppClientMethodCallParams(method="optInAsset", args=[prep("optInAsset"), asa],
+            box_references=empties(4), asset_references=[asa], static_fee=au.AlgoAmount.from_micro_algo(5000)))
+    except Exception as e:  # noqa: BLE001
+        rejected = any(s in str(e) for s in ("assert failed", "logic eval", "creator"))
+    assert rejected, "SECURITY: non-creator optInAsset MUST be rejected (DoS/MBR-drain guard)"
+    print("✅ non-creator optInAsset correctly REJECTED (only-creator guard holds)")
+
     token.send.call(au.AppClientMethodCallParams(method="mint", args=[main_addr, SEED],
         extra_fee=au.AlgoAmount.from_micro_algo(2000)), send_params={"populate_app_call_resources": True})  # seed the pool
     # user (sender) opts into the ASA
