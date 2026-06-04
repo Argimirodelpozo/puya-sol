@@ -39,6 +39,22 @@ def test_asm_uintn_mask(harness):
     assert as_int(harness.call(app, "mask160(uint256)", (1 << 160) - 1).abi_return) == (1 << 160) - 1
 
 
+def test_signed_negate(harness):
+    """conversions/contracts/signed_negate.sol
+
+    Unary minus + uint256() cast on a NEGATIVE int256 — the V4
+    SwapMath.computeSwapStep exact-in shape `uint256(-amountRemaining)`. Guards the
+    256-bit two's-complement negation (must round-trip, not give 0 / a huge value).
+    """
+    app = harness.compile_and_deploy("conversions/contracts/signed_negate.sol")
+    assert as_int(harness.call(app, "negToUint(int256)", -2000).abi_return) == 2000
+    assert as_int(harness.call(app, "negToUint(int256)", -1).abi_return) == 1
+    assert harness.call(app, "isNeg(int256)", -2000).abi_return is True
+    assert harness.call(app, "isNeg(int256)", 5).abi_return is False
+    # amountRemainingLessFee: uint256(-(-2000)) * (1e6-3000)/1e6 == 1994
+    assert as_int(harness.call(app, "lessFee(int256,uint24)", -2000, 3000).abi_return) == 1994
+
+
 def test_function_type_array_to_storage(harness):
     """conversions/contracts/function_type_array_to_storage.sol"""
     app = harness.compile_and_deploy("conversions/contracts/function_type_array_to_storage.sol")
