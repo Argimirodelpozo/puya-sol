@@ -158,6 +158,28 @@ def main() -> None:
                   for b in algorand.client.algod.application_boxes(main_id).get("boxes", [])]
     print(f"pool state boxes on main: {len(pool_boxes)}")
 
+    def _box_val(nm):
+        return base64.b64decode(algorand.client.algod.application_box_by_name(main_id, nm)["value"])
+
+    def find_slot0():
+        # slot0 is a 32-byte pool-state word; sqrtPriceX96 = low 160 bits = its last
+        # 20 bytes. Locate it by finding the known INIT_SQRT_PRICE (20-byte, left-padded).
+        target = INIT_SQRT_PRICE.to_bytes(20, "big")
+        for b in algorand.client.algod.application_boxes(main_id).get("boxes", []):
+            nm = base64.b64decode(b["name"])
+            idx = _box_val(nm).find(target)
+            if idx >= 0:
+                return nm, idx
+        return None, None
+
+    def read_sqrt_at(nm, off):
+        v = _box_val(nm)
+        return int.from_bytes(v[off:off + 20], "big")
+
+    s0_name, s0_off = find_slot0()
+    assert s0_name is not None, "could not locate slot0 sqrtPrice box after init"
+    print(f"slot0 sqrtPriceX96 after init = {read_sqrt_at(s0_name, s0_off)} (= INIT {INIT_SQRT_PRICE})")
+
     # ── helpers ──────────────────────────────────────────────────────────
     from algosdk.v2client import models as _m
 
@@ -230,9 +252,10 @@ def main() -> None:
             static_fee=au.AlgoAmount.from_micro_algo(500000))))
     amtIn, amtOut, fm = measure(lambda g: (unlock_op(g), swap_op(g)))
     print(f"=== SWAP zeroForOne exact-in {SWAP_IN}: DEBIT amountIn={amtIn} CREDIT amountOut={amtOut} (fm={fm}) ===")
-    if amtIn == 0 or amtOut == 0:
-        print("⚠️  swap measure returned no delta (unexpected) — fm above")
-        return
+    # verify the COMPUTE: exact-in must consume the full input; output sane for this
+    # ~tick-90 pool (price(c1/c0)~1.009, fee 0.3% => ~2011 out for 2000 in).
+    assert amtIn == SWAP_IN, f"exact-in should consume the full input: amtIn={amtIn} != {SWAP_IN} (fm={fm})"
+    assert SWAP_IN < amtOut < 2 * SWAP_IN, f"amountOut out of sane range: {amtOut} (fm={fm})"
     gw = algorand.new_group(); add_boost(gw, 2); unlock_op(gw); swap_op(gw)
     gw.add_payment(au.PaymentParams(sender=sender, receiver=main_client.app_address, amount=au.AlgoAmount.from_micro_algo(amtIn)))
     gw.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
@@ -240,8 +263,14 @@ def main() -> None:
     gw.add_app_call_method_call(main_client.params.call(au.AppClientMethodCallParams(
         method="mint", args=[prep("mint"), sender, 1, amtOut], box_references=empties(4), static_fee=au.AlgoAmount.from_micro_algo(3000))))
     gw.send({"populate_app_call_resources": True, "cover_app_call_inner_transaction_fees": True})
+    # verify STATE PERSISTED: the swap must have lowered the pool sqrtPrice (zeroForOne
+    # moves price down) \u2014 proves it mutated pool state, not just balanced a net-zero group.
+    p_after = read_sqrt_at(s0_name, s0_off)
+    assert p_after < INIT_SQRT_PRICE, f"zeroForOne must lower the pool price: {p_after} >= {INIT_SQRT_PRICE}"
+    print(f"   pool sqrtPriceX96 moved {INIT_SQRT_PRICE} -> {p_after}  (down, zeroForOne \u2713)")
     print("\n\u2705 PASS: V4 swap completed E2E on the AVM \u2014 swap math + delta accounting, "
-          "native input settled, output taken as ERC6909 claims, atomic-group net-zero passed.")
+          "native input settled, output taken as ERC6909 claims, pool price moved, "
+          "atomic-group net-zero passed.")
 
 
 if __name__ == "__main__":
