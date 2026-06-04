@@ -52,30 +52,17 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	if (_expr->wtype == awst::WType::uint64Type())
 		return _expr;
 
-	// biguint → bytes (untyped). bytes-typed `extract3` takes the last 8.
+	// biguint → low 8 bytes → btoi. NOTE: the AVM's big-int ops (b+, b%, …) STRIP
+	// leading zeros to a minimal-length result, so a previous `Add(b, 0)` did NOT
+	// normalise to a fixed 32-byte width — `extract3 24 8` then overran for any value
+	// whose minimal encoding was < 32 bytes (essentially every real amount; e.g. an
+	// 8-byte asaBalance result hit "extraction start 24 beyond length 8"). Instead
+	// left-pad by 8 (a bitwise pad, which keeps length unlike big-int add) and take
+	// the low 8 bytes — zero-extends a short value, truncates a long one to uint64.
 	auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
-
-	// Pad to ≥ 8 bytes by ORing with bzero(32); biguint addition + zero
-	// preserves value but normalises length to 32 so `extract3 24 8`
-	// always sees the low-order 8 bytes.
-	auto padBack = awst::makeAsBiguint(asBytes, _loc);
-	auto zeroBig = awst::makeBiguintConstant("0", _loc);
-	// biguint(b) | biguint(0) ≡ left-pad-with-zeros to 32 bytes via puya's
-	// big-int op. We use addition for a similar effect — `Add(b, 0)` yields
-	// b but normalised to fixed width.
-	auto normalised = awst::makeBigUIntBinOp(
-		std::move(padBack), awst::BigUIntBinaryOperator::Add,
-		std::move(zeroBig), _loc);
-	auto normBytes = awst::makeAsBytes(std::move(normalised), _loc);
-
-	// keep last 8 bytes of the normalised 32-byte rep
-	auto extract = awst::makeExtract3(
-		std::move(normBytes),
-		awst::makeIntegerConstant("24", _loc),
-		awst::makeIntegerConstant("8", _loc),
-		_loc);
-
-	return awst::makeBtoi(std::move(extract), _loc);
+	auto low8 = awst::makeExtractLastN(
+		awst::makeLeftPad(std::move(asBytes), 8, _loc), 8, _loc);
+	return awst::makeBtoi(std::move(low8), _loc);
 }
 
 /// `global CurrentApplicationAddress` as account-typed expr.
