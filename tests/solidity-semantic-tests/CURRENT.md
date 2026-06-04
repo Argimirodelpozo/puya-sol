@@ -21,13 +21,17 @@
 > scratch delta-accounting→**native settle**→atomic-group net-zero close, pool state
 > updates (liquidity added). Settlement unblocked via local PoolManager `_settle`
 > (read the native payment grouped at GroupIndex-2 since msg.value=0 in the dance) +
-> `_settleIfLast` skipping non-app-call txns. **swap (#51):** compute now runs
-> (uint160 width OK after 2266bc286 + local Slot0.sqrtPriceX96 cast) + seed
-> liquidity works E2E, but blocked on the AVM 256-inner-txn cap — `Pool.swap`'s
-> step-loop doesn't terminate (`computeSwapStep` no-progress); each iteration does
-> 1 inner getSqrtPriceAtTick. **#44 multi-currency** is coupled to per-currency
+> `_settleIfLast` skipping non-app-call txns. 🎉 **swap (#51) NOW COMPLETES E2E
+> ON THE AVM** (harness uros_swap_phase6.py @48db97678): seed liquidity + zeroForOne
+> exact-in 2000 → DEBIT 2000 / CREDIT 2011, native settle, ERC6909-claim mint,
+> atomic net-zero. Root cause of the prior no-progress was a puya OPTIMIZER bug
+> (multi-return tuple destructured into struct fields gets DCE-dropped — see memory
+> uros-multireturn-struct-destructure-dce), NOT the splitter. Fix = local-var
+> destructure in Pool.swap + Slot0 cast + split-config BitMath extract + harness
+> opcode-budget booster, on top of biguint trim 2266bc286 (contract edits are LOCAL/
+> gitignored; recipe in memory). **#44 multi-currency** is coupled to per-currency
 > token movement (ASA frontier) — landing it alone would break the working
-> conflated native-settle. Both are multi-day frontiers (harness uros_swap_phase6).
+> conflated native-settle (multi-day frontier).
 > Guards: `tests/{storage/struct_storage_ref_local,
 > structs/int24_struct_literal(+_negative), structs/int24_field_decode,
 > conversions/signed_narrowing, conversions/asm_uintn_mask}`.
