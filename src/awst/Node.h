@@ -1379,6 +1379,25 @@ inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 			}
 		}
 
+	// biguint -> arc4.uintN / arc4.intN (N<256): a biguint may carry leading zero
+	// bytes (notably from a bitwise `b&` mask, which keeps the WIDER operand's byte
+	// width — AVM `b&` does not strip), so puya's biguint->arc4.uintN `len <= n/8`
+	// overflow check would wrongly revert (e.g. a 32-byte uint160 from `slot0 &
+	// MASK_160`). Trim to the LOW n/8 bytes = value mod 2^n, the encoded low n bits
+	// (correct for unsigned AND for signed two's-complement). No-op for values
+	// already representable in n/8 bytes.
+	if (value && value->wtype == WType::biguintType())
+		if (auto const* uintN = dynamic_cast<ARC4UIntN const*>(wtype))
+		{
+			int const n = uintN->n();
+			if (n < 256 && n % 8 == 0)
+			{
+				auto low = makeExtractLastN(
+					makeLeftPad(makeAsBytes(std::move(value), loc), n / 8, loc), n / 8, loc);
+				value = makeAsBiguint(std::move(low), loc);
+			}
+		}
+
 	auto node = std::make_shared<ARC4Encode>();
 	node->sourceLocation = std::move(loc);
 	node->wtype = wtype;

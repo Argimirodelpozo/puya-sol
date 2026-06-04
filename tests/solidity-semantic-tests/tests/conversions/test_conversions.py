@@ -23,6 +23,22 @@ def test_signed_narrowing_toint128(harness):
     harness.call(app, "toI128(int256)", -(2 ** 130), expect_revert=True)
 
 
+def test_asm_uintn_mask(harness):
+    """conversions/contracts/asm_uintn_mask.sol
+
+    A Yul `and(x, MASK)` yields a non-minimal biguint (AVM b& keeps the wider
+    operand's byte width); returning it as uintN must not trip puya's
+    biguint->arc4.uintN `len <= n/8` overflow assert. Guard for the width trim
+    that unblocked the V4 swap uint160 sqrtPrice math.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/asm_uintn_mask.sol")
+    # bit set ABOVE the mask width is dropped; the low pattern survives
+    assert as_int(harness.call(app, "mask160(uint256)", (1 << 200) | 0xDEADBEEF).abi_return) == 0xDEADBEEF
+    assert as_int(harness.call(app, "mask128(uint256)", (1 << 200) | 0xCAFE).abi_return) == 0xCAFE
+    # a full-width in-range value is preserved (no truncation of valid bits)
+    assert as_int(harness.call(app, "mask160(uint256)", (1 << 160) - 1).abi_return) == (1 << 160) - 1
+
+
 def test_function_type_array_to_storage(harness):
     """conversions/contracts/function_type_array_to_storage.sol"""
     app = harness.compile_and_deploy("conversions/contracts/function_type_array_to_storage.sol")
