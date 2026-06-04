@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/arc20-demo/contracts/MyArc20.sol.ARC20.approval_program() -> uint64:
 main:
     intcblock 0 1 8 32 4294967295
-    bytecblock "smartAsaId" "freezeAddr" "accountFrozen" "reserveAddr" 0x151f7c75 "clawbackAddr" "globalFrozen" "cfgTotal" "cfgMetadataHash" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 0x00 "cfgDecimals" "cfgDefaultFrozen" "managerAddr" "cfgName" "cfgUnitName" "cfgUrl"
+    bytecblock "smartAsaId" "managerAddr" "accountFrozen" "freezeAddr" "reserveAddr" 0x151f7c75 "clawbackAddr" "cfgTotal" 0x010000000000000000000000000000000000000000000000000000000000000000 "cfgMetadataHash" "globalFrozen" "cfgDecimals" "cfgDefaultFrozen" "cfgUnitName" "cfgName" "cfgUrl" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "__ctor_pending" 0x00
     intc_0 // 0
-    dupn 10
+    dupn 12
     pushbytes ""
-    dupn 7
+    dupn 10
     pushint 4096
     bzero
     dup
@@ -20,7 +20,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 10 // "__ctor_pending"
+    bytec 17 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -53,7 +53,7 @@ main_ternary_merge@25:
     app_global_get_ex
     assert // check smartAsaId exists
     itob
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -66,10 +66,13 @@ main_ternary_false@24:
 
 main_asset_destroy_route@17:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 4
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -77,37 +80,180 @@ main_asset_destroy_route@17:
     -
     gtxns Amount
 
-main_ternary_merge@97:
+main_ternary_merge@30:
     !
     assert // not payable
-    err // revert
+    intc_0 // 0
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    dig 4
+    ==
+    assert // arc20: bad asset
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "managerAddr"
+    app_global_get_ex
+    assert // check managerAddr exists
+    ==
+    bnz main_bool_true@33
+    global CallerApplicationID
+    bz main_bool_false@34
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_1 // "managerAddr"
+    app_global_get_ex
+    assert // check managerAddr exists
+    ==
+    bz main_bool_false@34
+
+main_bool_true@33:
+    intc_1 // 1
+
+main_bool_merge@35:
+    assert // arc20: not manager
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    pushint 3
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ConfigAsset
+    itxn_submit
+    bytec_0 // "smartAsaId"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@34:
+    intc_0 // 0
+    b main_bool_merge@35
 
 main_ternary_false@29:
     intc_0 // 0
-    b main_ternary_merge@97
+    b main_ternary_merge@30
 
 main_asset_close_out_route@16:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 8
     txna ApplicationArgs 2
+    dup
+    bury 21
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@34
+    bz main_ternary_false@39
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
-    b main_ternary_merge@97
 
-main_ternary_false@34:
+main_ternary_merge@40:
+    !
+    assert // not payable
     intc_0 // 0
-    b main_ternary_merge@97
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    dig 8
+    dig 1
+    ==
+    assert // arc20: bad asset
+    txn Sender
+    swap
+    asset_holding_get AssetBalance
+    pop
+    itob
+    dup
+    bury 23
+    pushbytes 0x
+    b>
+    bz main_after_if_else@48
+    txn Sender
+    bytec_2 // "accountFrozen"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bz main_bool_true@45
+    global CurrentApplicationAddress
+    dig 20
+    ==
+    bnz main_bool_true@45
+    global CurrentApplicationID
+    bz main_bool_false@46
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    dig 20
+    ==
+    bz main_bool_false@46
+
+main_bool_true@45:
+    intc_1 // 1
+
+main_bool_merge@47:
+    assert // arc20: sender frozen
+    itxn_begin
+    intc_2 // 8
+    bzero
+    dig 22
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    itxn_field XferAsset
+    pushint 4
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field AssetSender
+    dig 20
+    itxn_field AssetReceiver
+    itxn_field AssetAmount
+    itxn_submit
+
+main_after_if_else@48:
+    intc_1 // 1
+    return
+
+main_bool_false@46:
+    intc_0 // 0
+    b main_bool_merge@47
+
+main_ternary_false@39:
+    intc_0 // 0
+    b main_ternary_merge@40
 
 main_account_freeze_route@15:
     txna ApplicationArgs 1
@@ -120,7 +266,7 @@ main_account_freeze_route@15:
     bury 3
     txna ApplicationArgs 2
     dup
-    bury 17
+    bury 20
     len
     intc_3 // 32
     ==
@@ -133,18 +279,18 @@ main_account_freeze_route@15:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 6
+    bury 9
     txn GroupIndex
-    bz main_ternary_false@39
+    bz main_ternary_false@52
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@40:
+main_ternary_merge@53:
     !
     assert // not payable
-    dig 5
+    dig 8
     intc_1 // 1
     <=
     assert // ABI bool validation
@@ -157,47 +303,47 @@ main_ternary_merge@40:
     assert // arc20: bad asset
     txn Sender
     intc_0 // 0
-    bytec_1 // "freezeAddr"
+    bytec_3 // "freezeAddr"
     app_global_get_ex
     assert // check freezeAddr exists
     ==
-    bnz main_bool_true@43
+    bnz main_bool_true@56
     global CallerApplicationID
-    bz main_bool_false@44
+    bz main_bool_false@57
     pushint 24
     bzero
     global CallerApplicationID
     itob
     concat
     intc_0 // 0
-    bytec_1 // "freezeAddr"
+    bytec_3 // "freezeAddr"
     app_global_get_ex
     assert // check freezeAddr exists
     ==
-    bz main_bool_false@44
+    bz main_bool_false@57
 
-main_bool_true@43:
+main_bool_true@56:
     intc_1 // 1
 
-main_bool_merge@45:
+main_bool_merge@58:
     assert // arc20: not freeze admin
-    dig 15
+    dig 18
     bytec_2 // "accountFrozen"
     concat
     sha256
-    dig 6
+    dig 9
     itob
     box_put
     intc_1 // 1
     return
 
-main_bool_false@44:
+main_bool_false@57:
     intc_0 // 0
-    b main_bool_merge@45
+    b main_bool_merge@58
 
-main_ternary_false@39:
+main_ternary_false@52:
     intc_0 // 0
-    b main_ternary_merge@40
+    b main_ternary_merge@53
 
 main_asset_freeze_route@14:
     txna ApplicationArgs 1
@@ -216,18 +362,18 @@ main_asset_freeze_route@14:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 6
+    bury 9
     txn GroupIndex
-    bz main_ternary_false@49
+    bz main_ternary_false@62
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@50:
+main_ternary_merge@63:
     !
     assert // not payable
-    dig 5
+    dig 8
     intc_1 // 1
     <=
     assert // ABI bool validation
@@ -240,43 +386,43 @@ main_ternary_merge@50:
     assert // arc20: bad asset
     txn Sender
     intc_0 // 0
-    bytec_1 // "freezeAddr"
+    bytec_3 // "freezeAddr"
     app_global_get_ex
     assert // check freezeAddr exists
     ==
-    bnz main_bool_true@53
+    bnz main_bool_true@66
     global CallerApplicationID
-    bz main_bool_false@54
+    bz main_bool_false@67
     pushint 24
     bzero
     global CallerApplicationID
     itob
     concat
     intc_0 // 0
-    bytec_1 // "freezeAddr"
+    bytec_3 // "freezeAddr"
     app_global_get_ex
     assert // check freezeAddr exists
     ==
-    bz main_bool_false@54
+    bz main_bool_false@67
 
-main_bool_true@53:
+main_bool_true@66:
     intc_1 // 1
 
-main_bool_merge@55:
+main_bool_merge@68:
     assert // arc20: not freeze admin
-    bytec 6 // "globalFrozen"
-    dig 6
+    bytec 10 // "globalFrozen"
+    dig 9
     app_global_put
     intc_1 // 1
     return
 
-main_bool_false@54:
+main_bool_false@67:
     intc_0 // 0
-    b main_bool_merge@55
+    b main_bool_merge@68
 
-main_ternary_false@49:
+main_ternary_false@62:
     intc_0 // 0
-    b main_ternary_merge@50
+    b main_ternary_merge@63
 
 main_asset_transfer_route@13:
     txna ApplicationArgs 1
@@ -294,29 +440,29 @@ main_asset_transfer_route@13:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 7
+    bury 10
     txna ApplicationArgs 3
     dup
-    bury 19
+    bury 24
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
-    bury 20
+    bury 25
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@59
+    bz main_ternary_false@72
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@60:
+main_ternary_merge@73:
     !
     assert // not payable
     intc_0 // 0
@@ -327,48 +473,48 @@ main_ternary_merge@60:
     ==
     assert // arc20: bad asset
     global CurrentApplicationAddress
-    dig 18
+    dig 23
     ==
-    bnz main_if_body@63
+    bnz main_if_body@76
     global CurrentApplicationID
-    bz main_else_body@69
+    bz main_else_body@82
     pushint 24
     bzero
     global CurrentApplicationID
     itob
     concat
-    dig 18
+    dig 23
     ==
-    bz main_else_body@69
+    bz main_else_body@82
 
-main_if_body@63:
+main_if_body@76:
     txn Sender
     intc_0 // 0
-    bytec_3 // "reserveAddr"
+    bytec 4 // "reserveAddr"
     app_global_get_ex
     assert // check reserveAddr exists
     ==
-    bnz main_bool_true@66
+    bnz main_bool_true@79
     global CallerApplicationID
-    bz main_bool_false@67
+    bz main_bool_false@80
     pushint 24
     bzero
     global CallerApplicationID
     itob
     concat
     intc_0 // 0
-    bytec_3 // "reserveAddr"
+    bytec 4 // "reserveAddr"
     app_global_get_ex
     assert // check reserveAddr exists
     ==
-    bz main_bool_false@67
+    bz main_bool_false@80
 
-main_bool_true@66:
+main_bool_true@79:
     intc_1 // 1
 
-main_bool_merge@68:
+main_bool_merge@81:
     assert // arc20: not reserve
-    dig 18
+    dig 23
     bytec_2 // "accountFrozen"
     concat
     sha256
@@ -382,7 +528,7 @@ main_bool_merge@68:
     !
     assert // arc20: receiver frozen
 
-main_after_if_else@87:
+main_after_if_else@100:
     itxn_begin
     intc_0 // 0
     bytec_0 // "smartAsaId"
@@ -393,64 +539,64 @@ main_after_if_else@87:
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field Fee
-    dig 17
+    dig 22
     itxn_field AssetSender
-    dig 18
+    dig 23
     itxn_field AssetReceiver
-    dig 6
+    dig 9
     itxn_field AssetAmount
     itxn_submit
     intc_1 // 1
     return
 
-main_bool_false@67:
+main_bool_false@80:
     intc_0 // 0
-    b main_bool_merge@68
+    b main_bool_merge@81
 
-main_else_body@69:
+main_else_body@82:
     global CurrentApplicationAddress
-    dig 19
+    dig 24
     ==
-    bnz main_if_body@72
+    bnz main_if_body@85
     global CurrentApplicationID
-    bz main_else_body@78
+    bz main_else_body@91
     pushint 24
     bzero
     global CurrentApplicationID
     itob
     concat
-    dig 19
+    dig 24
     ==
-    bz main_else_body@78
+    bz main_else_body@91
 
-main_if_body@72:
+main_if_body@85:
     txn Sender
     intc_0 // 0
-    bytec_3 // "reserveAddr"
+    bytec 4 // "reserveAddr"
     app_global_get_ex
     assert // check reserveAddr exists
     ==
-    bnz main_bool_true@75
+    bnz main_bool_true@88
     global CallerApplicationID
-    bz main_bool_false@76
+    bz main_bool_false@89
     pushint 24
     bzero
     global CallerApplicationID
     itob
     concat
     intc_0 // 0
-    bytec_3 // "reserveAddr"
+    bytec 4 // "reserveAddr"
     app_global_get_ex
     assert // check reserveAddr exists
     ==
-    bz main_bool_false@76
+    bz main_bool_false@89
 
-main_bool_true@75:
+main_bool_true@88:
     intc_1 // 1
 
-main_bool_merge@77:
+main_bool_merge@90:
     assert // arc20: not reserve
-    dig 17
+    dig 22
     bytec_2 // "accountFrozen"
     concat
     sha256
@@ -463,62 +609,62 @@ main_bool_merge@77:
     select
     !
     assert // arc20: sender frozen
-    b main_after_if_else@87
+    b main_after_if_else@100
 
-main_bool_false@76:
+main_bool_false@89:
     intc_0 // 0
-    b main_bool_merge@77
+    b main_bool_merge@90
 
-main_else_body@78:
+main_else_body@91:
     txn Sender
     intc_0 // 0
-    bytec 5 // "clawbackAddr"
+    bytec 6 // "clawbackAddr"
     app_global_get_ex
     assert // check clawbackAddr exists
     ==
-    bnz main_after_if_else@87
+    bnz main_after_if_else@100
     global CallerApplicationID
-    bz main_else_body@81
+    bz main_else_body@94
     pushint 24
     bzero
     global CallerApplicationID
     itob
     concat
     intc_0 // 0
-    bytec 5 // "clawbackAddr"
+    bytec 6 // "clawbackAddr"
     app_global_get_ex
     assert // check clawbackAddr exists
     ==
-    bnz main_after_if_else@87
+    bnz main_after_if_else@100
 
-main_else_body@81:
+main_else_body@94:
     txn Sender
-    dig 18
+    dig 23
     ==
-    bnz main_bool_true@84
+    bnz main_bool_true@97
     global CallerApplicationID
-    bz main_bool_false@85
+    bz main_bool_false@98
     pushint 24
     bzero
     global CallerApplicationID
     itob
     concat
-    dig 18
+    dig 23
     ==
-    bz main_bool_false@85
+    bz main_bool_false@98
 
-main_bool_true@84:
+main_bool_true@97:
     intc_1 // 1
 
-main_bool_merge@86:
+main_bool_merge@99:
     assert // arc20: not sender
     intc_0 // 0
-    bytec 6 // "globalFrozen"
+    bytec 10 // "globalFrozen"
     app_global_get_ex
     assert // check globalFrozen exists
     !
     assert // arc20: asset frozen
-    dig 17
+    dig 22
     bytec_2 // "accountFrozen"
     concat
     sha256
@@ -531,7 +677,7 @@ main_bool_merge@86:
     select
     !
     assert // arc20: sender frozen
-    dig 18
+    dig 23
     bytec_2 // "accountFrozen"
     concat
     sha256
@@ -544,27 +690,33 @@ main_bool_merge@86:
     select
     !
     assert // arc20: receiver frozen
-    b main_after_if_else@87
+    b main_after_if_else@100
 
-main_bool_false@85:
+main_bool_false@98:
     intc_0 // 0
-    b main_bool_merge@86
+    b main_bool_merge@99
 
-main_ternary_false@59:
+main_ternary_false@72:
     intc_0 // 0
-    b main_ternary_merge@60
+    b main_ternary_merge@73
 
 main_asset_config_route@12:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 7
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
     txna ApplicationArgs 3
     dup
     len
@@ -572,7 +724,7 @@ main_asset_config_route@12:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 5
+    bury 6
     txna ApplicationArgs 4
     dup
     len
@@ -581,108 +733,275 @@ main_asset_config_route@12:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 4
+    bury 5
     txna ApplicationArgs 5
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 13
     txna ApplicationArgs 6
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 15
     txna ApplicationArgs 7
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 12
     txna ApplicationArgs 8
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 16
     txna ApplicationArgs 9
+    dup
+    bury 18
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 10
+    dup
+    bury 15
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 11
+    dup
+    bury 19
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 12
+    dup
+    bury 22
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@91
+    bz main_ternary_false@104
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@92:
+main_ternary_merge@105:
     !
     assert // not payable
-    dig 4
+    dig 5
+    dup
     intc 4 // 4294967295
     <=
     assert // ABI validation
-    dig 3
+    intc 4 // 4294967295
+    &
+    bury 6
+    dig 4
     intc_1 // 1
     <=
     assert // ABI bool validation
-    err // revert
-
-main_ternary_false@91:
     intc_0 // 0
-    b main_ternary_merge@92
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    dig 7
+    ==
+    assert // arc20: bad asset
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "managerAddr"
+    app_global_get_ex
+    assert // check managerAddr exists
+    ==
+    bnz main_bool_true@108
+    global CallerApplicationID
+    bz main_bool_false@109
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_1 // "managerAddr"
+    app_global_get_ex
+    assert // check managerAddr exists
+    ==
+    bz main_bool_false@109
+
+main_bool_true@108:
+    intc_1 // 1
+
+main_bool_merge@110:
+    assert // arc20: not manager
+    intc_0 // 0
+    bytec 7 // "cfgTotal"
+    app_global_get_ex
+    assert // check cfgTotal exists
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 0
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    swap
+    dig 1
+    asset_holding_get AssetBalance
+    pop
+    itob
+    dig 2
+    b<=
+    assert // underflow
+    intc_2 // 8
+    bzero
+    uncover 2
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    global CurrentApplicationAddress
+    dig 3
+    asset_holding_get AssetBalance
+    pop
+    itob
+    dig 1
+    swap
+    b-
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    global CurrentApplicationAddress
+    uncover 4
+    asset_holding_get AssetBalance
+    pop
+    itob
+    uncover 2
+    swap
+    b-
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    concat
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 2
+    dup
+    uncover 2
+    >=
+    assert // arc20: total below circulating
+    bytec 7 // "cfgTotal"
+    swap
+    app_global_put
+    bytec 11 // "cfgDecimals"
+    dig 6
+    app_global_put
+    bytec 12 // "cfgDefaultFrozen"
+    dig 5
+    app_global_put
+    bytec 13 // "cfgUnitName"
+    dig 13
+    app_global_put
+    bytec 14 // "cfgName"
+    dig 15
+    app_global_put
+    bytec 15 // "cfgUrl"
+    dig 12
+    app_global_put
+    bytec 9 // "cfgMetadataHash"
+    box_del
+    pop
+    bytec 9 // "cfgMetadataHash"
+    dig 16
+    box_put
+    bytec_1 // "managerAddr"
+    dig 17
+    app_global_put
+    bytec 4 // "reserveAddr"
+    dig 14
+    app_global_put
+    bytec_3 // "freezeAddr"
+    dig 18
+    app_global_put
+    bytec 6 // "clawbackAddr"
+    dig 21
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@109:
+    intc_0 // 0
+    b main_bool_merge@110
+
+main_ternary_false@104:
+    intc_0 // 0
+    b main_ternary_merge@105
 
 main_asset_opt_in_route@11:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 11
     txn GroupIndex
-    bz main_ternary_false@96
+    bz main_ternary_false@114
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
-    b main_ternary_merge@97
 
-main_ternary_false@96:
+main_ternary_merge@115:
+    !
+    assert // not payable
     intc_0 // 0
-    b main_ternary_merge@97
+    bytec_0 // "smartAsaId"
+    app_global_get_ex
+    assert // check smartAsaId exists
+    dig 11
+    ==
+    assert // arc20: bad asset
+    intc_1 // 1
+    return
+
+main_ternary_false@114:
+    intc_0 // 0
+    b main_ternary_merge@115
 
 main_get_circulating_supply_route@10:
     txna ApplicationArgs 1
@@ -692,22 +1011,22 @@ main_get_circulating_supply_route@10:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 8
+    bury 11
     txn GroupIndex
-    bz main_ternary_false@101
+    bz main_ternary_false@119
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@102:
+main_ternary_merge@120:
     !
     assert // not payable
     intc_0 // 0
     bytec_0 // "smartAsaId"
     app_global_get_ex
     assert // check smartAsaId exists
-    dig 8
+    dig 11
     dig 1
     ==
     assert // arc20: bad asset
@@ -727,7 +1046,7 @@ main_ternary_merge@102:
     intc_2 // 8
     bzero
     swap
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     global CurrentApplicationAddress
     dig 3
@@ -737,7 +1056,7 @@ main_ternary_merge@102:
     dig 1
     swap
     b-
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 2
     swap
@@ -750,7 +1069,7 @@ main_ternary_merge@102:
     uncover 2
     swap
     b-
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     uncover 2
     swap
@@ -760,16 +1079,16 @@ main_ternary_merge@102:
     -
     intc_2 // 8
     extract3
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@101:
+main_ternary_false@119:
     intc_0 // 0
-    b main_ternary_merge@102
+    b main_ternary_merge@120
 
 main_get_account_is_frozen_route@9:
     txna ApplicationArgs 1
@@ -782,19 +1101,19 @@ main_get_account_is_frozen_route@9:
     bury 3
     txna ApplicationArgs 2
     dup
-    bury 17
+    bury 20
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@106
+    bz main_ternary_false@124
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@107:
+main_ternary_merge@125:
     !
     assert // not payable
     intc_0 // 0
@@ -804,7 +1123,7 @@ main_ternary_merge@107:
     dig 3
     ==
     assert // arc20: bad asset
-    dig 15
+    dig 18
     bytec_2 // "accountFrozen"
     concat
     sha256
@@ -815,20 +1134,20 @@ main_ternary_merge@107:
     swap
     uncover 2
     select
-    bytec 12 // 0x00
+    bytec 18 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@106:
+main_ternary_false@124:
     intc_0 // 0
-    b main_ternary_merge@107
+    b main_ternary_merge@125
 
 main_get_asset_is_frozen_route@8:
     txna ApplicationArgs 1
@@ -840,13 +1159,13 @@ main_get_asset_is_frozen_route@8:
     btoi
     bury 3
     txn GroupIndex
-    bz main_ternary_false@111
+    bz main_ternary_false@129
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@112:
+main_ternary_merge@130:
     !
     assert // not payable
     intc_0 // 0
@@ -857,23 +1176,23 @@ main_ternary_merge@112:
     ==
     assert // arc20: bad asset
     intc_0 // 0
-    bytec 6 // "globalFrozen"
+    bytec 10 // "globalFrozen"
     app_global_get_ex
     assert // check globalFrozen exists
-    bytec 12 // 0x00
+    bytec 18 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@111:
+main_ternary_false@129:
     intc_0 // 0
-    b main_ternary_merge@112
+    b main_ternary_merge@130
 
 main_get_asset_config_route@7:
     txna ApplicationArgs 1
@@ -883,30 +1202,30 @@ main_get_asset_config_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 8
+    bury 11
     txn GroupIndex
-    bz main_ternary_false@116
+    bz main_ternary_false@134
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@117:
+main_ternary_merge@135:
     !
     assert // not payable
     intc_0 // 0
     bytec_0 // "smartAsaId"
     app_global_get_ex
     assert // check smartAsaId exists
-    dig 8
+    dig 11
     ==
     assert // arc20: bad asset
     intc_0 // 0
-    bytec 5 // "clawbackAddr"
+    bytec 6 // "clawbackAddr"
     app_global_get_ex
     assert // check clawbackAddr exists
     intc_0 // 0
-    bytec 13 // "cfgDecimals"
+    bytec 11 // "cfgDecimals"
     app_global_get_ex
     assert // check cfgDecimals exists
     itob
@@ -917,22 +1236,22 @@ main_ternary_merge@117:
     assert // overflow
     extract 4 4
     intc_0 // 0
-    bytec 14 // "cfgDefaultFrozen"
+    bytec 12 // "cfgDefaultFrozen"
     app_global_get_ex
     assert // check cfgDefaultFrozen exists
-    bytec 12 // 0x00
+    bytec 18 // 0x00
     intc_0 // 0
     uncover 2
     setbit
     intc_0 // 0
-    bytec_1 // "freezeAddr"
+    bytec_3 // "freezeAddr"
     app_global_get_ex
     assert // check freezeAddr exists
     intc_0 // 0
-    bytec 15 // "managerAddr"
+    bytec_1 // "managerAddr"
     app_global_get_ex
     assert // check managerAddr exists
-    bytec 8 // "cfgMetadataHash"
+    bytec 9 // "cfgMetadataHash"
     box_get
     assert // box exists
     dup
@@ -942,7 +1261,7 @@ main_ternary_merge@117:
     swap
     concat
     intc_0 // 0
-    bytec 16 // "cfgName"
+    bytec 14 // "cfgName"
     app_global_get_ex
     assert // check cfgName exists
     dup
@@ -952,7 +1271,7 @@ main_ternary_merge@117:
     swap
     concat
     intc_0 // 0
-    bytec_3 // "reserveAddr"
+    bytec 4 // "reserveAddr"
     app_global_get_ex
     assert // check reserveAddr exists
     intc_0 // 0
@@ -961,7 +1280,7 @@ main_ternary_merge@117:
     assert // check cfgTotal exists
     itob
     intc_0 // 0
-    bytec 17 // "cfgUnitName"
+    bytec 13 // "cfgUnitName"
     app_global_get_ex
     assert // check cfgUnitName exists
     dup
@@ -971,7 +1290,7 @@ main_ternary_merge@117:
     swap
     concat
     intc_0 // 0
-    bytec 18 // "cfgUrl"
+    bytec 15 // "cfgUrl"
     app_global_get_ex
     assert // check cfgUrl exists
     dup
@@ -1030,16 +1349,16 @@ main_ternary_merge@117:
     concat
     swap
     concat
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@116:
+main_ternary_false@134:
     intc_0 // 0
-    b main_ternary_merge@117
+    b main_ternary_merge@135
 
 main_asset_create_route@6:
     txna ApplicationArgs 1
@@ -1057,7 +1376,7 @@ main_asset_create_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 5
+    bury 6
     txna ApplicationArgs 3
     dup
     len
@@ -1066,7 +1385,7 @@ main_asset_create_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 4
+    bury 5
     txna ApplicationArgs 4
     dup
     intc_0 // 0
@@ -1078,7 +1397,7 @@ main_asset_create_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 10
+    bury 13
     txna ApplicationArgs 5
     dup
     intc_0 // 0
@@ -1090,7 +1409,7 @@ main_asset_create_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 12
+    bury 15
     txna ApplicationArgs 6
     dup
     intc_0 // 0
@@ -1102,7 +1421,7 @@ main_asset_create_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 9
+    bury 12
     txna ApplicationArgs 7
     dup
     intc_0 // 0
@@ -1114,63 +1433,63 @@ main_asset_create_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 13
-    txna ApplicationArgs 8
-    dup
-    bury 15
-    len
-    intc_3 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 9
-    dup
-    bury 12
-    len
-    intc_3 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 10
-    dup
     bury 16
-    len
-    intc_3 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 11
+    txna ApplicationArgs 8
     dup
     bury 18
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 9
+    dup
+    bury 15
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 10
+    dup
+    bury 19
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 11
+    dup
+    bury 22
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@121
+    bz main_ternary_false@139
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@122:
+main_ternary_merge@140:
     !
     assert // not payable
-    dig 4
+    dig 5
     dup
     intc 4 // 4294967295
     <=
     assert // ABI validation
     intc 4 // 4294967295
     &
-    bury 5
-    dig 3
+    bury 6
+    dig 4
     intc_1 // 1
     <=
     assert // ABI bool validation
     txn Sender
     global CreatorAddress
     ==
-    bnz main_bool_true@125
+    bnz main_bool_true@143
     global CallerApplicationID
-    bz main_bool_false@126
+    bz main_bool_false@144
     pushint 24
     bzero
     global CallerApplicationID
@@ -1178,12 +1497,12 @@ main_ternary_merge@122:
     concat
     global CreatorAddress
     ==
-    bz main_bool_false@126
+    bz main_bool_false@144
 
-main_bool_true@125:
+main_bool_true@143:
     intc_1 // 1
 
-main_bool_merge@127:
+main_bool_merge@145:
     assert // arc20: only creator
     intc_0 // 0
     bytec_0 // "smartAsaId"
@@ -1193,7 +1512,7 @@ main_bool_merge@127:
     assert // arc20: already created
     itxn_begin
     global CurrentApplicationAddress
-    dig 5
+    dig 6
     dup
     cover 2
     pushint 255
@@ -1204,7 +1523,7 @@ main_bool_merge@127:
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field Fee
-    dig 15
+    dig 18
     dup
     cover 6
     itxn_field ConfigAssetUnitName
@@ -1213,7 +1532,7 @@ main_bool_merge@127:
     cover 4
     itxn_field ConfigAssetTotal
     itxn_field ConfigAssetReserve
-    dig 18
+    dig 21
     dup
     cover 6
     itxn_field ConfigAssetName
@@ -1230,67 +1549,67 @@ main_bool_merge@127:
     bytec 7 // "cfgTotal"
     swap
     app_global_put
-    bytec 13 // "cfgDecimals"
+    bytec 11 // "cfgDecimals"
     uncover 3
     app_global_put
-    bytec 14 // "cfgDefaultFrozen"
-    dig 6
+    bytec 12 // "cfgDefaultFrozen"
+    dig 7
     app_global_put
-    bytec 17 // "cfgUnitName"
+    bytec 13 // "cfgUnitName"
     uncover 2
     app_global_put
-    bytec 16 // "cfgName"
+    bytec 14 // "cfgName"
     swap
     app_global_put
-    bytec 18 // "cfgUrl"
-    dig 9
+    bytec 15 // "cfgUrl"
+    dig 12
     app_global_put
-    bytec 8 // "cfgMetadataHash"
+    bytec 9 // "cfgMetadataHash"
     box_del
     pop
-    bytec 8 // "cfgMetadataHash"
-    dig 13
+    bytec 9 // "cfgMetadataHash"
+    dig 16
     box_put
-    bytec 15 // "managerAddr"
+    bytec_1 // "managerAddr"
+    dig 17
+    app_global_put
+    bytec 4 // "reserveAddr"
     dig 14
     app_global_put
-    bytec_3 // "reserveAddr"
-    dig 11
+    bytec_3 // "freezeAddr"
+    dig 18
     app_global_put
-    bytec_1 // "freezeAddr"
-    dig 15
-    app_global_put
-    bytec 5 // "clawbackAddr"
-    dig 17
+    bytec 6 // "clawbackAddr"
+    dig 21
     app_global_put
     intc_0 // 0
     bytec_0 // "smartAsaId"
     app_global_get_ex
     assert // check smartAsaId exists
     itob
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_bool_false@126:
+main_bool_false@144:
     intc_0 // 0
-    b main_bool_merge@127
+    b main_bool_merge@145
 
-main_ternary_false@121:
+main_ternary_false@139:
     intc_0 // 0
-    b main_ternary_merge@122
+    b main_ternary_merge@140
 
 main___postInit_route@5:
-    bytec 10 // "__ctor_pending"
+    bytec 17 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 10 // "__ctor_pending"
+    bytec 17 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec 8 // "cfgMetadataHash"
+    bytec 9 // "cfgMetadataHash"
     intc_0 // 0
     box_create
     pop
@@ -1304,34 +1623,34 @@ main___postInit_route@5:
     bytec 7 // "cfgTotal"
     intc_0 // 0
     app_global_put
-    bytec 13 // "cfgDecimals"
+    bytec 11 // "cfgDecimals"
     intc_0 // 0
     app_global_put
-    bytec 14 // "cfgDefaultFrozen"
+    bytec 12 // "cfgDefaultFrozen"
     intc_0 // 0
     app_global_put
-    bytec 17 // "cfgUnitName"
+    bytec 13 // "cfgUnitName"
     pushbytes 0x
     app_global_put
-    bytec 16 // "cfgName"
+    bytec 14 // "cfgName"
     pushbytes 0x
     app_global_put
-    bytec 18 // "cfgUrl"
+    bytec 15 // "cfgUrl"
     pushbytes 0x
     app_global_put
-    bytec 15 // "managerAddr"
-    bytec 9 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_1 // "managerAddr"
+    bytec 16 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec_3 // "reserveAddr"
-    bytec 9 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec 4 // "reserveAddr"
+    bytec 16 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec_1 // "freezeAddr"
-    bytec 9 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // "freezeAddr"
+    bytec 16 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec 5 // "clawbackAddr"
-    bytec 9 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec 6 // "clawbackAddr"
+    bytec 16 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec 6 // "globalFrozen"
+    bytec 10 // "globalFrozen"
     intc_0 // 0
     app_global_put
     intc_1 // 1

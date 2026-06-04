@@ -142,13 +142,18 @@ contract ARC20 {
     // full 12-method ARC-20 ABI surface (and its selectors) is stable from the start.
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// 2. asset_opt_in
-    function asset_opt_in(uint64 asset) external {
-        asset;
-        revert("arc20: asset_opt_in not yet implemented (54c)");
+    /// 2. asset_opt_in — ABI-conformance entry point. Canonically a user opts into the
+    /// Smart ASA (registering per-account local state) alongside a grouped opt-in axfer.
+    /// This port keeps per-account data (account_frozen) in box state, so there is no
+    /// user local state to register — holders opt into the underlying ASA directly with
+    /// a client-side 0-axfer. Validates the asset; otherwise a no-op.
+    function asset_opt_in(uint64 asset) external view {
+        require(asset == smartAsaId, "arc20: bad asset");
     }
 
-    /// 3. asset_config
+    /// 3. asset_config — reconfigure the Smart ASA (manager only). App-level state update
+    /// with no inner acfg (the underlying ASA's params are fixed at create); the new total
+    /// must still cover the already-circulating supply.
     function asset_config(
         uint64 config_asset,
         uint64 total,
@@ -163,9 +168,23 @@ contract ARC20 {
         address freeze_addr,
         address clawback_addr
     ) external {
-        config_asset; total; decimals; defaultFrozen; unitName; name; url;
-        metadataHash; manager_addr; reserve_addr; freeze_addr; clawback_addr;
-        revert("arc20: asset_config not yet implemented (54c)");
+        require(config_asset == smartAsaId, "arc20: bad asset");
+        require(msg.sender == managerAddr, "arc20: not manager");
+        require(
+            total >= uint64(uint256(cfgTotal) - AVM.asaBalance(address(this), smartAsaId)),
+            "arc20: total below circulating"
+        );
+        cfgTotal = total;
+        cfgDecimals = decimals;
+        cfgDefaultFrozen = defaultFrozen;
+        cfgUnitName = unitName;
+        cfgName = name;
+        cfgUrl = url;
+        cfgMetadataHash = metadataHash;
+        managerAddr = manager_addr;
+        reserveAddr = reserve_addr;
+        freezeAddr = freeze_addr;
+        clawbackAddr = clawback_addr;
     }
 
     /// 4. asset_transfer — the one mover. Every transfer is an app-mediated clawback
@@ -220,15 +239,27 @@ contract ARC20 {
         accountFrozen[freeze_account] = asset_frozen;
     }
 
-    /// 7. asset_close_out
+    /// 7. asset_close_out — return the caller's entire balance to `close_to` via clawback,
+    /// closing their position. A frozen holder may only close out back to the app (reserve),
+    /// mirroring the reference's "frozen unless closing to the creator".
     function asset_close_out(uint64 close_asset, address close_to) external {
-        close_asset; close_to;
-        revert("arc20: asset_close_out not yet implemented (54c)");
+        require(close_asset == smartAsaId, "arc20: bad asset");
+        uint256 bal = AVM.asaBalance(msg.sender, smartAsaId);
+        if (bal > 0) {
+            require(
+                !accountFrozen[msg.sender] || close_to == address(this),
+                "arc20: sender frozen"
+            );
+            AVM.asaTransfer(smartAsaId, msg.sender, close_to, bal);
+        }
     }
 
-    /// 8. asset_destroy
+    /// 8. asset_destroy — destroy the underlying ASA (manager only). Requires the app to
+    /// hold every unit (circulating == 0); AVM.asaDestroy enforces that on-chain.
     function asset_destroy(uint64 destroy_asset) external {
-        destroy_asset;
-        revert("arc20: asset_destroy not yet implemented (54c)");
+        require(destroy_asset == smartAsaId, "arc20: bad asset");
+        require(msg.sender == managerAddr, "arc20: not manager");
+        AVM.asaDestroy(smartAsaId);
+        smartAsaId = 0;
     }
 }

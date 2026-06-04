@@ -184,3 +184,56 @@ def test_asset_freeze_blocks_and_unfreeze_restores(localnet, account):
     client.send.call(au.AppClientMethodCallParams(method="asset_freeze", args=[asa, False]))
     _xfer(acct2_client, asa, 100, acct2.address, account.address)
     assert _asa_bal(localnet, acct2.address, asa) == 900
+
+
+# ── 54c: asset_config + asset_close_out + asset_destroy + asset_opt_in ──
+
+def test_asset_config_reconfigures_and_rejects_low_total(localnet, account):
+    """Manager reconfigures stored config; a total below circulating is rejected."""
+    client, app_id, asa, acct2, _ = _setup_holder(localnet, account)
+    _xfer(client, asa, 1000, app_address(app_id), acct2.address)  # circulating -> 1000
+    client.send.call(au.AppClientMethodCallParams(
+        method="asset_config",
+        args=[asa, 2_000_000, DECIMALS, False, UNIT, NAME, "https://new.example", b"",
+              account.address, account.address, account.address, account.address]),
+        send_params={"populate_app_call_resources": True})
+    cfg = client.send.call(au.AppClientMethodCallParams(
+        method="get_asset_config", args=[asa])).abi_return
+    assert cfg["total"] == 2_000_000
+    assert cfg["url"] == "https://new.example"
+    with pytest.raises(Exception):  # 500 < circulating 1000
+        client.send.call(au.AppClientMethodCallParams(
+            method="asset_config",
+            args=[asa, 500, DECIMALS, False, UNIT, NAME, URL, b"",
+                  account.address, account.address, account.address, account.address]),
+            send_params={"populate_app_call_resources": True})
+
+
+def test_asset_close_out(localnet, account):
+    """A holder closes out — full balance clawed back to close_to, position emptied."""
+    client, app_id, asa, acct2, acct2_client = _setup_holder(localnet, account)
+    _xfer(client, asa, 1000, app_address(app_id), acct2.address)  # mint to acct2
+    acct2_client.send.call(au.AppClientMethodCallParams(
+        method="asset_close_out", args=[asa, account.address], extra_fee=FEE2),
+        send_params={"populate_app_call_resources": True})
+    assert _asa_bal(localnet, acct2.address, asa) == 0
+    assert _asa_bal(localnet, account.address, asa) == 1000
+
+
+def test_asset_destroy(localnet, account):
+    """Manager destroys the ASA while the app still holds every unit (circulating 0)."""
+    client, _ = deploy_arc20(localnet, account)
+    asa = _create(client, account)
+    client.send.call(au.AppClientMethodCallParams(
+        method="asset_destroy", args=[asa], extra_fee=FEE2),
+        send_params={"populate_app_call_resources": True})
+    assert int(client.send.call(au.AppClientMethodCallParams(method="smartAsaId")).abi_return) == 0
+
+
+def test_asset_opt_in_validates_asset(localnet, account):
+    """asset_opt_in accepts the controlled asset and rejects any other."""
+    client, _ = deploy_arc20(localnet, account)
+    asa = _create(client, account)
+    client.send.call(au.AppClientMethodCallParams(method="asset_opt_in", args=[asa]))
+    with pytest.raises(Exception):
+        client.send.call(au.AppClientMethodCallParams(method="asset_opt_in", args=[asa + 99_999]))
