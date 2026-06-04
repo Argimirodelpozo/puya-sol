@@ -13,11 +13,15 @@
 > - **1c9795ab1** signed **implicit widening** (`int128 x = int24`).
 > - **2d8b6b398** signed **explicit-cast widening** (`int128(int24)`).
 > - **c275eaf20** signed **narrowing** (`int128(int256)`, SafeCast.toInt128).
-> Net: V4 modliq's entire compute path now executes through the uros dance (2571
-> ops), stopping only at `CurrencyNotSettled` (the correct token-settlement
-> boundary — a runtime/token-movement frontier, not a compiler issue). Guards:
-> `tests/{storage/struct_storage_ref_local, structs/int24_struct_literal(+_negative),
-> structs/int24_field_decode, conversions/signed_narrowing}`.
+> Net: 🎉 **V4 modifyLiquidity now completes END-TO-END on the AVM** (harness
+> `uros_settle_phase5.py`, commit 77876ae53): full path init→tick math→BalanceDelta→
+> scratch delta-accounting→**native settle**→atomic-group net-zero close, pool state
+> updates (liquidity added). Settlement unblocked via local PoolManager `_settle`
+> (read the native payment grouped at GroupIndex-2 since msg.value=0 in the dance) +
+> `_settleIfLast` skipping non-app-call txns. Single-currency native; multi-currency
+> (#44) + swap (#51) remain. Guards: `tests/{storage/struct_storage_ref_local,
+> structs/int24_struct_literal(+_negative), structs/int24_field_decode,
+> conversions/signed_narrowing}`.
 
 **Totals (measured, v332 single-threaded, 8m11s):** **1192 PASS / 75 FAIL /
 55 xfailed.** The +6 xfail vs v330 (49→55) are the 6 honest flips from the
