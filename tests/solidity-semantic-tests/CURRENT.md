@@ -1,11 +1,25 @@
 # Semantic Test Status — v331
 
-> **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-03):** this branch
+> **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-05):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
-> `RESULTS_<sha>.txt`, not these version totals. Latest run **2266bc286 =
-> 1195 PASS / 59 FAIL / 76 xfailed** (RESULTS_2266bc286.txt), **zero regressions**
-> vs RESULTS_c275eaf20 (identical fail set; +1 guard `conversions/asm_uintn_mask`).
-> Session landed the full signed-int / V4-modliq fix chain (each isolated, zero-reg):
+> `RESULTS_<sha>.txt`, not these version totals. Latest run **2cbb0c403 =
+> 1200 PASS / 59 FAIL / 79 xfailed** (RESULTS_2cbb0c403.txt), **zero regressions**
+> vs RESULTS_2266bc286 (IDENTICAL 59-fail set; +5 pass / +3 xfail = new repros only).
+> - **1313695bd** storage-ref RETURNABLE as a bytes box-key, gated on MAPPING-VALUE
+>   structs (V4 Position.State); narrowed from an over-broad 'any struct' gate that
+>   regressed 8 library/struct tests. Source-unit-wide compile-time classifier;
+>   storage stays in main (calling convention only, never sidecar'd). Repro
+>   storage_ref_returned_nested (V4 nested shape) passes; flat top-level-mapping
+>   variant xfailed (separate key-derivation issue).
+> - **2cbb0c403** signed sub-256 int canonicalised to 256-bit two's complement
+>   (buildSignedArithmetic result + signed-compare per-operand sign-extend): fixes
+>   int128 sign-check / uint128(-x) magnitude / subtraction-origin / state round-trip.
+>   OPEN (xfail test_signed_int128_neg_ternary): int128 ternary-returning-int256
+>   (= V4 getAmount0/1Delta neg branch / remove path) — root cause is the int128
+>   PARAM decode not sign-extending (FunctionBuilder.cpp:716); fix is next.
+> - prior baseline **2266bc286 = 1195 PASS / 59 FAIL / 76 xfailed** (RESULTS_2266bc286.txt),
+>   zero-reg vs RESULTS_c275eaf20 (+1 guard `conversions/asm_uintn_mask`).
+> Earlier this branch landed the signed-int / V4-modliq fix chain (each isolated, zero-reg):
 > - **c43f434e3** storage-ref LOCAL var keyed off runtime value (V4
 >   `Pool.State storage pool = _getPool(id)`) → modliq passes checkPoolInitialized.
 > - **f3326fc4b** signed sub-word (int24) ARC4 **encode** = minimal two's-complement.
