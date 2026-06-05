@@ -8,6 +8,11 @@
 > GUARDS: BalanceDelta int128 pack/unpack, ProtocolFeeLibrary.calculateSwapFee,
 > SafeCast.toInt128 — each confirms a V4 math cluster the compiler already handles,
 > so those V4 unit xfails un-xfail on the user's helper recompile).
+> Then **b608196bf** added a 4th such guard: large-negative int256 mul (the
+> TickMath.getTickAtSqrtPrice log2 step) — also handled. (A full re-run after it
+> showed 60F/1205P with `builtinFunctions::test_blobhash` failing; that test PASSES
+> in isolation = a localnet-under-load FLAKE, not in the baseline, unrelated to
+> these changes — real fail-set is still the baseline 59, ZERO regression.)
 > _Prior:_ run **b9cf10135 =
 > 1202 PASS / 59 FAIL / 78 xfailed** (RESULTS_b9cf10135.txt), **zero regressions**
 > vs RESULTS_2266bc286 (IDENTICAL 59-fail set). **b9cf10135** = int128 ABI-param
