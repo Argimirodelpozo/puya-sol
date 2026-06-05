@@ -74,6 +74,58 @@ def test_signed_negate(harness):
     assert as_int(harness.call(app, "lessFee(int256,uint24)", -2000, 3000).abi_return) == 1994
 
 
+def test_signed_int128_neg(harness):
+    """conversions/contracts/signed_int128_neg.sol
+
+    The V4 SqrtPriceMath.getAmount0/1Delta(int128) NEGATIVE branch (remove
+    liquidity). A signed `int128 x < 0` compare must hold for a sub-256 negative,
+    and `uint128(-x)` must recover the magnitude — not ~2^128. Mirrors the add-path
+    int24/int128 sign-extension fixes (#49/#50) on the remove side: a negative
+    int128 held as a 128-bit two's complement (not sign-extended to 256-bit) would
+    make `x < 0` false and `uint128(x)` ~2^128 (the observed garbage take amount).
+    Covers three origins of the negative: ABI param, a subtraction, a state round-trip.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/signed_int128_neg.sol")
+    BIG = 1000000000000000000  # ~1e18, well inside int128 but > uint64 sign bit
+
+    # ---- param-origin -------------------------------------------------------
+    assert harness.call(app, "isNeg(int128)", -2000).abi_return is True
+    assert harness.call(app, "isNeg(int128)", -BIG).abi_return is True
+    assert harness.call(app, "isNeg(int128)", 2000).abi_return is False
+    assert as_int(harness.call(app, "mag(int128)", -2000).abi_return) == 2000
+    assert as_int(harness.call(app, "mag(int128)", -BIG).abi_return) == BIG
+    assert as_int(harness.call(app, "mag(int128)", 2000).abi_return) == 2000
+
+    # ---- computed-origin (subtraction) -------------------------------------
+    assert harness.call(app, "isNegSub(int128,int128)", 100, 300).abi_return is True
+    assert harness.call(app, "isNegSub(int128,int128)", 300, 100).abi_return is False
+    assert as_int(harness.call(app, "magSub(int128,int128)", 100, 300).abi_return) == 200
+    assert as_int(harness.call(app, "magSub(int128,int128)", 300, 100).abi_return) == 200
+
+    # ---- round-trip-origin (state int128) ----------------------------------
+    harness.call(app, "storeNeg(int128)", -BIG)
+    assert harness.call(app, "isNegStored()").abi_return is True
+    assert as_int(harness.call(app, "magStored()").abi_return) == BIG
+    harness.call(app, "storeNeg(int128)", 4242)
+    assert harness.call(app, "isNegStored()").abi_return is False
+    assert as_int(harness.call(app, "magStored()").abi_return) == 4242
+
+
+@pytest.mark.xfail(reason="A ternary RETURNING int256 with a signed `x < 0` condition takes the "
+                   "WRONG branch for a negative int128 param: branch(-2000) returns the else-branch "
+                   "value computed with a non-canonical x (-(2^128-2000)) instead of 2000. The "
+                   "standalone sign check (isNeg) and uint128(-x) magnitude (mag) are correct now — "
+                   "this is a separate ternary/int256-composition lowering bug, and it's the exact "
+                   "shape of V4 getAmount0/1Delta(int128)'s negative branch, so it gates the V4 remove.")
+def test_signed_int128_neg_ternary(harness):
+    """conversions/contracts/signed_int128_neg.sol — the getAmount*Delta(int128) ternary shape."""
+    app = harness.compile_and_deploy("conversions/contracts/signed_int128_neg.sol")
+    BIG = 1000000000000000000
+    assert as_int(harness.call(app, "branch(int128)", -2000).abi_return) == 2000
+    assert as_int(harness.call(app, "branch(int128)", 2000).abi_return) == -2000
+    assert as_int(harness.call(app, "branch(int128)", -BIG).abi_return) == BIG
+
+
 def test_function_type_array_to_storage(harness):
     """conversions/contracts/function_type_array_to_storage.sol"""
     app = harness.compile_and_deploy("conversions/contracts/function_type_array_to_storage.sol")

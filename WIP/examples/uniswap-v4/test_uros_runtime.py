@@ -371,14 +371,16 @@ def test_erc6909_claims(H):
     assert _bal(H, H.t1) == b1 + amt_out, "claims redeemed for the real token"
 
 
-@pytest.mark.xfail(reason="modliq with a NEGATIVE liquidityDelta (remove) hits an int128 sign "
-                   "assert (biguint vs 2^127) in an untested codegen path; the add path (positive) "
-                   "works with the identical box setup, so it's negative-delta int128 handling, not "
-                   "box-refs. Needs the remove counterpart to the add-path int fixes (#49/#50).")
+@pytest.mark.xfail(reason="remove modliq now COMPLETES E2E (storage-ref-return fixed the box-refs: "
+                   "the position box persists + the negative-int128 addDelta lands), but the OWED "
+                   "AMOUNT is garbage (~1.76e19): getAmount0/1Delta for a NEGATIVE liquidityDelta "
+                   "sign-extends wrong, so the subsequent take underflows. Residual is purely the "
+                   "negative-delta amount-math (the remove counterpart to the add-path int fixes "
+                   "#49/#50) — NOT box-refs and NOT storage-ref-return, both of which now work.")
 def test_remove_liquidity(H):
     """Removing the seeded liquidity returns both currencies to the user (runs LAST)."""
     buckets = _measure(H, lambda g: (_unlock(H, g), _modliq(H, g, H.pool, 60, 120, -SEED_LIQ)))
-    got0, got1 = buckets.get(_cid(H.c0), (0, 0))[1], buckets.get(_cid(H.c1), (0, 0))[1]
+    got0, got1 = buckets.get(_cid(H.c0), (0, 0))[0], buckets.get(_cid(H.c1), (0, 0))[0]
     assert got0 > 0 and got1 > 0, f"remove should return both currencies, got {buckets}"
     p0, p1 = _bal(H, H.t0), _bal(H, H.t1)
     g = H.algorand.new_group(); _boost(H, g); _unlock(H, g); _modliq(H, g, H.pool, 60, 120, -SEED_LIQ)

@@ -512,6 +512,20 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		return awst::makeBiguintToUInt64(std::move(rawResult), m_loc);
 	}
 
+	// Step 5: Canonicalise a sub-256 signed result to 256-bit two's complement.
+	// The `mod 2^N` wrap above leaves a NEGATIVE int<N> (64 < N < 256) in N-bit
+	// two's-complement form (2^N - X, sign bit at N-1, bit 255 clear). But the
+	// rest of the pipeline treats the canonical signed form as 256-bit: signed
+	// ordering compares XOR with 2^255 (SolIntegerBuilder), so a value whose sign
+	// bit sits at N-1 reads as POSITIVE. Without this, an INLINE consumer of a
+	// computed negative — the V4 `getAmount0/1Delta(int128)` doing `liquidity < 0`
+	// on a subtracted/derived delta — takes the wrong branch and `uint128(liquidity)`
+	// becomes ~2^128 (the observed garbage remove-amount). Idempotent with the
+	// signExtendToUint256 already applied at assignment/return/cast sites; no-op
+	// for non-negative results and for int256 (bits == 256).
+	if (bits < 256)
+		return TypeCoercion::signExtendToUint256(std::move(rawResult), bits, m_loc);
+
 	return rawResult;
 }
 

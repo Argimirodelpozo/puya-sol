@@ -333,6 +333,22 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 	{
 		if (needsBigUInt)
 		{
+			// Canonicalise each operand to 256-bit two's complement from its
+			// DECLARED width before flipping the sign bit. A sub-256 signed value
+			// (int72..int248) can arrive in N-bit two's-complement form — e.g. an
+			// ABI-decoded `int128` negative is 2^128 - X (bit 255 clear) — and the
+			// 2^255 XOR below would then misread its sign as positive (the V4
+			// getAmount*Delta(int128) `liquidity < 0` branch-swap). signExtendToUint256
+			// masks to N then sign-extends from bit N-1, so a value already canonical
+			// is unchanged (idempotent) while an N-bit form is lifted — making the
+			// signed compare correct for EVERY origin (ABI param, arithmetic, state
+			// read). Only signed operands are extended; an unsigned operand promoted
+			// into a signed compare keeps its full magnitude.
+			if (m_signed)
+				lhs = TypeCoercion::signExtendToUint256(std::move(lhs), m_bits, _loc);
+			if (otherInt->isSigned())
+				rhs = TypeCoercion::signExtendToUint256(std::move(rhs), otherInt->numBits(), _loc);
+
 			// XOR with 2^255 for biguint
 			solidity::u256 signBitVal = solidity::u256(1) << 255;
 			auto signBit = awst::makeIntegerConstant(signBitVal.str(), _loc, awst::WType::biguintType());
