@@ -174,6 +174,27 @@ def test_safecast_toint128(harness):
     assert harness.call(app, "toInt128(int256)", MAX + 1, expect_revert=True).reverted
 
 
+def test_int256_mul_large(harness):
+    """conversions/contracts/int256_mul_large.sol
+
+    The V4 TickMath.getTickAtSqrtPrice log2 step `log_2 * 255738958999603826347141`
+    with a large NEGATIVE int256 log_2 (the xfail blamed this mul for exceeding the
+    biguint range). Signed int256 mul must wrap mod 2^256 to the right two's complement
+    without spuriously reverting. Result interpreted as 256-bit signed.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/int256_mul_large.sol")
+    C = 255738958999603826347141
+
+    def s256(u):
+        return u - (1 << 256) if u >= (1 << 255) else u
+
+    def f(a):
+        return s256(as_int(harness.call(app, "f(int256)", a).abi_return))
+
+    for a in [-64 * (1 << 64), -(1 << 70), (1 << 70), -100, 100, 0]:
+        assert f(a) == a * C, f"f({a}) = {f(a)}, expected {a * C}"
+
+
 def test_function_type_array_to_storage(harness):
     """conversions/contracts/function_type_array_to_storage.sol"""
     app = harness.compile_and_deploy("conversions/contracts/function_type_array_to_storage.sol")
