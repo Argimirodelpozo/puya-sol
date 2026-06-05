@@ -796,3 +796,28 @@ def test_sstore_box_struct_slot(harness):
     # returns are exposed as the unsigned 256-bit bit-pattern).
     assert as_int(harness.call(app, "getB(uint256)", 7).abi_return) == (1 << 256) - 222
     assert as_int(harness.call(app, "getC(uint256)", 7).abi_return) == 0xdeadbeef
+
+
+def test_balancedelta_int128(harness):
+    """inlineAssembly/contracts/balancedelta_int128.sol
+
+    V4 BalanceDelta pack/unpack with NEGATIVE int128 amounts (remove-liquidity /
+    owed-to-caller deltas). amount0 = sar(128, bd), amount1 = signextend(15, bd) must
+    sign-extend. Signed >64-bit returns surface as the unsigned 256-bit two's-complement
+    bit-pattern, so interpret with s256.
+    """
+    app = harness.compile_and_deploy("inlineAssembly/contracts/balancedelta_int128.sol")
+
+    def s256(u):
+        return u - (1 << 256) if u >= (1 << 255) else u
+
+    def a0(x, y):
+        return s256(as_int(harness.call(app, "amount0(int128,int128)", x, y).abi_return))
+
+    def a1(x, y):
+        return s256(as_int(harness.call(app, "amount1(int128,int128)", x, y).abi_return))
+
+    assert a0(-100, -200) == -100 and a1(-100, -200) == -200  # both negative
+    assert a0(100, -200) == 100 and a1(100, -200) == -200      # +/-
+    assert a0(-100, 200) == -100 and a1(-100, 200) == 200      # -/+
+    assert a0(100, 200) == 100 and a1(100, 200) == 200         # both positive
