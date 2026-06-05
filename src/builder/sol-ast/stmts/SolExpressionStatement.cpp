@@ -134,7 +134,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 				if (rps.size() == 1
 					&& rps[0]->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage
-					&& builder::containsMappingType(rps[0]->type()))
+					&& builder::isBoxKeyedStorageRef(rps[0]->type())) // widened: plain structs too
 					storageRefMapReturn = true;
 			}
 		if (storageRefMapReturn

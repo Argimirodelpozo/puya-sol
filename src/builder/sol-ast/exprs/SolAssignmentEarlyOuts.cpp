@@ -92,7 +92,17 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	if (!m_scope.findMappingKeyParam(lhsDecl->id()).empty())
 	{
 		auto rhsExpr = buildExpr(m_assignment.rightHandSide());
-		if (rhsExpr->wtype != awst::WType::bytesType())
+		// If the RHS is a storage-ref element read (`self[k]` lowers to
+		// StateGet(BoxValueExpression)), the local holds that element's box KEY, not
+		// its decoded value — lift the key (mirrors SolInternalCall::extractMappingKeyPrefix).
+		// This is the V4 `position = self.positions.get(k)` shape (a named-return
+		// `position = self[positionKey];` in Position.get, plain-struct mapping element).
+		auto keyExpr = rhsExpr;
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(keyExpr.get()))
+			keyExpr = sg->field;
+		if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(keyExpr.get()))
+			rhsExpr = awst::makeReinterpretCast(box->key, awst::WType::bytesType(), m_loc);
+		else if (rhsExpr->wtype != awst::WType::bytesType())
 		{
 			rhsExpr = builder::TypeCoercion::coerceForAssignment(
 				std::move(rhsExpr), awst::WType::bytesType(), m_loc);

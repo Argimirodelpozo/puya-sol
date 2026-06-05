@@ -239,7 +239,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// Box-keyed mapping-of-struct storage ref (e.g. `return _pools[id]`
 			// returning `Pool.State storage`): the function returns the bytes
 			// box-key prefix. Array/slot refs still return the uint64 index.
-			method.returnType = containsMappingType(returnParams[0]->type())
+			// Keyed off the HOLDER being a mapping (storageRefReturnIsBytesKeyed),
+			// not the struct contents — so plain-struct mapping elements (e.g. V4
+			// Position.State, no nested mappings) are still box-keyed.
+			method.returnType = storageRefReturnIsBytesKeyed(&_func)
 				? awst::WType::bytesType()
 				: awst::WType::uint64Type();
 		// For signed integer returns ≤64 bits, promote to biguint for proper
@@ -483,14 +486,23 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
 		auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
 			return p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& containsMappingType(p->type())
+				&& isBoxKeyedStorageRef(p->type()) // widened: plain structs too
 				&& !p->name().empty();
 		};
 		for (auto const& p: _func.parameters())
 			if (isMappingStorageRef(p.get()))
 				mappingKeyParamDecls.push_back(p.get());
 		for (auto const& rp: returnParams)
-			if (isMappingStorageRef(rp.get()))
+			// Also register a box-keyed storage-ref NAMED return (e.g. V4
+			// `returns (Position.State storage position)` with `position = self[k];`)
+			// even when the struct has no nested mappings — so `position` resolves to
+			// the element's runtime box-key and the synthesised `return position;`
+			// hands back that key (storageRefReturnIsBytesKeyed gates the mapping-
+			// holder case that isMappingStorageRef/containsMappingType misses).
+			if (isMappingStorageRef(rp.get())
+				|| (rp->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage
+					&& !rp->name().empty() && storageRefReturnIsBytesKeyed(&_func)))
 				mappingKeyParamDecls.push_back(rp.get());
 		setMappingKeyParams(mappingKeyParamDecls);
 
@@ -511,6 +523,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			for (auto const& rp: retParams)
 			{
 				if (rp->name().empty())
+					continue;
+				// Box-keyed storage-ref named returns hold a bytes box-key (a
+				// mappingKeyParam), not a struct value — skip the struct zero-init.
+				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+					&& storageRefReturnIsBytesKeyed(&_func))
 					continue;
 				auto* rpType = m_typeMapper.map(rp->type());
 

@@ -43,6 +43,26 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_libraryFunctionIds.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
+	// Populate the box-keyed-struct registry (source-unit-wide): a struct type
+	// used as a mapping VALUE anywhere denotes a box (mapping element), so its
+	// storage-refs travel as box-keys (bytes); plain state-var/local structs stay
+	// by-value. This is a COMPILE-TIME calling-convention classifier ONLY — never
+	// a storage-placement decision and never cross-program storage access (all
+	// storage lives in main). The scan spans all source contracts only because a
+	// mapping(=>Struct) may be DECLARED in a different contract's source than the
+	// library defining methods on Struct (V4: orchestrator declares it, Position
+	// library uses it) — they compile against the same single main storage.
+	{
+		auto& reg = boxKeyedStructRegistry();
+		reg.clear();
+		std::set<solidity::frontend::Type const*> seen;
+		for (auto const& sourceName: _compiler.sourceNames())
+			for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+				solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
+				for (auto const* sv: contract->stateVariables())
+					collectMappingValueStructs(sv->type(), reg, seen);
+	}
+
 	registerFunctionIds(_compiler, _sourceFile, m_libraryFunctionIds, m_freeFunctionById);
 	presetDispatchCref(_compiler, _sourceFile);
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
@@ -250,7 +270,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		// silently get encoded as their own "state var" and box keys
 		// diverge from the auto-getter's reads.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& containsMappingType(param->type()))
+			&& isBoxKeyedStorageRef(param->type())) // widened: plain structs too
 		{
 			arg.wtype = awst::WType::bytesType();
 			mappingStorageParams.insert(pi);
@@ -429,7 +449,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	for (auto const& rp: returnParams)
 	{
 		if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+			&& (dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+				|| storageRefReturnIsBytesKeyed(&_func)) // + box-keyed struct named returns
 			&& !rp->name().empty())
 		{
 			fnCtx.setMappingKeyParam(rp->id(), rp->name());
@@ -481,6 +502,12 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		for (auto const& rp: returnParams)
 		{
 			if (rp->name().empty())
+				continue;
+			// Box-keyed storage-ref named returns hold a bytes box-key (registered as a
+			// mappingKeyParam), not a struct value — skip the struct zero-init, which
+			// would conflict with their bytes type (e.g. V4 Position.get's `position`).
+			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& storageRefReturnIsBytesKeyed(&_func))
 				continue;
 			auto* rpType = m_typeMapper.map(rp->type());
 

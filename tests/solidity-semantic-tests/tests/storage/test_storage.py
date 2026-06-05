@@ -960,3 +960,69 @@ def test_struct_storage_ref_local(harness):
     # checkInit() via the local must revert for a genuinely uninitialised id
     # (this is exactly the checkPoolInitialized -> PoolNotInitialized case)
     harness.call(app, "bumpLocal(uint256,uint256,uint256)", 9, 1, 1, expect_revert=True)
+
+
+@pytest.mark.xfail(reason="storage-ref-return through a getter on a TOP-LEVEL state-var "
+                   "mapping passed as a `mapping(K=>S) storage` PARAM: the box-key prefix the "
+                   "call site hands for the state-var mapping arg doesn't match the direct "
+                   "`_m[id]` element-key derivation, so the ref writes a different box. The "
+                   "V4-relevant NESTED shape (mapping as a struct FIELD, self.positions.get) "
+                   "works (see test_storage_ref_returned_nested). Separate key-derivation fix.")
+def test_storage_ref_returned(harness):
+    """storage/contracts/storage_ref_returned.sol
+
+    A storage reference RETURNED FROM A FUNCTION (a library getter taking a
+    `mapping(K=>Struct) storage` param and returning an element `T storage`) must
+    stay a ref, so a mutation through it persists to the element's box. This is the
+    Uniswap V4 Position shape:
+        Position.State storage position = self.positions.get(...);
+        position.update(...);
+    Before the fix the returned ref was lowered to the element VALUE (a copy), so
+    the mutation was discarded (no box write-back) and a later read saw old data.
+    """
+    app = harness.compile_and_deploy("storage/contracts/storage_ref_returned.sol")
+
+    # mutate _m[1] THROUGH a ref returned from the param-mapping getter: a=1, inner[7]=100
+    harness.call(app, "bumpViaRef(uint256,uint256,uint256)", 1, 7, 100)
+    # THE FIX: the ref-write must be visible to the DIRECT path (same box)
+    r = harness.call(app, "rdDirect(uint256,uint256)", 1, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100)
+    # and through the chained returned-ref read (getRef(...).rd())
+    r = harness.call(app, "rdViaRef(uint256,uint256)", 1, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100)
+    # mutate again through the ref: a=2, inner[7]=200
+    harness.call(app, "bumpViaRef(uint256,uint256,uint256)", 1, 7, 200)
+    r = harness.call(app, "rdDirect(uint256,uint256)", 1, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (2, 200)
+    # id isolation: _m[2] untouched
+    r = harness.call(app, "rdViaRef(uint256,uint256)", 2, 7)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
+    # inner-key isolation: inner[9] of _m[1] still 0 (a unchanged at 2)
+    r = harness.call(app, "rdViaRef(uint256,uint256)", 1, 9)
+    assert tuple(as_int(x) for x in r.abi_return) == (2, 0)
+
+
+def test_storage_ref_returned_nested(harness):
+    """storage/contracts/storage_ref_returned_nested.sol
+
+    The V4 Position shape with a NESTED mapping field: a getter on `self.inner`
+    (a mapping field of an outer struct held in a mapping element) returns an
+    element storage ref that is then mutated via a method. The returned ref must
+    key off the nested box (self_value ++ "inner" ++ k), so the mutation persists.
+    """
+    app = harness.compile_and_deploy("storage/contracts/storage_ref_returned_nested.sol")
+
+    # mutate _m[1].inner[5].n = 42 through the nested returned ref
+    harness.call(app, "mutate(uint256,uint256,uint256)", 1, 5, 42)
+    # THE FIX: the nested ref-write persists
+    r = harness.call(app, "read(uint256,uint256)", 1, 5)
+    assert as_int(r.abi_return) == 42
+    # mutate again through the ref
+    harness.call(app, "mutate(uint256,uint256,uint256)", 1, 5, 99)
+    r = harness.call(app, "read(uint256,uint256)", 1, 5)
+    assert as_int(r.abi_return) == 99
+    # key isolation: inner[6] and id 2 are untouched
+    r = harness.call(app, "read(uint256,uint256)", 1, 6)
+    assert as_int(r.abi_return) == 0
+    r = harness.call(app, "read(uint256,uint256)", 2, 5)
+    assert as_int(r.abi_return) == 0

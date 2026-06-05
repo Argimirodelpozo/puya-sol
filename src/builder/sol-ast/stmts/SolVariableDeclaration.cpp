@@ -177,7 +177,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				// resolve against that prefix (see SolIdentifier struct-ref read).
 				bool isMappingPtr = decl.type()
 					&& (decl.type()->category() == solidity::frontend::Type::Category::Mapping
-						|| builder::containsMappingType(decl.type()));
+						|| builder::containsMappingType(decl.type())
+						// A struct storage-ref local bound from a getter that returns the
+						// bytes box-key (e.g. `Position.State storage p = self.positions.get(k)`
+						// where Position.State has no nested mappings): the bytes return type
+						// marks it box-keyed, so bind it as a mappingKeyParam too (not a slot
+						// ref), so `p.field`/`p.method()` resolve against that runtime prefix.
+						|| (decl.type()->category() == solidity::frontend::Type::Category::Struct
+							&& value->wtype == awst::WType::bytesType()));
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
 					m_blk.setMappingKeyParam(decl.id(), decl.name());

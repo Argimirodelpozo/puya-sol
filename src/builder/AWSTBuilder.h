@@ -4,6 +4,7 @@
 #include "builder/ContractBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-ast/StorageRefPointer.h" // containsMappingType + storageRefPointerReturn
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -15,33 +16,10 @@
 namespace puyasol::builder
 {
 
-/// True if `_t` is a MappingType, or any array (possibly nested) whose
-/// element type eventually contains a MappingType. Used to decide which
-/// `storage` reference parameters travel as runtime bytes prefixes (the
-/// callee receives the caller's state-variable holder name) vs ordinary
-/// AWST-mapped parameter values. Must agree across the 3 call sites
-/// (AWSTBuilder, SolInternalCall, FunctionBuilder) or callee writes
-/// land under the wrong key.
-inline bool containsMappingType(solidity::frontend::Type const* _t)
-{
-	if (!_t) return false;
-	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
-	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return containsMappingType(arr->baseType());
-	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_t))
-	{
-		// A storage struct that carries nested mappings (e.g. Uniswap V4
-		// Pool.State { ...; mapping positions; mapping tickBitmap }) cannot be
-		// materialised by value — it must travel as a storage-key reference
-		// (bytes prefix), the same scheme used for plain mapping storage refs.
-		// Recurse into members so such structs are recognised here.
-		for (auto const& member: st->members(nullptr))
-			if (containsMappingType(member.type))
-				return true;
-		return false;
-	}
-	return false;
-}
+// containsMappingType lives in builder/sol-ast/StorageRefPointer.h (included
+// above) so storageRefPointerReturn can share it; it remains visible in this
+// namespace for the existing call sites (AWSTBuilder.cpp, SolInternalCall.cpp,
+// FunctionBuilder.cpp, PublicGetterBuilder.cpp).
 
 /// Top-level builder that drives the Solidity AST → AWST transformation.
 /// Uses CompilerStack for parsing and type-checking, then visits all contracts.

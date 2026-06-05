@@ -94,7 +94,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			// Box-keyed mapping-of-struct storage ref (e.g. `return _pools[id]`
 			// returning `Pool.State storage`) returns the bytes box-key prefix;
 			// array/slot refs return the uint64 index.
-			return builder::containsMappingType(_funcDef->returnParameters()[0]->type())
+			return builder::storageRefReturnIsBytesKeyed(_funcDef)
 				? awst::WType::bytesType()
 				: awst::WType::uint64Type();
 		return mapReturnType(_funcDef->returnParameters()[0]->type());
@@ -127,7 +127,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		// it through unchanged — the caller binds it as a struct-storage-ref
 		// (SolVariableDeclaration) — rather than reconstituting an IndexExpression,
 		// which here would be the invalid `bytes[idx] -> Struct`.
-		if (builder::containsMappingType(_funcDef->returnParameters()[0]->type()))
+		if (builder::storageRefReturnIsBytesKeyed(_funcDef))
 			return _result;
 		auto base = m_ctx.buildExpr(indexAccess->baseExpression());
 		auto* elemType = m_ctx.typeMapper.map(
@@ -150,7 +150,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		{
 			auto const& param = _funcDef->parameters()[pi];
 			if (param->referenceLocation() == VariableDeclaration::Location::Storage
-				&& builder::containsMappingType(param->type()))
+				&& builder::isBoxKeyedStorageRef(param->type())) // widened: plain structs too
 			{
 				paramTypes.push_back(awst::WType::bytesType());
 				mappingStorageParamIndices.insert(pi);
@@ -202,7 +202,26 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				return awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
 		}
 		else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
+		{
+			// `self.field` where `self` is a struct-storage-ref (a registered
+			// mappingKeyParam): the nested mapping's prefix is the base's RUNTIME
+			// box-key ++ utf8(field), NOT a static field name. Mirrors the
+			// self.field[k] index handling (resolveCursorContext) so a nested
+			// mapping passed to a getter — the Uniswap V4 `self.positions.get(k)`
+			// shape — keys under the SAME box a direct `self.field[k]` access uses.
+			// (Falls through to the bare field-name constant for a non-ref base.)
+			if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
+				if (auto const* d = baseId->annotation().referencedDeclaration;
+					d && !m_scope.findMappingKeyParam(d->id()).empty())
+					return awst::makeReinterpretCast(
+						awst::makeConcat(
+							awst::makeVarExpression(
+								baseId->name(), awst::WType::bytesType(), m_loc),
+							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
+							m_loc),
+						awst::WType::bytesType(), m_loc);
 			name = ma->memberName();
+		}
 		if (name.empty())
 			name = "map"; // fallback
 		return awst::makeUtf8BytesConstant(name, m_loc);
@@ -355,14 +374,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto const& p = _funcDef->parameters()[pi];
 			if (p->referenceLocation() != VariableDeclaration::Location::Storage)
 				continue;
-			// Exclude mapping storage refs AND structs that carry nested
-			// mappings (e.g. Uniswap V4 `Pool.State storage self`): those
-			// travel as a bytes key-prefix (mappingStorageParamIndices above)
-			// and write directly to box storage, so they get NO return
-			// write-back slot. Must use the same predicate as the callee
-			// (AWSTBuilder.cpp:253 `containsMappingType`) or the caller's
-			// return-tuple arity diverges from the callee's.
-			if (builder::containsMappingType(p->type()))
+			// Exclude box-keyed storage refs: mappings, arrays/structs that
+			// carry mappings, AND plain structs (e.g. Uniswap V4
+			// `Pool.State storage self`). Those travel as a bytes key-prefix
+			// (mappingStorageParamIndices above) and write directly to box
+			// storage, so they get NO return write-back slot. Must use the same
+			// predicate as the callee (AWSTBuilder.cpp `isBoxKeyedStorageRef`)
+			// or the caller's return-tuple arity diverges from the callee's.
+			if (builder::isBoxKeyedStorageRef(p->type())) // widened: plain structs too
 				continue;
 			storageParamIndices.push_back(pi);
 		}
