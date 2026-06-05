@@ -1,0 +1,178 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/constructor_arguments_internal.sol.Main.approval_program() -> uint64:
+main:
+    intcblock 0 1 24 6
+    bytecblock "__ctor_pending" "h" 0x2fe85e04 0x0a5c26e3 0x151f7c75 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec_2 // method "getFlag()bool"
+    bytec_3 // method "getName()byte[3]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_getFlag_route@6 main_getName_route@7
+    err
+
+main_getName_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 0
+    bytec_1 // "h"
+    app_global_get_ex
+    assert // check h exists
+    intc_2 // 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_3 // method "getName()byte[3]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_0 // 0
+    b main_ternary_merge@14
+
+main_getFlag_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 0
+    bytec_1 // "h"
+    app_global_get_ex
+    assert // check h exists
+    intc_2 // 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "getFlag()bool"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    !=
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    intc_1 // 1
+    itob
+    bytec 5 // TMPL_APPROVAL_Helper
+    bytec 6 // TMPL_CLEAR_Helper
+    intc_3 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    pushbytes 0x616263
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "h"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

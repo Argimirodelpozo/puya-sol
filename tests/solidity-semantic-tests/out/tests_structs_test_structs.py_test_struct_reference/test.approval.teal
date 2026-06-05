@@ -1,0 +1,222 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_reference.sol.test.approval_program() -> uint64:
+main:
+    intcblock 0 1 4
+    bytecblock 0x0000000000060000 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03 "data" 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139 0x3d016979cb90dcb5e722289a9bd637ae255ec3cb789c791e8dcebb90393b2885
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "data"
+    bytec_0 // 0x0000000000060000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xae34dd1b 0x0f76205a // method "check()bool", method "set()void"
+    txna ApplicationArgs 0
+    match main_check_route@5 main_set_route@6
+    err
+
+main_set_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    intc_2 // 4
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x000000020006
+    swap
+    concat
+    bytec_2 // "data"
+    swap
+    app_global_put
+    bytec_3 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    dup
+    intc_2 // 4
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x000000030006
+    swap
+    concat
+    bytec_3 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
+    box_del
+    pop
+    bytec_3 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
+    swap
+    box_put
+    bytec 4 // 0x3d016979cb90dcb5e722289a9bd637ae255ec3cb789c791e8dcebb90393b2885
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    intc_1 // 1
+    +
+    dup
+    pushint 4294967295
+    <=
+    assert // overflow
+    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    dup
+    intc_2 // 4
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 0
+    swap
+    itob
+    dup
+    bitlen
+    pushint 32
+    <=
+    assert // overflow
+    extract 4 4
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    swap
+    pushbytes 0x0006
+    concat
+    swap
+    concat
+    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    box_del
+    pop
+    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main_check_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 0
+    extract_uint32
+    pushint 2
+    ==
+    bz main_bool_false@23
+    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    pushint 3
+    ==
+    bz main_bool_false@23
+    bytec 4 // 0x3d016979cb90dcb5e722289a9bd637ae255ec3cb789c791e8dcebb90393b2885
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    bnz main_bool_false@23
+    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    box_get
+    bytec_0 // 0x0000000000060000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint32
+    intc_1 // 1
+    ==
+    bz main_bool_false@23
+    intc_1 // 1
+
+main_bool_merge@24:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@23:
+    intc_0 // 0
+    b main_bool_merge@24
+
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

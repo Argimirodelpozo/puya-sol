@@ -1,0 +1,199 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/byte_arrays.sol.C.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75
+    intc_1 // 0
+    dupn 3
+    pushbytes ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5bde53d0 0x47dbfdda // method "f(uint256,byte[],uint256)(uint512,uint512,byte[1],uint512)", method "f_external(uint256,byte[],uint256)(uint512,uint512,byte[1],uint512)"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_f_external_route@6
+    err
+
+main_f_external_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    dup
+    bury 3
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 3
+    dup
+    bury 6
+    len
+    dup
+    bury 2
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    dig 3
+    len
+    itob
+    dig 3
+    extract 5 1
+    dig 3
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    dig 8
+    dig 1
+    b|
+    uncover 3
+    dig 2
+    b|
+    concat
+    uncover 2
+    concat
+    dig 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 6
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    dup
+    bury 3
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 4
+    txna ApplicationArgs 3
+    dup
+    bury 6
+    len
+    dup
+    bury 2
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    dig 3
+    len
+    itob
+    dig 3
+    extract 5 1
+    dig 3
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    dig 8
+    dig 1
+    b|
+    uncover 3
+    dig 2
+    b|
+    concat
+    uncover 2
+    concat
+    dig 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 6
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

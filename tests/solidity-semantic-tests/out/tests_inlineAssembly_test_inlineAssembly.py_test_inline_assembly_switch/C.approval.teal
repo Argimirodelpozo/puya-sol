@@ -1,0 +1,100 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_switch.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    intc_2 // 0
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x607ebd63 // method "f(uint512)uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    load 0
+    bury 3
+    intc_0 // 32
+    bzero
+    dup
+    bury 2
+    dig 2
+    b|
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
+    uncover 2
+    match main_switch_case_0@10 main_switch_case_1@11
+    pushbytes 0x02
+
+main_switch_case_next@13:
+    dig 3
+    store 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@11:
+    pushbytes 0x09
+    b main_switch_case_next@13
+
+main_switch_case_0@10:
+    pushbytes 0x08
+    b main_switch_case_next@13
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

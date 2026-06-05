@@ -1,0 +1,227 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 42
+    bytecblock 0x 0x15
+    intc_1 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x85c02962 0x9af1cffa 0xa78000de // method "get(uint512)uint256", method "set(uint512,uint512)void", method "test()void"
+    txna ApplicationArgs 0
+    match main_get_route@5 main_set_route@6 main_test_route@7
+    err
+
+main_test_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dup
+    bury 2
+    callsub get
+    bytec_0 // 0x
+    b==
+    bz main_bool_false@17
+    intc_3 // 42
+    itob
+    callsub get
+    bytec_0 // 0x
+    b==
+    bz main_bool_false@17
+    intc_0 // 1
+
+main_bool_merge@18:
+    assert
+    pushint 21
+    itob
+    dig 1
+    dup
+    uncover 2
+    callsub set
+    callsub get
+    bytec_1 // 0x15
+    b==
+    bz main_bool_false@21
+    intc_3 // 42
+    itob
+    callsub get
+    bytec_0 // 0x
+    b==
+    bz main_bool_false@21
+    intc_0 // 1
+
+main_bool_merge@22:
+    assert
+    intc_3 // 42
+    itob
+    dup
+    bury 3
+    pushint 131
+    itob
+    callsub set
+    dup
+    callsub get
+    bytec_1 // 0x15
+    b==
+    bz main_bool_false@25
+    dig 1
+    callsub get
+    pushbytes 0x83
+    b==
+    bz main_bool_false@25
+    intc_0 // 1
+
+main_bool_merge@26:
+    assert
+    intc_0 // 1
+    return
+
+main_bool_false@25:
+    intc_1 // 0
+    b main_bool_merge@26
+
+main_bool_false@21:
+    intc_1 // 0
+    b main_bool_merge@22
+
+main_bool_false@17:
+    intc_1 // 0
+    b main_bool_merge@18
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_set_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub set
+    intc_0 // 1
+    return
+
+main_get_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub get
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.get(addr: bytes) -> bytes:
+get:
+    proto 1 1
+    txn GroupIndex
+    bz get_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@3:
+    !
+    assert // not payable
+    load 0
+    load 5
+    frame_dig -1
+    btoi
+    intc_2 // 32
+    *
+    intc_2 // 32
+    extract3
+    swap
+    store 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+get_ternary_false@2:
+    intc_1 // 0
+    b get_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.set(addr: bytes, x: bytes) -> void:
+set:
+    proto 2 0
+    txn GroupIndex
+    bz set_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@3:
+    !
+    assert // not payable
+    load 0
+    load 5
+    frame_dig -2
+    btoi
+    intc_2 // 32
+    *
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    b|
+    replace3
+    store 5
+    store 0
+    retsub
+
+set_ternary_false@2:
+    intc_1 // 0
+    b set_ternary_merge@3

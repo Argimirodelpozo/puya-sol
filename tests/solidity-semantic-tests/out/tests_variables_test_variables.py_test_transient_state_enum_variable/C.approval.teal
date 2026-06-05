@@ -1,0 +1,96 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_enum_variable.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 31
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "myPet"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xf2b65f27 // method "f()void", method "g()void"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    callsub g
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    load 5
+    pushbytes 0x02
+    replace2 31
+    store 5
+    callsub g
+    load 5
+    intc_2 // 31
+    getbyte
+    pushint 4
+    <
+    assert // enum out of range
+    load 5
+    intc_2 // 31
+    getbyte
+    intc_0 // 1
+    ==
+    assert
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_enum_variable.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    load 5
+    pushbytes 0x01
+    replace2 31
+    store 5
+    retsub
+
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3

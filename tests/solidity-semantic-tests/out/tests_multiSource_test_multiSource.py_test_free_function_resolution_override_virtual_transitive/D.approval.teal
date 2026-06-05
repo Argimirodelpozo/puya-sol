@@ -1,0 +1,92 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/claude-1000/multisource_mg1ibyln/s3.sol.D.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x4b2c0376 // method "g()uint256"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
+
+
+// /tmp/claude-1000/multisource_mg1ibyln/s3.sol.f_63() -> bytes:
+f:
+    pushint 1337
+    itob
+    retsub

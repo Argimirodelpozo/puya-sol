@@ -1,0 +1,268 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_array_static.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 3
+    bytecblock 0x151f7c75
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x48269b17 0x7391bb21 0x954cefe8 0xb2ec8b4e // method "f(uint256[3])byte[]", method "g(uint256[3])byte[]", method "h(uint8[3])byte[]", method "i(uint8[3])byte[]"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8
+    err
+
+main_i_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 3
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    dup
+    callsub h
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_h_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 3
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
+    callsub h
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_g_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 96
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    dup
+    callsub f
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 96
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
+    callsub f
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_array_static.sol.C.f(s: bytes) -> bytes, bytes:
+f:
+    proto 1 2
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 64 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    retsub
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_array_static.sol.C.h(s: bytes) -> bytes, bytes:
+h:
+    proto 1 2
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    extract 0 1 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    extract 1 1 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 2 1 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    retsub
+
+h_ternary_false@2:
+    intc_2 // 0
+    b h_ternary_merge@3

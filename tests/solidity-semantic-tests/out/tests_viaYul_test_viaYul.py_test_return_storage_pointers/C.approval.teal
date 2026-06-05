@@ -1,0 +1,123 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/return_storage_pointers.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 2 32
+    bytecblock "__ctor_pending" "arr1" "arr2"
+    intc_0 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x595e23e2 // method "__postInit()void", method "g()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    bytec_1 // "arr1"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz main_ternary_false@15
+    bytec_1 // "arr1"
+    box_len
+    pop
+
+main_ternary_merge@16:
+    intc_2 // 2
+    -
+    intc_3 // 32
+    /
+    itob
+    intc_3 // 32
+    bzero
+    dup
+    bury 3
+    b|
+    bury 2
+    bytec_2 // "arr2"
+    box_len
+    bury 1
+    bz main_ternary_false@18
+    bytec_2 // "arr2"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@19:
+    itob
+    dig 1
+    b|
+    dig 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main_ternary_false@15:
+    intc_2 // 2
+    b main_ternary_merge@16
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "arr1"
+    intc_2 // 2
+    box_create
+    pop
+    bytec_2 // "arr2"
+    intc_2 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return

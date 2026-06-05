@@ -1,0 +1,70 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_emit_file_level.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    intc_1 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc7d12872 // method "deposit(byte[32])void"
+    txna ApplicationArgs 0
+    match main_deposit_route@4
+    err
+
+main_deposit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    itob
+    intc_2 // 32
+    bzero
+    b|
+    dig 1
+    dig 3
+    concat
+    swap
+    concat
+    pushbytes 0x7e080067 // method "Deposit(address,byte[32],uint256)"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

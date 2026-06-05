@@ -1,0 +1,268 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/contracts/shift_bytes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 64
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000010000 0x151f7c75
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbc7feb88 0xe9ae96d6 // method "f(uint512)(uint256,uint256,uint256)", method "g(uint512)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 1
+    dup
+    cover 2
+    pushbytes 0x0001000000000000000000000000000000000000000000000000000000000000
+    b/
+    load 0
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 31 1
+    swap
+    store 0
+    dig 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    load 0
+    dig 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 4 1
+    swap
+    store 0
+    uncover 3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b/
+    load 0
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 7 1
+    swap
+    store 0
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 1
+    dup
+    cover 2
+    pushbytes 0x0100000000000000000000000000000000000000000000000000000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 1
+    swap
+    store 0
+    dig 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    dig 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 30 1
+    swap
+    store 0
+    uncover 3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 1 1
+    swap
+    store 0
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18

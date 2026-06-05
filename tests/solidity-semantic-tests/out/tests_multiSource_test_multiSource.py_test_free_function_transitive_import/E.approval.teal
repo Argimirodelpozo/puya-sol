@@ -1,0 +1,137 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/claude-1000/multisource_fmxkclgs/s3.sol.E.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3f72e9ed 0xafedb2e5 0x4b2c0376 // method "i()uint256", method "h()uint256", method "g()uint256"
+    txna ApplicationArgs 0
+    match main_i_route@5 main_h_route@6 main_g_route@7
+    err
+
+main_g_route@7:
+    callsub g
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_h_route@6:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    callsub g
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_2 // 0
+    b main_ternary_merge@16
+
+main_i_route@5:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_2 // 0
+    b main_ternary_merge@21
+
+
+// /tmp/claude-1000/multisource_fmxkclgs/s3.sol.f_57() -> bytes:
+f:
+    pushint 1337
+    itob
+    retsub
+
+
+// /tmp/claude-1000/multisource_fmxkclgs/s3.sol.E.g() -> bytes:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3

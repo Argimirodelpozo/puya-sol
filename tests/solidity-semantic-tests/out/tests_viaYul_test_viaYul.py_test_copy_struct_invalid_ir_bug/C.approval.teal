@@ -1,0 +1,287 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/copy_struct_invalid_ir_bug.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 12 1 2
+    bytecblock "array" 0x0c88cb4e "externalCalled" "__ctor_pending" 0x0001
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec_1 // method "ext()void"
+    pushbytes 0x2d4970c7 // method "f()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_ext_route@6 main_f_route@7
+    err
+
+main_f_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "ext()void"
+    concat
+    bytec 4 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "array"
+    intc_0 // 0
+    uncover 3
+    uncover 3
+    intc_1 // 12
+    callsub box_dynamic_array_concat_fixed
+    bytec_0 // "array"
+    intc_3 // 2
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    bytec 4 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "array"
+    intc_0 // 0
+    uncover 3
+    uncover 3
+    intc_1 // 12
+    callsub box_dynamic_array_concat_fixed
+    bytec_0 // "array"
+    intc_3 // 2
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    intc_0 // 0
+    extract_uint64
+    global CurrentApplicationID
+    ==
+    bz main_else_body@16
+    bytec_0 // "array"
+    intc_3 // 2
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    extract 8 4
+    bytec_1 // method "ext()void"
+    ==
+    assert // unknown function selector in self-call dispatch
+    callsub ext
+
+main_after_if_else@17:
+    bytec_0 // "array"
+    pushint 14
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    intc_0 // 0
+    extract_uint64
+    global CurrentApplicationID
+    ==
+    bz main_else_body@19
+    bytec_0 // "array"
+    pushint 14
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    extract 8 4
+    bytec_1 // method "ext()void"
+    ==
+    assert // unknown function selector in self-call dispatch
+    callsub ext
+
+main_after_if_else@20:
+    intc_0 // 0
+    bytec_2 // "externalCalled"
+    app_global_get_ex
+    assert // check externalCalled exists
+    pushbytes 0x02
+    b==
+    assert
+    intc_2 // 1
+    return
+
+main_else_body@19:
+    itxn_begin
+    bytec_0 // "array"
+    pushint 14
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    dup
+    extract 8 4
+    swap
+    intc_0 // 0
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    b main_after_if_else@20
+
+main_else_body@16:
+    itxn_begin
+    bytec_0 // "array"
+    intc_3 // 2
+    intc_1 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    dup
+    extract 8 4
+    swap
+    intc_0 // 0
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    itxn_submit
+    b main_after_if_else@17
+
+main_ternary_false@13:
+    intc_0 // 0
+    b main_ternary_merge@14
+
+main_ext_route@6:
+    callsub ext
+    intc_2 // 1
+    return
+
+main___postInit_route@5:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "array"
+    intc_3 // 2
+    box_create
+    pop
+    intc_0 // 0
+    itob
+    bytec_2 // "externalCalled"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:
+box_dynamic_array_concat_fixed:
+    proto 5 0
+    frame_dig -5
+    frame_dig -4
+    intc_3 // 2
+    box_extract
+    btoi
+    frame_dig -5
+    box_len
+    pop
+    frame_dig -2
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    box_resize
+    dup
+    frame_dig -2
+    +
+    itob
+    extract 6 2
+    frame_dig -5
+    frame_dig -4
+    uncover 2
+    box_replace
+    frame_dig -4
+    intc_3 // 2
+    +
+    swap
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    intc_0 // 0
+    frame_dig -3
+    box_splice
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/copy_struct_invalid_ir_bug.sol.C.ext() -> void:
+ext:
+    txn GroupIndex
+    bz ext_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+ext_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "externalCalled"
+    app_global_get_ex
+    assert // check externalCalled exists
+    dup
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    assert // signed inc/dec overflow
+    pushbytes 0x01
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // "externalCalled"
+    swap
+    app_global_put
+    retsub
+
+ext_ternary_false@2:
+    intc_0 // 0
+    b ext_ternary_merge@3

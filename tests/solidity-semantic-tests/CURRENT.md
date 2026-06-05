@@ -2,10 +2,13 @@
 
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-05):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
-> `RESULTS_<sha>.txt`, not these version totals. CLEAN BASELINE **1d592a517 =
-> 1206 PASS / 59 FAIL / 78 xfailed** (RESULTS_1d592a517.txt) + **avm-stdlib 20/20**,
-> **zero regressions** vs 2266bc286 (identical 59-fail set). This baseline is post-
-> removal of the legacy tests/uros-splitter dance suite. Prior run **c977b4406 =
+> `RESULTS_<sha>.txt`, not these version totals. CLEAN BASELINE **32893e996** (branch
+> `wip`) = semantic **1206 PASS / 59 FAIL / 78 xfailed** (RESULTS_32893e996.txt) +
+> **avm-stdlib 20/20** (avm-stdlib/RESULTS_32893e996.txt), **zero regressions** vs
+> 2266bc286 (identical 59-fail set). This baseline COMMITS THE COMPILED out/ ARTIFACTS
+> (TEAL/ARC56 per test) so future codegen changes diff against it. Post-removal of the
+> legacy tests/uros-splitter suite + the 8 custom-test labels. Prior **1d592a517**
+> (same totals, pre-outs). Earlier run **c977b4406 =
 > 1205 PASS / 59 FAIL / 78 xfailed** (RESULTS_c977b4406.txt), **zero regressions**
 > vs RESULTS_2266bc286 (IDENTICAL 59-fail set; +3 vs b9cf10135 = V4 stale-xfail
 > GUARDS: BalanceDelta int128 pack/unpack, ProtocolFeeLibrary.calculateSwapFee,

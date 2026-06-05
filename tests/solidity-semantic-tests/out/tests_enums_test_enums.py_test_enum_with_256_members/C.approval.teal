@@ -1,0 +1,186 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_with_256_members.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 255 0 256
+    bytecblock 0x151f7c75
+    intc_2 // 0
+    pushbytes ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a63a401 0xae705e3d 0x77f5c0ba 0x250e5423 // method "getMinMax()(uint64,uint64)", method "intToEnum(uint64)uint64", method "enumToInt(uint64)uint64", method "decodeEnum(byte[])uint64"
+    txna ApplicationArgs 0
+    match main_getMinMax_route@5 main_intToEnum_route@6 main_enumToInt_route@7 main_decodeEnum_route@8
+    err
+
+main_decodeEnum_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    dig 2
+    extract 2 32
+    pushint 24
+    extract_uint64
+    dup
+    intc_3 // 256
+    <
+    assert // enum out of range
+    intc_1 // 255
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_enumToInt_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    dig 1
+    dup
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    dup
+    intc_1 // 255
+    <=
+    assert // ABI enum validation
+    intc_1 // 255
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_intToEnum_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    dupn 2
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    dup
+    intc_3 // 256
+    <
+    assert // enum out of range
+    intc_1 // 255
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_2 // 0
+    b main_ternary_merge@25
+
+main_getMinMax_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000000000000ff
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30

@@ -1,0 +1,25 @@
+info: puya-sol v0.1.0 — Solidity to Algorand Compiler
+info: Source: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol
+info: EVM version set to: cancun (hasChainID=true)
+info: Parsing and type-checking...
+info: Parse and type-check successful!
+info: Building AWST...
+info: Translating contract: D
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:125 warning: codesize() stubbed as 50 (no AVM equivalent)
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:148 error: unsupported Yul builtin function `codecopy`: no AVM translation exists, so it would be stubbed as 0 — a silent wrong value.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:1 warning: dynamic/computed storage slots (assembly .slot / sload) are folded mod 256 into a single __dyn_storage box; distinct slots congruent mod 256 will ALIAS. Verify computed-slot storage (proxies, hand-rolled mappings) is collision-free.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:1 warning: dynamic/computed storage slots (assembly .slot / sstore) are folded mod 256 into a single __dyn_storage box; distinct slots congruent mod 256 will ALIAS. Verify computed-slot storage (proxies, hand-rolled mappings) is collision-free.
+info: Translating contract: C
+info: 'new D()' — using template variables for child bytecode (substitute before deployment).
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:401 warning: type(C).runtimeCode has no AVM analog — stubbed as 32 zero bytes; code that depends on the actual bytecode will misbehave
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:511 error: `extcodesize(addr)` is not supported on AVM — there is no way to query whether an arbitrary address has code, so the old stub returned 1 ('everything is a contract'), silently making `extcodesize(a) > 0` EOA-vs-contract guards always true.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:538 error: unsupported Yul builtin function `extcodecopy`: no AVM translation exists, so it would be stubbed as 0 — a silent wrong value.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:663 warning: type(C).runtimeCode has no AVM analog — stubbed as 32 zero bytes; code that depends on the actual bytecode will misbehave
+info: 'new D()' — using template variables for child bytecode (substitute before deployment).
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:879 warning: type(C).creationCode has no AVM analog — stubbed as 32 zero bytes; code that depends on the actual bytecode will misbehave
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:1 warning: dynamic/computed storage slots (assembly .slot / sload) are folded mod 256 into a single __dyn_storage box; distinct slots congruent mod 256 will ALIAS. Verify computed-slot storage (proxies, hand-rolled mappings) is collision-free.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:1 warning: dynamic/computed storage slots (assembly .slot / sstore) are folded mod 256 into a single __dyn_storage box; distinct slots congruent mod 256 will ALIAS. Verify computed-slot storage (proxies, hand-rolled mappings) is collision-free.
+info: Generated 2 AWST root node(s)
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_various_test_various.py_test_code_access_content/awst.json
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_various_test_various.py_test_code_access_content/options.json
+info: Completed with 8 warning(s)

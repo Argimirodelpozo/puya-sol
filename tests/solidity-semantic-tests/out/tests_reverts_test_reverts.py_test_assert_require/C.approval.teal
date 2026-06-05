@@ -1,0 +1,119 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/assert_require.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c7580
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xda75597a 0xd432046b // method "f()void", method "g(bool)bool", method "h(bool)bool"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7
+    err
+
+main_h_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    assert
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_g_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    intc_0 // 1
+    ==
+    assert
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    err
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

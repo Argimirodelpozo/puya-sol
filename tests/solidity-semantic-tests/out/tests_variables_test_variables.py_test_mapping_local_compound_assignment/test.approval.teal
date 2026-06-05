@@ -1,0 +1,124 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/mapping_local_compound_assignment.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0 255 2
+    bytecblock "__ctor_pending" 0x2dca610e8c003a3aa143b11564af20161e369da5a1a111a9bb53fff5f1a1683d
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x87798b92 // method "__postInit()void", method "f()(uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushint 42
+    itob
+    bytec_1 // 0x2dca610e8c003a3aa143b11564af20161e369da5a1a111a9bb53fff5f1a1683d
+    swap
+    box_put
+    pushint 21
+    itob
+    pushbytes 0xb158f50a66470918edff626b3ef0d1b4e8a94d557720bc54610e8c46b23fbc4f
+    dig 1
+    box_put
+    bytec_1 // 0x2dca610e8c003a3aa143b11564af20161e369da5a1a111a9bb53fff5f1a1683d
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 255
+    &
+    pushbytes 0x884757dafc0167627d52479d6a944538349a0bf31e0587b216bf48c5e6aa4cb3
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 255
+    &
+    pushbytes 0xaa279f4955af0f13157ad8b47d5f5b00ad7cb3b6cb55b0930eddd5bb48104cc3
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 255
+    &
+    uncover 2
+    itob
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "m1"
+    intc_3 // 2
+    box_create
+    pop
+    pushbytes "m2"
+    intc_3 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return

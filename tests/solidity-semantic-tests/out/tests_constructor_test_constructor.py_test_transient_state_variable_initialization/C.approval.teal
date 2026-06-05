@@ -1,0 +1,84 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol.C.approval_program() -> uint64:
+main:
+    intcblock 16 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "x" 0x
+    app_global_put
+    load 5
+    pushbytes 0x00000000000000000000000000000064
+    replace2 16
+    store 5
+    load 5
+    extract 16 16
+    pushbytes "y"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x599dbca4 // method "f()uint128"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_0 // 16
+    bzero
+    intc_2 // 0
+    pushbytes "y"
+    app_global_get_ex
+    assert // check y exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

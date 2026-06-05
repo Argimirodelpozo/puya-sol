@@ -1,0 +1,103 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/external_call_with_storage_array_parameter.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "x"
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc14ad39f // method "g(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dig 1
+    dup
+    cover 2
+    replace2 32 // on error: index access is out of bounds
+    swap
+    replace2 0 // on error: index access is out of bounds
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    callsub L.f
+    pop
+    bytec_0 // "x"
+    swap
+    app_global_put
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/external_call_with_storage_array_parameter.sol.L.f(_a: bytes) -> bytes, bytes, bytes:
+L.f:
+    proto 1 3
+    frame_dig -1
+    extract 0 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 32 32 // on error: index access is out of bounds
+    b*
+    frame_dig -1
+    dup
+    retsub

@@ -1,0 +1,91 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_attached_to_fixed_bytes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 65535 0 2
+    intc_2 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x35184c44 // method "sum(byte[2],byte[2])byte[2]"
+    txna ApplicationArgs 0
+    match main_sum_route@4
+    err
+
+main_sum_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_3 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_3 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    dup2
+    callsub L.add
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_attached_to_fixed_bytes.sol.L.add(a: bytes, b: bytes) -> bytes:
+L.add:
+    proto 2 1
+    frame_dig -2
+    btoi
+    intc_1 // 65535
+    &
+    frame_dig -1
+    btoi
+    intc_1 // 65535
+    &
+    +
+    dup
+    intc_1 // 65535
+    <=
+    assert // overflow
+    itob
+    extract 6 2
+    retsub

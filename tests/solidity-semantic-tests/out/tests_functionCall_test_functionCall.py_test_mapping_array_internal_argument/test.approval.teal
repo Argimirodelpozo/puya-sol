@@ -1,0 +1,352 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_array_internal_argument.sol.test.approval_program() -> uint64:
+main:
+    intcblock 255 0 1 8
+    bytecblock "a" 0x0004000600000000 "b" 0x151f7c75
+    pushbytes ""
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "a"
+    bytec_1 // 0x0004000600000000
+    app_global_put
+    bytec_2 // "b"
+    bytec_1 // 0x0004000600000000
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5c902989 0x4816d1a6 // method "set(uint64,uint64,uint64,uint64,uint64)(uint64,uint64,uint64,uint64)", method "get(uint64)(uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match main_set_route@5 main_get_route@6
+    err
+
+main_get_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 5
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    dig 4
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
+    &
+    itob
+    dup
+    pushbytes 0xd7fe8b5c4a504869334d9d78a1e3b18cb1c5d0946258af6182169b2095bc00a0
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_0 // 255
+    &
+    dig 1
+    pushbytes 0x3b196fd4907bedf51c3090e9835f2f7cb61e7ee1b2299ea3b8fed9b4183a822a
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_0 // 255
+    &
+    dig 2
+    pushbytes 0x33416ca544542451515a7469f2ab4453855aec530cc5f4a5d825191b150515e7
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_0 // 255
+    &
+    uncover 3
+    pushbytes 0x5c53585edd9ec296f5537f01ff9e47e2ba7977c75da7818dae99d0d524998967
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_0 // 255
+    &
+    uncover 3
+    itob
+    uncover 3
+    itob
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_set_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 5
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 4
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 3
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    dig 4
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
+    &
+    dig 4
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
+    &
+    dig 4
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
+    &
+    dig 4
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
+    &
+    dig 4
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
+    &
+    bytec_0 // "a"
+    dig 5
+    uncover 5
+    uncover 5
+    callsub set_internal
+    pop
+    cover 3
+    swap
+    bytec_2 // "b"
+    uncover 5
+    uncover 4
+    uncover 3
+    callsub set_internal
+    pop
+    cover 3
+    swap
+    intc_0 // 255
+    &
+    uncover 2
+    intc_0 // 255
+    &
+    uncover 2
+    intc_0 // 255
+    &
+    uncover 3
+    intc_0 // 255
+    &
+    uncover 3
+    itob
+    uncover 3
+    itob
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_array_internal_argument.sol.test.set_internal(m: bytes, key: uint64, value1: uint64, value2: uint64) -> uint64, uint64, bytes:
+set_internal:
+    proto 4 3
+    frame_dig -3
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    frame_dig -3
+    intc_0 // 255
+    &
+    frame_bury -3
+    frame_dig -2
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    frame_dig -2
+    intc_0 // 255
+    &
+    frame_bury -2
+    frame_dig -1
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    frame_dig -1
+    intc_0 // 255
+    &
+    frame_bury -1
+    frame_dig -3
+    itob
+    intc_1 // 0
+    itob
+    frame_dig -4
+    concat
+    sha256
+    dig 1
+    swap
+    concat
+    sha256
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 1
+    itob
+    frame_dig -4
+    concat
+    sha256
+    uncover 3
+    swap
+    concat
+    sha256
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    frame_dig -2
+    itob
+    uncover 4
+    swap
+    box_put
+    frame_dig -1
+    itob
+    uncover 2
+    swap
+    box_put
+    frame_dig -4
+    retsub

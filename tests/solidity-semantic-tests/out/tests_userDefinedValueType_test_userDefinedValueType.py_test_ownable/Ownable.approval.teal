@@ -1,0 +1,179 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/ownable.sol.Ownable.approval_program() -> uint64:
+main:
+    intcblock 0 1 24
+    bytecblock "owner" "__ctor_pending"
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x64e61812 0x3e2c61e5 0xb1bbb0a8 // method "__postInit()void", method "setOwner(address)void", method "renounceOwnership()void", method "owner()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setOwner_route@6 main_renounceOwnership_route@7 main_owner_route@8
+    err
+
+main_owner_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_renounceOwnership_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz main_after_if_else@22
+    global CallerApplicationID
+    assert // OnlyOwner
+    intc_2 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // OnlyOwner
+
+main_after_if_else@22:
+    bytec_0 // "owner"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_setOwner_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz main_after_if_else@29
+    global CallerApplicationID
+    assert // OnlyOwner
+    intc_2 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // OnlyOwner
+
+main_after_if_else@29:
+    intc_0 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    dig 1
+    dup
+    cover 2
+    concat
+    pushbytes 0x9a223efb // method "OwnershipTransferred(address,address)"
+    swap
+    concat
+    log
+    bytec_0 // "owner"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@26:
+    intc_0 // 0
+    b main_ternary_merge@27
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "owner"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return

@@ -1,0 +1,86 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_shadowing_file_level.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xce8354ad 0x42559282 // method "main()(byte[32],byte[32],byte[32])", method "k_main()(byte[32],byte[32],byte[32])"
+    txna ApplicationArgs 0
+    match main_main_route@5 main_k_main_route@6
+    err
+
+main_k_main_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    callsub K.main
+    cover 2
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_main_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushbytes 0x151f7c753e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d3e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_shadowing_file_level.sol.K.main() -> bytes, bytes, bytes:
+K.main:
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    pushbytes 0x3e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    retsub

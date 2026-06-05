@@ -1,0 +1,72 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/read_in_ctor.sol.A.approval_program() -> uint64:
+main:
+    intcblock 0 1 3
+    bytecblock "x" "a"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "a"
+    intc_2 // 3
+    app_global_put
+    bytec_0 // "x"
+    intc_2 // 3
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x262726a2 // method "readX()uint64"
+    txna ApplicationArgs 0
+    match main_readX_route@4
+    err
+
+main_readX_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushint 255
+    &
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

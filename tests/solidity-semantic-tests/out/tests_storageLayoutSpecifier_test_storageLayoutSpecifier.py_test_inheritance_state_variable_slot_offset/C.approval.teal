@@ -1,0 +1,127 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_state_variable_slot_offset.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "x" 0x
+    app_global_put
+    pushbytess "y" 0x
+    app_global_put
+    pushbytes "w"
+    intc_1 // 0
+    app_global_put
+    pushbytess "z" 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x558a5700 0xdc54cee4 0xbc35b963 0x1e4ed8da // method "xSlotOffset()(uint256,uint256)", method "ySlotOffset()(uint256,uint256)", method "wSlotOffset()(uint256,uint256)", method "zSlotOffset()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_xSlotOffset_route@5 main_ySlotOffset_route@6 main_wSlotOffset_route@7 main_zSlotOffset_route@8
+    err
+
+main_zSlotOffset_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_wSlotOffset_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_ySlotOffset_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_xSlotOffset_route@5:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30

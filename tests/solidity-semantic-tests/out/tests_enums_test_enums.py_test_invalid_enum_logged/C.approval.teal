@@ -1,0 +1,79 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/invalid_enum_logged.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2b01fe2a 0x68bafeb3 // method "test_log()uint256", method "test_log_ok()uint256"
+    txna ApplicationArgs 0
+    match main_test_log_route@5 main_test_log_ok_route@6
+    err
+
+main_test_log_ok_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    pushbytes 0xe1d77aac0000000000000000
+    log
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main_test_log_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    load 0
+    store 0
+    intc_1 // 0
+    assert // enum out of range
+    pushbytes 0xe1d77aac0000000000000005
+    log
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18

@@ -1,0 +1,121 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/homer.sol.Homer.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    intc_1 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4e22a3ba 0x027c6bc8 0xf76e680b // method "supportsInterface(byte[4])bool", method "is2D()bool", method "skinColor()string"
+    txna ApplicationArgs 0
+    match main_supportsInterface_route@5 main_is2D_route@6 main_skinColor_route@7
+    err
+
+main_skinColor_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000679656c6c6f77
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_is2D_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_supportsInterface_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    dup
+    pushbytes 0x01ffc9a7
+    ==
+    bnz main_bool_true@26
+    dup
+    pushbytes 0x73b6b492
+    ==
+    bz main_bool_false@27
+
+main_bool_true@26:
+    intc_0 // 1
+
+main_bool_merge@28:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bool_false@27:
+    intc_1 // 0
+    b main_bool_merge@28
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

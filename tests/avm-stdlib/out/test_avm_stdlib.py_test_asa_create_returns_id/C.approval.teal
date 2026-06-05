@@ -1,0 +1,365 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/claude-1000/multisource_f16i3wfn/contract.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 8 32
+    bytecblock 0x151f7c75 "createdAsa"
+    intc_0 // 0
+    dupn 2
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "createdAsa"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb6af3eae 0x72408b4f 0x4665a3dc 0x43d92000 0x6a617204 0x155a2205 0x09b79af6 0xa0348e03 // method "createIt()uint64", method "optInSelf(uint64)void", method "totalSupplyOf(uint64)uint256", method "balanceOfSelf(uint64)uint256", method "balanceOf(address,uint64)uint256", method "sendTo(uint64,address,uint256)void", method "destroyIt(uint64)void", method "createdAsa()uint64"
+    txna ApplicationArgs 0
+    match main_createIt_route@5 main_optInSelf_route@6 main_totalSupplyOf_route@7 main_balanceOfSelf_route@8 main_balanceOf_route@9 main_sendTo_route@10 main_destroyIt_route@11 main_createdAsa_route@12
+    err
+
+main_createdAsa_route@12:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "createdAsa"
+    app_global_get_ex
+    assert // check createdAsa exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main_destroyIt_route@11:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    itxn_begin
+    pushint 3
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ConfigAsset
+    itxn_submit
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_0 // 0
+    b main_ternary_merge@24
+
+main_sendTo_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 5
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    itxn_begin
+    intc_2 // 8
+    bzero
+    dig 4
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    global CurrentApplicationAddress
+    dig 2
+    itxn_field XferAsset
+    pushint 4
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field AssetSender
+    dig 2
+    itxn_field AssetReceiver
+    itxn_field AssetAmount
+    itxn_submit
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_0 // 0
+    b main_ternary_merge@29
+
+main_balanceOf_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    dig 2
+    dig 1
+    asset_holding_get AssetBalance
+    pop
+    itob
+    intc_3 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@33:
+    intc_0 // 0
+    b main_ternary_merge@34
+
+main_balanceOfSelf_route@8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    global CurrentApplicationAddress
+    dig 1
+    asset_holding_get AssetBalance
+    pop
+    itob
+    intc_3 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@38:
+    intc_0 // 0
+    b main_ternary_merge@39
+
+main_totalSupplyOf_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    dup
+    asset_params_get AssetTotal
+    pop
+    itob
+    intc_3 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@43:
+    intc_0 // 0
+    b main_ternary_merge@44
+
+main_optInSelf_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    itxn_begin
+    global CurrentApplicationAddress
+    dig 1
+    itxn_field XferAsset
+    pushint 4
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field AssetReceiver
+    intc_0 // 0
+    itxn_field AssetAmount
+    itxn_submit
+    intc_1 // 1
+    return
+
+main_ternary_false@48:
+    intc_0 // 0
+    b main_ternary_merge@49
+
+main_createIt_route@5:
+    txn GroupIndex
+    bz main_ternary_false@53
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@54:
+    !
+    assert // not payable
+    itxn_begin
+    global CurrentApplicationAddress
+    dupn 3
+    pushint 3
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    pushbytes "TEST"
+    itxn_field ConfigAssetUnitName
+    pushint 1000
+    itxn_field ConfigAssetTotal
+    itxn_field ConfigAssetReserve
+    pushbytes "Test Token"
+    itxn_field ConfigAssetName
+    itxn_field ConfigAssetManager
+    itxn_field ConfigAssetFreeze
+    intc_0 // 0
+    itxn_field ConfigAssetDecimals
+    itxn_field ConfigAssetClawback
+    itxn_submit
+    itxn CreatedAssetID
+    bytec_1 // "createdAsa"
+    dig 1
+    app_global_put
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@53:
+    intc_0 // 0
+    b main_ternary_merge@54

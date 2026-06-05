@@ -1,0 +1,329 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 8 0 31
+    bytecblock 0x0100 0x80 0xff 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
+    pushint 4096
+    bzero
+    dup
+    store 5
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "x"
+    intc_2 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcd78b354 0xf2b65f27 0xafedb2e5 0x3f4abdfd // method "f()uint256", method "g()void", method "h()uint256", method "x()uint512"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7 main_x_route@8
+    err
+
+main_x_route@8:
+    callsub x
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_h_route@7:
+    callsub h
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_g_route@6:
+    callsub g
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    load 5
+    intc_1 // 8
+    bzero
+    swap
+    bytec_2 // 0xff
+    replace2 31
+    store 5
+    callsub h
+    dig 1
+    swap
+    concat
+    callsub h
+    uncover 2
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    intc_1 // 8
+    extract3
+    bytec_2 // 0xff
+    b&
+    dup
+    bytec_1 // 0x80
+    b>=
+    bz main_ternary_false@23
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@24:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    b main_ternary_merge@24
+
+main_ternary_false@20:
+    intc_2 // 0
+    b main_ternary_merge@21
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    load 5
+    intc_3 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
+    b%
+    bytec_1 // 0x80
+    b<
+    bnz g_bool_true@5
+    load 5
+    intc_3 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
+    b%
+    bytec_1 // 0x80
+    b<
+    !
+    load 5
+    intc_3 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
+    b%
+    bytec_0 // 0x0100
+    b+
+    bytec 6 // 0x01
+    b-
+    bytec_0 // 0x0100
+    b%
+    bytec_1 // 0x80
+    b<
+    !
+    ==
+    bz g_bool_false@6
+
+g_bool_true@5:
+    intc_0 // 1
+
+g_bool_merge@7:
+    assert // signed arithmetic overflow
+    load 5
+    intc_1 // 8
+    bzero
+    load 5
+    intc_3 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
+    b%
+    bytec_0 // 0x0100
+    b+
+    bytec 6 // 0x01
+    b-
+    bytec_0 // 0x0100
+    b%
+    dig 1
+    swap
+    concat
+    load 5
+    intc_3 // 31
+    getbyte
+    itob
+    bytec_0 // 0x0100
+    b%
+    bytec_0 // 0x0100
+    b+
+    bytec 6 // 0x01
+    b-
+    bytec_0 // 0x0100
+    b%
+    uncover 2
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    intc_1 // 8
+    extract3
+    extract 7 1
+    replace2 31
+    store 5
+    retsub
+
+g_bool_false@6:
+    intc_2 // 0
+    b g_bool_merge@7
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol.C.h() -> bytes:
+h:
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    callsub g
+    intc_1 // 8
+    bzero
+    callsub x
+    dig 1
+    swap
+    concat
+    callsub x
+    uncover 2
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    intc_1 // 8
+    extract3
+    bytec_2 // 0xff
+    b&
+    dup
+    bytec_1 // 0x80
+    b>=
+    bz h_ternary_false@5
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+h_ternary_merge@6:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    retsub
+
+h_ternary_false@5:
+    b h_ternary_merge@6
+
+h_ternary_false@2:
+    intc_2 // 0
+    b h_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol.C.x() -> bytes:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
+    !
+    assert // not payable
+    load 5
+    intc_3 // 31
+    getbyte
+    itob
+    bytec_2 // 0xff
+    b&
+    dup
+    bytec_1 // 0x80
+    b>=
+    bz x_ternary_false@5
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+x_ternary_false@5:
+    retsub
+
+x_ternary_false@2:
+    intc_2 // 0
+    b x_ternary_merge@3

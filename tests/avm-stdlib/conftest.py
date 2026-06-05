@@ -18,7 +18,10 @@ import pytest
 
 from framework import Harness
 from framework.localnet import LocalNet
-from framework.paths import OUT_DIR
+
+# avm-stdlib writes its OWN out/ next to its tests — NOT the shared
+# solidity-semantic-tests out/ that framework.paths.OUT_DIR points at.
+OUT_DIR = Path(__file__).resolve().parent / "out"
 
 
 @pytest.fixture(scope="session")
