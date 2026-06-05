@@ -821,3 +821,20 @@ def test_balancedelta_int128(harness):
     assert a0(100, -200) == 100 and a1(100, -200) == -200      # +/-
     assert a0(-100, 200) == -100 and a1(-100, 200) == 200      # -/+
     assert a0(100, 200) == 100 and a1(100, 200) == 200         # both positive
+
+
+def test_protocolfee_swapfee(harness):
+    """inlineAssembly/contracts/protocolfee_swapfee.sol
+
+    V4 ProtocolFeeLibrary.calculateSwapFee Yul math: self + lpFee -
+    (self*lpFee / 1_000_000), inputs masked. Guards uint64 codegen of mul/div/sub.
+    """
+    app = harness.compile_and_deploy("inlineAssembly/contracts/protocolfee_swapfee.sol")
+
+    def f(self, lpFee):
+        return as_int(harness.call(app, "calculateSwapFee(uint16,uint24)", self, lpFee).abi_return)
+
+    assert f(1000, 3000) == 4000 - (1000 * 3000 // 1_000_000)          # 3997
+    assert f(0, 3000) == 3000                                          # 0 protocol fee
+    assert f(4095, 16777215) == 16781310 - (4095 * 16777215 // 1_000_000)  # max inputs
+    assert f(4096, 3000) == 3000                                       # self & 0xfff = 0
