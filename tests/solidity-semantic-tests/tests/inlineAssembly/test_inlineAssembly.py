@@ -622,6 +622,22 @@ def test_signextend_runtime(harness):
         r = harness.call(app, "se(uint256,uint256)", b, x)
         assert as_int(r.abi_return) == evm_se(b, x), f"signextend({b}, {hex(x)})"
 
+def test_signextend_adddelta(harness):
+    """inlineAssembly/contracts/signextend_adddelta.sol — Uniswap V4 LiquidityMath.addDelta:
+    signextend(15, y) (constant byte index) on a NEGATIVE int128, composed with a 128-bit add
+    and an shr(128) overflow guard. A removal (negative delta) must round-trip, not revert."""
+    app = harness.compile_and_deploy("inlineAssembly/contracts/signextend_adddelta.sol")
+    c = lambda *a, **k: harness.call(app, "addDelta(uint128,int128)", *a, **k)
+    # positive delta (add) — confirms routing + the non-negative path
+    assert as_int(c(5000000, 3000000).abi_return) == 8000000
+    assert as_int(c(0, 5000000).abi_return) == 5000000
+    # NEGATIVE delta (remove) — the bug: signextend(15, y) must sign-extend, so these
+    # must round-trip rather than revert/overflow.
+    assert as_int(c(5000000, -5000000).abi_return) == 0          # remove the whole position
+    assert as_int(c(10000000, -5000000).abi_return) == 5000000   # partial remove
+    # underflow: remove more than exists -> revert
+    assert c(3000000, -5000000, expect_revert=True).reverted
+
 def test_shadowing_local_function_opcode(harness):
     """inlineAssembly/contracts/shadowing_local_function_opcode.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/shadowing_local_function_opcode.sol")

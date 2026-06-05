@@ -305,77 +305,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 		return x;
 	}
 
-	uint64_t bitPos = (b + 1) * 8;
-
-	// Build: signBit = (x >> (bitPos - 1)) & 1
-	// Using shr pattern: x / 2^(bitPos-1) mod 2
-	auto shiftAmt = awst::makeBiguintConstant("1", _loc); // 2^(bitPos-1) via pow2
-
-	auto shiftConst = awst::makeIntegerConstant(bitPos - 1, _loc);
-
-	auto pow2shift = buildPowerOf2(std::move(shiftConst), _loc);
-
-	// x / 2^(bitPos-1)
-	auto shifted = makeBigUIntBinOp(x, awst::BigUIntBinaryOperator::FloorDiv, pow2shift, _loc);
-
-	// ... mod 2
-	auto two = awst::makeBiguintConstant("2", _loc);
-
-	auto signBit = makeBigUIntBinOp(shifted, awst::BigUIntBinaryOperator::Mod, two, _loc);
-
-	// signBit != 0  (i.e., sign bit is set)
-	auto zero = awst::makeBiguintConstant("0", _loc);
-
-	auto isNeg = awst::makeNumericCompare(signBit, awst::NumericComparison::Ne, zero, _loc);
-
-	// lowMask = 2^bitPos - 1
-	auto bitPosConst = awst::makeIntegerConstant(bitPos, _loc);
-
-	auto pow2BitPos = buildPowerOf2(std::move(bitPosConst), _loc);
-
-	auto oneBI = awst::makeBiguintConstant("1", _loc);
-
-	auto lowMask = makeBigUIntBinOp(pow2BitPos, awst::BigUIntBinaryOperator::Sub, oneBI, _loc);
-
-	// highMask = ~lowMask in 256 bits = (2^256 - 1) - lowMask
-	// Use MAX_UINT256 = 2^256 - 1
-	auto maxU256 = awst::makeBiguintConstant("115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc);
-
-	auto highMask = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, lowMask, _loc);
-
-	// Negative case: x | highMask (set all bits above bitPos)
-	auto xCastNeg = awst::makeAsBytes(x, _loc);
-
-	auto highMaskBytes = awst::makeAsBytes(highMask, _loc);
-
-	auto orCall = awst::makeBytesOr(std::move(xCastNeg), std::move(highMaskBytes), _loc);
-
-	auto negResult = awst::makeAsBiguint(std::move(orCall), _loc);
-
-	// Positive case: x & lowMask (clear all bits above bitPos)
-	// Re-create lowMask (can't reuse shared_ptr after move)
-	auto bitPosConst2 = awst::makeIntegerConstant(bitPos, _loc);
-
-	auto pow2BitPos2 = buildPowerOf2(std::move(bitPosConst2), _loc);
-
-	auto oneBI2 = awst::makeBiguintConstant("1", _loc);
-
-	auto lowMask2 = makeBigUIntBinOp(pow2BitPos2, awst::BigUIntBinaryOperator::Sub, oneBI2, _loc);
-
-	auto xCastPos = awst::makeAsBytes(x, _loc);
-
-	auto lowMask2Bytes = awst::makeAsBytes(lowMask2, _loc);
-
-	auto andCall = awst::makeIntrinsicCall("b&", awst::WType::bytesType(), _loc);
-	andCall->stackArgs.push_back(std::move(xCastPos));
-	andCall->stackArgs.push_back(std::move(lowMask2Bytes));
-
-	auto posResult = awst::makeAsBiguint(std::move(andCall), _loc);
-
-	// Conditional: isNeg ? negResult : posResult
-	return awst::makeConditional(
-		std::move(isNeg), std::move(negResult), std::move(posResult),
-		awst::WType::biguintType(), _loc);
+	// signextend(b, x) == sar(s, shl(s, x)) with s = 248 - 8*b (a constant here).
+	// shl moves byte b's sign bit (8*b+7) up to bit 255 (higher bits dropped by shl's
+	// mod-2^256 wrap); sar shifts it back, replicating the sign. This is the SAME
+	// on-chain-verified lowering as the runtime-b path, and crucially evaluates x ONCE.
+	// The earlier conditional-mask form reused x three times and derived the sign bit
+	// from the FULL x; it lowered inconsistently when signextend was composed inside a
+	// larger expression — e.g. Uniswap V4 LiquidityMath.addDelta's
+	// `add(and(x,mask), signextend(15, y))` for a NEGATIVE delta reverted instead of
+	// round-tripping (covered by inlineAssembly/signextend_adddelta).
+	uint64_t s = 248 - 8 * b;
+	auto sStr = std::to_string(s);
+	std::vector<std::shared_ptr<awst::Expression>> shlArgs{
+		awst::makeIntegerConstant(sStr, _loc, awst::WType::biguintType()), std::move(x)};
+	auto shifted = handleShl(shlArgs, _loc);
+	std::vector<std::shared_ptr<awst::Expression>> sarArgs{
+		awst::makeIntegerConstant(sStr, _loc, awst::WType::biguintType()), std::move(shifted)};
+	return handleSar(sarArgs, _loc);
 }
 
 
