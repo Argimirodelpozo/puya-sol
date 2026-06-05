@@ -150,6 +150,30 @@ def test_bitnot_biguint(harness):
     assert as_int(harness.call(app, "notU160(uint160)", 7).abi_return) == M160 - 7
 
 
+def test_safecast_toint128(harness):
+    """conversions/contracts/safecast_toint128.sol
+
+    SafeCast.toInt128(int256) incl. the MIN_INT128 (-2^127) edge: must round-trip
+    (downcasted == value), and out-of-range must revert. Guards signed int128(int256)
+    narrowing + the boundary check (V4/OZ SafeCast). int128 returns surface as the
+    unsigned 256-bit two's-complement bit-pattern -> s256.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/safecast_toint128.sol")
+    MIN, MAX = -(1 << 127), (1 << 127) - 1
+
+    def s256(u):
+        return u - (1 << 256) if u >= (1 << 255) else u
+
+    def f(v):
+        return s256(as_int(harness.call(app, "toInt128(int256)", v).abi_return))
+
+    assert f(MIN) == MIN          # MIN_INT128 round-trips (no spurious revert)
+    assert f(MAX) == MAX
+    assert f(-5) == -5 and f(1000) == 1000
+    assert harness.call(app, "toInt128(int256)", MIN - 1, expect_revert=True).reverted
+    assert harness.call(app, "toInt128(int256)", MAX + 1, expect_revert=True).reverted
+
+
 def test_function_type_array_to_storage(harness):
     """conversions/contracts/function_type_array_to_storage.sol"""
     app = harness.compile_and_deploy("conversions/contracts/function_type_array_to_storage.sol")
