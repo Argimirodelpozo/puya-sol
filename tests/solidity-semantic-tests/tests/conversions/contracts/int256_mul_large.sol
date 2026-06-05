@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// NOTE: puya-sol CUSTOM regression test — NOT part of the upstream Solidity
+// semantic-tests suite (added to guard a puya-sol-specific codegen path).
+
 // Repro of the V4 TickMath.getTickAtSqrtPrice log2 step the xfail blames:
 //   int256 log_sqrt10001 = log_2 * 255738958999603826347141;
 // log_2 is a large NEGATIVE int256 at MIN_SQRT_PRICE; the product (~2^148) is a

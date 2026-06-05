@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// NOTE: puya-sol CUSTOM regression test — NOT part of the upstream Solidity
+// semantic-tests suite (added to guard a puya-sol-specific codegen path).
+
 // Guard for the V4 SqrtPriceMath.getAmount0/1Delta(int128 liquidity) NEGATIVE
 // branch (remove-liquidity). The signed `liquidity < 0` ordering compare lowers
 // to "XOR both sides with 2^255" (the 256-bit sign bit). That is only correct

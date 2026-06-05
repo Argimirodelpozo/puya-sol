@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// NOTE: puya-sol CUSTOM regression test — NOT part of the upstream Solidity
+// semantic-tests suite (added to guard a puya-sol-specific codegen path).
+
 // Faithful repro of V4 ProtocolFeeLibrary.calculateSwapFee — a Yul assembly
 // block doing  self + lpFee - (self*lpFee / 1_000_000)  with masked inputs.
 // self<=0xfff (4095), lpFee<=0xffffff (16777215) so numerator<=~6.9e10 (fits

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// NOTE: puya-sol CUSTOM regression test — NOT part of the upstream Solidity
+// semantic-tests suite (added to guard a puya-sol-specific codegen path).
+
 // Regression guard: a storage reference RETURNED FROM A FUNCTION must stay a ref,
 // so a mutation through it persists. Mirrors Uniswap V4 Position:
 //   Position.State storage position = self.positions.get(...);  // ref via a library getter

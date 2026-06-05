@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+
+// NOTE: puya-sol CUSTOM regression test — NOT part of the upstream Solidity
+// semantic-tests suite (added to guard a puya-sol-specific codegen path).
 // V4 Position shape: a getter on a NESTED mapping field (self.positions) returns
 // an element storage ref, mutated via a method. `Outer.S storage self` -> a
 // nested `self.inner` mapping -> `Inner.getRef(self.inner, k)` -> `Inner.setN`.

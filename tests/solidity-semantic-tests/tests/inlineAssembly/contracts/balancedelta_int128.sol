@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// NOTE: puya-sol CUSTOM regression test — NOT part of the upstream Solidity
+// semantic-tests suite (added to guard a puya-sol-specific codegen path).
+
 // Guard for the V4 BalanceDelta pack/unpack with NEGATIVE int128 amounts (the
 // remove-liquidity / owed-to-caller deltas). Two int128 packed into an int256:
 //   bd = (amount0 << 128) | (amount1 & type(uint128).max)
