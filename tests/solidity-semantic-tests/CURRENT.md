@@ -2,7 +2,13 @@
 
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-05):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
-> `RESULTS_<sha>.txt`, not these version totals. Latest run **b9cf10135 =
+> `RESULTS_<sha>.txt`, not these version totals. Latest run **c977b4406 =
+> 1205 PASS / 59 FAIL / 78 xfailed** (RESULTS_c977b4406.txt), **zero regressions**
+> vs RESULTS_2266bc286 (IDENTICAL 59-fail set; +3 vs b9cf10135 = V4 stale-xfail
+> GUARDS: BalanceDelta int128 pack/unpack, ProtocolFeeLibrary.calculateSwapFee,
+> SafeCast.toInt128 — each confirms a V4 math cluster the compiler already handles,
+> so those V4 unit xfails un-xfail on the user's helper recompile).
+> _Prior:_ run **b9cf10135 =
 > 1202 PASS / 59 FAIL / 78 xfailed** (RESULTS_b9cf10135.txt), **zero regressions**
 > vs RESULTS_2266bc286 (IDENTICAL 59-fail set). **b9cf10135** = int128 ABI-param
 > decode sign-extension (FunctionBuilder ParamDecode.signedBits) — ROOT fix for the
