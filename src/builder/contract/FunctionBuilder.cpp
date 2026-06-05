@@ -341,6 +341,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		awst::WType const* arc4Type;
 		awst::SourceLocation loc;
 		unsigned maskBits = 0; // >0 for sub-64-bit unsigned types needing input masking
+		unsigned signedBits = 0; // >0 for signed 64<N<256 int params: sign-extend to 256-bit after decode
 	};
 	std::vector<ParamDecode> paramDecodes;
 	// Detect inline assembly early — needed to skip ARC4 param wrapping
@@ -391,7 +392,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
 				unsigned bits = intType ? intType->numBits() : 256;
 				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation});
+				// A signed sub-256 (64<N<256) param decodes to N-bit two's complement
+				// (2^N - X for negatives, bit 255 clear); sign-extend to canonical
+				// 256-bit after the decode so downstream 256-bit ops (signed compare,
+				// negate, casts) read its sign correctly. int256 is already canonical;
+				// <=64-bit signed is uint64-backed and handled by buildABIEntryChecks.
+				unsigned signedBits =
+					(intType && intType->isSigned() && bits > 64 && bits < 256) ? bits : 0;
+				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation, 0, signedBits});
 				arg.wtype = arc4Type;
 				continue;
 			}
@@ -714,7 +722,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				else
 				{
 					auto decode = awst::makeARC4Decode(std::move(arc4Var), pd.nativeType, pd.loc);
-					decodeExpr = std::move(decode);
+					// Canonicalise a signed sub-256 param to 256-bit two's complement —
+					// the ARC4 decode yields the N-bit form (2^N - X for negatives), and
+					// downstream 256-bit ops (the getAmount*Delta(int128) `liquidity<0`
+					// branch + its `-x`) would otherwise misread the sign.
+					if (pd.signedBits > 0)
+						decodeExpr = TypeCoercion::signExtendToUint256(
+							std::move(decode), pd.signedBits, pd.loc);
+					else
+						decodeExpr = std::move(decode);
 				}
 
 				auto target = awst::makeVarExpression(pd.name, pd.nativeType, pd.loc);

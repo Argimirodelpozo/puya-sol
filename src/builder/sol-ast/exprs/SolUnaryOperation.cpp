@@ -246,8 +246,31 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 		return xorOp;
 	}
 	auto expr = std::move(_operand);
+	// Width-aware bitwise NOT for a biguint-backed intN (64<N<256, or a sub-word
+	// uintN that landed in a biguint-typed context): ~x = x XOR (2^N - 1), masked
+	// to the Solidity type's bit width. A raw byte-level BitInvert inverts the
+	// wrong number of bits (e.g. ~uint128(5) must be 2^128-6, not ~0x05 = 0xFA),
+	// so `x & ~FLAG` (V4 LPFee removeOverrideFlagAndValidate / isOverride, uint24)
+	// silently became a no-op. Mirrors the uint64 path above; N==256 keeps the
+	// full-width BitInvert below (unchanged).
 	if (expr->wtype == awst::WType::biguintType())
 	{
+		unsigned maskBits = 0;
+		auto const* solType = m_unaryOp.subExpression().annotation().type;
+		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
+			solType = &udvt->underlyingType();
+		if (auto const* intType = dynamic_cast<IntegerType const*>(solType))
+			maskBits = intType->numBits();
+		if (maskBits > 0 && maskBits < 256)
+		{
+			solidity::u256 mask = (solidity::u256(1) << maskBits) - 1;
+			std::ostringstream oss; oss << mask;
+			auto maskConst = awst::makeIntegerConstant(
+				oss.str(), m_loc, awst::WType::biguintType());
+			return awst::makeBigUIntBinOp(
+				std::move(expr), awst::BigUIntBinaryOperator::BitXor,
+				std::move(maskConst), m_loc);
+		}
 		auto cast = awst::makeAsBytes(std::move(expr), m_loc);
 		expr = std::move(cast);
 	}

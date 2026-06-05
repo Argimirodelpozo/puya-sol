@@ -111,19 +111,43 @@ def test_signed_int128_neg(harness):
     assert as_int(harness.call(app, "magStored()").abi_return) == 4242
 
 
-@pytest.mark.xfail(reason="A ternary RETURNING int256 with a signed `x < 0` condition takes the "
-                   "WRONG branch for a negative int128 param: branch(-2000) returns the else-branch "
-                   "value computed with a non-canonical x (-(2^128-2000)) instead of 2000. The "
-                   "standalone sign check (isNeg) and uint128(-x) magnitude (mag) are correct now — "
-                   "this is a separate ternary/int256-composition lowering bug, and it's the exact "
-                   "shape of V4 getAmount0/1Delta(int128)'s negative branch, so it gates the V4 remove.")
 def test_signed_int128_neg_ternary(harness):
-    """conversions/contracts/signed_int128_neg.sol — the getAmount*Delta(int128) ternary shape."""
+    """conversions/contracts/signed_int128_neg.sol — the getAmount*Delta(int128) ternary shape.
+
+    A ternary RETURNING int256 with a signed `x < 0` condition, over a negative int128
+    param. This is the exact shape of V4 SqrtPriceMath.getAmount0/1Delta(int128)'s
+    negative branch (the remove-liquidity path). Fixed by sign-extending signed
+    64<N<256 params to canonical 256-bit at the ARC4 decode (FunctionBuilder), so the
+    `-x` negation and `x < 0` condition both read the sign correctly.
+    """
     app = harness.compile_and_deploy("conversions/contracts/signed_int128_neg.sol")
     BIG = 1000000000000000000
-    assert as_int(harness.call(app, "branch(int128)", -2000).abi_return) == 2000
-    assert as_int(harness.call(app, "branch(int128)", 2000).abi_return) == -2000
-    assert as_int(harness.call(app, "branch(int128)", -BIG).abi_return) == BIG
+    # branch returns int256; on the AVM it's an ARC4 uint256, so a NEGATIVE result is
+    # the 256-bit two's complement — sign-interpret before comparing.
+    def s256(u):
+        return u - (1 << 256) if u >= (1 << 255) else u
+    assert s256(as_int(harness.call(app, "branch(int128)", -2000).abi_return)) == 2000
+    assert s256(as_int(harness.call(app, "branch(int128)", 2000).abi_return)) == -2000
+    assert s256(as_int(harness.call(app, "branch(int128)", -BIG).abi_return)) == BIG
+
+
+def test_bitnot_biguint(harness):
+    """conversions/contracts/bitnot_biguint.sol
+
+    Bitwise NOT (~) on a biguint-backed intN (N>64) must mask to the type width
+    (~x = x XOR (2^N-1)), not invert the raw byte representation. Guards the V4
+    LPFee `x & ~OVERRIDE_FEE_FLAG` pattern, which silently became a no-op before.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/bitnot_biguint.sol")
+    M128 = (1 << 128) - 1
+    assert as_int(harness.call(app, "notU128(uint128)", 5).abi_return) == M128 - 5
+    assert as_int(harness.call(app, "notU128(uint128)", 0).abi_return) == M128
+    # clear bit 127 of a value that has it set + low bits: low bits survive
+    assert as_int(harness.call(app, "clearTopBit(uint128)", (1 << 127) | 0xABCD).abi_return) == 0xABCD
+    # clearing bit 127 when not set is a no-op
+    assert as_int(harness.call(app, "clearTopBit(uint128)", 0xABCD).abi_return) == 0xABCD
+    M160 = (1 << 160) - 1
+    assert as_int(harness.call(app, "notU160(uint160)", 7).abi_return) == M160 - 7
 
 
 def test_function_type_array_to_storage(harness):
