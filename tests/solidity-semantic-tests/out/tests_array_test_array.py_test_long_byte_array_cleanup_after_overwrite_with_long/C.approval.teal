@@ -166,9 +166,10 @@ main_ternary_merge@29:
     itob
     callsub getDataSlotContent
     load 0
+    store 0
     intc_2 // 32
     bzero
-    uncover 2
+    swap
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     pushbytes 0x0000000000000000000000000001000000000000000000000000000000000000
@@ -183,7 +184,7 @@ main_ternary_merge@29:
     intc_2 // 32
     extract3
     extract 0 14
-    swap
+    load 0
     store 0
     bytec_1 // 0x151f7c75
     swap
@@ -539,12 +540,15 @@ getDataSlotContent_ternary_merge@3:
     !
     assert // not payable
     load 0
+    store 0
+    load 0
     intc_2 // 32
     bzero
     swap
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
-    dup
+    store 0
+    load 0
     extract 0 32
     keccak256
     frame_dig -1
@@ -562,12 +566,12 @@ getDataSlotContent_ternary_merge@3:
     extract_uint64
     dup
     callsub __storage_read
-    dig 3
+    dig 2
     swap
     concat
     swap
     callsub __storage_read
-    uncover 3
+    uncover 2
     swap
     concat
     len
@@ -576,7 +580,7 @@ getDataSlotContent_ternary_merge@3:
     intc_2 // 32
     extract3
     extract 0 32
-    swap
+    load 0
     store 0
     retsub
 

@@ -144,8 +144,12 @@ main_ternary_merge@20:
     ==
     assert
     load 0
+    store 0
+    load 0
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000001ff
     replace2 32
+    store 0
+    load 0
     store 0
     swap
     callsub unwrap
@@ -231,6 +235,7 @@ main_ternary_false@29:
 wrap:
     proto 1 1
     load 0
+    store 0
     pushint 8
     bzero
     frame_dig -1
@@ -242,7 +247,7 @@ wrap:
     pushint 8
     -
     extract_uint64
-    swap
+    load 0
     store 0
     retsub
 
@@ -250,6 +255,8 @@ wrap:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/cleanup_abicoderv1.sol.unwrap(x: uint64) -> uint64:
 unwrap:
     proto 1 1
+    load 0
+    store 0
     load 0
     store 0
     frame_dig -1

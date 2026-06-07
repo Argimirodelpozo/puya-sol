@@ -6,7 +6,7 @@ main:
     intcblock 32 0 1
     bytecblock "st" 0x010000000000000000000000000000000000000000000000000000000000000000 0x
     intc_1 // 0
-    dupn 5
+    dupn 4
     pushint 4096
     bzero
     dup
@@ -71,7 +71,7 @@ main_ternary_merge@9:
     swap
     app_global_put
     load 0
-    bury 6
+    store 0
     dig 4
     bury 2
 
@@ -109,7 +109,7 @@ main_while_top@10:
     pushbytes 0x01
     b==
     bnz main_after_if_else@12
-    dig 5
+    load 0
     store 0
     intc_1 // 0
     bytec_0 // "st"

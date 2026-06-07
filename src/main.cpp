@@ -273,6 +273,7 @@ void printUsage(char const* _progName)
 		<< "  --opup-budget <N>      Inject ensure_budget(N) into ALL public methods (OpUp)\n"
 		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 2)\n"
+		<< "  --evm-memory-slots <N> Scratch slots for EVM memory (default 5 = 20KB; UltraHonk needs ~32)\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
@@ -355,6 +356,10 @@ Options parseArgs(int _argc, char* _argv[])
 		}
 		else if (arg == "--optimization-level" && i + 1 < _argc)
 			opts.optimizationLevel = std::stoi(_argv[++i]);
+		else if (arg == "--evm-memory-slots" && i + 1 < _argc)
+			// N scratch slots for EVM memory (=> MEMORY_SLOT_LAST = N-1). Default 5
+			// (20KB). Raise for memory-hungry contracts (UltraHonk verify => 32).
+			puyasol::builder::AssemblyBuilder::MEMORY_SLOT_LAST = std::stoi(_argv[++i]) - 1;
 		else if (arg == "--output-ir")
 			opts.outputIr = true;
 		else if (arg == "--no-output-logs")

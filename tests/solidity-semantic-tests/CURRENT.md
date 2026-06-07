@@ -1,13 +1,20 @@
 # Semantic Test Status — v331
 
-> **HONK SESSION (wip, 2026-06-07):** zero-regression checkpoint. Landed bug-1 (`abi.encodePacked`
-> of a DYNAMIC array prepended a 2-byte ARC4 length prefix → AbiEncoderBuilder.cpp strips it) +
-> bug-2 (FunctionSplitter blob carry now restores SCRATCH slot 0, not just the `__evm_memory`
-> local). Full suite at the dirty `wip` tree = **1206 PASS / 59 FAIL / 77 xfailed + 1 xpassed**
-> (RESULTS_honksession.txt) — fail-set IDENTICAL to baseline 32893e996 (zero regression; the lone
-> xpass is an improvement, likely the encodePacked fix). Honk verify still blocked on the v2
-> nested-aggregate gap (`proof.sumcheckUnivariates[round]` flat-write vs Solidity-pointer-read) —
-> see memory barretenberg-ultrahonk-status. out/ artifacts regenerated (multi-slot memory preamble).
+> **🎉 HONK SESSION (wip, 2026-06-07 LATE): UltraHonk Add2 proof VERIFIES TRUE on the AVM** via the
+> 8-piece uros split chain (16-txn single group). `=== VERIFY RESULT: True ===`. Four fixes this
+> session took it from a piece_1 memory crash to a passing verify (see memory
+> barretenberg-ultrahonk-status for the full trail): (1) removed the slot-0 `__evm_memory` local
+> cache — memoryVar/assignMemoryVar → loads(0)/stores(0); FunctionSplitter flush=no-op + carry
+> restores scratch for ALL slots [committable]; (2) stripped DBG scaffolding incl. the round-0
+> `break` that truncated the sumcheck [WIP source only]; (3) NEW `--evm-memory-slots N` flag
+> (AssemblyBuilder.h MEMORY_SLOT_LAST now a runtime static, default 4 → ZERO-reg; honk uses 32 =
+> 128KB for FrLib.invert's free-mem ptr) [committable]; (4) abi.decode(bytes,(bool)) was doing
+> btoi on the full 32-byte word — now extracts head word + low-8 like the uint64 path
+> (AbiEncoderBuilder.cpp); hit by the BN254 pairing result decode [committable, real frontend bug].
+> REMAINING: the REAL ≤190k group-budget constraint — verify consumes **1.25M** opcodes (piece_0
+> transcript 400k + piece_7 shplemini/pairing 494k each exceed 190k alone). Regression for the 3
+> committable fixes PENDING (run with DEFAULT slots=4). Prior checkpoint (bug-1 encodePacked +
+> bug-2 carry, committed 487de85f1) was **1206 PASS / 59 FAIL** = baseline 32893e996, zero-reg.
 
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-05):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via

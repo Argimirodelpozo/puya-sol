@@ -6,7 +6,7 @@ main:
     intcblock 2 32 0 1
     bytecblock "storageArray" 0x 0x01 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "__dyn_storage"
     intc_2 // 0
-    dupn 5
+    dupn 4
     bytec_1 // ""
     pushint 4096
     bzero
@@ -47,7 +47,7 @@ main_after_if_else@2:
 main_test_zeroed_indices_route@6:
     txna ApplicationArgs 1
     dup
-    bury 8
+    bury 7
     len
     intc_1 // 32
     ==
@@ -80,7 +80,7 @@ main_ternary_merge@17:
     intc_1 // 32
     /
     itob
-    dig 7
+    dig 6
     b<
     bz main_while_top@19
     bytec_0 // "storageArray"
@@ -108,7 +108,7 @@ main_ternary_merge@22:
     intc_1 // 32
     /
     itob
-    dig 7
+    dig 6
     b>
     bz main_after_while@24
     bytec_0 // "storageArray"
@@ -126,7 +126,7 @@ main_after_while@24:
 
 main_while_top@25:
     dig 3
-    dig 7
+    dig 6
     b<
     bz main_after_while@27
     dig 3
@@ -163,7 +163,7 @@ main_while_top@25:
     b main_while_top@25
 
 main_after_while@27:
-    dig 6
+    dig 5
     pushbytes 0x03
     b>
     bz main_while_top@41
@@ -229,14 +229,16 @@ main_after_while@38:
 
 main_while_top@39:
     dig 1
-    dig 7
+    dig 6
     b<
     bz main_while_top@41
     load 0
+    store 0
+    load 0
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
-    dup
-    bury 7
+    store 0
+    load 0
     extract 0 32
     keccak256
     dig 4
@@ -273,7 +275,7 @@ main_after_inlined___puyasol___storage_read@58:
     !
     !
     assert // revert
-    dig 5
+    load 0
     store 0
     dig 1
     bytec_2 // 0x01
@@ -340,7 +342,7 @@ main_ternary_merge@49:
     intc_1 // 32
     /
     itob
-    dig 7
+    dig 6
     b<
     bz main_after_while@51
     bytec_0 // "storageArray"
@@ -357,7 +359,7 @@ main_after_while@51:
 
 main_while_top@52:
     dig 2
-    dig 7
+    dig 6
     b<
     bz main_after_while@54
     pushint 8
@@ -384,11 +386,12 @@ main_while_top@52:
     dup
     assert
     load 0
+    store 0
     bytec_1 // 0x
     bytec_2 // 0x01
-    uncover 3
+    uncover 2
     select
-    swap
+    load 0
     store 0
     bytec_2 // 0x01
     b==

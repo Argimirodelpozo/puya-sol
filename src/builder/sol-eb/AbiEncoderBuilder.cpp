@@ -406,7 +406,11 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	if (!targetType || decoded->wtype == targetType)
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(decoded));
 
-	// Bool decode: btoi != 0
+	// Bool decode: ABI bool is a 32-byte big-endian word (0/1). Extract the head
+	// word and narrow via its low 8 bytes (uint64FromAbiWord) before comparing to
+	// zero — a bare btoi on the full 32-byte word fails at runtime with
+	// "btoi arg too long, got 32 bytes" (mirrors the uint64 path below). This is
+	// hit by e.g. `abi.decode(staticcall(0x08,...) result, (bool))` (BN254 pairing).
 	if (targetType == awst::WType::boolType())
 	{
 		auto bytesExpr = std::move(decoded);
@@ -415,10 +419,11 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 			auto toBytes = awst::makeAsBytes(std::move(bytesExpr), _loc);
 			bytesExpr = std::move(toBytes);
 		}
-		auto btoi = awst::makeBtoi(std::move(bytesExpr), _loc);
-
+		auto head = awst::makeExtract3(std::move(bytesExpr),
+			awst::makeIntegerConstant("0", _loc), awst::makeIntegerConstant("32", _loc), _loc);
+		auto u64 = uint64FromAbiWord(std::move(head), _loc);
 		auto zero = awst::makeZero(_loc);
-		auto cmp = awst::makeNumericCompare(std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
+		auto cmp = awst::makeNumericCompare(std::move(u64), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(cmp));
 	}
 

@@ -5,7 +5,6 @@
 main:
     intcblock 32 1 0 2
     bytecblock "arr" 0x "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 "__dyn_storage"
-    intc_2 // 0
     bytec_1 // ""
     pushint 4096
     bzero
@@ -55,17 +54,25 @@ main_ternary_merge@15:
     !
     assert // not payable
     load 0
+    store 0
+    load 0
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
-    dup
-    bury 3
+    store 0
     pushint 8
     bzero
-    swap
+    load 0
     extract 0 32
     keccak256
+    dig 1
+    swap
     concat
-    dup
+    load 0
+    extract 0 32
+    keccak256
+    uncover 2
+    swap
+    concat
     len
     pushint 8
     -
@@ -86,7 +93,7 @@ main_ternary_merge@15:
     extract3
 
 main_after_inlined___puyasol___storage_read@29:
-    dig 2
+    load 0
     store 0
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%

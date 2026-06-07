@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8192
-    bytecblock 0x "__dyn_storage"
-    intc_1 // 0
+    intcblock 8 1 32 0
+    bytecblock 0x "__dyn_storage" 0x01
+    intc_3 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -25,7 +26,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -43,7 +44,7 @@ main_x_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -62,91 +63,163 @@ main_ternary_merge@14:
     concat
     replace2 64
     store 0
-    load 0
-    store 0
+    callsub getArray
+    pushint 24
+    extract_uint64
     bytec_1 // "__dyn_storage"
-    intc_3 // 8192
+    pushint 8192
     box_create
     pop
+    pushint 256
+    %
+    intc_2 // 32
+    *
     bytec_1 // "__dyn_storage"
-    pushint 8032
+    swap
     intc_2 // 32
     box_extract
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_3 // 0
     b main_ternary_merge@14
 
 main_clearArray_route@6:
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@19:
     !
     assert // not payable
-    load 0
-    store 0
-    pushint 18446744073709551611
+    callsub getArray
+    dup
+    len
+    intc_0 // 8
+    -
+    dig 1
+    swap
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 18446744073709551612
+    dup
+    bytec_2 // 0x01
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 18446744073709551613
+    dup
+    pushbytes 0x02
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 18446744073709551614
+    dup
+    pushbytes 0x03
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 18446744073709551615
+    dup
+    pushbytes 0x04
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    intc_1 // 0
+    dup
+    pushbytes 0x05
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    intc_0 // 1
+    dup
+    pushbytes 0x06
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 2
+    dup
+    pushbytes 0x07
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 3
+    dup
+    pushbytes 0x08
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    pushint 4
+    pushbytes 0x09
+    b+
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_3 // 0
     b main_ternary_merge@19
 
 main_fillArray_route@5:
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@24:
     !
     assert // not payable
-    load 0
-    store 0
-    intc_0 // 1
+    callsub getArray
+    bury 2
+    intc_1 // 1
     itob
     bury 1
 
@@ -155,29 +228,28 @@ main_while_top@25:
     pushbytes 0x0a
     b<
     bz main_after_while@27
-    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    dig 1
+    dup2
     dup
     cover 2
     b+
     dup
     len
-    pushint 8
+    intc_0 // 8
     -
     extract_uint64
     dig 1
     callsub __storage_write
-    pushbytes 0x01
+    bytec_2 // 0x01
     b+
     bury 1
     b main_while_top@25
 
 main_after_while@27:
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@23:
-    intc_1 // 0
+    intc_3 // 0
     b main_ternary_merge@24
 
 
@@ -185,7 +257,7 @@ main_ternary_false@23:
 __storage_write:
     proto 2 0
     bytec_1 // "__dyn_storage"
-    intc_3 // 8192
+    pushint 8192
     box_create
     pop
     frame_dig -2
@@ -206,4 +278,14 @@ __storage_write:
     bytec_1 // "__dyn_storage"
     cover 2
     box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete.sol.C.getArray() -> bytes:
+getArray:
+    load 0
+    store 0
+    load 0
+    store 0
+    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     retsub

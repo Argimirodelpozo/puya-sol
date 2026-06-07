@@ -49,11 +49,7 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
     load 0
     pushint 24
     bzero
@@ -70,11 +66,7 @@ main_ternary_merge@9:
     swap
     replace2 64
     store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
     load 0
     dup
     intc_0 // 88
@@ -87,11 +79,7 @@ main_ternary_merge@9:
     concat
     replace2 64
     store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
     load 0
     dup
     intc_0 // 88
@@ -116,11 +104,7 @@ main_ternary_merge@9:
     concat
     replace2 64
     store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
     dig 2
     dig 4
     b>=
@@ -192,3 +176,14 @@ main_ternary_merge@9:
 main_ternary_false@8:
     pushint 0
     b main_ternary_merge@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/contracts/return_variable.sol.C.memorySize() -> bytes:
+memorySize:
+    load 0
+    store 0
+    load 0
+    extract 64 32
+    load 0
+    store 0
+    retsub

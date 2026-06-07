@@ -85,6 +85,30 @@ main_g_route@6:
     -
     gtxns Amount
 
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 1
+    itob
+    bytec_0 // "a"
+    swap
+    app_global_put
+    load 0
+    store 0
+    err // revert
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
 main_ternary_merge@24:
     !
     assert // not payable
@@ -94,19 +118,6 @@ main_ternary_merge@24:
     swap
     app_global_put
     err // revert
-
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@24
-
-main_f_route@5:
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@24
 
 main_ternary_false@23:
     intc_1 // 0

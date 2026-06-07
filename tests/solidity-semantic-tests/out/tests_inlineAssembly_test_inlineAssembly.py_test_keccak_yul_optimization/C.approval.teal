@@ -6,7 +6,7 @@ main:
     intcblock 1 32 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     intc_2 // 0
-    dupn 2
+    dup
     pushint 4096
     bzero
     dup
@@ -54,9 +54,11 @@ main_ternary_merge@13:
     bytec_1 // 0x
     bury 1
     load 0
+    store 0
+    load 0
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
-    bury 3
+    store 0
     bytec_1 // 0x
     bury 2
 
@@ -65,7 +67,7 @@ main_while_top@14:
     pushbytes 0x14
     b<
     bz main_after_while@16
-    dig 2
+    load 0
     extract 32 16
     keccak256
     bury 1
@@ -78,7 +80,7 @@ main_while_top@14:
     b main_while_top@14
 
 main_after_while@16:
-    dig 2
+    load 0
     store 0
     dup
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -114,12 +116,15 @@ main_ternary_merge@21:
     !
     assert // not payable
     load 0
+    store 0
+    load 0
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
-    dup
+    store 0
+    load 0
     extract 32 16
     keccak256
-    swap
+    load 0
     store 0
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%

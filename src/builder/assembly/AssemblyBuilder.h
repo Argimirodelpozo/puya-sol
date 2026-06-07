@@ -86,11 +86,15 @@ public:
 
 	// ── Memory blob constants ──────────────────────────────────────────
 
-	/// Scratch slots reserved for EVM memory simulation.
-	/// Slots 0-4, each holding up to 4096 bytes = 20KB total.
+	/// Scratch slots reserved for EVM memory simulation. Default 5 slots
+	/// (0..4 = 20KB). Raise via `--evm-memory-slots N` (=> LAST = N-1) for
+	/// memory-hungry contracts — the UltraHonk verify needs ~32 slots (128KB) for
+	/// FrLib.invert's free-memory pointer (~30KB+ by shplemini). LAST is a
+	/// RUNTIME static (not constexpr): the default keeps every other contract's
+	/// preamble + cross-piece carry at 5 slots, so raising it for one compile is
+	/// zero size-regression for the rest of the suite.
 	static constexpr int MEMORY_SLOT_FIRST = 0;
-	static constexpr int MEMORY_SLOT_LAST = 4;
-	static constexpr int MEMORY_SLOT_COUNT = MEMORY_SLOT_LAST - MEMORY_SLOT_FIRST + 1;
+	static inline int MEMORY_SLOT_LAST = 4;
 	static constexpr int SLOT_SIZE = 4096;
 
 	/// Scratch slot reserved for EIP-1153 transient storage.

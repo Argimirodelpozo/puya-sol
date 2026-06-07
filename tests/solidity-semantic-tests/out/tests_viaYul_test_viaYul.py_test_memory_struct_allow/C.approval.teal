@@ -6,7 +6,7 @@ main:
     intcblock 4096 1 8 0
     bytecblock 0x000000000000000000000000000000000000000000000000000000000000002a
     intc_3 // 0
-    dupn 2
+    dup
     intc_0 // 4096
     bzero
     dup
@@ -52,8 +52,8 @@ main_ternary_merge@9:
     !
     assert // not payable
     load 0
-    dup
-    bury 4
+    store 0
+    load 0
     extract 64 32
     dup
     bury 3
@@ -72,11 +72,11 @@ main_ternary_merge@9:
     intc_0 // 4096
     <
     bz main_else_body@11
-    dig 3
+    load 0
     swap
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace3
-    bury 3
+    store 0
 
 main_after_if_else@12:
     dig 1
@@ -96,14 +96,14 @@ main_after_if_else@12:
     intc_0 // 4096
     <
     bz main_else_body@14
-    dig 3
+    load 0
     swap
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace3
-    bury 3
+    store 0
 
 main_after_if_else@15:
-    dig 2
+    load 0
     store 0
     load 0
     pushint 24

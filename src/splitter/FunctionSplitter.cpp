@@ -722,36 +722,21 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 // Carry the multi-slot EVM-memory blob (scratch slots MEMORY_SLOT_FIRST..LAST)
 // across a cross-chunk piece boundary via `gload`, so memory a prior piece wrote
 // (e.g. loadProof's decoded proof) is visible to later pieces. State threads
-// through SCRATCHSPACE (not boxes). Slot 0 is also the cached `__evm_memory`
-// local, so it's restored into that local; higher slots go straight to scratch.
+// through SCRATCHSPACE (not boxes); all slots restore straight to scratch.
 std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
 	int _prevCallTxnIndex, awst::SourceLocation const& _loc)
 {
 	using AB = builder::AssemblyBuilder;
 	std::vector<std::shared_ptr<awst::Statement>> out;
+	// No slot-0 local cache anymore (see AssemblyBuilder::memoryVar/assignMemoryVar):
+	// every slot, including 0, is restored straight to scratch via gload so the next
+	// piece's loads() observes the prior piece's writes. State threads SCRATCHSPACE.
 	for (int slot = AB::MEMORY_SLOT_FIRST; slot <= AB::MEMORY_SLOT_LAST; ++slot)
 	{
 		auto gload = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
 		gload->immediates = {_prevCallTxnIndex, slot};
-		if (slot == AB::MEMORY_SLOT_FIRST)
-		{
-			// Slot 0 lives in BOTH the cached `__evm_memory` local (read by
-			// const-offset / struct-field access) AND scratch slot 0 (read by
-			// blob-aggregate access via readMem*Direct=loads). Restore both, else
-			// blob-aggregate reads (e.g. proof.sumcheckUnivariates) see a bzero
-			// scratch slot in the next piece while the local is correct.
-			auto tgt = awst::makeVarExpression(std::string("__evm_memory"), awst::WType::bytesType(), _loc);
-			out.push_back(awst::makeAssignmentStatement(std::move(tgt), std::move(gload), _loc));
-			auto gload2 = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
-			gload2->immediates = {_prevCallTxnIndex, slot};
-			out.push_back(awst::makeExpressionStatement(
-				awst::makeStoreSlot(slot, std::move(gload2), _loc), _loc));
-		}
-		else
-		{
-			out.push_back(awst::makeExpressionStatement(
-				awst::makeStoreSlot(slot, std::move(gload), _loc), _loc));
-		}
+		out.push_back(awst::makeExpressionStatement(
+			awst::makeStoreSlot(slot, std::move(gload), _loc), _loc));
 	}
 	return out;
 }
@@ -762,7 +747,11 @@ std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
 std::shared_ptr<awst::Statement> makeBlobFlushStmt(awst::SourceLocation const& _loc)
 {
 	using AB = builder::AssemblyBuilder;
-	auto val = awst::makeVarExpression(std::string("__evm_memory"), awst::WType::bytesType(), _loc);
+	// Slot-0 has no local cache anymore (see AssemblyBuilder::memoryVar/assignMemoryVar):
+	// writes go straight to scratch, so slot 0 is already current. The flush would
+	// otherwise store the now-undefined `__evm_memory` local (uint64 0) into slot 0 and
+	// poison the next piece's gload. Re-store slot-0-from-itself => harmless no-op.
+	auto val = awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, _loc);
 	return awst::makeExpressionStatement(
 		awst::makeStoreSlot(AB::MEMORY_SLOT_FIRST, std::move(val), _loc), _loc);
 }
@@ -1017,8 +1006,9 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			// last — ends with the original return statement instead).
 			if (!isLast)
 			{
-				// Flush the cached __evm_memory local to scratch slot 0 so the
-				// next cross-chunk piece's gload sees the latest blob contents.
+				// Slot-0 sync point. With no local cache, slot 0 is already
+				// current in scratch (writes go straight there), so this is a
+				// no-op store-back guarding against any stray local-var flush.
 				if (spec.crossChunk)
 					pieceBody->body.push_back(makeBlobFlushStmt(origLoc));
 				for (auto& s : makeScratchStoreStmts(liveAt[pi], origLoc))

@@ -24,13 +24,14 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     load 0
+    store 0
     load 5
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 0
     store 5
     load 5
     extract 0 32
-    swap
+    load 0
     store 0
     pushbytes 0x2a
     b==
@@ -61,6 +62,7 @@ main_ternary_merge@9:
     !
     assert // not payable
     load 0
+    store 0
     load 5
     extract 0 32
     dup
@@ -68,7 +70,7 @@ main_ternary_merge@9:
     b==
     !
     assert // revert
-    swap
+    load 0
     store 0
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%

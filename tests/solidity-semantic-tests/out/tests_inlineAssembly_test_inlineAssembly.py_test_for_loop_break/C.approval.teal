@@ -6,7 +6,6 @@ main:
     intcblock 1 0 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
     intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -54,7 +53,7 @@ main_ternary_merge@9:
     pushbytes 0x
     bury 1
     load 0
-    bury 2
+    store 0
 
 main_while_top@10:
     dup
@@ -78,7 +77,7 @@ main_while_top@10:
     b main_while_top@10
 
 main_after_while@13:
-    dig 1
+    load 0
     store 0
     dup
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000

@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_asm.sol.C.approval_program() -> uint64:
 main:
-    intcblock 4096 1 0 8
+    intcblock 4096 1 8
     bytecblock 0x000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c
-    intc_2 // 0
     intc_0 // 4096
     bzero
     dup
@@ -51,30 +50,35 @@ main_ternary_merge@9:
     !
     assert // not payable
     load 0
-    dup
-    bury 2
-    intc_3 // 8
+    store 0
+    intc_2 // 8
     bzero
-    swap
+    load 0
     extract 64 32
+    dig 1
+    swap
     concat
-    dup
+    load 0
+    extract 64 32
+    uncover 2
+    swap
+    concat
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     dup
     intc_0 // 4096
     <
     bz main_else_body@11
-    dig 1
+    load 0
     swap
     bytec_0 // 0x000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c
     replace3
-    bury 1
+    store 0
 
 main_after_if_else@12:
-    dup
+    load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
@@ -96,5 +100,5 @@ main_else_body@11:
     b main_after_if_else@12
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

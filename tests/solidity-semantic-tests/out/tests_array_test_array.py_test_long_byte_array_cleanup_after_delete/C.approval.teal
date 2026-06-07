@@ -156,10 +156,11 @@ main_ternary_merge@36:
     assert // not payable
     callsub getArrayDataAreaSlot
     load 0
+    store 0
     intc_3 // 8
     bzero
     dup
-    dig 3
+    dig 2
     concat
     dup
     len
@@ -167,7 +168,7 @@ main_ternary_merge@36:
     -
     extract_uint64
     callsub __storage_read
-    dig 3
+    dig 2
     pushbytes 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -181,7 +182,7 @@ main_ternary_merge@36:
     -
     extract_uint64
     callsub __storage_read
-    dig 4
+    dig 3
     pushbytes 0x02
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -195,7 +196,7 @@ main_ternary_merge@36:
     -
     extract_uint64
     callsub __storage_read
-    uncover 5
+    uncover 4
     pushbytes 0x03
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -209,7 +210,7 @@ main_ternary_merge@36:
     -
     extract_uint64
     callsub __storage_read
-    uncover 4
+    load 0
     store 0
     uncover 3
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -392,12 +393,15 @@ getArrayDataAreaSlot_ternary_merge@3:
     !
     assert // not payable
     load 0
+    store 0
+    load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
-    dup
+    store 0
+    load 0
     extract 0 32
     keccak256
-    swap
+    load 0
     store 0
     dup
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563

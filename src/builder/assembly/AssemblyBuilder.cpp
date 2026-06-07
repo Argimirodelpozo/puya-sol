@@ -450,8 +450,11 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocation const& _loc)
 {
-	auto var = awst::makeVarExpression(MEMORY_VAR, awst::WType::bytesType(), _loc);
-	return var;
+	// Slot 0 is read straight from scratch (no local cache). The local cache made
+	// __evm_memory a long-lived L-stack value; in very large split pieces puya
+	// miscounted its dig at the flush (storing uint64 to slot 0). Going through
+	// scratch loads/stores removes that whole bug class.
+	return awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc);
 }
 
 void AssemblyBuilder::assignMemoryVar(
@@ -460,10 +463,9 @@ void AssemblyBuilder::assignMemoryVar(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	auto target = awst::makeVarExpression(MEMORY_VAR, awst::WType::bytesType(), _loc);
-
-	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(_value), _loc);
-	_out.push_back(std::move(assign));
+	// Write slot 0 straight to scratch (no local cache). See memoryVar().
+	_out.push_back(awst::makeExpressionStatement(
+		awst::makeStoreSlot(MEMORY_SLOT_FIRST, std::move(_value), _loc), _loc));
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
