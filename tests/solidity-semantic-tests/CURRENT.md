@@ -11,10 +11,19 @@
 > 128KB for FrLib.invert's free-mem ptr) [committable]; (4) abi.decode(bytes,(bool)) was doing
 > btoi on the full 32-byte word — now extracts head word + low-8 like the uint64 path
 > (AbiEncoderBuilder.cpp); hit by the BN254 pairing result decode [committable, real frontend bug].
-> REMAINING: the REAL ≤190k group-budget constraint — verify consumes **1.25M** opcodes (piece_0
-> transcript 400k + piece_7 shplemini/pairing 494k each exceed 190k alone). Regression for the 3
-> committable fixes PENDING (run with DEFAULT slots=4). Prior checkpoint (bug-1 encodePacked +
-> bug-2 carry, committed 487de85f1) was **1206 PASS / 59 FAIL** = baseline 32893e996, zero-reg.
+> The 3 committable fixes are COMMITTED **f32a49f95** — regression (default slots=4) = **1206 PASS /
+> 59 FAIL / 77 xfail + 1 xpass**, fail-set IDENTICAL to baseline 32893e996 (ZERO regression; xpass =
+> improvement; RESULTS_honkverify.txt; out/ regenerated). REMAINING: the REAL ≤190k group budget —
+> verify consumes **1.25M** opcodes under simulate (the per-txn extra_opcode_budget is the cheat the
+> user flagged). Budget is a PER-PIECE ceiling (~190k = base + a piece's own ≤256 opup inner txns;
+> budget doesn't flow backward). piece_0=400k & piece_7=494k each exceed it. Rebalancing WITHIN the
+> 8 pieces is BLOCKED: the 8 pieces are forced by SIZE (several near 8KB — stmt 52 alone = 7765B;
+> merging any two → >8KB → main-app ExtraProgramPages >3 → deploy fails), and the uros :cross dispatch
+> costs 2 txns/piece (prep program-swap + main), pinning at 8 pieces (16-txn no-multigroup cap). THE
+> UNLOCK (next session): a 1-txn/piece dispatch (separate pre-deployed apps + cross-app gload, not the
+> uros program-swap) → 16 pieces → ~78k/piece << 190k → fits real opup. Then re-split ~16-way
+> (source-chunk batchMul line 333 + loadProof) + --opup-budget per piece + harness extra_opcode_budget=0.
+> Full detail: memory barretenberg-ultrahonk-status.
 
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-05):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
