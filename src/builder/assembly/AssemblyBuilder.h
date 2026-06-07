@@ -120,6 +120,35 @@ public:
 	static std::vector<std::shared_ptr<awst::Statement>> emitFreeMemoryBump(
 		int _size, awst::SourceLocation const& _loc, int _uniqueId);
 
+	/// Read a 32-byte EVM-memory word at a DYNAMIC offset using DIRECT scratch
+	/// (`extract3(loads(off / SLOT_SIZE), off % SLOT_SIZE, 32)`) — no cached
+	/// __evm_memory local. For the plain-Solidity large-aggregate path, which
+	/// runs outside inline-assembly blocks. STATIC so sol-ast builders can call it.
+	static std::shared_ptr<awst::Expression> readMemWordDirect(
+		std::shared_ptr<awst::Expression> _offset,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Read `_byteLen` bytes from the multi-slot blob at a DYNAMIC offset by
+	/// concatenating successive 32-byte words (each slot-routed via
+	/// readMemWordDirect). For materialising a small (<=SLOT_SIZE) memory
+	/// aggregate VALUE (struct/static-array) out of the blob. `_byteLen` is
+	/// assumed 32-aligned (ABI static aggregates); trimmed if not.
+	static std::shared_ptr<awst::Expression> readMemRangeDirect(
+		std::shared_ptr<awst::Expression> _offset,
+		int _byteLen,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Write a 32-byte word (`_value32`, exactly 32 bytes) at a DYNAMIC offset
+	/// using DIRECT scratch (`stores(slot, replace3(loads(slot), sub, value))`).
+	static void writeMemWordDirect(
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _value32,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 private:
 	// ── Expression translation ──────────────────────────────────────────
 
@@ -531,6 +560,46 @@ private:
 	std::shared_ptr<awst::Expression> readMemSlot(
 		uint64_t _offset,
 		awst::SourceLocation const& _loc
+	);
+
+	/// Read a 32-byte EVM-memory word at a CONSTANT byte offset, routed to the
+	/// scratch slot that holds it (slot = offset / SLOT_SIZE). Slot 0 reads the
+	/// cached __evm_memory local (unchanged); higher slots read scratch
+	/// directly. Words that straddle a slot boundary are stitched via concat.
+	/// Returns bytes (32 bytes).
+	std::shared_ptr<awst::Expression> readMemWordConst(
+		uint64_t _offset,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Write a 32-byte EVM-memory word (`_value32`, exactly 32 bytes) at a
+	/// CONSTANT byte offset. Slot 0 updates the cached __evm_memory local;
+	/// higher slots load-modify-store the scratch slot. Straddling words are
+	/// split across the two adjacent slots.
+	void writeMemWordConst(
+		uint64_t _offset,
+		std::shared_ptr<awst::Expression> _value32,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Read a 32-byte EVM-memory word at a DYNAMIC (runtime) byte offset.
+	/// Fast path (offset < SLOT_SIZE) uses the cached __evm_memory local so
+	/// ≤4KB contracts are unchanged; the slow path routes to the higher slot
+	/// via `loads(offset / SLOT_SIZE)`. Returns bytes (32 bytes).
+	std::shared_ptr<awst::Expression> readMemWordDyn(
+		std::shared_ptr<awst::Expression> _offset,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Write a 32-byte EVM-memory word (`_value32`, exactly 32 bytes) at a
+	/// DYNAMIC byte offset. Fast path updates the cached __evm_memory local;
+	/// the slow path does `stores(slot, replace3(loads(slot), sub, value))`.
+	void writeMemWordDyn(
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _value32,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
 	/// Pad a biguint expression to exactly 32 zero-padded big-endian bytes.

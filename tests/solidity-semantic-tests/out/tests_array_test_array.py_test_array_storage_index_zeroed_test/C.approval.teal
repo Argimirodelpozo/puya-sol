@@ -12,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -225,19 +233,19 @@ main_while_top@39:
     b<
     bz main_while_top@41
     load 0
-    pushint 8
-    bzero
-    swap
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
-    bury 8
+    bury 7
     extract 0 32
     keccak256
-    dig 5
+    dig 4
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    pushint 8
+    bzero
+    swap
     concat
     dup
     len

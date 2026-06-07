@@ -38,10 +38,15 @@ private:
 		awst::ARC4Struct const* _structType,
 		std::shared_ptr<awst::Expression> _newBytes);
 
+	// _emitAsStatement: when true (tuple-destructure context), the copy-on-write
+	// store is queued directly as a statement and a truthy sentinel is returned;
+	// the field-value decode (which needs the single assignment's result type) is
+	// skipped, since the tuple path only needs the store's side effect.
 	std::shared_ptr<awst::Expression> handleStructFieldAssignment(
 		awst::FieldExpression const* _fieldExpr,
 		std::shared_ptr<awst::Expression> _value,
-		std::shared_ptr<awst::Expression> _unwrappedTarget);
+		std::shared_ptr<awst::Expression> _unwrappedTarget,
+		bool _emitAsStatement = false);
 
 	/// Build a TupleExpression with one field replaced.
 	std::shared_ptr<awst::Expression> buildTupleWithUpdatedField(
@@ -67,6 +72,12 @@ private:
 	/// and `offset = (i % elemsPerBox) * elemSize`, encodes the rhs as ARC4
 	/// element bytes, and emits `box_replace(<name> ++ itob(page), offset, bytes)`.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleMultiBoxArrayWrite();
+
+	/// `a[i] = v` where `a` is a >4KB memory aggregate living in the multi-slot
+	/// blob (registered in SolVariableDeclaration). Computes `base + i*elemSize`,
+	/// materialises the rhs once, pads to 32 bytes, and emits writeMemWordDirect
+	/// via prePendingStatements; returns the rhs value. nullopt if not blob-backed.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();
 
 	// ── toAwst pipeline phases (post-buildExpr) ─────────────────────────
 	//

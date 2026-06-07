@@ -232,6 +232,10 @@ struct Options
 	// like `_calculateUserAccountData` so its body can be sliced via
 	// `--fn-split` rather than dragged in whole). Repeatable.
 	std::vector<std::string> forceInlineSubs;
+	// --force-no-inline-sub: the inverse — set inlineOpt=false so a single-call
+	// subroutine stays a real callsub (NOT inlined into its caller). Needed to
+	// expose phase functions as slice boundaries for --fn-split. Repeatable.
+	std::vector<std::string> forceNoInlineSubs;
 
 	// --pure-helper-split <SubName>:<idx>,<idx>,...
 	//
@@ -363,6 +367,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)
 			opts.forceInlineSubs.push_back(_argv[++i]);
+		else if (arg == "--force-no-inline-sub" && i + 1 < _argc)
+			opts.forceNoInlineSubs.push_back(_argv[++i]);
 		else if (arg == "--pure-helper-split" && i + 1 < _argc)
 		{
 			std::string spec = _argv[++i];
@@ -919,6 +925,46 @@ int main(int _argc, char* _argv[])
 			logger.info(
 				"--force-inline-sub: marked " + std::to_string(hit.size())
 				+ " node(s) for inlining");
+	}
+
+	// ─── --force-no-inline-sub: flip inlineOpt=false on matching nodes ──────
+	// Inverse of --force-inline-sub: keep a single-call subroutine/method a real
+	// callsub (NOT inlined) so --fn-split can use the call as a slice boundary
+	// and the body lives in exactly one piece's chunk.
+	if (!opts.forceNoInlineSubs.empty())
+	{
+		std::set<std::string> wanted(
+			opts.forceNoInlineSubs.begin(), opts.forceNoInlineSubs.end());
+		std::set<std::string> hit;
+		for (auto& root : roots)
+		{
+			if (auto* sub = dynamic_cast<puyasol::awst::Subroutine*>(root.get()))
+			{
+				if (wanted.count(sub->name))
+				{
+					sub->inlineOpt = false;
+					hit.insert(sub->name);
+				}
+			}
+			else if (auto* contract = dynamic_cast<puyasol::awst::Contract*>(root.get()))
+			{
+				for (auto& m : contract->methods)
+					if (wanted.count(m.memberName))
+					{
+						m.inlineOpt = false;
+						hit.insert(m.memberName);
+					}
+			}
+		}
+		for (auto const& name : wanted)
+			if (!hit.count(name))
+				logger.warning(
+					"--force-no-inline-sub: '" + name + "' not found "
+					"as Subroutine or ContractMethod in any root");
+		if (!hit.empty())
+			logger.info(
+				"--force-no-inline-sub: marked " + std::to_string(hit.size())
+				+ " node(s) non-inline");
 	}
 
 	// ─── --fn-split: slice subroutine bodies into pieces ─────────────────

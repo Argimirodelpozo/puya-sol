@@ -12,6 +12,8 @@
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
@@ -97,6 +99,15 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			return builder::storageRefReturnIsBytesKeyed(_funcDef)
 				? awst::WType::bytesType()
 				: awst::WType::uint64Type();
+		// Blob-backed >4KB memory return: subroutine returns the uint64 base
+		// offset (pointer model); the caller binds it (SolVariableDeclaration).
+		{
+			auto const& rp0 = _funcDef->returnParameters()[0];
+			if (!rp0->name().empty()
+				&& rp0->referenceLocation() == VariableDeclaration::Location::Memory
+				&& builder::computeEncodedElementSize(mapReturnType(rp0->type())) > builder::AssemblyBuilder::SLOT_SIZE)
+				return awst::WType::uint64Type();
+		}
 		return mapReturnType(_funcDef->returnParameters()[0]->type());
 	}
 
@@ -155,6 +166,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				paramTypes.push_back(awst::WType::bytesType());
 				mappingStorageParamIndices.insert(pi);
 			}
+			else if (param->referenceLocation() == VariableDeclaration::Location::Memory
+				&& builder::computeEncodedElementSize(m_ctx.typeMapper.map(param->type()))
+					> builder::AssemblyBuilder::SLOT_SIZE)
+				// Blob-backed (>4KB) memory aggregate: the callee receives the
+				// uint64 base offset (pointer model), not the struct value. The
+				// argument `p` resolves to its offset local (SolIdentifier).
+				paramTypes.push_back(awst::WType::uint64Type());
 			else
 				paramTypes.push_back(m_ctx.typeMapper.map(param->type()));
 		}

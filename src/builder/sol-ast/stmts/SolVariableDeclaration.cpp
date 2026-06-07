@@ -214,6 +214,26 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 		}
 
+		// Caller of a blob-backed memory return: `T memory p = blobAggFn(...)`.
+		// The call hands back the uint64 base offset; bind p's offset var +
+		// register it as a blob aggregate (no copy/FMP bump — the callee already
+		// allocated it in the shared blob). >4KB memory values can only originate
+		// from such a call (a >4KB value copy is impossible on the AVM).
+		if (initialValue
+			&& decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+			&& builder::computeEncodedElementSize(type) > builder::AssemblyBuilder::SLOT_SIZE)
+		{
+			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
+				builder::TypeCoercion::implicitNumericCast(
+					std::move(value), awst::WType::uint64Type(), m_loc),
+				m_loc));
+			m_blk.setBlobAggregate(decl.id(), offN);
+			m_blk.builderCtx().appendPendingTo(result);
+			return result;
+		}
+
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), m_loc);
 
 		m_blk.builderCtx().appendPendingTo(result);
@@ -226,6 +246,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			&& decl.referenceLocation() == VariableDeclaration::Location::Memory)
 		{
 			int sz = builder::computeEncodedElementSize(type);
+
+			// Aggregates larger than one scratch slot (4096 B) can't be held as a
+			// single AVM bytes value. Back them with the multi-slot EVM memory
+			// blob: bind the local to its runtime FMP base offset, register it so
+			// `t.field[i]` lowers to blob word read/writes (SolIndexAccess), and
+			// skip the oversized bzero default — the blob is pre-zeroed.
+			if (sz > builder::AssemblyBuilder::SLOT_SIZE)
+			{
+				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+				// base = current FMP (uint64) = extractUInt64(load(slot0), 88)
+				auto blob = awst::makeLoadSlot(builder::AssemblyBuilder::MEMORY_SLOT_FIRST, m_loc);
+				auto base = awst::makeExtractUInt64(
+					std::move(blob), awst::makeIntegerConstant("88", m_loc), m_loc);
+				result.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
+					std::move(base), m_loc));
+				for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
+						sz, m_loc, static_cast<int>(decl.id())))
+					result.push_back(std::move(s));
+				m_blk.setBlobAggregate(decl.id(), offN);
+				return result; // skip the normal (oversized) target = bzero(sz) assignment
+			}
+
 			if (sz > 0)
 				for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
 						sz, m_loc, static_cast<int>(decl.id())))

@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -47,13 +55,13 @@ main_ternary_merge@15:
     !
     assert // not payable
     load 0
-    pushint 8
-    bzero
-    swap
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
-    bury 4
+    bury 3
+    pushint 8
+    bzero
+    swap
     extract 0 32
     keccak256
     concat

@@ -135,6 +135,13 @@ struct ScopeState
 	/// (used as the box-key prefix for a `mapping(K=>V) storage` param).
 	std::unordered_map<int64_t, std::string> mappingKeyParams;
 
+	/// Local memory aggregate (`T memory t;`) whose encoded size exceeds one
+	/// scratch slot (>4096 B): decl ID → the uint64 local holding its runtime
+	/// EVM-memory base offset (FMP at allocation). Such aggregates live in the
+	/// multi-slot blob (not as a >4096 B value); `t.field[i]` lowers to a blob
+	/// word read/write at base + accumulated offset. See SolIndexAccess.
+	std::unordered_map<int64_t, std::string> blobAggregates;
+
 	/// Modifier-inliner param remap: when the same modifier is applied
 	/// multiple times in a function, each instance's locals get a unique
 	/// mangled name. Set/erased explicitly by the inliner around each
@@ -221,6 +228,14 @@ public:
 		return it != m_state->mappingKeyParams.end() ? it->second : std::string{};
 	}
 
+	/// Returns the runtime base-offset local name for a blob-backed memory
+	/// aggregate, or empty if `_declId` is not a blob aggregate.
+	std::string findBlobAggregate(int64_t _declId) const
+	{
+		auto it = m_state->blobAggregates.find(_declId);
+		return it != m_state->blobAggregates.end() ? it->second : std::string{};
+	}
+
 	ParamRemap const* findParamRemap(int64_t _declId) const
 	{
 		auto it = m_state->paramRemaps.find(_declId);
@@ -264,6 +279,11 @@ public:
 	void setMappingKeyParam(int64_t _declId, std::string _name)
 	{
 		m_state->mappingKeyParams[_declId] = std::move(_name);
+	}
+
+	void setBlobAggregate(int64_t _declId, std::string _offsetVar)
+	{
+		m_state->blobAggregates[_declId] = std::move(_offsetVar);
 	}
 
 	/// Toggle the enclosing function's constructor flag. Walks the chain

@@ -7,6 +7,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "awst/WType.h"
 
 #include <libsolidity/ast/AST.h>
@@ -212,7 +213,100 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	if (baseType && (baseType->category() == Type::Category::Mapping || isNestedMappingAccess))
 		return handleMappingAccess();
 
+	// Blob-backed memory aggregate scalar-leaf READ: `a[i]`, `p.field[i][j]`,
+	// `p.f.x` where the chain roots at a >4KB memory aggregate (registered in
+	// SolVariableDeclaration). Writes are handled in SolAssignment; aggregates
+	// <=4KB are not registered and fall through to the value model below.
+	if (!m_indexAccess.annotation().willBeWrittenTo)
+	{
+		if (auto off = resolveBlobOffset(m_ctx, m_scope, m_indexAccess, m_loc))
+			if (auto val = readBlobValue(
+					m_ctx, std::move(off), m_indexAccess.annotation().type, m_loc))
+				return val;
+	}
+
 	return handleRegularIndex();
+}
+
+std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
+	eb::ContractContext& _ctx, Context& _scope,
+	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+
+	// Root: Identifier referencing a blob-backed aggregate local → its base offset.
+	if (auto const* ident = dynamic_cast<Identifier const*>(&_node))
+	{
+		auto const* vd = dynamic_cast<VariableDeclaration const*>(
+			ident->annotation().referencedDeclaration);
+		if (!vd) return nullptr;
+		std::string offVar = _scope.findBlobAggregate(vd->id());
+		if (offVar.empty()) return nullptr;
+		return awst::makeVarExpression(offVar, awst::WType::uint64Type(), _loc);
+	}
+
+	// `base[i]` → parentOffset + i * sizeof(element-after-index).
+	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_node))
+	{
+		if (!ia->indexExpression()) return nullptr;
+		auto parent = resolveBlobOffset(_ctx, _scope, ia->baseExpression(), _loc);
+		if (!parent) return nullptr;
+		auto idx = _ctx.buildExpr(*ia->indexExpression());
+		idx = builder::TypeCoercion::implicitNumericCast(
+			std::move(idx), awst::WType::uint64Type(), _loc);
+		unsigned stride = builder::computeEncodedElementSize(
+			_ctx.typeMapper.map(ia->annotation().type));
+		return awst::makeUInt64BinOp(std::move(parent), awst::UInt64BinaryOperator::Add,
+			awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
+				awst::makeIntegerConstant(static_cast<uint64_t>(stride), _loc), _loc), _loc);
+	}
+
+	// `base.field` → parentOffset + sum of encoded sizes of preceding members.
+	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_node))
+	{
+		auto parent = resolveBlobOffset(_ctx, _scope, ma->expression(), _loc);
+		if (!parent) return nullptr;
+		auto const* structType = dynamic_cast<StructType const*>(
+			ma->expression().annotation().type);
+		if (!structType) return nullptr;
+		uint64_t fieldOff = 0;
+		for (auto const& m: structType->structDefinition().members())
+		{
+			if (m->name() == ma->memberName()) break;
+			fieldOff += static_cast<uint64_t>(
+				builder::computeEncodedElementSize(_ctx.typeMapper.map(m->type())));
+		}
+		if (fieldOff == 0) return parent;
+		return awst::makeUInt64BinOp(std::move(parent), awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(fieldOff, _loc), _loc);
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<awst::Expression> SolIndexAccess::readBlobValue(
+	eb::ContractContext& _ctx, std::shared_ptr<awst::Expression> _off,
+	solidity::frontend::Type const* _solType, awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+
+	bool isAggregate = _solType
+		&& (dynamic_cast<ArrayType const*>(_solType) || dynamic_cast<StructType const*>(_solType));
+
+	// Scalar leaf (Fr / uintN / bool / address) → one 32-byte word as biguint.
+	if (!isAggregate)
+		return awst::makeAsBiguint(
+			builder::AssemblyBuilder::readMemWordDirect(std::move(_off), _loc), _loc);
+
+	// Struct / static-array leaf: the blob holds the ARC4 (flat ABI) encoding —
+	// each field/element is a 32-byte big-endian word, exactly the ARC4 layout —
+	// so reinterpreting `sz` bytes as the mapped ARC4 type yields the value.
+	auto* mapped = _ctx.typeMapper.map(_solType);
+	int sz = builder::computeEncodedElementSize(mapped);
+	if (sz <= 0 || sz > builder::AssemblyBuilder::SLOT_SIZE)
+		return nullptr;  // too large to hold as a single value — caller falls back
+	return awst::makeReinterpretCast(
+		builder::AssemblyBuilder::readMemRangeDirect(std::move(_off), sz, _loc), mapped, _loc);
 }
 
 // ── IndexRangeAccess ──

@@ -7,6 +7,8 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -248,6 +250,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// Parameters — mapping storage refs become bytes (runtime key prefix).
 	// Free functions don't have storage refs, so the library-only branch is a no-op there.
 	std::set<size_t> mappingStorageParams;
+	std::set<size_t> blobAggParams;
 	for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
 	{
 		auto const& param = _func.parameters()[pi];
@@ -274,6 +277,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		{
 			arg.wtype = awst::WType::bytesType();
 			mappingStorageParams.insert(pi);
+		}
+		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+			&& computeEncodedElementSize(m_typeMapper.map(param->type())) > AssemblyBuilder::SLOT_SIZE)
+		{
+			// Memory aggregate >4KB → passed as its uint64 base offset into the
+			// multi-slot blob (pointer model); registered as a blob aggregate below.
+			arg.wtype = awst::WType::uint64Type();
+			blobAggParams.insert(pi);
 		}
 		else
 			arg.wtype = m_typeMapper.map(param->type());
@@ -339,6 +350,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			if (p->referenceLocation()
 				!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
+			if (blobAggParams.count(pi))
+				continue;  // blob-backed: shared via the multi-slot blob; mutations
+						   // are visible to the caller without return write-back
 			if (!p->type() || !isMemRefType(p->type()))
 				continue;
 			if (!detector.mutated.count(p->id()))
@@ -353,7 +367,17 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	{
 		std::vector<awst::WType const*> types;
 		for (auto const& rp: returnParams)
-			types.push_back(m_typeMapper.map(rp->type()));
+		{
+			// A >4KB memory return is blob-backed: it returns its uint64 base
+			// offset (pointer model); call sites reconstitute it (SolVariableDeclaration).
+			auto const* rpW = m_typeMapper.map(rp->type());
+			if (!rp->name().empty()
+				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+				&& computeEncodedElementSize(rpW) > AssemblyBuilder::SLOT_SIZE)
+				types.push_back(awst::WType::uint64Type());
+			else
+				types.push_back(rpW);
+		}
 		for (size_t idx: storageParamIndices)
 			types.push_back(sub->args[idx].wtype);
 		for (size_t idx: memoryRefParamIndices)
@@ -404,7 +428,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			std::string pname = param->name();
 			if (pname.empty())
 				pname = "_param" + std::to_string(pi);
-			auto* ptype = mappingStorageParams.count(pi) ? awst::WType::bytesType() : m_typeMapper.map(param->type());
+			auto* ptype = mappingStorageParams.count(pi) ? awst::WType::bytesType()
+				: blobAggParams.count(pi) ? awst::WType::uint64Type()
+				: m_typeMapper.map(param->type());
 			paramContext.emplace_back(pname, ptype);
 			if (auto const* solType = param->annotation().type)
 			{
@@ -457,6 +483,28 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
+	// Register memory return params >4KB as blob-backed aggregates (pointer
+	// model) so `p.field[i]` in the body lowers to multi-slot blob word access.
+	for (auto const& rp: returnParams)
+	{
+		if (rp->name().empty()
+			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
+			continue;
+		auto const* rpTypeB = m_typeMapper.map(rp->type());
+		if (computeEncodedElementSize(rpTypeB) > AssemblyBuilder::SLOT_SIZE)
+			fnCtx.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
+	}
+
+	// Register memory aggregate PARAMS >4KB as blob aggregates: the param's own
+	// local already holds the uint64 base offset (the caller passed it), so the
+	// offset var IS the param name — no FMP bump or binding needed.
+	for (size_t idx: blobAggParams)
+	{
+		auto const& param = _func.parameters()[idx];
+		std::string pname = param->name().empty() ? "_param" + std::to_string(idx) : param->name();
+		fnCtx.setBlobAggregate(param->id(), pname);
+	}
+
 	sub->body = sol_ast::buildBlock(blk, _func.body());
 
 	// Inline any modifier bodies into this library/free function. Same
@@ -484,10 +532,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			}
 		}
 
+		std::vector<solidity::frontend::VariableDeclaration const*> blobAggList;
+		for (size_t idx: blobAggParams)
+			blobAggList.push_back(_func.parameters()[idx].get());
+
 		FunctionTranslationCtx ftCtx{
 			m_typeMapper, exprBuilder, tr, _sourceFile,
 			fnCtx.params, sub->returnType, fnCtx.paramBitWidths,
 			std::move(namedReturnList), std::move(mappingKeyList),
+			std::move(blobAggList),
 			/*currentContract=*/nullptr,
 		};
 		inlineModifiers(ftCtx, _func, sub->body);
@@ -510,6 +563,12 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				&& storageRefReturnIsBytesKeyed(&_func))
 				continue;
 			auto* rpType = m_typeMapper.map(rp->type());
+
+			// Blob-backed (>4KB) memory returns are pre-zeroed in the preamble;
+			// skip the (oversized) bzero zero-init — they use the pointer model.
+			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+				&& computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
+				continue;
 
 			auto target = awst::makeVarExpression(rp->name(), rpType, loc);
 
@@ -545,6 +604,30 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), loc);
 			inits.push_back(std::move(assign));
 		}
+
+		// Blob-backed (>4KB) memory returns: bind the runtime base offset
+		// (current FMP, before the bump) + advance the FMP, prepended alongside
+		// the zero-inits. Matches the registration above + SolIndexAccess access.
+		for (auto const& rp: returnParams)
+		{
+			if (rp->referenceLocation()
+				!= solidity::frontend::VariableDeclaration::Location::Memory)
+				continue;
+			auto const* rpTypeC = m_typeMapper.map(rp->type());
+			int szC = computeEncodedElementSize(rpTypeC);
+			if (szC <= AssemblyBuilder::SLOT_SIZE)
+				continue;
+			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
+			auto blobLoad = awst::makeLoadSlot(AssemblyBuilder::MEMORY_SLOT_FIRST, loc);
+			auto base = awst::makeExtractUInt64(std::move(blobLoad),
+				awst::makeIntegerConstant("88", loc), loc);
+			inits.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(offN, awst::WType::uint64Type(), loc),
+				std::move(base), loc));
+			for (auto& s: AssemblyBuilder::emitFreeMemoryBump(szC, loc, static_cast<int>(rp->id())))
+				inits.push_back(std::move(s));
+		}
+
 		if (!inits.empty())
 		{
 			sub->body->body.insert(
@@ -705,8 +788,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			// the synthesized return tuple matches `sub->returnType`.
 			if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
-				auto var = awst::makeVarExpression(returnParams[0]->name(), m_typeMapper.map(returnParams[0]->type()), loc);
-				implicitReturn->value = std::move(var);
+				auto const* rp0W = m_typeMapper.map(returnParams[0]->type());
+				// Blob-backed >4KB memory return → return its uint64 base offset.
+				if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+					&& computeEncodedElementSize(rp0W) > AssemblyBuilder::SLOT_SIZE)
+					implicitReturn->value = awst::makeVarExpression(
+						"__blobagg_off_" + std::to_string(returnParams[0]->id()),
+						awst::WType::uint64Type(), loc);
+				else
+					implicitReturn->value = awst::makeVarExpression(
+						returnParams[0]->name(), rp0W, loc);
 			}
 			else
 			{

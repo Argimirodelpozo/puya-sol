@@ -3,6 +3,7 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -97,6 +98,28 @@ std::shared_ptr<awst::Block> buildBlock(
 		if (mp && !mp->name().empty())
 			fn.setMappingKeyParam(mp->id(), mp->name());
 
+	// Register memory return parameters larger than one scratch slot (4096 B) as
+	// blob-backed aggregates (pointer model), so `p.field[i]` in the body lowers
+	// to multi-slot blob word read/writes. The runtime base-offset local
+	// `__blobagg_off_<id>` is assigned + the FMP bumped in FunctionBuilder.
+	for (auto const* rp: _ctx.namedReturns)
+	{
+		if (!rp || rp->name().empty()
+			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
+			continue;
+		auto const* rpType = _ctx.typeMapper.map(rp->type());
+		if (computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
+			fn.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
+	}
+
+	// Register memory aggregate PARAMS >4KB as blob aggregates. Unlike returns,
+	// the param's own local already holds the uint64 base offset (the caller
+	// passed it — see SolInternalCall / SolIdentifier), so the offset var IS the
+	// param name; no FMP bump or binding is needed.
+	for (auto const* p: _ctx.blobAggParams)
+		if (p && !p->name().empty())
+			fn.setBlobAggregate(p->id(), p->name());
+
 	return sol_ast::buildBlock(blk, _block);
 }
 
@@ -121,6 +144,7 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 		m_currentBitWidths,
 		m_currentNamedReturns,
 		m_currentMappingKeyParams,
+		m_currentBlobAggParams,
 		m_currentContract,
 	};
 }
@@ -274,6 +298,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_currentPlaceholder.reset();
 	m_currentNamedReturns.clear();
 	m_currentMappingKeyParams.clear();
+	m_currentBlobAggParams.clear();
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;

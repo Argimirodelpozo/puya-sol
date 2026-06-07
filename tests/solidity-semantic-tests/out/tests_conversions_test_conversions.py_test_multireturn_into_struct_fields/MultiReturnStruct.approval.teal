@@ -3,20 +3,29 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/multireturn_struct.sol.MultiReturnStruct.approval_program() -> uint64:
 main:
-    intcblock 1 32 24 88
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0 24
+    bytecblock 0x151f7c75
+    intc_2 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -32,14 +41,16 @@ main_after_if_else@2:
 
 main_test2_route@6:
     txna ApplicationArgs 1
+    dup
+    bury 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -47,10 +58,10 @@ main_ternary_merge@13:
     !
     assert // not payable
     load 0
-    intc_2 // 24
+    intc_3 // 24
     bzero
     dig 1
-    intc_3 // 88
+    pushint 88
     extract_uint64
     pushint 64
     +
@@ -58,25 +69,70 @@ main_ternary_merge@13:
     concat
     replace2 64
     store 0
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    dupn 2
+    pushbytes 0x0a
+    b+
+    swap
+    pushbytes 0x14
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    swap
+    extract 32 32
+    concat
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@12:
-    pushint 0
+    intc_2 // 0
     b main_ternary_merge@13
 
 main_test4_route@5:
     txna ApplicationArgs 1
+    dup
+    bury 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -84,10 +140,10 @@ main_ternary_merge@18:
     !
     assert // not payable
     load 0
-    intc_2 // 24
+    intc_3 // 24
     bzero
     dig 1
-    intc_3 // 88
+    pushint 88
     extract_uint64
     pushint 128
     +
@@ -95,11 +151,118 @@ main_ternary_merge@18:
     concat
     replace2 64
     store 0
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    dupn 2
+    pushbytes 0x01
+    b+
+    dig 1
+    pushbytes 0x02
+    b+
+    dig 2
+    pushbytes 0x03
+    b+
+    uncover 3
+    pushbytes 0x04
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 4
+    b|
+    uncover 3
+    extract 96 32
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 3
+    b|
+    dig 2
+    extract 64 32
+    uncover 3
+    extract 96 32
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    dig 1
+    extract 32 32
+    dig 2
+    extract 64 32
+    uncover 3
+    extract 96 32
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    b+
+    dig 1
+    extract 64 32
+    b+
+    swap
+    extract 96 32
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@17:
-    pushint 0
+    intc_2 // 0
     b main_ternary_merge@18

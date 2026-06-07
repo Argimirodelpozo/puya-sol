@@ -55,6 +55,10 @@ struct FunctionTranslationCtx
 	std::map<std::string, unsigned> paramBitWidths;
 	std::vector<solidity::frontend::VariableDeclaration const*> namedReturns;
 	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
+	// Memory aggregate params >4KB: passed as their uint64 base offset into the
+	// multi-slot blob (pointer model). `buildBlock` registers each as a blob
+	// aggregate so `p.field[i]` in the body lowers to blob word access.
+	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
 
 	// Enclosing contract for modifier virtual-override lookup; nullable.
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
@@ -149,6 +153,7 @@ private:
 	std::shared_ptr<awst::Block> m_currentPlaceholder;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentNamedReturns;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentMappingKeyParams;
+	std::vector<solidity::frontend::VariableDeclaration const*> m_currentBlobAggParams;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
@@ -186,6 +191,16 @@ private:
 	)
 	{
 		m_currentMappingKeyParams = _params;
+	}
+
+	/// Set the blob-backed (>4KB) memory aggregate param decls for the current
+	/// function. `buildBlock` registers them on the function-body FunctionContext
+	/// so `p.field[i]` lowers to multi-slot blob word access (pointer model).
+	void setBlobAggParams(
+		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
+	)
+	{
+		m_currentBlobAggParams = _params;
 	}
 
 	/// Emit Solidity's non-payable check at method body entry:

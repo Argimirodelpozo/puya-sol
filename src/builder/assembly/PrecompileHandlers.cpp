@@ -172,8 +172,7 @@ void AssemblyBuilder::handleEcPairingRT(
 									std::shared_ptr<awst::Expression> off2)
 			-> std::shared_ptr<awst::Expression> {
 			auto extract = [&](std::shared_ptr<awst::Expression> off) {
-				auto a = awst::makeExtract3(memoryVar(_loc), std::move(off), awst::makeIntegerConstant("32", _loc), _loc);
-				return a;
+				return readMemWordDyn(std::move(off), _loc); // slot-aware (local for slot 0, loads beyond)
 			};
 			auto a = extract(std::move(off1));
 			auto b = extract(std::move(off2));
@@ -308,8 +307,13 @@ void AssemblyBuilder::handleModExpRT(
 	};
 	auto readSlot = [&](uint64_t slotOff) -> std::shared_ptr<awst::Expression>
 	{
-		auto extract = awst::makeExtract3(memoryVar(_loc), plusConst(baseOff(), slotOff), awst::makeIntegerConstant("32", _loc), _loc);
-		return awst::makeAsBiguint(std::move(extract), _loc);
+		// Slot-AWARE read via readMemWordDyn: `off < SLOT_SIZE ? memoryVar(slot-0
+		// local) : loads(off/SLOT_SIZE)`. The modexp input lands at the runtime free
+		// pointer; past slot 0 (honk verify ~18KB live memory) memoryVar reads garbage,
+		// but in a split piece slot-0 memory lives ONLY in the local (the blob prologue
+		// restores slot 0 → memoryVar, not scratch), so a loads-only read is wrong
+		// there. Dyn covers both, matching how runtime mload reads.
+		return awst::makeAsBiguint(readMemWordDyn(plusConst(baseOff(), slotOff), _loc), _loc);
 	};
 
 	auto base = readSlot(0x60);

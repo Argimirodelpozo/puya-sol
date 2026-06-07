@@ -15,6 +15,25 @@ public:
 	SolIndexAccess(eb::ContractContext& _ctx, solidity::frontend::IndexAccess const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
+	/// Walk an access chain (`a`, `a[i]`, `p.field[i][j]`, `p.f.x`) to its root.
+	/// If rooted at a blob-backed memory aggregate, returns the accumulated
+	/// uint64 byte-offset (base + Σ index*stride + field offsets); else nullptr.
+	/// Shared by SolIndexAccess (read), SolAssignment (write), SolMemberAccess.
+	static std::shared_ptr<awst::Expression> resolveBlobOffset(
+		eb::ContractContext& _ctx, Context& _scope,
+		solidity::frontend::Expression const& _node,
+		awst::SourceLocation const& _loc);
+
+	/// Materialise a VALUE read from the blob at `_off` for a leaf of Solidity
+	/// type `_solType`: a scalar leaf → `asBiguint(readMemWordDirect)`; a small
+	/// (<=SLOT_SIZE) struct/static-array leaf → `reinterpret(readMemRangeDirect,
+	/// arc4Type)`. Returns nullptr for aggregates too large to hold as a single
+	/// value (caller should fall back / pass a sub-offset). Consumes `_off`.
+	static std::shared_ptr<awst::Expression> readBlobValue(
+		eb::ContractContext& _ctx, std::shared_ptr<awst::Expression> _off,
+		solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
+
 private:
 	solidity::frontend::IndexAccess const& m_indexAccess;
 

@@ -152,10 +152,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 			_loc))
 		: base;
 
-	auto lenConst = awst::makeIntegerConstant(_count * 0x20, _loc);
-
-	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetExpr), std::move(lenConst), _loc);
-	return extract;
+	// Slot-aware per-word read (readMemWordDyn = `off<SLOT_SIZE ? memoryVar : loads`)
+	// rather than extract3 on the slot-0 memoryVar cache. EC precompile inputs live at
+	// the runtime free pointer; in a split piece slot-0 memory is only in the local
+	// while slot 1+ is in scratch, so the Dyn conditional is required (a loads-only
+	// read mishandles slot 0). Words may straddle a SLOT_SIZE boundary; each re-derives.
+	std::shared_ptr<awst::Expression> acc;
+	for (int i = 0; i < _count; ++i)
+	{
+		std::shared_ptr<awst::Expression> wordOff = (i == 0)
+			? offsetExpr
+			: awst::makeUInt64BinOp(offsetExpr, O::Add,
+				awst::makeIntegerConstant(static_cast<uint64_t>(i * 0x20), _loc), _loc);
+		auto word = readMemWordDyn(std::move(wordOff), _loc);
+		acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc) : std::move(word);
+	}
+	return acc;
 }
 
 void AssemblyBuilder::storeResultToMemoryRT(

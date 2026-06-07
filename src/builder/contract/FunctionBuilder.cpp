@@ -211,6 +211,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// External/DelegateCall) is handled inside `TypeMapper::map`'s
 		// `Type::Category::Function` case — no override needed here.
 		arg.wtype = m_typeMapper.map(param->type());
+		// Memory aggregate param >4KB → passed as its uint64 base offset (blob
+		// pointer model). The callee re-registers it as a blob aggregate
+		// (setBlobAggParams below) so `p.field[i]` lowers to blob word access.
+		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+			&& computeEncodedElementSize(arg.wtype) > AssemblyBuilder::SLOT_SIZE)
+			arg.wtype = awst::WType::uint64Type();
 		method.args.push_back(std::move(arg));
 		paramIndex++;
 	}
@@ -331,6 +337,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 	// ARC4 method config for public/external functions
 	method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
+
+	// uros chunked methods must NEVER be inlined: an inlined copy at an
+	// internal call site (e.g. verifySumcheck → relChunkMem) would bake the
+	// body into the CALLER's chunk, defeating the split (the body is duplicated
+	// instead of stubbed + reached via the staged inner-txn). Forcing a real
+	// SubroutineCall lets the uros backend stub it in non-owning chunks. No
+	// effect outside @custom:splitter contracts (chunk is empty there).
+	if (method.arc4MethodConfig.has_value())
+		if (auto* abiCfg = std::get_if<awst::ARC4ABIMethodConfig>(&*method.arc4MethodConfig))
+			if (!abiCfg->chunk.empty())
+				method.inlineOpt = false;
 
 	// For ARC4 methods, convert array/tuple parameter types to ARC4 encoding
 	// and prepare decode operations for the function body
@@ -514,6 +531,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				mappingKeyParamDecls.push_back(rp.get());
 		setMappingKeyParams(mappingKeyParamDecls);
 
+		// Blob-backed (>4KB) memory aggregate params: register so the body's
+		// `p.field[i]` reads/writes route through the multi-slot blob at the
+		// passed-in base offset (the param's value). Mirrors mappingKeyParamDecls.
+		std::vector<solidity::frontend::VariableDeclaration const*> blobAggParamDecls;
+		for (auto const& p: _func.parameters())
+			if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+				&& !p->name().empty()
+				&& computeEncodedElementSize(m_typeMapper.map(p->type())) > AssemblyBuilder::SLOT_SIZE)
+				blobAggParamDecls.push_back(p.get());
+		setBlobAggParams(blobAggParamDecls);
+
 		method.body = buildBlock(_func.body());
 
 		// Insert zero-initialization for named return variables
@@ -539,6 +567,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					continue;
 				auto* rpType = m_typeMapper.map(rp->type());
 
+				// Blob-backed (>4KB) memory returns are pre-zeroed in the preamble;
+				// skip the (oversized) bzero zero-init — they use the pointer model.
+				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+					&& computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
+					continue;
+
 				auto target = awst::makeVarExpression(rp->name(), rpType, method.sourceLocation);
 
 				auto zeroVal = StorageMapper::makeDefaultValue(rpType, method.sourceLocation);
@@ -555,6 +589,20 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				int sz = computeEncodedElementSize(rpType);
 				if (sz <= 0)
 					continue;
+				// Blob-backed (>4KB) memory return: bind its runtime base offset
+				// (current FMP, before the bump) to __blobagg_off_<id>, matching the
+				// blob-aggregate registration in ContractBuilder::buildBlock.
+				if (sz > AssemblyBuilder::SLOT_SIZE)
+				{
+					std::string offN = "__blobagg_off_" + std::to_string(rp->id());
+					auto blob = awst::makeLoadSlot(
+						AssemblyBuilder::MEMORY_SLOT_FIRST, method.sourceLocation);
+					auto base = awst::makeExtractUInt64(std::move(blob),
+						awst::makeIntegerConstant("88", method.sourceLocation), method.sourceLocation);
+					inits.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(offN, awst::WType::uint64Type(), method.sourceLocation),
+						std::move(base), method.sourceLocation));
+				}
 				for (auto& s: AssemblyBuilder::emitFreeMemoryBump(
 						sz, method.sourceLocation, static_cast<int>(rp->id())))
 					inits.push_back(std::move(s));

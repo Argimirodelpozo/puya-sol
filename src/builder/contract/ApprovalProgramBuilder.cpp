@@ -944,15 +944,20 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// split so the constructor body (which can declare `T memory t;` locals
 		// that emit FMP bumps reading slot 0) sees a properly initialized blob.
 		// Each app call gets fresh scratch space, so we must initialize on every call.
-		// store 0, bzero(4096) — pre-allocate a 4KB memory blob
+		// Pre-allocate the EVM memory blobs: `store <slot>, bzero(4096)` for each
+		// memory slot. Slots 1+ back memory aggregates / inline-assembly accesses
+		// above SLOT_SIZE (multi-slot EVM memory). Scratch is per-txn on AVM and
+		// an uninitialised slot reads as uint64 0 (not a 4096-byte blob), so we
+		// must bzero every memory slot on every app call before any load/replace.
 		{
-			auto storeOp = awst::makeStoreSlot(
-				AssemblyBuilder::MEMORY_SLOT_FIRST,
-				awst::makeBzero(AssemblyBuilder::SLOT_SIZE, method.sourceLocation),
-				method.sourceLocation);
-
-			auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
-			body->body.push_back(std::move(exprStmt));
+			for (int s = AssemblyBuilder::MEMORY_SLOT_FIRST; s <= AssemblyBuilder::MEMORY_SLOT_LAST; ++s)
+			{
+				auto storeOp = awst::makeStoreSlot(
+					s,
+					awst::makeBzero(AssemblyBuilder::SLOT_SIZE, method.sourceLocation),
+					method.sourceLocation);
+				body->body.push_back(awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation));
+			}
 
 			// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
 			auto loadBlob = awst::makeLoadSlot(

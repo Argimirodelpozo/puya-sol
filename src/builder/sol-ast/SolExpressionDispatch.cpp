@@ -16,6 +16,7 @@
 #include "builder/sol-ast/exprs/SolBinaryOperation.h"
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -102,6 +103,21 @@ public:
 
 	std::shared_ptr<awst::Expression> visitMemberAccess(MemberAccess const& _n) override
 	{
+		// Blob-backed aggregate scalar-leaf member read (`p.w1.x`): route through
+		// the multi-slot blob when the chain roots at a >4KB memory aggregate.
+		// resolveBlobOffset short-circuits (no index build) for non-blob-agg roots.
+		if (m_ctx.currentScope)
+		{
+			auto const* nt = _n.annotation().type;
+			if (nt)
+			{
+				auto loc0 = makeLoc(_n);
+				if (auto off = SolIndexAccess::resolveBlobOffset(m_ctx, *m_ctx.currentScope, _n, loc0))
+					if (auto val = SolIndexAccess::readBlobValue(m_ctx, std::move(off), nt, loc0))
+						return val;
+			}
+		}
+
 		SolExpressionFactory factory(m_ctx);
 		auto handler = factory.createMemberAccess(_n);
 		if (handler)

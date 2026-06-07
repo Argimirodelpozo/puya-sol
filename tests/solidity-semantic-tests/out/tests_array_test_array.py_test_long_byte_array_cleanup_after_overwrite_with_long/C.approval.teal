@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -531,11 +539,9 @@ getDataSlotContent_ternary_merge@3:
     !
     assert // not payable
     load 0
-    intc_3 // 8
-    bzero
     intc_2 // 32
     bzero
-    uncover 2
+    swap
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
@@ -545,7 +551,8 @@ getDataSlotContent_ternary_merge@3:
     b+
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    uncover 3
+    intc_3 // 8
+    bzero
     swap
     concat
     dup

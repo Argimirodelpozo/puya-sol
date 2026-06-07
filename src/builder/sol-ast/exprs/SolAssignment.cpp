@@ -12,6 +12,8 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-ast/exprs/SolIndexAccess.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -59,6 +61,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleTransientStateWrite())     return std::move(*r);
 	if (auto r = tryHandleStoragePointerReassign())  return std::move(*r);
 	if (auto r = tryHandleMultiBoxArrayWrite())      return std::move(*r);
+	if (auto r = tryHandleBlobAggregateWrite())      return std::move(*r);
 	if (auto r = tryHandlePushAssignRewrite(op))     return std::move(*r);
 
 	// (2) Build target + value (`tryHandlePushAssignRewrite` would have
@@ -106,6 +109,77 @@ SolAssignment::tryHandlePushAssignRewrite(Token _op)
 	m_ctx.pendingArrayPushValue.reset();
 	// `target` is now the ArrayExtend expression emitted by SolArrayMethod.
 	return target;
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleBlobAggregateWrite()
+{
+	// Writes into a blob-backed aggregate: scalar leaves (`a[i]=v`, `p.f.x=v`)
+	// and struct/array-valued copies (`p.w1 = bytesToG1Point(...)`).
+	if (m_assignment.assignmentOperator() != Token::Assign)
+		return std::nullopt;
+	auto const& lhs = m_assignment.leftHandSide();
+	auto const* lhsType = lhs.annotation().type;
+	if (!lhsType)
+		return std::nullopt;
+	auto off = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, lhs, m_loc);
+	if (!off)
+		return std::nullopt;
+
+	// Struct/array copy into a blob field: write the value's bytes word-by-word
+	// (each via writeMemWordDirect). Honk's G1Point = 2 uint256 (64 B, word
+	// aligned); only 32-byte-aligned aggregates are handled here.
+	if (dynamic_cast<ArrayType const*>(lhsType) || dynamic_cast<StructType const*>(lhsType))
+	{
+		int sz = builder::computeEncodedElementSize(m_ctx.typeMapper.map(lhsType));
+		if (sz <= 0 || sz % 32 != 0)
+			return std::nullopt;
+		auto agg = buildExpr(m_assignment.rightHandSide());
+		auto aggBytes = awst::makeAsBytes(std::move(agg), m_loc);
+		std::string offN = "__blobwa_off_" + std::to_string(m_assignment.id());
+		std::string vN = "__blobwa_v_" + std::to_string(m_assignment.id());
+		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc), std::move(off), m_loc));
+		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc), std::move(aggBytes), m_loc));
+		for (int i = 0; i * 32 < sz; ++i)
+		{
+			auto wordOff = awst::makeUInt64BinOp(
+				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
+				awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), m_loc), m_loc);
+			auto word = awst::makeExtract3(
+				awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc),
+				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), m_loc),
+				awst::makeIntegerConstant("32", m_loc), m_loc);
+			builder::AssemblyBuilder::writeMemWordDirect(
+				std::move(wordOff), std::move(word), m_loc, m_ctx.prePendingStatements);
+		}
+		return std::optional<std::shared_ptr<awst::Expression>>(
+			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc));
+	}
+
+	// Materialise the rhs once (may have side effects); the value is the
+	// assignment expression's result.
+	auto v = buildExpr(m_assignment.rightHandSide());
+	// Canonicalise the value to biguint (256-bit) so the 32-byte big-endian pad
+	// is valid (asBytes requires biguint/bytes, not uint64). Matches how a
+	// uint256/Fr element is stored as a full 32-byte EVM-memory word.
+	v = builder::TypeCoercion::implicitNumericCast(
+		std::move(v), awst::WType::biguintType(), m_loc);
+	std::string vN = "__blobassign_v_" + std::to_string(m_assignment.id());
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), std::move(v), m_loc));
+
+	// pad to exactly 32 big-endian bytes, then write the blob word.
+	auto vbytes = awst::makeExtractLastN(
+		awst::makeLeftPad(awst::makeAsBytes(
+			awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), m_loc), 32, m_loc), 32, m_loc);
+	builder::AssemblyBuilder::writeMemWordDirect(
+		std::move(off), std::move(vbytes), m_loc, m_ctx.prePendingStatements);
+
+	return std::optional<std::shared_ptr<awst::Expression>>(
+		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc));
 }
 
 std::shared_ptr<awst::Expression>

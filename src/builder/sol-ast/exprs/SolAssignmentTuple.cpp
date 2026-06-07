@@ -422,7 +422,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 
 			if (structType)
 			{
-				auto result = handleStructFieldAssignment(fieldExpr, std::move(assignValue), assignTarget);
+				// _emitAsStatement=true: the helper queues the copy-on-write store
+				// itself. Previously the tuple path discarded the returned value
+				// WITHOUT emitting the store, so `(s.a, s.b) = f()` computed f() but
+				// never wrote s.a/s.b — they kept their zero value (this was
+				// mis-attributed to a puya DCE bug; the writes were never emitted).
+				auto result = handleStructFieldAssignment(
+					fieldExpr, std::move(assignValue), assignTarget, /*_emitAsStatement=*/true);
 				if (result) continue;
 			}
 		}

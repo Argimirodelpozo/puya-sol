@@ -361,8 +361,23 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 			}
 			else
 			{
-				auto encode = awst::makeARC4Encode(std::move(arrayExpr), awst::WType::bytesType(), _loc);
-				return std::shared_ptr<awst::Expression>(std::move(encode));
+				// abi.encodePacked of a DYNAMIC array: ARC4-encode then STRIP the 2-byte
+				// length prefix. encodePacked concatenates the elements tight with NO
+				// length header (each element is its 32-byte ARC4 word for the 32-byte
+				// element types). Without the strip, the keccak input gains a spurious
+				// 2-byte prefix — this was silently corrupting EVERY Fiat-Shamir keccak in
+				// the honk transcript (eta and all downstream challenges wrong).
+				std::shared_ptr<awst::Expression> arc4 =
+					awst::makeARC4Encode(std::move(arrayExpr), awst::WType::bytesType(), _loc);
+				auto lenExpr = awst::makeLen(arc4, _loc);
+				auto lenMinus2 = awst::makeUInt64BinOp(
+					std::move(lenExpr), awst::UInt64BinaryOperator::Sub,
+					awst::makeIntegerConstant("2", _loc), _loc);
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
+				extract->stackArgs.push_back(arc4);
+				extract->stackArgs.push_back(awst::makeIntegerConstant("2", _loc));
+				extract->stackArgs.push_back(std::move(lenMinus2));
+				return extract;
 			}
 		}
 

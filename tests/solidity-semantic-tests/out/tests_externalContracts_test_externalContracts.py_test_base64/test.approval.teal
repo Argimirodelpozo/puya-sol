@@ -1,24 +1,32 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/claude-1000/multisource_z0kkbv2g/base64.sol.test.approval_program() -> uint64:
+// /tmp/claude-1000/multisource_8x7xv7i5/base64.sol.test.approval_program() -> uint64:
 main:
-    intcblock 8 32 0 1 255 16777215
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x03 0x3d 0x02 0x3f "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" 0x03e8 "foo" 0x151f7c75
-    intc_2 // 0
+    intcblock 32 8 4096 0 255 16777215
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x03 0x3d 0x02 0x3f "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" 0x03e8 "foo" 0x151f7c75
+    intc_3 // 0
     dup
-    pushint 4096
+    intc_2 // 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -36,23 +44,23 @@ main_encode_no_asm_large_route@8:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_2 // 0
+    intc_3 // 0
     itob
     bury 1
 
 main_while_top@16:
     dup
-    bytec 7 // 0x03e8
+    bytec 8 // 0x03e8
     b<
     bz main_after_while@26
-    bytec 8 // "foo"
+    bytec 9 // "foo"
     callsub NoAsmBase64.encode
     pop
     dup
@@ -62,34 +70,34 @@ main_while_top@16:
     b main_while_top@16
 
 main_after_while@26:
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@14:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@15
 
 main_encode_inline_asm_large_route@7:
     txn GroupIndex
     bz main_ternary_false@22
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
 main_ternary_merge@23:
     !
     assert // not payable
-    intc_2 // 0
+    intc_3 // 0
     itob
     bury 1
 
 main_while_top@24:
     dup
-    bytec 7 // 0x03e8
+    bytec 8 // 0x03e8
     b<
     bz main_after_while@26
-    bytec 8 // "foo"
+    bytec 9 // "foo"
     callsub InlineAsmBase64.encode
     pop
     dup
@@ -99,13 +107,13 @@ main_while_top@24:
     b main_while_top@24
 
 main_ternary_false@22:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@23
 
 main_encode_no_asm_route@6:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -118,7 +126,7 @@ main_encode_no_asm_route@6:
     txn GroupIndex
     bz main_ternary_false@30
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -133,21 +141,21 @@ main_ternary_merge@31:
     extract 6 2
     swap
     concat
-    bytec 9 // 0x151f7c75
+    bytec 10 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@30:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@31
 
 main_encode_inline_asm_route@5:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -160,7 +168,7 @@ main_encode_inline_asm_route@5:
     txn GroupIndex
     bz main_ternary_false@35
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -175,69 +183,71 @@ main_ternary_merge@36:
     extract 6 2
     swap
     concat
-    bytec 9 // 0x151f7c75
+    bytec 10 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@35:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@36
 
 
-// /tmp/claude-1000/multisource_z0kkbv2g/base64.sol.InlineAsmBase64.encode(data: bytes) -> bytes:
+// /tmp/claude-1000/multisource_8x7xv7i5/base64.sol.InlineAsmBase64.encode(data: bytes) -> bytes:
 InlineAsmBase64.encode:
     proto 1 1
-    intc_2 // 0
-    dupn 6
+    intc_3 // 0
+    dupn 10
+    bytec_2 // ""
+    dupn 11
     frame_dig -1
     len
     itob
     dup
-    pushbytes 0x
+    bytec_2 // 0x
     b==
     bz InlineAsmBase64.encode_after_if_else@2
-    pushbytes ""
+    bytec_2 // ""
     frame_bury 0
     retsub
 
 InlineAsmBase64.encode_after_if_else@2:
-    frame_dig 7
-    bytec 4 // 0x02
+    frame_dig 23
+    bytec 5 // 0x02
     b+
-    bytec_2 // 0x03
+    bytec_3 // 0x03
     b/
     pushbytes 0x04
     b*
-    intc_0 // 8
+    intc_1 // 8
     bzero
     dup
-    frame_bury 6
+    frame_bury 9
     dig 1
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     bzero
     frame_bury 3
     load 0
-    intc_1 // 32
+    intc_0 // 32
     bzero
     dup
-    frame_bury 5
+    frame_bury 6
     uncover 2
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
-    replace2 0
+    replace2 36
     frame_bury 0
     frame_dig -1
     dup
@@ -254,201 +264,297 @@ InlineAsmBase64.encode_while_top@3:
     frame_dig 1
     frame_dig 2
     b<
-    bz InlineAsmBase64.encode_after_while@41
+    bz InlineAsmBase64.encode_after_while@173
     frame_dig 1
-    bytec_2 // 0x03
+    bytec_3 // 0x03
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_bury 1
-    frame_dig 6
+    frame_dig 9
     dup
     frame_dig 4
-    dup
-    cover 3
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
+    frame_bury 15
     frame_dig -1
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000040000
     b/
-    bytec 5 // 0x3f
+    bytec 6 // 0x3f
     b&
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 2
-    swap
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
+    dup
+    frame_bury 21
+    intc_2 // 4096
+    <
+    dup
+    frame_bury 22
+    bz InlineAsmBase64.encode_ternary_false@18
     frame_dig 0
-    dup
-    uncover 2
-    intc_1 // 32
+    frame_dig 21
+    intc_0 // 32
     extract3
-    frame_dig 5
-    dup
-    cover 6
+
+InlineAsmBase64.encode_ternary_merge@31:
+    frame_dig 6
     swap
     concat
-    dup
+    frame_bury 7
+    frame_dig 22
+    bz InlineAsmBase64.encode_ternary_false@45
+    frame_dig 0
+    frame_dig 21
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@58:
+    frame_dig 6
+    swap
+    concat
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    frame_dig 7
+    swap
+    intc_0 // 32
     extract3
     extract 31 1
-    swap
-    cover 2
-    replace3
+    frame_dig 0
+    frame_dig 15
     uncover 2
+    replace3
+    frame_bury 0
+    frame_dig 4
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 2
-    dig 1
+    dup
+    frame_bury 4
+    frame_dig 9
+    dup
+    uncover 2
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
+    frame_bury 14
     frame_dig -1
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000001000
     b/
-    bytec 5 // 0x3f
+    bytec 6 // 0x3f
     b&
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 4
-    swap
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
-    dig 3
-    swap
-    intc_1 // 32
+    dup
+    frame_bury 16
+    intc_2 // 4096
+    <
+    dup
+    frame_bury 17
+    bz InlineAsmBase64.encode_ternary_false@72
+    frame_dig 0
+    frame_dig 16
+    intc_0 // 32
     extract3
-    dig 5
+
+InlineAsmBase64.encode_ternary_merge@85:
+    frame_dig 6
     swap
     concat
-    dup
+    frame_bury 8
+    frame_dig 17
+    bz InlineAsmBase64.encode_ternary_false@99
+    frame_dig 0
+    frame_dig 16
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@112:
+    frame_dig 6
+    swap
+    concat
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    frame_dig 8
+    swap
+    intc_0 // 32
     extract3
     extract 31 1
-    uncover 3
-    cover 2
+    frame_dig 0
+    frame_dig 14
+    uncover 2
     replace3
-    swap
+    frame_bury 0
+    frame_dig 4
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 2
-    dig 1
+    dup
+    frame_bury 4
+    frame_dig 9
+    dup
+    uncover 2
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
+    frame_bury 18
     frame_dig -1
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
     b/
-    bytec 5 // 0x3f
+    bytec 6 // 0x3f
     b&
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 4
-    swap
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
-    dig 3
-    swap
-    intc_1 // 32
+    dup
+    frame_bury 19
+    intc_2 // 4096
+    <
+    dup
+    frame_bury 20
+    bz InlineAsmBase64.encode_ternary_false@126
+    frame_dig 0
+    frame_dig 19
+    intc_0 // 32
     extract3
-    dig 5
+
+InlineAsmBase64.encode_ternary_merge@139:
+    frame_dig 6
     swap
     concat
-    dup
+    frame_bury 10
+    frame_dig 20
+    bz InlineAsmBase64.encode_ternary_false@153
+    frame_dig 0
+    frame_dig 19
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@166:
+    frame_dig 6
+    swap
+    concat
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    frame_dig 10
+    swap
+    intc_0 // 32
     extract3
     extract 31 1
-    uncover 3
-    cover 2
-    replace3
-    swap
-    bytec_0 // 0x01
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 2
-    dig 1
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    frame_dig -1
-    bytec 5 // 0x3f
-    b&
-    bytec_0 // 0x01
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    dig 3
-    swap
-    intc_1 // 32
-    extract3
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    extract 31 1
-    uncover 3
-    cover 2
+    frame_dig 0
+    frame_dig 18
+    uncover 2
     replace3
     frame_bury 0
+    frame_dig 4
+    bytec_0 // 0x01
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 4
+    frame_dig 9
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    frame_bury 11
+    frame_dig -1
+    bytec 6 // 0x3f
+    b&
+    bytec_0 // 0x01
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 12
+    intc_2 // 4096
+    <
+    dup
+    frame_bury 13
+    bz InlineAsmBase64.encode_ternary_false@168
+    frame_dig 0
+    frame_dig 12
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@169:
+    frame_dig 6
+    swap
+    concat
+    frame_bury 5
+    frame_dig 13
+    bz InlineAsmBase64.encode_ternary_false@171
+    frame_dig 0
+    frame_dig 12
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@172:
+    frame_dig 6
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    frame_dig 5
+    swap
+    intc_0 // 32
+    extract3
+    extract 31 1
+    frame_dig 0
+    frame_dig 11
+    uncover 2
+    replace3
+    frame_bury 0
+    frame_dig 4
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -456,30 +562,134 @@ InlineAsmBase64.encode_while_top@3:
     frame_bury 4
     b InlineAsmBase64.encode_while_top@3
 
-InlineAsmBase64.encode_after_while@41:
+InlineAsmBase64.encode_ternary_false@171:
+    frame_dig 12
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@172
+
+InlineAsmBase64.encode_ternary_false@168:
+    frame_dig 12
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@169
+
+InlineAsmBase64.encode_ternary_false@153:
+    frame_dig 19
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@166
+
+InlineAsmBase64.encode_ternary_false@126:
+    frame_dig 19
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@139
+
+InlineAsmBase64.encode_ternary_false@99:
+    frame_dig 16
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@112
+
+InlineAsmBase64.encode_ternary_false@72:
+    frame_dig 16
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@85
+
+InlineAsmBase64.encode_ternary_false@45:
+    frame_dig 21
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@58
+
+InlineAsmBase64.encode_ternary_false@18:
+    frame_dig 21
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    b InlineAsmBase64.encode_ternary_merge@31
+
+InlineAsmBase64.encode_after_while@173:
     frame_dig -1
-    bytec_2 // 0x03
+    bytec_3 // 0x03
     b%
-    frame_dig 5
+    frame_dig 6
     b|
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
     uncover 2
-    match InlineAsmBase64.encode_switch_case_0@48 InlineAsmBase64.encode_switch_case_1@49
+    match InlineAsmBase64.encode_switch_case_0@180 InlineAsmBase64.encode_switch_case_1@181
 
-InlineAsmBase64.encode_switch_case_next@50:
+InlineAsmBase64.encode_switch_case_next@182:
     frame_dig 0
     store 0
     frame_dig 3
     frame_bury 0
     retsub
 
-InlineAsmBase64.encode_switch_case_1@49:
+InlineAsmBase64.encode_switch_case_1@181:
     frame_dig 4
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -487,22 +697,22 @@ InlineAsmBase64.encode_switch_case_1@49:
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    frame_dig 6
+    frame_dig 9
     swap
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig 0
     swap
-    bytec_3 // 0x3d
+    bytec 4 // 0x3d
     replace3
     frame_bury 0
-    b InlineAsmBase64.encode_switch_case_next@50
+    b InlineAsmBase64.encode_switch_case_next@182
 
-InlineAsmBase64.encode_switch_case_0@48:
+InlineAsmBase64.encode_switch_case_0@180:
     frame_dig 4
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -511,22 +721,22 @@ InlineAsmBase64.encode_switch_case_0@48:
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    frame_dig 6
+    frame_dig 9
     dup
     cover 3
     swap
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig 0
     swap
-    bytec_3 // 0x3d
+    bytec 4 // 0x3d
     replace3
     swap
-    bytec 4 // 0x02
+    bytec 5 // 0x02
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -535,54 +745,54 @@ InlineAsmBase64.encode_switch_case_0@48:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
-    bytec_3 // 0x3d
+    bytec 4 // 0x3d
     replace3
     frame_bury 0
-    b InlineAsmBase64.encode_switch_case_next@50
+    b InlineAsmBase64.encode_switch_case_next@182
 
 
-// /tmp/claude-1000/multisource_z0kkbv2g/base64.sol.NoAsmBase64.encode(data: bytes) -> bytes:
+// /tmp/claude-1000/multisource_8x7xv7i5/base64.sol.NoAsmBase64.encode(data: bytes) -> bytes:
 NoAsmBase64.encode:
     proto 1 1
-    intc_2 // 0
+    intc_3 // 0
     dupn 6
-    pushbytes ""
+    bytec_2 // ""
     dup
     frame_dig -1
     len
     itob
     dup
-    pushbytes 0x
+    bytec_2 // 0x
     b==
     bz NoAsmBase64.encode_after_if_else@2
-    pushbytes ""
+    bytec_2 // ""
     frame_bury 0
     retsub
 
 NoAsmBase64.encode_after_if_else@2:
-    intc_0 // 8
+    intc_1 // 8
     bzero
     dup
     frame_bury 4
     frame_dig 9
-    bytec 4 // 0x02
+    bytec 5 // 0x02
     b+
-    bytec_2 // 0x03
+    bytec_3 // 0x03
     b/
     pushbytes 0x04
     b*
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     bzero
     frame_bury 1
-    intc_2 // 0
+    intc_3 // 0
     itob
     dup
     frame_bury 2
@@ -600,7 +810,7 @@ NoAsmBase64.encode_while_top@3:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig -1
@@ -623,7 +833,7 @@ NoAsmBase64.encode_while_top@3:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig -1
@@ -631,7 +841,7 @@ NoAsmBase64.encode_while_top@3:
     getbyte
     intc 4 // 255
     &
-    intc_0 // 8
+    intc_1 // 8
     shl
 
 NoAsmBase64.encode_ternary_merge@7:
@@ -643,7 +853,7 @@ NoAsmBase64.encode_ternary_merge@7:
     <=
     assert // overflow
     frame_dig 0
-    bytec 4 // 0x02
+    bytec 5 // 0x02
     b+
     dup
     frame_bury 6
@@ -655,7 +865,7 @@ NoAsmBase64.encode_ternary_merge@7:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig -1
@@ -682,7 +892,7 @@ NoAsmBase64.encode_ternary_merge@10:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     dig 2
@@ -690,9 +900,9 @@ NoAsmBase64.encode_ternary_merge@10:
     shr
     pushint 63
     &
-    bytec 6 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 7 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    pushint 1
     extract3
     frame_dig 1
     cover 2
@@ -705,7 +915,7 @@ NoAsmBase64.encode_ternary_merge@10:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     dig 3
@@ -713,9 +923,9 @@ NoAsmBase64.encode_ternary_merge@10:
     shr
     pushint 63
     &
-    bytec 6 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 7 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    pushint 1
     extract3
     uncover 3
     cover 2
@@ -728,7 +938,7 @@ NoAsmBase64.encode_ternary_merge@10:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     dig 3
@@ -736,9 +946,9 @@ NoAsmBase64.encode_ternary_merge@10:
     shr
     pushint 63
     &
-    bytec 6 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 7 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    pushint 1
     extract3
     uncover 3
     cover 2
@@ -752,35 +962,35 @@ NoAsmBase64.encode_ternary_merge@10:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     uncover 2
     pushint 63
     &
-    bytec 6 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 7 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    pushint 1
     extract3
     replace3
     frame_bury 1
     frame_dig 0
-    bytec_2 // 0x03
+    bytec_3 // 0x03
     b+
     frame_bury 0
     b NoAsmBase64.encode_while_top@3
 
 NoAsmBase64.encode_ternary_false@9:
-    intc_2 // 0
+    intc_3 // 0
     b NoAsmBase64.encode_ternary_merge@10
 
 NoAsmBase64.encode_ternary_false@6:
-    intc_2 // 0
+    intc_3 // 0
     b NoAsmBase64.encode_ternary_merge@7
 
 NoAsmBase64.encode_after_while@11:
     frame_dig 9
-    bytec_2 // 0x03
+    bytec_3 // 0x03
     b%
     dup
     frame_bury 3
@@ -797,12 +1007,12 @@ NoAsmBase64.encode_after_while@11:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig 1
     swap
-    bytec_3 // 0x3d
+    bytec 4 // 0x3d
     replace3
     swap
     bytec_0 // 0x01
@@ -812,10 +1022,10 @@ NoAsmBase64.encode_after_while@11:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
-    bytec_3 // 0x3d
+    bytec 4 // 0x3d
     replace3
     frame_bury 1
 
@@ -826,7 +1036,7 @@ NoAsmBase64.encode_after_if_else@16:
 
 NoAsmBase64.encode_else_body@13:
     frame_dig 3
-    bytec 4 // 0x02
+    bytec 5 // 0x02
     b==
     bz NoAsmBase64.encode_after_if_else@16
     frame_dig 2
@@ -837,12 +1047,12 @@ NoAsmBase64.encode_else_body@13:
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     frame_dig 1
     swap
-    bytec_3 // 0x3d
+    bytec 4 // 0x3d
     replace3
     frame_bury 1
     b NoAsmBase64.encode_after_if_else@16

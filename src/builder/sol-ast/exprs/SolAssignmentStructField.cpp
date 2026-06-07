@@ -88,7 +88,8 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	awst::FieldExpression const* _fieldExpr,
 	std::shared_ptr<awst::Expression> _value,
-	std::shared_ptr<awst::Expression> _unwrappedTarget)
+	std::shared_ptr<awst::Expression> _unwrappedTarget,
+	bool _emitAsStatement)
 {
 	auto const* arc4StructType = dynamic_cast<awst::ARC4Struct const*>(_fieldExpr->base->wtype);
 	if (!arc4StructType)
@@ -223,6 +224,16 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 
 	auto e = awst::makeAssignmentExpression(
 		std::move(assignTarget2), std::move(assignValue2), m_loc);
+
+	// Tuple-destructure context: queue the copy-on-write store directly as a
+	// statement (its side effect is all that's needed) and return it as a truthy
+	// sentinel. The decode-of-field-value below uses the *single* assignment's
+	// result type, which is meaningless (void) for a tuple assignment.
+	if (_emitAsStatement)
+	{
+		m_ctx.queueStmt(e, m_loc);
+		return e;
+	}
 
 	if (arc4FieldType)
 	{

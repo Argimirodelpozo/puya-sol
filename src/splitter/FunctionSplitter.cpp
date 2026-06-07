@@ -2,6 +2,8 @@
 /// See FunctionSplitter.h for design.
 
 #include "splitter/FunctionSplitter.h"
+#include "builder/assembly/AssemblyBuilder.h"
+#include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 
 #include <algorithm>
@@ -616,35 +618,84 @@ std::shared_ptr<awst::Expression> coerceFromFixedBytes(
 	return awst::makeReinterpretCast(std::move(_bytes), _wtype, _loc);
 }
 
-std::shared_ptr<awst::Statement> makeScratchStoreStmt(
-	std::vector<FunctionSplitter::VarInfo> const& _liveOut,
+// Pack one (possibly WTuple) live value into consecutive scratch slots, advancing
+// *_slot per leaf. WTuple vars are EXPLODED element-by-element (a WTuple is not a
+// single bytes-able value — reinterpret(tuple→bytes) is rejected by puya), so a
+// split boundary may fall anywhere, including across a tuple temp left live by a
+// mid-expansion tuple-assignment.
+void packLiveValue(
+	std::shared_ptr<awst::Expression> _value,
+	awst::WType const* _wtype,
+	int& _slot,
+	std::vector<std::shared_ptr<awst::Statement>>& _out,
 	awst::SourceLocation const& _loc)
 {
-	std::shared_ptr<awst::Expression> payload;
-	if (_liveOut.empty())
+	if (auto const* wt = dynamic_cast<awst::WTuple const*>(_wtype))
 	{
-		payload = awst::makeBytesConstant({}, _loc);
+		auto const& types = wt->types();
+		for (size_t k = 0; k < types.size(); ++k)
+		{
+			auto item = awst::makeTupleItem(_value, static_cast<int>(k), types[k], _loc);
+			packLiveValue(std::move(item), types[k], _slot, _out, _loc);
+		}
+		return;
+	}
+	auto fixed = coerceToFixedBytes(std::move(_value), _wtype, _loc);
+	auto store = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
+	store->immediates = {_slot++};
+	store->stackArgs.push_back(std::move(fixed));
+	_out.push_back(awst::makeExpressionStatement(std::move(store), _loc));
+}
+
+// Inverse of packLiveValue: rebuild the (possibly WTuple) value from consecutive
+// slots, advancing *_slot per leaf in the same order packLiveValue used.
+std::shared_ptr<awst::Expression> unpackLiveValue(
+	awst::WType const* _wtype,
+	int& _slot,
+	int _prevCallTxnIndex,
+	bool _crossChunk,
+	awst::SourceLocation const& _loc)
+{
+	if (auto const* wt = dynamic_cast<awst::WTuple const*>(_wtype))
+	{
+		auto tuple = awst::makeTupleExpression(_wtype, _loc);
+		for (auto const* elemType : wt->types())
+			tuple->items.push_back(
+				unpackLiveValue(elemType, _slot, _prevCallTxnIndex, _crossChunk, _loc));
+		return tuple;
+	}
+	int slot = _slot++;
+	std::shared_ptr<awst::Expression> loadExpr;
+	if (_crossChunk)
+	{
+		auto gload = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
+		gload->immediates = {_prevCallTxnIndex, slot};
+		loadExpr = std::move(gload);
 	}
 	else
 	{
-		std::shared_ptr<awst::Expression> acc;
-		for (auto const& lv : _liveOut)
-		{
-			auto var = awst::makeVarExpression(lv.name, lv.wtype, _loc);
-			auto fixed = coerceToFixedBytes(var, lv.wtype, _loc);
-			if (!acc)
-				acc = fixed;
-			else
-				acc = awst::makeConcat(acc, fixed, _loc);
-		}
-		payload = acc;
+		auto load = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
+		load->immediates = {slot};
+		loadExpr = std::move(load);
 	}
+	return coerceFromFixedBytes(std::move(loadExpr), _wtype, _loc);
+}
 
-	auto store = awst::makeIntrinsicCall(
-		"store", awst::WType::voidType(), _loc);
-	store->immediates = {FunctionSplitter::kLiveVarsScratchSlot};
-	store->stackArgs.push_back(std::move(payload));
-	return awst::makeExpressionStatement(std::move(store), _loc);
+// One scratch slot per leaf live value (base kLiveVarsScratchSlot, running). Each
+// AVM scratch slot holds a full-width value, so aggregate (struct/array/bytes)
+// live vars round-trip intact; WTuple vars are exploded across slots.
+std::vector<std::shared_ptr<awst::Statement>> makeScratchStoreStmts(
+	std::vector<FunctionSplitter::VarInfo> const& _liveOut,
+	awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	int slot = FunctionSplitter::kLiveVarsScratchSlot;
+	for (auto const& lv : _liveOut)
+	{
+		auto var = awst::makeVarExpression(lv.name, lv.wtype, _loc);
+		packLiveValue(std::move(var), lv.wtype, slot, out, _loc);
+	}
+	return out;
 }
 
 std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
@@ -653,61 +704,67 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 	bool _crossChunk,
 	awst::SourceLocation const& _loc)
 {
+	// Inverse of makeScratchStoreStmts. crossChunk=false → `load <slot>` (same txn
+	// frame); crossChunk=true → `gload <prev_idx> <slot>` reads the previous piece's
+	// scratch (sibling call-txn prev_idx).
 	std::vector<std::shared_ptr<awst::Statement>> out;
-	if (_liveIn.empty())
-		return out;
-
-	// Two read modes:
-	//   - In-program (crossChunk=false): pieces share the same txn's
-	//     scratch frame, so `load <slot>` reads what the previous piece
-	//     stored.
-	//   - Cross-chunk (crossChunk=true): pieces run as siblings inside
-	//     orch.dispatch_chain's staged inner-txn group. Each piece
-	//     reads the previous piece's scratch via `gload <prev_idx>
-	//     <slot>` where `prev_idx` is the previous piece's call-txn
-	//     position in the orch group (= 2N-1 for piece N, since orch
-	//     interleaves install at 2N and call at 2N+1).
-	std::string tmpName = "__uros_live_in";
-	std::shared_ptr<awst::Expression> loadExpr;
-	if (_crossChunk)
+	int slot = FunctionSplitter::kLiveVarsScratchSlot;
+	for (auto const& lv : _liveIn)
 	{
-		auto gload = awst::makeIntrinsicCall(
-			"gload", awst::WType::bytesType(), _loc);
-		gload->immediates = {_prevCallTxnIndex,
-			FunctionSplitter::kLiveVarsScratchSlot};
-		loadExpr = std::move(gload);
-	}
-	else
-	{
-		auto load = awst::makeIntrinsicCall(
-			"load", awst::WType::bytesType(), _loc);
-		load->immediates = {FunctionSplitter::kLiveVarsScratchSlot};
-		loadExpr = std::move(load);
-	}
-	auto tmpTarget = awst::makeVarExpression(
-		tmpName, awst::WType::bytesType(), _loc);
-	out.push_back(awst::makeAssignmentStatement(
-		tmpTarget, std::move(loadExpr), _loc));
-
-	for (size_t i = 0; i < _liveIn.size(); ++i)
-	{
-		auto blob = awst::makeVarExpression(
-			tmpName, awst::WType::bytesType(), _loc);
-		auto extract = awst::makeIntrinsicCall(
-			"extract3", awst::WType::bytesType(), _loc);
-		extract->stackArgs.push_back(blob);
-		extract->stackArgs.push_back(awst::makeIntegerConstant(
-			std::to_string(i * kLiveVarBytes), _loc));
-		extract->stackArgs.push_back(awst::makeIntegerConstant(
-			std::to_string(kLiveVarBytes), _loc));
-		auto value = coerceFromFixedBytes(extract, _liveIn[i].wtype, _loc);
-		auto target = awst::makeVarExpression(
-			_liveIn[i].name, _liveIn[i].wtype, _loc);
+		auto value = unpackLiveValue(lv.wtype, slot, _prevCallTxnIndex, _crossChunk, _loc);
 		out.push_back(awst::makeAssignmentStatement(
-			std::move(target), std::move(value), _loc));
+			awst::makeVarExpression(lv.name, lv.wtype, _loc),
+			std::move(value), _loc));
 	}
-
 	return out;
+}
+
+// Carry the multi-slot EVM-memory blob (scratch slots MEMORY_SLOT_FIRST..LAST)
+// across a cross-chunk piece boundary via `gload`, so memory a prior piece wrote
+// (e.g. loadProof's decoded proof) is visible to later pieces. State threads
+// through SCRATCHSPACE (not boxes). Slot 0 is also the cached `__evm_memory`
+// local, so it's restored into that local; higher slots go straight to scratch.
+std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
+	int _prevCallTxnIndex, awst::SourceLocation const& _loc)
+{
+	using AB = builder::AssemblyBuilder;
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	for (int slot = AB::MEMORY_SLOT_FIRST; slot <= AB::MEMORY_SLOT_LAST; ++slot)
+	{
+		auto gload = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
+		gload->immediates = {_prevCallTxnIndex, slot};
+		if (slot == AB::MEMORY_SLOT_FIRST)
+		{
+			// Slot 0 lives in BOTH the cached `__evm_memory` local (read by
+			// const-offset / struct-field access) AND scratch slot 0 (read by
+			// blob-aggregate access via readMem*Direct=loads). Restore both, else
+			// blob-aggregate reads (e.g. proof.sumcheckUnivariates) see a bzero
+			// scratch slot in the next piece while the local is correct.
+			auto tgt = awst::makeVarExpression(std::string("__evm_memory"), awst::WType::bytesType(), _loc);
+			out.push_back(awst::makeAssignmentStatement(std::move(tgt), std::move(gload), _loc));
+			auto gload2 = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
+			gload2->immediates = {_prevCallTxnIndex, slot};
+			out.push_back(awst::makeExpressionStatement(
+				awst::makeStoreSlot(slot, std::move(gload2), _loc), _loc));
+		}
+		else
+		{
+			out.push_back(awst::makeExpressionStatement(
+				awst::makeStoreSlot(slot, std::move(gload), _loc), _loc));
+		}
+	}
+	return out;
+}
+
+// Flush the cached `__evm_memory` local back to scratch slot MEMORY_SLOT_FIRST so
+// the following piece's `gload` observes the latest slot-0 contents (slots
+// 1..LAST are already written through `stores`). Emitted in cross-chunk epilogues.
+std::shared_ptr<awst::Statement> makeBlobFlushStmt(awst::SourceLocation const& _loc)
+{
+	using AB = builder::AssemblyBuilder;
+	auto val = awst::makeVarExpression(std::string("__evm_memory"), awst::WType::bytesType(), _loc);
+	return awst::makeExpressionStatement(
+		awst::makeStoreSlot(AB::MEMORY_SLOT_FIRST, std::move(val), _loc), _loc);
 }
 
 } // anonymous namespace
@@ -802,6 +859,17 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			continue;
 		}
 		SplitTarget& tgt = it->second;
+		// A prior spec's `parentContract->methods.push_back(pieces)` can
+		// REALLOCATE the methods vector, dangling the `&m` pointer cached in
+		// byName at map-build time. Re-resolve the ContractMethod by name from
+		// the (possibly moved) vector before every use — without this, the 2nd+
+		// ContractMethod target reads a dangling pointer and reports "no body".
+		if (tgt.parentContract)
+		{
+			tgt.method = nullptr;
+			for (auto& m : tgt.parentContract->methods)
+				if (m.memberName == spec.subroutineName) { tgt.method = &m; break; }
+		}
 		if (!tgt.body())
 		{
 			logger.warning(
@@ -870,6 +938,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		for (size_t sp : spec.splitPoints)
 			liveAt.push_back(computeLiveVars(stmts, sp, paramNames));
 
+
 		// Build chunk ranges: [0, sp[0]), [sp[0], sp[1]), ..., [sp[N-1], end).
 		std::vector<std::pair<size_t, size_t>> ranges;
 		size_t prev = 0;
@@ -932,6 +1001,12 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				{
 					pieceBody->body.push_back(std::move(s));
 				}
+				// Cross-chunk pieces run as separate programs (fresh scratch), so
+				// also restore the EVM-memory blob (slots 0-4) the prior piece
+				// flushed — threads memory state through scratchspace via gload.
+				if (spec.crossChunk)
+					for (auto& s : makeBlobCarryLoadStmts(prevCallTxnIdx, origLoc))
+						pieceBody->body.push_back(std::move(s));
 			}
 
 			// Body: original statements in this piece's range.
@@ -942,8 +1017,12 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			// last — ends with the original return statement instead).
 			if (!isLast)
 			{
-				pieceBody->body.push_back(makeScratchStoreStmt(
-					liveAt[pi], origLoc));
+				// Flush the cached __evm_memory local to scratch slot 0 so the
+				// next cross-chunk piece's gload sees the latest blob contents.
+				if (spec.crossChunk)
+					pieceBody->body.push_back(makeBlobFlushStmt(origLoc));
+				for (auto& s : makeScratchStoreStmts(liveAt[pi], origLoc))
+					pieceBody->body.push_back(std::move(s));
 				pieceBody->body.push_back(awst::makeReturnStatement(
 					nullptr, origLoc));
 			}
@@ -966,6 +1045,28 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		// which puya tries to compile and trips the 'h' format / 32 KB
 		// branch limit that motivated splitting in the first place.
 		auto newBody = awst::makeBlock(origLoc);
+		if (spec.crossChunk)
+		{
+			// CROSS-CHUNK: the pieces are standalone, client-driven chunks — the
+			// deploy harness submits them as a staged sequence threading scratch
+			// (slot 100 + EVM-blob slots 0-4) via gload across the group. The
+			// original function must therefore NOT callsub the pieces: a callsub
+			// makes per-Contract DCE keep every piece REAL in this chunk (the
+			// dispatcher absorbs its whole pipeline — the 33KB/19KB/11KB chunks),
+			// defeating the split. Leave a stub body so the pieces are STUBBED
+			// here and live only in their own ≤8KB chunks. Runtime dispatch is the
+			// piece chain registered from chain_groups.json. The stub returns the
+			// type's zero (false for a bool verifier = "not verified" = safe).
+			if (origReturnType != awst::WType::voidType())
+				newBody->body.push_back(awst::makeReturnStatement(
+					builder::StorageMapper::makeDefaultValue(origReturnType, origLoc),
+					origLoc));
+			else
+				newBody->body.push_back(awst::makeReturnStatement(nullptr, origLoc));
+			tgt.body() = newBody;
+		}
+		else
+		{
 		for (size_t pi = 0; pi < numPieces; ++pi)
 		{
 			BuiltPiece const& bp = built[pi];
@@ -1002,6 +1103,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				nullptr, origLoc));
 		}
 		tgt.body() = newBody; // safe: tgt.method pointer still valid
+		}
 
 		// Now register the pieces — for ContractMethod target, push them
 		// onto the parent contract's `methods` (this MAY invalidate
@@ -1035,6 +1137,13 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 					abi.allowedCompletionTypes = {0}; // NoOp only
 					abi.create = 3;                   // Disallow
 					abi.name = bp.name;
+					// Each cross-chunk piece gets its OWN uros chunk so the
+					// downstream uros bin-pack places it in a separate ≤8KB
+					// program (else all pieces inherit the primary method's
+					// default chunk and stay in one oversized program). The
+					// deploy harness (chain_groups.json + deploy.uros.json)
+					// finds each piece by name in its chunk and wires the chain.
+					abi.chunk = bp.name;
 					m.arc4MethodConfig = abi;
 				}
 				// else: in-program callsub mode — pieces are

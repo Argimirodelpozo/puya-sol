@@ -50,6 +50,14 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
+		// Blob-backed memory aggregate (>4KB): the variable travels as its
+		// uint64 base offset into the multi-slot blob. A bare reference (e.g.
+		// passing `p` as a function argument) resolves to that offset; field
+		// and index access go through SolIndexAccess / the member-read intercept
+		// via resolveBlobOffset.
+		if (auto off = m_scope.findBlobAggregate(varDecl->id()); !off.empty())
+			return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
+
 		// Struct storage-ref param (e.g. Uniswap V4 `Pool.State storage self`):
 		// the param travels as the box-key PREFIX in bytes (Layer-1
 		// mapping-storage-ref handling, since the struct carries nested

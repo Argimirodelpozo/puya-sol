@@ -1,5 +1,14 @@
 # Semantic Test Status — v331
 
+> **HONK SESSION (wip, 2026-06-07):** zero-regression checkpoint. Landed bug-1 (`abi.encodePacked`
+> of a DYNAMIC array prepended a 2-byte ARC4 length prefix → AbiEncoderBuilder.cpp strips it) +
+> bug-2 (FunctionSplitter blob carry now restores SCRATCH slot 0, not just the `__evm_memory`
+> local). Full suite at the dirty `wip` tree = **1206 PASS / 59 FAIL / 77 xfailed + 1 xpassed**
+> (RESULTS_honksession.txt) — fail-set IDENTICAL to baseline 32893e996 (zero regression; the lone
+> xpass is an improvement, likely the encodePacked fix). Honk verify still blocked on the v2
+> nested-aggregate gap (`proof.sumcheckUnivariates[round]` flat-write vs Solidity-pointer-read) —
+> see memory barretenberg-ultrahonk-status. out/ artifacts regenerated (multi-slot memory preamble).
+
 > **BRANCH NOTE (remove-uros-frontend-splitter, 2026-06-05):** this branch
 > diverged from the v33x EVM-divergence line below and tracks its baseline via
 > `RESULTS_<sha>.txt`, not these version totals. CLEAN BASELINE **32893e996** (branch
