@@ -13,7 +13,11 @@
 > (7): storage_layout_struct (`a.slot` storage-slot introspection), dirty_memory_struct, base64, strings,
 > library_return_struct_with_mapping, cleanup, cleanup_abicoderv1. Suite **1199 pass / 66 fail / 77 xfail
 > (+1 xpass)** — 66 = baseline 59 + these 7; zero other regression (RESULTS_asm_ptr_arc4.txt). Foundation
-> (assembly_access + the modifier-inlining SIGSEGV fix, 2bbe46014) stays. See [[ensurebiguint-strict-assembly]].
+> (assembly_access + the modifier-inlining SIGSEGV fix, 2bbe46014) stays. **FINAL (user): ARC4 is the
+> default layout; EVM-hardcoded-offset accuracy (`add(m,32)` etc., which can't be both accurate AND ARC4)
+> is deferred to a future opt-in per-contract "adapter flag" — implementation basis = the reverted
+> EVM-layout commit ec6652e3b, to be re-enabled behind the flag.** The 7 remaining are EVM-fundamental
+> until then. See [[ensurebiguint-strict-assembly]].
 
 > **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — step 2: EVM length-prefixed layout + materialize:**
 > Initialized memory assembly-aggregates (`new T[](n)`) now materialize into the linear-memory blob in EVM
