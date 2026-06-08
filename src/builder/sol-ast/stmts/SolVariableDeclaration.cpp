@@ -234,6 +234,70 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			return result;
 		}
 
+		// Initialized memory aggregate used as a value in inline assembly: it must
+		// live in the linear-memory blob with EVM layout (32-byte length word +
+		// 32-byte-strided elements) so the assembly's pointer arithmetic and the
+		// Solidity field/index access agree. Bind the base to FMP, write the length
+		// word (element count from the arc4 uint16 prefix), bump FMP; elements
+		// default-zero in the pre-zeroed blob — true for `new T[](n)`, the case
+		// that reaches here. Registered blob-backed + EVM-layout. (>4KB ARC4-flat
+		// aggregates are not assembly-marked, so they keep their layout;
+		// uninitialized ones use the FMP path below.)
+		if (initialValue
+			&& decl.referenceLocation() == VariableDeclaration::Location::Memory
+			&& m_blk.isAssemblyAggregate(decl.id()))
+		{
+			using AB = builder::AssemblyBuilder;
+			m_blk.builderCtx().appendPendingTo(result); // flush the initializer's build
+			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+			std::string lenTmp = "__evmagg_len_" + std::to_string(decl.id());
+			std::string fmpBlob = "__evmagg_fmp_" + std::to_string(decl.id());
+			// Element count = arc4 dynamic-array uint16 length prefix (single eval).
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(lenTmp, awst::WType::uint64Type(), m_loc),
+				awst::makeExtractUInt16(awst::makeAsBytes(std::move(value), m_loc),
+					awst::makeIntegerConstant("0", m_loc), m_loc),
+				m_loc));
+			// offN = current FMP (uint64) = extractUInt64(load(slot0), 88).
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
+				awst::makeExtractUInt64(awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),
+					awst::makeIntegerConstant("88", m_loc), m_loc),
+				m_loc));
+			// EVM length word (32-byte big-endian count) at offN.
+			AB::writeMemWordDirect(
+				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
+				awst::makeLeftPad(awst::makeItob(
+					awst::makeVarExpression(lenTmp, awst::WType::uint64Type(), m_loc), m_loc),
+					24, m_loc),
+				m_loc, result);
+			// Bump FMP by 32 (length word) + count*32 (32-byte-strided elements).
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(fmpBlob, awst::WType::bytesType(), m_loc),
+				awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc), m_loc));
+			{
+				auto fmp = awst::makeExtractUInt64(
+					awst::makeVarExpression(fmpBlob, awst::WType::bytesType(), m_loc),
+					awst::makeIntegerConstant("88", m_loc), m_loc);
+				auto elemsBytes = awst::makeUInt64BinOp(
+					awst::makeVarExpression(lenTmp, awst::WType::uint64Type(), m_loc),
+					awst::UInt64BinaryOperator::Mult, awst::makeIntegerConstant("32", m_loc), m_loc);
+				auto sz = awst::makeUInt64BinOp(std::move(elemsBytes),
+					awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant("32", m_loc), m_loc);
+				auto newFmp = awst::makeUInt64BinOp(std::move(fmp),
+					awst::UInt64BinaryOperator::Add, std::move(sz), m_loc);
+				auto word = awst::makeLeftPad(awst::makeItob(std::move(newFmp), m_loc), 24, m_loc);
+				auto rep = awst::makeReplace3(
+					awst::makeVarExpression(fmpBlob, awst::WType::bytesType(), m_loc),
+					awst::makeIntegerConstant("64", m_loc), std::move(word), m_loc);
+				result.push_back(awst::makeExpressionStatement(
+					awst::makeStoreSlot(AB::MEMORY_SLOT_FIRST, std::move(rep), m_loc), m_loc));
+			}
+			m_blk.setBlobAggregate(decl.id(), offN);
+			m_blk.markEvmLayout(decl.id());
+			return result;
+		}
+
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), m_loc);
 
 		m_blk.builderCtx().appendPendingTo(result);
@@ -267,6 +331,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						sz, m_loc, static_cast<int>(decl.id())))
 					result.push_back(std::move(s));
 				m_blk.setBlobAggregate(decl.id(), offN);
+				if (m_blk.isAssemblyAggregate(decl.id()))
+					m_blk.markEvmLayout(decl.id()); // EVM length-prefixed layout, not ARC4-flat
 				return result; // skip the normal (oversized) target = bzero(sz) assignment
 			}
 

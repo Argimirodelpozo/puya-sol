@@ -93,8 +93,15 @@ public:
 					!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
 			auto const* t = vd->type();
-			if (dynamic_cast<solidity::frontend::ArrayType const*>(t)
-				|| dynamic_cast<solidity::frontend::StructType const*>(t))
+			// bytes/string keep their dedicated assembly handling (tryHandleBytes*);
+			// promoting them to blob-backed breaks value uses (x[i]=, x.length,
+			// return x). Real arrays + structs only (bytes-Yul-libs handled later).
+			if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
+			{
+				if (!at->isByteArrayOrString())
+					ids.insert(vd->id());
+			}
+			else if (dynamic_cast<solidity::frontend::StructType const*>(t))
 				ids.insert(vd->id());
 		}
 		return true;

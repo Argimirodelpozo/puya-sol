@@ -1,4 +1,17 @@
-# Semantic Test Status — v333
+# Semantic Test Status — v334
+
+> **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — step 2: EVM length-prefixed layout + materialize:**
+> Initialized memory assembly-aggregates (`new T[](n)`) now materialize into the linear-memory blob in EVM
+> layout (32-byte length word + 32-byte-strided elements; SolVariableDeclaration), and field/index reads
+> use an EVM-layout mode in SolIndexAccess (`m[i] = base + 32 + i*32`; sub-256-bit reads mask to width =
+> dirty-memory clean) gated on a new `evmLayoutAggregates` flag — the ARC4-flat >4KB Honk path is
+> untouched. +2: **dirty_memory_dynamic_array** + **storage_layout_struct** (→ 3/9 with assembly_access).
+> bytes/string are EXCLUDED from blob-backing (they keep their dedicated tryHandleBytes* handling;
+> promoting them broke `x[i]=`/`x.length`/`return x` — fixed a test_inline_assembly_memory_access
+> regression). Suite **1200 pass / 65 fail / 77 xfail (+1 xpass)** — 65 = baseline 59 + the 6 remaining
+> aggregate cases (base64, strings, library_return_struct_with_mapping, cleanup, cleanup_abicoderv1,
+> dirty_memory_struct). Zero new regression (RESULTS_asm_ptr_evmlayout.txt). Next (step 3): struct
+> field-write + pointer-deref for dirty_memory_struct.
 
 > **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — milestone 1 of the full push:** Implementing
 > type-dispatched aggregate→memory-pointer resolution — an aggregate used as a value in inline assembly

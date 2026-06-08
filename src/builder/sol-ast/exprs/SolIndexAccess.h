@@ -22,7 +22,7 @@ public:
 	static std::shared_ptr<awst::Expression> resolveBlobOffset(
 		eb::ContractContext& _ctx, Context& _scope,
 		solidity::frontend::Expression const& _node,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc, bool _evmLayout = false);
 
 	/// Materialise a VALUE read from the blob at `_off` for a leaf of Solidity
 	/// type `_solType`: a scalar leaf → `asBiguint(readMemWordDirect)`; a small
@@ -32,7 +32,7 @@ public:
 	static std::shared_ptr<awst::Expression> readBlobValue(
 		eb::ContractContext& _ctx, std::shared_ptr<awst::Expression> _off,
 		solidity::frontend::Type const* _solType,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc, bool _evmLayout = false);
 
 private:
 	solidity::frontend::IndexAccess const& m_indexAccess;

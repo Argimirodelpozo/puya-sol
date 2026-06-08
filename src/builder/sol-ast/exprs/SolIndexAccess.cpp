@@ -18,6 +18,25 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
+namespace {
+// Does the root of an index/member chain reference an EVM-layout (length-prefixed)
+// blob aggregate? Determines which layout resolveBlobOffset/readBlobValue use.
+bool rootIsEvmLayout(Context& _scope, solidity::frontend::Expression const& _node)
+{
+	if (auto const* ident = dynamic_cast<Identifier const*>(&_node))
+	{
+		auto const* vd = dynamic_cast<VariableDeclaration const*>(
+			ident->annotation().referencedDeclaration);
+		return vd && _scope.isEvmLayoutAggregate(vd->id());
+	}
+	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_node))
+		return rootIsEvmLayout(_scope, ia->baseExpression());
+	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_node))
+		return rootIsEvmLayout(_scope, ma->expression());
+	return false;
+}
+} // namespace
+
 SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _node)
 	: SolExpression(_ctx, _node), m_indexAccess(_node)
 {
@@ -219,9 +238,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	// <=4KB are not registered and fall through to the value model below.
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 	{
-		if (auto off = resolveBlobOffset(m_ctx, m_scope, m_indexAccess, m_loc))
+		bool evm = rootIsEvmLayout(m_scope, m_indexAccess);
+		if (auto off = resolveBlobOffset(m_ctx, m_scope, m_indexAccess, m_loc, evm))
 			if (auto val = readBlobValue(
-					m_ctx, std::move(off), m_indexAccess.annotation().type, m_loc))
+					m_ctx, std::move(off), m_indexAccess.annotation().type, m_loc, evm))
 				return val;
 	}
 
@@ -230,7 +250,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	eb::ContractContext& _ctx, Context& _scope,
-	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc)
+	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc,
+	bool _evmLayout)
 {
 	using namespace solidity::frontend;
 
@@ -249,11 +270,27 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_node))
 	{
 		if (!ia->indexExpression()) return nullptr;
-		auto parent = resolveBlobOffset(_ctx, _scope, ia->baseExpression(), _loc);
+		auto parent = resolveBlobOffset(_ctx, _scope, ia->baseExpression(), _loc, _evmLayout);
 		if (!parent) return nullptr;
 		auto idx = _ctx.buildExpr(*ia->indexExpression());
 		idx = builder::TypeCoercion::implicitNumericCast(
 			std::move(idx), awst::WType::uint64Type(), _loc);
+		if (_evmLayout)
+		{
+			// EVM memory: dynamic array = [32-byte length][32-byte-strided elements];
+			// static array = elements only (no length word). m[i] = base + hdr + i*32.
+			auto const* arrT = dynamic_cast<ArrayType const*>(
+				ia->baseExpression().annotation().type);
+			uint64_t hdr = (arrT && arrT->isDynamicallySized()) ? 32 : 0;
+			auto elem = awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
+				awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
+			auto base = hdr
+				? awst::makeUInt64BinOp(std::move(parent), awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant(hdr, _loc), _loc)
+				: std::move(parent);
+			return awst::makeUInt64BinOp(std::move(base), awst::UInt64BinaryOperator::Add,
+				std::move(elem), _loc);
+		}
 		unsigned stride = builder::computeEncodedElementSize(
 			_ctx.typeMapper.map(ia->annotation().type));
 		return awst::makeUInt64BinOp(std::move(parent), awst::UInt64BinaryOperator::Add,
@@ -264,7 +301,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	// `base.field` → parentOffset + sum of encoded sizes of preceding members.
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_node))
 	{
-		auto parent = resolveBlobOffset(_ctx, _scope, ma->expression(), _loc);
+		auto parent = resolveBlobOffset(_ctx, _scope, ma->expression(), _loc, _evmLayout);
 		if (!parent) return nullptr;
 		auto const* structType = dynamic_cast<StructType const*>(
 			ma->expression().annotation().type);
@@ -273,7 +310,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		for (auto const& m: structType->structDefinition().members())
 		{
 			if (m->name() == ma->memberName()) break;
-			fieldOff += static_cast<uint64_t>(
+			// EVM memory struct: every member occupies one 32-byte slot (value
+			// inline, or a pointer for reference types). ARC4-flat: packed sizes.
+			fieldOff += _evmLayout ? 32 : static_cast<uint64_t>(
 				builder::computeEncodedElementSize(_ctx.typeMapper.map(m->type())));
 		}
 		if (fieldOff == 0) return parent;
@@ -286,7 +325,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 
 std::shared_ptr<awst::Expression> SolIndexAccess::readBlobValue(
 	eb::ContractContext& _ctx, std::shared_ptr<awst::Expression> _off,
-	solidity::frontend::Type const* _solType, awst::SourceLocation const& _loc)
+	solidity::frontend::Type const* _solType, awst::SourceLocation const& _loc,
+	bool _evmLayout)
 {
 	using namespace solidity::frontend;
 
@@ -295,8 +335,28 @@ std::shared_ptr<awst::Expression> SolIndexAccess::readBlobValue(
 
 	// Scalar leaf (Fr / uintN / bool / address) → one 32-byte word as biguint.
 	if (!isAggregate)
-		return awst::makeAsBiguint(
-			builder::AssemblyBuilder::readMemWordDirect(std::move(_off), _loc), _loc);
+	{
+		auto word = builder::AssemblyBuilder::readMemWordDirect(std::move(_off), _loc);
+		// EVM memory stores each element right-aligned in a 32-byte slot; reading a
+		// sub-256-bit integer cleans it to its width (the dirty-memory semantics).
+		if (_evmLayout)
+		{
+			unsigned bits = 256;
+			auto const* it = dynamic_cast<IntegerType const*>(_solType);
+			if (!it)
+				if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_solType))
+					it = dynamic_cast<IntegerType const*>(&udvt->underlyingType());
+			if (it) bits = it->numBits();
+			if (bits < 256)
+			{
+				unsigned nbytes = bits / 8;
+				word = awst::makeExtract3(std::move(word),
+					awst::makeIntegerConstant(static_cast<uint64_t>(32 - nbytes), _loc),
+					awst::makeIntegerConstant(static_cast<uint64_t>(nbytes), _loc), _loc);
+			}
+		}
+		return awst::makeAsBiguint(std::move(word), _loc);
+	}
 
 	// Struct / static-array leaf: the blob holds the ARC4 (flat ABI) encoding —
 	// each field/element is a 32-byte big-endian word, exactly the ARC4 layout —
