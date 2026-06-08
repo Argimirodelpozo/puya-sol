@@ -252,7 +252,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// blob: bind the local to its runtime FMP base offset, register it so
 			// `t.field[i]` lowers to blob word read/writes (SolIndexAccess), and
 			// skip the oversized bzero default — the blob is pre-zeroed.
-			if (sz > builder::AssemblyBuilder::SLOT_SIZE)
+			if (sz > builder::AssemblyBuilder::SLOT_SIZE
+				|| m_blk.isAssemblyAggregate(decl.id()))
 			{
 				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 				// base = current FMP (uint64) = extractUInt64(load(slot0), 88)

@@ -79,7 +79,8 @@ public:
 		std::map<std::string, std::string> const& _constants = {},
 		std::map<std::string, unsigned> const& _paramBitWidths = {},
 		std::map<std::string, std::string> const& _storageSlotVars = {},
-		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {}
+		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {},
+		std::map<std::string, std::string> const& _blobOffsetVars = {}
 	);
 
 	/// Extract function name string from a Yul FunctionName variant.
@@ -806,6 +807,11 @@ private:
 	/// alias). Keyed on the dotted yul name ("info.slot"); the value carries
 	/// the box key + struct type for the field-aware sstore lowering.
 	std::map<std::string, BoxKeyedSlot> m_boxKeyedStructSlots;
+
+	/// Assembly identifier name → blob-backed aggregate's uint64 offset-var name.
+	/// A reference to such a name resolves to the memory pointer (offset), not the
+	/// aggregate value. Populated by SolInlineAssembly from findBlobAggregate.
+	std::map<std::string, std::string> m_blobOffsetVars;
 
 	// ── Assembly function support ───────────────────────────────────────
 

@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace puyasol::builder
@@ -142,6 +143,11 @@ struct ScopeState
 	/// word read/write at base + accumulated offset. See SolIndexAccess.
 	std::unordered_map<int64_t, std::string> blobAggregates;
 
+	/// Decl IDs of memory aggregate locals used as VALUES in inline assembly —
+	/// their Yul memory pointer. Promoted to blob-backed so the assembly sees a
+	/// real offset (pre-scan in ContractBuilder::buildBlock).
+	std::unordered_set<int64_t> assemblyAggregates;
+
 	/// Modifier-inliner param remap: when the same modifier is applied
 	/// multiple times in a function, each instance's locals get a unique
 	/// mangled name. Set/erased explicitly by the inliner around each
@@ -236,6 +242,12 @@ public:
 		return it != m_state->blobAggregates.end() ? it->second : std::string{};
 	}
 
+	/// Is this decl a memory aggregate used as a value in inline assembly?
+	bool isAssemblyAggregate(int64_t _declId) const
+	{
+		return m_state->assemblyAggregates.count(_declId) > 0;
+	}
+
 	ParamRemap const* findParamRemap(int64_t _declId) const
 	{
 		auto it = m_state->paramRemaps.find(_declId);
@@ -284,6 +296,11 @@ public:
 	void setBlobAggregate(int64_t _declId, std::string _offsetVar)
 	{
 		m_state->blobAggregates[_declId] = std::move(_offsetVar);
+	}
+
+	void markAssemblyAggregate(int64_t _declId)
+	{
+		m_state->assemblyAggregates.insert(_declId);
 	}
 
 	/// Toggle the enclosing function's constructor flag. Walks the chain

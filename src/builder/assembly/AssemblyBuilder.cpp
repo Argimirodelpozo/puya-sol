@@ -110,7 +110,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	std::map<std::string, std::string> const& _constants,
 	std::map<std::string, unsigned> const& _paramBitWidths,
 	std::map<std::string, std::string> const& _storageSlotVars,
-	std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots
+	std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots,
+	std::map<std::string, std::string> const& _blobOffsetVars
 )
 {
 	m_returnType = _returnType;
@@ -123,6 +124,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_constants = _constants;
 	m_storageSlotVars = _storageSlotVars;
 	m_boxKeyedStructSlots = _boxKeyedStructSlots;
+	m_blobOffsetVars = _blobOffsetVars;
 	m_arrayParamName.clear();
 	m_arrayParamType = nullptr;
 	m_arrayParamSize = 0;

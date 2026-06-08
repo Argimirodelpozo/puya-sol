@@ -69,6 +69,40 @@ awst::SourceLocation makeLoc(
 	return loc;
 }
 
+namespace {
+
+/// Collect decl IDs of memory aggregate locals referenced as VALUES in any
+/// inline-assembly block in a function body. In Yul such a reference is the
+/// aggregate's memory pointer (a uint256 offset), so we promote these to
+/// blob-backed (SolVariableDeclaration) and resolve them to a uint64 offset in
+/// the assembly translator.
+class AssemblyAggregateScanner: public solidity::frontend::ASTConstVisitor
+{
+public:
+	std::set<int64_t>& ids;
+	explicit AssemblyAggregateScanner(std::set<int64_t>& _ids): ids(_ids) {}
+
+	bool visit(solidity::frontend::InlineAssembly const& _asm) override
+	{
+		for (auto const& ref: _asm.annotation().externalReferences)
+		{
+			auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+				ref.second.declaration);
+			if (!vd
+				|| vd->referenceLocation()
+					!= solidity::frontend::VariableDeclaration::Location::Memory)
+				continue;
+			auto const* t = vd->type();
+			if (dynamic_cast<solidity::frontend::ArrayType const*>(t)
+				|| dynamic_cast<solidity::frontend::StructType const*>(t))
+				ids.insert(vd->id());
+		}
+		return true;
+	}
+};
+
+} // namespace
+
 std::shared_ptr<awst::Block> buildBlock(
 	FunctionTranslationCtx& _ctx,
 	solidity::frontend::Block const& _block,
@@ -119,6 +153,22 @@ std::shared_ptr<awst::Block> buildBlock(
 	for (auto const* p: _ctx.blobAggParams)
 		if (p && !p->name().empty())
 			fn.setBlobAggregate(p->id(), p->name());
+
+	// Promote memory aggregates used as values in inline assembly to blob-backed
+	// (their Yul memory pointer). Mark them BEFORE the body translates so
+	// SolVariableDeclaration blob-backs them at their declaration. Scan the whole
+	// body — assembly may be nested (if/for) and appear after the declaration.
+	// Only for the real function-body pass: `_placeholder` is set during modifier
+	// inlining, where this runs re-entrantly over modifier bodies (and the
+	// pre-built placeholder shares contexts that are unsafe to re-walk here).
+	if (!_placeholder)
+	{
+		std::set<int64_t> asmAggIds;
+		AssemblyAggregateScanner scanner{asmAggIds};
+		_block.accept(scanner);
+		for (int64_t id: asmAggIds)
+			fn.markAssemblyAggregate(id);
+	}
 
 	return sol_ast::buildBlock(blk, _block);
 }

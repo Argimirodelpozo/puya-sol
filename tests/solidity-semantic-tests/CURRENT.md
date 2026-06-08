@@ -1,4 +1,17 @@
-# Semantic Test Status — v332
+# Semantic Test Status — v333
+
+> **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — milestone 1 of the full push:** Implementing
+> type-dispatched aggregate→memory-pointer resolution — an aggregate used as a value in inline assembly
+> resolves to its Yul memory pointer (per user direction). FOUNDATION: a pre-scan marks memory-aggregate
+> locals used in assembly (ContractBuilder::buildBlock + AssemblyAggregateScanner); SolVariableDeclaration
+> blob-backs them (FMP offset); buildIdentifier resolves them to the uint64 offset (m_blobOffsetVars
+> plumbed via SolInlineAssembly). **assembly_access now PASSES (1/9).** Crash fixed: the pre-scan is
+> guarded `if (!_placeholder)` — running it during modifier inlining re-walks pre-built placeholder
+> contexts → dangling-parent SEGV in BlockContext::isUnchecked (had crashed 7 modifier/inlineAssembly
+> tests). Suite **1198 pass / 67 fail / 77 xfail (+1 xpass)** — 67 = baseline 59 + the 8 remaining
+> aggregate cases (still hard-error, pending step 2: EVM length-prefixed layout + materialize-into-blob
+> for dirty_memory_*/structs/Yul-libs). Zero new regression beyond those 8 (RESULTS_asm_ptr_foundation.txt).
+> Design + integration map: memory [[ensurebiguint-strict-assembly]].
 
 > **ASSEMBLY TYPE-ENFORCEMENT (wip, 2026-06-08):** `ensureBiguint` (AssemblyBuilder.cpp) is now
 > strict — "ensure = coerce-or-compile-error". (1) NEW `arc4.uintN` branch: a `uint256` arriving at

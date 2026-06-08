@@ -221,6 +221,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		return node;
 	}
 
+	// Blob-backed memory aggregate: a bare reference is its Yul memory pointer
+	// (the uint64 base offset into the multi-slot blob), NOT the aggregate value.
+	auto boIt = m_blobOffsetVars.find(name);
+	if (boIt != m_blobOffsetVars.end())
+		return awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc);
+
 	auto it = m_locals.find(name);
 	// Default: all assembly vars are uint256
 	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();

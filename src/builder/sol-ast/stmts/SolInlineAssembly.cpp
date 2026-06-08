@@ -347,6 +347,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// Build augmented params
 	auto augmentedParams = m_blk.fn.params;
 	std::map<std::string, unsigned> paramBitWidths;
+	// Blob-backed memory aggregates referenced in assembly resolve to their
+	// uint64 memory-pointer offset (not the aggregate value).
+	std::map<std::string, std::string> blobOffsetVars;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
 		if (!extInfo.declaration) continue;
@@ -354,6 +357,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		if (!varDecl || varDecl->isConstant()) continue;
 
 		std::string name = yulId->name.str();
+		if (auto blobOff = m_blk.findBlobAggregate(varDecl->id()); !blobOff.empty())
+			blobOffsetVars[name] = blobOff;
 		bool found = false;
 		for (auto const& [pName, pType]: augmentedParams)
 			if (pName == name) found = true;
@@ -380,7 +385,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		constants,
 		paramBitWidths,
 		storageSlotVars,
-		boxKeyedStructSlots);
+		boxKeyedStructSlots,
+		blobOffsetVars);
 }
 
 } // namespace puyasol::builder::sol_ast
