@@ -70,7 +70,6 @@ def test_calldata_to_storage(harness):
     assert bytes(harness.call(app, "l(uint256)", 0).abi_return) == b"ab"
     assert bytes(harness.call(app, "l(uint256)", 1).abi_return) == b"cd"
 
-@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_cleanup(harness):
     """userDefinedValueType/contracts/cleanup.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/cleanup.sol")
@@ -87,7 +86,6 @@ def test_cleanup(harness):
     assert tuple(as_int(x) for x in harness.call(app, "mem()").abi_return) == (255, 255)
     assert tuple(as_int(x) for x in harness.call(app, "stor()").abi_return) == (1, 255, 2)
 
-@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_cleanup_abicoderv1(harness):
     """userDefinedValueType/contracts/cleanup_abicoderv1.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/cleanup_abicoderv1.sol")
@@ -538,7 +536,6 @@ def test_storage_layout(harness):
     r = harness.call(app, "storage_g()")
     assert tuple(as_int(x) for x in r.abi_return) == (2, 20)
 
-@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_storage_layout_struct(harness):
     """userDefinedValueType/contracts/storage_layout_struct.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_layout_struct.sol')

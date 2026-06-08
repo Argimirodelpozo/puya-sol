@@ -351,7 +351,6 @@ def test_library_references_preserve(harness):
     r = harness.call(app, "bSum()")
     assert as_int(r.abi_return) == 5
 
-@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_library_return_struct_with_mapping(harness):
     """libraries/contracts/library_return_struct_with_mapping.sol"""
     app = harness.compile_and_deploy('libraries/contracts/library_return_struct_with_mapping.sol')

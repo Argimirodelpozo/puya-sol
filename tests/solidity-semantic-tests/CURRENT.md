@@ -8,14 +8,18 @@
 > and now `Logger::error`s. This surfaced a real unsoundness class: an aggregate
 > (struct/array/bytes/string) used as a *value* in inline assembly is its Yul **memory pointer**, but
 > puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so `add(s,64)`
-> was silently becoming `add(0,64)`. No sound value exists → hard error (EVM_DIVERGENCE.md #13; a
-> faithful fix needs the unfinished large-aggregate linear-memory model). Flips **9 tests** pass→xfail
-> (all same root cause: base64, strings, library_return_struct_with_mapping, assembly_access, cleanup,
-> cleanup_abicoderv1, storage_layout_struct, dirty_memory_dynamic_array, dirty_memory_struct). Suite
-> **1197 pass / 59 fail / 86 xfail (+1 xpass)** — the 59 fails IDENTICAL to baseline 32893e996 (no new
-> persistent failures; the only delta is the 9 now-honest xfails). RESULTS_asm_typecheck.txt. Note:
-> the hard-error message is swallowed by the test framework (captured into CompileError.stderr, not
-> printed) — compile the .sol directly to see it.
+> was silently becoming `add(0,64)`. The hard-error is a **temporary backstop**: the real fix (now in
+> progress, per user direction) is type-dispatched **aggregate→memory-pointer** resolution in the
+> assembly handlers, backed by promoting assembly-used local aggregates to the linear-memory blob.
+> Pending that, the **9** affected tests are left as **honest fails** (NOT xfailed — they should pass
+> once pointer handling lands): base64, strings, library_return_struct_with_mapping, assembly_access,
+> cleanup, cleanup_abicoderv1, storage_layout_struct, dirty_memory_dynamic_array, dirty_memory_struct.
+> Suite **1197 pass / 68 fail / 77 xfail (+1 xpass)** — 68 = baseline 59 + these 9 (intentional,
+> temporary, tracked). Design + integration map in memory [[ensurebiguint-strict-assembly]]. Key
+> complication: EVM memory is **length-prefixed** (`m[0]` at `m+32`) but the existing >4KB blob model
+> is **ARC4-flat** (`m[i]` at `base+i*stride`, no length word) — so the harder cases (dirty_memory_*,
+> base64/strings) need an EVM-faithful layout, not just Phase-B reuse. (NB: hard-error message is
+> swallowed by the harness into CompileError.stderr — compile the .sol directly to see it.)
 
 > **CLEANUP BATCH (wip, 2026-06-08):** zero-reg tidy-up. (1) Removed the unsound Solady
 > `shr(96,shl(96,x))→x` address-cleanup peephole (CoreTranslation.cpp) — it short-circuited

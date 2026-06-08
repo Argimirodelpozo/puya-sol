@@ -899,7 +899,6 @@ def test_dirty_calldata_struct(harness):
     r = harness.call(app, "f((uint16[]))", ([384],))
     assert not r.reverted
 
-@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_dirty_memory_dynamic_array(harness):
     """viaYul/contracts/dirty_memory_dynamic_array.sol — EVM-specific Yul
     memory cleanup behavior (asserts r==0xffff..., int32→uint sign-extends
@@ -918,7 +917,6 @@ def test_dirty_memory_static_array(harness):
     app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_static_array.sol", via_yul_behavior=True)
     assert not harness.call(app, "f()").reverted
 
-@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_dirty_memory_struct(harness):
     """viaYul/contracts/dirty_memory_struct.sol — see dirty_memory_dynamic_array."""
     app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_struct.sol", via_yul_behavior=True)
