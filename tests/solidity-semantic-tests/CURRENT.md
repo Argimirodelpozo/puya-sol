@@ -8,7 +8,9 @@
 > `__evm_memory` local cache was removed; slot count is now `--evm-memory-slots`-configurable,
 > so "slots 0-4 / 20KB" → "0..MEMORY_SLOT_LAST"). Suite **1206 pass / 59 fail** = baseline
 > 32893e996, ZERO regression (RESULTS_cleanup.txt). A thorough sweep found no other map[]
-> bugs, no dead code; codebase is otherwise well-refactored.
+> bugs, no dead code; codebase is otherwise well-refactored. Follow-up (batch-3): 2
+> bit-identical DRY refactors — SuperCallResolution MRO-collection loop → one lambda;
+> PrecompileHandlers 4× `m_locals[...]=biguintType()` → a loop. Zero-reg (RESULTS_cleanup_b3.txt).
 
 > **LOGIC-SIG COMPILATION (wip, 2026-06-07):** new capability — a Solidity contract `is LogicSig`
 > (AVM.sol marker) with a `logicsig`-modified entry compiles to an AVM logic-sig program instead of

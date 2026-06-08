@@ -166,15 +166,22 @@ void ContractBuilder::collectSuperCallMetadata(
 		}
 	}
 
+	// Collect every super/explicit-base call across all implemented functions in the
+	// MRO (used by both the fallback super.f and the explicit-base Base.f passes below).
+	// (SuperCallCollector is a non-movable AST visitor, so fill one by reference.)
+	auto collectAllSuperCalls = [&](SuperCallCollector& c) {
+		for (auto const* base: mro)
+			for (auto const* func: base->definedFunctions())
+				if (func->isImplemented())
+					func->body().accept(c);
+	};
+
 	// Fallback: super calls not handled by MRO chains (e.g., g() calling super.f()
 	// where g and f are different function names). Use original AST-ID-based resolution.
 	m_fallbackSuperFuncs.clear();
 	{
 		SuperCallCollector globalCollector;
-		for (auto const* base: mro)
-			for (auto const* func: base->definedFunctions())
-				if (func->isImplemented())
-					func->body().accept(globalCollector);
+		collectAllSuperCalls(globalCollector);
 
 		// Collect all super target IDs already handled by MRO chain
 		std::set<int64_t> handledSuperIds;
@@ -210,10 +217,7 @@ void ContractBuilder::collectSuperCallMetadata(
 	m_explicitBaseTargetFuncs.clear();
 	{
 		SuperCallCollector globalCollector;
-		for (auto const* base: mro)
-			for (auto const* func: base->definedFunctions())
-				if (func->isImplemented())
-					func->body().accept(globalCollector);
+		collectAllSuperCalls(globalCollector);
 
 		for (int64_t id: globalCollector.explicitBaseTargetIds)
 		{

@@ -330,10 +330,8 @@ void AssemblyBuilder::handleModExpRT(
 	std::string baseVar = "__modexp_base";
 	std::string expVar = "__modexp_exp";
 	std::string modVar = "__modexp_mod";
-	m_locals[resultVar] = awst::WType::biguintType();
-	m_locals[baseVar] = awst::WType::biguintType();
-	m_locals[expVar] = awst::WType::biguintType();
-	m_locals[modVar] = awst::WType::biguintType();
+	for (auto const& v : {resultVar, baseVar, expVar, modVar})
+		m_locals[v] = awst::WType::biguintType();
 
 	auto makeVar = [&](std::string const& n) {
 		return awst::makeVarExpression(n, awst::WType::biguintType(), _loc);
