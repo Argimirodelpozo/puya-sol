@@ -148,12 +148,6 @@ struct ScopeState
 	/// real offset (pre-scan in ContractBuilder::buildBlock).
 	std::unordered_set<int64_t> assemblyAggregates;
 
-	/// Decl IDs of blob-backed aggregates using EVM-faithful linear-memory layout
-	/// (32-byte length word + 32-byte-strided elements) instead of the ARC4-flat
-	/// layout of the >4KB model. Set for assembly-promoted aggregates so their
-	/// field/index access matches assembly pointer arithmetic.
-	std::unordered_set<int64_t> evmLayoutAggregates;
-
 	/// Modifier-inliner param remap: when the same modifier is applied
 	/// multiple times in a function, each instance's locals get a unique
 	/// mangled name. Set/erased explicitly by the inliner around each
@@ -254,12 +248,6 @@ public:
 		return m_state->assemblyAggregates.count(_declId) > 0;
 	}
 
-	/// EVM-faithful linear-memory layout (length-prefixed) vs ARC4-flat?
-	bool isEvmLayoutAggregate(int64_t _declId) const
-	{
-		return m_state->evmLayoutAggregates.count(_declId) > 0;
-	}
-
 	ParamRemap const* findParamRemap(int64_t _declId) const
 	{
 		auto it = m_state->paramRemaps.find(_declId);
@@ -313,11 +301,6 @@ public:
 	void markAssemblyAggregate(int64_t _declId)
 	{
 		m_state->assemblyAggregates.insert(_declId);
-	}
-
-	void markEvmLayout(int64_t _declId)
-	{
-		m_state->evmLayoutAggregates.insert(_declId);
 	}
 
 	/// Toggle the enclosing function's constructor flag. Walks the chain

@@ -1,4 +1,19 @@
-# Semantic Test Status — v334
+# Semantic Test Status — v335
+
+> **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — ARC4 pivot (supersedes v334's EVM-layout):** Per user
+> direction — respect ARC4 as the native AVM layout, don't chase EVM-faithfulness unless it's free —
+> REVERTED step 2's EVM length-prefixed layout. New model: an assembly-used aggregate is an **ARC4-layout
+> blob pointer**; `add`/`sub`/`mstore`/`mload` + `m[i]`/`m.length` all interpret it consistently in ARC4
+> (no EVM length-word emulation). Sound + native for layout-agnostic pointer use. Assembly that hard-codes
+> EVM offsets (`add(m,32)` to skip a 32-byte length word) **silently diverges** (ARC4 packs differently),
+> so EVM-memory-layout quirk tests are EVM-fundamental (like blockhash/selfdestruct). Reverted
+> SolIndexAccess/Context/SolVariableDeclaration to milestone-1 ARC4-flat; kept the scanner bytes-exclusion;
+> added a minimal ARC4 materialize (`new T[](n)` → fresh pre-zeroed FMP region; non-`new` → strict
+> ensureBiguint backstop). PASS: **assembly_access**, **dirty_memory_dynamic_array**. EVM-fundamental fails
+> (7): storage_layout_struct (`a.slot` storage-slot introspection), dirty_memory_struct, base64, strings,
+> library_return_struct_with_mapping, cleanup, cleanup_abicoderv1. Suite **1199 pass / 66 fail / 77 xfail
+> (+1 xpass)** — 66 = baseline 59 + these 7; zero other regression (RESULTS_asm_ptr_arc4.txt). Foundation
+> (assembly_access + the modifier-inlining SIGSEGV fix, 2bbe46014) stays. See [[ensurebiguint-strict-assembly]].
 
 > **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — step 2: EVM length-prefixed layout + materialize:**
 > Initialized memory assembly-aggregates (`new T[](n)`) now materialize into the linear-memory blob in EVM
