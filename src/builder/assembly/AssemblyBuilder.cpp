@@ -638,16 +638,30 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 		return asBiguint;
 	}
 
-	// Non-scalar type (array, struct, tuple) used in assembly arithmetic.
-	// This happens in EVM memory pointer operations like add(array, 0x20)
-	// which have no meaning on AVM. Coerce to biguint(0).
-	Logger::instance().warning(
-		"non-scalar type '" + _expr->wtype->name()
-		+ "' in assembly arithmetic, coercing to biguint(0)",
+	// arc4.uintN (e.g. arc4.uint256) — the ABI/storage encoding of an integer:
+	// exactly N/8 big-endian bytes, no length prefix, so its raw bytes ARE the
+	// value. Reinterpret straight through bytes → biguint (value-preserving).
+	// In-expression integers are already biguint (TypeMapper maps >64-bit ints to
+	// biguint), so this only fires if an arc4 numeric leaks in from the ABI/storage
+	// boundary — previously such a value was silently coerced to 0 by the fallback.
+	if (_expr->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+	{
+		auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
+		return awst::makeAsBiguint(std::move(asBytes), _loc);
+	}
+
+	// Anything left — array / struct / tuple / reference-array — has no integer
+	// value (e.g. EVM memory-pointer arithmetic like add(array, 0x20), meaningless
+	// on the AVM's slot-backed memory model). Hard-error rather than silently
+	// coercing to 0, which would miscompile the value with no signal. (Return a
+	// placeholder so the rest of the program still compiles and surfaces any
+	// further errors in the same run; the logged error fails the build.)
+	Logger::instance().error(
+		"cannot coerce non-scalar type '" + _expr->wtype->name()
+		+ "' to biguint in assembly arithmetic — no integer value",
 		_loc
 	);
-	auto zero = awst::makeBiguintConstant("0", _loc);
-	return zero;
+	return awst::makeBiguintConstant("0", _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(

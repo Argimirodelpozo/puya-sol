@@ -7,6 +7,7 @@ from framework import (
 )
 
 
+@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_assembly_access(harness):
     """memoryManagement/contracts/assembly_access.sol"""
     app = harness.compile_and_deploy("memoryManagement/contracts/assembly_access.sol")

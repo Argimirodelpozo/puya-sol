@@ -143,6 +143,30 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
    — its contract defines a user `blockhash` that shadows the builtin, so it
    never reaches the builtin lowering and still compiles.
 
+13. ✅ **Aggregate (struct / array / `bytes` / `string`) used as a *value* in
+   inline assembly → hard-errored.** In Yul a memory aggregate decays to its
+   **memory pointer** (a `uint256` offset): `add(s, 64)`, `mstore(add(arr, k), v)`,
+   slice `_ptr`/`_len` walks, etc. puya-sol models memory aggregates as **native
+   ARC4 values** (`arc4.struct`, `arc4.dynamic_array<…>`, byte strings), which
+   have no linear-memory offset to expose, so `ensureBiguint`
+   (`AssemblyBuilder.cpp`) used to fall through its catch-all and coerce the
+   operand to `biguint(0)` — turning `add(s, 64)` into `add(0, 64)` and silently
+   reading/writing a bogus address. There is no sound value to substitute, so the
+   `ensure*` coercion now *fails* ⇒ compilation failure (the "ensure =
+   coerce-or-error" contract; legitimate coercions belong at the call sites, not
+   in `ensureBiguint`). A faithful fix needs aggregates to live in the
+   linear-memory blob with real offsets — the unfinished large-aggregate memory
+   model — out of scope here. Companion improvement at the same site: an
+   `arc4.uintN` operand (e.g. a `uint256` arriving from storage/calldata at the
+   ABI boundary) now reinterprets value-preservingly to biguint instead of
+   dropping into the same `biguint(0)` hole. Flips nine tests (xfailed):
+   `externalContracts::test_base64`, `externalContracts::test_strings`,
+   `libraries::test_library_return_struct_with_mapping`,
+   `memoryManagement::test_assembly_access`, `userDefinedValueType::test_cleanup`,
+   `userDefinedValueType::test_cleanup_abicoderv1`,
+   `userDefinedValueType::test_storage_layout_struct`,
+   `viaYul::test_dirty_memory_dynamic_array`, `viaYul::test_dirty_memory_struct`.
+
 ---
 
 ## Full verdict table

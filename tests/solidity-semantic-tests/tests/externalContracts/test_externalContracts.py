@@ -12,6 +12,7 @@ def test_FixedFeeRegistrar(harness):  # currently fails
     """externalContracts/contracts/FixedFeeRegistrar.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/FixedFeeRegistrar.sol')
 
+@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
 def test_base64(harness):
     """externalContracts/contracts/base64.sol
 
@@ -96,6 +97,7 @@ def test_snark(harness):
     """externalContracts/contracts/snark.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/snark.sol')
 
-def test_strings(harness):  # currently fails
+@pytest.mark.xfail(reason="aggregate (struct/array/bytes/string) used as a value in inline assembly is its Yul memory pointer; puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so this is a hard compile error per EVM_DIVERGENCE.md (#13) (was a silent coerce-to-biguint(0))", strict=False)
+def test_strings(harness):
     """externalContracts/contracts/strings.sol"""
     app = harness.compile_and_deploy('externalContracts/contracts/strings.sol')

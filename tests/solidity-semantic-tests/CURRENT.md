@@ -1,4 +1,21 @@
-# Semantic Test Status — v331
+# Semantic Test Status — v332
+
+> **ASSEMBLY TYPE-ENFORCEMENT (wip, 2026-06-08):** `ensureBiguint` (AssemblyBuilder.cpp) is now
+> strict — "ensure = coerce-or-compile-error". (1) NEW `arc4.uintN` branch: a `uint256` arriving at
+> the ABI/storage boundary (arc4.uint256) reinterprets value-preservingly `bytes→biguint` instead of
+> falling into the catch-all (answers the mulmod-soundness thread; in-expression uint256 is already
+> biguint via TypeMapper). (2) The catch-all stopped warning + returning `biguint(0)` (silent-wrong)
+> and now `Logger::error`s. This surfaced a real unsoundness class: an aggregate
+> (struct/array/bytes/string) used as a *value* in inline assembly is its Yul **memory pointer**, but
+> puya-sol models memory aggregates as native ARC4 values with no linear-memory offset, so `add(s,64)`
+> was silently becoming `add(0,64)`. No sound value exists → hard error (EVM_DIVERGENCE.md #13; a
+> faithful fix needs the unfinished large-aggregate linear-memory model). Flips **9 tests** pass→xfail
+> (all same root cause: base64, strings, library_return_struct_with_mapping, assembly_access, cleanup,
+> cleanup_abicoderv1, storage_layout_struct, dirty_memory_dynamic_array, dirty_memory_struct). Suite
+> **1197 pass / 59 fail / 86 xfail (+1 xpass)** — the 59 fails IDENTICAL to baseline 32893e996 (no new
+> persistent failures; the only delta is the 9 now-honest xfails). RESULTS_asm_typecheck.txt. Note:
+> the hard-error message is swallowed by the test framework (captured into CompileError.stderr, not
+> printed) — compile the .sol directly to see it.
 
 > **CLEANUP BATCH (wip, 2026-06-08):** zero-reg tidy-up. (1) Removed the unsound Solady
 > `shr(96,shl(96,x))→x` address-cleanup peephole (CoreTranslation.cpp) — it short-circuited
