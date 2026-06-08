@@ -1,5 +1,15 @@
 # Semantic Test Status — v331
 
+> **CLEANUP BATCH (wip, 2026-06-08):** zero-reg tidy-up. (1) Removed the unsound Solady
+> `shr(96,shl(96,x))→x` address-cleanup peephole (CoreTranslation.cpp) — it short-circuited
+> EVERY such expr to x, mis-compiling genuine 160-bit masking; only WIP/solady used it.
+> (2) Fixed `m_localConstants[paramName]` operator[] map-poisoning read → `.find()`
+> (DataOps.cpp:59; behaviour-preserving). (3) Corrected ~20 stale comments/log-strings (the
+> `__evm_memory` local cache was removed; slot count is now `--evm-memory-slots`-configurable,
+> so "slots 0-4 / 20KB" → "0..MEMORY_SLOT_LAST"). Suite **1206 pass / 59 fail** = baseline
+> 32893e996, ZERO regression (RESULTS_cleanup.txt). A thorough sweep found no other map[]
+> bugs, no dead code; codebase is otherwise well-refactored.
+
 > **LOGIC-SIG COMPILATION (wip, 2026-06-07):** new capability — a Solidity contract `is LogicSig`
 > (AVM.sol marker) with a `logicsig`-modified entry compiles to an AVM logic-sig program instead of
 > a stateful app (`awst::LogicSignature` → puya). Zero-regression (1206/59 = baseline 32893e996,

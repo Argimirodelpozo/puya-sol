@@ -398,8 +398,10 @@ void AssemblyBuilder::initializeMemoryBlob(
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
 
-	// Load the memory blob from scratch slot 0 into local variable __evm_memory.
-	// The blob is pre-allocated in the approval program preamble with bzero(SLOT_SIZE).
+	// Slot 0 lives directly in scratch (pre-allocated bzero(SLOT_SIZE) in the
+	// approval-program preamble); there is no __evm_memory local cache anymore, so
+	// this re-stores slot 0 from itself (no-op). MEMORY_VAR stays declared but
+	// vestigial — memoryVar()/assignMemoryVar() go straight to scratch slot 0.
 	m_locals[MEMORY_VAR] = awst::WType::bytesType();
 	{
 		auto blob = loadMemoryBlob(loc, MEMORY_SLOT_FIRST);
@@ -493,7 +495,8 @@ void AssemblyBuilder::flushMemoryToScratch(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Store the local __evm_memory blob back to scratch slot 0
+	// Re-store slot 0 from itself — a no-op now that slot 0 lives directly in
+	// scratch (no __evm_memory local cache). Retained as a splitter sync hook.
 	storeMemoryBlob(memoryVar(_loc), _loc, _out, 0);
 }
 

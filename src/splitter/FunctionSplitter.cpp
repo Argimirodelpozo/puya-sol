@@ -991,7 +991,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 					pieceBody->body.push_back(std::move(s));
 				}
 				// Cross-chunk pieces run as separate programs (fresh scratch), so
-				// also restore the EVM-memory blob (slots 0-4) the prior piece
+				// also restore the EVM-memory blob (slots 0..MEMORY_SLOT_LAST) the prior piece
 				// flushed — threads memory state through scratchspace via gload.
 				if (spec.crossChunk)
 					for (auto& s : makeBlobCarryLoadStmts(prevCallTxnIdx, origLoc))
@@ -1039,7 +1039,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		{
 			// CROSS-CHUNK: the pieces are standalone, client-driven chunks — the
 			// deploy harness submits them as a staged sequence threading scratch
-			// (slot 100 + EVM-blob slots 0-4) via gload across the group. The
+			// (slot 100 + EVM-blob slots 0..MEMORY_SLOT_LAST) via gload across the group. The
 			// original function must therefore NOT callsub the pieces: a callsub
 			// makes per-Contract DCE keep every piece REAL in this chunk (the
 			// dispatcher absorbs its whole pipeline — the 33KB/19KB/11KB chunks),

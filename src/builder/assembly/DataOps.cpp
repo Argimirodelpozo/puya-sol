@@ -56,7 +56,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			&& (elem.paramType == awst::WType::bytesType()
 				|| elem.paramType == awst::WType::stringType()))
 		{
-			uint64_t relativeOffset = *offset - m_localConstants[elem.paramName];
+			// Use .find() (not operator[]) — a calldata param name is never a Yul
+			// `let` constant, so operator[] would insert+return a spurious 0 entry,
+			// mutating the map during a read. Absent ⇒ base offset 0 (relative ==
+			// absolute), preserving the prior operator[] behaviour.
+			auto lcIt = m_localConstants.find(elem.paramName);
+			uint64_t paramBase = lcIt != m_localConstants.end() ? lcIt->second : 0;
+			uint64_t relativeOffset = *offset - paramBase;
 
 			auto offArg = awst::makeIntegerConstant(relativeOffset, _loc);
 

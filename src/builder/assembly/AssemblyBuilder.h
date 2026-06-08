@@ -27,10 +27,12 @@ void setCompileEVMVersion(solidity::langutil::EVMVersion _v);
 /// Translates EVM Yul opcodes to equivalent AVM operations using biguint arithmetic
 /// (EVM uint256 ↔ AVM biguint), a scratch-slot-backed memory blob, and calldata mapping.
 ///
-/// Memory model: EVM linear memory is simulated using AVM scratch slots 0-4.
-/// Each slot holds a bytes blob of up to 4096 bytes, giving 20KB total addressable space.
-/// mload/mstore translate to extract3/replace3 on the blob, supporting dynamic offsets.
-/// The blob is loaded into a local variable at assembly block start and flushed at block end.
+/// Memory model: EVM linear memory is simulated using AVM scratch slots
+/// MEMORY_SLOT_FIRST..MEMORY_SLOT_LAST (default 0-4 = 20KB; raise with
+/// --evm-memory-slots N). Each slot holds a bytes blob of up to 4096 bytes.
+/// mload/mstore translate to extract3/replace3 on the holding slot, supporting
+/// dynamic offsets. Every slot (incl. slot 0) is read/written directly in
+/// scratch via loads/stores — there is no __evm_memory local cache.
 ///
 /// Implementation is split across multiple files by operation category:
 ///   - AssemblyBuilder.cpp      — Core: constructor, memory init, type coercion
@@ -552,8 +554,9 @@ private:
 		int _slot = 0
 	);
 
-	/// Flush the local __evm_memory variable to scratch slot(s).
-	/// Called at assembly block end and before return statements.
+	/// Flush the slot-0 blob to scratch. Now effectively a no-op — slot 0 is read
+	/// and written directly in scratch (no __evm_memory local cache). Retained as
+	/// a sync hook; emitted at assembly block end and before return statements.
 	void flushMemoryToScratch(
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
@@ -567,19 +570,18 @@ private:
 	);
 
 	/// Read a 32-byte EVM-memory word at a CONSTANT byte offset, routed to the
-	/// scratch slot that holds it (slot = offset / SLOT_SIZE). Slot 0 reads the
-	/// cached __evm_memory local (unchanged); higher slots read scratch
-	/// directly. Words that straddle a slot boundary are stitched via concat.
-	/// Returns bytes (32 bytes).
+	/// scratch slot that holds it (slot = offset / SLOT_SIZE) and read directly
+	/// via loads(slot) (slot 0 goes through memoryVar()). Words that straddle a
+	/// slot boundary are stitched via concat. Returns bytes (32 bytes).
 	std::shared_ptr<awst::Expression> readMemWordConst(
 		uint64_t _offset,
 		awst::SourceLocation const& _loc
 	);
 
 	/// Write a 32-byte EVM-memory word (`_value32`, exactly 32 bytes) at a
-	/// CONSTANT byte offset. Slot 0 updates the cached __evm_memory local;
-	/// higher slots load-modify-store the scratch slot. Straddling words are
-	/// split across the two adjacent slots.
+	/// CONSTANT byte offset. Each slot is load-modify-stored in scratch
+	/// (stores(slot, replace3(loads(slot), sub, value))); slot 0 goes through
+	/// assignMemoryVar(). Straddling words are split across the two adjacent slots.
 	void writeMemWordConst(
 		uint64_t _offset,
 		std::shared_ptr<awst::Expression> _value32,
@@ -588,17 +590,17 @@ private:
 	);
 
 	/// Read a 32-byte EVM-memory word at a DYNAMIC (runtime) byte offset.
-	/// Fast path (offset < SLOT_SIZE) uses the cached __evm_memory local so
-	/// ≤4KB contracts are unchanged; the slow path routes to the higher slot
-	/// via `loads(offset / SLOT_SIZE)`. Returns bytes (32 bytes).
+	/// Routes to the scratch slot via `loads(offset / SLOT_SIZE)` (the
+	/// offset < SLOT_SIZE case reads slot 0); straddling words stitch two slots.
+	/// Returns bytes (32 bytes).
 	std::shared_ptr<awst::Expression> readMemWordDyn(
 		std::shared_ptr<awst::Expression> _offset,
 		awst::SourceLocation const& _loc
 	);
 
 	/// Write a 32-byte EVM-memory word (`_value32`, exactly 32 bytes) at a
-	/// DYNAMIC byte offset. Fast path updates the cached __evm_memory local;
-	/// the slow path does `stores(slot, replace3(loads(slot), sub, value))`.
+	/// DYNAMIC byte offset via `stores(slot, replace3(loads(slot), sub, value))`
+	/// into the scratch slot (offset / SLOT_SIZE).
 	void writeMemWordDyn(
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _value32,
@@ -690,10 +692,12 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	/// Build an expression reading the __evm_memory local variable.
+	/// Build an expression reading EVM-memory slot 0 directly from scratch
+	/// (`loads(MEMORY_SLOT_FIRST)`) — there is no `__evm_memory` local cache.
 	std::shared_ptr<awst::Expression> memoryVar(awst::SourceLocation const& _loc);
 
-	/// Assign a new value to the __evm_memory local variable.
+	/// Store a new value into EVM-memory slot 0 directly in scratch
+	/// (`stores(MEMORY_SLOT_FIRST, value)`).
 	void assignMemoryVar(
 		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc,

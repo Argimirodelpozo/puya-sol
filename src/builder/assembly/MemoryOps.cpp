@@ -36,22 +36,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 			return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
 		}
 		// Not a calldata parameter → read from EVM memory at this constant
-		// offset, routed to the scratch slot holding it (slot 0 stays in the
-		// cached __evm_memory local; higher slots read scratch directly).
+		// offset, routed to the scratch slot holding it (all slots, including 0,
+		// are read directly from scratch — no __evm_memory local cache).
 		return awst::makeAsBiguint(readMemWordConst(*constOffset, _loc), _loc);
 	}
 
-	// Dynamic offset → route to the correct slot at runtime (the fast path
-	// keeps offsets < SLOT_SIZE on the cached __evm_memory local). mload → uint256.
+	// Dynamic offset → route to the correct slot at runtime (offsets < SLOT_SIZE
+	// hit slot 0; all slots read directly from scratch). mload → uint256.
 	return awst::makeAsBiguint(readMemWordDyn(_args[0], _loc), _loc);
 }
 
 // ── Multi-slot memory word access ───────────────────────────────────────────
 // EVM memory spans scratch slots [MEMORY_SLOT_FIRST, MEMORY_SLOT_LAST], each
 // SLOT_SIZE (4096) bytes. A byte offset maps to (slot = offset / SLOT_SIZE,
-// sub = offset % SLOT_SIZE). Slot 0 stays in the cached __evm_memory local so
-// contracts that never exceed SLOT_SIZE are byte-for-byte unchanged; higher
-// slots are read/written directly against scratch. 32-byte-aligned accesses
+// sub = offset % SLOT_SIZE). Every slot — including slot 0 — is read/written
+// directly against scratch (loads/stores); there is no __evm_memory local cache.
+// 32-byte-aligned accesses
 // never straddle a slot boundary (SLOT_SIZE % 32 == 0); unaligned straddling
 // words are stitched/split across the two adjacent slots.
 
@@ -66,7 +66,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 			awst::makeIntegerConstant("32", _loc), _loc);
 
 	if (slot > MEMORY_SLOT_LAST)
-		Logger::instance().warning("EVM memory read beyond 20KB addressable space", _loc);
+		Logger::instance().warning("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
 		return awst::makeExtract3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot, _loc),
@@ -97,7 +97,7 @@ void AssemblyBuilder::writeMemWordConst(
 	}
 
 	if (slot > MEMORY_SLOT_LAST)
-		Logger::instance().warning("EVM memory write beyond 20KB addressable space", _loc);
+		Logger::instance().warning("EVM memory write beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
 	{
@@ -591,16 +591,16 @@ void AssemblyBuilder::handleMstore(
 	// Write 32 bytes into EVM memory at the given offset.
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
-	// Constant offset → route to the scratch slot holding it (slot 0 updates
-	// the cached __evm_memory local; higher slots load-modify-store scratch).
+	// Constant offset → route to the scratch slot holding it (every slot,
+	// including 0, is load-modify-stored directly in scratch — no local cache).
 	if (constOffset)
 	{
 		writeMemWordConst(*constOffset, std::move(padded), _loc, _out);
 		return;
 	}
 
-	// Dynamic offset → route to the correct slot at runtime (the fast path
-	// keeps offsets < SLOT_SIZE on the cached __evm_memory local).
+	// Dynamic offset → route to the correct slot at runtime (offsets < SLOT_SIZE
+	// hit slot 0; all slots written directly to scratch).
 	writeMemWordDyn(_args[0], std::move(padded), _loc, _out);
 }
 

@@ -339,7 +339,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// State variables → AppStorageDefinitions
 	contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
-	// Reserve scratch slots 0-4 for EVM memory simulation
+	// Reserve EVM-memory scratch slots (0..MEMORY_SLOT_LAST, default 0-4; raisable
+	// via --evm-memory-slots) plus the transient + flash-accounting slots.
 	contract->reservedScratchSpace = AssemblyBuilder::reservedScratchSlots();
 
 	// Collect super.f() and Base.f() target metadata across the MRO and the
