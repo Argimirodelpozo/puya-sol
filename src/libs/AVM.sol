@@ -18,6 +18,23 @@ pragma solidity ^0.8.20;
 ///   library Txn     — Current-txn field reads (sender, fee, note, etc.)
 ///   library Global  — Global params (current app id/address, group id,
 ///                     opcode budget, latest timestamp)
+///   contract LogicSig — marker base: compile this contract to a stateless
+///                     logic-signature program instead of a stateful app
+
+/// @title LogicSig
+/// @dev Inherit this marker to compile a contract as an AVM **logic signature**
+///      (stateless program) instead of a stateful application. Mark the single
+///      entry function with the `logicsig` modifier; its body becomes the lsig
+///      program and MUST return bool (true = approve). Logic sigs have a SEPARATE
+///      pooled opcode budget from app calls (~320k/group), execute before their
+///      transaction, and can read group scratch via gload. They CANNOT touch app
+///      state or issue inner transactions — the compiler hard-fails on those.
+abstract contract LogicSig {
+    modifier logicsig() {
+        _;
+    }
+}
+
 library AVM {
     // ─── ASA: configuration ──────────────────────────────────────────────
 

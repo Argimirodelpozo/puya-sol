@@ -117,9 +117,28 @@ njson AWSTSerializer::serializeRootNode(awst::RootNode const& _node)
 {
 	if (auto const* contract = dynamic_cast<awst::Contract const*>(&_node))
 		return serializeContract(*contract);
+	if (auto const* lsig = dynamic_cast<awst::LogicSignature const*>(&_node))
+		return serializeLogicSignature(*lsig);
 	if (auto const* sub = dynamic_cast<awst::Subroutine const*>(&_node))
 		return serializeSubroutine(*sub);
 	return njson::object();
+}
+
+njson AWSTSerializer::serializeLogicSignature(awst::LogicSignature const& _lsig)
+{
+	njson j;
+	j["_type"] = "LogicSignature";
+	j["source_location"] = serializeSourceLocation(_lsig.sourceLocation);
+	j["id"] = _lsig.id;
+	j["short_name"] = _lsig.shortName;
+	j["program"] = _lsig.program ? serializeSubroutine(*_lsig.program) : njson(nullptr);
+	j["docstring"] = _lsig.docstring.has_value() ? njson(_lsig.docstring.value()) : njson(nullptr);
+	j["reserved_scratch_space"] = njson(_lsig.reservedScratchSpace);
+	j["avm_version"] = _lsig.avmVersion.has_value() ? njson(_lsig.avmVersion.value()) : njson(nullptr);
+	j["validate_encoding"] = _lsig.validateEncoding.has_value()
+		? njson(_lsig.validateEncoding.value())
+		: njson(nullptr);
+	return j;
 }
 
 njson AWSTSerializer::serializeContract(awst::Contract const& _contract)

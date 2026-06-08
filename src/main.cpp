@@ -1151,12 +1151,14 @@ int main(int _argc, char* _argv[])
 	if (opts.dumpAwst)
 		std::cout << awstJson.dump(2) << std::endl;
 
-	// Get all contract names for options
+	// Get all contract / logic-sig names for the compilation set.
 	std::vector<std::string> contractNames;
 	for (auto const& root: roots)
 	{
 		if (auto const* contract = dynamic_cast<puyasol::awst::Contract const*>(root.get()))
 			contractNames.push_back(contract->id);
+		else if (auto const* lsig = dynamic_cast<puyasol::awst::LogicSignature const*>(root.get()))
+			contractNames.push_back(lsig->id);
 	}
 
 	// Write options.json (with template var declarations for child contracts)

@@ -875,6 +875,82 @@ void AWSTBuilder::translateContracts(
 			for (auto& sub : translator.takeDispatchSubroutines())
 				roots.push_back(std::move(sub));
 
+			// ── LogicSig: emit a stateless logic-signature program ──
+			// A contract `is LogicSig` (AVM.sol marker) compiles to an AVM lsig
+			// instead of a stateful app: the entry function (marked `logicsig`, or
+			// the sole public method) becomes the program. We repackage its
+			// already-translated body, discarding the app approval/clear/router.
+			// Lsig-illegal constructs (app state, inner-txns) hard-fail downstream.
+			{
+				bool isLsig = false;
+				for (auto const* base: contract->annotation().linearizedBaseContracts)
+					if (base->name() == "LogicSig") { isLsig = true; break; }
+				if (isLsig)
+				{
+					std::string entryName;
+					for (auto const* f: contract->definedFunctions())
+					{
+						if (f->isConstructor() || !f->isImplemented())
+							continue;
+						for (auto const& modInv: f->modifiers())
+						{
+							auto const& p = modInv->name().path();
+							if (!p.empty() && p.back() == "logicsig")
+							{
+								entryName = f->name();
+								break;
+							}
+						}
+						if (!entryName.empty())
+							break;
+					}
+					awst::ContractMethod const* entry = nullptr;
+					if (!entryName.empty())
+					{
+						for (auto const& m: awstContract->methods)
+							if (m.memberName == entryName) { entry = &m; break; }
+					}
+					else
+					{
+						// Fallback: the sole public/external (ARC4) method.
+						int pubCount = 0;
+						for (auto const& m: awstContract->methods)
+							if (m.arc4MethodConfig.has_value()) { entry = &m; ++pubCount; }
+						if (pubCount != 1)
+							entry = nullptr;
+					}
+					if (!entry)
+					{
+						Logger::instance().error(
+							"contract `" + contract->name() + "` is LogicSig but has no single "
+							"entry function — mark exactly one function with the `logicsig` modifier",
+							awstContract->sourceLocation);
+						continue;
+					}
+					auto program = std::make_shared<awst::Subroutine>();
+					program->sourceLocation = entry->sourceLocation;
+					program->id = awstContract->id;
+					program->name = entry->memberName;
+					program->args = entry->args;
+					program->returnType = entry->returnType;
+					program->body = entry->body;
+					program->documentation = entry->documentation;
+					program->pure = entry->pure;
+
+					auto lsig = std::make_shared<awst::LogicSignature>();
+					lsig->sourceLocation = awstContract->sourceLocation;
+					lsig->id = awstContract->id;
+					lsig->shortName = awstContract->name;
+					lsig->program = std::move(program);
+					lsig->docstring = awstContract->description;
+					lsig->reservedScratchSpace = awstContract->reservedScratchSpace;
+					lsig->avmVersion = awstContract->avmVersion;
+					roots.push_back(std::move(lsig));
+					Logger::instance().info("Emitted LogicSignature: " + contract->name());
+					continue;
+				}
+			}
+
 			// Only emit deployable contracts (those with public/external methods
 			// or a constructor). Non-deployable contracts (e.g., ErrorReporter
 			// with only internal functions) are translated for MRO/inheritance

@@ -1,5 +1,14 @@
 # Semantic Test Status — v331
 
+> **LOGIC-SIG COMPILATION (wip, 2026-06-07):** new capability — a Solidity contract `is LogicSig`
+> (AVM.sol marker) with a `logicsig`-modified entry compiles to an AVM logic-sig program instead of
+> a stateful app (`awst::LogicSignature` → puya). Zero-regression (1206/59 = baseline 32893e996,
+> RESULTS_lsig.txt). Restrictions hard-fail (no instance-method calls / state / inner-txns); needs
+> `--evm-version osaka` for AVM.sol's Bits.clz. Built while exploring whether the honk verify could
+> fit one txn-group by offloading crypto to lsigs (separate ~320k pool) — it can't, because lsigs
+> are approve/reject only (can't pass values), so the verify's value-producing bulk stays stuck in
+> the 190k app pool. See memory avm-lsig-compilation + barretenberg-ultrahonk-status. Honk budget PINNED.
+
 > **🎉 HONK SESSION (wip, 2026-06-07 LATE): UltraHonk Add2 proof VERIFIES TRUE on the AVM** via the
 > 8-piece uros split chain (16-txn single group). `=== VERIFY RESULT: True ===`. Four fixes this
 > session took it from a piece_1 memory crash to a passing verify (see memory

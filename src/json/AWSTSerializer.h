@@ -21,6 +21,9 @@ public:
 	/// Serialize a contract.
 	nlohmann::ordered_json serializeContract(awst::Contract const& _contract);
 
+	/// Serialize a logic-signature program.
+	nlohmann::ordered_json serializeLogicSignature(awst::LogicSignature const& _lsig);
+
 	/// Serialize a subroutine.
 	nlohmann::ordered_json serializeSubroutine(awst::Subroutine const& _sub);
 

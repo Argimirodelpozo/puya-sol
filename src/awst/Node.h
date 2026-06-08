@@ -2240,4 +2240,21 @@ inline std::shared_ptr<Subroutine> makeSubroutine(
 	return node;
 }
 
+// Stateless logic-signature program (mirrors puya's awst.nodes.LogicSignature).
+// Emitted instead of a Contract when a Solidity contract is marked with the
+// `LogicSig` stdlib base (see AVM.sol). The single entry function's body becomes
+// `program` (must return bool/uint64). Has a SEPARATE pooled opcode budget from
+// app calls on the AVM. No app state / no inner-txns — backend hard-fails on those.
+struct LogicSignature: RootNode
+{
+	std::string nodeType() const override { return "LogicSignature"; }
+	std::string id;
+	std::string shortName;
+	std::shared_ptr<Subroutine> program;
+	std::optional<std::string> docstring;
+	std::vector<int> reservedScratchSpace;
+	std::optional<int> avmVersion;
+	std::optional<bool> validateEncoding;
+};
+
 } // namespace puyasol::awst

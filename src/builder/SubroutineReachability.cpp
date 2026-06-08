@@ -43,17 +43,26 @@ std::vector<std::shared_ptr<awst::RootNode>> filterToReachableSubroutines(
 	std::set<std::string> reachable;
 	std::queue<std::string> worklist;
 
-	// Seed with contract method references.
+	// Seed with contract method references AND logic-sig program references.
 	for (auto const& root: _roots)
 	{
-		auto const* contract = dynamic_cast<awst::Contract const*>(root.get());
-		if (!contract)
-			continue;
 		std::set<std::string> refs;
-		collectMethodRefs(contract->approvalProgram, refs);
-		collectMethodRefs(contract->clearProgram, refs);
-		for (auto const& method: contract->methods)
-			collectMethodRefs(method, refs);
+		if (auto const* contract = dynamic_cast<awst::Contract const*>(root.get()))
+		{
+			collectMethodRefs(contract->approvalProgram, refs);
+			collectMethodRefs(contract->clearProgram, refs);
+			for (auto const& method: contract->methods)
+				collectMethodRefs(method, refs);
+		}
+		else if (auto const* lsig = dynamic_cast<awst::LogicSignature const*>(root.get()))
+		{
+			// A logic-sig program is a reachability root too — seed the helper
+			// subroutines its body calls, else they'd be dropped as unreachable.
+			if (lsig->program && lsig->program->body)
+				collectRefs(*lsig->program->body, refs);
+		}
+		else
+			continue;
 		for (auto const& id: refs)
 		{
 			reachable.insert(id);
