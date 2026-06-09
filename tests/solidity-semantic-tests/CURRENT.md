@@ -1,4 +1,13 @@
-# Semantic Test Status — v335
+# Semantic Test Status — v336
+
+> **EVM MEMORY BOUNDS GUARD (wip, 2026-06-09):** Clear-fail when an EVM memory access exceeds the modeled
+> scratch blob, instead of silently corrupting a non-memory scratch slot (slot ∈ (LAST,255]) or an opaque
+> AVM error (slot>255). CONST offset past the blob → compile error (readMemWordConst/writeMemWordConst,
+> was a warning). DYNAMIC offset → runtime assert `off+32 <= SLOT_SIZE*(MEMORY_SLOT_LAST+1)` (new
+> `memBoundsAssert`; emitted by readMemWordDyn via m_pendingStatements + writeMemWordDyn/writeMemWordDirect
+> via _out; the message names `--evm-memory-slots`). Blob ceiling ≈ 256 scratch slots × 4096 ≈ 1 MB (shared
+> with locals); default 4 slots = 16 KB, tunable. Suite **1199 pass / 66 fail / 77 xfail (+1 xpass)** —
+> IDENTICAL fail-set to v335 (zero-reg; the const→error fired 0× across the whole suite; RESULTS_membnd.txt).
 
 > **ASSEMBLY AGGREGATE→POINTER (wip, 2026-06-08) — ARC4 pivot (supersedes v334's EVM-layout):** Per user
 > direction — respect ARC4 as the native AVM layout, don't chase EVM-faithfulness unless it's free —

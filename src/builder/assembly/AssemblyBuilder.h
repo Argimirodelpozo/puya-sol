@@ -156,6 +156,16 @@ public:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// Build a statement asserting a 32-byte memory access at `_off` (uint64)
+	/// stays within the modeled scratch blob. Reverts clearly when a contract's
+	/// EVM memory exceeds the allocated slots — instead of silently corrupting
+	/// non-memory scratch (slot in (LAST,255]) or an opaque AVM error (slot>255).
+	/// Raise `--evm-memory-slots` if a contract legitimately needs more memory.
+	static std::shared_ptr<awst::Statement> memBoundsAssert(
+		std::shared_ptr<awst::Expression> _off,
+		awst::SourceLocation const& _loc
+	);
+
 private:
 	// ── Expression translation ──────────────────────────────────────────
 

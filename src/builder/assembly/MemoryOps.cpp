@@ -55,6 +55,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 // never straddle a slot boundary (SLOT_SIZE % 32 == 0); unaligned straddling
 // words are stitched/split across the two adjacent slots.
 
+std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
+	std::shared_ptr<awst::Expression> _off, awst::SourceLocation const& _loc)
+{
+	// Blob capacity (bytes) = SLOT_SIZE * slot count; a 32-byte word must fit:
+	// assert(off + 32 <= cap). Beyond this the access would spill into a
+	// non-memory scratch slot (silent corruption) or error opaquely (slot>255).
+	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE) * static_cast<uint64_t>(MEMORY_SLOT_LAST + 1);
+	auto end = awst::makeUInt64BinOp(std::move(_off), awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
+	auto cond = awst::makeNumericCompare(std::move(end), awst::NumericComparison::Lte,
+		awst::makeIntegerConstant(cap, _loc), _loc);
+	return awst::makeExpressionStatement(
+		awst::makeAssert(std::move(cond), _loc,
+			"EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)"), _loc);
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 	uint64_t _offset, awst::SourceLocation const& _loc)
 {
@@ -66,7 +82,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 			awst::makeIntegerConstant("32", _loc), _loc);
 
 	if (slot > MEMORY_SLOT_LAST)
-		Logger::instance().warning("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
+		Logger::instance().error("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
 		return awst::makeExtract3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot, _loc),
@@ -97,7 +113,7 @@ void AssemblyBuilder::writeMemWordConst(
 	}
 
 	if (slot > MEMORY_SLOT_LAST)
-		Logger::instance().warning("EVM memory write beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
+		Logger::instance().error("EVM memory write beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
 	{
@@ -132,6 +148,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto off = offsetToUint64(std::move(_offset), _loc);
+	// Fail clearly if this offset spills past the modeled blob (vs silently
+	// reading a non-memory scratch slot); fires before the read is consumed.
+	m_pendingStatements.push_back(memBoundsAssert(off, _loc));
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 
 	// offset < SLOT_SIZE → cached slot-0 local (unchanged for ≤4KB memory).
@@ -168,6 +187,9 @@ void AssemblyBuilder::writeMemWordDyn(
 		std::move(_value32), _loc));
 	auto offR = [&]() { return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc); };
 	auto valR = [&]() { return awst::makeVarExpression(valN, awst::WType::bytesType(), _loc); };
+	// Fail clearly if the write spills past the modeled blob (would otherwise
+	// silently corrupt a non-memory scratch slot).
+	_out.push_back(memBoundsAssert(offR(), _loc));
 
 	// Fast: __evm_memory = replace3(__evm_memory, off, val)  [slot 0]
 	auto fastBlock = awst::makeBlock(_loc);
@@ -241,6 +263,9 @@ void AssemblyBuilder::writeMemWordDirect(
 	static int s_ctr = 0;
 	int id = s_ctr++;
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
+
+	// Fail clearly if the write spills past the modeled blob.
+	_out.push_back(memBoundsAssert(_offset, _loc));
 
 	std::string slotN = "__blobw_slot_" + std::to_string(id);
 	std::string valN = "__blobw_val_" + std::to_string(id);
