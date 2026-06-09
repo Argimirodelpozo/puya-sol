@@ -100,9 +100,13 @@ def test_code_length_contract_member(harness):
     # TODO: verify expected: 0x20 | 0x20 | true
     assert not r.reverted
 
-@pytest.mark.xfail(reason="Yul `balance` has no AVM equivalent; now a hard compile error per EVM_DIVERGENCE.md (was a silent stub-to-0)", strict=False)
 def test_codebalance_assembly(harness):
-    """various/contracts/codebalance_assembly.sol"""
+    """various/contracts/codebalance_assembly.sol
+
+    balance(addr) maps to the AVM `balance` opcode on the 32-byte account from
+    addr (microAlgos, not wei). Compile+deploy only: the EVM return values
+    (balance(0)=0, balance(1)=1, balance(address())=23 wei) are EVM-specific
+    and don't translate to AVM account balances, so values aren't asserted."""
     app = harness.compile_and_deploy('various/contracts/codebalance_assembly.sol')
 
 def test_codehash(harness):

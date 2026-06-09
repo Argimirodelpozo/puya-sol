@@ -482,6 +482,26 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// biguint (match at consumption, not at exit — same as selfbalance/clz).
 		return awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
 	}
+	if (funcName == "balance")
+	{
+		// balance(addr) → AVM `balance` opcode on the 32-byte account derived
+		// from addr (left-zero-padded to 32 bytes). uint64 result, same as
+		// selfbalance (microAlgo balances fit uint64); the consumer coerces via
+		// ensureBiguint only when it needs a biguint. NOTE: this is the AVM
+		// account balance in microAlgos (NOT EVM wei), and the account must be
+		// available to the txn — an arbitrary EVM address (e.g. balance(0))
+		// maps to an unfunded/unavailable AVM account, so only addresses the
+		// txn references (incl. address()/self) read meaningfully.
+		if (args.empty())
+		{
+			Logger::instance().error("balance requires 1 argument (address)", loc);
+			return awst::makeZero(loc, awst::WType::uint64Type());
+		}
+		auto acct = padTo32Bytes(ensureBiguint(args[0], loc), loc);
+		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
+		bal->stackArgs.push_back(std::move(acct));
+		return bal;
+	}
 	if (funcName == "selfbalance")
 	{
 		// Yul selfbalance() returns the balance of the executing contract.
@@ -517,23 +537,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "codesize")
 	{
-		// EVM codesize() returns the deployed contract's bytecode length.
-		// AVM has no direct opcode exposing the TEAL program size, and
-		// `type(C).creationCode` is stubbed as 32 zero bytes elsewhere.
-		// Return a sentinel 50 — chosen so:
-		//   - codesize() > creationCode.length (32) is true, so
-		//     deployedCodeExclusion/subassembly_deduplication's lower
-		//     bound passes;
-		//   - codesize() < 2*creationCode.length (64) is also true for
-		//     that same test's upper bound;
-		//   - codesize() < typical `longdata` bytes (~700) still passes
-		//     deployedCodeExclusion/super_function etc.
-		// Tests with codesize checks that depend on the actual compiled
-		// bytecode length will still misbehave but at least compile.
-		Logger::instance().warning(
-			"codesize() stubbed as 50 (no AVM equivalent)", loc);
-		auto c = awst::makeIntegerConstant("50", loc, awst::WType::biguintType());
-		return c;
+		// codesize() → HARD ERROR. EVM codesize() is the deployed contract's
+		// bytecode length; the AVM has no opcode exposing the TEAL program
+		// size, so the old stub returned a sentinel 50 — a silent wrong value
+		// that makes codesize-based length checks pass on a fabricated number.
+		// Refuse rather than invent a length (same hard-error policy as
+		// extcodesize / blockhash / delegatecall for unsupported EVM features).
+		Logger::instance().error(
+			"`codesize()` is not supported on AVM — there is no opcode exposing "
+			"the deployed program's byte length, so the old stub returned a "
+			"fabricated 50. Refuse rather than emit a silent wrong value.", loc);
+		// Stub so AWST building completes; the error aborts the build first.
+		return awst::makeZero(loc, awst::WType::biguintType());
 	}
 	if (funcName == "clz")
 	{
