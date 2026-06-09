@@ -5,6 +5,8 @@
 #include "Logger.h"
 
 #include <sstream>
+#include <string_view>
+#include <unordered_map>
 
 namespace puyasol::builder
 {
@@ -292,63 +294,43 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return awst::makeVoidConstant(loc);
 	}
 
-	// Builtin dispatch
-	if (funcName == "mulmod")
-		return handleMulmod(args, loc);
-	if (funcName == "addmod")
-		return handleAddmod(args, loc);
-	if (funcName == "add")
-		return handleAdd(args, loc);
-	if (funcName == "mul")
-		return handleMul(args, loc);
-	if (funcName == "mod")
-		return handleMod(args, loc);
-	if (funcName == "sub")
-		return handleSub(args, loc);
-	if (funcName == "mload")
-		return handleMload(args, loc);
-	if (funcName == "iszero")
-		return handleIszero(args, loc);
-	if (funcName == "eq")
-		return handleEq(args, loc);
-	if (funcName == "lt")
-		return handleLt(args, loc);
-	if (funcName == "gt")
-		return handleGt(args, loc);
-	if (funcName == "and")
-		return handleAnd(args, loc);
-	if (funcName == "or")
-		return handleOr(args, loc);
-	if (funcName == "not")
-		return handleNot(args, loc);
-	if (funcName == "xor")
-		return handleXor(args, loc);
-	if (funcName == "div")
-		return handleDiv(args, loc);
-	if (funcName == "shl")
-		return handleShl(args, loc);
-	if (funcName == "shr")
-		return handleShr(args, loc);
-	if (funcName == "byte")
-		return handleByte(args, loc);
-	if (funcName == "signextend")
-		return handleSignextend(args, loc);
-	if (funcName == "sdiv")
-		return handleSdiv(args, loc);
-	if (funcName == "smod")
-		return handleSmod(args, loc);
-	if (funcName == "slt")
-		return handleSlt(args, loc);
-	if (funcName == "sgt")
-		return handleSgt(args, loc);
-	if (funcName == "sar")
-		return handleSar(args, loc);
-	if (funcName == "tload")
-		return handleTload(args, loc);
-	if (funcName == "sload")
-		return handleSload(args, loc);
-	if (funcName == "gas")
-		return handleGas(loc);
+	// Builtin dispatch. The uniform opcodes — those that just translate their
+	// already-built args through a handler with one of two shared signatures —
+	// go through these two static name→member-handler tables instead of a
+	// 30-deep `if (funcName == ...)` string chain. The genuinely special
+	// builtins below (hard errors, mocked stubs, conditionals, side-effecting
+	// statements, raw-AST precompile dispatch) keep their explicit branches:
+	// they don't share a signature and benefit from staying visible.
+	using ArgsHandler = std::shared_ptr<awst::Expression> (AssemblyBuilder::*)(
+		std::vector<std::shared_ptr<awst::Expression>> const&, awst::SourceLocation const&);
+	static std::unordered_map<std::string_view, ArgsHandler> const kArgsBuiltins = {
+		{"mulmod", &AssemblyBuilder::handleMulmod}, {"addmod", &AssemblyBuilder::handleAddmod},
+		{"add", &AssemblyBuilder::handleAdd}, {"mul", &AssemblyBuilder::handleMul},
+		{"mod", &AssemblyBuilder::handleMod}, {"sub", &AssemblyBuilder::handleSub},
+		{"mload", &AssemblyBuilder::handleMload}, {"iszero", &AssemblyBuilder::handleIszero},
+		{"eq", &AssemblyBuilder::handleEq}, {"lt", &AssemblyBuilder::handleLt},
+		{"gt", &AssemblyBuilder::handleGt}, {"and", &AssemblyBuilder::handleAnd},
+		{"or", &AssemblyBuilder::handleOr}, {"not", &AssemblyBuilder::handleNot},
+		{"xor", &AssemblyBuilder::handleXor}, {"div", &AssemblyBuilder::handleDiv},
+		{"shl", &AssemblyBuilder::handleShl}, {"shr", &AssemblyBuilder::handleShr},
+		{"byte", &AssemblyBuilder::handleByte}, {"signextend", &AssemblyBuilder::handleSignextend},
+		{"sdiv", &AssemblyBuilder::handleSdiv}, {"smod", &AssemblyBuilder::handleSmod},
+		{"slt", &AssemblyBuilder::handleSlt}, {"sgt", &AssemblyBuilder::handleSgt},
+		{"sar", &AssemblyBuilder::handleSar}, {"tload", &AssemblyBuilder::handleTload},
+		{"sload", &AssemblyBuilder::handleSload}, {"calldataload", &AssemblyBuilder::handleCalldataload},
+		{"keccak256", &AssemblyBuilder::handleKeccak256},
+	};
+	if (auto it = kArgsBuiltins.find(funcName); it != kArgsBuiltins.end())
+		return (this->*(it->second))(args, loc);
+
+	using NullaryHandler =
+		std::shared_ptr<awst::Expression> (AssemblyBuilder::*)(awst::SourceLocation const&);
+	static std::unordered_map<std::string_view, NullaryHandler> const kNullaryBuiltins = {
+		{"gas", &AssemblyBuilder::handleGas}, {"timestamp", &AssemblyBuilder::handleTimestamp},
+		{"returndatasize", &AssemblyBuilder::handleReturndatasize},
+	};
+	if (auto it = kNullaryBuiltins.find(funcName); it != kNullaryBuiltins.end())
+		return (this->*(it->second))(loc);
 	if (funcName == "extcodesize")
 	{
 		// extcodesize(addr) → HARD ERROR. AVM cannot dereference an arbitrary
@@ -421,8 +403,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto cast = awst::makeAsBiguint(std::move(sender), loc);
 		return cast;
 	}
-	if (funcName == "timestamp")
-		return handleTimestamp(loc);
 	if (funcName == "blockhash")
 	{
 		// blockhash(n) -> HARD ERROR. EVM blockhash(n) is the hash of a recent
@@ -497,11 +477,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "number")
 	{
-		// number() → global Round (block number equivalent)
-		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
-		// Convert to biguint (EVM returns uint256)
-		auto itob = awst::makeItob(std::move(round), loc);
-		return awst::makeAsBiguint(std::move(itob), loc);
+		// number() → global Round (block-number equivalent), a uint64. Return it
+		// as uint64; the consumer coerces via ensureBiguint only when it needs a
+		// biguint (match at consumption, not at exit — same as selfbalance/clz).
+		return awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
 	}
 	if (funcName == "selfbalance")
 	{
@@ -578,12 +557,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		auto c256 = awst::makeIntegerConstant(static_cast<uint64_t>(256), loc);
 		return awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), loc);
 	}
-	if (funcName == "calldataload")
-		return handleCalldataload(args, loc);
-	if (funcName == "keccak256")
-		return handleKeccak256(args, loc);
-	if (funcName == "returndatasize")
-		return handleReturndatasize(loc);
 	if (funcName == "returndatacopy")
 	{
 		// returndatacopy(destOffset, offset, size): copy the last inner txn's
