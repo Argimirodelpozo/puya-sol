@@ -556,37 +556,25 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "clz")
 	{
-		// clz(x) = count leading zeros (256-bit): 256 - bitlen(x).
-		// EIP-7939. AVM's `bitlen` opcode returns the bit length of a
-		// biguint (0 for x==0). Subtract from 256 to get the EVM semantic.
+		// clz(x) = count leading zeros (256-bit): 256 - bitlen(x). EIP-7939.
+		// AVM's `bitlen` reads its arg (uint64 / biguint / bytes) as a
+		// big-endian integer and returns the significant-bit count (0 for 0),
+		// so no width conversion of the operand is needed. The result is in
+		// [0,256] (256 only when x==0); it fits uint64 but NOT uint8, and all
+		// assembly operands are 256-bit so 256-bitlen never underflows.
+		// Returning uint64 (the natural type for a small result, like the
+		// comparison ops return bool) is the same single stack word and lets
+		// consumers coerce via ensureBiguint only when they need a biguint.
 		if (args.empty())
 		{
 			Logger::instance().warning("clz() called with no args", loc);
-			auto zero = awst::makeIntegerConstant("256", loc, awst::WType::biguintType());
-			return zero;
+			return awst::makeIntegerConstant(static_cast<uint64_t>(256), loc);
 		}
 		auto x = args[0];
-		// Ensure operand is bytes-like so bitlen sees the full u256 width.
-		if (x->wtype == awst::WType::uint64Type())
-		{
-			x = awst::makeItob(std::move(x), loc);
-		}
-		else if (x->wtype == awst::WType::biguintType())
-		{
-			auto cast = awst::makeAsBytes(std::move(x), loc);
-			x = std::move(cast);
-		}
-
 		auto bitlen = awst::makeIntrinsicCall("bitlen", awst::WType::uint64Type(), loc);
 		bitlen->stackArgs.push_back(std::move(x));
-
-		auto c256 = awst::makeIntegerConstant("256", loc);
-
-		auto sub = awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), loc);
-
-		// Yul returns a 256-bit value; promote to biguint.
-		auto itob2 = awst::makeItob(std::move(sub), loc);
-		return awst::makeAsBiguint(std::move(itob2), loc);
+		auto c256 = awst::makeIntegerConstant(static_cast<uint64_t>(256), loc);
+		return awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), loc);
 	}
 	if (funcName == "calldataload")
 		return handleCalldataload(args, loc);
