@@ -1,4 +1,15 @@
-# Semantic Test Status — v336
+# Semantic Test Status — v337
+
+> **CLZ HANDLER CLEANUP (wip, 2026-06-09):** `clz(x)` = `256 - bitlen(x)` (EIP-7939) simplified
+> (CoreTranslation.cpp). Dropped the redundant operand width-conversions (itob / asBytes) — AVM's `bitlen`
+> reads its arg (uint64 / biguint / bytes) as a big-endian integer, so they were no-ops. Now returns
+> **uint64** (the natural type for a [0,256] result; the comparison handlers likewise return bool, not
+> biguint) instead of promoting to biguint — consumers coerce via `ensureBiguint` only when they need a
+> biguint. uint8 was considered (it IS uint64 under the hood → same single stack word, zero budget diff)
+> but rejected: the result range is [0,**256**] and `clz(0)=256` overflows uint8's 255 ceiling. No clamp
+> (all assembly operands are 256-bit, so 256-bitlen never underflows). Behaviour-preserving (identical
+> value). Suite **1199 pass / 66 fail / 77 xfail (+1 xpass)** — fail-set BYTE-IDENTICAL to v336 (zero-reg,
+> RESULTS_clz.txt; the 2 clz tests pass; 0 connection errors). Commit `ef4b528e0`.
 
 > **EVM MEMORY BOUNDS GUARD (wip, 2026-06-09):** Clear-fail when an EVM memory access exceeds the modeled
 > scratch blob, instead of silently corrupting a non-memory scratch slot (slot ∈ (LAST,255]) or an opaque
