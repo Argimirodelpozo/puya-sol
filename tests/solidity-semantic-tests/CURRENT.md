@@ -1,4 +1,25 @@
-# Semantic Test Status — v337
+# Semantic Test Status — v338
+
+> **ASSEMBLY: returndata + natural-type returns + table dispatch (wip, 2026-06-09):** Four assembly-handler
+> changes, all zero-reg (full suite **1199p / 66f / 77xf / 1xp**, fail-set BYTE-IDENTICAL to v337 across two
+> runs, 0 connection errors; RESULTS_returndata.txt + RESULTS_batchB.txt). Commits `42df5368c` (returndata
+> + selfbalance) and `ac74df04b` (dispatch + number).
+> 1. **returndatacopy / returndatasize** were no-ops → now map to the AVM return-data buffer = the last inner
+>    txn's last log (`itxn LastLog`). `returndatasize()` = `len(itxn LastLog)` (uint64). `returndatacopy(dest,
+>    off, size)` = copy `size` bytes of LastLog from `off` into memory at `dest`, via `writeMemWordDyn`
+>    (length-driven `replace3` + slot-0/slot-1+ conditional + bounds assert); `extract3` gives EVM's
+>    out-of-range revert for free. Helper `emitReturndatacopy` (DataOps.cpp), wired in both the statement
+>    (StatementOps) and expr (CoreTranslation) paths. The returndata xfails (functionCall/reverts/abiEncoderV1)
+>    stay xfail — they assert EVM-exact out-of-range / buffer layout the LastLog model doesn't reproduce.
+> 2. **selfbalance() → uint64** (was `itob`+`asBiguint` widen). AVM balance is microAlgos, fits uint64.
+> 3. **number() → uint64** (Round; was `itob`+`asBiguint` widen). Same as selfbalance/clz. KEY RULE: only the
+>    `uint64→biguint` widen (via `itob`, a real opcode) is worth dropping; `bytes→biguint` widens
+>    (address/caller/blobhash) are free `asBiguint` reinterprets → left as-is (no opcode saved, blast risk).
+> 4. **Table-driven builtin dispatch** (CoreTranslation::buildFunctionCall): the ~30-deep `if (funcName==…)`
+>    chain for uniform opcodes → two static `unordered_map<string_view, member-handler>` tables (by signature:
+>    (args,loc) and (loc)), O(1) lookup. The 18 special builtins (hard errors, mocked stubs, blobhash
+>    conditional, calldatacopy side-effects, precompile raw-AST dispatch, user fns, unknown-fallback) keep
+>    explicit branches. Net −27 LOC, behaviour-preserving. See [[ensurebiguint-strict-assembly]].
 
 > **CLZ HANDLER CLEANUP (wip, 2026-06-09):** `clz(x)` = `256 - bitlen(x)` (EIP-7939) simplified
 > (CoreTranslation.cpp). Dropped the redundant operand width-conversions (itob / asBytes) — AVM's `bitlen`
