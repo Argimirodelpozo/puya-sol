@@ -506,13 +506,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "selfbalance")
 	{
 		// Yul selfbalance() returns the balance of the executing contract.
-		// Map to AVM `balance(global CurrentApplicationAddress)` (uint64),
-		// then widen to biguint so the Yul value type matches EVM's uint256.
+		// Map to AVM `balance(global CurrentApplicationAddress)`, which is a
+		// uint64 — microAlgo balances always fit uint64. Return it as uint64
+		// rather than widening to biguint: the consumer coerces via
+		// ensureBiguint only when it needs a biguint (same natural-type
+		// convention as clz / the comparison handlers).
 		auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::bytesType(), loc);
 		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
 		bal->stackArgs.push_back(std::move(appAddr));
-		auto itob = awst::makeItob(std::move(bal), loc);
-		return awst::makeAsBiguint(std::move(itob), loc);
+		return bal;
 	}
 	if (funcName == "coinbase" || funcName == "gasprice" || funcName == "basefee"
 		|| funcName == "blobbasefee")
@@ -584,7 +586,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return handleReturndatasize(loc);
 	if (funcName == "returndatacopy")
 	{
-		// returndatacopy(destOffset, offset, size) — no-op on AVM (no return data)
+		// returndatacopy(destOffset, offset, size): copy the last inner txn's
+		// log (itxn LastLog) into memory. Void op — emit the copy as a pending
+		// statement and yield void.
+		emitReturndatacopy(args, loc, m_pendingStatements);
 		return awst::makeVoidConstant(loc);
 	}
 	if (funcName == "pop")

@@ -608,9 +608,15 @@ void AssemblyBuilder::buildExpressionStatement(
 			_out.push_back(std::move(retStmt));
 			return;
 		}
-		if (funcName == "returndatacopy" || funcName == "pop")
+		if (funcName == "returndatacopy")
 		{
-			// No-op on AVM (returndatacopy: no return data; pop: discard value)
+			// Copy the last inner txn's log (itxn LastLog) into memory.
+			emitReturndatacopy(args, loc, _out);
+			return;
+		}
+		if (funcName == "pop")
+		{
+			// pop(x) — discard value, no-op
 			return;
 		}
 		if (funcName == "delegatecall")

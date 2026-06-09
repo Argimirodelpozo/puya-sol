@@ -451,9 +451,19 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Handle returndatasize(): returns 0 (no return data concept on AVM).
+	/// Handle returndatasize(): byte length of the last inner txn's log
+	/// (itxn LastLog) — the AVM return-data buffer. Returns uint64.
 	std::shared_ptr<awst::Expression> handleReturndatasize(
 		awst::SourceLocation const& _loc
+	);
+
+	/// Handle returndatacopy(destOffset, offset, size): copy `size` bytes of
+	/// the last inner txn's log (itxn LastLog) from `offset` into memory at
+	/// `destOffset`. Emits the copy statements into `_out`.
+	void emitReturndatacopy(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
 	/// Handle revert(offset, length): fail the transaction.

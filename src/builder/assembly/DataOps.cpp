@@ -480,9 +480,42 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
 	awst::SourceLocation const& _loc
 )
 {
-	// On AVM there is no return data concept — return 0
-	auto zero = awst::makeBiguintConstant("0", _loc);
-	return zero;
+	// EVM returndatasize(): the size of the most recent call's return-data
+	// buffer. On AVM that buffer is the last inner transaction's last log
+	// (`itxn LastLog`); its byte length is the return-data size. Returned as
+	// uint64 (the natural type for a length; consumers coerce via
+	// ensureBiguint only when they need a biguint).
+	return awst::makeLen(awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc);
+}
+
+void AssemblyBuilder::emitReturndatacopy(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	if (_args.size() != 3)
+	{
+		Logger::instance().error(
+			"returndatacopy requires 3 arguments (destOffset, offset, size)", _loc);
+		return;
+	}
+	// EVM returndatacopy(destOffset, offset, size): copy `size` bytes from the
+	// return-data buffer — on AVM the last inner transaction's last log
+	// (`itxn LastLog`) — starting at `offset`, into memory at `destOffset`.
+	// `extract3` reverts when offset+size exceeds the log length, which matches
+	// EVM's out-of-range revert for returndatacopy.
+	auto destOff = offsetToUint64(_args[0], _loc);
+	auto srcOff = offsetToUint64(_args[1], _loc);
+	auto size = offsetToUint64(_args[2], _loc);
+
+	auto log = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
+	auto slice = awst::makeExtract3(std::move(log), std::move(srcOff), std::move(size), _loc);
+
+	// writeMemWordDyn is length-driven (its replace3 writes len(slice) bytes,
+	// not a fixed 32), so it copies the whole slice into the blob with the
+	// slot-0/slot-1+ conditional and the memory-bounds assert.
+	writeMemWordDyn(std::move(destOff), std::move(slice), _loc, _out);
 }
 
 void AssemblyBuilder::handleRevert(
