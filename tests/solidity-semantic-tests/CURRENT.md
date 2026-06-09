@@ -1,4 +1,19 @@
-# Semantic Test Status — v338
+# Semantic Test Status — v339
+
+> **ASSEMBLY: balance(addr) added + codesize() hard error (wip, 2026-06-09):** Suite **1193p / 66f / 83xf /
+> 1xp** — fail-set BYTE-IDENTICAL to v338 (zero new raw regressions, 0 connection errors; RESULTS_batchC.txt).
+> Commit `6bc1f7147`. Pass count 1199→1193 is an intended honesty trade, NOT a regression.
+> 1. **`balance(addr)`** was unsupported (hit the unknown-builtin hard error). Added: AVM `balance` opcode on
+>    addr left-zero-padded to a 32-byte account (`padTo32Bytes(ensureBiguint(addr))`), returns **uint64** (same
+>    natural-type convention as selfbalance/clz). `codebalance_assembly` flips xfail→pass (compiles+deploys;
+>    EVM return values 0/1/23-wei NOT asserted — AVM account balance ≠ wei, and arbitrary EVM addresses
+>    (balance(0)/(1)) map to unavailable AVM accounts; only referenced/self accounts read meaningfully).
+> 2. **`codesize()` → HARD ERROR** (was a fabricated sentinel 50). AVM has no opcode for the deployed program's
+>    byte length; the 50 stub silently satisfied codesize-based length checks on a fake number. Refuse rather
+>    than emit a wrong value (same policy as extcodesize/blockhash/delegatecall). The 7 deployedCodeExclusion
+>    tests that leaned on the stub (bound/library/module/static_base/subassembly_dedup/super/virtual_function)
+>    are now xfailed as EVM-fundamental (the `_deployed` variants don't use codesize → unaffected). See
+>    [[ensurebiguint-strict-assembly]].
 
 > **ASSEMBLY: returndata + natural-type returns + table dispatch (wip, 2026-06-09):** Four assembly-handler
 > changes, all zero-reg (full suite **1199p / 66f / 77xf / 1xp**, fail-set BYTE-IDENTICAL to v337 across two
