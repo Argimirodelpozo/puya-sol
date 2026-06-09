@@ -38,22 +38,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	awst::SourceLocation const& _loc
 )
 {
-	// gas() → global OpcodeBudget (uint64) → itob → reinterpret as biguint
+	// gas() → global OpcodeBudget, a uint64. Return it as uint64; the consumer
+	// coerces via ensureBiguint only when it needs a biguint (match at
+	// consumption, not exit — same as number/selfbalance; drops the itob widen).
 	Logger::instance().debug(
 		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
-	auto gasCall = awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
-	auto itobCall = awst::makeItob(std::move(gasCall), _loc);
-	return awst::makeAsBiguint(std::move(itobCall), _loc);
+	return awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
 	awst::SourceLocation const& _loc
 )
 {
-	// timestamp() → global LatestTimestamp (uint64) → itob → reinterpret as biguint
-	auto tsCall = awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
-	auto itobCall = awst::makeItob(std::move(tsCall), _loc);
-	return awst::makeAsBiguint(std::move(itobCall), _loc);
+	// timestamp() → global LatestTimestamp, a uint64. Return it as uint64; the
+	// consumer coerces via ensureBiguint only when it needs a biguint (match at
+	// consumption, not exit — same as number/selfbalance; drops the itob widen).
+	return awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
 }
 
 // ─── New Yul builtins for Uniswap V4 ────────────────────────────────────────
