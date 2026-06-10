@@ -184,6 +184,164 @@ def _cache_store(key: str, out_dir: Path) -> None:
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+# ── Two-stage (AWST-content) backend cache ──────────────────────────────────
+# The puya-sol *frontend* (C++) is ~0.05s and deterministic; the puya *backend*
+# (Python) is ~5s, ~65% of which is interpreter+import startup paid per contract.
+# The L1 cache above keys on the puya-sol *binary* (mtime+size), so any rebuild
+# of the compiler invalidates every entry — a cold run then re-pays the backend
+# for all ~1322 contracts (~70 min, on every dev iteration). This L2 cache keys
+# the backend artifacts on the AWST *content* instead: a localized codegen
+# change leaves most contracts' AWST byte-identical, so they hit here and only
+# the genuinely-changed contracts re-run puya. Safe by construction — a hit
+# means (AWST + semantic options + puya version) are byte-identical, so the
+# emitted TEAL is identical; any mismatch is a miss (slower, never wrong).
+_BACKEND_CACHE_DIR = CACHE_DIR / "backend"
+# A no-op "backend" so puya-sol writes awst.json/options.json then exits without
+# the ~5s Python step — used to compute the L2 key cheaply.
+_NOOP_PUYA = shutil.which("true") or "/bin/true"
+# Files the frontend writes; everything else in out_dir is a backend artifact.
+_FRONTEND_ONLY_FILES = {"awst.json", "options.json", "puya-sol.log"}
+
+
+def _puya_sol_cmd(
+    source_path: Path,
+    all_sources: list[Path],
+    out_dir: Path,
+    import_dir: Path | None,
+    remappings: list[str],
+    ensure_budget: dict[str, int] | None,
+    via_yul_behavior: bool,
+    evm_version: str | None,
+    puya_path: str,
+) -> list[str]:
+    """Build the puya-sol argv. `puya_path` selects the backend: the real PUYA
+    for a full compile, or a no-op (`true`) to emit AWST only."""
+    cmd = [str(COMPILER), "--source", str(source_path)]
+    for extra in all_sources:
+        if str(extra) != str(source_path):
+            cmd += ["--source", str(extra)]
+    cmd += ["--output-dir", str(out_dir), "--puya-path", puya_path]
+    if import_dir:
+        cmd += ["--import-path", str(import_dir)]
+    for rmap in remappings:
+        cmd += ["--remapping", rmap]
+    if ensure_budget:
+        for func, budget in ensure_budget.items():
+            cmd += ["--ensure-budget", f"{func}:{budget}"]
+    if via_yul_behavior:
+        cmd += ["--via-yul-behavior"]
+    if evm_version:
+        cmd += ["--evm-version", evm_version]
+    return cmd
+
+
+def _normalized_options_bytes(options_path: Path) -> bytes:
+    """Options JSON with run-specific paths stripped, for content-keying.
+
+    `compilation_set` maps "<source-path>.<ContractName>" → output-dir; both
+    sides vary per test run / out-dir but don't affect the emitted TEAL.
+    Replace it with the sorted contract names (which DO affect output) and keep
+    the semantic compile settings (optimization/debug level, target avm version,
+    output flags, template vars).
+    """
+    try:
+        data = json.loads(options_path.read_text())
+    except Exception:
+        return b""
+    cset = data.get("compilation_set", {})
+    names = sorted(str(k).rsplit(".", 1)[-1] for k in cset.keys())
+    norm = {k: v for k, v in data.items() if k != "compilation_set"}
+    norm["_contract_names"] = names
+    return json.dumps(norm, sort_keys=True).encode()
+
+
+def _flags_blob(
+    remappings: list[str],
+    ensure_budget: dict[str, int] | None,
+    via_yul_behavior: bool,
+    evm_version: str | None,
+) -> bytes:
+    """Stable serialization of the compile flags that affect output."""
+    return json.dumps({
+        "remappings": sorted(remappings),
+        "ensure_budget": dict(sorted((ensure_budget or {}).items())),
+        "via_yul_behavior": via_yul_behavior,
+        "evm_version": evm_version,
+    }, sort_keys=True).encode()
+
+
+def _backend_cache_key(
+    out_dir: Path,
+    flags_blob: bytes,
+) -> str | None:
+    """Content key for the backend step: AWST + normalized options + puya sig
+    + compile flags.
+
+    Deliberately EXCLUDES the puya-sol binary signature — that's the point: the
+    frontend re-runs cheaply and emits identical AWST for any contract its
+    change didn't touch, so those skip the backend. The flags are folded in as
+    belt-and-suspenders in case any (ensure-budget/evm-version/via-yul) reaches
+    the backend by a channel other than awst.json/options.json. Returns None if
+    the frontend didn't produce the inputs.
+    """
+    awst = out_dir / "awst.json"
+    options = out_dir / "options.json"
+    if not awst.is_file() or not options.is_file():
+        return None
+    h = hashlib.sha256()
+    h.update(b"backend_v1\n")
+    h.update(f"puya:{_puya_backend_sig()}\n".encode())
+    h.update(b"flags:")
+    h.update(flags_blob)
+    h.update(b"\nawst:")
+    h.update(awst.read_bytes())
+    h.update(b"\nopts:")
+    h.update(_normalized_options_bytes(options))
+    return h.hexdigest()
+
+
+def _backend_cache_lookup(key: str, out_dir: Path) -> bool:
+    """Restore cached backend artifacts (TEAL/ARC56/bin/tmpl) into out_dir.
+
+    out_dir already holds the freshly-emitted awst.json/options.json from the
+    frontend run; only backend files live in the cache entry. Returns True on
+    hit (requires at least one .arc56.json, matching _cache_lookup).
+    """
+    entry = _BACKEND_CACHE_DIR / key
+    if not entry.is_dir() or not any(entry.glob("*.arc56.json")):
+        return False
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for src in entry.iterdir():
+        if src.is_file():
+            shutil.copy2(src, out_dir / src.name)
+    return True
+
+
+def _backend_cache_store(key: str, out_dir: Path) -> None:
+    """Atomically store out_dir's backend artifacts under `key` (same race-safe
+    tmp-dir+rename scheme as _cache_store). The frontend trio
+    (awst.json/options.json/puya-sol.log) is excluded — it's regenerated cheaply
+    on every run."""
+    _BACKEND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    entry = _BACKEND_CACHE_DIR / key
+    if entry.exists():
+        return
+    tmp = Path(tempfile.mkdtemp(prefix="bcache_", dir=str(_BACKEND_CACHE_DIR)))
+    try:
+        for src in out_dir.iterdir():
+            if src.is_file() and src.name not in _FRONTEND_ONLY_FILES:
+                shutil.copy2(src, tmp / src.name)
+        try:
+            os.rename(tmp, entry)
+            tmp = None
+        except OSError:
+            # Another worker raced and won; identical result, drop ours.
+            pass
+    finally:
+        if tmp is not None and tmp.exists():
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 @dataclass
 class CompiledArtifacts:
     """One compiled .sol → multiple contracts keyed by name.
@@ -278,23 +436,6 @@ def compile_sol(
             }
         return artifacts
 
-    cmd = [str(COMPILER), "--source", str(source_path)]
-    for extra in all_sources:
-        if str(extra) != str(source_path):
-            cmd += ["--source", str(extra)]
-    cmd += ["--output-dir", str(out_dir), "--puya-path", str(PUYA)]
-    if import_dir:
-        cmd += ["--import-path", str(import_dir)]
-    for rmap in remappings:
-        cmd += ["--remapping", rmap]
-    if ensure_budget:
-        for func, budget in ensure_budget.items():
-            cmd += ["--ensure-budget", f"{func}:{budget}"]
-    if via_yul_behavior:
-        cmd += ["--via-yul-behavior"]
-    if evm_version:
-        cmd += ["--evm-version", evm_version]
-
     # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
     # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
     # set (for algosdk), but that user-site contains an OLDER puya install
@@ -303,35 +444,61 @@ def compile_sol(
     # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
     # stack-value cap on long dynamic arrays.
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
-    try:
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout, env=env
+
+    def _run(puya_path: str):
+        return subprocess.run(
+            _puya_sol_cmd(
+                source_path, all_sources, out_dir, import_dir, remappings,
+                ensure_budget, via_yul_behavior, evm_version, puya_path,
+            ),
+            capture_output=True, text=True, timeout=timeout, env=env,
         )
+
+    try:
+        # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+        # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+        # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+        # — same terminal outcome as before.
+        front = _run(_NOOP_PUYA)
+        if front.returncode != 0:
+            raise CompileError(
+                f"puya-sol exited {front.returncode}",
+                stdout=front.stdout, stderr=front.stderr,
+            )
+
+        # Stage 2 — backend. Reuse cached TEAL if the AWST is unchanged;
+        # otherwise run the full puya-sol (frontend+backend+child-tmpl gen,
+        # exactly as before) and cache its backend artifacts. Running the full
+        # compiler on a miss (rather than puya directly) preserves the
+        # post-backend deploy.tmpl.json generation for `new C()` children.
+        bkey = _backend_cache_key(
+            out_dir,
+            _flags_blob(remappings, ensure_budget, via_yul_behavior, evm_version),
+        )
+        if not (bkey and _backend_cache_lookup(bkey, out_dir)):
+            full = _run(str(PUYA))
+            if full.returncode != 0:
+                raise CompileError(
+                    f"puya-sol exited {full.returncode}",
+                    stdout=full.stdout, stderr=full.stderr,
+                )
+            if bkey:
+                _backend_cache_store(bkey, out_dir)
     except subprocess.TimeoutExpired as e:
+        raise CompileError(f"compilation timed out after {timeout}s") from e
+    finally:
+        # Snapshot the main source body BEFORE rmtree so `last_deployable`
+        # keeps working after the multi-source splitter's temp dir is removed.
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            main_source_text = ""
         if import_dir:
             shutil.rmtree(import_dir, ignore_errors=True)
-        raise CompileError(f"compilation timed out after {timeout}s") from e
 
-    # Snapshot the main source body BEFORE rmtree so `last_deployable`
-    # keeps working after the multi-source splitter's temp dir is removed.
-    try:
-        main_source_text = source_path.read_text()
-    except Exception:
-        main_source_text = ""
-
-    if import_dir:
-        shutil.rmtree(import_dir, ignore_errors=True)
-
-    if result.returncode != 0:
-        raise CompileError(
-            f"puya-sol exited {result.returncode}",
-            stdout=result.stdout,
-            stderr=result.stderr,
-        )
-
-    # Successful compile — populate cache for next run. Failures are
-    # deliberately NOT cached (could be transient: disk full, segfault,
-    # etc., and the cost of a re-run is bounded by the test timeout).
+    # Successful compile — populate the L1 cache for instant warm reruns.
+    # Failures are deliberately NOT cached (could be transient: disk full,
+    # segfault, etc., and the cost of a re-run is bounded by the test timeout).
     _cache_store(cache_key, out_dir)
 
     artifacts = CompiledArtifacts(main_source=source_path, main_source_text=main_source_text)
