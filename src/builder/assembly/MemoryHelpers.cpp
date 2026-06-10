@@ -151,6 +151,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 			awst::makeIntegerConstant(_startSlot * 0x20, _loc),
 			_loc))
 		: base;
+	// Evaluate the base offset once — it is referenced once per word below, so a
+	// runtime free-pointer base (the EC-precompile case) would otherwise be
+	// re-read _count times.
+	if (_count > 1)
+	{
+		static int s_concatOffEvalId = 0;
+		offsetExpr = awst::makeSingleEvaluation(
+			std::move(offsetExpr), awst::WType::uint64Type(), ++s_concatOffEvalId, _loc);
+	}
 
 	// Slot-aware per-word read (readMemWordDyn = `off<SLOT_SIZE ? memoryVar : loads`)
 	// rather than extract3 on the slot-0 memoryVar cache. EC precompile inputs live at

@@ -19,7 +19,8 @@ bool AssemblyBuilder::checkArity(
 	if (_args.size() != _n)
 	{
 		Logger::instance().error(
-			std::string(_name) + " requires " + std::to_string(_n) + " arguments", _loc);
+			std::string(_name) + " requires " + std::to_string(_n)
+			+ (_n == 1 ? " argument" : " arguments"), _loc);
 		return false;
 	}
 	return true;

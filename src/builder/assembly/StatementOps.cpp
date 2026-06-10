@@ -340,6 +340,12 @@ void AssemblyBuilder::buildAssignment(
 			auto slotExpr = buildExpression(*_assign.value);
 			if (slotExpr)
 			{
+				// Drain prerequisites the slot expression produced before the
+				// assignment (this early-return path bypasses the drain on the
+				// normal assignment path). No-op when the RHS is pure.
+				for (auto& ps: m_pendingStatements)
+					_out.push_back(std::move(ps));
+				m_pendingStatements.clear();
 				// Ensure biguint type for the slot value
 				if (slotExpr->wtype == awst::WType::uint64Type())
 				{

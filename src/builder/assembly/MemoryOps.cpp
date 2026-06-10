@@ -15,11 +15,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	awst::SourceLocation const& _loc
 )
 {
-	if (_args.size() != 1)
-	{
-		Logger::instance().error("mload requires 1 argument", _loc);
+	if (!checkArity(_args, 1, "mload", _loc))
 		return nullptr;
-	}
 
 	// First check calldata map for constant offsets (function parameters)
 	auto constOffset = resolveConstantOffset(_args[0]);
@@ -148,6 +145,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto off = offsetToUint64(std::move(_offset), _loc);
+	// Evaluate the offset once: it appears in the bounds assert, the slot-0 fast
+	// path, and the slot/sub slow path (~5 references); a side-effecting offset
+	// like mload(q) would otherwise re-run each time. writeMemWordDyn already
+	// materializes its offset for the same reason.
+	static int s_readOffEvalId = 0;
+	off = awst::makeSingleEvaluation(
+		std::move(off), awst::WType::uint64Type(), ++s_readOffEvalId, _loc);
 	// Fail clearly if this offset spills past the modeled blob (vs silently
 	// reading a non-memory scratch slot); fires before the read is consumed.
 	m_pendingStatements.push_back(memBoundsAssert(off, _loc));
@@ -587,11 +591,8 @@ void AssemblyBuilder::handleMstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("mstore requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "mstore", _loc))
 		return;
-	}
 
 	// Track last mstore value for dynamic-length keccak256 patterns
 	m_lastMstoreValue = _args[1];
@@ -635,11 +636,8 @@ void AssemblyBuilder::handleMstore8(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("mstore8 requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "mstore8", _loc))
 		return;
-	}
 
 	// mstore8(ptr, value): write the low 8 bits of value as a single byte
 	// at memory[ptr]. Pad the value to 32 bytes and extract byte[31] (the
@@ -661,11 +659,8 @@ void AssemblyBuilder::handleReturn(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("return requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "return", _loc))
 		return;
-	}
 
 	// return(offset, size): Return the value stored at memory[offset]
 

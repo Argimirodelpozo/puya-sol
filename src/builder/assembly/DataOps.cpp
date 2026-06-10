@@ -14,11 +14,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	awst::SourceLocation const& _loc
 )
 {
-	if (_args.size() != 1)
-	{
-		Logger::instance().error("calldataload requires 1 argument", _loc);
+	if (!checkArity(_args, 1, "calldataload", _loc))
 		return nullptr;
-	}
 
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)

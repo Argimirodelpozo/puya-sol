@@ -15,11 +15,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	awst::SourceLocation const& _loc
 )
 {
-	if (_args.size() != 1)
-	{
-		Logger::instance().error("sload requires 1 argument", _loc);
+	if (!checkArity(_args, 1, "sload", _loc))
 		return nullptr;
-	}
 
 	// Convert slot arg to uint64 for __storage_read(slot)
 	auto slotArg = _args[0];
@@ -108,11 +105,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleDiv(
 	awst::SourceLocation const& _loc
 )
 {
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("div requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "div", _loc))
 		return nullptr;
-	}
 	// EVM: div(a, 0) = 0. AVM: b/ by 0 panics.
 	// Emit: b != 0 ? a / b : 0
 	return safeDivMod(
@@ -130,11 +124,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 	//
 	// EVM semantics (EIP-145): shl returns 0 when `shift >= 256` —
 	// not `value << (shift mod 256)`. Symmetric to handleShr above.
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("shl requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "shl", _loc))
 		return nullptr;
-	}
 	auto shift = ensureBiguint(_args[0], _loc);
 	// Reduce the value to its low 256 bits before shifting. EVM shl operates on
 	// a 256-bit word, so (v * 2^s) % 2^256 == ((v % 2^256) * 2^s) % 2^256. Our
@@ -175,11 +166,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 	// See WIP/examples/aave-v4/contracts/PositionStatusMap.sol:223
 	// — `shr(sub(256, ...), MASK)` simplifies to `shr(256, MASK)` at
 	// bucket boundaries and must return 0.
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("shr requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "shr", _loc))
 		return nullptr;
-	}
 	auto shift = ensureBiguint(_args[0], _loc);
 	auto value = _args[1];
 	auto power = buildPowerOf2(shift, _loc);
@@ -204,11 +192,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 {
 	// byte(n, x) → extract byte n from 32-byte big-endian padded x
 	// Implementation: pad x to 32 bytes, then extract3(padded, n, 1)
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("byte requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "byte", _loc))
 		return nullptr;
-	}
 
 	// Pad x to 32 bytes big-endian
 	auto padded = padTo32Bytes(_args[1], _loc);
@@ -249,11 +234,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	//
 	// For simplicity and since V4 uses signextend only in specific patterns,
 	// we implement the full logic using conditional expression.
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("signextend requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "signextend", _loc))
 		return nullptr;
-	}
 
 	// Ensure x is biguint
 	auto x = ensureBiguint(_args[1], _loc);

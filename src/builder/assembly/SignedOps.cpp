@@ -344,7 +344,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	// Simpler: fillMask = MAX_UINT256 - (2^(256 - shift) - 1) = MAX_UINT256 - 2^(256-shift) + 1
 	// Or: ~(2^(256-shift) - 1) in 256 bits
 
-	// We need (256 - shift) as uint64
+	// We need (256 - shift) as uint64, clamped so shift >= 256 does not underflow
+	// the uint64 subtraction (AVM `-` panics on underflow). EVM sar(n>=256, x<0)
+	// = all-ones (sign extend): shrResult is already 0 for shift>=256 (handleShr),
+	// and complementShift=0 gives pow2Complement=2^0=1 -> fillMask=MAX, so
+	// negResult = 0 | MAX = MAX. The conditional only evaluates the (256-shift)
+	// branch when shift<256, so the subtraction never underflows.
 	auto shiftAmt = _args[0];
 	std::shared_ptr<awst::Expression> shiftU64;
 	if (shiftAmt->wtype != awst::WType::uint64Type())
@@ -352,9 +357,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	else
 		shiftU64 = shiftAmt;
 
-	auto twoFiftySix = awst::makeIntegerConstant("256", _loc);
-
-	auto complementShift = awst::makeUInt64BinOp(std::move(twoFiftySix), awst::UInt64BinaryOperator::Sub, std::move(shiftU64), _loc);
+	auto shiftGe256 = awst::makeNumericCompare(
+		ensureBiguint(_args[0], _loc), awst::NumericComparison::Gte,
+		awst::makeBiguintConstant("256", _loc), _loc);
+	auto sub256 = awst::makeUInt64BinOp(
+		awst::makeIntegerConstant("256", _loc), awst::UInt64BinaryOperator::Sub,
+		std::move(shiftU64), _loc);
+	auto complementShift = awst::makeConditional(
+		std::move(shiftGe256), awst::makeIntegerConstant("0", _loc),
+		std::move(sub256), awst::WType::uint64Type(), _loc);
 
 	auto pow2Complement = buildPowerOf2(complementShift, _loc);
 
