@@ -134,9 +134,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 		{
 			value = buildExpression(*_decl.value);
 			// Drain any pending statements from inlined assembly functions
-			for (auto& ps: m_pendingStatements)
-				_out.push_back(std::move(ps));
-			m_pendingStatements.clear();
+			drainPendingStatements(_out);
 
 			if (!value)
 			{
@@ -236,9 +234,7 @@ void AssemblyBuilder::buildAssignment(
 					if (bwt && bwt->length().has_value() && *bwt->length() == 12)
 					{
 						auto rhs = buildExpression(*_assign.value);
-						for (auto& ps: m_pendingStatements)
-							_out.push_back(std::move(ps));
-						m_pendingStatements.clear();
+						drainPendingStatements(_out);
 						if (!rhs)
 							return;
 
@@ -343,9 +339,7 @@ void AssemblyBuilder::buildAssignment(
 				// Drain prerequisites the slot expression produced before the
 				// assignment (this early-return path bypasses the drain on the
 				// normal assignment path). No-op when the RHS is pure.
-				for (auto& ps: m_pendingStatements)
-					_out.push_back(std::move(ps));
-				m_pendingStatements.clear();
+				drainPendingStatements(_out);
 				// Ensure biguint type for the slot value
 				if (slotExpr->wtype == awst::WType::uint64Type())
 				{
@@ -388,9 +382,7 @@ void AssemblyBuilder::buildAssignment(
 
 	auto value = buildExpression(*_assign.value);
 	// Drain any pending statements from inlined assembly functions
-	for (auto& ps: m_pendingStatements)
-		_out.push_back(std::move(ps));
-	m_pendingStatements.clear();
+	drainPendingStatements(_out);
 
 	if (!value)
 	{
@@ -561,9 +553,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		for (auto const& arg: call->arguments)
 			args.push_back(buildExpression(arg));
 		// Drain any pending statements from inlined assembly functions
-		for (auto& ps: m_pendingStatements)
-			_out.push_back(std::move(ps));
-		m_pendingStatements.clear();
+		drainPendingStatements(_out);
 
 		if (funcName == "mstore")
 		{

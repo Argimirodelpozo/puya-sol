@@ -316,8 +316,15 @@ private:
 	// builtin and returns false when `_args` doesn't hold exactly `_n`.
 	bool checkArity(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
-		size_t _n, char const* _name, awst::SourceLocation const& _loc
+		size_t _n, char const* _name, awst::SourceLocation const& _loc,
+		char const* _hint = nullptr
 	);
+	// Move pending statements [_from, end) into `_out`, shrinking the pending
+	// list to `_from` (default 0 = drain all). Prerequisites a just-built
+	// expression accumulated (memory-bounds asserts, inlined-fn side effects)
+	// must run before the statement that consumes the expression.
+	void drainPendingStatements(
+		std::vector<std::shared_ptr<awst::Statement>>& _out, size_t _from = 0);
 	// eq/lt/gt: coerce both operands to biguint and compare under `_cmp`
 	// (result is a native bool).
 	std::shared_ptr<awst::Expression> makeYulCompare(

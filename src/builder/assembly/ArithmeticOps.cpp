@@ -13,14 +13,16 @@ namespace puyasol::builder
 
 bool AssemblyBuilder::checkArity(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	size_t _n, char const* _name, awst::SourceLocation const& _loc
+	size_t _n, char const* _name, awst::SourceLocation const& _loc,
+	char const* _hint
 )
 {
 	if (_args.size() != _n)
 	{
 		Logger::instance().error(
 			std::string(_name) + " requires " + std::to_string(_n)
-			+ (_n == 1 ? " argument" : " arguments"), _loc);
+			+ (_n == 1 ? " argument" : " arguments")
+			+ (_hint ? std::string(" (") + _hint + ")" : std::string()), _loc);
 		return false;
 	}
 	return true;

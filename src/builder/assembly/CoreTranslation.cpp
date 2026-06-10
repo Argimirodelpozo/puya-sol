@@ -492,11 +492,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// available to the txn — an arbitrary EVM address (e.g. balance(0))
 		// maps to an unfunded/unavailable AVM account, so only addresses the
 		// txn references (incl. address()/self) read meaningfully.
-		if (args.empty())
-		{
-			Logger::instance().error("balance requires 1 argument (address)", loc);
+		if (!checkArity(args, 1, "balance", loc, "address"))
 			return awst::makeZero(loc, awst::WType::uint64Type());
-		}
 		auto acct = padTo32Bytes(ensureBiguint(args[0], loc), loc);
 		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
 		bal->stackArgs.push_back(std::move(acct));

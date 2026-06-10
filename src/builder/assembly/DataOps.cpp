@@ -193,11 +193,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	awst::SourceLocation const& _loc
 )
 {
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("keccak256 requires 2 arguments (offset, length)", _loc);
+	if (!checkArity(_args, 2, "keccak256", _loc, "offset, length"))
 		return nullptr;
-	}
 
 	auto length = resolveConstantOffset(_args[1]);
 
@@ -491,12 +488,8 @@ void AssemblyBuilder::emitReturndatacopy(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (_args.size() != 3)
-	{
-		Logger::instance().error(
-			"returndatacopy requires 3 arguments (destOffset, offset, size)", _loc);
+	if (!checkArity(_args, 3, "returndatacopy", _loc, "destOffset, offset, size"))
 		return;
-	}
 	// EVM returndatacopy(destOffset, offset, size): copy `size` bytes from the
 	// return-data buffer — on AVM the last inner transaction's last log
 	// (`itxn LastLog`) — starting at `offset`, into memory at `destOffset`.
