@@ -1,3 +1,33 @@
+# Semantic Test Status — v342
+
+> **SOL-TYPES/ AUDIT (wip, 2026-06-10):** `51590af382`, zero-regression (full
+> -n2 **1197p/66f/83xf**, FAILED set BYTE-IDENTICAL to baseline sha1
+> c9bb89f26c…; RESULTS_51590af382.txt). File-by-file pass over
+> `src/builder/sol-types/` — the CLEANEST subsystem audited so far. Four changes,
+> none reachable-bug fixes (verification showed solc upholds the assumptions);
+> defensive hardening + one proven no-op removal:
+> 1. **coerceForAssignment array-literal widening** (both unsigned branches):
+>    decode each source element to its OWN native width, not a hardcoded uint64,
+>    so a >64-bit source can't be truncated before widening. solc infers literals
+>    from the assignment context (or rejects narrow→wide array conversions), so
+>    every reachable case has srcNative==uint64 → byte-identical; this just makes
+>    the "narrow ≤64-bit" assumption robust not load-bearing-and-silent.
+> 2. **signExtendToUint256: dropped `mod 2^256`** — runs only when masked value ∈
+>    [2^(N-1), 2^N-1], so value+(2^256-2^N) ∈ [2^256-2^(N-1), 2^256-1] < 2^256:
+>    the mod was a guaranteed no-op. Saves one biguint op on EVERY signed sub-256
+>    sign-extension (hot path); zero-reg across all signed tests confirms it.
+> 3. **stringToBytesN**: return nullptr (fall through) instead of silently
+>    truncating a string longer than bytes[N] (solc rejects it up front anyway).
+> 4. **arc4DefaultEncoding**: bail when a static-array-of-dynamic-elements would
+>    need a uint16 element offset >0xFFFF (overflow-safe check), rather than emit
+>    a wrapped/corrupt offset header.
+> VERIFIED NOT bugs (don't re-flag): **wtypeToABIName returns "uintN" for signed
+> intN INTENTIONALLY** — mirrors puya's on-chain selector convention
+> (SolExternalCall.cpp:28; the arc56 client ABI keeps intN via a separate layer);
+> makeWord32ToUInt64 is the correct `extract(24,8)+btoi` account→app inverse;
+> TypeMapper's default→bytes fallback is the deliberately-kept one (a blanket
+> flip regresses 58 tests); Arc4ArrayWidening + TypeMapper are clean.
+
 # Semantic Test Status — v341
 
 > **STORAGE/ AUDIT — 6 FIXES (wip, 2026-06-10):** `a72c656f73`, zero-regression
