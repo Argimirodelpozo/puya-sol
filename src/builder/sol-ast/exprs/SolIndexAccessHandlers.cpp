@@ -23,6 +23,16 @@ using namespace solidity::frontend;
 namespace puyasol::builder::sol_ast
 {
 
+std::shared_ptr<awst::Expression> SolIndexAccess::signExtendSignedElement(
+	std::shared_ptr<awst::Expression> _decoded)
+{
+	// The index-access result type (`m_indexAccess.annotation().type`) is the
+	// element type; delegate the signed sub-256 → canonical-256-bit extension to
+	// the shared TypeCoercion helper so this and the sol-eb array builder agree.
+	return builder::TypeCoercion::signExtendSignedElement(
+		std::move(_decoded), m_indexAccess.annotation().type, m_loc);
+}
+
 std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 {
 	auto const* arrType = dynamic_cast<ArrayType const*>(
@@ -69,10 +79,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// Only ARC4Decode if element needs decoding to native type
 	bool needsDecode = rawElemType != elemType && rawElemType->name() != elemType->name();
 	if (needsDecode)
-	{
-		auto decode = awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc);
-		return decode;
-	}
+		return signExtendSignedElement(
+			awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc));
 	return indexExpr;
 }
 
@@ -382,7 +390,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			{
 				auto result = baseBuilder->index(*idxBuilder, m_loc);
 				if (result)
-					return result->resolve();
+					// Write targets resolve as lvalues (the bare decoded element,
+					// no sign-extension — a CommaExpression can't be assigned to);
+					// reads resolve as rvalues (sign-extended where applicable).
+					return m_indexAccess.annotation().willBeWrittenTo
+						? result->resolve_lvalue()
+						: result->resolve();
 			}
 		}
 	}
@@ -471,7 +484,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		}
 		if (elemIsArc4 && expectedIsNative)
 		{
-			auto decode = awst::makeARC4Decode(std::move(e), expectedType, m_loc);
+			std::shared_ptr<awst::Expression> decode =
+				awst::makeARC4Decode(std::move(e), expectedType, m_loc);
+			// Sign-extend a signed sub-256 element only when read (rvalue); a
+			// write target must remain the bare decode (a valid lvalue).
+			if (!m_indexAccess.annotation().willBeWrittenTo)
+				decode = signExtendSignedElement(std::move(decode));
 			return decode;
 		}
 	}
@@ -572,10 +590,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 			&& expectedType->kind() != awst::WTypeKind::ARC4DynamicArray
 			&& expectedType->kind() != awst::WTypeKind::ARC4Struct;
 		if (elemIsArc4 && expectedIsNative)
-		{
-			auto decode = awst::makeARC4Decode(std::move(cast), expectedType, m_loc);
-			return decode;
-		}
+			return signExtendSignedElement(
+				awst::makeARC4Decode(std::move(cast), expectedType, m_loc));
 	}
 	return cast;
 }

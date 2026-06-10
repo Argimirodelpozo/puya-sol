@@ -54,10 +54,15 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 			|| elemType->kind() == awst::WTypeKind::ARC4Struct);
 
 	std::shared_ptr<awst::Expression> result = std::move(e);
+	bool signExtendElem = false;
 	if (needsDecode)
 	{
-		auto decode = awst::makeARC4Decode(std::move(result), expectedType, _loc);
-		result = std::move(decode);
+		result = awst::makeARC4Decode(std::move(result), expectedType, _loc);
+		// A signed sub-256 element (e.g. int128) decodes to its raw N-bit two's
+		// complement. The canonical-256-bit sign-extension is deferred to
+		// resolve() (read context) so it never poisons the lvalue path — the
+		// bare decode must stay a valid assignment target for `a[i] = x`.
+		signExtendElem = true;
 	}
 
 	// Enum element validation: Solidity panics (0x21) when reading an out-
@@ -87,7 +92,29 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		result = tmpVar;
 	}
 
-	return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(result));
+	auto out = std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(result));
+	if (signExtendElem)
+	{
+		out->m_signExtendElem = m_arrayType->baseType();
+		out->m_signExtendLoc = _loc;
+	}
+	return out;
+}
+
+std::shared_ptr<awst::Expression> SolArrayBuilder::resolve()
+{
+	// rvalue read: sign-extend a decoded signed sub-256 element to canonical
+	// 256-bit (no-op for unsigned / int256 / <=64-bit — see TypeCoercion).
+	if (m_signExtendElem)
+		return TypeCoercion::signExtendSignedElement(m_expr, m_signExtendElem, m_signExtendLoc);
+	return m_expr;
+}
+
+std::shared_ptr<awst::Expression> SolArrayBuilder::resolve_lvalue()
+{
+	// Assignment target: the bare decoded element. Never sign-extend (a
+	// CommaExpression is not a valid lvalue).
+	return m_expr;
 }
 
 std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(

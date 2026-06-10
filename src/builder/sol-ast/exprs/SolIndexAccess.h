@@ -42,6 +42,15 @@ private:
 	std::shared_ptr<awst::Expression> handleRegularIndex();
 	std::shared_ptr<awst::Expression> handleSlicedIndex();
 
+	/// Sign-extend a decoded signed sub-256 array element (e.g. `int128`) from
+	/// its raw N-bit two's complement to the canonical 256-bit biguint, so that
+	/// `a[i]` compares/arithmetics equal to a sign-extended scalar of the same
+	/// type. No-op for unsigned, int256 (already canonical), and <=64-bit
+	/// (uint64-backed) elements. `_decoded` is the post-ARC4Decode native value;
+	/// the Solidity element type is read from `m_indexAccess.annotation().type`.
+	std::shared_ptr<awst::Expression> signExtendSignedElement(
+		std::shared_ptr<awst::Expression> _decoded);
+
 	/// Multi-box state-var array access: emits page-aware box_extract/box_replace.
 	/// `_idxExpr` is the element index (uint64 or biguint, will be coerced).
 	/// `_arrWtype` must be an ARC4StaticArray flagged multi-box by StorageMapper.

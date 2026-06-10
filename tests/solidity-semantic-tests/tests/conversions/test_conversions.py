@@ -209,3 +209,34 @@ def test_string_to_bytes(harness):
     r = harness.call(app, "f(string)", "Hello")
     assert bytes(r.abi_return) == b"Hello"
 
+
+
+def test_int128_array_element_signextend(harness):
+    """conversions/contracts/int128_arr_check.sol
+
+    CUSTOM regression guard (NOT vendored from the upstream Solidity semantic
+    suite). A signed sub-256 array element (int128) is decoded as its raw N-bit
+    two's complement and must be sign-extended to the canonical 256-bit form on
+    read, so `a[i]` compares/arithmetics equal to a sign-extended scalar of the
+    same value. Before the fix, eq0([-777], -777) was False (element 2^128-777
+    vs scalar 2^256-777).
+    """
+    app = harness.compile_and_deploy("conversions/contracts/int128_arr_check.sol")
+    # scalar + element-return round-trips (sanity — unaffected by the fix)
+    assert as_signed_int(harness.call(app, "ident(int128)", -777).abi_return) == -777
+    assert as_signed_int(harness.call(app, "get0(int128[])", [-777]).abi_return) == -777
+    # the core fix: a negative element compares equal to the negative scalar
+    assert harness.call(app, "eq0(int128[],int128)", [-777], -777).abi_return is True
+    # a positive value still compares equal (sign-extension is a no-op there)
+    assert harness.call(app, "eq0(int128[],int128)", [777], 777).abi_return is True
+    # a genuine mismatch is still reported False (guards against over-eager extend)
+    assert harness.call(app, "eq0(int128[],int128)", [-777], -778).abi_return is False
+    # sign test: negative element is < 0, positive is not
+    assert harness.call(app, "gt0(int128[])", [-777]).abi_return is True
+    assert harness.call(app, "gt0(int128[])", [777]).abi_return is False
+    # arithmetic across two decoded signed elements (widened to int256)
+    assert as_signed_int(harness.call(app, "sum2(int128[])", [-777, 1000]).abi_return) == 223
+    assert as_signed_int(harness.call(app, "sum2(int128[])", [-5, -10]).abi_return) == -15
+    # memory-array element access path (true iff t == -5)
+    assert harness.call(app, "eqMem(int128)", -5).abi_return is True
+    assert harness.call(app, "eqMem(int128)", 7).abi_return is False

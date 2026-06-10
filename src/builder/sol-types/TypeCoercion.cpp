@@ -7,6 +7,8 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <libsolutil/Numeric.h>
 
+#include <libsolidity/ast/AST.h>
+
 namespace puyasol::builder
 {
 
@@ -219,6 +221,24 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 	comma->expressions.push_back(std::move(bind));
 	comma->expressions.push_back(std::move(conditional));
 	return comma;
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::Type const* _solElemType,
+	awst::SourceLocation const& _loc
+)
+{
+	using namespace solidity::frontend;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_solElemType))
+		_solElemType = &udvt->underlyingType();
+	// Only biguint-backed signed elements (64 < N < 256) need extension. int256
+	// is already canonical two's complement; <=64-bit elements are uint64-backed
+	// and carry their own sign handling (a 256-bit extension would mis-type them).
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_solElemType))
+		if (intType->isSigned() && intType->numBits() > 64 && intType->numBits() < 256)
+			return signExtendToUint256(std::move(_value), intType->numBits(), _loc);
+	return _value;
 }
 
 // ── Bytes ────────────────────────────────────────────────────────

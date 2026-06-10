@@ -16,6 +16,11 @@
 #include <string>
 #include <vector>
 
+namespace solidity::frontend
+{
+class Type;
+}
+
 namespace puyasol::builder
 {
 
@@ -63,6 +68,19 @@ public:
 	static std::shared_ptr<awst::Expression> signExtendToUint64(
 		std::shared_ptr<awst::Expression> _value,
 		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Sign-extend a decoded signed sub-256 *array element* from its raw N-bit
+	/// two's complement to the canonical 256-bit biguint, matching how scalar
+	/// signed params are decoded — so `a[i]` compares/arithmetics equal to a
+	/// scalar of the same type. No-op (returns `_value` unchanged) for unsigned,
+	/// `int256` (already canonical), `<=64`-bit (uint64-backed, which carry their
+	/// own sign handling) and non-integer element types. `_solElemType` is the
+	/// Solidity element type; UDVTs are unwrapped to their underlying type.
+	static std::shared_ptr<awst::Expression> signExtendSignedElement(
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::Type const* _solElemType,
 		awst::SourceLocation const& _loc
 	);
 

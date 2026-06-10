@@ -33,8 +33,21 @@ public:
 	std::unique_ptr<NodeBuilder> member_access(
 		std::string const& _name, awst::SourceLocation const& _loc) override;
 
+	/// rvalue read: sign-extends a decoded signed sub-256 element (see index()).
+	std::shared_ptr<awst::Expression> resolve() override;
+	/// lvalue (assignment target): the *bare* decoded element. Must NOT sign-
+	/// extend — the sign-extension wraps the value in a CommaExpression, which
+	/// is not a valid assignment target.
+	std::shared_ptr<awst::Expression> resolve_lvalue() override;
+
 private:
 	solidity::frontend::ArrayType const* m_arrayType;
+
+	/// Set by index() when this builder wraps a decoded signed sub-256 element
+	/// (e.g. int128). resolve() then sign-extends it to canonical 256-bit on
+	/// read; resolve_lvalue() leaves it bare. Null for every other case.
+	solidity::frontend::Type const* m_signExtendElem = nullptr;
+	awst::SourceLocation m_signExtendLoc{};
 
 	/// Get the AWST element type from the base array WType.
 	awst::WType const* elementType() const;
