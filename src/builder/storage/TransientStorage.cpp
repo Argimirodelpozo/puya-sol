@@ -1,6 +1,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/StateVarWalker.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/Types.h>
@@ -98,6 +99,7 @@ void TransientStorage::collectVars(
 		tv.byteOffset = currentOffset;
 		tv.byteSize = byteSize;
 		tv.wtype = mappedType;
+		tv.solType = solType;
 
 		size_t idx = m_vars.size();
 		m_vars.push_back(tv);
@@ -192,7 +194,12 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	if (_type == awst::WType::biguintType())
 	{
 		auto raw = extractBytes(absByte, sz, _loc);
-		return awst::makeAsBiguint(std::move(raw), _loc);
+		std::shared_ptr<awst::Expression> bg = awst::makeAsBiguint(std::move(raw), _loc);
+		// A signed sub-256 transient (e.g. int128) is stored as its raw N-bit
+		// two's complement; sign-extend to canonical 256-bit on read so it
+		// compares/arithmetics like a scalar of the same value. No-op for
+		// unsigned / int256 / non-integer (see TypeCoercion).
+		return TypeCoercion::signExtendSignedElement(std::move(bg), info->solType, _loc);
 	}
 
 	// Account: stored as 20 bytes (EVM-compatible offset layout), but AVM
@@ -247,8 +254,8 @@ namespace
 		else if (_value->wtype == awst::WType::biguintType())
 		{
 			// biguint values are big-endian bytes possibly shorter than 32.
-			// Pad to exactly 32 bytes via `b| bzero(32)` (b| yields
-			// max(len(a), len(b)); biguint ≤ 32 bytes so result is 32).
+			// Pad to exactly 32 bytes via makeZeroExtendToN (= `b|(bzero(32), v)`,
+			// which yields max(len, 32); biguint ≤ 32 bytes so the result is 32).
 			// Then extract the trailing `byteSize` bytes at compile-time offset.
 			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
 			auto padded = awst::makeZeroExtendToN(std::move(bytesView), 32, _loc);

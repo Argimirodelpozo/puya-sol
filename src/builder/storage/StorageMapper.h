@@ -152,6 +152,17 @@ private:
 		awst::SourceLocation const& _loc,
 		awst::AppStorageKind _kind = awst::AppStorageKind::AppGlobal
 	);
+
+	/// Build the raw storage *target* expression for a kind: a
+	/// BoxValueExpression (Box) or an AppStateExpression (AppGlobal / fallback).
+	/// Shared by createStateRead (which adds the exists-assert / StateGet
+	/// wrapping) and createStateWrite (which uses it directly as the lvalue).
+	std::shared_ptr<awst::Expression> makeStorageTarget(
+		std::shared_ptr<awst::BytesConstant> const& _key,
+		awst::WType const* _type,
+		awst::AppStorageKind _kind,
+		awst::SourceLocation const& _loc
+	);
 };
 
 } // namespace puyasol::builder

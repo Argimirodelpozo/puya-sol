@@ -3,8 +3,27 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_bytes, as_signed_int,
 )
+
+
+def test_transient_int128_signextend(harness):
+    """variables/contracts/transient_int128_signext_check.sol
+
+    CUSTOM regression guard (NOT vendored from the upstream Solidity semantic
+    suite). A signed sub-256 transient variable (int128) is stored as its raw
+    N-bit two's complement and must be sign-extended to canonical 256-bit on
+    read, so it compares/arithmetics equal to a scalar of the same value
+    (before the fix a read of -5 yielded 2^128-5).
+    """
+    app = harness.compile_and_deploy("variables/contracts/transient_int128_signext_check.sol")
+    # write-then-read round-trip within one call, compared to the scalar
+    assert harness.call(app, "roundtrip(int128)", -5).abi_return is True
+    assert harness.call(app, "roundtrip(int128)", 777).abi_return is True
+    assert harness.call(app, "roundtrip(int128)", -(2 ** 126)).abi_return is True
+    # the read sign-extends, so widening to int256 preserves the sign
+    assert as_signed_int(harness.call(app, "widen(int128)", -5).abi_return) == -5
+    assert as_signed_int(harness.call(app, "widen(int128)", -(2 ** 126)).abi_return) == -(2 ** 126)
 
 
 def test_delete_local(harness):

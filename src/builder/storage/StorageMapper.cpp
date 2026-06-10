@@ -221,8 +221,7 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	}
 
 	// Large values don't fit in AVM global state — promote to box storage.
-	// AVM limit: 128 bytes total for key + value. Key = variable name (UTF-8).
-	// Large values don't fit in AVM global state (128 bytes for key+value).
+	// AVM limit: 128 bytes total for key + value (key = variable name, UTF-8).
 	// Use storageSizeUpperBound() (slot count) × 32 for accurate multi-slot sizing.
 	try
 	{
@@ -306,6 +305,20 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 	return defs;
 }
 
+std::shared_ptr<awst::Expression> StorageMapper::makeStorageTarget(
+	std::shared_ptr<awst::BytesConstant> const& _key,
+	awst::WType const* _type,
+	awst::AppStorageKind _kind,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_kind == awst::AppStorageKind::Box)
+		return awst::makeBoxValueExpression(_key, _type, _loc);
+	// AppGlobal — and any other kind reaching here (Transient is dispatched
+	// upstream by StorageBackend) — reads/writes global app state.
+	return awst::makeAppStateExpression(_key, _type, _loc);
+}
+
 std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	std::string const& _varName,
 	awst::WType const* _type,
@@ -314,28 +327,20 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 )
 {
 	auto key = makeKeyExpr(_varName, _loc, _kind);
+	auto target = makeStorageTarget(key, _type, _kind, _loc);
 
-	switch (_kind)
-	{
-	case awst::AppStorageKind::AppGlobal:
-	{
-		auto expr = awst::makeAppStateExpression(key, _type, _loc);
-		expr->existsAssertionMessage = "check " + _varName + " exists";
-		return expr;
-	}
-	case awst::AppStorageKind::Box:
-	{
-		// makeStateGetWithDefault gates on AVM's 4 KB stack-value cap and
-		// returns the bare BoxValueExpression for oversized / dynamic
-		// types — see the comment inside that helper.
-		auto boxExpr = awst::makeBoxValueExpression(key, _type, _loc);
-		return makeStateGetWithDefault(std::move(boxExpr), _type, _loc);
-	}
-	default:
-	{
-		return awst::makeAppStateExpression(key, _type, _loc);
-	}
-	}
+	// Box: makeStateGetWithDefault gates on AVM's 4 KB stack-value cap and
+	// returns the bare BoxValueExpression for oversized / dynamic types —
+	// see the comment inside that helper.
+	if (_kind == awst::AppStorageKind::Box)
+		return makeStateGetWithDefault(std::move(target), _type, _loc);
+
+	// AppGlobal / fallback: assert the var exists. Safe because every
+	// non-constant global is pre-written with its type default at deploy
+	// (ApprovalProgramBuilder::emitStateVarInit), so the assert never fires.
+	if (auto app = std::dynamic_pointer_cast<awst::AppStateExpression>(target))
+		app->existsAssertionMessage = "check " + _varName + " exists";
+	return target;
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(
@@ -347,28 +352,8 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(
 )
 {
 	auto key = makeKeyExpr(_varName, _loc, _kind);
-
-	std::shared_ptr<awst::Expression> target;
-	switch (_kind)
-	{
-	case awst::AppStorageKind::AppGlobal:
-	{
-		target = awst::makeAppStateExpression(key, _type, _loc);
-		break;
-	}
-	case awst::AppStorageKind::Box:
-	{
-		target = awst::makeBoxValueExpression(key, _type, _loc);
-		break;
-	}
-	default:
-	{
-		target = awst::makeAppStateExpression(key, _type, _loc);
-		break;
-	}
-	}
-
-	return awst::makeAssignmentExpression(target, std::move(_value), _loc, _type);
+	auto target = makeStorageTarget(key, _type, _kind, _loc);
+	return awst::makeAssignmentExpression(std::move(target), std::move(_value), _loc, _type);
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
@@ -377,7 +362,13 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 )
 {
 	auto castToBytes = awst::makeAsBytes(_slotExpr, _loc);
-	auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, _loc);
+	// A biguint strips leading zeros, so a small computed slot number (e.g.
+	// `base + 2`) can encode to <8 bytes — extractLastN(8) would then compute
+	// `len - 8`, an AVM uint64 subtraction that PANICS on underflow. Pad to
+	// >=8 bytes first (`b|(bzero(8), v)` = max(len, 8), value-preserving) so the
+	// low-8-byte truncation to uint64 is well-defined for every slot value.
+	auto atLeast8 = awst::makeZeroExtendToN(std::move(castToBytes), 8, _loc);
+	auto last8 = awst::makeExtractLastN(std::move(atLeast8), 8, _loc);
 	return awst::makeBtoi(std::move(last8), _loc);
 }
 

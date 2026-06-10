@@ -42,6 +42,10 @@ public:
 		unsigned byteOffset; // byte offset within the slot
 		unsigned byteSize;   // width in bytes
 		awst::WType const* wtype;
+		// Solidity declared type — kept so buildRead can sign-extend a signed
+		// sub-256 value (e.g. int128) to canonical 256-bit on read. Owned by the
+		// Solidity AST (lives for the whole compilation), like declId.
+		solidity::frontend::Type const* solType = nullptr;
 	};
 
 	/// Collect transient state variables from a contract and compute packed layout.

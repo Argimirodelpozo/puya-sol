@@ -62,6 +62,11 @@ void StorageLayout::computeLayout(
 		allVars.push_back(var);
 	});
 
+	// Reserve up front: the m_slots[].variables back-pointers taken below
+	// (&m_variables[i]) must stay valid, but the loop keeps push_back-ing into
+	// m_variables — a reallocation mid-loop would dangle every earlier pointer.
+	m_variables.reserve(allVars.size());
+
 	for (auto const* var: allVars)
 	{
 		auto const* solType = var->type();
