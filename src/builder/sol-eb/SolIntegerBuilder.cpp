@@ -82,7 +82,13 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		return nullptr;
 
 	bool otherIsBigUInt = otherInt->numBits() > 64;
-	bool needsBigUInt = m_isBigUInt || otherIsBigUInt;
+	// Signed subtraction must use the biguint two's-complement path even for
+	// sub-64-bit types: the uint64 `-` panics on underflow, but signed
+	// `1 - 2 = -1` is valid. The biguint Sub below skips the unsigned underflow
+	// assert for signed operands. (Matches the plain non-compound path, which
+	// routes all signed arithmetic through biguint via buildSignedArithmetic.)
+	bool needsBigUInt = m_isBigUInt || otherIsBigUInt
+		|| (m_signed && _op == BuilderBinaryOp::Sub);
 
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
@@ -99,17 +105,30 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		{
 			auto shiftAmt = TypeCoercion::implicitNumericCast(
 				std::move(rhs), awst::WType::uint64Type(), _loc);
-			auto result = buildBigUIntShift(std::move(lhs), std::move(shiftAmt),
-				_op == BuilderBinaryOp::LShift, _loc);
+			std::shared_ptr<awst::Expression> result;
+			// Signed `>>` is an ARITHMETIC shift (sign-filling); the logical
+			// FloorDiv would zero-fill the high bits of a negative value.
+			if (m_signed && _op == BuilderBinaryOp::RShift)
+				result = buildBigUIntArithmeticShiftRight(std::move(lhs), std::move(shiftAmt), _loc);
+			else
+				result = buildBigUIntShift(std::move(lhs), std::move(shiftAmt),
+					_op == BuilderBinaryOp::LShift, _loc);
 			return wrap(emitOverflowCheck(std::move(result), _op, _loc));
 		}
 
 		rhs = promoteToBigUInt(std::move(rhs), _loc);
 
-		// Subtraction: wrapping (a + 2^256 - b) % 2^256
+		// Subtraction: wrapping (a + 2^256 - b) % 2^256.
+		// For SIGNED operands the checked-mode unsigned `a >= b` assert is the
+		// WRONG check — signed `1 - 2 = -1` is valid, not an underflow — and it
+		// reverts valid code (this reaches compound `x -= y`, which bypasses
+		// SolBinaryOperation's signed routing). Skip it for signed; the
+		// two's-complement wrap yields the canonical result. Mirrors signed
+		// Add/Mul below, which likewise don't apply the unsigned overflow check.
 		if (_op == BuilderBinaryOp::Sub)
 		{
-			auto result = buildWrappingSubtract(m_ctx, m_scope.isUnchecked(), std::move(lhs), std::move(rhs), _loc);
+			bool skipUnsignedAssert = m_signed || m_scope.isUnchecked();
+			auto result = buildWrappingSubtract(m_ctx, skipUnsignedAssert, std::move(lhs), std::move(rhs), _loc);
 			return wrap(emitOverflowCheck(std::move(result), _op, _loc));
 		}
 

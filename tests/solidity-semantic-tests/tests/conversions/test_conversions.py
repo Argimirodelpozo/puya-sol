@@ -240,3 +240,31 @@ def test_int128_array_element_signextend(harness):
     # memory-array element access path (true iff t == -5)
     assert harness.call(app, "eqMem(int128)", -5).abi_return is True
     assert harness.call(app, "eqMem(int128)", 7).abi_return is False
+
+
+def test_sol_eb_bug_guards(harness):
+    """conversions/contracts/sol_eb_bug_guards.sol
+
+    CUSTOM regression guard (NOT vendored) for four sol-eb/ builder-audit bugs:
+    (A) signed compound `-=` reverted; (B) signed `>>` was a logical shift;
+    (C) `bool` in abi.encode was 8 bytes not 32; (D) enum `==` double-evaluated
+    a side-effecting operand.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/sol_eb_bug_guards.sol")
+    # A — signed compound subtraction, all widths + the int8 INT_MIN boundary
+    assert as_signed_int(harness.call(app, "cSub8(int8,int8)", 1, 2).abi_return) == -1
+    assert as_signed_int(harness.call(app, "cSub8(int8,int8)", -100, 28).abi_return) == -128
+    assert as_signed_int(harness.call(app, "cSub128(int128,int128)", 5, 20).abi_return) == -15
+    assert as_signed_int(harness.call(app, "cSub256(int256,int256)", -1, -1).abi_return) == 0
+    # B — arithmetic shift right (negative sign-fills; positive zero-fills; >=256 saturates)
+    assert as_signed_int(harness.call(app, "sar(int256,uint256)", -8, 1).abi_return) == -4
+    assert as_signed_int(harness.call(app, "sar(int256,uint256)", -1, 5).abi_return) == -1
+    assert as_signed_int(harness.call(app, "sar(int256,uint256)", 8, 1).abi_return) == 4
+    assert as_signed_int(harness.call(app, "sar(int256,uint256)", -8, 300).abi_return) == -1
+    assert as_signed_int(harness.call(app, "sar(int256,uint256)", 8, 300).abi_return) == 0
+    # C — bool occupies a full 32-byte ABI word ending in 0x01
+    b = bytes(harness.call(app, "encBool()").abi_return)
+    assert len(b) == 96
+    assert b[32:64] == bytes(31) + bytes([1])
+    # D — the side-effecting operand evaluates exactly once
+    assert harness.call(app, "enumOneEval()").abi_return is True

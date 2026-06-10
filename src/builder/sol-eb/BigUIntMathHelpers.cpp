@@ -47,6 +47,79 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	return result;
 }
 
+std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
+	std::shared_ptr<awst::Expression> _value,
+	std::shared_ptr<awst::Expression> _shiftAmt,
+	awst::SourceLocation const& _loc)
+{
+	auto* biguint = awst::WType::biguintType();
+	auto* u64 = awst::WType::uint64Type();
+	static int s_asrTemp = 0;
+	int id = s_asrTemp++;
+	std::string vName = "__asr_v_" + std::to_string(id);
+	std::string nrName = "__asr_nr_" + std::to_string(id);
+	std::string nName = "__asr_n_" + std::to_string(id);
+	std::string sName = "__asr_s_" + std::to_string(id);
+	auto vRead = [&]() { return awst::makeVarExpression(vName, biguint, _loc); };
+	auto nrRead = [&]() { return awst::makeVarExpression(nrName, u64, _loc); };
+	auto nRead = [&]() { return awst::makeVarExpression(nName, u64, _loc); };
+	auto sRead = [&]() { return awst::makeVarExpression(sName, biguint, _loc); };
+
+	// 2^n as a 32-byte biguint: setbit(bzero(32), 255-n, 1) (valid for n in [0,255]).
+	auto pow2n = [&]() {
+		auto bitIdx = awst::makeUInt64BinOp(
+			awst::makeIntegerConstant("255", _loc), awst::UInt64BinaryOperator::Sub, nRead(), _loc);
+		auto setbit = awst::makeSetbit(awst::makeBzero(32, _loc), std::move(bitIdx), awst::makeOne(_loc), _loc);
+		return awst::makeAsBiguint(std::move(setbit), _loc);
+	};
+
+	// Pin value (read for the sign test + the floordiv) and the shift amount
+	// (read for the clamp compare + branch) so each evaluates once.
+	auto bindV = awst::makeAssignmentExpression(
+		awst::makeVarExpression(vName, biguint, _loc), std::move(_value), _loc, biguint);
+	auto bindNraw = awst::makeAssignmentExpression(
+		awst::makeVarExpression(nrName, u64, _loc), std::move(_shiftAmt), _loc, u64);
+
+	// nTmp = min(shift, 255): shifts >= 255 saturate (0 / all-ones), and the
+	// setbit power trick is only valid for [0,255].
+	auto nLt256 = awst::makeNumericCompare(
+		nrRead(), awst::NumericComparison::Lt, awst::makeIntegerConstant("256", _loc), _loc);
+	auto clampedN = awst::makeConditional(
+		std::move(nLt256), nrRead(), awst::makeIntegerConstant("255", _loc), u64, _loc);
+	auto bindN = awst::makeAssignmentExpression(
+		awst::makeVarExpression(nName, u64, _loc), std::move(clampedN), _loc, u64);
+
+	// sTmp = floordiv(v, 2^n) — the logical shift.
+	auto shifted = awst::makeBigUIntBinOp(vRead(), awst::BigUIntBinaryOperator::FloorDiv, pow2n(), _loc);
+	auto bindS = awst::makeAssignmentExpression(
+		awst::makeVarExpression(sName, biguint, _loc), std::move(shifted), _loc, biguint);
+
+	// fill = 2^256 - (2^256 / 2^n) = the top-n sign bits.
+	auto fill = awst::makeBigUIntBinOp(
+		makePow256(_loc), awst::BigUIntBinaryOperator::Sub,
+		awst::makeBigUIntBinOp(makePow256(_loc), awst::BigUIntBinaryOperator::FloorDiv, pow2n(), _loc), _loc);
+
+	// negative iff v >= 2^255.
+	auto neg = awst::makeNumericCompare(
+		vRead(), awst::NumericComparison::Gte,
+		awst::makeIntegerConstant(
+			"57896044618658097711785492504343953926634992332820282019728792003956564819968",
+			_loc, biguint),
+		_loc);
+
+	// result = neg ? (sTmp | fill) : sTmp
+	auto orFill = awst::makeBigUIntBinOp(sRead(), awst::BigUIntBinaryOperator::BitOr, std::move(fill), _loc);
+	auto result = awst::makeConditional(std::move(neg), std::move(orFill), sRead(), biguint, _loc);
+
+	auto comma = awst::makeCommaExpression(biguint, _loc);
+	comma->expressions.push_back(std::move(bindV));
+	comma->expressions.push_back(std::move(bindNraw));
+	comma->expressions.push_back(std::move(bindN));
+	comma->expressions.push_back(std::move(bindS));
+	comma->expressions.push_back(std::move(result));
+	return comma;
+}
+
 std::shared_ptr<awst::Expression> buildBigUIntExp(
 	ContractContext& m_ctx,
 	bool _isUnchecked,

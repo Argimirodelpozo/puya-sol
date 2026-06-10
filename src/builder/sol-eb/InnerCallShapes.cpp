@@ -291,12 +291,28 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		Logger::instance().debug("staticcall precompile 0x01: ecRecover → ecdsa_pk_recover Secp256k1", _loc);
 		// Input (128 bytes): hash(0..32), v(32..64), r(64..96), s(96..128)
 		auto msgHash = makeExtract(_inputData, 0, 32, _loc);
-		// recovery_id = v - 27, taken as uint64 from last byte of v-word
+		// recovery_id = v - 27 from the last byte of the v-word, but guard
+		// against v < 27: AVM `-` panics on underflow where EVM's 0x01
+		// precompile returns empty. Mirror the ecrecover() builtin's clamp:
+		// (v >= 27) ? v - 27 : 0. Pin v to a temp (read twice).
 		auto vByte = makeExtract(_inputData, 63, 1, _loc);
 		auto vInt = awst::makeBtoi(std::move(vByte), _loc);
-		auto recoveryId = awst::makeUInt64BinOp(
-			std::move(vInt), awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant("27", _loc), _loc);
+		auto* u64v = awst::WType::uint64Type();
+		static int s_ecRecVTmp = 0;
+		std::string vName = "__ecrec_v_" + std::to_string(++s_ecRecVTmp);
+		auto bindV = awst::makeAssignmentExpression(
+			awst::makeVarExpression(vName, u64v, _loc), std::move(vInt), _loc, u64v);
+		auto vRead = [&]() { return awst::makeVarExpression(vName, u64v, _loc); };
+		auto vGte27 = awst::makeNumericCompare(
+			vRead(), awst::NumericComparison::Gte, awst::makeIntegerConstant("27", _loc), _loc);
+		auto vMinus27 = awst::makeUInt64BinOp(
+			vRead(), awst::UInt64BinaryOperator::Sub, awst::makeIntegerConstant("27", _loc), _loc);
+		auto guarded = awst::makeConditional(
+			std::move(vGte27), std::move(vMinus27), awst::makeZero(_loc), u64v, _loc);
+		auto recoveryIdComma = awst::makeCommaExpression(u64v, _loc);
+		recoveryIdComma->expressions.push_back(std::move(bindV));
+		recoveryIdComma->expressions.push_back(std::move(guarded));
+		std::shared_ptr<awst::Expression> recoveryId = recoveryIdComma;
 		auto r = makeExtract(_inputData, 64, 32, _loc);
 		auto s = makeExtract(_inputData, 96, 32, _loc);
 

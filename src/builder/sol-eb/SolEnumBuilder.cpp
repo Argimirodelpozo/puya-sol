@@ -17,20 +17,30 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
 
-	// Enum range validation: EVM panics (0x21) when comparing invalid enum values
+	// Enum range validation: EVM panics (0x21) when reading an out-of-range enum
+	// value. Validate each operand on read, but spill it to a temp first so the
+	// assert and the comparison share ONE evaluation — otherwise a side-effecting
+	// operand (`bump() == E.B`) runs its side effects twice (it would appear in
+	// both the prepended assert and the returned comparison). Mirrors the
+	// spill-to-temp pattern in SolArrayBuilder::index's enum check.
 	if (m_enumType)
 	{
 		unsigned numMembers = m_enumType->numberOfMembers();
-		auto validateEnum = [&](std::shared_ptr<awst::Expression> val) {
+		static int s_enumCmpTemp = 0;
+		auto spillAndValidate = [&](std::shared_ptr<awst::Expression> val)
+			-> std::shared_ptr<awst::Expression> {
+			std::string tmpName = "__enum_cmp_" + std::to_string(s_enumCmpTemp++);
+			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(tmpVar, std::move(val), _loc));
 			auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
-
-			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), _loc);
-
-			auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc);
-			m_ctx.prePendingStatements.push_back(std::move(stmt));
+			auto cmp = awst::makeNumericCompare(tmpVar, awst::NumericComparison::Lt, std::move(maxVal), _loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc));
+			return tmpVar;
 		};
-		validateEnum(lhs);
-		validateEnum(rhs);
+		lhs = spillAndValidate(std::move(lhs));
+		rhs = spillAndValidate(std::move(rhs));
 	}
 
 	awst::NumericComparison cmpOp = awst::NumericComparison::Eq;

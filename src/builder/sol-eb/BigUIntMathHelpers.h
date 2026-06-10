@@ -35,6 +35,17 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	bool _isLeftShift,
 	awst::SourceLocation const& _loc);
 
+/// Build ARITHMETIC shift right (Solidity `>>` on a signed int = SAR) for a
+/// 256-bit two's-complement value: `(v >= 2^255) ? (v/2^n | topNbitsMask)
+/// : v/2^n`, with the shift clamped to 255 (any shift >= 255 saturates to 0
+/// for non-negative / all-ones for negative). Logical `>>` (buildBigUIntShift)
+/// sign-fills with zeros, which is wrong for negative values. `_value` must be
+/// in canonical 256-bit two's-complement form.
+std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
+	std::shared_ptr<awst::Expression> _value,
+	std::shared_ptr<awst::Expression> _shiftAmt,
+	awst::SourceLocation const& _loc);
+
 /// Build biguint exponentiation via square-and-multiply. Appends the
 /// init assigns + while-loop to `_ctx.prePendingStatements`; returns a
 /// VarExpression for the accumulator var. In unchecked mode the

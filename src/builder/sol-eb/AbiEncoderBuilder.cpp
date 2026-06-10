@@ -114,7 +114,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		boolToInt->stackArgs.push_back(awst::makeOne(_loc));
 		boolToInt->stackArgs.push_back(std::move(_expr));
 
-		bytesExpr = awst::makeItob(std::move(boolToInt), _loc);
+		auto itob = awst::makeItob(std::move(boolToInt), _loc);
+		// For non-packed (abi.encode), pad to the 32-byte ABI word — mirrors
+		// the uint64 branch. Without this a bool occupied only 8 bytes and
+		// misaligned every following argument. Packed keeps the raw 8-byte
+		// itob (the packed-width logic below slices it to 1 byte).
+		bytesExpr = _isPacked ? std::move(itob) : leftPadBytes(std::move(itob), 32, _loc);
 	}
 	else
 	{

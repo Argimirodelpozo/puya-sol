@@ -171,12 +171,14 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	if (isExternal)
 	{
 		// External function pointer = concat(appIdBytes[8], selectorBytes[4]) = 12 bytes.
-		// `this.f` → (itob(0) sentinel, internalFuncId[:4]) — self-call, uses
-		//   internal dispatch at call time.
+		// `this.f` → (itob(CurrentApplicationID), f.ARC4-selector) — the dispatch
+		//   site recognises the self appId and takes an internal-dispatch shortcut.
 		// `C(addr).f` → (8-byte appId derived from addr, f.ARC4-selector) — inner
 		//   app txn at call time.
-		// Calling code checks appId == 0 (self) for internal dispatch; non-zero
-		// uses inner txn with that appId.
+		// Calling code compares the captured appId against CurrentApplicationID
+		// (self) for the internal-dispatch shortcut; a different appId uses an
+		// inner txn. (Earlier this used an itob(0) sentinel + internal-id slot;
+		// that's no longer the encoding.)
 		static awst::BytesWType s_bytes12(12);
 
 		// Helper: itob(constInt) → 8 bytes.
