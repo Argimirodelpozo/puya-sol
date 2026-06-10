@@ -1,5 +1,32 @@
 # Semantic Test Status — v339
 
+> **ASSEMBLY FIXES + TWO-STAGE TEST CACHE (2026-06-10):** Two commits, both
+> zero-regression. (1) `c0b38f3fc7` two-stage AWST-content backend cache (test
+> infra only): the puya Python backend is ~5s/contract (~3.2s of it pure
+> interpreter+import startup); the compile cache keyed on the puya-sol *binary*
+> mtime, so every rebuild re-paid the backend for all ~1322 contracts (~67min
+> cold, every dev iteration). New L2 cache keys backend artifacts on AWST
+> *content* (awst.json + normalized options + puya version + flags) so a
+> localized codegen change only re-runs puya for contracts whose AWST actually
+> changed. Post-rebuild compile **3.8s -> 0.06s/contract (~65x)**; accessor slice
+> 26s -> 7s. Safe-by-construction (hit => identical AWST => identical TEAL; miss =
+> slower never wrong). Validated: byte-identical artifacts cold/L1/L2, error-path
+> raises + poisons neither cache, distinct keys per ensure-budget/evm-version,
+> real pytest accessor (8/8 x3 states) + inheritance (47p, multi-source).
+> (2) `68e39e4425` five inline-asm (Yul) fixes: full -n2 suite **1193p / 66f /
+> 83xf / 1xp in 28:46**, FAILED set BYTE-IDENTICAL to RESULTS_batchC (zero reg /
+> zero recovery; RESULTS_68e39e4425.txt): mulmod/addmod & sdiv/smod zero-divisor
+> (EVM returns 0, AVM b%/b/ panic) now safeDivMod-guarded; safeDivMod divisor
+> wrapped in SingleEvaluation (was a duplicated-subtree double-eval); mcopy
+> generic fallback copied only ONE 32-byte word regardless of length -> now
+> unrolls a const multiple-of-32, fail-loud on dynamic / non-multiple / >4096;
+> if/switch conditions now drain pending statements before the node (buildForLoop
+> already did). Plus bit-identical consolidation (TEAL-diff verified): eq/lt/gt ->
+> makeYulCompare, and/or/xor -> makeYulBitwise, arity checks -> checkArity
+> (ArithmeticOps + SignedOps). The assembly agent-audit also RULED OUT several
+> false-positive "use-after-move" claims (handleShl/Shr pass buildPowerOf2 its
+> arg by value, so no UB).
+
 > **ASSEMBLY: balance(addr) added + codesize() hard error (wip, 2026-06-09):** Suite **1193p / 66f / 83xf /
 > 1xp** — fail-set BYTE-IDENTICAL to v338 (zero new raw regressions, 0 connection errors; RESULTS_batchC.txt).
 > Commit `6bc1f7147`. Pass count 1199→1193 is an intended honesty trade, NOT a regression.
