@@ -1,3 +1,35 @@
+# Semantic Test Status — v341
+
+> **STORAGE/ AUDIT — 6 FIXES (wip, 2026-06-10):** `a72c656f73`, zero-regression
+> (full -n2 FAILED set BYTE-IDENTICAL to baseline sha1 c9bb89f26c…;
+> RESULTS_a72c656f73.txt; 1196p measured + 1 additive guard = 1197p/66f/83xf).
+> File-by-file pass over `src/builder/storage/`:
+> 1. **StorageLayout** — `m_variables.reserve(allVars.size())` before the build
+>    loop: `m_slots[].variables` stores `&m_variables[i]` back-pointers taken
+>    mid-loop, which a vector realloc would dangle. LATENT today (that API —
+>    `slots()`/`getSlotInfo()`/`SlotInfo::variables` — is unused externally;
+>    callers use the index-based `getVarInfo`/`getVarInfoById`) but a UB footgun.
+> 2. **StorageMapper::biguintSlotToBtoi** — a small *computed* slot number
+>    (`BigUIntBinaryOperation`, e.g. `base+2`) encodes to <8 bytes (biguint
+>    strips leading zeros), so `extractLastN(8)`'s `len-8` is an AVM uint64 sub
+>    that PANICS on underflow. Now zero-extends to ≥8 bytes first
+>    (`b|(bzero(8), v)` = max(len, 8)) — value-identical for the ≥8 case, fixes
+>    the small-slot panic. Callers: SolAssignment / SolUnaryOperation compound
+>    slot writes. (The 256→64 low-word truncation aliasing is the separate
+>    documented `9443b5150` limitation.)
+> 3+4. Comment cleanups (triplicated global-state comment; name makeZeroExtendToN).
+> 5. **StorageMapper::makeStorageTarget** extracted — shared by
+>    createStateRead/createStateWrite (drops the duplicated kind→target switch),
+>    behaviorally identical.
+> 6. **TransientStorage::buildRead** — sign-extend a signed sub-256 transient
+>    (e.g. `int128`) to canonical 256-bit on read via `signExtendSignedElement`
+>    (same class as [[int24-subword-codec]] #5 / b0bcb15498); `TransientVar` now
+>    carries the Solidity type. +1 CUSTOM guard
+>    `variables::test_transient_int128_signextend`.
+> VERIFIED NOT bugs: AppGlobal read's exists-assert can't fire (every non-const
+> global is pre-written at deploy, `ApprovalProgramBuilder::emitStateVarInit`);
+> StorageBackend writes type off the value (callers pre-coerce).
+
 # Semantic Test Status — v340
 
 > **INT128[] ARRAY-ELEMENT SIGN-EXTEND (wip, 2026-06-10):** `b0bcb15498`,
