@@ -1,3 +1,42 @@
+# Semantic Test Status — v343
+
+> **SOL-EB/ AUDIT — 4 CONFIRMED BUGS (wip, 2026-06-10):** `9db1ca8032`,
+> zero-regression (full -n2 **1198p/66f/83xf**, FAILED set BYTE-IDENTICAL to
+> baseline sha1 c9bb89f26c…; RESULTS_9db1ca8032.txt; +1 = the new CUSTOM guard).
+> Method: 4 audit agents over ~10.5k lines surfaced ~15 candidates; EVERY
+> behavioral claim was reproduced on-chain — which REFUTED most of them. The 4
+> real bugs were all real-but-UNTESTED (no recovered baseline fails):
+> - **A. Signed compound `-=` reverted** (all widths int8/128/256): routed
+>   through the unsigned-underflow-checked subtract (`1 - 2 = -1` is valid, not
+>   underflow). Fix: route signed Sub through the biguint two's-complement path +
+>   skip the unsigned `a>=b` assert for signed (SolIntegerBuilder::binary_op).
+>   KEY: compound `x op= y` BYPASSES SolBinaryOperation's signed routing and hits
+>   the raw builder directly — that's why plain `a-b` worked but `a-=b` didn't.
+> - **B. Signed `>>` (SAR) was a LOGICAL shift** (`-8>>1` gave 2^255-4 not -4):
+>   new `buildBigUIntArithmeticShiftRight` = `(v>=2^255)?(v/2^n | topNbits):v/2^n`,
+>   shift clamped to 255 (>=255 saturates). Wired for signed RShift.
+> - **C. `bool` in abi.encode was 8 bytes not 32** (`abi.encode(uint256,bool,
+>   uint256)`=72B) → misaligned every following arg. Fix: pad to 32 for
+>   non-packed, mirroring the uint64 branch (AbiEncoderBuilder::toPackedBytes).
+> - **D. enum `==` double-evaluated a side-effecting operand**: spill each operand
+>   to a temp first (SolEnumBuilder::compare).
+> Small items: ecRecover STATICCALL-precompile path now clamps `v<27` like the
+> ecrecover() builtin (InnerCallShapes); stale FunctionPointerBuilder comment.
+> FALSE POSITIVES (verified working, don't re-flag): signed `+=`/`*=`/`/=`/`%=`,
+> sub-64-bit signed compare, AbiDecode/AbiEncodeHeadTail/AbiEncodeArrays,
+> CallResolver/BuiltinCallables/AsaIntrinsics/TypeConversions, Sol{Address,String,
+> Struct,Array} builders.
+> **OPEN (real, not fixed — needs scoping):** caller selector-width builders
+> (AbiEncoderBuilder::buildARC4MethodSelector for encodeCall;
+> InnerCallHandlers::buildMethodSelector) emit the WRONG integer width vs the
+> callee selector for non-uint64/256 int params. Callee `f(uint128)` names its
+> param "uint128" (>64: exact width, signedness dropped) and `h(uint8)` names it
+> "uint64" (≤64: collapsed); buildARC4MethodSelector emits "uint256" for uint128,
+> buildMethodSelector emits "uint256"/"int256". Likely limited to encodeCall +
+> some inner-call paths (main SolExternalCall path appears correct since V4/AAVE
+> uint128 cross-calls work). Needs a dedicated pass to nail the canonical rule
+> and align all three builders. See [[int24-subword-codec]] (selector layer).
+
 # Semantic Test Status — v342
 
 > **SOL-TYPES/ AUDIT (wip, 2026-06-10):** `51590af382`, zero-regression (full
