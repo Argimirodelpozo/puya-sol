@@ -134,11 +134,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 	// Sign of result = sign of a XOR sign of b
 	// |result| = |a| / |b|
 	// If b == 0, result = 0 (EVM convention)
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("sdiv requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "sdiv", _loc))
 		return nullptr;
-	}
 
 	// Ensure args are biguint (may be uint64 or bytes from other ops)
 	auto a = ensureBiguint(_args[0], _loc);
@@ -166,9 +163,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 	auto xorResult = awst::makeNumericCompare(aNegInt, awst::NumericComparison::Ne, bNegInt, _loc);
 
 	// result = resultNeg ? negate(quotient) : quotient
-	return awst::makeConditional(
+	auto signedResult = awst::makeConditional(
 		std::move(xorResult), negate256(quotient, _loc), quotient,
 		awst::WType::biguintType(), _loc);
+
+	// EVM: sdiv(a, 0) = 0; AVM `b/` panics on a zero divisor. Guard the whole
+	// signed division so a zero divisor short-circuits to 0 — the conditional
+	// only evaluates the taken branch, so the FloorDiv by |b|=0 never runs.
+	auto bNonZero = awst::makeNumericCompare(
+		b, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);
+	return awst::makeConditional(
+		std::move(bNonZero), std::move(signedResult),
+		awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
@@ -178,11 +184,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
 {
 	// smod(a, b) — signed modulo: sign of result = sign of a
 	// |result| = |a| % |b|
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("smod requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "smod", _loc))
 		return nullptr;
-	}
 
 	auto a = ensureBiguint(_args[0], _loc);
 	auto b = ensureBiguint(_args[1], _loc);
@@ -203,9 +206,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
 
 	// result = aNeg ? negate(remainder) : remainder
 	auto aNeg2 = isNegative256(a, _loc);
-	return awst::makeConditional(
+	auto signedResult = awst::makeConditional(
 		std::move(aNeg2), negate256(remainder, _loc), remainder,
 		awst::WType::biguintType(), _loc);
+
+	// EVM: smod(a, 0) = 0; AVM `b%` panics on a zero divisor. Guard so a zero
+	// divisor short-circuits to 0 before the (un-taken) Mod branch runs.
+	auto bNonZero = awst::makeNumericCompare(
+		b, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);
+	return awst::makeConditional(
+		std::move(bNonZero), std::move(signedResult),
+		awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
@@ -214,11 +225,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 )
 {
 	// slt(a, b) — signed less-than in two's complement
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("slt requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "slt", _loc))
 		return nullptr;
-	}
 
 	// Capture original types before ensureBiguint conversion, so we can use
 	// the correct sign-bit threshold (bit 63 for uint64, bit 255 for biguint).
@@ -287,11 +295,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSgt(
 )
 {
 	// sgt(a, b) = slt(b, a) — just swap arguments
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("sgt requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "sgt", _loc))
 		return nullptr;
-	}
 	std::vector<std::shared_ptr<awst::Expression>> swapped = {_args[1], _args[0]};
 	return handleSlt(swapped, _loc);
 }
@@ -322,11 +327,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	//   result = shr_result | fill
 	// Else: result = shr_result
 
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("sar requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "sar", _loc))
 		return nullptr;
-	}
 
 	// Ensure value is biguint for sign checking
 	auto val = ensureBiguint(_args[1], _loc);
@@ -387,11 +389,8 @@ void AssemblyBuilder::handleSstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("sstore requires 2 arguments", _loc);
+	if (!checkArity(_args, 2, "sstore", _loc))
 		return;
-	}
 
 	// Box-keyed struct slot write (`sstore(info.slot, packedWord)` where `info`
 	// aliases an ARC4 struct in a box — e.g. Uniswap V4 Pool.updateTick). The

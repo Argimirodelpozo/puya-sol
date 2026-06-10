@@ -33,10 +33,24 @@ void AssemblyBuilder::buildIfStatement(
 		}
 	}
 
+	// Building the condition may produce pending statements (e.g. an inlined
+	// side-effecting Yul call, or a memory-bounds assert). The condition is
+	// evaluated once, so drain them into `_out` BEFORE the if — otherwise the
+	// next statement drains them AFTER the if and the condition reads stale
+	// state. A no-op when the condition is pure (the common case). Mirrors the
+	// handling in buildForLoop.
+	auto drainCondPending = [&](size_t _from) {
+		for (size_t i = _from; i < m_pendingStatements.size(); ++i)
+			_out.push_back(std::move(m_pendingStatements[i]));
+		m_pendingStatements.resize(_from);
+	};
+
 	if (isRevertBody)
 	{
 		// Emit assert(NOT(condition)) — avoids DCE of if(cond){assert(false)}
+		size_t pendingBefore = m_pendingStatements.size();
 		auto cond = ensureBool(buildExpression(*_node.condition), loc);
+		drainCondPending(pendingBefore);
 		auto notCond = awst::makeNot(std::move(cond), loc);
 
 		auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(notCond), loc, "revert"), loc);
@@ -45,7 +59,9 @@ void AssemblyBuilder::buildIfStatement(
 	else
 	{
 		// Original IfElse path for non-revert if-bodies
+		size_t pendingBefore = m_pendingStatements.size();
 		auto cond = ensureBool(buildExpression(*_node.condition), loc);
+		drainCondPending(pendingBefore);
 
 		auto ifBlock = awst::makeBlock(loc);
 		for (auto const& innerStmt: _node.body.statements)
@@ -161,7 +177,13 @@ void AssemblyBuilder::buildSwitchStatement(
 )
 {
 	auto loc = makeLoc(_node.debugData);
+	// Drain any prerequisites the switch expression produced (same rationale as
+	// buildIfStatement — the expression is evaluated once, before the switch).
+	size_t pendingBefore = m_pendingStatements.size();
 	auto switchExpr = buildExpression(*_node.expression);
+	for (size_t i = pendingBefore; i < m_pendingStatements.size(); ++i)
+		_out.push_back(std::move(m_pendingStatements[i]));
+	m_pendingStatements.resize(pendingBefore);
 
 	// Build AWST Switch node from Yul switch cases.
 	// AVM `match` does exact byte comparison. Yul values are u256 (32 bytes),

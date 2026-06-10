@@ -749,16 +749,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 {
 	// EVM div/mod by zero returns 0; AVM panics.
 	// Emit: right != 0 ? left op right : 0
-	auto zero = awst::makeBiguintConstant("0", _loc);
+	// The divisor appears in both the zero-check and the operation, so wrap it
+	// in a SingleEvaluation — the backend evaluates it once and reuses the
+	// cached result, instead of re-running a non-trivial / side-effecting
+	// divisor expression twice (which the prior shared-pointer reuse did).
+	static int s_divisorEvalId = 0;
+	auto right = awst::makeSingleEvaluation(
+		ensureBiguint(std::move(_right), _loc), awst::WType::biguintType(),
+		++s_divisorEvalId, _loc);
 
-	auto zeroForCmp = awst::makeBiguintConstant("0", _loc);
+	auto cond = awst::makeNumericCompare(
+		right, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);
 
-	auto cond = awst::makeNumericCompare(ensureBiguint(_right, _loc), awst::NumericComparison::Ne, std::move(zeroForCmp), _loc);
-
-	auto divExpr = makeBigUIntBinOp(_left, _op, _right, _loc);
+	auto divExpr = makeBigUIntBinOp(std::move(_left), _op, right, _loc);
 
 	return awst::makeConditional(
-		std::move(cond), std::move(divExpr), std::move(zero),
+		std::move(cond), std::move(divExpr), awst::makeBiguintConstant("0", _loc),
 		awst::WType::biguintType(), _loc);
 }
 

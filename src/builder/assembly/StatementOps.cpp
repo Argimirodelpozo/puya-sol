@@ -636,27 +636,65 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "mcopy")
 		{
-			// mcopy(dst, src, length): copy memory slot src to dst
-			// In our memory-slot model, this is equivalent to mstore(dst, mload(src)).
-			// A compile-time length of 0 is a no-op — skip entirely so we don't
-			// dereference possibly-out-of-bounds src offsets (mcopy_empty pattern).
-			if (args.size() >= 3)
+			// Copy whole 32-byte words: a constant multiple-of-32 length
+			// lowers to that many mstore(mload) word copies (forward order:
+			// correct for non-overlapping / copy-down; EVM memmove-style
+			// overlapping copy-up is not modeled). Byte-granular, dynamic,
+			// or huge lengths cannot be sized statically here -> fail loud,
+			// instead of the previous silent single-word copy that dropped
+			// every byte past the first word for len > 32.
+			auto const* lenConst = (args.size() >= 3)
+				? dynamic_cast<awst::IntegerConstant const*>(args[2].get())
+				: nullptr;
+			if (!lenConst)
 			{
-				if (auto const* lenConst =
-					dynamic_cast<awst::IntegerConstant const*>(args[2].get()))
-				{
-					if (lenConst->value == "0")
-						return;
-				}
+				Logger::instance().error(
+					"mcopy with a dynamic length is not supported in the "
+					"scratch-slot memory model (use a compile-time multiple "
+					"of 32 bytes, or a `bytes memory` mcopy)", loc);
+				return;
+			}
+			solidity::u256 lenVal(lenConst->value);
+			if (lenVal == 0)
+				return;  // no-op (mcopy_empty pattern)
+			if (lenVal % 32 != 0)
+			{
+				Logger::instance().error(
+					"mcopy with a non-32-byte-multiple length is not "
+					"supported in the scratch-slot memory model", loc);
+				return;
+			}
+			if (lenVal > 4096)
+			{
+				Logger::instance().error(
+					"mcopy length too large to unroll in the scratch-slot "
+					"memory model (max 4096 bytes)", loc);
+				return;
 			}
 			if (args.size() >= 2)
 			{
-				auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{args[1]};
-				auto loadedVal = handleMload(mloadArgs, loc);
-				if (loadedVal)
+				auto nwords = (lenVal / 32).convert_to<unsigned long long>();
+				for (unsigned long long w = 0; w < nwords; ++w)
 				{
-					auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{args[0], loadedVal};
-					handleMstore(storeArgs, loc, _out);
+					std::shared_ptr<awst::Expression> srcOff = args[1];
+					std::shared_ptr<awst::Expression> dstOff = args[0];
+					if (w > 0)
+					{
+						auto delta = std::to_string(32 * w);
+						srcOff = makeBigUIntBinOp(args[1],
+							awst::BigUIntBinaryOperator::Add,
+							awst::makeBiguintConstant(delta, loc), loc);
+						dstOff = makeBigUIntBinOp(args[0],
+							awst::BigUIntBinaryOperator::Add,
+							awst::makeBiguintConstant(delta, loc), loc);
+					}
+					auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{srcOff};
+					auto loadedVal = handleMload(mloadArgs, loc);
+					if (loadedVal)
+					{
+						auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{dstOff, loadedVal};
+						handleMstore(storeArgs, loc, _out);
+					}
 				}
 			}
 			return;

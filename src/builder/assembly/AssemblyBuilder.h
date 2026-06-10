@@ -310,6 +310,29 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
 	);
+
+	// ── ArithmeticOps shared helpers ────────────────────────────────────
+	// Arity guard for the Yul builtin handlers: logs an error naming the
+	// builtin and returns false when `_args` doesn't hold exactly `_n`.
+	bool checkArity(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		size_t _n, char const* _name, awst::SourceLocation const& _loc
+	);
+	// eq/lt/gt: coerce both operands to biguint and compare under `_cmp`
+	// (result is a native bool).
+	std::shared_ptr<awst::Expression> makeYulCompare(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::NumericComparison _cmp, char const* _name,
+		awst::SourceLocation const& _loc
+	);
+	// and/or/xor: apply byte-wise opcode `_op` to both operands
+	// (coerced biguint→bytes), reinterpreting the result as biguint.
+	std::shared_ptr<awst::Expression> makeYulBitwise(
+		char const* _op,
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		char const* _name, awst::SourceLocation const& _loc
+	);
+
 	std::shared_ptr<awst::Expression> handleGas(
 		awst::SourceLocation const& _loc
 	);
