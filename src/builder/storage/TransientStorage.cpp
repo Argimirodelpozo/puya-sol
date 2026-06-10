@@ -39,6 +39,7 @@ void TransientStorage::collectVars(
 
 	unsigned currentSlot = 0;
 	unsigned currentOffset = 0;
+	bool overflowReported = false;
 	for (auto const* var: allVars)
 	{
 		auto const* solType = var->type();
@@ -86,9 +87,20 @@ void TransientStorage::collectVars(
 
 		if (currentSlot >= MAX_SLOTS)
 		{
-			Logger::instance().warning(
-				"transient variable '" + var->name() + "' exceeds max slots ("
-				+ std::to_string(MAX_SLOTS) + "), skipped");
+			// The whole contract's transient state is packed EVM-style into a
+			// single MAX_SLOTS-word scratch blob. Overflowing it must FAIL the
+			// compile, not silently drop the variable — a dropped var's reads /
+			// writes resolve to nullptr downstream (wrong code or a crash).
+			// Report once: slots only grow, so every later var would re-trip this.
+			if (!overflowReported)
+			{
+				Logger::instance().error(
+					"too much transient state: '" + var->name() + "' overflows the "
+					+ std::to_string(MAX_SLOTS) + "-slot ("
+					+ std::to_string(MAX_SLOTS * SLOT_SIZE) + "-byte) transient scratch "
+					"blob. Reduce the number or width of `transient` state variables.");
+				overflowReported = true;
+			}
 			continue;
 		}
 
