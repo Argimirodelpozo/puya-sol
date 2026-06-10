@@ -1,3 +1,33 @@
+# Semantic Test Status — v340
+
+> **INT128[] ARRAY-ELEMENT SIGN-EXTEND (wip, 2026-06-10):** `b0bcb15498`,
+> zero-regression. A signed sub-256 array element (e.g. `int128`) was decoded by
+> `ARC4Decode` as its raw N-bit two's complement and never sign-extended to the
+> canonical 256-bit form — so `a[i] == scalar` compared `2^128-777` against the
+> sign-extended scalar `2^256-777` and returned **false** (and arithmetic on a
+> negative `a[i]` was off). The bug was confirmed via a repro: scalar `ident(-777)`
+> and element-return `get0([-777])` round-tripped (the return re-sign-extends), but
+> `eq0([-777], -777)` was false and `gt0([-777]) < 0` was true. ROOT CAUSE was the
+> **sol-eb array builder** `SolArrayBuilder::index` (the path for ARC4 array
+> params/locals) — NOT the `SolIndexAccess` handler sites first patched (their AWST
+> was byte-identical, so the first fix changed nothing). FIX: new shared
+> `TypeCoercion::signExtendSignedElement(value, solElemType, loc)` (extends only
+> signed `64 < N < 256`; no-op for unsigned / int256-already-canonical / <=64-bit
+> uint64-backed), called from every element-read site. KEY subtlety (a real
+> regression caught mid-fix): the extension must be **deferred to `resolve()`
+> (rvalue)**, with `resolve_lvalue()` returning the bare decode — a write target
+> `a[i] = x` must stay assignable, and the extension wraps the value in a
+> `CommaExpression`, which puya **rejects as an lvalue** (`deserialization failed:
+> 'CommaExpression'` on `int128[] memory` writes). `handleRegularIndex` resolves
+> write targets via `resolve_lvalue()`; its non-builder decode path is gated on
+> `!willBeWrittenTo`; the two already-read-only sites apply the helper directly.
+> Net: only signed-sub-256 array-element READS change; writes + all other types
+> byte-identical. Full -n2 suite **1196p / 66f / 83xf in 3:25** — FAILED set
+> BYTE-IDENTICAL to baseline (sha1 c9bb89f26c…; RESULTS_b0bcb15498.txt), 0
+> connection errors, +1 = the new CUSTOM guard `conversions::
+> test_int128_array_element_signextend` (calldata + memory, pos/neg/mismatch,
+> sign-test, arithmetic). See [[int24-subword-codec]].
+
 # Semantic Test Status — v339
 
 > **ASSEMBLY FIXES + TWO-STAGE TEST CACHE (2026-06-10):** Two commits, both
