@@ -53,6 +53,10 @@ void rewriteARC4Returns(
 					{
 						wrapReturns(block->body);
 					}
+					else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+					{
+						if (loop->loopBody) wrapReturns(loop->loopBody->body);
+					}
 				}
 			};
 			wrapReturns(method.body->body);
@@ -345,6 +349,8 @@ void rewriteARC4Returns(
 				}
 				else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
 					walk(block->body);
+				else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+					if (loop->loopBody) walk(loop->loopBody->body);
 			}
 		};
 		walk(method.body->body);
@@ -399,6 +405,8 @@ void rewriteARC4Returns(
 				}
 				else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
 					walkMask(block->body);
+				else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+					if (loop->loopBody) walkMask(loop->loopBody->body);
 			}
 		};
 		walkMask(method.body->body);

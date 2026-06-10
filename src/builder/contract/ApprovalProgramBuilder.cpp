@@ -71,7 +71,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				// Box-stored ARC4 struct with explicit initializer: encode
 				// the initializer and box_put it. Box arrays/bytes/dyn
 				// arrays are handled by the dedicated m_boxArrayVarNames
-				// loop above, so skip those kinds here.
+				// loop (built below but emitted earlier in the program), so
+				// skip those kinds here.
 				if (kind == awst::AppStorageKind::Box)
 				{
 					if (!var->value())

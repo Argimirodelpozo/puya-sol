@@ -436,7 +436,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
 					isAggregate = true;
 			}
-			if (!isAggregate)
+			// Skip the aggregate->ARC4 remap for inline-assembly bodies, matching
+			// the biguint remap guard above: the decode is suppressed for asm
+			// functions (see the `!hasInlineAssembly` guard at the decode-insert
+			// site), so remapping the signature without a decode would leave the
+			// body reading ARC4 bytes where it expects the native aggregate.
+			if (!isAggregate || funcHasInlineAssembly)
 				continue;
 
 			awst::WType const* arc4Type = m_typeMapper.mapToARC4Type(arg.wtype);
