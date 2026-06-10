@@ -39,19 +39,13 @@ def test_asm_uintn_mask(harness):
     assert as_int(harness.call(app, "mask160(uint256)", (1 << 160) - 1).abi_return) == (1 << 160) - 1
 
 
-@pytest.mark.xfail(
-    reason="puya AWST->IR lowering drops a multi-return call destructured directly "
-    "into struct fields (the materialised return is lost) — silent miscompile, "
-    "reproduces at -O0/1/2. See puyabug.md / memory uros-multireturn-struct-destructure-dce. "
-    "Backend fix owned elsewhere; V4 uses the local-var-destructure workaround.",
-    strict=False,
-)
 def test_multireturn_into_struct_fields(harness):
     """conversions/contracts/multireturn_struct.sol
 
-    Guard for the puya multi-return → struct-field lowering bug. test4(5) must == 30
-    and test2(5) == 40; currently both return 0 because the call is dropped. Flips to
-    xpass when puya is fixed (then un-xfail).
+    Regression guard for the puya multi-return -> struct-field lowering bug
+    (the call used to be DCE-dropped, so both returned 0). Now fixed; promoted
+    from xfail to guard against the drop re-appearing for this shape.
+    test4(5) == 30 and test2(5) == 40.
     """
     app = harness.compile_and_deploy("conversions/contracts/multireturn_struct.sol")
     assert as_int(harness.call(app, "test4(uint256)", 5).abi_return) == 30
@@ -214,3 +208,4 @@ def test_string_to_bytes(harness):
     # Reinterprets string as bytes — algosdk returns bytes (list[int]).
     r = harness.call(app, "f(string)", "Hello")
     assert bytes(r.abi_return) == b"Hello"
+
