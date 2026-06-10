@@ -162,15 +162,14 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 
 	auto offsetConst = awst::makeIntegerConstant(offsetStr, _loc, awst::WType::biguintType());
 
+	// `add` = masked + (2^256 - 2^N). This branch only runs when the masked
+	// value is in [2^(N-1), 2^N - 1], so the sum lands in [2^256 - 2^(N-1),
+	// 2^256 - 1] — always < 2^256. A `mod 2^256` here would be a guaranteed
+	// no-op, so it's omitted.
 	auto add = awst::makeBigUIntBinOp(tempRead(), awst::BigUIntBinaryOperator::Add, std::move(offsetConst), _loc);
 
-	// Mod 2^256 to keep within 32 bytes
-	auto pow256Const = makePow256(_loc);
-
-	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(pow256Const), _loc);
-
 	auto conditional = awst::makeConditional(
-		std::move(cond), std::move(mod), tempRead(), awst::WType::biguintType(), _loc);
+		std::move(cond), std::move(add), tempRead(), awst::WType::biguintType(), _loc);
 
 	auto comma = awst::makeCommaExpression(awst::WType::biguintType(), _loc);
 	comma->expressions.push_back(std::move(bind));
@@ -252,6 +251,12 @@ std::shared_ptr<awst::BytesConstant> TypeCoercion::stringToBytesN(
 {
 	auto const* sc = dynamic_cast<awst::StringConstant const*>(_src);
 	if (!sc || _n <= 0)
+		return nullptr;
+
+	// A string longer than the target width can't be right-padded into bytes[N]
+	// without dropping bytes. Solidity rejects such conversions up front, so this
+	// is a defensive guard: fall through (nullptr) rather than silently truncate.
+	if (static_cast<int>(sc->value.size()) > _n)
 		return nullptr;
 
 	std::vector<uint8_t> val(sc->value.begin(), sc->value.end());
@@ -568,6 +573,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				&& srcArc4->n() < tgtArc4->n()
 				&& srcArc4->arc4Alias().empty() && tgtArc4->arc4Alias().empty())
 			{
+				// Decode to the SOURCE's native width (not hardcoded uint64): a >64-bit
+				// source element (e.g. uint128 in `uint256[] = [2**100]`) would otherwise
+				// be truncated to its low 64 bits. Then widen to the target's native width.
+				auto const* srcNative = srcArc4->n() <= 64
+					? awst::WType::uint64Type()
+					: awst::WType::biguintType();
 				auto const* widerNative = tgtArc4->n() <= 64
 					? awst::WType::uint64Type()
 					: awst::WType::biguintType();
@@ -575,9 +586,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				std::shared_ptr<awst::Expression> bodyBytes;
 				for (auto const& elem : newArr->values)
 				{
-					auto decode = awst::makeARC4Decode(elem, awst::WType::uint64Type(), _loc);
+					auto decode = awst::makeARC4Decode(elem, srcNative, _loc);
 					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
-					if (widerNative != awst::WType::uint64Type())
+					if (widerNative != srcNative)
 						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
 
 					auto encode = awst::makeARC4Encode(std::move(nativeVal), dynArr->elementType(), _loc);
@@ -695,6 +706,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				&& srcArc4->n() < tgtArc4->n()
 				&& srcArc4->arc4Alias().empty() && tgtArc4->arc4Alias().empty())
 			{
+				auto const* srcNative = srcArc4->n() <= 64
+					? awst::WType::uint64Type()
+					: awst::WType::biguintType();
 				auto const* widerNative = tgtArc4->n() <= 64
 					? awst::WType::uint64Type()
 					: awst::WType::biguintType();
@@ -702,11 +716,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				auto widened = awst::makeNewArray(_targetType, _loc);
 				for (auto const& elem : newArr->values)
 				{
-					// Decode narrow ARC4 → uint64 (narrow types always ≤ 64 bits here)
-					auto decode = awst::makeARC4Decode(elem, awst::WType::uint64Type(), _loc);
+					// Decode to the SOURCE's native width (>64-bit source elements must
+					// not be truncated to uint64), then widen to the target's width.
+					auto decode = awst::makeARC4Decode(elem, srcNative, _loc);
 
 					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
-					if (widerNative != awst::WType::uint64Type())
+					if (widerNative != srcNative)
 						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
 
 					auto encode = awst::makeARC4Encode(std::move(nativeVal), targetStat->elementType(), _loc);

@@ -100,6 +100,14 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		{
 			int64_t headSize = N * 2;
 			int64_t tailSize = static_cast<int64_t>(elemDefault->size());
+			// ARC4 dynamic-element offsets are uint16 (2 bytes). If the final
+			// element's offset (headSize + (N-1)*tailSize) would exceed 0xFFFF it
+			// can't be encoded — bail out so the caller falls back, rather than
+			// emit a silently wrapped/corrupt offset header. Checking headSize
+			// first bounds N, keeping the product below overflow-safe.
+			if (headSize > 0xFFFF
+				|| (tailSize > 0 && N > 0 && (N - 1) > (0xFFFF - headSize) / tailSize))
+				return std::nullopt;
 			result.reserve(static_cast<size_t>(headSize + N * tailSize));
 			for (int64_t i = 0; i < N; ++i)
 			{
