@@ -29,6 +29,19 @@
 > VERIFIED NOT bugs: AppGlobal read's exists-assert can't fire (every non-const
 > global is pre-written at deploy, `ApprovalProgramBuilder::emitStateVarInit`);
 > StorageBackend writes type off the value (callers pre-coerce).
+> FOLLOW-UP `9ed8450946`: the 7th audit finding — TransientStorage silently
+> dropped a transient var that overflowed the MAX_SLOTS-word (5×32=160B) scratch
+> blob (warning + `continue`; a dropped var's reads/writes then resolve to
+> nullptr downstream). Now a hard `Logger::error` (frontend exits 1 / no TEAL),
+> guarded to fire once. Verified: 6×`uint256 transient` → exit 1, no TEAL; 5-var
+> boundary still compiles; no existing test exceeds 5 slots. Full -n2
+> **1197p/66f/83xf** (=1195 baseline +2 session guards), FAILED set byte-identical
+> to baseline (RESULTS_9ed8450946.txt). NB: 5 is conservative — an AVM scratch
+> slot holds 4096 B (128 words), so MAX_SLOTS could be raised. How transient
+> works: all transient vars pack EVM-style into ONE scratch slot
+> (`AssemblyBuilder::TRANSIENT_SLOT`), per-txn-clearing (matches EIP-1153),
+> bzero'd in the approval preamble; buildRead/buildWrite extract/replace2 at
+> `slot*32 + (32 - byteOffset - byteSize)` (low-end packing).
 
 # Semantic Test Status — v340
 
