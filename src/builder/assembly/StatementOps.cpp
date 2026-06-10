@@ -89,13 +89,19 @@ void AssemblyBuilder::buildVariableDeclaration(
 				// Inline the function body (populates return variables)
 				handleUserFunctionCall(callName, args, loc, _out);
 
-				// Map the function's return variables to the declared variables
+				// Map the function's return values to the declared variables. A
+				// subroutine-dispatched call lands its results in fresh temps
+				// (m_yulSubReturnTemps); an inlined call assigns the function's
+				// own return-var names. Read whichever applies.
+				bool fromSub = !m_yulSubReturnTemps.empty();
 				size_t numReturns = std::min(
 					_decl.variables.size(), funcDef.returnVariables.size()
 				);
 				for (size_t i = 0; i < numReturns; ++i)
 				{
-					std::string retName = funcDef.returnVariables[i].name.str();
+					std::string retName = fromSub
+						? m_yulSubReturnTemps[i]
+						: funcDef.returnVariables[i].name.str();
 					std::string varName = _decl.variables[i].name.str();
 
 					auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
@@ -185,13 +191,18 @@ void AssemblyBuilder::buildAssignment(
 					// Inline the function body
 					handleUserFunctionCall(callName, args, loc, _out);
 
-					// Map return variables to assignment targets
+					// Map return values to assignment targets — fresh subroutine
+					// temps (m_yulSubReturnTemps) if dispatched as a subroutine,
+					// else the function's own return-var names (inlined).
+					bool fromSub = !m_yulSubReturnTemps.empty();
 					size_t numReturns = std::min(
 						_assign.variableNames.size(), funcDef.returnVariables.size()
 					);
 					for (size_t i = 0; i < numReturns; ++i)
 					{
-						std::string retName = funcDef.returnVariables[i].name.str();
+						std::string retName = fromSub
+							? m_yulSubReturnTemps[i]
+							: funcDef.returnVariables[i].name.str();
 						std::string varName = _assign.variableNames[i].name.str();
 
 						auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);

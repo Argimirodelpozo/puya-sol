@@ -36,9 +36,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	// Reset the marker so the inline path below leaves it empty (callers then
+	// read the function's own return-var names, which the inlined body assigns).
+	m_yulSubReturnTemps.clear();
+
 	// Recursive Yul functions are lowered to AWST Subroutines (emitted in
-	// AssemblyBuilder::buildBlock). Dispatch via SubroutineCallExpression
-	// instead of inlining so calls don't recurse at compile time.
+	// AssemblyBuilder::buildBlock). Dispatch via a subroutine call instead of
+	// inlining so calls don't recurse at compile time.
 	auto subIt = m_yulFuncSubroutineIds.find(_name);
 	if (subIt != m_yulFuncSubroutineIds.end())
 	{
@@ -56,25 +60,53 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			return nullptr;
 		}
 
-		auto call = awst::makeSubroutineCall(awst::SubroutineID{subIt->second}, funcDef.returnVariables.size() == 1
-			? awst::WType::biguintType()
-			: awst::WType::voidType(), _loc);
+		size_t nRet = funcDef.returnVariables.size();
+		awst::WType const* callRetType =
+			nRet == 0 ? awst::WType::voidType()
+			: nRet == 1 ? awst::WType::biguintType()
+			: static_cast<awst::WType const*>(new awst::WTuple(
+				std::vector<awst::WType const*>(nRet, awst::WType::biguintType())));
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{subIt->second}, callRetType, _loc);
 		for (auto const& a: _args)
 			awst::pushCallArg(call->args, ensureBiguint(a, _loc));
 
-		if (funcDef.returnVariables.size() == 1)
+		static int s_yulCallId = 0;
+		int callId = ++s_yulCallId;
+
+		if (nRet == 0)
 		{
-			std::string retName = funcDef.returnVariables[0].name.str();
-			m_locals[retName] = awst::WType::biguintType();
-			auto target = awst::makeVarExpression(retName, awst::WType::biguintType(), _loc);
-			auto assign = awst::makeAssignmentStatement(std::move(target), call, _loc);
-			_out.push_back(std::move(assign));
-			return awst::makeVarExpression(retName, awst::WType::biguintType(), _loc);
+			_out.push_back(awst::makeExpressionStatement(call, _loc));
+			return awst::makeVoidConstant(_loc);
 		}
 
-		auto exprStmt = awst::makeExpressionStatement(call, _loc);
-		_out.push_back(std::move(exprStmt));
-		return awst::makeVoidConstant(_loc);
+		// Destructure the return value(s) into FRESH temps __yulret_<id>_<i> —
+		// decoupled from the function's own return-var names so a recursive call
+		// (whose return-var names equal the current frame's) doesn't clobber the
+		// caller's live values before they're read. Callers map these temps to
+		// their declared variables via m_yulSubReturnTemps. Multi-return wraps
+		// the call in a SingleEvaluation so it runs once.
+		std::shared_ptr<awst::Expression> resultSrc;
+		if (nRet == 1)
+			resultSrc = call;
+		else
+			resultSrc = awst::makeSingleEvaluation(call, callRetType, callId, _loc);
+
+		for (size_t i = 0; i < nRet; ++i)
+		{
+			std::string t = "__yulret_" + std::to_string(callId) + "_" + std::to_string(i);
+			m_locals[t] = awst::WType::biguintType();
+			std::shared_ptr<awst::Expression> value = (nRet == 1)
+				? resultSrc
+				: awst::makeTupleItem(resultSrc, static_cast<int>(i), awst::WType::biguintType(), _loc);
+			auto target = awst::makeVarExpression(t, awst::WType::biguintType(), _loc);
+			_out.push_back(awst::makeAssignmentStatement(std::move(target), std::move(value), _loc));
+			m_yulSubReturnTemps.push_back(t);
+		}
+
+		// Single-return may be used in expression context — return the temp.
+		if (nRet == 1)
+			return awst::makeVarExpression(m_yulSubReturnTemps[0], awst::WType::biguintType(), _loc);
+		return nullptr;
 	}
 
 	// Recursion guard: Yul function inlining expands each call at the AST
@@ -84,9 +116,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	// compiles far enough to report a meaningful diagnostic.
 	if (m_inlineDepth > 64)
 	{
+		// Backstop against the C++ translator stack overflowing on runaway inline
+		// expansion. Genuine recursion (direct or mutual) is detected and lowered
+		// to a subroutine above, so reaching this means either an unusually deep
+		// non-recursive call chain or a gap in that detection — NOT that recursion
+		// is unsupported.
 		Logger::instance().error(
-			"assembly function '" + _name + "' recurses deeper than the inlining "
-			"limit (64 frames); recursive Yul functions are not supported on AVM",
+			"assembly function '" + _name + "' exceeded the inline-expansion depth "
+			"limit (64 frames); recursion is normally lowered to a subroutine, so "
+			"this is either a very deep non-recursive call chain or a recursion-"
+			"detection gap",
 			_loc
 		);
 		return nullptr;

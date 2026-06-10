@@ -838,3 +838,28 @@ def test_protocolfee_swapfee(harness):
     assert f(0, 3000) == 3000                                          # 0 protocol fee
     assert f(4095, 16777215) == 16781310 - (4095 * 16777215 // 1_000_000)  # max inputs
     assert f(4096, 3000) == 3000                                       # self & 0xfff = 0
+
+
+def test_recursive_multireturn(harness):
+    """CUSTOM puya-sol test (NOT vendored from the upstream Solidity semantic
+    suite) — added by us to guard a compiler fix.
+
+    Recursive Yul function -> subroutine lowering with correct return binding.
+    f = multi-return recursion (was 'multiple return variables not yet
+    supported'); f2 = single-return ACCUMULATOR recursion. Both were miscompiled
+    by reusing the function's own return-var names as caller-scope temps (a
+    recursive call clobbered the live frame values); fixed by landing call
+    results in fresh per-call temps.
+    inlineAssembly/contracts/recursive_multireturn.sol"""
+    app = harness.compile_and_deploy("inlineAssembly/contracts/recursive_multireturn.sol")
+    # f(n) -> (sum 0..n = n(n+1)/2, count = n+1)
+    r = harness.call(app, "f(uint256)", 3)
+    vals = [as_int(x) for x in r.abi_return]
+    assert vals == [6, 4], vals
+    r = harness.call(app, "f(uint256)", 5)
+    vals = [as_int(x) for x in r.abi_return]
+    assert vals == [15, 6], vals
+    # single-return ACCUMULATOR recursion (uses the old value) — clobbered by the
+    # same return-var-name reuse bug; sum 0..n
+    assert as_int(harness.call(app, "f2(uint256)", 3).abi_return) == 6
+    assert as_int(harness.call(app, "f2(uint256)", 5).abi_return) == 15

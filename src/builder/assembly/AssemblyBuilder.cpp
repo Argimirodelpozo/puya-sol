@@ -806,15 +806,6 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 {
 	auto loc = makeLoc(_funcDef.debugData);
 
-	if (_funcDef.returnVariables.size() > 1)
-	{
-		Logger::instance().error(
-			"recursive Yul function '" + _funcDef.name.str()
-			+ "' with multiple return variables is not yet supported",
-			loc);
-		return;
-	}
-
 	// Save state that translateStatement touches so the outer block can resume.
 	auto savedLocals = std::move(m_locals);
 	auto savedConstants = std::move(m_localConstants);
@@ -874,12 +865,24 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	// Final return
 	awst::WType const* retType = awst::WType::voidType();
-	if (_funcDef.returnVariables.size() == 1)
+	size_t nRet = _funcDef.returnVariables.size();
+	if (nRet == 1)
 	{
 		retType = awst::WType::biguintType();
 		std::string retName = _funcDef.returnVariables[0].name.str();
 		auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 		bodyStmts.push_back(awst::makeReturnStatement(std::move(retVar), loc));
+	}
+	else if (nRet > 1)
+	{
+		// Multi-return: return a tuple of the N return-variable values.
+		std::vector<awst::WType const*> rts(nRet, awst::WType::biguintType());
+		retType = new awst::WTuple(std::move(rts));
+		auto tupleExpr = awst::makeTupleExpression(retType, loc);
+		for (auto const& r: _funcDef.returnVariables)
+			tupleExpr->items.push_back(
+				awst::makeVarExpression(r.name.str(), awst::WType::biguintType(), loc));
+		bodyStmts.push_back(awst::makeReturnStatement(std::move(tupleExpr), loc));
 	}
 	else
 	{

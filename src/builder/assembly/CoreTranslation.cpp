@@ -282,9 +282,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	{
 		auto const& funcDef = *m_asmFunctions[funcName];
 		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
-		handleUserFunctionCall(funcName, args, loc, inlinedStmts);
+		auto ret = handleUserFunctionCall(funcName, args, loc, inlinedStmts);
 		for (auto& s: inlinedStmts)
 			m_pendingStatements.push_back(std::move(s));
+		// A subroutine-dispatched single-return call returns its result via a
+		// fresh temp (decoupled from the function's return-var name to avoid
+		// recursion aliasing); use it. Inlined calls return nullptr — read the
+		// function's first return-var name (the inlined body assigned it).
+		if (ret)
+			return ret;
 		if (!funcDef.returnVariables.empty())
 		{
 			std::string retName = funcDef.returnVariables[0].name.str();
@@ -610,11 +616,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// m_pendingStatements. Using a local avoids aliasing issues when
 		// nested inlining drains m_pendingStatements inside handleUserFunctionCall.
 		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
-		handleUserFunctionCall(funcName, args, loc, inlinedStmts);
+		auto ret = handleUserFunctionCall(funcName, args, loc, inlinedStmts);
 		for (auto& s: inlinedStmts)
 			m_pendingStatements.push_back(std::move(s));
 
-		// Return a reference to the first return variable
+		// Subroutine-dispatched single-return: use the returned fresh temp
+		// (avoids recursion aliasing). Inlined calls return nullptr — read the
+		// function's first return variable, which the inlined body assigned.
+		if (ret)
+			return ret;
 		if (!funcDef.returnVariables.empty())
 		{
 			std::string retName = funcDef.returnVariables[0].name.str();

@@ -893,6 +893,14 @@ private:
 	/// to reference its emitted Subroutine at call sites.
 	std::map<std::string, std::string> m_yulFuncSubroutineIds;
 
+	/// After a subroutine-dispatched Yul call, holds the fresh per-call temp
+	/// local names the return values were destructured into (one per return
+	/// value). Decoupled from the function's own return-variable names so a
+	/// recursive call doesn't clobber the current frame's return vars. Empty
+	/// when the last call was inlined (callers then read the function's
+	/// return-variable names directly, as the inlined body assigns them).
+	std::vector<std::string> m_yulSubReturnTemps;
+
 	/// Build a root-level Subroutine node from a recursive Yul function and
 	/// push it onto the pending sink. Only supports zero/one return values
 	/// and rejects `leave` (would need return-with-value rewriting).
