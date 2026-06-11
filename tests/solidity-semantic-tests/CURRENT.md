@@ -1,3 +1,33 @@
+# Semantic Test Status — v344
+
+> **CROSS-CONTRACT SELECTOR + ARG-WIDTH FIX (wip, 2026-06-10):** `e0fe72de53`,
+> zero-regression (full -n2 **1199p/66f/83xf**, FAILED set BYTE-IDENTICAL to
+> baseline sha1 c9bb89f26c…; RESULTS_e0fe72de53.txt; +1 CUSTOM guard). CLOSES the
+> OPEN selector-width finding from v343's sol-eb audit ([[sol-eb-audit]]). A
+> cross-contract call / `abi.encodeCall` / inner-call to a method with a
+> non-uint64/256 INTEGER parameter computed the WRONG ARC4 selector AND encoded
+> the arg at the wrong width → mis-route/revert. Latent (untested).
+> GROUND TRUTH (verified via the callee's TEAL `method "..."` router strings, NOT
+> the client-patched arc56): **PARAM int** — `<=64 → "uint64"` (width+sign
+> collapsed), `>64 → "uintN"` (exact width, sign dropped). **RETURN int** —
+> `signed → "uint256"` (ANY width; a signed return is the full 256-bit two's
+> complement), `unsigned →` same as param. The param-vs-return asymmetry for
+> signed ints is why two helpers are needed.
+> FIX: all 3 caller selector builders (SolExternalCall, AbiEncoderBuilder::
+> buildARC4MethodSelector, InnerCallHandlers::buildMethodSelector) now share
+> `TypeCoercion::intSelectorName` (params) + `intSelectorReturnName` (returns) —
+> they previously collapsed every >64-bit to "uint256" via map()→biguint.
+> COUPLED value fix: SolExternalCall::encodeArgToBytes encoded a biguint arg as
+> always 32B, but uint128 is arc4.uint128 (16B) and the callee asserts len==N/8;
+> now `makeARC4Encode` to the param's exact ARC4 width. Verified e2e on localnet:
+> uint128/int128/uint8/uint256 cross-calls route + round-trip
+> (test_xcall_selector_width). Also fixed a stale SolExternalCall comment that
+> claimed the callee collapses to uint256 (false since mapSolTypeToARC4 landed).
+> NB: non-standard widths (int72 etc.) still revert on a separate pre-existing
+> encode/decode limitation — out of scope. Zero-reg: common arg types
+> (uint256/uint8/...) are unchanged; only the previously-broken >64-bit-sub-256
+> widths move.
+
 # Semantic Test Status — v343
 
 > **SOL-EB/ AUDIT — 4 CONFIRMED BUGS (wip, 2026-06-10):** `9db1ca8032`,
