@@ -217,3 +217,16 @@ def test_transient_state_variable_udvt(harness):
     # h() -> 0
     r = harness.call(app, "h()")
     assert as_int(r.abi_return) == 0
+
+
+def test_tuple_destructure_shadow(harness):
+    """variables/contracts/tuple_destructure_shadow.sol
+
+    CUSTOM regression guard (NOT vendored). A tuple-destructured local that
+    shadows an outer variable must get a shadow-safe unique name; before the fix
+    the inner destructured `a` overwrote the outer `a` (shadowTuple returned 1,
+    not 100). The single-decl path was already correct.
+    """
+    app = harness.compile_and_deploy("variables/contracts/tuple_destructure_shadow.sol")
+    assert as_int(harness.call(app, "shadowTuple()").abi_return) == 100
+    assert as_int(harness.call(app, "shadowSingle()").abi_return) == 100
