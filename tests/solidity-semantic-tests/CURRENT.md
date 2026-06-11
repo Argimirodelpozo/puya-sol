@@ -1,3 +1,25 @@
+# Semantic Test Status — v351
+
+> **DELETE-KEY + EVM REVERT PAYLOADS + main.cpp REFACTOR (2026-06-11):**
+> `b50efe1c8a` + `3c23bdcfa2` + `3fee994fb6`, all zero-regression
+> (66f/**1222p**/83xf; RESULTS_3c23bdcfa2.txt).
+> **delete m[f()]** ran the key twice (handleDelete rebuilt the operand —
+> same class as inc/dec). All other mapping-key shapes confirmed eval-once;
+> the "key re-inlined per box op" concern is RETIRED. Guard
+> storage::test_mapping_key_side_effect_once (6 shapes).
+> **EVM-shaped revert payloads** (RevertBlob.h): revert("m")/require(c,"m")
+> log Error(string) 0x08c379a0+abi.encode (constants fold to one pushbytes;
+> RUNTIME messages — previously DISCARDED — build at runtime); assert →
+> Panic(0x01); bare revert/require stay empty-data. Lowering
+> `if(!cond){log(blob); err}` ~100B/messaged assert; TEAL comment preserved.
+> smoke::test_failure TIGHTENED to exact ErrorString/Panic matches (its TODO).
+> Follow-up noted: custom-error selector+args payloads.
+> **main.cpp 1253→249 lines**: option machinery → src/cli/{CliOptions,
+> SourceCompat,CompilerSetup,AwstPostPasses}; pure code motion (one
+> mechanical change: --evm-memory-slots applied post-parse, equivalent).
+> Byte-identical awst.json oracle + identical --help; suite at identical
+> totals in 5:04 (all-L2-cache-hit = byte-identical AWST suite-wide).
+
 # Semantic Test Status — v350
 
 > **SOL-EB/ASSEMBLY AUDIT (2026-06-11 day): batch 3 `5a128c2556` + batch 4
