@@ -404,6 +404,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 				if (auto const* enumType = dynamic_cast<EnumType const*>(retParams[0]->type()))
 				{
 					unsigned numMembers = enumType->numberOfMembers();
+					// The value feeds both the range-assert and the return —
+					// wrap so `return f()` with a side-effecting enum f()
+					// evaluates once (verified: f() ran twice).
+					stmt->value = awst::makeEvalOnce(std::move(stmt->value), m_loc);
 					auto val = builder::TypeCoercion::implicitNumericCast(
 						stmt->value, awst::WType::uint64Type(), m_loc);
 

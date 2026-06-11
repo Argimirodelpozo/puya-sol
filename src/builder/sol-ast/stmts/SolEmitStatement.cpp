@@ -82,6 +82,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 			if (auto const* enumType = dynamic_cast<EnumType const*>(paramSolType))
 			{
 				unsigned numMembers = enumType->numberOfMembers();
+				// The value feeds both the range-assert and the event field —
+				// wrap so a side-effecting enum arg (`emit CE(f())`) evaluates
+				// once (verified: f() ran twice).
+				translated = awst::makeEvalOnce(std::move(translated), m_loc);
 				auto val = builder::TypeCoercion::implicitNumericCast(translated, awst::WType::uint64Type(), m_loc);
 
 				auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);

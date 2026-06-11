@@ -156,3 +156,19 @@ def test_using_inherited_enum_excplicitly(harness):
     # answer() -> 1
     r = harness.call(app, "answer()")
     assert as_int(r.abi_return) == 1
+
+
+def test_enum_side_effect_once(harness):
+    """enums/contracts/enum_side_effect_once.sol
+
+    CUSTOM regression guard (NOT vendored). A side-effecting enum value used in
+    an `emit E(f())` or a direct `return f()` must evaluate once. Both sites
+    reference the value twice (range-assert 0x21 + the field/return) and ran
+    f() twice before the fix (makeEvalOnce wrap in SolEmitStatement /
+    SolExpressionStatement).
+    """
+    app = harness.compile_and_deploy("enums/contracts/enum_side_effect_once.sol")
+    assert as_int(harness.call(app, "emitOnce()").abi_return) == 1
+    assert tuple(as_int(x) for x in harness.call(app, "retOnce()").abi_return) == (1, 1)
+    harness.call(app, "retDirect()")
+    assert as_int(harness.call(app, "cnt()").abi_return) == 1

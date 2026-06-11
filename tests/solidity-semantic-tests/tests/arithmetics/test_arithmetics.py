@@ -3,7 +3,7 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_bytes, as_signed_int,
 )
 
 
@@ -183,3 +183,42 @@ def test_unchecked_div_by_zero(harness):
     # mod(uint256,uint256): 7, 0 -> FAILURE, hex"4e487b71", 0x12 # throws #
     r = harness.call(app, "mod(uint256,uint256)", 7, 0, expect_revert=True)
     assert r.reverted
+
+
+def test_signed_edge_semantics(harness):
+    """arithmetics/contracts/signed_edge_semantics.sol
+
+    CUSTOM regression guard (NOT vendored). Pins EVM signed-arithmetic edge
+    semantics end-to-end: truncated div/mod signs, INT_MIN % -1 == 0 (no
+    panic), unchecked INT_MIN/-1 and -INT_MIN wrap to INT_MIN, (-2)**3 == -8,
+    0**0 == 1, arithmetic right shift with sign fill (incl. shift >= 256
+    saturation and compound >>=/<<= which bypass SolBinaryOperation), and
+    int128 compound %= canonicalization.
+    """
+    app = harness.compile_and_deploy("arithmetics/contracts/signed_edge_semantics.sol")
+    MIN = -(2 ** 255)
+    assert tuple(as_signed_int(x) for x in harness.call(app, "divTrunc()").abi_return) == (-3, -3, -1, 1)
+    assert as_signed_int(harness.call(app, "minModMinus1()").abi_return) == 0
+    assert as_signed_int(harness.call(app, "uncheckedMinDiv()").abi_return) == MIN
+    assert tuple(as_signed_int(x) for x in harness.call(app, "sexp()").abi_return) == (-8, 4, 1)
+    assert as_signed_int(harness.call(app, "sshift(int256,uint256)", -8, 1).abi_return) == -4
+    assert as_signed_int(harness.call(app, "sshift(int256,uint256)", -1, 255).abi_return) == -1
+    assert tuple(as_signed_int(x) for x in harness.call(app, "sshiftBig()").abi_return) == (-1, 0)
+    assert as_signed_int(harness.call(app, "compoundSar()").abi_return) == -4
+    assert as_signed_int(harness.call(app, "compoundShl()").abi_return) == -8
+    assert as_signed_int(harness.call(app, "uncheckedNegMin()").abi_return) == MIN
+    assert as_signed_int(harness.call(app, "compoundNarrow()").abi_return) == -2
+
+
+def test_checked_panic_semantics(harness):
+    """arithmetics/contracts/checked_panic_semantics.sol
+
+    CUSTOM regression guard (NOT vendored). Checked arithmetic must revert on:
+    INT_MIN/-1, -INT_MIN, INT_MIN-1, int8 overflow, 2**256, uint underflow
+    (all panic 0x11), and div/mod by zero (panic 0x12).
+    """
+    app = harness.compile_and_deploy("arithmetics/contracts/checked_panic_semantics.sol")
+    for fn in ["minDiv()", "negMin()", "minSub1()", "i8Over()",
+               "expOver()", "uUnder()", "divZero()", "modZero()"]:
+        r = harness.call(app, fn, expect_revert=True)
+        assert r.reverted, f"{fn} did not revert"

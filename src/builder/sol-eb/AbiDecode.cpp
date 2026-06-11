@@ -196,13 +196,20 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 					auto absoluteTail = awst::makeUInt64BinOp(
 						structStart, awst::UInt64BinaryOperator::Add, std::move(fieldOffsetWord), _loc);
 
-					// Inline the dyn-array-tail decode for the common case
-					// (ARC4DynamicArray with 32-byte EVM element width).
+					// Inline the dyn-array-tail decode for the common cases:
+					// 32-byte EVM element width (uint256[]/bytes32[]/address[]
+					// fields) and 1-byte width (string/bytes fields — the EVM
+					// tail is raw contiguous bytes, identical to the ARC4 body,
+					// so only the [32-byte len] → [uint16 len] header differs).
+					// Without the 1-byte case a string field fell to the
+					// ARC4FromBytes fallback, which treats the first 2 DATA
+					// bytes as the ARC4 header — `S(42,"hi there",7)` decoded
+					// its string as " there" (silent 2-byte truncation).
 					if (arc4FieldType->kind() == awst::WTypeKind::ARC4DynamicArray)
 					{
 						auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(arc4FieldType);
 						int elemSize = ::puyasol::builder::computeEncodedElementSize(dynArr->elementType());
-						if (elemSize == 32)
+						if (elemSize == 32 || elemSize == 1)
 						{
 							// length word at absoluteTail (first 32 bytes)
 							auto lenWord = awst::makeExtract3(_data, absoluteTail,

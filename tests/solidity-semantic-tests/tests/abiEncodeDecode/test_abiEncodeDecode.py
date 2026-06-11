@@ -324,3 +324,27 @@ def test_encode_dynamic_arg_side_effect_once(harness):
     assert as_int(r[0]) == 1, f"string arg evaluated {as_int(r[0])}x"
     r = harness.call(app, "encArrOnce()").abi_return
     assert (as_int(r[0]), as_int(r[1])) == (1, 9), r
+
+
+def test_decode_roundtrip_matrix(harness):
+    """abiEncodeDecode/contracts/decode_roundtrip_matrix.sol
+
+    CUSTOM regression guard (NOT vendored). abi.decode(abi.encode(x), (T))
+    round-trips for: a dynamic struct with a STRING field (before the fix the
+    string field's decode fell to the wrong-layout ARC4FromBytes fallback,
+    treating the first 2 data bytes as an ARC4 header — S(42,"hi there",7)
+    silently decoded as " there"); a struct with uint256[] and bytes fields;
+    a mixed static/dynamic tuple; and bytes32+address.
+
+    KNOWN GAP (loud, not asserted here): nested dynamic arrays (uint256[][])
+    revert at decode — rtNested() in the contract documents it.
+    """
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/decode_roundtrip_matrix.sol")
+    r = harness.call(app, "rtStruct()").abi_return
+    assert (as_int(r[0]), r[1], as_int(r[2])) == (42, "hi there", 7), r
+    r = harness.call(app, "rtStructArr()").abi_return
+    assert tuple(as_int(x) for x in r) == (5, 6, 2, 3), r
+    r = harness.call(app, "rtTuple()").abi_return
+    assert (as_int(r[0]), bytes(r[1]).hex(), as_int(r[2]), bool(r[3])) == (9, "deadbeef", 513, True), r
+    r = harness.call(app, "rtFixed()")
+    assert r.abi_return is not None
