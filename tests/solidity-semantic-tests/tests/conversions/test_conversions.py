@@ -268,3 +268,21 @@ def test_sol_eb_bug_guards(harness):
     assert b[32:64] == bytes(31) + bytes([1])
     # D — the side-effecting operand evaluates exactly once
     assert harness.call(app, "enumOneEval()").abi_return is True
+
+
+def test_struct_int128_field_signextend(harness):
+    """conversions/contracts/struct_int128_field_signext.sol
+
+    CUSTOM regression guard (NOT vendored). A signed int128 STRUCT FIELD must be
+    sign-extended to canonical 256-bit on read. The sub-64-bit field case was
+    already handled; the 64<N<256 case was not (eq(-5) returned false). Same
+    class as the int128[] array-element and transient read fixes.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/struct_int128_field_signext.sol")
+    assert harness.call(app, "eq(int128)", -5).abi_return is True
+    assert harness.call(app, "eq(int128)", 777).abi_return is True
+    assert harness.call(app, "eq(int128)", -(2 ** 126)).abi_return is True
+    assert as_signed_int(harness.call(app, "widen(int128)", -5).abi_return) == -5
+    assert as_signed_int(harness.call(app, "widen(int128)", -(2 ** 126)).abi_return) == -(2 ** 126)
+    assert as_signed_int(harness.call(app, "arith(int128)", -5).abi_return) == -4
+    assert harness.call(app, "unsignedOk(uint128)", 2 ** 100).abi_return is True

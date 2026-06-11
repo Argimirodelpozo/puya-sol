@@ -45,14 +45,20 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 			// (SolAssignment::tryStructOrNamedTupleFieldAssignment) must see the
 			// bare ARC4Decode/FieldExpression, so leave it unwrapped.
 			if (!m_memberAccess.annotation().willBeWrittenTo)
+			{
 				if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
 						m_memberAccess.annotation().type))
-				{
 					if (fieldInt->isSigned() && fieldInt->numBits() < 64
 						&& nativeType == awst::WType::uint64Type())
 						decode = TypeCoercion::signExtendToUint64(
 							std::move(decode), fieldInt->numBits(), m_loc);
-				}
+				// 64<N<256 biguint-backed signed fields (e.g. int128): sign-extend to
+				// canonical 256-bit so `s.x == scalar` / arithmetic match. Same class as
+				// the int128[] array-element and transient read fixes. No-op for
+				// unsigned / int256 / <=64-bit.
+				decode = TypeCoercion::signExtendSignedElement(
+					std::move(decode), m_memberAccess.annotation().type, m_loc);
+			}
 			return decode;
 		}
 		return field;
