@@ -154,3 +154,31 @@ def test_signed_divmodexp_side_effect_once(harness):
     for fn, val, ec in [("sdiv()", 3, 2), ("smod()", 2, 2), ("sexp()", 36, 1)]:
         r = harness.call(app, fn).abi_return
         assert (as_signed_int(r[0]), as_int(r[1])) == (val, ec), f"{fn} -> {r}"
+
+
+def test_cond_assign_condition_once(harness):
+    """operators/contracts/cond_assign_condition.sol
+
+    CUSTOM regression guard (NOT vendored). A side-effecting ternary condition
+    `(x = f()) ? a : b` must evaluate f() exactly once. Before the fix the
+    assignment was both a prepending statement and the live condition (without a
+    SingleEvaluation wrapper), so f() ran twice: with a flag-flipping f() the
+    condition came out false (result 20, cnt 2 instead of 10, cnt 1).
+    """
+    app = harness.compile_and_deploy("operators/contracts/cond_assign_condition.sol")
+    assert tuple(as_int(x) for x in harness.call(app, "condAssign()").abi_return) == (10, 1)
+
+
+def test_bytes_elem_compound_side_effect_index(harness):
+    """operators/contracts/bytes_elem_compound_index.sol
+
+    CUSTOM regression guard (NOT vendored). A compound assignment to a bytes
+    element with a side-effecting index — `b[i++] |= 0x10` — must evaluate the
+    index once. Before the fix the current-value read rebuilt the LHS, re-running
+    i++: it read b[1] (0x02), wrote b[0]=0x12, and i ended at 2.
+    Expected: b=[0x11,0x02,0x04], i=1.
+    """
+    app = harness.compile_and_deploy("operators/contracts/bytes_elem_compound_index.sol")
+    r = harness.call(app, "bytesElemCompound()").abi_return
+    # bytes1 returns decode as [int]; check value, neighbours untouched, index once
+    assert list(r[0]) == [0x11] and list(r[1]) == [0x02] and list(r[2]) == [0x04] and as_int(r[3]) == 1, r

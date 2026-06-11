@@ -187,28 +187,12 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			// The signed handlers reference each operand multiple times (sign/
 			// overflow/range checks alongside the result). A side-effecting
 			// operand — e.g. `a() + b()` — would otherwise execute once per
-			// reference (verified: `a() + b()` ran a()/b() ~4× each). Wrap each
-			// non-trivial operand in a SingleEvaluation so the backend evaluates
-			// it once and reuses the cached value across every reference. Pure
-			// leaves (vars/constants) are idempotent, so skip them to keep the
-			// common `x + y` / `x + 1` codegen byte-identical.
-			auto isLeafOperand = [](awst::Expression const* e) {
-				return dynamic_cast<awst::VarExpression const*>(e)
-					|| dynamic_cast<awst::IntegerConstant const*>(e)
-					|| dynamic_cast<awst::BoolConstant const*>(e)
-					|| dynamic_cast<awst::BytesConstant const*>(e)
-					|| dynamic_cast<awst::StringConstant const*>(e)
-					|| dynamic_cast<awst::AddressConstant const*>(e);
-			};
-			auto wrapEval = [&](std::shared_ptr<awst::Expression> v)
-				-> std::shared_ptr<awst::Expression> {
-				if (isLeafOperand(v.get())) return v;
-				static int s_signedOpEvalId = 0;
-				auto const* wt = v->wtype;
-				return awst::makeSingleEvaluation(std::move(v), wt, ++s_signedOpEvalId, m_loc);
-			};
-			left = wrapEval(std::move(left));
-			right = wrapEval(std::move(right));
+			// reference (verified: `a() + b()` ran a()/b() ~4× each). makeEvalOnce
+			// wraps each non-leaf operand in a SingleEvaluation so the backend
+			// evaluates it once and reuses the cached value; pure leaves pass
+			// through, keeping the common `x + y` / `x + 1` codegen byte-identical.
+			left = awst::makeEvalOnce(std::move(left), m_loc);
+			right = awst::makeEvalOnce(std::move(right), m_loc);
 			if (op == Token::Add || op == Token::AssignAdd
 				|| op == Token::Sub || op == Token::AssignSub
 				|| op == Token::Mul || op == Token::AssignMul)

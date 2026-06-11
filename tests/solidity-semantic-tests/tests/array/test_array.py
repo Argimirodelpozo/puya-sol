@@ -1188,3 +1188,41 @@ def test_strings_in_struct(harness):
     # getLast() -> 0x20, 0x09, "asdfghjkl"
     r = harness.call(app, "getLast()")
     assert r.abi_return == 'asdfghjkl'
+
+
+def test_array_builtin_side_effects_once(harness):
+    """array/contracts/array_builtin_side_effects.sol
+
+    CUSTOM regression guard (NOT vendored). Side-effecting subexpressions in
+    array/builtin positions must evaluate exactly once:
+      - arr.push(v(7))            -> v once
+      - abi.encode(v(1), v(2))    -> each once (was 2x: makeLeftPadToN
+                                     referenced its padded input in both the
+                                     len() offset and the extract3 source)
+      - keccak256(abi.encodePacked(v(5))) -> once (same root cause)
+      - arr[v(0)] read            -> once (was 2x: the biguint->uint64 index
+                                     cast routes through makeExtractLastN,
+                                     which duplicated its input the same way)
+    Fixed by wrapping the duplicated input in SingleEvaluation (makeEvalOnce)
+    inside the two Node.h helpers.
+    """
+    app = harness.compile_and_deploy("array/contracts/array_builtin_side_effects.sol")
+    assert tuple(as_int(x) for x in harness.call(app, "pushOnce()").abi_return) == (7, 1)
+    assert tuple(as_int(x) for x in harness.call(app, "encodeOnce()").abi_return) == (1, 2, 2)
+    assert as_int(harness.call(app, "packOnce()").abi_return) == 1
+    assert tuple(as_int(x) for x in harness.call(app, "idxReadOnce()").abi_return) == (42, 1)
+
+
+def test_new_array_size_side_effect_once(harness):
+    """array/contracts/new_array_size_side_effect.sol
+
+    CUSTOM regression guard (NOT vendored). A side-effecting size in
+    `new T[](sz())` must evaluate once. The runtime-sized lowering inlined the
+    raw size expression in the generated while-loop condition (re-evaluated per
+    iteration), and the bool[] special case referenced it twice. Fixed by
+    pinning the size to an eager pre-loop temp (SingleEvaluation would not help
+    here — it materializes inside the loop header).
+    """
+    app = harness.compile_and_deploy("array/contracts/new_array_size_side_effect.sol")
+    assert tuple(as_int(x) for x in harness.call(app, "newArrOnce()").abi_return) == (3, 1)
+    assert tuple(as_int(x) for x in harness.call(app, "newBoolArrOnce()").abi_return) == (3, 1)

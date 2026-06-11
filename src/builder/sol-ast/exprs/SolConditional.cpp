@@ -26,12 +26,18 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	e->condition = buildExpr(m_conditional.condition());
 	if (dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
 	{
-		// Emit: flag = true; (as statement)
-		// shared_ptr copy on e->condition so both stmt and condition reference it
+		// A side-effecting condition (e.g. `(x = f()) ? a : b`) must run once.
+		// We emit it as a pre-pending statement so the side effect lands in the
+		// body even if the whole ternary is discarded (e.g. `(x=f()?a:b).selector`),
+		// AND keep it as the ConditionalExpression condition (it evaluates to the
+		// assigned value). Both positions reference the SAME node — without a
+		// SingleEvaluation wrapper that meant the assignment (and its `f()`) ran
+		// TWICE (verified: `(x=f())?10:20` gave 20/cnt=2 instead of 10/cnt=1).
+		// Wrap once so the backend evaluates the source a single time and reuses
+		// the cached value for the condition.
+		e->condition = awst::makeEvalOnce(e->condition, m_loc);
 		auto stmt = awst::makeExpressionStatement(e->condition, m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(stmt));
-		// The ConditionalExpression condition still holds the AssignmentExpression,
-		// which evaluates to the assigned value (the condition result).
 	}
 
 	// Snapshot prePendingStatements size before each branch so we can

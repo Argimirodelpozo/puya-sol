@@ -753,10 +753,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 	// in a SingleEvaluation — the backend evaluates it once and reuses the
 	// cached result, instead of re-running a non-trivial / side-effecting
 	// divisor expression twice (which the prior shared-pointer reuse did).
-	static int s_divisorEvalId = 0;
 	auto right = awst::makeSingleEvaluation(
 		ensureBiguint(std::move(_right), _loc), awst::WType::biguintType(),
-		++s_divisorEvalId, _loc);
+		awst::nextSingleEvalId(), _loc);
 
 	auto cond = awst::makeNumericCompare(
 		right, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);

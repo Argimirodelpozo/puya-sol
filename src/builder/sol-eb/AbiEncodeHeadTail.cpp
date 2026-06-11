@@ -132,6 +132,14 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 {
 	using namespace solidity::frontend;
 
+	// Every path below references `_expr` more than once (bytes/string: len +
+	// rightPadTo32, which itself doubles its input — 3 refs total; fast path
+	// (a): len + content strip; loop helpers pin internally but still read the
+	// input for the pin + length). Wrap once so a side-effecting dynamic arg —
+	// `abi.encode(mkStr())` — evaluates once (verified: cnt was 3 for string,
+	// 2 for uint256[]). All downstream references share the cached value.
+	_expr = awst::makeEvalOnce(std::move(_expr), _loc);
+
 	// StringLiteralType: treat like bytes/string for encoding purposes.
 	bool isStringLiteral = _solType
 		&& _solType->category() == Type::Category::StringLiteral;

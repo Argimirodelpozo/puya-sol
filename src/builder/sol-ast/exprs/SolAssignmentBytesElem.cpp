@@ -24,7 +24,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 
 	if (op != Token::Assign)
 	{
-		auto currentValue = buildExpr(m_assignment.leftHandSide());
+		// Reuse the already-built index access for the current-value read.
+		// Rebuilding the LHS re-runs a side-effecting index — `b[i++] |= v` would
+		// bump `i` twice, reading one element and writing another (verified:
+		// b[0]=0x01 -> 0x12 from b[1], i==2). The index node is already the
+		// hoisted temp, so reusing base+index evaluates the index exactly once.
+		auto currentValue = awst::makeIndexExpression(
+			_indexExpr->base, _indexExpr->index, _indexExpr->wtype, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
 		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 			m_ctx, op, solType, currentValue, _value, m_loc);

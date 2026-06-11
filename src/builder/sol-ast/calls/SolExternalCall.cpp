@@ -110,7 +110,10 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	{
 		if (isDynamicBytes)
 		{
-			// ARC4 byte[] encoding: uint16(length) ++ raw_bytes
+			// ARC4 byte[] encoding: uint16(length) ++ raw_bytes. The arg feeds
+			// both the length and the concat — wrap in makeEvalOnce so a
+			// side-effecting bytes arg (`other.f(mkBytes())`) evaluates once.
+			_argExpr = awst::makeEvalOnce(std::move(_argExpr), m_loc);
 			auto lenExpr = awst::makeLen(_argExpr, m_loc);
 			auto itobLen = awst::makeItob(std::move(lenExpr), m_loc);
 			auto header = awst::makeExtract(std::move(itobLen), 6, 2, m_loc);
@@ -285,8 +288,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	// Tuple/struct returns
 	if (auto const* tupleType = dynamic_cast<awst::WTuple const*>(_returnType))
 	{
+		// Unique id required: with a fixed id, the wrapped return-bytes of two
+		// identical external calls in one function would compare attrs-equal
+		// and merge — the second call's itxn would never submit.
 		auto singleBytes = awst::makeSingleEvaluation(
-			std::move(stripPrefix), awst::WType::bytesType(), 0, m_loc);
+			std::move(stripPrefix), awst::WType::bytesType(),
+			awst::nextSingleEvalId(), m_loc);
 
 		auto tuple = awst::makeTupleExpression(_returnType, m_loc);
 

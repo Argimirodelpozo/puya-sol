@@ -307,3 +307,20 @@ def test_offset_overflow_in_array_decoding_3(harness):
     # test() -> FAILURE
     r = harness.call(app, "test()", expect_revert=True)
     assert r.reverted
+
+
+def test_encode_dynamic_arg_side_effect_once(harness):
+    """abiEncodeDecode/contracts/encode_dyn_side_effect.sol
+
+    CUSTOM regression guard (NOT vendored). A side-effecting DYNAMIC argument to
+    abi.encode — `abi.encode(mkStr())`, `abi.encode(mkArr())` — must evaluate
+    once. encodeDynamicTail referenced its input in every path (bytes/string:
+    len + rightPadTo32 which itself doubles = 3 evals; arrays: 2). Fixed by a
+    single makeEvalOnce wrap at the top of encodeDynamicTail; the static-arg
+    case is covered by array::test_array_builtin_side_effects_once.
+    """
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/encode_dyn_side_effect.sol")
+    r = harness.call(app, "encStrOnce()").abi_return
+    assert as_int(r[0]) == 1, f"string arg evaluated {as_int(r[0])}x"
+    r = harness.call(app, "encArrOnce()").abi_return
+    assert (as_int(r[0]), as_int(r[1])) == (1, 9), r

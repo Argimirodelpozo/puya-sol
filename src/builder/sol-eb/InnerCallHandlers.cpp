@@ -498,7 +498,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
 								awst::pushCallArg(call->args,
 									_ctx.buildExpr(*encCallExpr->arguments()[i]));
-							auto cachedCall = awst::makeSingleEvaluation(std::move(call), tupleTypeOwned, 0, _loc);
+							// Unique id required: with a fixed id, two identical calls in
+							// one function compare attrs-equal and would merge into a
+							// single evaluation (second call never executes).
+							auto cachedCall = awst::makeSingleEvaluation(
+								std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
 
 							std::vector<std::shared_ptr<awst::Expression>> parts;
 							for (size_t i = 0; i < nReturns; ++i)

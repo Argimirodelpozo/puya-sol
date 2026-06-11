@@ -156,9 +156,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 	// re-read _count times.
 	if (_count > 1)
 	{
-		static int s_concatOffEvalId = 0;
 		offsetExpr = awst::makeSingleEvaluation(
-			std::move(offsetExpr), awst::WType::uint64Type(), ++s_concatOffEvalId, _loc);
+			std::move(offsetExpr), awst::WType::uint64Type(),
+			awst::nextSingleEvalId(), _loc);
 	}
 
 	// Slot-aware per-word read (readMemWordDyn = `off<SLOT_SIZE ? memoryVar : loads`)

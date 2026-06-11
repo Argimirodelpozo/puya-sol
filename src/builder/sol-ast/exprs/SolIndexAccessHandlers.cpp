@@ -54,6 +54,15 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	auto idx = buildExpr(*m_indexAccess.indexExpression());
 	idx = builder::TypeCoercion::implicitNumericCast(std::move(idx), awst::WType::uint64Type(), m_loc);
 
+	// puya lowers a dynamic-array element read as a bounds-check (index <
+	// length) PLUS the element access, evaluating the index expression twice.
+	// A side-effecting index — `arr[f()]` — would then run f() twice (verified:
+	// cnt==2). Wrap a read index in SingleEvaluation so it evaluates once. The
+	// write path returns a bare lvalue IndexExpression (handled by SolAssignment),
+	// so leave its index unwrapped to keep it assignable.
+	if (!m_indexAccess.annotation().willBeWrittenTo)
+		idx = awst::makeEvalOnce(std::move(idx), m_loc);
+
 	// For bytes (dynamic byte array) storage, use extract3 instead of
 	// IndexExpression — puya's IR builder rejects indexing on a bytes
 	// value and expects a ReferenceArray/ARC4DynamicArray shape.

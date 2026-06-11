@@ -149,9 +149,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	// path, and the slot/sub slow path (~5 references); a side-effecting offset
 	// like mload(q) would otherwise re-run each time. writeMemWordDyn already
 	// materializes its offset for the same reason.
-	static int s_readOffEvalId = 0;
 	off = awst::makeSingleEvaluation(
-		std::move(off), awst::WType::uint64Type(), ++s_readOffEvalId, _loc);
+		std::move(off), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
 	// Fail clearly if this offset spills past the modeled blob (vs silently
 	// reading a non-memory scratch slot); fires before the read is consumed.
 	m_pendingStatements.push_back(memBoundsAssert(off, _loc));

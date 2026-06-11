@@ -924,21 +924,33 @@ inline std::shared_ptr<IntrinsicCall> makeExtract(
 	return node;
 }
 
+// Wrap `expr` in a SingleEvaluation with a globally unique id so the backend
+// evaluates it exactly once however many times the node is referenced. Pure
+// leaves (vars/constants) and already-wrapped nodes pass through untouched —
+// re-evaluating them is free and keeps their codegen byte-identical. Defined
+// after the SingleEvaluation node below; declared here so the byte-shuffling
+// helpers in this section can use it.
+inline std::shared_ptr<Expression> makeEvalOnce(
+	std::shared_ptr<Expression> expr, SourceLocation loc);
+
 // Take the LAST n bytes of `bytesExpr`: lowers to
 //   extract3(bytesExpr, len(bytesExpr) - n, n)
 // 3-arg `extract3` form because the offset is `len - n` at runtime
 // (constant only if `len` is known statically — which it usually isn't
 // for box reads and padded biguints, so the dynamic form is correct).
 // ~8 sites across the builder use this exact pattern to right-align
-// a bytes value to a fixed width after a left-pad. Note `bytesExpr` is
-// referenced TWICE (once by len, once by extract3); puya's IR builder
-// deduplicates by AST identity, so passing the same shared_ptr to both
-// produces the right wiring.
+// a bytes value to a fixed width after a left-pad. `bytesExpr` is
+// referenced TWICE (once by len, once by extract3) — serialization turns a
+// shared node into two identical subtrees that each lower separately (puya
+// has NO general AST-identity dedup; SingleEvaluation is the only dedup
+// mechanism), so wrap the input in makeEvalOnce or a side-effecting input
+// (a call, an inner txn) would execute twice.
 inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	std::shared_ptr<Expression> bytesExpr,
 	int n,
 	SourceLocation loc)
 {
+	bytesExpr = makeEvalOnce(std::move(bytesExpr), loc);
 	auto nStr = std::to_string(n);
 	auto lenCall = makeLen(bytesExpr, loc);
 	auto nConstOffset = makeIntegerConstant(nStr, loc);
@@ -1112,7 +1124,11 @@ inline std::shared_ptr<IntrinsicCall> makeZeroExtendToN(
 inline std::shared_ptr<IntrinsicCall> makeLeftPadToN(
 	std::shared_ptr<Expression> value, int n, SourceLocation loc)
 {
-	auto padded = makeLeftPad(std::move(value), n, loc);
+	// `padded` feeds both the len() in the offset and the extract3 source —
+	// wrap in makeEvalOnce so a side-effecting `value` (e.g. a call being
+	// ABI-encoded) evaluates once, not once per reference (this helper sits
+	// under abi.encode/encodePacked, where the double-eval was user-visible).
+	auto padded = makeEvalOnce(makeLeftPad(std::move(value), n, loc), loc);
 	auto offset = makeUInt64BinOp(makeLen(padded, loc),
 		UInt64BinaryOperator::Sub,
 		makeIntegerConstant(static_cast<uint64_t>(n), loc), loc);
@@ -1505,6 +1521,37 @@ inline std::shared_ptr<SingleEvaluation> makeSingleEvaluation(
 	node->source = std::move(source);
 	node->id = id;
 	return node;
+}
+
+// Globally unique SingleEvaluation id. puya's single-eval cache is keyed by
+// attrs equality over (source, _id) PER FUNCTION — two INDEPENDENT
+// SingleEvaluation nodes that happen to wrap structurally equal sources with
+// equal ids would wrongly merge into one evaluation (e.g. two identical inner
+// calls collapsing to a single submit). Every independently created node must
+// therefore get a fresh id; sharing an evaluation is expressed by referencing
+// the SAME node (it serializes with one id), never by reusing an id. Starts
+// high above the legacy per-site static counters (which count from 0) so old
+// ids can't collide with these.
+inline int nextSingleEvalId()
+{
+	static int s_nextSingleEvalId = 1 << 20;
+	return ++s_nextSingleEvalId;
+}
+
+// See declaration above makeExtractLastN.
+inline std::shared_ptr<Expression> makeEvalOnce(
+	std::shared_ptr<Expression> expr, SourceLocation loc)
+{
+	if (!expr
+		|| dynamic_cast<SingleEvaluation const*>(expr.get())
+		|| dynamic_cast<VarExpression const*>(expr.get())
+		|| dynamic_cast<IntegerConstant const*>(expr.get())
+		|| dynamic_cast<BoolConstant const*>(expr.get())
+		|| dynamic_cast<BytesConstant const*>(expr.get())
+		|| dynamic_cast<StringConstant const*>(expr.get()))
+		return expr;
+	auto const* wt = expr->wtype;
+	return makeSingleEvaluation(std::move(expr), wt, nextSingleEvalId(), std::move(loc));
 }
 
 struct CheckedMaybe: Expression

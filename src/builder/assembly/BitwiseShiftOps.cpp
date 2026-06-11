@@ -128,10 +128,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 		return nullptr;
 	// Evaluate the shift once — it feeds both buildPowerOf2 and the shift<256
 	// guard below (a side-effecting shift would otherwise run twice).
-	static int s_shlShiftEvalId = 0;
 	auto shift = awst::makeSingleEvaluation(
 		ensureBiguint(_args[0], _loc), awst::WType::biguintType(),
-		++s_shlShiftEvalId, _loc);
+		awst::nextSingleEvalId(), _loc);
 	// Reduce the value to its low 256 bits before shifting. EVM shl operates on
 	// a 256-bit word, so (v * 2^s) % 2^256 == ((v % 2^256) * 2^s) % 2^256. Our
 	// biguint may carry a wider value — up to 512 bits — e.g. a negative
@@ -175,10 +174,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 		return nullptr;
 	// Evaluate the shift once — it feeds both buildPowerOf2 and the shift<256
 	// guard below (a side-effecting shift would otherwise run twice).
-	static int s_shrShiftEvalId = 0;
 	auto shift = awst::makeSingleEvaluation(
 		ensureBiguint(_args[0], _loc), awst::WType::biguintType(),
-		++s_shrShiftEvalId, _loc);
+		awst::nextSingleEvalId(), _loc);
 	auto value = _args[1];
 	auto power = buildPowerOf2(shift, _loc);
 	auto divResult = makeBigUIntBinOp(
