@@ -489,7 +489,14 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	else if (auto const* e = dynamic_cast<awst::SingleEvaluation const*>(&_expr))
 	{
 		j["source"] = serializeExpression(*e->source);
-		j["id"] = e->id;
+		// puya's awst.SingleEvaluation field is the attrs-private `_id` (cattrs
+		// structures it under the literal key `_id`, NOT `id`). Emitting `id`
+		// left `_id` at its default `id(self)` — a fresh value per deserialized
+		// copy — so two serialized copies of the SAME SingleEvaluation never
+		// compared equal and the backend's single-eval cache never hit: the
+		// "evaluate the source once" guarantee silently never worked. Emit the
+		// matching key so multi-referenced sources actually evaluate once.
+		j["_id"] = e->id;
 	}
 	else if (auto const* e = dynamic_cast<awst::CheckedMaybe const*>(&_expr))
 	{
