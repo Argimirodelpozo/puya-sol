@@ -574,7 +574,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		}
 	}
 
-	auto target = buildExpr(m_unaryOp.subExpression());
+	// Reuse the ALREADY-BUILT operand — rebuilding the subexpression re-runs
+	// side-effecting parts, e.g. `delete m[f()]` evaluated the mapping key's
+	// f() twice (verified). The caller built the identical node, so the
+	// unwraps below behave exactly as before.
+	auto target = _operand;
 
 	// Clear function pointer tracking on delete (e.g., delete y where y is a func ptr)
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))

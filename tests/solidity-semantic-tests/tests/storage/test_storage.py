@@ -1026,3 +1026,21 @@ def test_storage_ref_returned_nested(harness):
     assert as_int(r.abi_return) == 0
     r = harness.call(app, "read(uint256,uint256)", 2, 5)
     assert as_int(r.abi_return) == 0
+
+
+def test_mapping_key_side_effect_once(harness):
+    """storage/contracts/mapping_key_side_effect_once.sol
+
+    CUSTOM regression guard (NOT vendored). A side-effecting mapping key —
+    `m[k(v)]` — must evaluate the key exactly once for every access shape:
+    write, compound +=, read, nested write (two keys), delete, and
+    arr[key].push. Before the fix `delete m[k(6)]` ran the key twice
+    (handleDelete rebuilt the subexpression instead of reusing the built
+    operand — same class as the inc/dec rebuild bug).
+    """
+    app = harness.compile_and_deploy("storage/contracts/mapping_key_side_effect_once.sol")
+    for fn, exp in [("writeOnce()", (55, 1)), ("compoundOnce()", (15, 1)),
+                    ("readOnce()", (7, 1)), ("nestedOnce()", (9, 2)),
+                    ("deleteOnce()", (0, 1)), ("pushOnce()", (42, 1))]:
+        r = harness.call(app, fn).abi_return
+        assert tuple(as_int(x) for x in r) == exp, f"{fn} -> {r}"
