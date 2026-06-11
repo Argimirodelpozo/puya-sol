@@ -247,6 +247,11 @@ std::string AbiEncoderBuilder::buildARC4MethodSelector(
 {
 	using namespace solidity::frontend;
 	auto solTypeToARC4 = [&](Type const* _type) -> std::string {
+		// Integers: match the callee router's exact naming (<=64 → "uint64",
+		// >64 → "uintN", signedness dropped). The biguint→"uint256" fallback
+		// below would wrongly collapse every >64-bit width to uint256.
+		if (auto name = builder::TypeCoercion::intSelectorName(_type))
+			return *name;
 		auto* wtype = _ctx.typeMapper.map(_type);
 		if (wtype == awst::WType::biguintType()) return "uint256";
 		if (wtype == awst::WType::uint64Type()) return "uint64";
@@ -265,6 +270,13 @@ std::string AbiEncoderBuilder::buildARC4MethodSelector(
 			return "struct " + structType->structDefinition().name();
 		return _type->toString(true);
 	};
+	// Return-position names differ from params for SIGNED ints (signed return =
+	// full 256-bit two's complement → "uint256").
+	auto solTypeToARC4Ret = [&](Type const* _type) -> std::string {
+		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
+			return *name;
+		return solTypeToARC4(_type);
+	};
 
 	std::string sel = _funcDef->name() + "(";
 	bool first = true;
@@ -282,13 +294,13 @@ std::string AbiEncoderBuilder::buildARC4MethodSelector(
 		for (auto const& r : _funcDef->returnParameters())
 		{
 			if (!firstRet) sel += ",";
-			sel += solTypeToARC4(r->type());
+			sel += solTypeToARC4Ret(r->type());
 			firstRet = false;
 		}
 		sel += ")";
 	}
 	else if (_funcDef->returnParameters().size() == 1)
-		sel += solTypeToARC4(_funcDef->returnParameters()[0]->type());
+		sel += solTypeToARC4Ret(_funcDef->returnParameters()[0]->type());
 	else
 		sel += "void";
 	return sel;

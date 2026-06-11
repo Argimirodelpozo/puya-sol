@@ -130,21 +130,15 @@ std::string InnerCallHandlers::buildMethodSelector(
 	solidity::frontend::FunctionDefinition const* _func)
 {
 	auto solTypeToARC4 = [&](solidity::frontend::Type const* _type) -> std::string {
+		// Integers: canonical selector name (<=64 → "uint64", >64 → "uintN",
+		// signedness dropped) — must match the callee router. The previous
+		// explicit branches emitted "int256"/exact-"intN"/"uintN" names that
+		// mismatched the callee (which collapses <=64 to uint64 and drops sign).
+		if (auto name = builder::TypeCoercion::intSelectorName(_type))
+			return *name;
 		auto* wtype = _ctx.typeMapper.map(_type);
-		if (wtype == awst::WType::biguintType())
-		{
-			if (auto const* intT = dynamic_cast<solidity::frontend::IntegerType const*>(_type))
-				return intT->isSigned() ? "int256" : "uint256";
-			return "uint256";
-		}
-		if (wtype == awst::WType::uint64Type())
-		{
-			if (auto const* intT = dynamic_cast<solidity::frontend::IntegerType const*>(_type))
-				return intT->isSigned()
-					? "int" + std::to_string(intT->numBits())
-					: "uint" + std::to_string(intT->numBits());
-			return "uint64";
-		}
+		if (wtype == awst::WType::biguintType()) return "uint256";
+		if (wtype == awst::WType::uint64Type()) return "uint64"; // enums, etc.
 		if (wtype == awst::WType::boolType()) return "bool";
 		if (wtype == awst::WType::accountType()) return "address";
 		if (wtype == awst::WType::bytesType()) return "byte[]";
@@ -159,6 +153,13 @@ std::string InnerCallHandlers::buildMethodSelector(
 		if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
 			return "struct " + structType->structDefinition().name();
 		return _type->toString(true);
+	};
+	// Return-position names differ from params for SIGNED ints (signed return =
+	// full 256-bit two's complement → "uint256").
+	auto solTypeToARC4Ret = [&](solidity::frontend::Type const* _type) -> std::string {
+		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
+			return *name;
+		return solTypeToARC4(_type);
 	};
 
 	std::string sel = _func->name() + "(";
@@ -178,13 +179,13 @@ std::string InnerCallHandlers::buildMethodSelector(
 		for (auto const& retParam : _func->returnParameters())
 		{
 			if (!firstRet) sel += ",";
-			sel += solTypeToARC4(retParam->type());
+			sel += solTypeToARC4Ret(retParam->type());
 			firstRet = false;
 		}
 		sel += ")";
 	}
 	else if (_func->returnParameters().size() == 1)
-		sel += solTypeToARC4(_func->returnParameters()[0]->type());
+		sel += solTypeToARC4Ret(_func->returnParameters()[0]->type());
 	else
 		sel += "void";
 

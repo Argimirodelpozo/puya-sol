@@ -4,8 +4,25 @@ import pytest
 from algosdk import encoding
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_bytes, as_signed_int,
 )
+
+
+def test_xcall_selector_width(harness):
+    """various/contracts/xcall_selector_width.sol
+
+    CUSTOM regression guard (NOT vendored). A cross-contract call to a method
+    with a non-uint64/256 integer parameter must compute the same ARC4 selector
+    (and encode the arg at the same width) as the callee's router, or the call
+    mis-routes/reverts. Covers >64-bit unsigned/signed params + returns and the
+    <=64-bit collapse.
+    """
+    app = harness.compile_and_deploy(
+        "various/contracts/xcall_selector_width.sol", postinit_inner_txns=8)
+    assert as_int(harness.call(app, "callF(uint128)", 2 ** 100).abi_return) == 2 ** 100 + 1
+    assert as_signed_int(harness.call(app, "callG(int128)", -5).abi_return) == -6
+    assert as_int(harness.call(app, "callH(uint8)", 200).abi_return) == 201
+    assert as_int(harness.call(app, "callK(uint256)", 2 ** 200).abi_return) == 2 ** 200 + 1
 
 
 def test_address_code(harness):  # currently fails

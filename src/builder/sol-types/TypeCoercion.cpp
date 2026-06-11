@@ -349,6 +349,44 @@ std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
 	}
 }
 
+std::optional<std::string> TypeCoercion::intSelectorName(
+	solidity::frontend::Type const* _type)
+{
+	using namespace solidity::frontend;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
+		_type = &udvt->underlyingType();
+	if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
+	{
+		unsigned bits = intT->numBits();
+		// <=64-bit collapses to uint64; >64-bit keeps its exact width. Signedness
+		// is always dropped (the callee names int128 as "uint128").
+		return bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(bits));
+	}
+	return std::nullopt;
+}
+
+std::optional<std::string> TypeCoercion::intSelectorReturnName(
+	solidity::frontend::Type const* _type)
+{
+	using namespace solidity::frontend;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
+		_type = &udvt->underlyingType();
+	if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
+	{
+		// A SIGNED integer RETURN is encoded as the full 256-bit two's complement
+		// (sign-extended), so the callee names it "uint256" regardless of width
+		// (verified via TEAL: int8/int64/int128/int256 returns are all "uint256").
+		// Unsigned returns use the same exact-width rule as params. The param vs
+		// return asymmetry for signed ints is why this is separate from
+		// intSelectorName.
+		if (intT->isSigned())
+			return std::string("uint256");
+		unsigned bits = intT->numBits();
+		return bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(bits));
+	}
+	return std::nullopt;
+}
+
 // ── Defaults ─────────────────────────────────────────────────────
 
 std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(

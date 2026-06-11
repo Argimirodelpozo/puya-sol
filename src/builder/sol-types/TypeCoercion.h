@@ -126,6 +126,27 @@ public:
 	/// Canonical ABI type name for selector computation.
 	static std::string wtypeToABIName(awst::WType const* _type);
 
+	/// Canonical ARC4 method-selector type name for a Solidity INTEGER type,
+	/// matching exactly what the callee's on-chain router emits (verified via the
+	/// TEAL `method "..."` strings): `<= 64`-bit → "uint64" (width AND signedness
+	/// collapsed), `> 64`-bit → "uint" + numBits (exact width, signedness
+	/// dropped). E.g. uint8/int40/int64 → "uint64"; uint128/int128 → "uint128".
+	/// Returns nullopt if `_type` (UDVT-unwrapped) is not an integer, so callers
+	/// fall through to their own handling. The three caller-side selector
+	/// builders (SolExternalCall, AbiEncoderBuilder::buildARC4MethodSelector,
+	/// InnerCallHandlers::buildMethodSelector) MUST share this or cross-contract
+	/// selectors mismatch and calls mis-route.
+	static std::optional<std::string> intSelectorName(
+		solidity::frontend::Type const* _type);
+
+	/// Like intSelectorName but for a RETURN-position integer. Identical for
+	/// unsigned, but a SIGNED return is named "uint256" (any width) — the callee
+	/// encodes signed returns as the full 256-bit two's complement. Params and
+	/// returns differ for signed ints, so the caller-side selector builders must
+	/// use this for return types and intSelectorName for params.
+	static std::optional<std::string> intSelectorReturnName(
+		solidity::frontend::Type const* _type);
+
 	// ── Defaults ─────────────────────────────────────────────────
 
 	/// Type-correct default value expression (0 / false / empty bytes / …).

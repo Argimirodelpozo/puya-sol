@@ -21,12 +21,15 @@ static constexpr int TxnTypeAppl = 6;
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
 	auto solTypeToARC4Name = [this](Type const* _type) -> std::string {
+		// Integers: match the callee router's exact naming — <=64-bit → "uint64",
+		// >64-bit → "uintN" (exact width), signedness dropped. The map()→biguint
+		// path below collapses EVERY >64-bit width to "uint256", which mismatches
+		// the callee selector (e.g. uint128 is "uint128" on-chain, not "uint256").
+		if (auto name = builder::TypeCoercion::intSelectorName(_type))
+			return *name;
 		auto* rawType = m_ctx.typeMapper.map(_type);
 		if (rawType == awst::WType::accountType())
 			return "address";
-		// Note: signed/unsigned int types both map to biguint (or uint64) on the
-		// callee side, so puya emits a `uint{N}` selector regardless of Solidity
-		// signedness. We must mirror that here or selectors won't match.
 		// Fixed-size Solidity `bytesN` stays as BytesWType(length=N) on the
 		// child side, which puya names `byte[N]`. Match that here rather than
 		// routing through ARC4StaticArray (which would produce `uint8[N]`).
@@ -38,6 +41,14 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 		}
 		auto* arc4Type = m_ctx.typeMapper.mapToARC4Type(rawType);
 		return builder::TypeCoercion::wtypeToABIName(arc4Type);
+	};
+	// Return-position names differ from params for SIGNED ints (a signed return
+	// is the full 256-bit two's complement → "uint256"); non-int types are named
+	// identically, so fall through to the param namer.
+	auto solTypeToARC4Ret = [&](Type const* _type) -> std::string {
+		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
+			return *name;
+		return solTypeToARC4Name(_type);
 	};
 
 	std::string selector = _memberAccess.memberName() + "(";
@@ -60,20 +71,20 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 			for (auto const& retParam: funcDef->returnParameters())
 			{
 				if (!firstRet) selector += ",";
-				selector += solTypeToARC4Name(retParam->type());
+				selector += solTypeToARC4Ret(retParam->type());
 				firstRet = false;
 			}
 			selector += ")";
 		}
 		else if (funcDef->returnParameters().size() == 1)
-			selector += solTypeToARC4Name(funcDef->returnParameters()[0]->type());
+			selector += solTypeToARC4Ret(funcDef->returnParameters()[0]->type());
 		else
 			selector += "void";
 	}
 	else if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extRefDecl))
 	{
 		selector += ")";
-		selector += solTypeToARC4Name(varDecl->type());
+		selector += solTypeToARC4Ret(varDecl->type());
 	}
 	else
 		selector += ")void";
@@ -129,7 +140,21 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	}
 	else if (_argExpr->wtype == awst::WType::biguintType())
 	{
-		// biguint → 32 bytes, left-padded
+		// Encode to the param's EXACT ARC4 width, not always 32 bytes. A >64-bit
+		// int param is arc4.uintN (N/8 bytes) — e.g. uint128 is 16 bytes — and
+		// the callee's arc4 decode asserts len == N/8, so a 32-byte arg reverts.
+		// makeARC4Encode trims the biguint to its low N/8 bytes (correct for
+		// signed two's complement too). int256/uint256 stays 32 bytes.
+		auto const* solT = _paramSolType;
+		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solT))
+			solT = &udvt->underlyingType();
+		if (dynamic_cast<IntegerType const*>(solT))
+		{
+			auto* arc4Type = m_ctx.typeMapper.mapSolTypeToARC4(_paramSolType);
+			auto enc = awst::makeARC4Encode(std::move(_argExpr), arc4Type, m_loc);
+			return awst::makeAsBytes(std::move(enc), m_loc);
+		}
+		// Non-integer biguint (rare): keep the 32-byte left-pad.
 		auto cast = awst::makeAsBytes(std::move(_argExpr), m_loc);
 		return awst::makeLeftPadToN(std::move(cast), 32, m_loc);
 	}
