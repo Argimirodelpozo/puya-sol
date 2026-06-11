@@ -1,3 +1,30 @@
+# Semantic Test Status — v348
+
+> **SOL-AST/ AUDIT — calls/ DONE + eval-once ROUND 2 (overnight 2026-06-11):**
+> `92061e9900` + `1ac8c327e8`, full -n2 = 66 fail / **1214 pass** / 83 xf,
+> ZERO-regression (RESULTS_1ac8c327e8.txt; 1214 = 1206 + 8 CUSTOM guards).
+> **Node.h infra**: `nextSingleEvalId()` (globally-unique SingleEvaluation ids —
+> puya's per-function cache merges attrs-equal (source,_id) pairs, so the
+> hardcoded id=0 sites in InnerCallHandlers/SolExternalCall would have collapsed
+> two identical calls into ONE execution once dedup started working; all
+> non-splitter sites migrated) + `makeEvalOnce()` (wrap-unless-leaf).
+> **Eval-once fixes** (each ran once per REFERENCE before): makeExtractLastN +
+> makeLeftPadToN duplicated their input — the "puya dedups by AST identity"
+> comment was FALSE — breaking abi.encode args (2x), encodePacked (2x),
+> arr[f()] reads (2x); encodeDynamicTail ran dynamic args 2-3x (string 3x!);
+> encodeArgToBytes external-call bytes arg 2x; `(x=f())?a:b` 2x;
+> `b[i++]|=v` index 2x; **`new T[](f())` ran f() ONCE PER ITERATION** (size
+> inlined in the generated while condition — fixed with an EAGER pre-loop temp;
+> SingleEvaluation can't help in loop conditions, it materializes in the loop
+> header). Confirmed-correct + pinned: call args eval once, left-to-right.
+> **`new C{value:N}` DOUBLE-PAY** (`1ac8c327e8`): postInit children received
+> MBR + 2xN — the fund pay bundled value AND the [pay(N), __postInit] group
+> paid again (a pay always transfers; "only sets msg.value" was a fiction).
+> Fund is now MBR-only when postInit exists. Verified 2_000_000 → 1_500_000.
+> __postInit replay-safe (__ctor_pending one-shot; inner deploys atomic).
+> calls/ audit COMPLETE (sol-ast/ fully audited: top, stmts/, members/,
+> exprs/, calls/). See [[sol-ast-audit]].
+
 # Semantic Test Status — v347
 
 > **SOL-AST/ AUDIT — exprs/ (wip, 2026-06-11): side-effecting subexpressions
