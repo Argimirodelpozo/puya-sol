@@ -20,3 +20,15 @@ def test_empty_for_loop(harness):
     # f() -> 10
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 10
+
+
+def test_if_condition_side_effect_order(harness):
+    """statements/contracts/if_condition_side_effect_order.sol
+
+    CUSTOM regression guard (NOT vendored). An if-condition's side effects
+    (postfix inc, inline assignment) must commit before the branch body reads
+    the affected variables — pins the prePending emission order.
+    """
+    app = harness.compile_and_deploy("statements/contracts/if_condition_side_effect_order.sol")
+    assert tuple(as_int(x) for x in harness.call(app, "condOrder()").abi_return) == (10, 1)
+    assert as_int(harness.call(app, "condAssignIf()").abi_return) == 5
