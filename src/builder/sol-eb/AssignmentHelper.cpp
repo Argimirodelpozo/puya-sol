@@ -28,7 +28,13 @@ std::shared_ptr<awst::Expression> AssignmentHelper::tryComputeCompoundValue(
 		case Token::AssignAdd: return BuilderBinaryOp::Add;
 		case Token::AssignSub: return BuilderBinaryOp::Sub;
 		case Token::AssignMul: return BuilderBinaryOp::Mult;
-		case Token::AssignDiv: return BuilderBinaryOp::Div;
+		// FloorDiv, NOT Div: SolIntegerBuilder's signed-division routing gates
+		// on FloorDiv (matching SolBinaryOperation's Token::Div mapping). With
+		// Div, signed `x /= y` skipped buildSignedModDiv and computed an
+		// UNSIGNED floor-div of the two's-complement bits (verified: -7 /= 2
+		// returned 2^255 - 4 instead of -3). Unsigned was unaffected — both
+		// enum values lower to the same FloorDiv op.
+		case Token::AssignDiv: return BuilderBinaryOp::FloorDiv;
 		case Token::AssignMod: return BuilderBinaryOp::Mod;
 		case Token::AssignShl: return BuilderBinaryOp::LShift;
 		case Token::AssignShr: case Token::AssignSar: return BuilderBinaryOp::RShift;

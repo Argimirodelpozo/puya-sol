@@ -106,7 +106,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 
 	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
 	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
-	auto z = promoteToBigUInt(std::move(_args[2]), _loc);
+	// The modulus feeds both the zero-assert and the mod op — wrap so a
+	// side-effecting third arg (`mulmod(a, b, f())`) evaluates once.
+	auto z = awst::makeEvalOnce(promoteToBigUInt(std::move(_args[2]), _loc), _loc);
 
 	// EVM reverts on mod by zero
 	emitModByZeroCheck(_ctx, z, _loc);
@@ -127,7 +129,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 
 	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
 	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
-	auto z = promoteToBigUInt(std::move(_args[2]), _loc);
+	// Same as handleMulmod: the modulus is referenced twice (assert + mod).
+	auto z = awst::makeEvalOnce(promoteToBigUInt(std::move(_args[2]), _loc), _loc);
 
 	// EVM reverts on mod by zero
 	emitModByZeroCheck(_ctx, z, _loc);
@@ -240,8 +243,14 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		vUint = awst::makeBtoi(std::move(vBytes), _loc);
 	}
 
-	// Stash v in a temp so we can read it multiple times.
-	std::string vTmpName = "__ecrecover_v";
+	// Stash v in a temp so we can read it multiple times. The names MUST be
+	// unique per call: both assignments are prePending statements, so for two
+	// ecrecovers in ONE expression (`ecrecover(a..) == ecrecover(b..)`) all
+	// the assignments run before either side's reads lower — with a shared
+	// name both sides would read the SECOND call's v/result.
+	static int s_ecrecoverTmpCounter = 0;
+	int ecTmpId = ++s_ecrecoverTmpCounter;
+	std::string vTmpName = "__ecrecover_v_" + std::to_string(ecTmpId);
 	auto vTmpTarget = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
 	auto vAssign = awst::makeAssignmentStatement(vTmpTarget, std::move(vUint), _loc);
 	_ctx.prePendingStatements.push_back(std::move(vAssign));
@@ -283,8 +292,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	ecdsaRecover->stackArgs.push_back(std::move(r));
 	ecdsaRecover->stackArgs.push_back(std::move(s));
 
-	// Store result in temp var
-	std::string tmpName = "__ecrecover_result";
+	// Store result in temp var (unique per call — see vTmpName comment).
+	std::string tmpName = "__ecrecover_result_" + std::to_string(ecTmpId);
 	auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, _loc);
 
 	auto assignTuple = awst::makeAssignmentStatement(tmpTarget, std::move(ecdsaRecover), _loc);

@@ -222,3 +222,28 @@ def test_checked_panic_semantics(harness):
                "expOver()", "uUnder()", "divZero()", "modZero()"]:
         r = harness.call(app, fn, expect_revert=True)
         assert r.reverted, f"{fn} did not revert"
+
+
+def test_compound_builtin_side_effect_once(harness):
+    """arithmetics/contracts/compound_builtin_side_effect_once.sol
+
+    CUSTOM regression guard (NOT vendored). Two classes pinned:
+    1. Side-effecting RHS on the compound path evaluates ONCE: checked
+       `x -= u(30)` (buildWrappingSubtract referenced both operands in the
+       underflow-assert AND the difference), signed `x %= s(3)` and
+       `x /= s(2)` (buildSignedModDiv referenced each operand 3x — now pinned
+       via comma let-binding), and the addmod/mulmod modulus (zero-assert +
+       mod op).
+    2. Signed compound DIVISION VALUE: AssignmentHelper mapped AssignDiv to
+       BuilderBinaryOp::Div while the signed-division gate checks FloorDiv —
+       `x /= 2` with x == -7 computed an UNSIGNED floor-div of the
+       two's-complement bits (2^255 - 4 instead of -3).
+    """
+    app = harness.compile_and_deploy("arithmetics/contracts/compound_builtin_side_effect_once.sol")
+    assert tuple(as_int(x) for x in harness.call(app, "subOnce()").abi_return) == (70, 1)
+    r = harness.call(app, "smodOnce()").abi_return
+    assert (as_signed_int(r[0]), as_int(r[1])) == (-1, 1)
+    r = harness.call(app, "sdivOnce()").abi_return
+    assert (as_signed_int(r[0]), as_int(r[1])) == (-3, 1)
+    assert tuple(as_int(x) for x in harness.call(app, "addmodOnce()").abi_return) == (1, 1)
+    assert tuple(as_int(x) for x in harness.call(app, "mulmodOnce()").abi_return) == (1, 1)

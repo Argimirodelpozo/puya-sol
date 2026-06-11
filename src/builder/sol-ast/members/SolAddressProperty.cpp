@@ -89,7 +89,12 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		// raw IntrinsicCall miscompiles the pop ordering of app_params_get;
 		// going through a VarExpression matches the pattern that
 		// SolNewExpression already uses successfully.
-		std::string tmpName = "__app_program_result";
+		// Unique per call: the assign is prePending but the read is returned in
+		// the RESULT expression, so two `.code` reads in one expression would
+		// otherwise both read the second call's temp (all prepends run first).
+		static int s_appProgramTmpCounter = 0;
+		std::string tmpName =
+			"__app_program_result_" + std::to_string(++s_appProgramTmpCounter);
 		auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, m_loc);
 		auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(appParamsGet), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assign));

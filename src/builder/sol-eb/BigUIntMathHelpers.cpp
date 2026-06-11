@@ -211,6 +211,12 @@ std::shared_ptr<awst::Expression> buildWrappingSubtract(
 	std::shared_ptr<awst::Expression> _right,
 	awst::SourceLocation const& _loc)
 {
+	// Both operands feed the underflow-assert AND the wrapped difference —
+	// wrap so a side-effecting operand (`x -= f()`, the compound path that
+	// bypasses SolBinaryOperation's wrap) evaluates once.
+	_left = awst::makeEvalOnce(std::move(_left), _loc);
+	_right = awst::makeEvalOnce(std::move(_right), _loc);
+
 	// Checked subtraction: assert a >= b before wrapping
 	if (!_isUnchecked)
 	{
@@ -236,6 +242,27 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	BuilderBinaryOp _op,
 	awst::SourceLocation const& _loc)
 {
+	// Each operand feeds the sign test, the negation, and the conditional's
+	// else-branch (3 references each) — a side-effecting operand on the
+	// compound path (`x %= f()`) ran once per reference. Pin both via the
+	// same comma let-binding buildBigUIntArithmeticShiftRight uses, NOT
+	// SingleEvaluation: for DIV the first _right reference sits inside the
+	// short-circuit RHS of `Or(isLeftNeg, isRightNeg)`, so an SE temp would
+	// be defined in a branch that doesn't dominate later uses (puya rejects
+	// with "used but never defined"). The comma prologue evaluates both
+	// bindings unconditionally before anything references them.
+	auto* biguintW = awst::WType::biguintType();
+	static int s_smdTemp = 0;
+	int smdId = s_smdTemp++;
+	std::string lName = "__smd_l_" + std::to_string(smdId);
+	std::string rName = "__smd_r_" + std::to_string(smdId);
+	auto bindL = awst::makeAssignmentExpression(
+		awst::makeVarExpression(lName, biguintW, _loc), std::move(_left), _loc, biguintW);
+	auto bindR = awst::makeAssignmentExpression(
+		awst::makeVarExpression(rName, biguintW, _loc), std::move(_right), _loc, biguintW);
+	_left = awst::makeVarExpression(lName, biguintW, _loc);
+	_right = awst::makeVarExpression(rName, biguintW, _loc);
+
 	// Two's complement: negative if value >= 2^255
 	static constexpr char const* POW_2_255 =
 		"57896044618658097711785492504343953926634992332820282019728792003956564819968";
@@ -269,6 +296,14 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 		? awst::BigUIntBinaryOperator::Mod
 		: awst::BigUIntBinaryOperator::FloorDiv;
 
+	// absResult is referenced three times below (negation, zero test, else
+	// branch) — all PURE re-lowerings over the SE-pinned operands, so the
+	// repeats are wasteful but correct. Do NOT makeEvalOnce-wrap it: its
+	// first reference is `notZero` inside the short-circuit RHS of the final
+	// condition's `And`, so the materialized temp would be defined in a
+	// branch that doesn't dominate the conditional's else-arm — puya rejects
+	// with "used but never defined: awst_tmp%N". SingleEvaluation is only
+	// safe when the FIRST reference lowers unconditionally.
 	auto absResult = awst::makeBigUIntBinOp(std::move(absLeft), unsignedOp, std::move(absRight), _loc);
 
 	// Apply sign:
@@ -301,9 +336,14 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 
 	auto shouldNegateAndNonZero = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And, std::move(notZero), _loc);
 
-	return awst::makeConditional(
+	auto finalCond = awst::makeConditional(
 		std::move(shouldNegateAndNonZero), std::move(negResult),
 		std::move(absResult), awst::WType::biguintType(), _loc);
+	auto comma = awst::makeCommaExpression(awst::WType::biguintType(), _loc);
+	comma->expressions.push_back(std::move(bindL));
+	comma->expressions.push_back(std::move(bindR));
+	comma->expressions.push_back(std::move(finalCond));
+	return comma;
 }
 
 } // namespace puyasol::builder::eb

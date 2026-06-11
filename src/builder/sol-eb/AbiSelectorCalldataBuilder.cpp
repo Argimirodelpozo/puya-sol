@@ -172,19 +172,12 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
 			asBytes = std::move(cast);
 		}
 
-		// Left-pad to ≥4 bytes then extract the last 4 bytes.
-		auto cat = awst::makeLeftPad(std::move(asBytes), 4, _loc);
-
-		auto lenCall = awst::makeLen(cat, _loc);
-
-		auto four = awst::makeIntegerConstant("4", _loc);
-
-		auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
-		offset->stackArgs.push_back(std::move(lenCall));
-		offset->stackArgs.push_back(four);
-
-		auto extract = awst::makeExtract3(std::move(cat), std::move(offset), std::move(four), _loc);
-		selector = std::move(extract);
+		// Left-pad to ≥4 bytes then take the last 4. makeExtractLastN wraps
+		// its input in a SingleEvaluation, so a side-effecting selector
+		// expression evaluates once (the previous hand-rolled len+extract3
+		// referenced the padded value twice).
+		selector = awst::makeExtractLastN(
+			awst::makeLeftPad(std::move(asBytes), 4, _loc), 4, _loc);
 	}
 
 	if (args.size() == 1)
