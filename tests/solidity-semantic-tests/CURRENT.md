@@ -1,3 +1,35 @@
+# Semantic Test Status — v345
+
+> **SOL-AST/ AUDIT — TOP LEVEL + stmts/ (wip, 2026-06-10):** two commits,
+> zero-regression (full -n2 **1200p/66f/83xf**, FAILED set BYTE-IDENTICAL to
+> baseline sha1 c9bb89f26c…; RESULTS_258f4041a2.txt; 1200 = 1195 + 5 session
+> CUSTOM guards). File-by-file pass over `src/builder/sol-ast/` top level + the
+> `stmts/` folder.
+> - **TOP LEVEL** (`f7987a5b76`, behaviorally inert): removed the DEAD
+>   `constantLocals` mechanism (ScopeState map + findConstantLocal +
+>   setConstantLocal + the vestigial SolVariableDeclaration setter) — it was
+>   write-only state; the only reader was deleted earlier because the fold was
+>   unsafe (no invalidation on reassignment → loop counter `new T[](i)` mis-folded
+>   to `new T[](1)`). + 2 comment tidies (dup "8." step; misleading "options
+>   ignored" log). Otherwise the top level (Context hierarchy, dispatch, factory)
+>   is clean.
+> - **stmts/ — tuple-destructure SHADOWING** (`258f4041a2`): a destructured local
+>   (`(uint a,)=f()`) used the BARE name, bypassing the shadow-safe resolveVarName
+>   the single-decl path uses, so an inner destructured var aliased+overwrote an
+>   outer one. Verified: `uint a=100; {(uint a,)=two();} return a;` returned 1 not
+>   100. Fix: resolveVarName for destructured targets. +1 CUSTOM guard
+>   variables::test_tuple_destructure_shadow.
+> REFUTED (verify behaviorally!): bare `return;` in a named-return function — the
+> vendored solc REJECTS it ("Return arguments required"), so puya-sol's
+> named-return synthesis is unreachable. CANDIDATES noted not-fixed (niche/latent):
+> SolIfStatement postPending-after-IfElse ordering; enum-return/event range-check
+> double-eval (same class as the sol-eb bug D); SolEmitStatement event-signature
+> width/sign collapse (latent, self-consistent w/ arc56); storage-ref locals
+> (SolVariableDeclaration:185,198) also use bare names (niche + mappingKeyParam
+> threading). PROCESS: stray /tmp/*.sol from candidate testing collided with the
+> multi-source import path → a false-positive regression; clean /tmp + use mktemp
+> -d for throwaway compiles.
+
 # Semantic Test Status — v344
 
 > **CROSS-CONTRACT SELECTOR + ARG-WIDTH FIX (wip, 2026-06-10):** `e0fe72de53`,
