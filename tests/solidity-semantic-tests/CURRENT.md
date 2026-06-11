@@ -1,3 +1,30 @@
+# Semantic Test Status — v350
+
+> **SOL-EB/ASSEMBLY AUDIT (2026-06-11 day): batch 3 `5a128c2556` + batch 4
+> `5f265670d5`**, both zero-regression (66f/**1219p**/83xf final; 1219 = 1214
+> + 5 guards). The sol-eb/ + assembly/ correctness audit is COMPLETE.
+> **Batch 3**: abi.decode STRUCT STRING/BYTES FIELDS silently truncated 2
+> bytes (dyn-struct walk only inlined elemSize==32; string/bytes hit the
+> wrong-layout ARC4FromBytes fallback — S(42,"hi there",7) decoded " there";
+> fix accepts elemSize==1). Enum emit/return ran a side-effecting value twice
+> (range-assert + use; the two stmts/ open candidates — both fixed). 4 CUSTOM
+> guard batteries: 11 signed-arithmetic edges ALL CORRECT (truncated div/mod,
+> INT_MIN%-1, unchecked wraps, sar saturation, compound shifts), 8 checked
+> panics ALL CORRECT, decode round-trip matrix, enum-once. KNOWN GAP:
+> uint256[][] abi.decode reverts loud (unsupported nested-dynamic decode).
+> **Batch 4**: 🔑 SIGNED COMPOUND DIVISION WRONG VALUE — AssignmentHelper
+> mapped AssignDiv→Div but the signed gate checks FloorDiv, so `x /= 2`
+> (x=-7) computed an UNSIGNED floordiv of the two's-comp bits (2^255-4, not
+> -3, silently). + checked `x -= f()` ran f() twice (buildWrappingSubtract,
+> the balance-update shape); signed `x %= / /= f()` 3x (buildSignedModDiv →
+> comma let-binding, NOT SingleEvaluation: SE temps materialized in a
+> short-circuit branch fail puya SSA "used but never defined" — SE is only
+> safe when the first reference lowers unconditionally); addmod/mulmod
+> modulus 2x; ecrecover + address.code fixed temp names collided across two
+> calls in one expression; encodeWithSelector hand-rolled len+extract →
+> makeExtractLastN. Guard arithmetics::test_compound_builtin_side_effect_once.
+> See [[sol-ast-audit]].
+
 # Semantic Test Status — v348
 
 > **SOL-AST/ AUDIT — calls/ DONE + eval-once ROUND 2 (overnight 2026-06-11):**
