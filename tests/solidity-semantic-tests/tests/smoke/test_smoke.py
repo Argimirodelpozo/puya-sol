@@ -167,23 +167,26 @@ def test_structs(harness):
 def test_failure(harness):
     """failure.sol — revert classifiers.
 
-    puya-sol currently emits `err` for revert/assert without first
-    log-emitting ABI-encoded Error(string) / Panic(uint) bytes. So we
-    detect that the call reverted but cannot match the structured reason.
-    Tighten this assertion once the codegen emits the EVM-compatible
-    revert payload.
+    Asserts the full EVM-shaped revert payloads: revert("msg") and
+    require(cond, msg) log Error(string) (selector 0x08c379a0 + ABI-encoded
+    string — including a RUNTIME empty-string message), assert(false) logs
+    Panic(0x01). The payload is read from the failing txn's last log entry
+    via simulate (ARC-65 style); the success path emits no log.
     """
-    import pytest
+    from framework.revert import ErrorString, Panic
     app = harness.compile_and_deploy("smoke/contracts/failure.sol", evm_version="byzantium")
 
-    for sig, args in [
-        ("e()", ()),
-        ("f(bool)", (False,)),
-        ("g(bool)", (False,)),
-        ("h()", ()),
+    for sig, args, expect in [
+        ("e()", (), ErrorString("Transaction failed.")),
+        ("f(bool)", (False,), ErrorString("")),
+        ("g(bool)", (False,), ErrorString("Value is false.")),
+        ("h()", (), Panic(0x01)),
     ]:
         r = harness.call(app, sig, *args, expect_revert=True)
         assert r.reverted, f"{sig} should revert"
+        assert r.revert_reason == expect, f"{sig} -> {r.revert_reason}, want {expect}"
+    r = harness.call(app, "g(bool)", True)
+    assert not r.reverted and not (r.logs or [])
 
 
 def test_multiline(harness):
