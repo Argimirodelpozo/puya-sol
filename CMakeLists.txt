@@ -32,6 +32,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Source files
 set(SOURCES
 	src/main.cpp
+	src/cli/CliOptions.cpp
+	src/cli/SourceCompat.cpp
+	src/cli/CompilerSetup.cpp
+	src/cli/AwstPostPasses.cpp
 	src/Logger.cpp
 	src/awst/WType.cpp
 	src/awst/Node.cpp
