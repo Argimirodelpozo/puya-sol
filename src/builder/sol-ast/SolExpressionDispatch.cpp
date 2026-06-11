@@ -158,10 +158,10 @@ public:
 
 	std::shared_ptr<awst::Expression> visitCallOptions(FunctionCallOptions const& _n) override
 	{
-		// {value:, gas:} options are consumed by the outer FunctionCall via
-		// SolFunctionCall::extractCallValue. Here we just translate the base.
-		Logger::instance().warning(
-			"function call options {value:, gas:} ignored on Algorand", makeLoc(_n));
+		// {value:, gas:} options are consumed by the enclosing FunctionCall
+		// (value via SolFunctionCall::extractCallValue; gas has no AVM analog and
+		// is dropped). Reaching this visitor means the options wrap a non-call
+		// value expression, where they have no effect — translate the base.
 		return visit(_n.expression());
 	}
 

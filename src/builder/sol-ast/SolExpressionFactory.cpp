@@ -533,11 +533,11 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	if (baseType && baseType->category() == Type::Category::Contract)
 		return std::make_unique<SolConstantAccess>(m_ctx, _node);
 
-	// 8. Address properties (.code, .balance)
+	// 9. Address properties (.code, .balance)
 	if (baseType && baseType->category() == Type::Category::Address)
 		return std::make_unique<SolAddressProperty>(m_ctx, _node);
 
-	// 9. Struct/tuple field access — try after building base
+	// 10. Struct/tuple field access — try after building base
 	// (Must check if result is ARC4Struct/WTuple, which requires building the base first.
 	//  Use SolFieldAccess which handles this check internally.)
 	return std::make_unique<SolFieldAccess>(m_ctx, _node);

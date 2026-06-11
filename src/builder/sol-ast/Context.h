@@ -125,10 +125,6 @@ struct ScopeState
 	/// `f()` call through a fn-ptr local as a direct callsub.
 	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
 
-	/// Folded compile-time constant value for a local declaration.
-	/// Sentinel return is 0; reads check `>0`.
-	std::unordered_map<int64_t, unsigned long long> constantLocals;
-
 	/// Slot-based storage refs for local pointers (`T storage p = base[i]`).
 	std::unordered_map<int64_t, std::shared_ptr<awst::Expression>> slotStorageRefs;
 
@@ -216,12 +212,6 @@ public:
 		return it != m_state->funcPtrTargets.end() ? it->second : nullptr;
 	}
 
-	unsigned long long findConstantLocal(int64_t _declId) const
-	{
-		auto it = m_state->constantLocals.find(_declId);
-		return it != m_state->constantLocals.end() ? it->second : 0ULL;
-	}
-
 	std::shared_ptr<awst::Expression> findSlotStorageRef(int64_t _declId) const
 	{
 		auto it = m_state->slotStorageRefs.find(_declId);
@@ -276,11 +266,6 @@ public:
 	void eraseFuncPtrTarget(int64_t _declId)
 	{
 		m_state->funcPtrTargets.erase(_declId);
-	}
-
-	void setConstantLocal(int64_t _declId, unsigned long long _value)
-	{
-		m_state->constantLocals[_declId] = _value;
 	}
 
 	void setSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
