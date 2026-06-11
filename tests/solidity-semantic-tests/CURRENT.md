@@ -1,3 +1,25 @@
+# Semantic Test Status — v346
+
+> **SOL-AST/ AUDIT — members/ (wip, 2026-06-10):** `9c4a7c6dc6`, zero-regression
+> (true fail-set = baseline 66; the one flagged failure inlineAssembly::
+> test_blobhash is a known localnet-load FLAKE, passes in isolation; the run was
+> slow at 7:06 = loaded. +1 CUSTOM guard → true 1201p).
+> **int128 STRUCT FIELD sign-ext** (SolFieldAccess): a signed sub-256 struct
+> field (int128) decodes to its raw N-bit two's complement and must sign-extend
+> to canonical 256-bit on read. The sub-64-bit case was handled
+> (signExtendToUint64); the 64<N<256 biguint-backed case was NOT. Verified:
+> `s.x == v` for int128 -5 = false (field 2^128-5 vs scalar 2^256-5),
+> int256(s.x) = 2^128-5. THIRD bug in this class (after int128[] array elems
+> b0bcb15498 + transients a72c656f73) — every ARC4-decode of a signed sub-256
+> value needs signExtendSignedElement on read ([[int24-subword-codec]]). Fix:
+> apply the shared helper alongside signExtendToUint64 (read-only, !willBeWrittenTo).
+> Guard conversions::test_struct_int128_field_signextend.
+> Rest of members/ CLEAN: SolSelectorAccess (by-design keccak EVM .selector,
+> distinct from ARC4 dispatch), SolAddressProperty (fail-loud for arbitrary-addr
+> .code/.codehash), SolLengthAccess (careful slice bounds + box-len underflow
+> guards), SolIntrinsicAccess (documented EVM divergences w/ warnings),
+> SolConstantAccess/SolEnumValueAccess/SolMetaTypeAccess.
+
 # Semantic Test Status — v345
 
 > **SOL-AST/ AUDIT — TOP LEVEL + stmts/ (wip, 2026-06-10):** two commits,
