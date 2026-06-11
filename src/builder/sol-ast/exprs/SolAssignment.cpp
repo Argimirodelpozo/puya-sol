@@ -381,7 +381,17 @@ SolAssignment::applyCompoundAssignment(
 {
 	if (_op == Token::Assign) return _value;
 
-	auto currentValue = buildExpr(m_assignment.leftHandSide());
+	// Reuse the ALREADY-BUILT target for the current-value read instead of
+	// rebuilding the LHS. A rebuild re-runs the builder on a side-effecting
+	// index/key (e.g. `arr[i++] += 5`), evaluating it twice — the read would
+	// see one element and the write land on another, and the index would bump
+	// twice (verified: `arr[i++] += 5` gave i==2). The built target is the read
+	// form (a bare BoxValue for storage); wrap it in StateGet so the read picks
+	// up the stored value (or default). For a non-side-effecting LHS this is
+	// identical to the old rebuild — the location subtree simply duplicates on
+	// serialization, exactly as two separate builds would. makeWritableTarget
+	// on the same node (in toAwst) still yields the write target.
+	auto currentValue = _target;
 	if (dynamic_cast<awst::BoxValueExpression const*>(currentValue.get()))
 		currentValue = builder::StorageMapper::makeStateGetWithDefault(currentValue, currentValue->wtype, m_loc);
 	auto* targetSolType = m_assignment.leftHandSide().annotation().type;

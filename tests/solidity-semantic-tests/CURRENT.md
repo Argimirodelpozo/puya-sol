@@ -1,3 +1,35 @@
+# Semantic Test Status — v347
+
+> **SOL-AST/ AUDIT — exprs/ (wip, 2026-06-11): side-effecting subexpressions
+> evaluate ONCE.** Full -n2 = 66 fail / **1206 pass** / 83 xf, ZERO-regression
+> (RESULTS_exprs_sideeffect.txt; NEW-fail diff vs baseline empty; +5 CUSTOM
+> guards). Four fixes, all the same theme — a non-hoisted side effect (a call,
+> `i++`) must not run once per reference:
+> 1. **🔑 LATENT GLOBAL: SingleEvaluation `_id` serializer** (AWSTSerializer):
+>    puya's awst.SingleEvaluation field is the attrs-private `_id`; cattrs keys
+>    it under `_id`, NOT `id`. We emitted `id` → `_id` fell back to `id(self)`
+>    (fresh per deserialized copy) → copies never compared equal → the IR
+>    builder's single-eval cache NEVER hit → "evaluate source once" SILENTLY
+>    NEVER WORKED in puya-sol since inception (only looked fine because every
+>    existing usage wrapped a PURE source). Fix = emit `_id`. Now SingleEvaluation
+>    is a usable single-eval tool everywhere (shift/memory/extcall/innercall/...).
+> 2. **inc/dec side-effecting index** `arr[i++]++` (SolUnaryOperation): rebuilt
+>    the subexpression for the write target → i++ twice (i==2, wrong elem). Fix:
+>    derive the write target from the already-built `_operand`.
+> 3. **compound-assign side-effecting index** `arr[i++] += 5` (SolAssignment):
+>    rebuilt LHS for the current-value read. Fix: reuse the built `target`.
+> 4. **signed arith/div/mod/exp side-effecting operand** `a()+b()`
+>    (SolBinaryOperation): the signed handlers reference each operand multiply
+>    (sign/overflow/range) → ran ~4-5x (cnt 9/6/11 vs 2). Fix: wrap each non-leaf
+>    signed operand in makeSingleEvaluation before dispatch (REQUIRES fix #1).
+> Guards: operators::test_{incdec,compound}_side_effect_index,
+> test_signed_{arith,divmodexp}_side_effect_once, test_shortcircuit_side_effect
+> (latter confirms `&&`/`||` already lazily short-circuit side-effecting RHS).
+> Open (niche, now cleanly fixable via working SingleEvaluation): SolConditional
+> assignment-condition `(x=f())?a:b` double-eval; SolAssignmentBytesElem compound;
+> side-effecting mapping KEY `m[f()]+=x` (deeper — key re-inlined per box op).
+> See [[sol-ast-audit]].
+
 # Semantic Test Status — v346
 
 > **SOL-AST/ AUDIT — members/ (wip, 2026-06-10):** `9c4a7c6dc6`, zero-regression

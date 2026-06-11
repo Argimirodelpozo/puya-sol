@@ -471,9 +471,21 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	// peel ARC4Decode (native-typed read of an ARC4-encoded field) so the
 	// write hits the encoded slot — paired with ARC4Encode on the new
 	// value below.
-	auto makeWriteTarget = [&]() -> std::shared_ptr<awst::Expression>
+	// Derive the assignment target from the ALREADY-BUILT operand — do NOT
+	// rebuild the subexpression. A rebuild re-runs the builder on any
+	// side-effecting index (e.g. `arr[i++]`), evaluating it twice: the index
+	// would increment once for the read and again for the write, landing the
+	// write on the wrong element (verified: `arr[i++]++` gave i==2). Reusing
+	// the built operand keeps the side effect (already hoisted to a prePending
+	// temp) running once and shares the index temp between read and write.
+	// State vars come back wrapped in StateGet (a read) — unwrap so the write
+	// lands on the writable BoxValue/AppState. Also peel ARC4Decode (native
+	// read of an ARC4 field) so the write hits the encoded slot — paired with
+	// ARC4Encode on the new value below. Unwrapping shares the (non-side-
+	// effecting) location subtree with the read, identical to the old rebuild.
+	auto makeWriteTarget = [&](std::shared_ptr<awst::Expression> target)
+		-> std::shared_ptr<awst::Expression>
 	{
-		auto target = buildExpr(m_unaryOp.subExpression());
 		if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
 			target = sg->field;
 		if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(target.get()))
@@ -496,7 +508,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 	if (isPrefix)
 	{
-		auto writeTarget = makeWriteTarget();
+		auto writeTarget = makeWriteTarget(_operand);
 		auto newValue = maybeEncode(writeTarget, makeNewValue(_operand));
 		return awst::makeAssignmentExpression(
 			std::move(writeTarget), std::move(newValue), m_loc, _operand->wtype);
@@ -521,8 +533,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		auto saveStmt = awst::makeAssignmentStatement(tempVar, _operand, m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 
-		// Compute new value from the saved temp (not re-reading a)
-		auto writeTarget = makeWriteTarget();
+		// Compute new value from the saved temp (not re-reading a). The write
+		// target reuses the built operand (saveStmt copies it, not moves) so a
+		// side-effecting index shares the same prePending temp as the read.
+		auto writeTarget = makeWriteTarget(_operand);
 		auto newValue = maybeEncode(writeTarget, makeNewValue(tempVar));
 
 		// a = temp + 1 (for inc) or temp - 1 (for dec)
