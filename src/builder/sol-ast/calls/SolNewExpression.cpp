@@ -175,6 +175,25 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			sizeExpr = builder::TypeCoercion::implicitNumericCast(
 				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
 
+			// Pin the size to a temp BEFORE the loop. The size feeds the while
+			// condition below (re-evaluated EVERY iteration — a side-effecting
+			// size like `new T[](f())` re-ran f() once per iteration) and the
+			// bool[] special case references it twice. An eager pre-loop temp —
+			// not SingleEvaluation — is required here: SingleEvaluation
+			// materializes at its first reference, which is inside the loop
+			// header and so still re-executes per iteration. Skip for leaves
+			// (vars/constants are stable across the generated loop).
+			if (!dynamic_cast<awst::VarExpression const*>(sizeExpr.get())
+				&& !dynamic_cast<awst::IntegerConstant const*>(sizeExpr.get()))
+			{
+				std::string sizeName = "__rt_size_" + std::to_string(tc);
+				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(sizeName, awst::WType::uint64Type(), m_loc),
+					std::move(sizeExpr), m_loc));
+				sizeExpr = awst::makeVarExpression(
+					sizeName, awst::WType::uint64Type(), m_loc);
+			}
+
 			// Special case: `new bool[](n)` with runtime n — bypass puya's
 			// bool encoder (same bug as the compile-time path: it starts from
 			// empty bytes and setbit-fails). Emit the ARC4 wire form
@@ -495,17 +514,20 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				fundCreate->fields["Receiver"] = std::move(fundAddr);
 
-				// Base MBR (1M) + any `{value: N}` forwarded to the child ctor.
-				// Solidity `new X{value: N}(...)` funds the child with N on
-				// construction; AVM needs MBR on top. Bundling them into this
-				// single pay itxn avoids a separate pay txn in the no-postInit
-				// branch. In the postInit branch we still emit an additional
-				// pay txn just before __postInit so msg.value resolves inside
-				// the call (see below) — but the MBR + value is already live
-				// on the child at that point, so the second pay is functionally
-				// redundant w.r.t. balance and only serves to set msg.value.
+				// Base MBR (1M), plus `{value: N}` ONLY when the child has no
+				// __postInit. In the postInit branch the value travels in the
+				// `[pay(value), __postInit]` group below — that pay both
+				// transfers the amount and is what the child's msg.value reads
+				// (`gtxns Amount (GroupIndex-1)`). Bundling value here TOO made
+				// the child receive 2x value (verified: balance was
+				// MBR + 2*500000 for `new Child{value: 500000}()`). A pay txn
+				// always transfers its Amount — there is no "only sets
+				// msg.value" pay. (The group can't be [pay, create, postInit]:
+				// the child's address/app-id don't exist until the create
+				// executes, so the fund/postInit submits must come after.)
 				auto baseMbr = awst::makeIntegerConstant("1000000", m_loc);
-				std::shared_ptr<awst::Expression> ctorValueForFund = extractCallValue();
+				std::shared_ptr<awst::Expression> ctorValueForFund =
+					childHasPostInit ? nullptr : extractCallValue();
 				std::shared_ptr<awst::Expression> totalFundAmount;
 				if (ctorValueForFund)
 				{

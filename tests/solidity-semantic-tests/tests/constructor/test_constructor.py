@@ -208,3 +208,20 @@ def test_transient_state_variable_initialization(harness):
     # f() -> 100
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 100
+
+
+def test_new_child_value_funds_once(harness):
+    """constructor/contracts/new_child_value_probe.sol
+
+    CUSTOM regression guard (NOT vendored). `new Child{value: N}()` where the
+    child ctor reads msg.value (postInit route) must transfer N exactly once.
+    Before the fix the fund pay bundled MBR+N AND the [pay(N), __postInit]
+    group paid N again — the child's balance was MBR + 2N (verified 2_000_000
+    for N=500_000). msg.value inside the ctor reads the postInit-group pay.
+    AVM expectation: balance = MBR(1_000_000) + N, seenValue = N.
+    """
+    app = harness.compile_and_deploy(
+        "constructor/contracts/new_child_value_probe.sol", fund_wei=5_000_000)
+    r = harness.call(app, "deploy()", extra_fee=10_000).abi_return
+    assert as_int(r[0]) == 500_000, f"child saw msg.value {as_int(r[0])}"
+    assert as_int(r[1]) == 1_500_000, f"child balance {as_int(r[1])} != MBR + value"
