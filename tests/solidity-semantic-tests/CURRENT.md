@@ -1,3 +1,40 @@
+# Semantic Test Status — v355
+
+> **TARGET-FAIL SWEEP + FRAME-CORRECT HALTS + REORG (2026-06-12):**
+> 6 commits ending `26c6e547c9`, **zero-regression: 60 failed / 1231 passed /
+> 83 xf** (test-by-test diff vs v354 baseline: NEW set EMPTY, 5 FIXED —
+> errors::require_error_evaluation_order_1, various::create_calldata,
+> modifiers::access_through_module_name, abiEncodeDecode::contract_array_v2,
+> using::recursive_import).
+> **Assembly `return(o,s)` halts** (`c4e778391f`+`7d0d464603`): internal/
+> private fns (frame = program) lower as log(0x151f7c75 ++ ARC4) + program
+> exit; public/external keep subroutine-return (their frame IS the routed
+> call or `this.f()` callsub — EVM return() ends only the callee frame).
+> Conditional halts don't leak: SolIfStatement::buildBranch saves/restores
+> BlockContext.terminated (branches share the parent context!); same guard
+> for m_haltEmitted around Yul if/for/switch bodies.
+> **Explicit-assert accounting** (`c4e778391f`): payload'd require/revert
+> asserts serialize `"explicit": false` — puya soundly strips them when
+> downstream of a never-returning halt fn (≥2 callers), and its TEAL-level
+> count guard otherwise hard-errors. Constant require conditions lower
+> directly (no foldable gates).
+> **msg.data in constructors is empty** (`a6cb41ca63`): the documented-but-
+> never-set FunctionContext::inConstructor is now wired for real
+> (FunctionBuilder + 4 ApprovalProgramBuilder ctor sites).
+> **Harness** (`2d0c2c2ba5`): multisource section imports rewritten to
+> ./X.sol (duplicate-SourceUnit fix → modifiers flake + recursive_import);
+> isoltest words packing strips the EVM [offset][length] head exactly like
+> the EVM decoder; framework.evm_words() view; contract_array_v2 address[]
+> via encode_address (21-byte dirty-address case = documented EVM_DIVERGENCE,
+> AVM addresses are natively 32B).
+> **Overload suffix** (`a398e1f6a4`): fallback tag now solc
+> Type::identifier() — every tag SIGNATURE-derived. Naming side sees the
+> most-derived override; calls in inherited base bodies see the base decl
+> (scope-relative referencedDeclaration) — AST-id tags (old p->id(),
+> rejected __<declId>) silently disagree across that split.
+> **Reorg** (`26c6e547c9`): sol-eb/ ABI codec → builder/abi/, call machinery
+> → builder/itxn/, ContractBuilder → builder/contract/ (include-only diff).
+
 # Semantic Test Status — v354
 
 > **CUSTOM-ERROR PAYLOADS + CLASS-CLOSURE BATTERIES (2026-06-12):**
