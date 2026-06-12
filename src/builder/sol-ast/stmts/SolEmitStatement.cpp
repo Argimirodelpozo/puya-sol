@@ -115,15 +115,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 
 	if (fields.empty())
 	{
-		// Zero-argument event: raw log with 4-byte ARC-28 selector
-		auto sigBytes = awst::makeUtf8BytesConstant(eventSignature, m_loc);
-
-		auto hash = awst::makeKeccak256(std::move(sigBytes), m_loc);
-
-		auto zero = awst::makeZero(m_loc);
-		auto four = awst::makeIntegerConstant("4", m_loc);
-
-		auto selector = awst::makeExtract3(std::move(hash), std::move(zero), std::move(four), m_loc);
+		// Zero-argument event: raw log with the 4-byte ARC-28 selector.
+		// MethodConstant (TEAL `method "sig"`) IS the sha512_256 selector —
+		// the same hashing every other event (puya Emit), abi.encodeCall,
+		// and custom-error payload uses. This path previously hand-rolled
+		// keccak256(sig)[0:4], so zero-argument events logged a selector no
+		// ARC-28 subscriber would match.
+		auto selector = awst::makeMethodConstant(
+			eventSignature, awst::WType::bytesType(), m_loc);
 		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), m_loc);
 		logCall->stackArgs.push_back(std::move(selector));
 
