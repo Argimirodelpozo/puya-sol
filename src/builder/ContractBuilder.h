@@ -69,6 +69,10 @@ struct FunctionTranslationCtx
 	// apply wherever the body ends up. NOT part of makeFunctionCtx's
 	// positional aggregate init — assigned explicitly after construction.
 	bool inConstructor = false;
+	// Mirrors FunctionContext::frameIsProgram (internal/private function =>
+	// assembly return() halts the program). Appended at struct end like
+	// inConstructor — mid-struct insertion breaks aggregate init.
+	bool frameIsProgram = false;
 };
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
@@ -155,6 +159,7 @@ private:
 
 	// ── Per-function scratch (set by setFunctionContext, used by buildBlock) ──
 	bool m_currentInConstructor = false;
+	bool m_currentFrameIsProgram = false;
 	std::vector<std::pair<std::string, awst::WType const*>> m_currentParams;
 	awst::WType const* m_currentReturnType = nullptr;
 	std::map<std::string, unsigned> m_currentBitWidths;

@@ -548,8 +548,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		setBlobAggParams(blobAggParamDecls);
 
 		m_currentInConstructor = _func.isConstructor();
+		m_currentFrameIsProgram =
+			_func.visibility() == solidity::frontend::Visibility::Internal
+			|| _func.visibility() == solidity::frontend::Visibility::Private;
 		method.body = buildBlock(_func.body());
 		m_currentInConstructor = false;
+		m_currentFrameIsProgram = false;
 
 		// Insert zero-initialization for named return variables
 		// Solidity implicitly initializes named returns to their zero values.

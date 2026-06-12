@@ -66,8 +66,12 @@ void AssemblyBuilder::buildIfStatement(
 		drainPendingStatements(_out, pendingBefore);
 
 		auto ifBlock = awst::makeBlock(loc);
+		// A halt (EVM return()) inside the CONDITIONAL body must not latch
+		// m_haltEmitted: statements after the assembly block stay reachable.
+		bool savedHalt = m_haltEmitted;
 		for (auto const& innerStmt: _node.body.statements)
 			buildStatement(innerStmt, ifBlock->body);
+		m_haltEmitted = savedHalt;
 
 		_out.push_back(awst::makeIfElse(
 			std::move(cond), std::move(ifBlock), nullptr, loc));
@@ -102,11 +106,14 @@ void AssemblyBuilder::buildForLoop(
 	m_forLoopPost = &_node.post.statements;
 
 	auto body = awst::makeBlock(loc);
+	// Halts inside the loop body are conditional (zero iterations possible).
+	bool savedHalt = m_haltEmitted;
 	for (auto const& bodyStmt: _node.body.statements)
 		buildStatement(bodyStmt, body->body);
 	// Post statements at end of body (normal iteration path)
 	for (auto const& postStmt: _node.post.statements)
 		buildStatement(postStmt, body->body);
+	m_haltEmitted = savedHalt;
 
 	m_forLoopPost = savedPost;
 
@@ -225,6 +232,8 @@ void AssemblyBuilder::buildSwitchStatement(
 		switchNode->value = switchExpr;
 	}
 
+	// Halts inside switch cases are conditional on the scrutinee.
+	bool savedHalt = m_haltEmitted;
 	for (auto const& yulCase: _node.cases)
 	{
 		if (!yulCase.value)
@@ -269,6 +278,7 @@ void AssemblyBuilder::buildSwitchStatement(
 			}
 		}
 	}
+	m_haltEmitted = savedHalt;
 
 	_out.push_back(std::move(switchNode));
 }

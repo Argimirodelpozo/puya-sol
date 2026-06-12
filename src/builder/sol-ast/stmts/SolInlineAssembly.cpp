@@ -378,6 +378,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		paramBitWidths.emplace(n, bw);
 
 	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
+	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,

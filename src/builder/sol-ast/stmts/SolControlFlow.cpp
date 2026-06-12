@@ -30,12 +30,26 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	auto postPending = bc.takePending();
 
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
+		// Branches share the parent BlockContext, so a program halt inside
+		// the branch (assembly return() → BlockContext.terminated) must not
+		// leak out: the branch is CONDITIONAL — statements after the if are
+		// still reachable. The flag does its work within the branch's own
+		// buildBlock (skipping trailing branch statements), then the parent
+		// value is restored. (Bare nested blocks keep propagating — they
+		// execute unconditionally. Loop bodies derive their own context via
+		// withLoop and never leak.)
+		bool parentTerminated = m_blk.terminated;
+		std::shared_ptr<awst::Block> branch;
 		if (auto const* block = dynamic_cast<Block const*>(&body))
-			return buildBlock(m_blk, *block);
-		auto syntheticBlock = awst::makeBlock(m_blk.makeLoc(body.location()));
-		auto translated = buildStatement(m_blk, body);
-		if (translated) syntheticBlock->body.push_back(std::move(translated));
-		return syntheticBlock;
+			branch = buildBlock(m_blk, *block);
+		else
+		{
+			branch = awst::makeBlock(m_blk.makeLoc(body.location()));
+			auto translated = buildStatement(m_blk, body);
+			if (translated) branch->body.push_back(std::move(translated));
+		}
+		m_blk.terminated = parentTerminated;
+		return branch;
 	};
 
 	auto ifBranch = buildBranch(m_node.trueStatement());

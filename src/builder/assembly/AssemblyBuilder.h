@@ -76,6 +76,13 @@ public:
 	/// program halt at its top level (branch-local halts are not counted —
 	/// translateSwitch/If save+restore the flag around branch bodies).
 	bool haltEmitted() const { return m_haltEmitted; }
+	/// True when the enclosing Solidity function is internal/private: its
+	/// call frame is the whole program, so EVM `return(o,s)` lowers as a
+	/// program halt. Public/external functions are their own frame on the
+	/// AVM (router call or `this.f()` callsub) — there `return(o,s)` lowers
+	/// as a plain subroutine return so callers continue, matching EVM
+	/// frame semantics.
+	void setFrameIsProgram(bool _v) { m_frameIsProgram = _v; }
 
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
 		solidity::yul::Block const& _block,
@@ -840,6 +847,7 @@ private:
 	/// trailing flushMemoryToScratch + local-upgrade coercions so puya
 	/// doesn't flag them as unreachable code after the halt.
 	bool m_haltEmitted = false;
+	bool m_frameIsProgram = false;
 
 	std::map<std::string, awst::WType const*> m_locals;
 	/// Variables that were upgraded from uint64 to biguint within the assembly block.

@@ -409,6 +409,12 @@ struct FunctionContext: Context
 	/// into one). Set by ApprovalProgramBuilder around constructor inlining.
 	bool inConstructor = false;
 
+	/// True iff this function is internal/private — its call frame is the
+	/// whole program, so an assembly `return(o,s)` halt exits the program.
+	/// Public/external functions are their own frame (see AssemblyBuilder::
+	/// setFrameIsProgram).
+	bool frameIsProgram = false;
+
 	FunctionContext(
 		TranslationContext& _tr,
 		std::vector<std::pair<std::string, awst::WType const*>> _params,

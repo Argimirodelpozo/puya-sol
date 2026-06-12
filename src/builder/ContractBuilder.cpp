@@ -119,6 +119,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	// with the placeholder body for modifier inlining), then dispatch.
 	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
 	fn.inConstructor = _ctx.inConstructor;
+	fn.frameIsProgram = _ctx.frameIsProgram;
 	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
@@ -206,6 +207,7 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 		m_currentContract,
 	};
 	ctx.inConstructor = m_currentInConstructor;
+	ctx.frameIsProgram = m_currentFrameIsProgram;
 	return ctx;
 }
 

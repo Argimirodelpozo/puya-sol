@@ -753,7 +753,13 @@ void AssemblyBuilder::handleReturn(
 		auto arc4Bytes = awst::makeConcat(std::move(countBytes), std::move(elemsBytes), _loc);
 		auto returnValue = awst::makeReinterpretCast(std::move(arc4Bytes), m_returnType, _loc);
 
-		emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
+		if (m_frameIsProgram)
+		{
+			emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
+			return;
+		}
+		flushMemoryToScratch(_loc, _out);
+		_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
 		return;
 	}
 
@@ -797,7 +803,15 @@ void AssemblyBuilder::handleReturn(
 		returnValue = std::move(emptyArr);
 	}
 
-	emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
+	if (m_frameIsProgram)
+	{
+		emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
+		return;
+	}
+	// Public/external frame: EVM return() ends this frame only — callers
+	// (router or `this.f()` callsub) continue. Plain subroutine return.
+	flushMemoryToScratch(_loc, _out);
+	_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
 }
 
 void AssemblyBuilder::emitArc4ReturnHalt(
