@@ -4,6 +4,7 @@
 ///   - uint64FromAbiWord: small helper for extracting a uint64 from a
 ///     32-byte ABI word
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "Logger.h"
 #include "builder/abi/AbiCodecHelpers.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -227,18 +228,22 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 							fieldVal = awst::makeReinterpretCast(std::move(arc4Bytes), arc4FieldType, _loc);
 						}
 					}
-					// Fallback for unsupported dynamic field shapes: ARC4FromBytes on raw slab.
+					// Unsupported dynamic field shape (dyn array with element
+					// width other than 32/1, nested dynamic arrays, struct
+					// elements): refuse to compile. The old ARC4FromBytes-on-
+					// EVM-slab fallback handed downstream code a value whose
+					// bytes are NOT the ARC4 layout its type claims — silent
+					// wrong data when access happens not to trap.
 					if (!fieldVal)
 					{
-						// Read length at tail then extract; ARC4FromBytes will likely be wrong shape.
-						auto lenWord = awst::makeExtract3(_data, absoluteTail,
-							awst::makeIntegerConstant("32", _loc), _loc);
-						auto byteLen = uint64FromAbiWord(std::move(lenWord), _loc);
-						auto dataStart = awst::makeUInt64BinOp(
-							std::move(absoluteTail), awst::UInt64BinaryOperator::Add,
-							awst::makeIntegerConstant("32", _loc), _loc);
-						auto slab = awst::makeExtract3(_data, std::move(dataStart), std::move(byteLen), _loc);
-						fieldVal = awst::makeARC4FromBytes(std::move(slab), arc4FieldType, _loc);
+						Logger::instance().error(
+							"abi.decode of struct field type '"
+							+ arc4FieldType->name()
+							+ "' is not supported: the EVM tail layout for this "
+							"shape has no ARC4 translation here, and a "
+							"reinterpreted value would be silently wrong.", _loc);
+						fieldVal = awst::makeARC4FromBytes(
+							awst::makeBytesConstant({}, _loc), arc4FieldType, _loc);
 					}
 				}
 
@@ -324,13 +329,21 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		// the assignment target sees a properly-typed value. The resulting
 		// layout is not actually ARC4 (EVM ABI differs), so downstream access
 		// will likely trap at runtime — matches the semantic-test expectation
-		// of FAILURE for corrupt-input decode cases.
+		// of FAILURE for corrupt-input decode cases. Kept (not a hard error)
+		// because those tests RELY on the runtime trap; the warning makes the
+		// wrong-layout visible in the compile log. If access does NOT trap,
+		// the value is silently wrong — see EVM_DIVERGENCE.md encoding seams.
 		auto kind = wtype->kind();
 		if (kind == awst::WTypeKind::ARC4DynamicArray
 			|| kind == awst::WTypeKind::ARC4StaticArray
 			|| kind == awst::WTypeKind::ARC4Struct
 			|| kind == awst::WTypeKind::ARC4Tuple)
 		{
+			Logger::instance().warning(
+				"abi.decode to '" + wtype->name()
+				+ "': EVM tail layout has no direct ARC4 translation for this "
+				"shape; emitting a wrong-layout value that typically traps at "
+				"runtime on access.", _loc);
 			return awst::makeARC4FromBytes(std::move(dataBytes), wtype, _loc);
 		}
 		return dataBytes;
