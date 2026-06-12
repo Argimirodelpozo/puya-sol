@@ -1,7 +1,7 @@
 /// @file CallResolver.cpp
 /// Resolves function call targets from Solidity AST nodes.
 
-#include "builder/sol-eb/CallResolver.h"
+#include "builder/itxn/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
 
 namespace puyasol::builder::eb

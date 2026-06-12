@@ -2,7 +2,7 @@
 /// AVM stdlib library intercept: turns `AVM.asaCreate / asaBalance /
 /// asaTotalSupply / asaTransfer` calls into ASA-native AWST.
 
-#include "builder/sol-eb/AsaIntrinsics.h"
+#include "builder/itxn/AsaIntrinsics.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 

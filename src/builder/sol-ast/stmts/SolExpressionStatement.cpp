@@ -4,7 +4,7 @@
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-ast/calls/RevertBlob.h"
-#include "builder/sol-eb/AbiEncoderBuilder.h"
+#include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"

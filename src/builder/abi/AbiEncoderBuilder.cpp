@@ -1,9 +1,9 @@
 /// @file AbiEncoderBuilder.cpp
 /// Handles abi.encode*, abi.decode — extracted from FunctionCallBuilder.
 
-#include "builder/sol-eb/AbiEncoderBuilder.h"
-#include "builder/sol-eb/AbiCodecHelpers.h"
-#include "builder/sol-eb/AbiSelectorCalldataBuilder.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/abi/AbiCodecHelpers.h"
+#include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 

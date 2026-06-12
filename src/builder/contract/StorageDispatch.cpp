@@ -1,4 +1,4 @@
-#include "builder/ContractBuilder.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"

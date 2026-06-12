@@ -6,8 +6,8 @@
 ///     per-element head/tail layout inside the array body)
 ///   - encodeStaticArrayDynElems: T[N] where T is dynamic (same shape
 ///     without the length word)
-#include "builder/sol-eb/AbiEncoderBuilder.h"
-#include "builder/sol-eb/AbiCodecHelpers.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/abi/AbiCodecHelpers.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 

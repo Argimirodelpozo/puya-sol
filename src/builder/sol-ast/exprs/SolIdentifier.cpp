@@ -3,7 +3,7 @@
 /// Migrated from IdentifierBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolIdentifier.h"
-#include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"

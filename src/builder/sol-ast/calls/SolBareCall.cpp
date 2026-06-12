@@ -1,5 +1,5 @@
 #include "builder/sol-ast/calls/SolBareCall.h"
-#include "builder/sol-eb/InnerCallHandlers.h"
+#include "builder/itxn/InnerCallHandlers.h"
 
 namespace puyasol::builder::sol_ast
 {

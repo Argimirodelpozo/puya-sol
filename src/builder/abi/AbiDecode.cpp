@@ -3,8 +3,8 @@
 ///   - decodeAbiValue: top-level decoder driving the type-walk
 ///   - uint64FromAbiWord: small helper for extracting a uint64 from a
 ///     32-byte ABI word
-#include "builder/sol-eb/AbiEncoderBuilder.h"
-#include "builder/sol-eb/AbiCodecHelpers.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/abi/AbiCodecHelpers.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"

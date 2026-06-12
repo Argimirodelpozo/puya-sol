@@ -1,4 +1,4 @@
-#include "builder/ContractBuilder.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeCoercion.h"

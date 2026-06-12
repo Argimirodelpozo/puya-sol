@@ -2,9 +2,9 @@
 /// Handles address.call/staticcall/delegatecall/transfer inner transaction patterns
 /// and precompile routing.
 
-#include "builder/sol-eb/InnerCallHandlers.h"
+#include "builder/itxn/InnerCallHandlers.h"
 #include "builder/contract/StateVarWalker.h"
-#include "builder/sol-eb/InnerCallInternal.h"
+#include "builder/itxn/InnerCallInternal.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"

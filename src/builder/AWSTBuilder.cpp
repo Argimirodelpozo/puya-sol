@@ -6,7 +6,7 @@
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/OverloadSuffix.h"
-#include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"

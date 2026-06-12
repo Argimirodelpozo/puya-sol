@@ -8,8 +8,8 @@
 ///   - handleCallWithRawData       (low-level `address.call(rawBytes)`)
 ///   - handleStaticCallPrecompile  (static-call routing for 0x01..0x09 precompiles)
 
-#include "builder/sol-eb/InnerCallHandlers.h"
-#include "builder/sol-eb/InnerCallInternal.h"
+#include "builder/itxn/InnerCallHandlers.h"
+#include "builder/itxn/InnerCallInternal.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"

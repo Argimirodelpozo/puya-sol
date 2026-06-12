@@ -1,7 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/ContractBuilder.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-ast/StorageRefPointer.h" // containsMappingType + storageRefPointerReturn

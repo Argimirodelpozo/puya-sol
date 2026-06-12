@@ -10,7 +10,7 @@
 ///   emitSuperSubroutines      — generate the f__super_<callerId> bodies
 ///                              once all regular methods are built.
 
-#include "builder/ContractBuilder.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/sol-types/OverloadSuffix.h"
 
 #include <libsolidity/ast/ASTVisitor.h>

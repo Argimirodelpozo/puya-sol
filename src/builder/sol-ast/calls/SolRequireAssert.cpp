@@ -1,6 +1,6 @@
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/RevertBlob.h"
-#include "builder/sol-eb/AbiEncoderBuilder.h"
+#include "builder/abi/AbiEncoderBuilder.h"
 
 #include <libsolidity/ast/AST.h>
 

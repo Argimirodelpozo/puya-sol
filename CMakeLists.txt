@@ -44,7 +44,7 @@ set(SOURCES
 	src/builder/AWSTBuilder.cpp
 	src/builder/FunctionIdRegistry.cpp
 	src/builder/SubroutineReachability.cpp
-	src/builder/ContractBuilder.cpp
+	src/builder/contract/ContractBuilder.cpp
 	src/builder/contract/StorageDispatch.cpp
 	src/builder/contract/ModifierBodyInliner.cpp
 	src/builder/contract/ModifierInliner.cpp
@@ -90,13 +90,13 @@ set(SOURCES
 	src/builder/sol-intrinsics/IntrinsicMapper.cpp
 
 	# Expression builder helpers (sol-eb/)
-	src/builder/sol-eb/AbiSelectorCalldataBuilder.cpp
+	src/builder/abi/AbiSelectorCalldataBuilder.cpp
 	src/builder/sol-eb/BigUIntMathHelpers.cpp
 	src/builder/sol-eb/BinaryOpBuilder.cpp
 	src/builder/sol-eb/ContractContext.cpp
 	src/builder/sol-eb/BuiltinCallables.cpp
-	src/builder/sol-eb/InnerCallHandlers.cpp
-	src/builder/sol-eb/InnerCallShapes.cpp
+	src/builder/itxn/InnerCallHandlers.cpp
+	src/builder/itxn/InnerCallShapes.cpp
 	src/builder/sol-eb/NodeBuilder.cpp
 	src/builder/sol-eb/SolArrayBuilder.cpp
 	src/builder/sol-eb/SolBoolBuilder.cpp
@@ -107,15 +107,15 @@ set(SOURCES
 	src/builder/sol-eb/SolEnumBuilder.cpp
 	src/builder/sol-eb/SolFixedBytesBuilder.cpp
 	src/builder/sol-eb/BuilderRegistry.cpp
-	src/builder/sol-eb/CallResolver.cpp
-	src/builder/sol-eb/AsaIntrinsics.cpp
+	src/builder/itxn/CallResolver.cpp
+	src/builder/itxn/AsaIntrinsics.cpp
 	src/builder/storage/StorageBackend.cpp
-	src/builder/sol-eb/AbiEncoderBuilder.cpp
-	src/builder/sol-eb/AbiDecode.cpp
-	src/builder/sol-eb/AbiEncodeHeadTail.cpp
-	src/builder/sol-eb/AbiEncodeArrays.cpp
-	src/builder/sol-eb/FunctionPointerBuilder.cpp
-	src/builder/sol-eb/FunctionPointerDispatchTypes.cpp
+	src/builder/abi/AbiEncoderBuilder.cpp
+	src/builder/abi/AbiDecode.cpp
+	src/builder/abi/AbiEncodeHeadTail.cpp
+	src/builder/abi/AbiEncodeArrays.cpp
+	src/builder/itxn/FunctionPointerBuilder.cpp
+	src/builder/itxn/FunctionPointerDispatchTypes.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp
 	src/builder/sol-eb/TypeConversions.cpp
 	src/builder/sol-ast/Context.cpp

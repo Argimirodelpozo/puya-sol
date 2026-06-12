@@ -1,5 +1,5 @@
 #include "builder/sol-ast/calls/SolAbiEncode.h"
-#include "builder/sol-eb/AbiEncoderBuilder.h"
+#include "builder/abi/AbiEncoderBuilder.h"
 
 namespace puyasol::builder::sol_ast
 {

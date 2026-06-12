@@ -2,9 +2,9 @@
 /// Implements function pointer support — dispatch tables for internal,
 /// inner app calls for external.
 
-#include "builder/sol-eb/FunctionPointerBuilder.h"
-#include "builder/sol-eb/AbiEncoderBuilder.h"
-#include "builder/sol-eb/FunctionPointerDispatchTypes.h"
+#include "builder/itxn/FunctionPointerBuilder.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/itxn/FunctionPointerDispatchTypes.h"
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"

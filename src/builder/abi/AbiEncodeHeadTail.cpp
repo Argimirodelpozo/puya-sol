@@ -7,8 +7,8 @@
 ///     bytes; dispatches into per-shape encoders in AbiEncodeArrays.cpp
 ///   - encodeFromArc4Bytes: recursive bridge used when an outer encoder
 ///     has already extracted a child's bytes blob from an ARC4 container
-#include "builder/sol-eb/AbiEncoderBuilder.h"
-#include "builder/sol-eb/AbiCodecHelpers.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/abi/AbiCodecHelpers.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 

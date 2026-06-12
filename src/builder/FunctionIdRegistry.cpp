@@ -1,6 +1,6 @@
 #include "builder/FunctionIdRegistry.h"
 #include "builder/sol-types/OverloadSuffix.h"
-#include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/itxn/FunctionPointerBuilder.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>

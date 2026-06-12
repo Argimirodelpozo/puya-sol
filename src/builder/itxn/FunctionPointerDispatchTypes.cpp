@@ -1,5 +1,5 @@
-#include "builder/sol-eb/FunctionPointerDispatchTypes.h"
-#include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/itxn/FunctionPointerDispatchTypes.h"
+#include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 
 namespace puyasol::builder::eb

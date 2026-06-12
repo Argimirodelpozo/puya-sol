@@ -15,7 +15,7 @@
 /// form a cohesive pre-pass and only mutate two map-typed out-
 /// parameters (no other class state required).
 
-#include "builder/ContractBuilder.h"  // LibraryFunctionIdMap, FreeFunctionIdMap
+#include "builder/contract/ContractBuilder.h"  // LibraryFunctionIdMap, FreeFunctionIdMap
 
 #include <libsolidity/interface/CompilerStack.h>
 

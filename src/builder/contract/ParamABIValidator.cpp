@@ -1,5 +1,5 @@
 #include "builder/contract/ParamABIValidator.h"
-#include "builder/ContractBuilder.h"
+#include "builder/contract/ContractBuilder.h"
 
 namespace puyasol::builder
 {

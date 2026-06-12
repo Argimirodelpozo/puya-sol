@@ -3,7 +3,7 @@
 /// Uses FunctionCallKind + FunctionType::Kind for dispatch.
 
 #include "builder/sol-ast/SolExpressionFactory.h"
-#include "builder/sol-eb/FunctionPointerBuilder.h"
+#include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/SolRevert.h"
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
