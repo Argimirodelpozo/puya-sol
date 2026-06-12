@@ -1,3 +1,14 @@
+# Semantic Test Status — v353
+
+> **DEDUP ROUND 2 (2026-06-11): `69f196204c`** — awst::unwrapStateGet adopts
+> the single-layer StateGet peel at 11 shared_ptr sites (raw-pointer/wtype-peek
+> variants untouched; makeWritableTarget stays the chain peel) + the three
+> identical uint64/account/bytes→biguint promotion lambdas in SolBinaryOperation
+> unified into file-local promoteSignedOperandToBiguint (doc warns the
+> strict-assembly AssemblyBuilder::ensureBiguint must stay separate). Net −33
+> LOC; AWST byte-identical (10-contract oracle incl. signed-arith; suite at
+> identical totals 66f/1222p/83xf, all-L2 5:27).
+
 # Semantic Test Status — v352
 
 > **DEDUP REFACTOR (2026-06-11): `711eb88714`** — 18 hand-rolled sites → 4
