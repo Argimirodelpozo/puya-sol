@@ -1,3 +1,16 @@
+# Semantic Test Status — v356
+
+> **ENCODING-MODEL NOTE + DECODE FAIL-LOUD (2026-06-12 cont):** EVM_DIVERGENCE
+> gains the "Encoding model" section (ARC4-always rule + bridge inventory +
+> 4 seams, queued as tasks #11-#14; commit 0355cb127a). Seam #3 landed
+> (`d5f24791d5`): struct-field decode wrong-shape fallback → Logger::error;
+> top-level corrupt-input fallback keeps the runtime trap (tests rely on it)
+> + compile-log warning scoped to ARC4-shaped targets. Full run IDENTICAL to
+> v355: **60 failed / 1231 passed / 83 xf**, fail-set diff EMPTY both ways.
+> Also: makeUInt16Bytes dedup `97eb303568` (AWST byte-identical ×4 oracle);
+> dead block.chainid→GenesisHash handler removed `29ad9c1e63`; storage/ +
+> sol-intrinsics/ + builtin/ audits CLEAN (subagents).
+
 # Semantic Test Status — v355
 
 > **TARGET-FAIL SWEEP + FRAME-CORRECT HALTS + REORG (2026-06-12):**
