@@ -1,3 +1,12 @@
+# Semantic Test Status — v352
+
+> **DEDUP REFACTOR (2026-06-11): `711eb88714`** — 18 hand-rolled sites → 4
+> shared helpers, net −23 LOC, AWST BYTE-IDENTICAL (8-contract oracle after
+> each batch; full -n2 at identical totals 66f/1222p/83xf in 4:28 = all-L2
+> cache hits): StorageMapper::isMappingDerivedKey (2 verbatim copies),
+> awst::makeEnumRangeAssert (8 sites), awst::makeStructWithReplacedField
+> (4 ARC4 copy-on-write sites), StorageMapper::makeBoxLenTuple (4 sites).
+
 # Semantic Test Status — v351
 
 > **DELETE-KEY + EVM REVERT PAYLOADS + main.cpp REFACTOR (2026-06-11):**
