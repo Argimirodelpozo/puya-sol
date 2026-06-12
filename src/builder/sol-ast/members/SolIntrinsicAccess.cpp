@@ -135,6 +135,14 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// ApplicationArgs (slot 0 is the selector, so 15 actual params).
 	if (baseName == "msg" && member == "data")
 	{
+		// EVM: calldata is EMPTY during construction — ctor args travel
+		// appended to the initcode, not in calldata. On AVM the ctor body
+		// runs as __postInit, whose ApplicationArgs carry selector+args;
+		// reconstructing calldata from them here would wrongly expose those
+		// (various/create_calldata asserts msg.data.length == 0 in the ctor).
+		if (m_scope.isInConstructor())
+			return awst::makeBytesConstant({}, m_loc);
+
 		auto numAppArgs = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), m_loc);
 
 		auto zero = awst::makeZero(m_loc);

@@ -62,6 +62,13 @@ struct FunctionTranslationCtx
 
 	// Enclosing contract for modifier virtual-override lookup; nullable.
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
+
+	// True while building a constructor body (incl. base ctors and the
+	// __postInit-deferred copy): flows into FunctionContext::inConstructor
+	// so ctor-only semantics (e.g. msg.data is EMPTY during construction)
+	// apply wherever the body ends up. NOT part of makeFunctionCtx's
+	// positional aggregate init — assigned explicitly after construction.
+	bool inConstructor = false;
 };
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
@@ -147,6 +154,7 @@ private:
 	std::optional<sol_ast::TranslationContext> m_tr;
 
 	// ── Per-function scratch (set by setFunctionContext, used by buildBlock) ──
+	bool m_currentInConstructor = false;
 	std::vector<std::pair<std::string, awst::WType const*>> m_currentParams;
 	awst::WType const* m_currentReturnType = nullptr;
 	std::map<std::string, unsigned> m_currentBitWidths;

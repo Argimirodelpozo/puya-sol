@@ -547,7 +547,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				blobAggParamDecls.push_back(p.get());
 		setBlobAggParams(blobAggParamDecls);
 
+		m_currentInConstructor = _func.isConstructor();
 		method.body = buildBlock(_func.body());
+		m_currentInConstructor = false;
 
 		// Insert zero-initialization for named return variables
 		// Solidity implicitly initializes named returns to their zero values.

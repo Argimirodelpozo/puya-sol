@@ -118,6 +118,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	// Build a fresh per-function context, then a top BlockContext (optionally
 	// with the placeholder body for modifier inlining), then dispatch.
 	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
+	fn.inConstructor = _ctx.inConstructor;
 	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
@@ -191,7 +192,7 @@ awst::SourceLocation ContractBuilder::makeLoc(
 
 FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 {
-	return FunctionTranslationCtx{
+	auto ctx = FunctionTranslationCtx{
 		m_typeMapper,
 		*m_exprBuilder,
 		*m_tr,
@@ -204,6 +205,8 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 		m_currentBlobAggParams,
 		m_currentContract,
 	};
+	ctx.inConstructor = m_currentInConstructor;
+	return ctx;
 }
 
 std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
