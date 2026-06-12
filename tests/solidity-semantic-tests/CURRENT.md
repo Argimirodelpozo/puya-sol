@@ -1,3 +1,26 @@
+# Semantic Test Status — v354
+
+> **CUSTOM-ERROR PAYLOADS + CLASS-CLOSURE BATTERIES (2026-06-12):**
+> `3d8e656312` + `6a46204c99`, zero-regression — and the FIRST vendored-fail
+> reduction of the week: **65 failed / 1224 passed / 83 xf** (errors::
+> test_small_error_optimization flips to passing).
+> **Custom errors**: revert E(args) / require(c, E(args)) log
+> sha512_256(canonicalSig)[:4] ++ abi.encode(args) — AVM-convention selector
+> (MethodConstant → TEAL `method`, same hashing as ARC-28 events/ARC-4
+> methods, per user decision matching encodeCall's divergence); only the
+> Error(string)/Panic magic constants stay EVM-literal. require's payload
+> hoists EAGERLY (preserves Solidity's eager arg evaluation, args run once on
+> success). Guard errors::test_custom_error_payload (hashlib sha512_256,
+> byte-exact).
+> **Sign-extension class CLOSED**: conversions::test_int128_every_read_surface
+> — 13 surfaces × 3 values, zero mismatches; no fourth site after the three
+> historical fixes.
+> **Multireturn→struct-field "puya DCE bug" RESOLVED frontend-side**: the drop
+> was SolAssignmentTuple discarding the store (fixed 487de85f11,
+> _emitAsStatement); both shapes verified exactly-once at HEAD (guard
+> conversions::test_struct_field_call_shapes). Memory corrected (2nd stale-
+> memory catch: signextend was also already fixed, 795d55ea74+8e559b4886).
+
 # Semantic Test Status — v353
 
 > **DEDUP ROUND 2 (2026-06-11): `69f196204c`** — awst::unwrapStateGet adopts
