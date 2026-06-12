@@ -17,17 +17,28 @@ namespace puyasol::builder
 ///   - `IntegerType`        → "u<bits>" or "i<bits>" (signed)
 ///   - `AddressType`        → "addr"
 ///   - `FixedBytesType`     → "b<N>"
-///   - any other shape      → "<AST id>" (decimal, stable per param)
+///   - any other shape      → solc's `Type::identifier()` (signature-derived)
 ///
 /// Two call sites need to agree on this shape: `FunctionBuilder.cpp` (when
 /// building `method.memberName`) and `CallResolver.cpp` (when looking
 /// up the resolved name). Sharing the implementation here prevents drift.
 ///
-/// We deliberately do NOT use solc's `Type::canonicalName()` here. The
-/// short tags keep generated method names compact (saving TEAL bytes for
-/// the bytecblock entries when methods are bytec-referenced); a switch
-/// to canonical names would lengthen contract output by ~0.5–1 KB on
-/// overload-heavy contracts (AAVE), with no corresponding readability
+/// EVERY tag must be derived from the parameter's TYPE, never from AST
+/// node ids of the declaration at hand: the naming side sees the contract's
+/// most-derived override while a call inside an inherited base body sees
+/// the base declaration (solc's referencedDeclaration is scope-relative).
+/// The two FunctionDefinitions share a signature but not ids — a previous
+/// fallback used `p->id()` and silently disagreed across that split for
+/// overloads with non-value-typed params. `Type::identifier()` (e.g.
+/// `t_string_memory_ptr`) is solc's stable signature-derived encoding;
+/// struct/contract ids embedded in it refer to the TYPE's declaration,
+/// which both views share.
+///
+/// We deliberately do NOT use solc's `Type::canonicalName()` for the value
+/// cases. The short tags keep generated method names compact (saving TEAL
+/// bytes for the bytecblock entries when methods are bytec-referenced); a
+/// switch to canonical names would lengthen contract output by ~0.5–1 KB
+/// on overload-heavy contracts (AAVE), with no corresponding readability
 /// gain on the AVM-side.
 inline void appendOverloadSuffix(
 	std::string& _name,
@@ -48,7 +59,7 @@ inline void appendOverloadSuffix(
 		else if (auto const* fixedBytes = dynamic_cast<solidity::frontend::FixedBytesType const*>(solType))
 			_name += "b" + std::to_string(fixedBytes->numBytes());
 		else
-			_name += std::to_string(p->id());
+			_name += solType->identifier();
 		first = false;
 	}
 	_name += ")";
