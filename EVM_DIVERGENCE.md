@@ -53,6 +53,53 @@ findings + the abort mechanism were spot-verified against source by hand.)
 
 ---
 
+## Encoding model (design rule + known seams)
+
+**Rule (2026-06-12, confirmed with maintainer): the internal encoding is
+ALWAYS ARC4.** Everything in the typed AWST world is ARC4/native — params
+decode from ARC4 app args, returns ARC4-encode (`0x151f7c75` log),
+cross-contract calls pass ARC4 app args, aggregates carry uint16 length
+prefixes, scalars are uint64/biguint. EVM byte-layout may exist ONLY where
+Solidity semantics make the bytes observable to the contract:
+
+| EVM-shaped artifact | Bridge (ARC4 ↔ EVM) |
+|---|---|
+| `abi.encode*` output / `abi.decode` input | `builder/abi/` encodeArgsHeadTail / AbiDecode |
+| revert payload logs (Error/custom) | RevertBlob builders |
+| assembly calldata view | SyntheticCalldataOps `__cd_blob` |
+| assembly memory (mload/mstore words) | blob memory model |
+| storage slot packing (`.slot` asm compat) | StorageMapper |
+| asm `return(o,s)` of ABI-built arrays | EIP-2330 stitch (MemoryOps) |
+
+A future `--evm-compat` flag could flip selected bridges (selector hashing,
+calldata canonicalisation); until then the table above is the whole list —
+new EVM-shaped bytes anywhere else is a bug.
+
+**Known seams violating the rule (queued, ordered):**
+
+1. **`.call(payload)` end-to-end incoherence.** `abi.encodeWithSignature`
+   builds keccak selector + EVM head/tail args
+   (`builder/abi/AbiSelectorCalldataBuilder.cpp`); non-self `.call(data)`
+   splits that blob `[selector, rest]` and forwards verbatim to the callee
+   router (`builder/itxn/InnerCallHandlers.cpp`) — but puya-sol routers
+   dispatch on sha512_256 selectors and expect ARC4 args. Such a payload can
+   never match a puya-sol callee (self-calls only work because they are
+   pattern-rewritten to direct subroutine calls). Fix: one bridge that
+   re-encodes toward puya-sol callees (sha512_256 + ARC4).
+2. **Selector hash split inside the `abi.*` family.** `encodeCall`, custom
+   errors, events, methods → sha512_256 (`MethodConstant`);
+   `encodeWithSignature`/`encodeWithSelector` → keccak. Two `abi.encode*`
+   spellings of the same function produce different bytes. Align with the
+   sha512_256 ruling (or document keccak as a raw-bytes escape hatch).
+3. **`abi.decode` wrong-shape fallbacks.** Unsupported dynamic-struct-field
+   shapes fall back to `ARC4FromBytes` on a raw EVM slab with a "will likely
+   be wrong shape" comment (`builder/abi/AbiDecode.cpp`). Must fail loud
+   instead (project rule above).
+4. **bytes/string length-prefix re-framing is scattered.** ARC4 uint16 vs
+   EVM 32-byte length word conversions are hand-rolled per assembly site;
+   the >4KB blob model is ARC4-flat while asm expects EVM length-prefixed
+   (multi-slot Phase B v2). Route through one named bridge.
+
 ## Recommended immediate hard-errors (ordered by danger)
 
 All are localized `warning()`→`error()` swaps; no architectural change. The key
