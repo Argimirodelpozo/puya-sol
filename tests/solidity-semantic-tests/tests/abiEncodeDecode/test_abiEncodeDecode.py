@@ -198,8 +198,9 @@ def test_abi_encode_with_selectorv2(harness):
 def test_abi_encode_with_signature(harness):
     """abiEncodeDecode/contracts/abi_encode_with_signature.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_signature.sol")
-    # selector("f(uint256)")[:4]
-    sel = bytes.fromhex("b3de648b")
+    # EVM_DIVERGENCE: sha512_256 selector("f(uint256)")[:4] (keccak on EVM).
+    from framework import arc4_selector
+    sel = arc4_selector("f(uint256)")
     assert bytes(harness.call(app, "f0()").abi_return) == sel
 
     payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
@@ -223,15 +224,20 @@ def test_abi_encode_with_signature(harness):
 def test_abi_encode_with_signaturev2(harness):
     """abiEncodeDecode/contracts/abi_encode_with_signaturev2.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_with_signaturev2.sol")
-    sel_f = bytes.fromhex("b3de648b")
+    # EVM_DIVERGENCE: sha512_256 selectors (keccak on EVM).
+    from framework import arc4_selector
+    sel_f = arc4_selector("f(uint256)")
     assert bytes(harness.call(app, "f0()").abi_return) == sel_f
 
     payload_abc = sel_f + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
     assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
     assert bytes(harness.call(app, "f1s()").abi_return) == payload_abc
 
-    # f2: selector for the long Lorem ipsum signature + encoded uint[4]
-    sel_long = bytes.fromhex("e9c921cd")
+    # f2: selector for the long Lorem ipsum signature (runtime string ->
+    # runtime sha512_256) + encoded uint[4]
+    sel_long = arc4_selector(
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
+        "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
     elems = [(2**256 - 1) - i for i in range(4)]
     expected_r = (
         sel_long

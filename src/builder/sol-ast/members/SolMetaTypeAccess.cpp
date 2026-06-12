@@ -127,21 +127,38 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		return awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 	}
 
-	// type(Interface).interfaceId → bytes4 ERC165 ID
+	// type(Interface).interfaceId → bytes4 ERC-165 ID. EVM Solidity bakes
+	// in the XOR of keccak selectors (solc's interfaceId()); our selectors
+	// are sha512_256 (routers/f.selector/encodeCall), so the ID is the XOR
+	// of MethodConstants instead — `supportsInterface` implementations that
+	// XOR runtime selectors against type(I).interfaceId stay consistent
+	// on-chain. The byte VALUE diverges from EVM (same class as the
+	// selector convention itself; see EVM_DIVERGENCE.md "Encoding model").
 	if (member == "interfaceId")
 	{
-		uint32_t interfaceIdValue = 0;
+		auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeArg))
-			interfaceIdValue = contractType->contractDefinition().interfaceId();
-
-		auto e = awst::makeBytesConstant(
-			{static_cast<uint8_t>((interfaceIdValue >> 24) & 0xFF),
-			 static_cast<uint8_t>((interfaceIdValue >> 16) & 0xFF),
-			 static_cast<uint8_t>((interfaceIdValue >> 8) & 0xFF),
-			 static_cast<uint8_t>(interfaceIdValue & 0xFF)},
-			m_loc, awst::BytesEncoding::Base16,
-			m_ctx.typeMapper.map(m_memberAccess.annotation().type));
-		return e;
+		{
+			std::shared_ptr<awst::Expression> acc;
+			// Mirrors solc's interfaceId(): interfaceFunctionList(false) — the
+			// interface's OWN functions, inherited ones excluded.
+			for (auto const& it: contractType->contractDefinition().interfaceFunctionList(false))
+			{
+				auto sig = it.second->externalSignature();
+				auto sel = awst::makeMethodConstant(
+					sig, awst::WType::bytesType(), m_loc);
+				if (!acc)
+					acc = std::move(sel);
+				else
+					acc = awst::makeBytesBinOp(
+						std::move(acc), awst::BytesBinaryOperator::BitXor,
+						std::move(sel), m_loc);
+			}
+			if (acc)
+				return awst::makeReinterpretCast(std::move(acc), targetType, m_loc);
+		}
+		return awst::makeBytesConstant(
+			{0, 0, 0, 0}, m_loc, awst::BytesEncoding::Base16, targetType);
 	}
 
 	return nullptr;

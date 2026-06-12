@@ -191,8 +191,10 @@ def test_same_function_in_construction_and_runtime_equality_check(harness):
 def test_selector_1(harness):
     """functionTypes/contracts/selector_1.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_1.sol", via_yul_behavior=True)
-    s1 = bytes.fromhex("cf9f23b5")
-    s2 = bytes.fromhex("7defb410")
+    # EVM_DIVERGENCE: selectors are sha512_256 on AVM (keccak on EVM).
+    from framework import arc4_selector
+    s1 = arc4_selector("ext()")
+    s2 = arc4_selector("pub()")
     r = harness.call(app, "test()")
     assert [bytes(x) for x in r.abi_return] == [s1, s2, s1, s2]
 
@@ -201,7 +203,9 @@ def test_selector_2(harness):
     """functionTypes/contracts/selector_2.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_2.sol", via_yul_behavior=True)
     r = harness.call(app, "test()")
-    assert [bytes(x) for x in r.abi_return] == [bytes.fromhex("cf9f23b5"), bytes.fromhex("7defb410")]
+    # EVM_DIVERGENCE: sha512_256 selectors.
+    from framework import arc4_selector
+    assert [bytes(x) for x in r.abi_return] == [arc4_selector("ext()"), arc4_selector("pub()")]
 
 def test_selector_assignment_expression(harness):
     """functionTypes/contracts/selector_assignment_expression.sol"""
@@ -223,14 +227,18 @@ def test_selector_expression_side_effect(harness):
 def test_selector_ternary(harness):
     """functionTypes/contracts/selector_ternary.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_ternary.sol")
-    assert bytes(harness.call(app, "h(bool)", True).abi_return) == bytes.fromhex("26121ff0")
-    assert bytes(harness.call(app, "h(bool)", False).abi_return) == bytes.fromhex("e2179b8e")
+    # EVM_DIVERGENCE: sha512_256 selectors.
+    from framework import arc4_selector
+    assert bytes(harness.call(app, "h(bool)", True).abi_return) == arc4_selector("f()")
+    assert bytes(harness.call(app, "h(bool)", False).abi_return) == arc4_selector("g()")
 
 def test_selector_ternary_function_pointer_from_function_call(harness):
     """functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol")
-    assert bytes(harness.call(app, "test(bool)", True).abi_return) == bytes.fromhex("26121ff0")
-    assert bytes(harness.call(app, "test(bool)", False).abi_return) == bytes.fromhex("e2179b8e")
+    # EVM_DIVERGENCE: sha512_256 selectors.
+    from framework import arc4_selector
+    assert bytes(harness.call(app, "test(bool)", True).abi_return) == arc4_selector("f()")
+    assert bytes(harness.call(app, "test(bool)", False).abi_return) == arc4_selector("g()")
 
 def test_stack_height_check_on_adding_gas_variable_to_function(harness):
     """functionTypes/contracts/stack_height_check_on_adding_gas_variable_to_function.sol"""

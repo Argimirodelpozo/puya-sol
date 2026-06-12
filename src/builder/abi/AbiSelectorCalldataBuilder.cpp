@@ -200,14 +200,26 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 	if (args.empty()) return nullptr;
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
-	auto sigExpr = _ctx.buildExpr(*args[0]);
 
-	// Solidity's abi.encodeWithSignature uses keccak256 (EVM selector); AVM
-	// has a native keccak256 opcode so we emit it directly. For literal
-	// signatures we still call keccak256 at runtime — we could fold at compile
-	// time but runtime keeps the code simpler and fits in the 700-op budget.
-	auto hash = awst::makeKeccak256(std::move(sigExpr), _loc);
-	parts.push_back(awst::makeExtract(std::move(hash), 0, 4, _loc));
+	// sha512_256 ARC-4 selector, matching what puya-sol routers dispatch on
+	// (and encodeCall/f.selector/events/custom errors). EVM Solidity uses
+	// keccak256 here — on the AVM that selector matches nothing; see
+	// EVM_DIVERGENCE.md "Encoding model". Literal signatures fold to a
+	// compile-time MethodConstant; runtime signature strings hash with the
+	// native sha512_256 opcode (same first-4-bytes rule).
+	if (auto const* sigLit = dynamic_cast<solidity::frontend::Literal const*>(args[0].get()))
+	{
+		parts.push_back(awst::makeMethodConstant(
+			sigLit->value(), awst::WType::bytesType(), _loc));
+	}
+	else
+	{
+		auto sigExpr = _ctx.buildExpr(*args[0]);
+		auto hash = awst::makeIntrinsicCall(
+			"sha512_256", awst::WType::bytesType(), _loc);
+		hash->stackArgs.push_back(std::move(sigExpr));
+		parts.push_back(awst::makeExtract(std::move(hash), 0, 4, _loc));
+	}
 
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));

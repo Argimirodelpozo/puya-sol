@@ -3,40 +3,42 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_bytes, arc4_selector,
 )
+
+def _xor4(a: bytes, b: bytes) -> bytes:
+    return bytes(x ^ y for x, y in zip(a, b))
+
+# EVM_DIVERGENCE: ERC-165 IDs are XORs of sha512_256 selectors on AVM
+# (keccak on EVM) — matches type(I).interfaceId and f.selector on-chain.
+ERC165_ID = arc4_selector("supportsInterface(bytes4)")
+SIMPSON_ID = _xor4(arc4_selector("is2D()"), arc4_selector("skinColor()"))
+def _not_an_id(idb: bytes) -> bytes:
+    return bytes([idb[0] ^ 0x07]) + idb[1:]
 
 
 def test_homer(harness):
     """interfaceID/contracts/homer.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/homer.sol")
-    # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(ERC165_ID))
     assert bool(as_int(r.abi_return)) is False
-    # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
+    r = harness.call(app, "supportsInterface(bytes4)", ERC165_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", SIMPSON_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(SIMPSON_ID))
     assert bool(as_int(r.abi_return)) is False
 
 def test_homer_interfaceId(harness):
     """interfaceID/contracts/homer_interfaceId.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/homer_interfaceId.sol")
-    # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(ERC165_ID))
     assert bool(as_int(r.abi_return)) is False
-    # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
+    r = harness.call(app, "supportsInterface(bytes4)", ERC165_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", SIMPSON_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(SIMPSON_ID))
     assert bool(as_int(r.abi_return)) is False
 
 def test_interfaceId_events(harness):
@@ -90,31 +92,23 @@ def test_interfaces(harness):
 def test_lisa(harness):
     """interfaceID/contracts/lisa.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/lisa.sol")
-    # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(ERC165_ID))
     assert bool(as_int(r.abi_return)) is False
-    # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
+    r = harness.call(app, "supportsInterface(bytes4)", ERC165_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", SIMPSON_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(SIMPSON_ID))
     assert bool(as_int(r.abi_return)) is False
 
 def test_lisa_interfaceId(harness):
     """interfaceID/contracts/lisa_interfaceId.sol"""
     app = harness.compile_and_deploy("interfaceID/contracts/lisa_interfaceId.sol")
-    # supportsInterface(bytes4): left(0x01ffc9a0) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a0"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(ERC165_ID))
     assert bool(as_int(r.abi_return)) is False
-    # supportsInterface(bytes4): left(0x01ffc9a7) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("01ffc9a7"))
+    r = harness.call(app, "supportsInterface(bytes4)", ERC165_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x73b6b492) -> true
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("73b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", SIMPSON_ID)
     assert bool(as_int(r.abi_return)) is True
-    # supportsInterface(bytes4): left(0x70b6b492) -> false
-    r = harness.call(app, "supportsInterface(bytes4)", bytes.fromhex("70b6b492"))
+    r = harness.call(app, "supportsInterface(bytes4)", _not_an_id(SIMPSON_ID))
     assert bool(as_int(r.abi_return)) is False

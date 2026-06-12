@@ -15,11 +15,14 @@ using namespace solidity::frontend;
 
 std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::string const& _sig)
 {
-	auto sigConst = awst::makeUtf8BytesConstant(_sig, m_loc);
-	auto keccak = awst::makeKeccak256(std::move(sigConst), m_loc);
-
-	auto extract = awst::makeExtract3(std::move(keccak), awst::makeIntegerConstant("0", m_loc), awst::makeIntegerConstant("4", m_loc), m_loc);
-	return extract;
+	// sha512_256 ARC-4 selector (TEAL `method "sig"`), per the project-wide
+	// convention (routers, encodeCall, events, custom errors, external
+	// fn-pointers). Was keccak256(sig)[0:4] — a selector nothing on the
+	// AVM dispatches on. NOTE: type(I).interfaceId stays solc-side keccak
+	// (XOR of EVM selectors), so `f.selector ^ g.selector == interfaceId`
+	// no longer holds; ERC-165 code comparing interfaceId constants is
+	// unaffected (both sides come from solc).
+	return awst::makeMethodConstant(_sig, awst::WType::bytesType(), m_loc);
 }
 
 std::string SolSelectorAccess::resolveSignature(Expression const& _expr)
@@ -209,21 +212,26 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 
 	Logger::instance().debug("selector: " + sig, m_loc);
 
-	auto keccak = awst::makeKeccak256(awst::makeUtf8BytesConstant(sig, m_loc), m_loc);
-
 	auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 	auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(targetType);
-	if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() == 4)
+
+	// Event selectors are bytes32 (the EVM topic shape): emit the FULL
+	// 32-byte sha512_256(sig) — its first 4 bytes equal the ARC-28 log
+	// prefix our emit path writes, so prefix comparisons stay coherent.
+	if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() == 32)
 	{
-		auto extract = awst::makeExtract(std::move(keccak), 0, 4, m_loc);
-		return awst::makeReinterpretCast(std::move(extract), targetType, m_loc);
+		auto hash = awst::makeIntrinsicCall(
+			"sha512_256", awst::WType::bytesType(), m_loc);
+		hash->stackArgs.push_back(awst::makeUtf8BytesConstant(sig, m_loc));
+		return awst::makeReinterpretCast(std::move(hash), targetType, m_loc);
 	}
-	else if (targetType != awst::WType::bytesType())
-	{
-		auto cast = awst::makeReinterpretCast(std::move(keccak), targetType, m_loc);
-		return cast;
-	}
-	return keccak;
+
+	// Function selectors: 4-byte sha512_256 ARC-4 selector — see
+	// makeSelectorExpr.
+	auto selector = awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
+	if (targetType && targetType != awst::WType::bytesType())
+		return awst::makeReinterpretCast(std::move(selector), targetType, m_loc);
+	return selector;
 }
 
 } // namespace puyasol::builder::sol_ast

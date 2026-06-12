@@ -163,3 +163,19 @@ def evm_words(data) -> tuple[int, ...]:
     for i in range(0, len(padded), 32):
         words.append(int.from_bytes(padded[i:i + 32], "big"))
     return tuple(words)
+
+
+def arc4_selector(sig: str) -> bytes:
+    """4-byte ARC-4 method selector: sha512_256(signature)[:4]. puya-sol's
+    convention for routers, f.selector, abi.encodeWithSignature/encodeCall,
+    events and custom errors (EVM uses keccak256 — EVM_DIVERGENCE)."""
+    import hashlib
+    return hashlib.new("sha512_256", sig.encode()).digest()[:4]
+
+
+def arc4_event_topic(sig: str) -> int:
+    """Event .selector value on AVM: the FULL 32-byte sha512_256(signature)
+    as an int (EVM uses keccak256 topic0 — EVM_DIVERGENCE). Its first 4
+    bytes equal the ARC-28 log prefix puya-sol emits."""
+    import hashlib
+    return int.from_bytes(hashlib.new("sha512_256", sig.encode()).digest(), "big")
