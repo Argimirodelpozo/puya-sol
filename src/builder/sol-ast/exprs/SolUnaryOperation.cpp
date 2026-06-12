@@ -486,8 +486,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	auto makeWriteTarget = [&](std::shared_ptr<awst::Expression> target)
 		-> std::shared_ptr<awst::Expression>
 	{
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
-			target = sg->field;
+		target = awst::unwrapStateGet(std::move(target));
 		if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(target.get()))
 			target = decodeExpr->value;
 		return target;
@@ -647,8 +646,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 	// Default: assign zero value
 	auto defaultVal = builder::StorageMapper::makeDefaultValue(target->wtype, m_loc);
-	if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
-		target = sg->field;
+	target = awst::unwrapStateGet(std::move(target));
 
 	// Slot-based storage delete: target is a computed biguint slot (e.g. delete _x[0] on multidim storage array)
 	if (dynamic_cast<awst::BigUIntBinaryOperation const*>(target.get())

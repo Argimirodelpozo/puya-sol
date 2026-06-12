@@ -92,9 +92,7 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 
 		auto outerBase = outerField->base;
 		// Write target: bare base, no StateGet wrapper (puya rejects).
-		auto outerWriteBase = outerBase;
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerBase.get()))
-			outerWriteBase = sg->field;
+		auto outerWriteBase = awst::unwrapStateGet(outerBase);
 		// Read base: surviving fields need a read-shape (BoxValue needs to
 		// be wrapped in StateGet so field reads return the box content).
 		auto outerReadBase = outerBase;

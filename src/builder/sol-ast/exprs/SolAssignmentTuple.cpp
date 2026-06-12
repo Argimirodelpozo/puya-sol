@@ -307,8 +307,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		auto assignTarget = item;
 		if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(item.get()))
 			assignTarget = decodeExpr->value;
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(assignTarget.get()))
-			assignTarget = sg->field;
+		assignTarget = awst::unwrapStateGet(std::move(assignTarget));
 
 		std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
 		// Coerce string↔bytes via ReinterpretCast

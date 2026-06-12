@@ -348,9 +348,7 @@ SolAssignment::tryStructOrNamedTupleFieldAssignment(
 		std::move(_value), fieldExpr->wtype, m_loc);
 	auto newTuple = buildTupleWithUpdatedField(base, fieldName, std::move(_value));
 
-	auto writeTarget = base;
-	if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
-		writeTarget = sg->field;
+	auto writeTarget = awst::unwrapStateGet(base);
 
 	auto e = awst::makeAssignmentExpression(std::move(writeTarget), std::move(newTuple), m_loc);
 	return awst::makeFieldExpression(std::move(e), fieldName, fieldExpr->wtype, m_loc);

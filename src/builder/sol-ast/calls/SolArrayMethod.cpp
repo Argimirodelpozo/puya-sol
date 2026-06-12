@@ -175,9 +175,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						// Unwrap StateGet (top-level, and any nested in the
 						// access chain) to underlying writable target. Same
 						// transform used by the `m[k].push()` path above.
-						if (auto const* sg = dynamic_cast<awst::StateGet const*>(
-								aliasExpr.get()))
-							aliasExpr = sg->field;
+						aliasExpr = awst::unwrapStateGet(std::move(aliasExpr));
 						aliasExpr = awst::makeWritableTarget(aliasExpr);
 						// Underlying targets we can write through:
 						//   - BoxValueExpression  (simple `T[] storage p = state;`)

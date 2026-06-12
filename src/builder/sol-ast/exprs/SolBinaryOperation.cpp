@@ -15,6 +15,34 @@
 namespace puyasol::builder::sol_ast
 {
 
+namespace
+{
+// Promote a signed-arith operand to biguint. `itob` is uint64-only; account
+// and fixed/dynamic bytes are already big-endian byte buffers, so they
+// reinterpret-cast through `bytes` to `biguint` without truncation (same fix
+// as AssemblyBuilder::ensureBiguint, commit 01332f363 — but NOTE that helper
+// additionally carries the strict-assembly aggregate-pointer semantics and
+// must stay separate). Shared by buildSignedArithmetic (operands + overflow
+// checks) and buildSignedDivMod.
+std::shared_ptr<awst::Expression> promoteSignedOperandToBiguint(
+	std::shared_ptr<awst::Expression> expr, awst::SourceLocation const& loc)
+{
+	if (expr->wtype == awst::WType::biguintType())
+		return expr;
+	if (expr->wtype == awst::WType::accountType()
+		|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
+	{
+		auto bytesExpr = expr->wtype == awst::WType::accountType()
+			? awst::makeAsBytes(std::move(expr), loc)
+			: std::move(expr);
+		return awst::makeAsBiguint(std::move(bytesExpr), loc);
+	}
+	auto itob = awst::makeItob(std::move(expr), loc);
+	return awst::makeAsBiguint(std::move(itob), loc);
+}
+} // anonymous namespace
+
+
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
@@ -312,29 +340,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	// (operand coercion to biguint happens in Step 1 below)
 
 	// Ensure both operands are biguint (needed for mod 2^N wrapping)
-	auto ensureBiguint = [&](std::shared_ptr<awst::Expression> expr)
-		-> std::shared_ptr<awst::Expression> {
-		if (expr->wtype == awst::WType::biguintType())
-			return expr;
-		// `itob` is uint64-only. account / fixed-bytes / dynamic bytes are
-		// already big-endian byte buffers — reinterpret-cast directly through
-		// `bytes` to `biguint` (no truncation). Same fix as in
-		// AssemblyBuilder::ensureBiguint (commit `01332f363`); this lambda is
-		// SolBinaryOperation's parallel coercion path for signed-arith ops.
-		if (expr->wtype == awst::WType::accountType()
-			|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
-		{
-			auto bytesExpr = expr->wtype == awst::WType::accountType()
-				? awst::makeAsBytes(std::move(expr), m_loc)
-				: std::move(expr);
-			return awst::makeAsBiguint(std::move(bytesExpr), m_loc);
-		}
-		auto itob = awst::makeItob(std::move(expr), m_loc);
-		return awst::makeAsBiguint(std::move(itob), m_loc);
-	};
-
-	_left = ensureBiguint(std::move(_left));
-	_right = ensureBiguint(std::move(_right));
+	_left = promoteSignedOperandToBiguint(std::move(_left), m_loc);
+	_right = promoteSignedOperandToBiguint(std::move(_right), m_loc);
 
 	// Mask operands to N bits — uint64 two's complement values may be larger
 	// than 2^N (e.g., int8(-2) is uint64(2^64-2)). Modular arithmetic requires
@@ -392,28 +399,10 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		// For add: overflow iff a_neg == b_neg && a_neg != result_neg
 		// For sub: overflow iff a_neg != b_neg && a_neg != result_neg
 
-		// Coerce a value to biguint if needed (same itob-vs-reinterpret rule
-		// as the outer ensureBiguint lambda).
-		auto toBiguint = [&](std::shared_ptr<awst::Expression> const& val)
-			-> std::shared_ptr<awst::Expression> {
-			if (val->wtype == awst::WType::biguintType())
-				return val;
-			if (val->wtype == awst::WType::accountType()
-				|| (val->wtype && val->wtype->kind() == awst::WTypeKind::Bytes))
-			{
-				auto bytesExpr = val->wtype == awst::WType::accountType()
-					? awst::makeAsBytes(val, m_loc)
-					: val;
-				return awst::makeAsBiguint(std::move(bytesExpr), m_loc);
-			}
-			auto itob = awst::makeItob(val, m_loc);
-			return awst::makeAsBiguint(std::move(itob), m_loc);
-		};
-
 		// isNeg: val >= half  ↔  NOT (val < half)
 		auto isNeg = [&](std::shared_ptr<awst::Expression> const& val)
 			-> std::shared_ptr<awst::Expression> {
-			auto cmp = awst::makeNumericCompare(toBiguint(val), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
+			auto cmp = awst::makeNumericCompare(promoteSignedOperandToBiguint(val, m_loc), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
 			auto notExpr = awst::makeNot(std::move(cmp), m_loc);
 			return notExpr;
 		};
@@ -673,26 +662,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		return c;
 	};
 
-	// Ensure both operands are biguint (mirrors buildSignedArithmetic's
-	// ensureBiguint — same account/bytes-vs-itob branching).
-	auto ensureBiguint = [&](std::shared_ptr<awst::Expression> expr)
-		-> std::shared_ptr<awst::Expression> {
-		if (expr->wtype == awst::WType::biguintType())
-			return expr;
-		if (expr->wtype == awst::WType::accountType()
-			|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
-		{
-			auto bytesExpr = expr->wtype == awst::WType::accountType()
-				? awst::makeAsBytes(std::move(expr), m_loc)
-				: std::move(expr);
-			return awst::makeAsBiguint(std::move(bytesExpr), m_loc);
-		}
-		auto itob = awst::makeItob(std::move(expr), m_loc);
-		return awst::makeAsBiguint(std::move(itob), m_loc);
-	};
-
-	_left = ensureBiguint(std::move(_left));
-	_right = ensureBiguint(std::move(_right));
+	// Ensure both operands are biguint (mod/abs arithmetic is biguint-only).
+	_left = promoteSignedOperandToBiguint(std::move(_left), m_loc);
+	_right = promoteSignedOperandToBiguint(std::move(_right), m_loc);
 
 	// Mask to N bits
 	if (bits < 256)

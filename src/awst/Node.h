@@ -1782,6 +1782,17 @@ inline std::shared_ptr<StateGet> makeStateGet(
 	return node;
 }
 
+// Peel a single StateGet read wrapper: StateGet(x) → x (the writable
+// storage field). No-op for anything else. The ubiquitous "write target
+// from a read expression" idiom; use makeWritableTarget to peel whole
+// chains instead of one layer.
+inline std::shared_ptr<Expression> unwrapStateGet(std::shared_ptr<Expression> e)
+{
+	if (auto const* sg = dynamic_cast<StateGet const*>(e.get()))
+		return sg->field;
+	return e;
+}
+
 struct StateExists: Expression
 {
 	std::string nodeType() const override { return "StateExists"; }

@@ -194,9 +194,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		// box is read/written as a direct `_pools[id]` access would.
 		if (dynamic_cast<IndexAccess const*>(&argExpr))
 		{
-			auto built = buildExpr(argExpr);
-			if (auto const* sg = dynamic_cast<awst::StateGet const*>(built.get()))
-				built = sg->field;
+			auto built = awst::unwrapStateGet(buildExpr(argExpr));
 			if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(built.get()))
 				return awst::makeReinterpretCast(
 					box->key, awst::WType::bytesType(), m_loc);

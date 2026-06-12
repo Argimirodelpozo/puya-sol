@@ -27,8 +27,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 	std::string fieldName = _fieldExpr->name;
 
 	// Unwrap StateGet for write targets (StateGet is not an Lvalue)
-	if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
-		base = sg->field;
+	base = awst::unwrapStateGet(std::move(base));
 
 	// Wrap bytes → ARC4 byte[] encoding (prepends length prefix in puya)
 	awst::WType const* arc4FieldType = nullptr;
@@ -77,8 +76,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	auto base = _fieldExpr->base;
 	std::string fieldName = _fieldExpr->name;
 
-	if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
-		base = sg->field;
+	base = awst::unwrapStateGet(std::move(base));
 
 	auto readBase = base;
 	if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))

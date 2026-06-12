@@ -141,8 +141,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			&& dynamic_cast<solidity::frontend::IndexAccess const*>(m_node.expression()))
 		{
 			auto built = m_blk.builderCtx().build(*m_node.expression());
-			if (auto* sg = dynamic_cast<awst::StateGet*>(built.get()))
-				built = sg->field;
+			built = awst::unwrapStateGet(std::move(built));
 			if (auto* box = dynamic_cast<awst::BoxValueExpression*>(built.get()))
 				stmt->value = awst::makeReinterpretCast(
 					box->key, awst::WType::bytesType(), m_loc);

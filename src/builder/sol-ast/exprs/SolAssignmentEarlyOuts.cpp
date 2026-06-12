@@ -97,9 +97,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 		// its decoded value — lift the key (mirrors SolInternalCall::extractMappingKeyPrefix).
 		// This is the V4 `position = self.positions.get(k)` shape (a named-return
 		// `position = self[positionKey];` in Position.get, plain-struct mapping element).
-		auto keyExpr = rhsExpr;
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(keyExpr.get()))
-			keyExpr = sg->field;
+		auto keyExpr = awst::unwrapStateGet(rhsExpr);
 		if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(keyExpr.get()))
 			rhsExpr = awst::makeReinterpretCast(box->key, awst::WType::bytesType(), m_loc);
 		else if (rhsExpr->wtype != awst::WType::bytesType())
