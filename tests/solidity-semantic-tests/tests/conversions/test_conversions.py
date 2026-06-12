@@ -286,3 +286,46 @@ def test_struct_int128_field_signextend(harness):
     assert as_signed_int(harness.call(app, "widen(int128)", -(2 ** 126)).abi_return) == -(2 ** 126)
     assert as_signed_int(harness.call(app, "arith(int128)", -5).abi_return) == -4
     assert harness.call(app, "unsignedOk(uint128)", 2 ** 100).abi_return is True
+
+
+def test_int128_every_read_surface(harness):
+    """conversions/contracts/int128_everywhere.sol
+
+    CUSTOM regression battery (NOT vendored). A signed sub-256 value (int128 /
+    int24) must round-trip as canonical negative through EVERY read surface:
+    state var, public auto-getter path, mapping value, dynamic + fixed array
+    elements, struct field, struct-in-mapping field, abi.decode round-trip,
+    calldata param, internal tuple return, comparisons on every container, and
+    ternary reads. Closes the class behind the three historical fixes
+    (int128[] elements, transients, struct fields) — checked at -5, -(2^126),
+    and +777.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/int128_everywhere.sol")
+    for v in (-5, -(2 ** 126), 777):
+        harness.call(app, "setAll(int128)", v)
+        small = v if -(2 ** 23) <= v < 2 ** 23 else int.from_bytes(
+            (v % 2 ** 24).to_bytes(3, "big"), "big", signed=True)
+        for fn, exp in [("rState()", v), ("rMap()", v), ("rArr()", v), ("rFarr()", v),
+                        ("rStructField()", v), ("rStructInMap()", v), ("rSmall()", small)]:
+            assert as_signed_int(harness.call(app, fn).abi_return) == exp, (v, fn)
+        assert as_signed_int(harness.call(app, "rDecode(int128)", v).abi_return) == v
+        assert as_signed_int(harness.call(app, "rParam(int128)", v).abi_return) == v
+        r = harness.call(app, "rTuple(int128)", v).abi_return
+        assert (as_signed_int(r[0]), as_int(r[1])) == (v, 3)
+        assert bool(harness.call(app, "cmpAll(int128)", v).abi_return) is True
+        assert as_signed_int(harness.call(app, "rTernary(bool)", True).abi_return) == v
+
+
+def test_struct_field_call_shapes(harness):
+    """conversions/contracts/int128_everywhere.sol
+
+    CUSTOM regression guard (NOT vendored). The two historical
+    multireturn/struct-field call shapes evaluate exactly once and write:
+    `(p.a, p.b) = mk2()` (the old silent-drop, fixed frontend-side via
+    _emitAsStatement in 487de85f11 — the puya-DCE attribution was retracted)
+    and `p.a = mk1(p.a)` (the old under-uros duplication shape; clean in
+    plain context).
+    """
+    app = harness.compile_and_deploy("conversions/contracts/int128_everywhere.sol")
+    assert tuple(as_int(x) for x in harness.call(app, "destructure()").abi_return) == (11, 22, 1)
+    assert tuple(as_int(x) for x in harness.call(app, "fieldCall()").abi_return) == (6, 1)
