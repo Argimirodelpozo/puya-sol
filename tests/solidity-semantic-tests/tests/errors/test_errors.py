@@ -299,3 +299,37 @@ def test_weird_name(harness):
     # f() -> FAILURE, hex"b48fb6cf", hex"0000000000000000000000000000000000000000000000000000000000000002"
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
+
+
+def test_custom_error_payload(harness):
+    """errors/contracts/custom_error_payload.sol
+
+    CUSTOM regression guard (NOT vendored). `revert E(args)` and
+    `require(cond, E(args))` log the custom-error payload —
+    sha512_256(canonicalSig)[:4] ++ abi.encode(args) — before failing. The
+    selector follows the AVM convention (same hashing as ARC-28 events and
+    ARC-4 methods, matching abi.encodeCall's deliberate divergence), NOT EVM
+    keccak; only the fixed Error(string)/Panic constants stay EVM-literal.
+    The success path evaluates the error args eagerly (Solidity semantics)
+    but logs nothing.
+    """
+    import hashlib
+
+    def sel(sig: str) -> bytes:
+        return hashlib.new("sha512_256", sig.encode()).digest()[:4]
+
+    def word(v: int) -> bytes:
+        return v.to_bytes(32, "big")
+
+    def enc_str(s: bytes) -> bytes:
+        return word(len(s)) + s + b"\x00" * ((32 - len(s) % 32) % 32)
+
+    app = harness.compile_and_deploy("errors/contracts/custom_error_payload.sol")
+    r = harness.call(app, "p()", expect_revert=True)
+    assert r.revert_data == sel("Plain()"), r.revert_data.hex()
+    r = harness.call(app, "w()", expect_revert=True)
+    assert r.revert_data == sel("WithArgs(uint256,string)") + word(7) + word(0x40) + enc_str(b"xy")
+    r = harness.call(app, "r(bool)", False, expect_revert=True)
+    assert r.revert_data == sel("WithArgs(uint256,string)") + word(9) + word(0x40) + enc_str(b"zz")
+    r = harness.call(app, "rOk()")
+    assert not r.reverted and as_int(r.abi_return) == 5

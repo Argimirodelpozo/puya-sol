@@ -1,5 +1,6 @@
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/RevertBlob.h"
+#include "builder/sol-eb/AbiEncoderBuilder.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -46,26 +47,53 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				message = id->name();
 				isCustomError = true;
 			}
-			// Solidity evaluates require's args eagerly — even on the
-			// success path. Build each error-arg expression AND emit it
-			// as a pre-pending ExpressionStatement so its side effects
-			// (e.g. an inner call that short-circuits via Yul `return`)
-			// actually land in the function body BEFORE the assert. A
-			// bare `buildExpr` returns the expression value but doesn't
-			// put it in the body — for a pure expression that's fine
-			// (the discarded value has no effect), but for a function
-			// call we'd lose the callsub entirely.
-			// See errors/require_error_evaluation_order_1.sol.
+			// Solidity evaluates require's error args eagerly — even on the
+			// success path (see errors/require_error_evaluation_order_1.sol).
+			// Build the EVM-shaped payload — selector ++ abi.encode(args) —
+			// and hoist it to a temp NOW: that evaluates each arg exactly
+			// once, eagerly (replacing the old bare-prepend mechanism), while
+			// the log itself only fires on failure via the conditional below.
 			if (isCustomError)
-				for (auto const& a : errorCall->arguments())
+			{
+				auto const* errorDef =
+					dynamic_cast<solidity::frontend::ErrorDefinition const*>(
+						solidity::frontend::ASTNode::referencedDeclaration(
+							errorCall->expression()));
+				if (errorDef)
 				{
-					auto argExpr = buildExpr(*a);
-					if (argExpr && argExpr->wtype && argExpr->wtype != awst::WType::voidType())
-					{
-						auto stmt = awst::makeExpressionStatement(std::move(argExpr), m_loc);
-						m_ctx.prePendingStatements.push_back(std::move(stmt));
-					}
+					// AVM-convention selector (sha512_256, like events/methods)
+					// via MethodConstant — see SolRevertStatement.
+					auto sig = errorDef->functionType(true)->externalSignature();
+					std::shared_ptr<awst::Expression> blob =
+						awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
+					if (!errorCall->arguments().empty())
+						blob = awst::makeConcat(
+							std::move(blob),
+							eb::AbiEncoderBuilder::encodeArgsHeadTail(
+								m_ctx, *errorCall, 0, m_loc),
+							m_loc);
+					static int s_reqErrBlobCounter = 0;
+					std::string tmpName = "__require_err_blob_"
+						+ std::to_string(++s_reqErrBlobCounter);
+					m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc),
+						std::move(blob), m_loc));
+					revertBlob = awst::makeVarExpression(
+						tmpName, awst::WType::bytesType(), m_loc);
 				}
+				else
+					// No resolvable ErrorDefinition: keep the legacy eager
+					// arg-evaluation so side effects still land.
+					for (auto const& a : errorCall->arguments())
+					{
+						auto argExpr = buildExpr(*a);
+						if (argExpr && argExpr->wtype && argExpr->wtype != awst::WType::voidType())
+						{
+							auto stmt = awst::makeExpressionStatement(std::move(argExpr), m_loc);
+							m_ctx.prePendingStatements.push_back(std::move(stmt));
+						}
+					}
+			}
 		}
 		if (!isCustomError)
 		{

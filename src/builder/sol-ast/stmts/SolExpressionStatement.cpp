@@ -3,6 +3,8 @@
 
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
+#include "builder/sol-ast/calls/RevertBlob.h"
+#include "builder/sol-eb/AbiEncoderBuilder.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -67,6 +69,8 @@ SolRevertStatement::SolRevertStatement(
 
 std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 {
+	std::vector<std::shared_ptr<awst::Statement>> result;
+
 	// Resolve via solc's ASTNode::referencedDeclaration helper so we get
 	// the ErrorDefinition's name regardless of whether the source wrote
 	// `revert MyError()` (Identifier), `revert Lib.MyError()`
@@ -74,10 +78,34 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 	std::string errorName = "revert";
 	if (auto const* errorDef = dynamic_cast<ErrorDefinition const*>(
 			ASTNode::referencedDeclaration(m_node.errorCall().expression())))
+	{
 		errorName = errorDef->name();
 
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(m_loc), m_loc, errorName), m_loc);
-	return {stmt};
+		// Custom-error payload, logged before the failing `err` so clients
+		// read it via simulate: sha512_256(canonicalSignature)[:4] ++
+		// abi.encode(args…). The selector follows the AVM convention — the
+		// SAME sha512_256 hashing ARC-28 events and ARC-4 methods use (via
+		// MethodConstant → TEAL `method "sig"`), NOT EVM keccak; this matches
+		// abi.encodeCall's deliberate AVM-selector divergence. Only the fixed
+		// Error(string)/Panic magic constants stay EVM-literal.
+		auto sig = errorDef->functionType(true)->externalSignature();
+		std::shared_ptr<awst::Expression> blob =
+			awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
+		if (!m_node.errorCall().arguments().empty())
+			blob = awst::makeConcat(
+				std::move(blob),
+				eb::AbiEncoderBuilder::encodeArgsHeadTail(
+					m_blk.builderCtx(), m_node.errorCall(), 0, m_loc),
+				m_loc);
+		// Arg builds may hoist side effects / loop encoders to prePending.
+		for (auto& pstmt: m_blk.builderCtx().takePrePending())
+			result.push_back(std::move(pstmt));
+		result.push_back(makeRevertLogStmt(std::move(blob), m_loc));
+	}
+
+	result.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(awst::makeFalse(m_loc), m_loc, errorName), m_loc));
+	return result;
 }
 
 // ── ReturnStatement ──
