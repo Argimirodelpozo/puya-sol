@@ -82,11 +82,8 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 
 		auto cmpLhs = TypeCoercion::implicitNumericCast(
 			tmpVar, awst::WType::uint64Type(), _loc);
-		auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
-
-		auto cmp = awst::makeNumericCompare(std::move(cmpLhs), awst::NumericComparison::Lt, std::move(maxVal), _loc);
-
-		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "Enum out of range"), _loc);
+		auto assertStmt = awst::makeExpressionStatement(
+			awst::makeEnumRangeAssert(std::move(cmpLhs), numMembers, _loc, "Enum out of range"), _loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 
 		result = tmpVar;

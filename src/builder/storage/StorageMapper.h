@@ -139,6 +139,20 @@ public:
 	/// alive). Both sites must agree, hence the shared helper.
 	static bool isTopLevelDynamicBox(awst::BoxValueExpression const* _box);
 
+	/// Detect mapping-derived box keys: either the legacy
+	/// `BoxPrefixedKey(prefix, sha256(...))` shape, or the per-layer
+	/// `sha256(keyBytes ++ parent)` shape. Used to gate the
+	/// pre-create-the-per-entry-box logic for `mapping(K => sized_type) m;
+	/// m[k] ... = v`.
+	static bool isMappingDerivedKey(awst::Expression const* _key);
+
+	/// `box_len(<key>)` typed as WTuple(uint64, bool) — the (length, exists)
+	/// pair. Callers pick TupleItem 0 (length) or 1 (exists).
+	static std::shared_ptr<awst::Expression> makeBoxLenTuple(
+		TypeMapper& _typeMapper,
+		std::shared_ptr<awst::Expression> _key,
+		awst::SourceLocation const& _loc);
+
 private:
 	TypeMapper& m_typeMapper;
 

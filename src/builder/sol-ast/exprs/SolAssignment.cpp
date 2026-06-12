@@ -19,21 +19,6 @@
 
 namespace puyasol::builder::sol_ast
 {
-namespace
-{
-/// Detect mapping-derived box keys: either the legacy `BoxPrefixedKey(prefix, sha256(...))`
-/// shape, or the per-layer `sha256(keyBytes ++ parent)` shape. Used to gate the
-/// pre-create-the-per-entry-box logic for `mapping(K => sized_type) m; m[k] ... = v`.
-bool isMappingDerivedKey(awst::Expression const* _key)
-{
-	if (!_key) return false;
-	if (dynamic_cast<awst::BoxPrefixedKeyExpression const*>(_key)) return true;
-	if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(_key))
-		return ic->opCode == "sha256";
-	return false;
-}
-} // namespace
-
 
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
@@ -194,9 +179,7 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 
 	unsigned numMembers = enumType->numberOfMembers();
 	auto val = builder::TypeCoercion::implicitNumericCast(_value, awst::WType::uint64Type(), m_loc);
-	auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
-	auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
-	m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
+	m_ctx.queuePreStmt(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
 	return val;
 }
 
@@ -545,7 +528,7 @@ void SolAssignment::maybePrePopulateBox(
 
 	auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(boxIdx->base.get());
 	if (!bv || !bv->key
-		|| !isMappingDerivedKey(bv->key.get()))
+		|| !builder::StorageMapper::isMappingDerivedKey(bv->key.get()))
 		return;
 
 	// Static array of dynamic-content elements: a zero-filled box_create
@@ -566,10 +549,8 @@ void SolAssignment::maybePrePopulateBox(
 		auto putCall = awst::makeBoxPut(
 			bv->key, awst::makeBytesConstant(std::move(*enc), m_loc), m_loc);
 
-		auto* tupleType = m_ctx.typeMapper.template createType<awst::WTuple>(
-			std::vector<awst::WType const*>{
-				awst::WType::uint64Type(), awst::WType::boolType()});
-		auto boxLen = awst::makeBoxLen(bv->key, tupleType, m_loc);
+		auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+			m_ctx.typeMapper, bv->key, m_loc);
 		auto exists = awst::makeTupleItem(
 			std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 		auto notExists = awst::makeNot(std::move(exists), m_loc);

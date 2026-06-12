@@ -699,11 +699,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					unsigned numMembers = enumType->numberOfMembers();
 					auto var = awst::makeVarExpression(retParams[0]->name(), awst::WType::uint64Type(), method.sourceLocation);
 
-					auto maxVal = awst::makeIntegerConstant(numMembers, method.sourceLocation);
-
-					auto cmp = awst::makeNumericCompare(std::move(var), awst::NumericComparison::Lt, std::move(maxVal), method.sourceLocation);
-
-					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), method.sourceLocation, "enum out of range"), method.sourceLocation);
+					auto assertStmt = awst::makeExpressionStatement(
+						awst::makeEnumRangeAssert(std::move(var), numMembers, method.sourceLocation),
+						method.sourceLocation);
 					method.body->body.push_back(std::move(assertStmt));
 				}
 			}

@@ -145,11 +145,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 		std::move(argExpr), awst::WType::uint64Type(), m_loc);
 
 	unsigned numMembers = enumType->numberOfMembers();
-	auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
-
-	auto cmp = awst::makeNumericCompare(result, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
-
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
+	auto stmt = awst::makeExpressionStatement(
+		awst::makeEnumRangeAssert(result, numMembers, m_loc), m_loc);
 	m_ctx.prePendingStatements.push_back(std::move(stmt));
 
 	return result;

@@ -33,10 +33,9 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(tmpVar, std::move(val), _loc));
-			auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
-			auto cmp = awst::makeNumericCompare(tmpVar, awst::NumericComparison::Lt, std::move(maxVal), _loc);
 			m_ctx.prePendingStatements.push_back(
-				awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc));
+				awst::makeExpressionStatement(
+					awst::makeEnumRangeAssert(tmpVar, numMembers, _loc), _loc));
 			return tmpVar;
 		};
 		lhs = spillAndValidate(std::move(lhs));

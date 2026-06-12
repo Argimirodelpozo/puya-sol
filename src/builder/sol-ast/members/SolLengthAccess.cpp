@@ -190,10 +190,8 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				}
 				auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
 
-				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-					std::vector<awst::WType const*>{
-						awst::WType::uint64Type(), awst::WType::boolType()});
-				auto boxLen = awst::makeBoxLen(std::move(boxKey), tupleType, m_loc);
+				auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+					m_ctx.typeMapper, std::move(boxKey), m_loc);
 
 				auto lenVal = awst::makeTupleItem(std::move(boxLen), 0, awst::WType::uint64Type(), m_loc);
 

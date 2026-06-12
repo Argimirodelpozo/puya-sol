@@ -79,10 +79,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						return;
 					auto boxKey = bv->key;
 
-					auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-						std::vector<awst::WType const*>{
-							awst::WType::uint64Type(), awst::WType::boolType()});
-					auto boxLen = awst::makeBoxLen(boxKey, tupleType, m_loc);
+					auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+						m_ctx.typeMapper, boxKey, m_loc);
 
 					auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 
@@ -210,10 +208,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								if (!bv || !bv->key)
 									return;
 								auto boxKey = bv->key;
-								auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-									std::vector<awst::WType const*>{
-										awst::WType::uint64Type(), awst::WType::boolType()});
-								auto boxLen = awst::makeBoxLen(boxKey, tupleType, m_loc);
+								auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+									m_ctx.typeMapper, boxKey, m_loc);
 								auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
 								auto notExists = awst::makeNot(std::move(existsVal), m_loc);
 								auto createCall = awst::makeBoxCreate(

@@ -88,11 +88,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 				translated = awst::makeEvalOnce(std::move(translated), m_loc);
 				auto val = builder::TypeCoercion::implicitNumericCast(translated, awst::WType::uint64Type(), m_loc);
 
-				auto maxVal = awst::makeIntegerConstant(numMembers, m_loc);
-
-				auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
-
-				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
+				auto assertStmt = awst::makeExpressionStatement(
+					awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
 				preStatements.push_back(std::move(assertStmt));
 
 				translated = std::move(val);

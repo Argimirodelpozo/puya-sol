@@ -605,17 +605,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 							readStruct = sr.rootAppState;
 						}
 
-						auto newStruct = awst::makeNewStruct(structType, m_loc);
-						for (auto const& [fn, ft]: structType->fields())
-						{
-							if (fn == fieldPath[0])
-								newStruct->values[fn] = modifiedArg;
-							else
-							{
-								auto fieldRead = awst::makeFieldExpression(readStruct, fn, ft, m_loc);
-								newStruct->values[fn] = std::move(fieldRead);
-							}
-						}
+						auto newStruct = awst::makeStructWithReplacedField(
+							structType, readStruct, fieldPath[0], modifiedArg, m_loc);
 						writeValue = std::move(newStruct);
 					}
 					else

@@ -123,6 +123,26 @@ bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
 		&& std::dynamic_pointer_cast<awst::BytesConstant>(_box->key) != nullptr;
 }
 
+bool StorageMapper::isMappingDerivedKey(awst::Expression const* _key)
+{
+	if (!_key) return false;
+	if (dynamic_cast<awst::BoxPrefixedKeyExpression const*>(_key)) return true;
+	if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(_key))
+		return ic->opCode == "sha256";
+	return false;
+}
+
+std::shared_ptr<awst::Expression> StorageMapper::makeBoxLenTuple(
+	TypeMapper& _typeMapper,
+	std::shared_ptr<awst::Expression> _key,
+	awst::SourceLocation const& _loc)
+{
+	auto* tupleType = _typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::uint64Type(), awst::WType::boolType()});
+	return awst::makeBoxLen(std::move(_key), tupleType, _loc);
+}
+
 // ── Multi-box helpers ──
 
 // Multi-box arrays currently support only scalar elements (ARC4UIntN /

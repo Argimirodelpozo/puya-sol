@@ -359,11 +359,8 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 
 	// EVM reverts with Panic(0x21) if value >= numMembers
 	unsigned numMembers = enumType->numberOfMembers();
-	auto maxVal = awst::makeIntegerConstant(numMembers, _loc);
-
-	auto cmp = awst::makeNumericCompare(result, awst::NumericComparison::Lt, std::move(maxVal), _loc);
-
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc);
+	auto stmt = awst::makeExpressionStatement(
+		awst::makeEnumRangeAssert(result, numMembers, _loc), _loc);
 	_ctx.prePendingStatements.push_back(std::move(stmt));
 
 	return std::make_unique<SolEnumBuilder>(_ctx, enumType, std::move(result));

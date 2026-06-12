@@ -1148,6 +1148,21 @@ inline std::shared_ptr<IntrinsicCall> makeKeccak256(
 	return node;
 }
 
+// `assert(value < numMembers)` — the EVM Panic(0x21) enum-range check.
+// `value` must already be uint64-typed; callers wrap/queue the returned
+// Assert expression themselves (statement vs queuePreStmt differs per site).
+inline std::shared_ptr<Expression> makeEnumRangeAssert(
+	std::shared_ptr<Expression> value,
+	unsigned numMembers,
+	SourceLocation const& loc,
+	std::string message = "enum out of range")
+{
+	auto cmp = makeNumericCompare(
+		std::move(value), NumericComparison::Lt,
+		makeIntegerConstant(numMembers, loc), loc);
+	return makeAssert(std::move(cmp), loc, std::move(message));
+}
+
 // `condition ? trueExpr : falseExpr` — assemble in one call instead of
 // the std::make_shared + 5 field assignments boilerplate.
 inline std::shared_ptr<ConditionalExpression> makeConditional(
@@ -1705,6 +1720,28 @@ inline std::shared_ptr<NewStruct> makeNewStruct(
 	node->sourceLocation = std::move(loc);
 	node->wtype = wtype;
 	return node;
+}
+
+// Copy-on-write struct update: every field of `structType` is re-read from
+// `readBase` except `fieldName`, which takes `newValue`. The standard shape
+// for ARC4Struct field writes/deletes/write-backs (an ARC4 struct value is
+// immutable bytes — replacing a field means rebuilding the whole struct).
+inline std::shared_ptr<NewStruct> makeStructWithReplacedField(
+	ARC4Struct const* structType,
+	std::shared_ptr<Expression> const& readBase,
+	std::string const& fieldName,
+	std::shared_ptr<Expression> newValue,
+	SourceLocation const& loc)
+{
+	auto newStruct = makeNewStruct(structType, loc);
+	for (auto const& [fname, ftype]: structType->fields())
+	{
+		if (fname == fieldName)
+			newStruct->values[fname] = std::move(newValue);
+		else
+			newStruct->values[fname] = makeFieldExpression(readBase, fname, ftype, loc);
+	}
+	return newStruct;
 }
 
 struct NamedTupleExpression: Expression
