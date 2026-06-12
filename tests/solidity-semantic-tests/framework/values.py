@@ -147,3 +147,19 @@ def as_bytes(value) -> bytes:
     if isinstance(value, str):
         return value.encode("utf-8")
     raise TypeError(f"can't coerce {type(value).__name__} to bytes: {value!r}")
+
+
+def evm_words(data) -> tuple[int, ...]:
+    """EVM return-data word view of a `bytes`-returning method.
+
+    isoltest expectations like `s() -> 0x20, len, ...` treat the raw EVM
+    return blob — outer (offset, length) framing plus the payload padded to
+    32-byte words — as a tuple of words. The AVM side returns just the
+    payload (ARC4 byte[]); reconstruct the EVM view for those assertions.
+    """
+    b = bytes(data) if not isinstance(data, (bytes, bytearray)) else bytes(data)
+    words = [0x20, len(b)]
+    padded = b + b"\x00" * ((32 - len(b) % 32) % 32)
+    for i in range(0, len(padded), 32):
+        words.append(int.from_bytes(padded[i:i + 32], "big"))
+    return tuple(words)

@@ -165,11 +165,18 @@ def test_crazy_elementary_typenames_on_stack(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) in (-7, 115792089237316195423570985008687907853269984665640564039457584007913129639929)
 
-def test_create_calldata(harness):  # currently fails
-    """various/contracts/create_calldata.sol"""
-    app = harness.compile_and_deploy('various/contracts/create_calldata.sol')
+def test_create_calldata(harness):
+    """various/contracts/create_calldata.sol
+
+    msg.data must be EMPTY during construction (EVM: ctor args travel in the
+    initcode, not calldata; on AVM the __postInit ApplicationArgs are masked).
+    The `-> 0x20, 0` expectation is the isoltest EVM-words view of the empty
+    bytes return.
+    """
+    from framework import evm_words
+    app = harness.compile_and_deploy('various/contracts/create_calldata.sol', ctor_args=[42])
     r = harness.call(app, 's()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0,)
+    assert evm_words(r.abi_return) == (0x20, 0)
 
 def test_create_random(harness):
     """various/contracts/create_random.sol"""

@@ -164,18 +164,53 @@ def split_multisource(
                 tmp_dir,
                 remappings,
             )
+        # First pass: collect section names so import rewriting below can
+        # recognize references to sibling sections.
+        section_names = [parts[i].strip() for i in range(1, len(parts), 2)]
+
+        def rewrite_section_imports(body: str) -> str:
+            """Rewrite direct imports of sibling sections to RELATIVE form.
+
+            `import "a" as M` (unit name "a") and the main compile of the
+            same section (unit name "<tmpdir>/a.sol") would otherwise load
+            as TWO distinct SourceUnits — duplicate ContractDefinitions —
+            which breaks identity-sensitive checks (e.g. solc's "modifier
+            must come from this contract or a base" on `M.M.C.m`, the
+            access_through_module_name failure). `import "./a.sol"`
+            resolves relative to the importing unit, collapsing to the
+            SAME unit for self-imports and to the sibling's compiled unit
+            otherwise.
+            """
+            for sect in section_names:
+                fname = sect if sect.endswith(".sol") else sect + ".sol"
+                for q in ('"', "'"):
+                    body = body.replace(
+                        f"import {q}{sect}{q}", f"import {q}./{fname}{q}")
+                    if fname != sect:
+                        body = body.replace(
+                            f"import {q}{fname}{q}", f"import {q}./{fname}{q}")
+                    body = re.sub(
+                        r"(import\s*\{[^}]*\}\s*from\s*)" + q + re.escape(sect) + q,
+                        r"\g<1>" + q + "./" + fname + q,
+                        body)
+                    if fname != sect:
+                        body = re.sub(
+                            r"(import\s*\{[^}]*\}\s*from\s*)" + q + re.escape(fname) + q,
+                            r"\g<1>" + q + "./" + fname + q,
+                            body)
+            return body
+
         for i in range(1, len(parts), 2):
             name = parts[i].strip()
             body = parts[i + 1] if i + 1 < len(parts) else ""
             if "// ----" in body:
                 body = body[: body.index("// ----")]
+            body = rewrite_section_imports(body)
             file_name = name if name.endswith(".sol") else name + ".sol"
             (tmp_dir / file_name).parent.mkdir(parents=True, exist_ok=True)
             (tmp_dir / file_name).write_text(body)
-            # Solidity `import "A"` resolves to the literal name first. If
-            # the declared section is `==== Source: A ====` (no .sol), the
-            # imports use just "A" — write a second copy under the bare
-            # name so the FileReader finds it either way.
+            # Keep the bare-name copy as a fallback for import forms the
+            # rewriter doesn't recognize (resolved via --import-path).
             if not name.endswith(".sol"):
                 (tmp_dir / name).parent.mkdir(parents=True, exist_ok=True)
                 (tmp_dir / name).write_text(body)

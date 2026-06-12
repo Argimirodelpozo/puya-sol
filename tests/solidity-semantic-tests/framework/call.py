@@ -521,7 +521,30 @@ def _encode_args(abi_method, args: tuple) -> list:
     as `list[int]`, not `bytes`. Convert that one shape; everything else
     is the test's responsibility — use the helpers in `framework.values`
     (or pass the right Python type for the ABI signature).
+
+    isoltest words convention: upstream fixtures call `f(bytes)` with the
+    raw EVM calldata tail spelled as N 32-byte words (`f(bytes): 0x20,
+    0xA0, ...`). When the method takes exactly one `byte[]` param and the
+    test passed multiple bare ints, pack each into a 32-byte big-endian
+    word, then strip the EVM head ([offset][length]) the same way the
+    EVM decoder would — the function receives only the payload bytes.
+    Falls back to the raw concatenation when the head doesn't parse.
     """
+    if (
+        len(abi_method.args) == 1
+        and str(abi_method.args[0].type) == "byte[]"
+        and len(args) > 1
+        and all(isinstance(a, int) and not isinstance(a, bool) for a in args)
+    ):
+        blob = b"".join(int(a).to_bytes(32, "big") for a in args)
+        if len(blob) >= 64:
+            off = int.from_bytes(blob[:32], "big")
+            if off % 32 == 0 and off + 32 <= len(blob):
+                ln = int.from_bytes(blob[off : off + 32], "big")
+                if off + 32 + ln <= len(blob):
+                    return [list(blob[off + 32 : off + 32 + ln])]
+        return [list(blob)]
+
     out: list = []
     for spec, val in zip(abi_method.args, args):
         t = str(spec.type)
