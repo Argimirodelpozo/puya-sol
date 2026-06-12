@@ -1097,6 +1097,28 @@ inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 	return makeBzero(std::move(countExpr), std::move(loc));
 }
 
+// Right-pad a bytes value with zeros to the next 32-byte multiple — the
+// EVM-ABI word-alignment write. Exact padding via bzero((32 - len%32) % 32);
+// the canonical bridge for ARC4→EVM tail framing (the read-side partners
+// are uint64FromAbiWord in builder/abi and makeExtractUInt16 below).
+inline std::shared_ptr<Expression> makeRightPadTo32Multiple(
+	std::shared_ptr<Expression> bytes, SourceLocation loc)
+{
+	auto lenCall = makeLen(bytes, loc);
+	auto modPart = makeUInt64BinOp(
+		std::move(lenCall), UInt64BinaryOperator::Mod,
+		makeIntegerConstant("32", loc), loc);
+	auto sub = makeUInt64BinOp(
+		makeIntegerConstant("32", loc), UInt64BinaryOperator::Sub,
+		std::move(modPart), loc);
+	auto pad = makeUInt64BinOp(
+		std::move(sub), UInt64BinaryOperator::Mod,
+		makeIntegerConstant("32", loc), loc);
+	auto bz = makeBzero(std::move(pad), loc);
+	return makeConcat(std::move(bytes), std::move(bz), loc);
+}
+
+
 // `b|(lhs, rhs)` — bitwise-OR of two byte strings (commutative).
 inline std::shared_ptr<IntrinsicCall> makeBytesOr(
 	std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs,

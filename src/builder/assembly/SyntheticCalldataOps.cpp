@@ -103,26 +103,11 @@ std::shared_ptr<awst::Expression> pad32BE(
 	return awst::makeLeftPad(awst::makeItob(std::move(_u64Val), _loc), 24, _loc);
 }
 
-// Helper: pad a bytes value to a 32-byte multiple (right-pad with zeros).
-//   pad = (32 - (len % 32)) % 32
-//   result = bytes ++ bzero(pad)
+// Pad to a 32-byte multiple: shared canonical helper (awst::makeRightPadTo32Multiple).
 std::shared_ptr<awst::Expression> padTo32Multiple(
 	std::shared_ptr<awst::Expression> _bytes, awst::SourceLocation const& _loc)
 {
-	using O = awst::UInt64BinaryOperator;
-	auto lenCall = awst::makeLen(_bytes, _loc);
-
-	// pad = (32 - (len % 32)) % 32 == (-len) % 32 == (-len) & 31
-	auto modPart = awst::makeUInt64BinOp(
-		std::move(lenCall), O::Mod, awst::makeIntegerConstant("32", _loc), _loc);
-	auto sub = awst::makeUInt64BinOp(
-		awst::makeIntegerConstant("32", _loc), O::Sub, std::move(modPart), _loc);
-	auto pad = awst::makeUInt64BinOp(
-		std::move(sub), O::Mod, awst::makeIntegerConstant("32", _loc), _loc);
-
-	auto bz = awst::makeBzero(std::move(pad), _loc);
-
-	return awst::makeConcat(std::move(_bytes), std::move(bz), _loc);
+	return awst::makeRightPadTo32Multiple(std::move(_bytes), _loc);
 }
 
 bool isDynamicAbi(awst::WType const* _type)

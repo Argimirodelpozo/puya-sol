@@ -93,33 +93,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
 {
-	// Compute padding needed: (32 - (len % 32)) % 32
-	// Then concat with bzero(padding)
-	// For simplicity: concat(expr, bzero(32)), then extract first (len + padding) bytes
-	// Actually simpler: concat(expr, bzero(31)), then extract first ((len + 31) / 32 * 32) bytes
-
-	// len = len(expr)
-	auto lenCall = awst::makeLen(_expr, _loc);
-
-	// padded_len = ((len + 31) / 32) * 32
-	auto len31 = awst::makeUInt64BinOp(std::move(lenCall),
-		awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant("31", _loc), _loc);
-
-	auto div32 = awst::makeUInt64BinOp(std::move(len31),
-		awst::UInt64BinaryOperator::FloorDiv,
-		awst::makeIntegerConstant("32", _loc), _loc);
-
-	auto paddedLen = awst::makeUInt64BinOp(std::move(div32),
-		awst::UInt64BinaryOperator::Mult,
-		awst::makeIntegerConstant("32", _loc), _loc);
-
-	// concat(expr, bzero(31)) — ensure enough zeros for any padding
-	auto padded = awst::makeRightPad(std::move(_expr), 31, _loc);
-
-	// extract3(padded, 0, paddedLen)
-	auto result = awst::makeExtract3(std::move(padded), awst::makeIntegerConstant("0", _loc), std::move(paddedLen), _loc);
-	return result;
+	// Shared canonical helper — exact bzero((32 - len%32) % 32) pad. The
+	// previous shape (over-concat 31 zeros + extract) was behaviourally
+	// identical but a different AWST; one impl now serves both the abi/
+	// encoders and the assembly synthetic-calldata writer.
+	return awst::makeRightPadTo32Multiple(std::move(_expr), _loc);
 }
 
 // ── encodeDynamicTail: [length as 32 bytes][data right-padded to 32] ──

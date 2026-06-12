@@ -100,7 +100,14 @@ new EVM-shaped bytes anywhere else is a bug.
    with fields were already sha512_256 via puya Emit. Still open in the
    same class: `f.selector` (SolSelectorAccess) returns keccak bytes —
    folded into seam #2's decision.
-4. **bytes/string length-prefix re-framing is scattered.** ARC4 uint16 vs
+4. **bytes/string length-prefix re-framing is scattered.** ✅ DONE — the
+   canonical bridge set is: `uint64FromAbiWord` (EVM 32-byte word → uint64,
+   builder/abi), `awst::makeUInt16Bytes` (uint64 → ARC4 uint16 header) and
+   `awst::makeExtractUInt16` (its read inverse), `awst::makeRightPadTo32Multiple`
+   (EVM word-alignment write — now the single impl behind both the abi/
+   encoders and SyntheticCalldataOps). New length-prefix conversions must go
+   through these.
+   Original text: bytes/string length-prefix re-framing is scattered.** ARC4 uint16 vs
    EVM 32-byte length word conversions are hand-rolled per assembly site;
    the >4KB blob model is ARC4-flat while asm expects EVM length-prefixed
    (multi-slot Phase B v2). Route through one named bridge.
