@@ -14,6 +14,12 @@ bool statementAlwaysTerminates(Statement const& _stmt)
 			if (auto const* boolConst = dynamic_cast<BoolConstant const*>(assertExpr->condition.get()))
 				if (!boolConst->value)
 					return true;
+		// The raw AVM program-exit intrinsic (`return 1`) emitted by the EVM
+		// `return(offset, size)` halt lowering — terminates the whole program,
+		// so the enclosing function needs no trailing implicit return.
+		if (auto const* ic = dynamic_cast<IntrinsicCall const*>(exprStmt->expr.get()))
+			if (ic->opCode == "return")
+				return true;
 	}
 	return false;
 }

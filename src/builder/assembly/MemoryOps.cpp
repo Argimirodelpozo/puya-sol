@@ -753,8 +753,7 @@ void AssemblyBuilder::handleReturn(
 		auto arc4Bytes = awst::makeConcat(std::move(countBytes), std::move(elemsBytes), _loc);
 		auto returnValue = awst::makeReinterpretCast(std::move(arc4Bytes), m_returnType, _loc);
 
-		flushMemoryToScratch(_loc, _out);
-		_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
+		emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
 		return;
 	}
 
@@ -798,11 +797,49 @@ void AssemblyBuilder::handleReturn(
 		returnValue = std::move(emptyArr);
 	}
 
-	// Flush memory blob to scratch before returning
+	emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
+}
+
+void AssemblyBuilder::emitArc4ReturnHalt(
+	std::shared_ptr<awst::Expression> _value,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// EVM `return(offset, size)` halts the WHOLE call — even when it executes
+	// inside a nested internal function (errors/require_error_evaluation_order_1:
+	// an assembly `return` inside a require error-arg must end the call with
+	// that data, not return from the enclosing subroutine). Lower it as the
+	// ARC4 return log the router would emit — log(0x151f7c75 ++ ARC4(value)) —
+	// followed by the raw AVM `return 1` program exit. The previous lowering
+	// (subroutine ReturnStatement) was only correct when the enclosing
+	// function happened to be the externally-called one.
 	flushMemoryToScratch(_loc, _out);
 
-	auto ret = awst::makeReturnStatement(std::move(returnValue), _loc);
-	_out.push_back(std::move(ret));
+	std::shared_ptr<awst::Expression> arc4Value = std::move(_value);
+	bool alreadyArc4 = arc4Value->wtype
+		&& arc4Value->wtype->kind() >= awst::WTypeKind::ARC4UIntN
+		&& arc4Value->wtype->kind() <= awst::WTypeKind::ARC4Struct;
+	if (!alreadyArc4)
+	{
+		auto* arc4Type = m_typeMapper.mapToARC4Type(
+			arc4Value->wtype ? arc4Value->wtype : m_returnType);
+		if (arc4Type && arc4Value->wtype != arc4Type)
+			arc4Value = awst::makeARC4Encode(std::move(arc4Value), arc4Type, _loc);
+	}
+	auto arc4Bytes = awst::makeAsBytes(std::move(arc4Value), _loc);
+
+	// 0x151f7c75 — the ARC4 return-value log prefix.
+	auto prefix = awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc);
+	auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
+	logCall->stackArgs.push_back(
+		awst::makeConcat(std::move(prefix), std::move(arc4Bytes), _loc));
+	_out.push_back(awst::makeExpressionStatement(std::move(logCall), _loc));
+
+	auto returnOp = awst::makeIntrinsicCall("return", awst::WType::voidType(), _loc);
+	returnOp->stackArgs.push_back(awst::makeTrue(_loc));
+	_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
+	m_haltEmitted = true;
 }
 
 // ─── Statement translation ─────────────────────────────────────────────────

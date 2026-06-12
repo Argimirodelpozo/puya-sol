@@ -51,11 +51,17 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 		errorMessage = ma->memberName();
 	}
 
+	auto failNode = awst::makeAssert(
+		awst::makeFalse(m_loc), m_loc, std::move(errorMessage));
 	if (revertBlob)
+	{
 		m_ctx.prePendingStatements.push_back(
 			makeRevertLogStmt(std::move(revertBlob), m_loc));
-
-	return awst::makeAssert(awst::makeFalse(m_loc), m_loc, std::move(errorMessage));
+		// The log carries the user-visible revert contract; let puya's
+		// optimizer strip the fail when provably unreachable.
+		failNode->isExplicit = false;
+	}
+	return failNode;
 }
 
 } // namespace puyasol::builder::sol_ast

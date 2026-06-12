@@ -72,6 +72,11 @@ public:
 	/// @param _params        Function parameters (name, type) for memory-based access
 	/// @param _returnType    Expected return type of the enclosing function
 	/// @param _constants     External constant values (name → decimal string)
+	/// True when the translated assembly block emitted an UNCONDITIONAL
+	/// program halt at its top level (branch-local halts are not counted —
+	/// translateSwitch/If save+restore the flag around branch bodies).
+	bool haltEmitted() const { return m_haltEmitted; }
+
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
 		solidity::yul::Block const& _block,
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
@@ -269,6 +274,12 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
+	/// EVM `return(o,s)` halt: log(0x151f7c75 ++ ARC4(value)) + AVM `return 1`.
+	void emitArc4ReturnHalt(
+		std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	void handleReturn(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc,

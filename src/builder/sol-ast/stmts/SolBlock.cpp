@@ -250,6 +250,12 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 
 	for (auto const& stmt: m_block.statements())
 	{
+		// A prior statement unconditionally halted the program (assembly
+		// `return`/`revert`): the rest of this block is statically dead.
+		// Skip it — puya rejects unreachable code, and EVM sources routinely
+		// have a trailing `return x;` after an assembly halt.
+		if (m_blk.terminated)
+			break;
 		if (auto const* innerBlock = dynamic_cast<Block const*>(stmt.get()))
 		{
 			// Flatten nested blocks — they share the same BlockContext nest
@@ -261,6 +267,10 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 			auto translated = handler.toAwstBlock();
 			for (auto& s: translated->body)
 				awstBlock->body.push_back(std::move(s));
+			// A bare nested block shares control flow with this one — its
+			// halt makes our remaining statements dead too.
+			if (childBlk.terminated)
+				m_blk.terminated = true;
 		}
 		else
 		{

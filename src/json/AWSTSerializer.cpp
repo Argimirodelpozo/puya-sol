@@ -396,6 +396,7 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 		j["comment"] = e->errorMessage.has_value()
 			? njson(e->errorMessage.value())
 			: njson(nullptr);
+		j["explicit"] = e->isExplicit;
 	}
 	else if (auto const* e = dynamic_cast<awst::AssignmentExpression const*>(&_expr))
 	{

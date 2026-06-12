@@ -545,6 +545,13 @@ struct AssertExpression: Expression
 	std::string nodeType() const override { return "AssertExpression"; }
 	std::shared_ptr<Expression> condition;
 	std::optional<std::string> errorMessage;
+	// Maps to puya's AssertExpression.explicit (default true). Set false on
+	// asserts synthesized as the failure half of a revert-payload lowering
+	// (the log carries the user-visible contract): puya's TEAL optimizer may
+	// soundly strip such an assert when it is unreachable (e.g. downstream
+	// of a call to a never-returning assembly-halt function), and its
+	// explicit-check accounting would otherwise hard-error on the removal.
+	bool isExplicit = true;
 };
 
 // Construct an AssertExpression node. The wtype defaults to voidType()

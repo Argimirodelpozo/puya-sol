@@ -121,27 +121,56 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 	if (isAssertBuiltin && !revertBlob)
 		revertBlob = awst::makeBytesConstant(panicRevertBlobBytes(0x01), m_loc);
 
-	// With a structured payload, lower as
-	//   if (!cond) { log(blob); fail }
-	// so clients (and the harness via simulate) read EVM-shaped revert data
-	// from the failing txn's last log. A message-less `require(cond)` keeps
-	// the plain assert — EVM's revert data is empty there too. Custom errors
-	// keep the existing path (selector+args payload is a follow-up).
+	// With a structured payload, log it just before the failure:
+	//   if (!cond) { log(blob) }   // prePending
+	//   assert(cond, msg)          // the statement itself
+	// The failure mechanism stays on the native Assert node — putting the
+	// assert INSIDE the if-branch broke puya's explicit-assert accounting
+	// ("explicit condition check(s) removed during TEAL optimization") when
+	// the condition folded to a constant (require(true, E(...))). The
+	// condition feeds both the log-gate and the assert; SE-wrap so a
+	// side-effecting condition still evaluates once (the gate lowers first,
+	// unconditionally — dominance-safe).
 	if (revertBlob && condition)
 	{
-		auto failBlock = awst::makeBlock(m_loc);
-		failBlock->body.push_back(makeRevertLogStmt(std::move(revertBlob), m_loc));
-		failBlock->body.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(awst::makeFalse(m_loc), m_loc, std::move(message)), m_loc));
-		m_ctx.pendingStatements.push_back(awst::makeIfElse(
-			awst::makeNot(std::move(condition), m_loc), std::move(failBlock), nullptr, m_loc));
-		return awst::makeVoidConstant(m_loc);
+		// Constant conditions lower DIRECTLY — leaving a constant-gated
+		// if/assert for the optimizer to fold trips puya's explicit-assert
+		// accounting ("explicit condition check(s) removed") when several
+		// such shapes coexist in one program.
+		if (auto const* bc = dynamic_cast<awst::BoolConstant const*>(condition.get()))
+		{
+			if (bc->value)
+				// require(true, E(args)): the eager payload temp already
+				// evaluated the args (Solidity semantics); nothing to check.
+				return awst::makeVoidConstant(m_loc);
+			// require(false, E(args)): unconditional log + fail; our
+			// removeDeadCode strips any trailing statements.
+			m_ctx.prePendingStatements.push_back(
+				makeRevertLogStmt(std::move(revertBlob), m_loc));
+			auto failNode = awst::makeAssert(
+				awst::makeFalse(m_loc), m_loc, std::move(message));
+			failNode->isExplicit = false;
+			return failNode;
+		}
+		condition = awst::makeEvalOnce(std::move(condition), m_loc);
+		auto logBlock = awst::makeBlock(m_loc);
+		logBlock->body.push_back(makeRevertLogStmt(std::move(revertBlob), m_loc));
+		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+			awst::makeNot(condition, m_loc), std::move(logBlock), nullptr, m_loc));
+		auto assertNode = awst::makeAssert(
+			std::move(condition), m_loc, std::move(message));
+		assertNode->isExplicit = false;
+		return assertNode;
 	}
 	if (revertBlob)
 	{
 		// Condition-less (always-fail) shape with a payload.
 		m_ctx.prePendingStatements.push_back(
 			makeRevertLogStmt(std::move(revertBlob), m_loc));
+		auto failNode = awst::makeAssert(
+			std::move(condition), m_loc, std::move(message));
+		failNode->isExplicit = false;
+		return failNode;
 	}
 
 	return awst::makeAssert(std::move(condition), m_loc, std::move(message));

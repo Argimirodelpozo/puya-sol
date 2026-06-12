@@ -103,8 +103,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 		result.push_back(makeRevertLogStmt(std::move(blob), m_loc));
 	}
 
-	result.push_back(awst::makeExpressionStatement(
-		awst::makeAssert(awst::makeFalse(m_loc), m_loc, errorName), m_loc));
+	auto failNode = awst::makeAssert(awst::makeFalse(m_loc), m_loc, errorName);
+	// The log (when present) carries the user-visible revert contract; let
+	// puya's optimizer strip the fail when provably unreachable.
+	failNode->isExplicit = false;
+	result.push_back(awst::makeExpressionStatement(std::move(failNode), m_loc));
 	return result;
 }
 

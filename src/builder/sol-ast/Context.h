@@ -444,6 +444,12 @@ struct LoopContext
 /// var-name shadowing.
 struct BlockContext: Context
 {
+	/// Set when a statement in THIS block unconditionally halts the program
+	/// (assembly `return`/`revert` top-level halt). The remaining statements
+	/// of the block are statically dead — SolBlock skips lowering them so
+	/// puya doesn't reject the function with "unreachable code".
+	bool terminated = false;
+
 	FunctionContext& fn;
 	BlockContext* outer = nullptr;
 	LoopContext const* enclosingLoop = nullptr;

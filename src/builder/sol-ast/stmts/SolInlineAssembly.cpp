@@ -378,7 +378,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		paramBitWidths.emplace(n, bw);
 
 	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
-	return asmTranslator.buildBlock(
+	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,
 		m_blk.fn.returnType,
@@ -387,6 +387,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		storageSlotVars,
 		boxKeyedStructSlots,
 		blobOffsetVars);
+	// An unconditional top-level halt (EVM `return`/`revert` lowered to the
+	// AVM program exit) makes everything after this assembly block statically
+	// dead — flag the enclosing block so SolBlock skips the remaining
+	// statements (puya rejects functions with unreachable code).
+	if (asmTranslator.haltEmitted())
+		m_blk.terminated = true;
+	return stmts;
 }
 
 } // namespace puyasol::builder::sol_ast
