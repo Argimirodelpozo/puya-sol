@@ -302,9 +302,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 							  : awst::UInt64BinaryOperator::Sub,
 		std::move(delta), m_loc);
 
-	// 2-byte big-endian = extract3(itob(new_len), 6, 2)
-	auto itob = awst::makeItob(std::move(newLen), m_loc);
-	auto extract = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", m_loc), awst::makeIntegerConstant("2", m_loc), m_loc);
+	auto extract = awst::makeUInt16Bytes(std::move(newLen), m_loc);
 	// box_put(arrayVarName, len_bytes)
 	m_ctx.queueStmt(awst::makeBoxPut(boxKey, std::move(extract), m_loc), m_loc);
 	return awst::makeVoidConstant(m_loc);

@@ -222,10 +222,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 								elemCount, awst::UInt64BinaryOperator::Mult,
 								awst::makeIntegerConstant(elemSize, _loc), _loc);
 							auto elemBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
-							auto itob = awst::makeItob(std::move(elemCount), _loc);
-							auto header = awst::makeExtract3(std::move(itob),
-								awst::makeIntegerConstant("6", _loc),
-								awst::makeIntegerConstant("2", _loc), _loc);
+							auto header = awst::makeUInt16Bytes(std::move(elemCount), _loc);
 							auto arc4Bytes = awst::makeConcat(std::move(header), std::move(elemBytes), _loc);
 							fieldVal = awst::makeReinterpretCast(std::move(arc4Bytes), arc4FieldType, _loc);
 						}
@@ -303,8 +300,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				// elemBytes = extract3(_data, dataStart, byteCount)
 				auto elemBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
 				// arc4Header = extract3(itob(elemCount), 6, 2) — uint16 BE length
-				auto itob = awst::makeItob(std::move(elemCount), _loc);
-				auto header = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", _loc), awst::makeIntegerConstant("2", _loc), _loc);
+				auto header = awst::makeUInt16Bytes(std::move(elemCount), _loc);
 				// concat(header, elemBytes)
 				auto arc4Bytes = awst::makeConcat(std::move(header), std::move(elemBytes), _loc);
 

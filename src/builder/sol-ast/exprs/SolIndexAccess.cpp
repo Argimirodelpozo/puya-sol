@@ -468,9 +468,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 
 			auto diff = awst::makeUInt64BinOp(
 				mkEnd(), awst::UInt64BinaryOperator::Sub, mkStart(), m_loc);
-			auto itob = awst::makeItob(std::move(diff), m_loc);
-
-			auto lenHdr = awst::makeExtract3(std::move(itob), awst::makeIntegerConstant("6", m_loc), awst::makeIntegerConstant("2", m_loc), m_loc);
+			auto lenHdr = awst::makeUInt16Bytes(std::move(diff), m_loc);
 			auto cat = awst::makeConcat(std::move(lenHdr), std::move(sub), m_loc);
 			return awst::makeReinterpretCast(std::move(cat), resultType, m_loc);
 		}

@@ -1051,6 +1051,21 @@ inline std::shared_ptr<IntrinsicCall> makeExtract3(
 	return node;
 }
 
+// The inverse of makeExtractUInt16: 2-byte big-endian (ARC4 uint16)
+// encoding of a uint64 value — extract3(itob(value), 6, 2). The standard
+// ARC4 dynamic-array length-prefix write.
+inline std::shared_ptr<Expression> makeUInt16Bytes(
+	std::shared_ptr<Expression> value, SourceLocation loc)
+{
+	auto itob = makeItob(std::move(value), loc);
+	return makeExtract3(
+		std::move(itob),
+		makeIntegerConstant("6", loc),
+		makeIntegerConstant("2", loc),
+		loc);
+}
+
+
 // `replace3(bytes, offset, replacement)` → bytes with `replacement` overlaid
 // starting at `offset`. ~16 sites use this exact 3-stack-arg shape.
 inline std::shared_ptr<IntrinsicCall> makeReplace3(
