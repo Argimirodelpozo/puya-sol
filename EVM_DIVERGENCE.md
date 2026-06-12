@@ -91,10 +91,15 @@ new EVM-shaped bytes anywhere else is a bug.
    `encodeWithSignature`/`encodeWithSelector` → keccak. Two `abi.encode*`
    spellings of the same function produce different bytes. Align with the
    sha512_256 ruling (or document keccak as a raw-bytes escape hatch).
-3. **`abi.decode` wrong-shape fallbacks.** Unsupported dynamic-struct-field
-   shapes fall back to `ARC4FromBytes` on a raw EVM slab with a "will likely
-   be wrong shape" comment (`builder/abi/AbiDecode.cpp`). Must fail loud
-   instead (project rule above).
+3. **`abi.decode` wrong-shape fallbacks.** ✅ DONE `d5f24791d5` —
+   struct-field fallback is a hard error; the top-level corrupt-input
+   fallback keeps its runtime trap (tests rely on it) with a scoped
+   compile-log warning.
+   Found during the same inventory and fixed: zero-argument events
+   hand-rolled a keccak selector (`b4cbff4cf4` → MethodConstant) — events
+   with fields were already sha512_256 via puya Emit. Still open in the
+   same class: `f.selector` (SolSelectorAccess) returns keccak bytes —
+   folded into seam #2's decision.
 4. **bytes/string length-prefix re-framing is scattered.** ARC4 uint16 vs
    EVM 32-byte length word conversions are hand-rolled per assembly site;
    the >4KB blob model is ARC4-flat while asm expects EVM length-prefixed
