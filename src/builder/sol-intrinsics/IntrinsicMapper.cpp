@@ -21,15 +21,11 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			return awst::makeGlobal("LatestTimestamp", awst::WType::uint64Type(), _loc);
 		if (_memberName == "number")
 			return awst::makeGlobal("Round", awst::WType::uint64Type(), _loc);
-		if (_memberName == "chainid")
-		{
-			// AVM has no chain ID. The closest equivalent is GenesisHash which
-			// uniquely identifies the network (mainnet/testnet/localnet).
-			Logger::instance().warning(
-				"block.chainid mapped to global GenesisHash. "
-				"AVM has no chain ID; GenesisHash uniquely identifies the network", _loc);
-			return awst::makeGlobal("GenesisHash", awst::WType::bytesType(), _loc);
-		}
+		// block.chainid is handled by SolIntrinsicAccess (constant 1 +
+		// warning) before this mapper runs — no handler here. A previous
+		// dead handler returned bytes-typed GenesisHash, which is the wrong
+		// type for chainid arithmetic; removed so a future handler-order
+		// change cannot silently activate it.
 		if (_memberName == "coinbase")
 		{
 			// block.coinbase is the miner address on EVM. AVM has no miner
