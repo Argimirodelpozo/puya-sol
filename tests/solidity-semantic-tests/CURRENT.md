@@ -1,3 +1,22 @@
+# Semantic Test Status — v358
+
+> **STRUCT/ARRAY SELECTOR EXPANSION (2026-06-13, 73760008fa):** zero-reg,
+> **60 failed / 1232 passed / 83 xf** (+1 = the new verification test).
+> buildMethodSelector named struct params `struct P` (arrays-of-structs
+> fell through toString to `struct C.P[]`) while puya's callee router +
+> Solidity's ABI convention expand them to the ARC4 tuple
+> `(uint256,uint256)`. So f.selector / abi.encodeCall / encodeWithSelector
+> / the typed .call bridge computed selectors NO struct-param method could
+> match → cross-contract dispatch to any struct-param method silently
+> missed the router. Latent (no test exercised it). New nestedArc4Name()
+> replicates puya's POSITION-DEPENDENT rules (nested ints keep exact width
+> + signedness — "int8" stays "int8"; top-level scalars collapse/drop sign;
+> enum→uint8; struct→"(...)"; array→"elem[]"/"elem[K]"), verified against
+> puya's `method "…"` output. CUSTOM conversions::test_struct_param_selector
+> checks f.selector == arc4_selector(puya string) incl. ARC-4 return suffix.
+> Deepest layer of encoding seam #2 ([[encoding-model]]); found by asking
+> "any other encoding inconsistencies" after the four seams closed.
+
 # Semantic Test Status — v357
 
 > **ENCODING SEAMS CLOSED (2026-06-12 cont, ee40d9f20c):** all four
