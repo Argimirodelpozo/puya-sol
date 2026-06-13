@@ -1,3 +1,32 @@
+# Semantic Test Status — v357
+
+> **ENCODING SEAMS CLOSED (2026-06-12 cont, ee40d9f20c):** all four
+> EVM_DIVERGENCE "Encoding model" seams landed, **zero-regression: 60
+> failed / 1231 passed / 83 xf — fail-set IDENTICAL to v356** (two full
+> runs; the first caught my EVM-form mistake, see below).
+> **Selectors are sha512_256 of the ARC-4 CANONICAL signature**
+> (`2b6a9f895d`+`08826f60a6`): name + ARC4 type names + return suffix,
+> "void" for none — what routers dispatch on and fn-ptr slots store
+> (buildMethodSelector, now public, + FunctionType overload for
+> public-var getters: "x()uint256"). f.selector, event .selector
+> (bytes32 = FULL 32-byte sha512_256; first 4 = ARC-28 log prefix),
+> error .selector (no-return form == revert-payload prefix),
+> type(I).interfaceId (XOR of canonical selectors == XOR of .selector
+> values). FIRST ATTEMPT hashed EVM-form sigs ("f()") = a THIRD
+> convention — caught by external_function_pointer_selector (slot vs
+> .selector) + function_types_sig; lesson: the canonicalizer is
+> buildMethodSelector, nothing else. encodeWithSignature hashes the
+> string AS GIVEN (EVM-form strings can't be canonicalized — return type
+> unknowable); ~14 tests re-derived via framework.arc4_selector /
+> arc4_event_topic instead of keccak hex.
+> **.call bridge** (`ee40d9f20c`): .call(abi.encodeWithSignature/
+> WithSelector(...)) lowers as a TYPED inner call (selector +
+> per-arg ARC4 ApplicationArgs; shared submitTypedAppCall tail with
+> encodeCall); returndata AVM-framed (LastLog minus prefix, maintainer
+> ruling). Opaque payloads (proxy/forwarder bytes) keep [selector,rest]
+> + warning. **abi.decode fail-loud** (`d5f24791d5`, v356) + **one
+> canonical pad32 helper** (`cf035c8cd1`) complete the seam set.
+
 # Semantic Test Status — v356
 
 > **ENCODING-MODEL NOTE + DECODE FAIL-LOUD (2026-06-12 cont):** EVM_DIVERGENCE
