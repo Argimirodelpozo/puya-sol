@@ -199,6 +199,12 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
    only transfers funds and does **not** delete the contract. The one divergence
    is that the AVM app is likewise not deleted (matches post-Cancun EVM). Left
    working by design; classified **FINE**.
+   **ON-CHAIN VERIFIED 2026-06-13** (various::test_selfdestruct_drain_onchain,
+   a create2-free probe — the upstream selfdestruct_* tests all xfail on
+   create2 before reaching the mechanism): CloseRemainderTo on an application
+   account SUCCEEDS and sweeps the ENTIRE balance to the beneficiary, leaving
+   the app account at 0 (app not deleted). The earlier "may be rejected
+   because app accounts can't be closed" concern does not hold.
 
 12. ✅ **`blockhash(n)` → hard-errored (both high-level & Yul-asm).** Both paths
    (`SolBuiltinCall.cpp::handleBlockhash` and the Yul `blockhash` builtin in

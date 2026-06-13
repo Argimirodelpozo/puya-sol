@@ -647,3 +647,29 @@ def test_write_storage_external(harness):
     # h() -> 12
     r = harness.call(app, "h()")
     assert as_int(r.abi_return) == 12
+
+
+def test_selfdestruct_drain_onchain(harness):
+    """various/contracts/selfdestruct_drain_onchain.sol  (CUSTOM on-chain probe)
+
+    Post-Cancun selfdestruct(beneficiary) must drain the app account's ALGO
+    to the beneficiary via CloseRemainderTo. This is the load-bearing
+    assumption never on-chain-tested (upstream selfdestruct_* all xfail on
+    create2 first): an app account normally cannot be closed while the app
+    exists, so CloseRemainderTo on it may be rejected by the AVM."""
+    from algosdk import account
+    FUND = 500_000
+    app = harness.compile_and_deploy(
+        "various/contracts/selfdestruct_drain_onchain.sol", fund_wei=FUND)
+    algod = harness.localnet.algod
+    _, ben = account.generate_account()
+    app_before = algod.account_info(app.app_addr)["amount"]
+    assert app_before > 0
+    assert algod.account_info(ben)["amount"] == 0
+    r = harness.call(app, "boom(address)", ben, extra_fee=2000)
+    # VERIFIED 2026-06-13: CloseRemainderTo on the app account SUCCEEDS and
+    # sweeps the ENTIRE balance to the beneficiary, leaving the app at 0
+    # (the app itself is not deleted — post-Cancun semantics).
+    assert not r.reverted
+    assert algod.account_info(app.app_addr)["amount"] == 0
+    assert algod.account_info(ben)["amount"] == app_before
