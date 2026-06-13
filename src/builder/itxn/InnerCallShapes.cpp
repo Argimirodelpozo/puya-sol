@@ -152,25 +152,37 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		argsTuple->items.push_back(encodeArgToBytes(std::move(argExpr), _loc));
 	}
 
-	// Build WTuple type for args
-	std::vector<awst::WType const*> argTypes;
-	for (auto const& item : argsTuple->items)
-		argTypes.push_back(item->wtype);
-	argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
+	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
+}
 
-	// Convert receiver → app ID
+// ── shared tail: typed inner app call + AVM-framed returndata ──
+//
+// ApplicationArgs[0] = 4-byte sha512_256 selector, [1..n] = ARC4-encoded
+// args. Returndata is AVM-framed: the callee's ARC4 return log minus the
+// 0x151f7c75 prefix (per maintainer ruling — static 32-byte values look
+// identical to EVM ABI; dynamic returns are ARC4-shaped, so abi.decode
+// of a dynamic low-level return diverges from EVM; see EVM_DIVERGENCE).
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _receiver,
+	std::shared_ptr<awst::TupleExpression> _argsTuple,
+	awst::SourceLocation const& _loc)
+{
+	std::vector<awst::WType const*> argTypes;
+	for (auto const& item : _argsTuple->items)
+		argTypes.push_back(item->wtype);
+	_argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
+
 	auto appId = addressToAppId(std::move(_receiver), _loc);
 
-	// Build inner app call
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
 	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
 	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["ApplicationID"] = std::move(appId);
 	create->fields["OnCompletion"] = awst::makeZero(_loc);
-	create->fields["ApplicationArgs"] = std::move(argsTuple);
+	create->fields["ApplicationArgs"] = std::move(_argsTuple);
 
-	// Submit
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
@@ -178,13 +190,64 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	// Read LastLog and strip ARC4 prefix
+	// Read LastLog and strip the 4-byte ARC4 return prefix
 	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
-
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
+}
+
+// ── .call(abi.encodeWithSignature/WithSelector(...)) → typed inner call ──
+//
+// The encoder is visible at the call site, so the EVM-shaped blob never
+// needs to exist: selector from the signature/selector argument, each
+// further argument ARC4-encoded per its own type into its own
+// ApplicationArg (the EVM analog encodes per static arg type too —
+// Solidity does not type-check WithSignature args against the string).
+// A self-receiver is not special-cased here: the literal-sig self-call
+// pattern is rewritten to a direct subroutine call earlier in the
+// dispatcher; anything else reaching this path with a self receiver
+// fails loud at runtime (AVM rejects self inner-txn calls).
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _receiver,
+	solidity::frontend::FunctionCall const& _encodeExpr,
+	bool _isSignature,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	auto const& args = _encodeExpr.arguments();
+	if (args.empty())
+		return nullptr;
+
+	std::shared_ptr<awst::Expression> selector;
+	if (_isSignature)
+	{
+		if (auto const* lit = dynamic_cast<Literal const*>(args[0].get()))
+			selector = awst::makeMethodConstant(
+				lit->value(), awst::WType::bytesType(), _loc);
+		else
+		{
+			// Runtime signature string: sha512_256(sig)[0:4], the same
+			// rule MethodConstant applies at compile time.
+			auto sigExpr = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
+			auto hash = awst::makeIntrinsicCall(
+				"sha512_256", awst::WType::bytesType(), _loc);
+			hash->stackArgs.push_back(std::move(sigExpr));
+			selector = awst::makeExtract(std::move(hash), 0, 4, _loc);
+		}
+	}
+	else
+		selector = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
+
+	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
+	argsTuple->items.push_back(std::move(selector));
+	for (size_t i = 1; i < args.size(); ++i)
+		argsTuple->items.push_back(
+			encodeArgToBytes(_ctx.buildExpr(*args[i]), _loc));
+
+	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
 }
 
 // ── .call(rawBytes) → inner app call with raw ApplicationArgs[0] ──
@@ -202,11 +265,21 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 		_dataBytes = std::move(cast);
 	}
 
-	// Split the runtime blob into [selector, rest] so the callee's ARC4
-	// router matches on the 4-byte method selector and the remainder flows
-	// into ApplicationArgs[1] (a single packed arg — works for the common
-	// single-arg forward case). Empty / short blobs produce empty selectors
-	// that will miss the router's match table and fall through to fallback.
+	// OPAQUE payload: runtime bytes whose structure the compiler cannot
+	// see (forwarder/proxy patterns, storage-loaded blobs). Split into
+	// [selector, rest]: the 4-byte selector can match the callee router,
+	// and the remainder flows into ApplicationArgs[1] as ONE packed arg —
+	// so the call genuinely works only for targets taking a single static
+	// 32-byte argument (where the EVM word equals the ARC4 encoding) or a
+	// single raw-bytes argument. Warn so the limitation is visible; the
+	// recognizable abi.encode* shapes never reach here (typed re-encode
+	// in handleCallWithEncodeCall / handleCallWithSignatureArgs).
+	Logger::instance().warning(
+		"low-level .call(data) with an opaque payload: forwarding "
+		"[selector, rest] as-is. This matches a puya-sol callee only when "
+		"the target method takes a single static 32-byte argument (or raw "
+		"bytes); multi-argument and dynamic-argument targets cannot be "
+		"reconstructed from an EVM-shaped blob at runtime.", _loc);
 	static int s_rawCallTmpCounter = 0;
 	std::string tmpName = "__rawcall_data_" + std::to_string(++s_rawCallTmpCounter);
 	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
