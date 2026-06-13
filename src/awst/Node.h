@@ -920,6 +920,13 @@ inline std::shared_ptr<IntrinsicCall> makeAppGlobalPut(
 
 // `extract <offset> <length>; <bytesExpr>` — 2-immediate form for constant
 // offset/length; stack arg is the source bytes expression.
+//
+// AVM SEMANTICS, easy to misread: when `length == 0` the `extract` opcode
+// returns bytes from `offset` to the END of the source — NOT zero bytes.
+// So `makeExtract(x, N, 0)` is the idiom for "strip the first N bytes,
+// keep the rest" (used to drop ARC4 length/return prefixes). Two separate
+// code audits flagged this as an "extracts zero bytes" bug; it is not.
+// Use makeExtract3 when the length is a non-constant runtime value.
 inline std::shared_ptr<IntrinsicCall> makeExtract(
 	std::shared_ptr<Expression> bytesExpr,
 	int offset, int length,
@@ -1101,6 +1108,12 @@ inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 // EVM-ABI word-alignment write. Exact padding via bzero((32 - len%32) % 32);
 // the canonical bridge for ARC4→EVM tail framing (the read-side partners
 // are uint64FromAbiWord in builder/abi and makeExtractUInt16 below).
+//
+// CONTRACT: references `bytes` TWICE (len + concat). Callers passing a
+// side-effecting expression must makeEvalOnce it first, or it evaluates
+// twice. Current callers are safe — encodeDynamicTail pre-caches via
+// makeEvalOnce; the synthetic-calldata caller passes a pure var-derived
+// value — but a new caller could reintroduce a double-eval.
 inline std::shared_ptr<Expression> makeRightPadTo32Multiple(
 	std::shared_ptr<Expression> bytes, SourceLocation loc)
 {

@@ -353,6 +353,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto buildInnerTxnResult = [&]() -> std::shared_ptr<awst::Expression> {
 			auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 			// extract(readLog, 4, 0) — strip the 4-byte ARC4 return prefix.
+			// len=0 → extract to END: strip the 4-byte ARC4 return prefix.
 			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
 				return strip;

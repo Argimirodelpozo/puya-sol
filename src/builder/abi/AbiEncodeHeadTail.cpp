@@ -234,6 +234,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
 
 				auto bytesCast = awst::makeAsBytes(arrayExpr, _loc);
+				// len=0 → extract to END: strip the 2-byte ARC4 length header,
+				// keep all element bytes.
 				auto stripHeader = awst::makeExtract(std::move(bytesCast), 2, 0, _loc);
 
 				return awst::makeConcat(std::move(lenPadded), std::move(stripHeader), _loc);

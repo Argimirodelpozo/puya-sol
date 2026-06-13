@@ -192,6 +192,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 
 	// Read LastLog and strip the 4-byte ARC4 return prefix
 	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
+	// len=0 → extract to END: strip the 4-byte ARC4 return prefix, keep the rest.
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
