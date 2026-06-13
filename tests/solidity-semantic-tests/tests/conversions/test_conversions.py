@@ -350,3 +350,20 @@ def test_struct_param_selector(harness):
         arc4_selector("takeStructArr((uint256,uint256)[])uint256")
     assert bytes(harness.call(app, "selEnumStruct()").abi_return) == \
         arc4_selector("takeEnumStruct((uint8,int8,byte[3]))uint256")
+
+
+def test_getter_abi_validation(harness):
+    """conversions/contracts/getter_abi_validation.sol  (CUSTOM)
+
+    A public getter for `mapping(uint8 => V)` decodes its key as a full
+    uint64 (selector "m(uint64)"), so a raw caller can pass an out-of-range
+    key. The getter must apply the same buildABIEntryChecks a real method
+    does — assert key <= 255 (abicoder v2) before hashing the slot — not
+    silently read m[0]. Regression for the getter ABI-validation gap."""
+    app = harness.compile_and_deploy("conversions/contracts/getter_abi_validation.sol")
+    # in-range keys read the right slots
+    assert as_int(harness.call(app, "m(uint64)", 0).abi_return) == 99
+    assert as_int(harness.call(app, "m(uint64)", 5).abi_return) == 42
+    # out-of-range key (256 > uint8 max) must REVERT, not read m[256 & 0xff]=m[0]
+    r = harness.call(app, "m(uint64)", 256, expect_revert=True)
+    assert r.reverted

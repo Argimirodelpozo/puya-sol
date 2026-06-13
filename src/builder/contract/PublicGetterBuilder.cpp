@@ -1,6 +1,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
+#include "builder/contract/ParamABIValidator.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -578,28 +579,31 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				if (ann.useABICoderV2.set())
 					getterV2 = *ann.useABICoderV2;
 			}
-			if (getterV2)
+			// ABI entry validation for the getter's KEY params. Getters
+			// previously validated only enum keys (and only under v2), so a
+			// raw caller could pass an out-of-range sub-64-bit mapping key
+			// (e.g. 256 to a `mapping(uint8 => V)` getter, whose ABI arg is a
+			// full uint64) and silently hit the WRONG storage slot. Reuse the
+			// exact buildABIEntryChecks the router runs for real methods, and
+			// insert at the FRONT so any mask applies before the key
+			// derivation reads the param. (Array-index getter params are
+			// uint256 — unaffected; only sub-64-bit mapping keys need this.)
 			{
+				std::vector<ABIParamDesc> descs;
+				descs.reserve(solParamTypes.size());
 				for (size_t pi = 0; pi < solParamTypes.size(); ++pi)
 				{
-					auto const* pt = solParamTypes[pi];
-					// Enum validation
-					if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(pt))
-					{
-						unsigned memberCount = enumType->numberOfMembers();
-						std::string pname = (pi < solParamNames.size() && !solParamNames[pi].empty())
-							? solParamNames[pi] : "key" + std::to_string(pi);
-
-						auto pv = awst::makeVarExpression(pname, awst::WType::uint64Type(), loc);
-
-						auto mv = awst::makeIntegerConstant(memberCount - 1, loc);
-
-						auto cmp = awst::makeNumericCompare(pv, awst::NumericComparison::Lte, std::move(mv), loc);
-
-						auto as = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "enum validation"), loc);
-						body->body.push_back(std::move(as));
-					}
+					std::string pname = (pi < solParamNames.size() && !solParamNames[pi].empty())
+						? solParamNames[pi] : "key" + std::to_string(pi);
+					descs.push_back({solParamTypes[pi], std::move(pname), loc});
 				}
+				// _enumChecksRequireV2=true: an auto-getter does not range-
+				// check enum keys under abicoder v1 (matches solc).
+				auto checks = buildABIEntryChecks(descs, getterV2, /*_enumChecksRequireV2=*/true);
+				body->body.insert(
+					body->body.begin(),
+					std::make_move_iterator(checks.begin()),
+					std::make_move_iterator(checks.end()));
 			}
 
 			auto ret = awst::makeReturnStatement(std::move(readExpr), loc);
