@@ -193,8 +193,8 @@ def test_selector_1(harness):
     app = harness.compile_and_deploy("functionTypes/contracts/selector_1.sol", via_yul_behavior=True)
     # EVM_DIVERGENCE: selectors are sha512_256 on AVM (keccak on EVM).
     from framework import arc4_selector
-    s1 = arc4_selector("ext()")
-    s2 = arc4_selector("pub()")
+    s1 = arc4_selector("ext()void")
+    s2 = arc4_selector("pub()void")
     r = harness.call(app, "test()")
     assert [bytes(x) for x in r.abi_return] == [s1, s2, s1, s2]
 
@@ -205,7 +205,7 @@ def test_selector_2(harness):
     r = harness.call(app, "test()")
     # EVM_DIVERGENCE: sha512_256 selectors.
     from framework import arc4_selector
-    assert [bytes(x) for x in r.abi_return] == [arc4_selector("ext()"), arc4_selector("pub()")]
+    assert [bytes(x) for x in r.abi_return] == [arc4_selector("ext()void"), arc4_selector("pub()void")]
 
 def test_selector_assignment_expression(harness):
     """functionTypes/contracts/selector_assignment_expression.sol"""
@@ -229,16 +229,16 @@ def test_selector_ternary(harness):
     app = harness.compile_and_deploy("functionTypes/contracts/selector_ternary.sol")
     # EVM_DIVERGENCE: sha512_256 selectors.
     from framework import arc4_selector
-    assert bytes(harness.call(app, "h(bool)", True).abi_return) == arc4_selector("f()")
-    assert bytes(harness.call(app, "h(bool)", False).abi_return) == arc4_selector("g()")
+    assert bytes(harness.call(app, "h(bool)", True).abi_return) == arc4_selector("f()void")
+    assert bytes(harness.call(app, "h(bool)", False).abi_return) == arc4_selector("g()void")
 
 def test_selector_ternary_function_pointer_from_function_call(harness):
     """functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol"""
     app = harness.compile_and_deploy("functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol")
     # EVM_DIVERGENCE: sha512_256 selectors.
     from framework import arc4_selector
-    assert bytes(harness.call(app, "test(bool)", True).abi_return) == arc4_selector("f()")
-    assert bytes(harness.call(app, "test(bool)", False).abi_return) == arc4_selector("g()")
+    assert bytes(harness.call(app, "test(bool)", True).abi_return) == arc4_selector("f()void")
+    assert bytes(harness.call(app, "test(bool)", False).abi_return) == arc4_selector("g()void")
 
 def test_stack_height_check_on_adding_gas_variable_to_function(harness):
     """functionTypes/contracts/stack_height_check_on_adding_gas_variable_to_function.sol"""

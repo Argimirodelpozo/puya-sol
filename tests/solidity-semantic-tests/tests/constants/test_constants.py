@@ -89,7 +89,9 @@ def test_function_unreferenced(harness):
     """constants/contracts/function_unreferenced.sol"""
     app = harness.compile_and_deploy("constants/contracts/function_unreferenced.sol")
     # Function selector (4 bytes); EVM-flat encoding left-aligns into a word.
-    assert bytes(harness.call(app, "f()").abi_return) == bytes.fromhex("e2179b8e")
+    # EVM_DIVERGENCE: ARC-4 canonical selector.
+    from framework import arc4_selector
+    assert bytes(harness.call(app, "f()").abi_return) == arc4_selector("g()void")
 
 def test_same_constants_different_files(harness):
     """constants/contracts/same_constants_different_files.sol"""

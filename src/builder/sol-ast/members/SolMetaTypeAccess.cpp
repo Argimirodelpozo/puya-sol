@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/itxn/InnerCallHandlers.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -144,7 +145,13 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 			// interface's OWN functions, inherited ones excluded.
 			for (auto const& it: contractType->contractDefinition().interfaceFunctionList(false))
 			{
-				auto sig = it.second->externalSignature();
+				// ARC-4 canonical form (router selector) so the XOR equals
+				// the XOR of the members' f.selector values.
+				auto const* fd = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+					&it.second->declaration());
+				auto sig = fd
+					? eb::InnerCallHandlers::buildMethodSelector(m_ctx, fd)
+					: it.second->externalSignature();
 				auto sel = awst::makeMethodConstant(
 					sig, awst::WType::bytesType(), m_loc);
 				if (!acc)

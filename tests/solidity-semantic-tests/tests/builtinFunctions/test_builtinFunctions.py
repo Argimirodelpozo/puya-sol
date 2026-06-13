@@ -212,10 +212,16 @@ def test_function_types_sig(harness):
     # `.selector` returns a bytes4 (4 raw bytes); the original EVM-flat
     # fixture left-aligns each into a 32-byte word, but AVM returns the
     # 4-byte selector directly.
-    assert bytes(harness.call(app, "f()").abi_return) == bytes.fromhex("26121ff0")
-    assert bytes(harness.call(app, "g()").abi_return) == bytes.fromhex("4bb8a92a")
-    assert bytes(harness.call(app, "h()").abi_return) == bytes.fromhex("4bb8a92a")
-    assert bytes(harness.call(app, "i()").abi_return) == bytes.fromhex("0c55699c")
+    # EVM_DIVERGENCE: ARC-4 canonical selectors (sha512_256 of
+    # "name(args)return") — `this.f.selector` now equals the fn-ptr slot
+    # value g/h read back.
+    from framework import arc4_selector
+    s_f = arc4_selector("f()byte[4]")
+    assert bytes(harness.call(app, "f()").abi_return) == s_f
+    assert bytes(harness.call(app, "g()").abi_return) == s_f
+    assert bytes(harness.call(app, "h()").abi_return) == s_f
+    # public-state-var getter selector: router form "x()uint256".
+    assert bytes(harness.call(app, "i()").abi_return) == arc4_selector("x()uint256")
 
 def test_iterated_keccak256_with_bytes(harness):
     """builtinFunctions/contracts/iterated_keccak256_with_bytes.sol"""

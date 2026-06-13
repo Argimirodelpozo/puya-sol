@@ -213,7 +213,10 @@ def test_external_function_pointer_selector(harness):
     assert as_int(r.abi_return) == 2309670203
     # testSol() -> 0xe16b4a9b
     r = harness.call(app, "testSol()")
-    assert as_int(r.abi_return) == 3781905051
+    # EVM_DIVERGENCE: ARC-4 canonical selector — equals the fn-ptr slot
+    # value testYul() reads (sha512_256("testFunction()void")[:4]).
+    from framework import arc4_selector
+    assert as_int(r.abi_return) == int.from_bytes(arc4_selector("testFunction()void"), "big")
 
 def test_external_function_pointer_selector_assignment(harness):
     """inlineAssembly/contracts/external_function_pointer_selector_assignment.sol"""

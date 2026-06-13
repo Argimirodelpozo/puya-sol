@@ -63,6 +63,23 @@ private:
 		solidity::frontend::FunctionCall const& _encodeCallExpr,
 		awst::SourceLocation const& _loc);
 
+	/// .call(abi.encodeWithSignature/WithSelector(...)) → typed inner call
+	/// (sha512_256 selector + per-arg ARC4 ApplicationArgs)
+	static std::unique_ptr<InstanceBuilder> handleCallWithSignatureArgs(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _receiver,
+		solidity::frontend::FunctionCall const& _encodeExpr,
+		bool _isSignature,
+		awst::SourceLocation const& _loc);
+
+	/// Shared tail: submit the typed inner app call and produce the
+	/// (true, AVM-framed returndata) tuple (LastLog minus ARC4 prefix).
+	static std::unique_ptr<InstanceBuilder> submitTypedAppCall(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _receiver,
+		std::shared_ptr<awst::TupleExpression> _argsTuple,
+		awst::SourceLocation const& _loc);
+
 	/// .call(rawBytes) → inner app call with raw bytes as ApplicationArgs[0]
 	static std::unique_ptr<InstanceBuilder> handleCallWithRawData(
 		ContractContext& _ctx,
@@ -107,10 +124,22 @@ private:
 		std::shared_ptr<awst::Expression> _arg,
 		awst::SourceLocation const& _loc);
 
-	/// Build the ARC4 method selector string from a FunctionDefinition.
+public:
+	/// Build the ARC4 method selector string from a FunctionDefinition —
+	/// THE canonical selector form (ARC4 type names, return suffix, "void"
+	/// for none): what routers dispatch on, fn-pointer slots store, and
+	/// f.selector / type(I).interfaceId expose.
 	static std::string buildMethodSelector(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _func);
+
+	/// Overload from a name + FunctionType (public-state-var getters have
+	/// no FunctionDefinition; their signature derives from the getter's
+	/// FunctionType parameter/return lists).
+	static std::string buildMethodSelector(
+		ContractContext& _ctx,
+		std::string const& _name,
+		solidity::frontend::FunctionType const& _funcType);
 
 	static std::shared_ptr<awst::IntrinsicCall> makeExtract(
 		std::shared_ptr<awst::Expression> _source, int _offset, int _length,

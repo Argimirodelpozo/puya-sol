@@ -11,8 +11,8 @@ def _xor4(a: bytes, b: bytes) -> bytes:
 
 # EVM_DIVERGENCE: ERC-165 IDs are XORs of sha512_256 selectors on AVM
 # (keccak on EVM) — matches type(I).interfaceId and f.selector on-chain.
-ERC165_ID = arc4_selector("supportsInterface(bytes4)")
-SIMPSON_ID = _xor4(arc4_selector("is2D()"), arc4_selector("skinColor()"))
+ERC165_ID = arc4_selector("supportsInterface(byte[4])bool")
+SIMPSON_ID = _xor4(arc4_selector("is2D()bool"), arc4_selector("skinColor()string"))
 def _not_an_id(idb: bytes) -> bytes:
     return bytes([idb[0] ^ 0x07]) + idb[1:]
 

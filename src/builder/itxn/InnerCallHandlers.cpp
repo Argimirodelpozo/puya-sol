@@ -125,41 +125,90 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	return cast;
 }
 
+namespace
+{
+
+// Integers: canonical selector name (<=64 → "uint64", >64 → "uintN",
+// signedness dropped) — must match the callee router.
+std::string solTypeToARC4Impl(
+	ContractContext& _ctx, solidity::frontend::Type const* _type)
+{
+	if (auto name = builder::TypeCoercion::intSelectorName(_type))
+		return *name;
+	auto* wtype = _ctx.typeMapper.map(_type);
+	if (wtype == awst::WType::biguintType()) return "uint256";
+	if (wtype == awst::WType::uint64Type()) return "uint64"; // enums, etc.
+	if (wtype == awst::WType::boolType()) return "bool";
+	if (wtype == awst::WType::accountType()) return "address";
+	if (wtype == awst::WType::bytesType()) return "byte[]";
+	if (wtype == awst::WType::stringType()) return "string";
+	if (wtype->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bw = static_cast<awst::BytesWType const*>(wtype);
+		if (bw->length().has_value())
+			return "byte[" + std::to_string(bw->length().value()) + "]";
+		return "byte[]";
+	}
+	if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
+		return "struct " + structType->structDefinition().name();
+	return _type->toString(true);
+}
+
+std::string solTypeToARC4RetImpl(
+	ContractContext& _ctx, solidity::frontend::Type const* _type)
+{
+	if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
+		return *name;
+	return solTypeToARC4Impl(_ctx, _type);
+}
+
+} // namespace
+
+std::string InnerCallHandlers::buildMethodSelector(
+	ContractContext& _ctx,
+	std::string const& _name,
+	solidity::frontend::FunctionType const& _funcType)
+{
+	std::string sel = _name + "(";
+	bool first = true;
+	for (auto const& paramType : _funcType.parameterTypes())
+	{
+		if (!first) sel += ",";
+		sel += solTypeToARC4Impl(_ctx, paramType);
+		first = false;
+	}
+	sel += ")";
+
+	auto const& rets = _funcType.returnParameterTypes();
+	if (rets.size() > 1)
+	{
+		sel += "(";
+		bool firstRet = true;
+		for (auto const& retType : rets)
+		{
+			if (!firstRet) sel += ",";
+			sel += solTypeToARC4RetImpl(_ctx, retType);
+			firstRet = false;
+		}
+		sel += ")";
+	}
+	else if (rets.size() == 1)
+		sel += solTypeToARC4RetImpl(_ctx, rets[0]);
+	else
+		sel += "void";
+
+	return sel;
+}
+
 std::string InnerCallHandlers::buildMethodSelector(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const* _func)
 {
-	auto solTypeToARC4 = [&](solidity::frontend::Type const* _type) -> std::string {
-		// Integers: canonical selector name (<=64 → "uint64", >64 → "uintN",
-		// signedness dropped) — must match the callee router. The previous
-		// explicit branches emitted "int256"/exact-"intN"/"uintN" names that
-		// mismatched the callee (which collapses <=64 to uint64 and drops sign).
-		if (auto name = builder::TypeCoercion::intSelectorName(_type))
-			return *name;
-		auto* wtype = _ctx.typeMapper.map(_type);
-		if (wtype == awst::WType::biguintType()) return "uint256";
-		if (wtype == awst::WType::uint64Type()) return "uint64"; // enums, etc.
-		if (wtype == awst::WType::boolType()) return "bool";
-		if (wtype == awst::WType::accountType()) return "address";
-		if (wtype == awst::WType::bytesType()) return "byte[]";
-		if (wtype == awst::WType::stringType()) return "string";
-		if (wtype->kind() == awst::WTypeKind::Bytes)
-		{
-			auto const* bw = static_cast<awst::BytesWType const*>(wtype);
-			if (bw->length().has_value())
-				return "byte[" + std::to_string(bw->length().value()) + "]";
-			return "byte[]";
-		}
-		if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
-			return "struct " + structType->structDefinition().name();
-		return _type->toString(true);
+	auto solTypeToARC4 = [&](solidity::frontend::Type const* _type) {
+		return solTypeToARC4Impl(_ctx, _type);
 	};
-	// Return-position names differ from params for SIGNED ints (signed return =
-	// full 256-bit two's complement → "uint256").
-	auto solTypeToARC4Ret = [&](solidity::frontend::Type const* _type) -> std::string {
-		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
-			return *name;
-		return solTypeToARC4(_type);
+	auto solTypeToARC4Ret = [&](solidity::frontend::Type const* _type) {
+		return solTypeToARC4RetImpl(_ctx, _type);
 	};
 
 	std::string sel = _func->name() + "(";
@@ -527,7 +576,22 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
 			if (encodeMA && encodeMA->memberName() == "encodeCall" && encodeCallExpr->arguments().size() >= 2)
 			{
-				auto result = handleCallWithEncodeCall(_ctx, std::move(_receiver), *encodeCallExpr, _loc);
+				auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _loc);
+				if (result) return result;
+			}
+			// .call(abi.encodeWithSignature/WithSelector(...)): the encoder is
+			// visible at the call site, so re-encode as a TYPED inner call
+			// (sha512_256 selector + one ARC4 ApplicationArg per argument)
+			// instead of forwarding an EVM-shaped blob the callee router
+			// could never parse. See EVM_DIVERGENCE.md "Encoding model" #1.
+			if (encodeMA
+				&& (encodeMA->memberName() == "encodeWithSignature"
+					|| encodeMA->memberName() == "encodeWithSelector")
+				&& !encodeCallExpr->arguments().empty())
+			{
+				auto result = handleCallWithSignatureArgs(
+					_ctx, _receiver, *encodeCallExpr,
+					encodeMA->memberName() == "encodeWithSignature", _loc);
 				if (result) return result;
 			}
 		}

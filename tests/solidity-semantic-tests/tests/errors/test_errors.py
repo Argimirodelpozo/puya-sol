@@ -22,19 +22,17 @@ def test_error_in_library_and_interface(harness):
 
 def test_error_selector(harness):
     """errors/contracts/error_selector.sol
-
-    SELECTOR NOTE: Error selectors are keccak256-based on BOTH EVM and AVM.
-    Solidity's `errorName.selector` is `bytes4(keccak256(canonicalSig))`
-    regardless of backend — puya-sol folds this at compile time so error
-    selectors appear as the same 4 bytes EVM uses. Only METHOD selectors
-    diverge between backends (AVM uses sha512_256 there). Reads of the
-    emitted TEAL confirm `0x92bbf6e8` (= keccak256("E()")[:4]) in the
-    bytecblock for this contract.
+    SELECTOR NOTE: error selectors follow the project-wide sha512_256
+    convention (selector == revert-payload prefix == sha512_256 of the
+    canonical no-return signature). EVM uses keccak256 — EVM_DIVERGENCE.
     """
     app = harness.compile_and_deploy("errors/contracts/error_selector.sol")
-    e1 = bytes.fromhex("92bbf6e8")  # keccak256("E()")[:4]
-    e2 = bytes.fromhex("002ff067")  # keccak256("E(uint256)")[:4] — leading zero byte
-    sel_F = bytes.fromhex("28811f59")  # keccak256("F()")[:4]
+    # EVM_DIVERGENCE: error selectors are sha512_256(canonicalSig)[:4],
+    # matching the custom-error revert payload prefix (EVM uses keccak).
+    from framework import arc4_selector
+    e1 = arc4_selector("E()")
+    e2 = arc4_selector("E(uint256)")
+    sel_F = arc4_selector("F()")
     r = harness.call(app, "test1()")
     assert [bytes(x) for x in r.abi_return] == [e1, e2, e1, e1]
     r = harness.call(app, "test2()")

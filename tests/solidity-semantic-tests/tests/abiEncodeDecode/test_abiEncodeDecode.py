@@ -207,9 +207,11 @@ def test_abi_encode_with_signature(harness):
     assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
     assert bytes(harness.call(app, "f1s()").abi_return) == payload_abc
 
-    # f2 signature is the long Lorem ipsum string; selector picked from the
-    # contract's actual hash.
-    sel_long = bytes.fromhex("e9c921cd")
+    # f2 signature is the long Lorem ipsum string; encodeWithSignature
+    # hashes the string AS GIVEN (sha512_256) — EVM_DIVERGENCE.
+    sel_long = arc4_selector(
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
+        "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
     r = harness.call(app, "f2()")
     elems = [(2**256 - 1) - i for i in range(4)]
     expected_r = (
@@ -250,7 +252,8 @@ def test_abi_encode_with_signaturev2(harness):
     assert list(r.abi_return[1]) == [0, 0]
 
     # f4: selector("Lorem ipsum dolor sit ethereum........") + uintmax + offset + 3 + S tail
-    sel_s_b = bytes.fromhex("7c793002")
+    # EVM_DIVERGENCE: runtime string signature → sha512_256 as given.
+    sel_s_b = arc4_selector("Lorem ipsum dolor sit ethereum........")
     s_a, s_c = 0x1234567, 0x1234
     s_b = b"Lorem ipsum dolor sit ethereum........"
     s_tail = (

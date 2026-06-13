@@ -19,6 +19,7 @@ private:
 
 	/// Try to resolve a signature from a sub-expression (for ternary distribution).
 	std::string resolveSignature(solidity::frontend::Expression const& _expr);
+	std::string canonicalSelectorSig(solidity::frontend::FunctionType const& _ft);
 };
 
 } // namespace puyasol::builder::sol_ast

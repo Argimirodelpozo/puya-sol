@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolSelectorAccess.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/itxn/InnerCallHandlers.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -25,37 +26,54 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::strin
 	return awst::makeMethodConstant(_sig, awst::WType::bytesType(), m_loc);
 }
 
+// FUNCTION selectors hash the ARC-4 canonical signature — ARC4 type
+// names, return type appended, "void" for none — i.e. exactly what the
+// router dispatches on and what fn-pointer slots store
+// (InnerCallHandlers::buildMethodSelector). Events and errors keep their
+// no-return forms: those match the ARC-28 emit prefix and the custom-
+// error revert payload respectively.
+std::string SolSelectorAccess::canonicalSelectorSig(FunctionType const& _ft)
+{
+	if (_ft.kind() == FunctionType::Kind::Error)
+	{
+		try { return _ft.externalSignature(); }
+		catch (...) { return {}; }
+	}
+	if (_ft.hasDeclaration())
+	{
+		if (auto const* fd = dynamic_cast<FunctionDefinition const*>(&_ft.declaration()))
+			return eb::InnerCallHandlers::buildMethodSelector(m_ctx, fd);
+		// Public-state-var getter: no FunctionDefinition; the router method
+		// signature derives from the getter FunctionType.
+		if (dynamic_cast<VariableDeclaration const*>(&_ft.declaration()))
+			return eb::InnerCallHandlers::buildMethodSelector(
+				m_ctx, _ft.declaration().name(), _ft);
+	}
+	try { return _ft.externalSignature(); }
+	catch (...) { return {}; }
+}
+
 std::string SolSelectorAccess::resolveSignature(Expression const& _expr)
 {
 	auto const* ft = dynamic_cast<FunctionType const*>(_expr.annotation().type);
 	if (ft)
 	{
-		try { return ft->externalSignature(); }
-		catch (...) {}
+		auto sig = canonicalSelectorSig(*ft);
+		if (!sig.empty()) return sig;
 	}
 	if (auto const* id = dynamic_cast<Identifier const*>(&_expr))
 	{
 		if (auto const* fd = dynamic_cast<FunctionDefinition const*>(
 				id->annotation().referencedDeclaration))
-		{
-			std::string s = fd->name() + "(";
-			bool first = true;
-			for (auto const& p: fd->parameters())
-			{
-				if (!first) s += ",";
-				s += p->type()->canonicalName();
-				first = false;
-			}
-			return s + ")";
-		}
+			return eb::InnerCallHandlers::buildMethodSelector(m_ctx, fd);
 	}
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_expr))
 	{
 		auto const* mft = dynamic_cast<FunctionType const*>(ma->annotation().type);
 		if (mft)
 		{
-			try { return mft->externalSignature(); }
-			catch (...) {}
+			auto sig = canonicalSelectorSig(*mft);
+			if (!sig.empty()) return sig;
 		}
 	}
 	return {};
@@ -140,7 +158,9 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 		{
 			try
 			{
-				sig = funcType->externalSignature();
+				sig = canonicalSelectorSig(*funcType);
+				if (sig.empty())
+					throw std::runtime_error("unresolved selector signature");
 			}
 			catch (...)
 			{
