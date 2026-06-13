@@ -1,3 +1,19 @@
+# Semantic Test Status — v359
+
+> **GETTER ABI VALIDATION (e41861abdc, 2026-06-13):** zero-reg, **60 failed /
+> 1233 passed / 83 xf** (+1 = the new getter test). Public-state-var
+> getters now run the same sub-64-bit ABI param validation as real methods
+> (buildABIEntryChecks, refactored into a descriptor-based core). A
+> `mapping(uint8 => V)` getter decodes its key as a full uint64, so a raw
+> caller could pass 256 and silently hit m[256 & 0xff] == m[0] instead of
+> reverting — now masked/asserted at the body front. ENUM keys keep the
+> v1/v2 distinction via _enumChecksRequireV2: an auto-getter does NOT
+> range-check enum keys under abicoder v1 (table(0xa7)->0), only v2
+> (->revert), while user methods that read the enum panic under both. The
+> first full run caught a v1-enum regression (unconditional enum check);
+> diagnosed as real EVM semantics + fixed with the flag (the self-
+> correction the full-run gate exists for). Closes [[getter-abi-validation-gap]].
+
 # Semantic Test Status — v358
 
 > **STRUCT/ARRAY SELECTOR EXPANSION (2026-06-13, 73760008fa):** zero-reg,
