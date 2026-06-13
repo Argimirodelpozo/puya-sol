@@ -128,8 +128,64 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 namespace
 {
 
-// Integers: canonical selector name (<=64 → "uint64", >64 → "uintN",
-// signedness dropped) — must match the callee router.
+// NESTED ARC4 type name (struct-field / array-element position): exact
+// bit width, signedness PRESERVED, recursive. This is what puya emits for
+// aggregate members, and it differs from the top-level param namer below
+// in two ways that the callee router enforces:
+//   - exact width: a nested `uint8` stays "uint8" (top-level collapses to
+//     "uint64" because a top-level scalar int is transported as a native
+//     word, while a nested one is ARC4-packed at its declared width);
+//   - signedness kept: a nested `int8` is "int8" (top-level drops sign to
+//     "uint8"/"uint128"/… for the same transport reason).
+// Verified against puya's `method "…"` output for struct/nested-struct/
+// array-of-struct/enum/int8/bytesN/fixed-array params.
+std::string nestedArc4Name(
+	ContractContext& _ctx, solidity::frontend::Type const* _type)
+{
+	using namespace solidity::frontend;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
+		_type = &udvt->underlyingType();
+	if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
+		return (intT->isSigned() ? "int" : "uint") + std::to_string(intT->numBits());
+	if (auto const* enumT = dynamic_cast<EnumType const*>(_type))
+	{
+		auto const* enc = dynamic_cast<IntegerType const*>(enumT->encodingType());
+		return "uint" + std::to_string(enc ? enc->numBits() : 8u);
+	}
+	if (dynamic_cast<BoolType const*>(_type)) return "bool";
+	if (dynamic_cast<AddressType const*>(_type)) return "address";
+	if (auto const* fb = dynamic_cast<FixedBytesType const*>(_type))
+		return "byte[" + std::to_string(fb->numBytes()) + "]";
+	if (auto const* arrT = dynamic_cast<ArrayType const*>(_type))
+	{
+		if (arrT->isByteArrayOrString())
+			return arrT->isString() ? "string" : "byte[]";
+		std::string elem = nestedArc4Name(_ctx, arrT->baseType());
+		if (arrT->isDynamicallySized())
+			return elem + "[]";
+		return elem + "[" + arrT->length().str() + "]";
+	}
+	if (auto const* structT = dynamic_cast<StructType const*>(_type))
+	{
+		std::string s = "(";
+		bool first = true;
+		for (auto const& m : structT->structDefinition().members())
+		{
+			if (!first) s += ",";
+			s += nestedArc4Name(_ctx, m->type());
+			first = false;
+		}
+		return s + ")";
+	}
+	return _type->toString(true);
+}
+
+// TOP-LEVEL param name: scalar ints collapse to "uint64"/"uintN" with
+// signedness dropped (intSelectorName); enums → "uint64"; aggregates
+// (struct/array) expand via nestedArc4Name so the string matches the
+// callee router exactly (previously a struct emitted "struct P" and an
+// array-of-struct fell through toString to "struct C.P[]" — neither
+// matched puya's tuple form, silently breaking cross-contract dispatch).
 std::string solTypeToARC4Impl(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
@@ -149,8 +205,9 @@ std::string solTypeToARC4Impl(
 			return "byte[" + std::to_string(bw->length().value()) + "]";
 		return "byte[]";
 	}
-	if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
-		return "struct " + structType->structDefinition().name();
+	if (dynamic_cast<solidity::frontend::StructType const*>(_type)
+		|| dynamic_cast<solidity::frontend::ArrayType const*>(_type))
+		return nestedArc4Name(_ctx, _type);
 	return _type->toString(true);
 }
 

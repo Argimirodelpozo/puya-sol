@@ -329,3 +329,24 @@ def test_struct_field_call_shapes(harness):
     app = harness.compile_and_deploy("conversions/contracts/int128_everywhere.sol")
     assert tuple(as_int(x) for x in harness.call(app, "destructure()").abi_return) == (11, 22, 1)
     assert tuple(as_int(x) for x in harness.call(app, "fieldCall()").abi_return) == (6, 1)
+
+
+def test_struct_param_selector(harness):
+    """conversions/contracts/struct_param_selector.sol  (CUSTOM)
+
+    A method selector for struct/array/enum params must hash the ARC4
+    TUPLE expansion the callee router dispatches on — `(uint256,uint256)`,
+    not `struct P`. These strings are puya's exact `method "..."` output;
+    f.selector goes through buildMethodSelector, so a mismatch here means
+    cross-contract abi.encodeCall/.call to the method silently misses
+    dispatch. EVM uses keccak; ours is sha512_256 (EVM_DIVERGENCE)."""
+    from framework import arc4_selector
+    app = harness.compile_and_deploy("conversions/contracts/struct_param_selector.sol")
+    assert bytes(harness.call(app, "selStruct()").abi_return) == \
+        arc4_selector("takeStruct((uint256,uint256))uint256")
+    assert bytes(harness.call(app, "selNested()").abi_return) == \
+        arc4_selector("takeNested(((uint256,uint256),uint8))uint256")
+    assert bytes(harness.call(app, "selStructArr()").abi_return) == \
+        arc4_selector("takeStructArr((uint256,uint256)[])uint256")
+    assert bytes(harness.call(app, "selEnumStruct()").abi_return) == \
+        arc4_selector("takeEnumStruct((uint8,int8,byte[3]))uint256")
