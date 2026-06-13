@@ -77,7 +77,11 @@ new EVM-shaped bytes anywhere else is a bug.
 
 **Known seams violating the rule (queued, ordered):**
 
-1. **`.call(payload)` end-to-end incoherence.** `abi.encodeWithSignature`
+1. **`.call(payload)` end-to-end incoherence.** ✅ DONE `ee40d9f20c` —
+   recognizable abi.encode* payloads lower as typed inner calls
+   (per-arg ARC4, AVM-framed returndata); opaque payloads forward
+   [selector, rest] with a warning.
+   Original text: **`.call(payload)` end-to-end incoherence.** `abi.encodeWithSignature`
    builds keccak selector + EVM head/tail args
    (`builder/abi/AbiSelectorCalldataBuilder.cpp`); non-self `.call(data)`
    splits that blob `[selector, rest]` and forwards verbatim to the callee
@@ -86,7 +90,15 @@ new EVM-shaped bytes anywhere else is a bug.
    never match a puya-sol callee (self-calls only work because they are
    pattern-rewritten to direct subroutine calls). Fix: one bridge that
    re-encodes toward puya-sol callees (sha512_256 + ARC4).
-2. **Selector hash split inside the `abi.*` family.** `encodeCall`, custom
+2. **Selector hash split inside the `abi.*` family.** ✅ DONE
+   `2b6a9f895d`+`08826f60a6` — everything FunctionDefinition/getter-
+   derived hashes the ARC-4 CANONICAL signature via buildMethodSelector
+   (the one canonicalizer; ARC4 type names + return suffix).
+   encodeWithSignature hashes the given string as-is (EVM-form strings
+   cannot be canonicalized — return type unknowable); errors keep the
+   no-return form (== revert payload prefix); events hash name(args)
+   (ARC-28, .selector = full 32-byte hash).
+   Original text: **Selector hash split inside the `abi.*` family.** `encodeCall`, custom
    errors, events, methods → sha512_256 (`MethodConstant`);
    `encodeWithSignature`/`encodeWithSelector` → keccak. Two `abi.encode*`
    spellings of the same function produce different bytes. Align with the
