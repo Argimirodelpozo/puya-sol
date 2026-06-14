@@ -1,3 +1,16 @@
+# Semantic Test Status — v363
+
+> **abi.decode MIXED-WIDTH STRUCT field-walk (baff492d67, 2026-06-14):** zero-reg,
+> **60 failed / 1238 passed / 83 xf** (+1). abi.decode of a static struct
+> slab-reinterpreted totalSize (ARC4) bytes from the EVM data — wrong when a
+> field is sub-32 (int128=16 ARC4 / 32 EVM): b=-1 not -7, c/d garbage. New
+> evmStaticSize() gates the slab to all-32 structs; mixed structs field-walk
+> (each field at its EVM offset). Decode counterpart to v362's encode fix —
+> together abi.decode(abi.encode(struct{int128})) round-trips. CLOSES the
+> encoding-inconsistency hunt: 5 bugs found+fixed this session (struct
+> selector, encodePacked enum, address[] encode, signed-aggregate encode,
+> mixed-struct decode), all silent + suite-invisible. [[encoding-model]]
+
 # Semantic Test Status — v362
 
 > **abi.encode SIGNED SUB-256 AGGREGATE (22d46b97a3, 2026-06-14):** zero-reg,
