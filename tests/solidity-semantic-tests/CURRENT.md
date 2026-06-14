@@ -1,3 +1,17 @@
+# Semantic Test Status — v360
+
+> **abi.encodePacked ENUM WIDTH + selfdestruct on-chain (0a53d90291, 2026-06-14):**
+> zero-reg, **60 failed / 1235 passed / 83 xf** (+2 vs v359 = the new
+> encodePacked + selfdestruct tests). abi.encodePacked packed an enum as the
+> 8-byte native word instead of its 1-byte uint8 encoding (corrupts keccak,
+> shifts following args) — fixed via the enum encodingType in the
+> packed-width switch. address packs as the full 32-byte AVM account (EVM
+> 20) — AVM-fundamental, documented. selfdestruct on-chain-verified
+> (CloseRemainderTo drains the app account fully). Found by encoding-
+> inconsistency hunting (same lens as the struct-selector bug); see
+> [[encoding-model]]. NEXT: abi.encode(address[]) element-width bug (20 vs
+> 32-byte ARC4 account) staged.
+
 # Semantic Test Status — v359
 
 > **GETTER ABI VALIDATION (e41861abdc, 2026-06-13):** zero-reg, **60 failed /
