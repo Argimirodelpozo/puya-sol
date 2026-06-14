@@ -1,3 +1,14 @@
+# Semantic Test Status — v362
+
+> **abi.encode SIGNED SUB-256 AGGREGATE (22d46b97a3, 2026-06-14):** zero-reg,
+> **60 failed / 1237 passed / 83 xf** (+1). abi.encode of a negative int128
+> inside a struct/array zero-extended (0x00..00fff9) instead of
+> sign-extending (0xff..fff9) → corrupts keccak + EVM decode. Fixed both
+> sites: struct fields (toPackedBytes via signExtendSignedElement) + array
+> elements (encodeDynArrayPadSmallElems runtime sign-pad). Found by
+> round-trip fuzzing — the 4th encoding-hunt bug. The DECODE counterpart
+> (mixed-width struct slab reinterpret) is #19, in progress. [[encoding-model]]
+
 # Semantic Test Status — v361
 
 > **abi.encode(address[]) ELEMENT WIDTH (36ddf1095c, 2026-06-14):** zero-reg,
