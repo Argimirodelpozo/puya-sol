@@ -409,3 +409,30 @@ def test_abi_encode_signed_aggregate(harness):
     ea = bytes(harness.call(app, "encArr(int128[])", [-7, 5]).abi_return)
     assert ea[64:96] == neg7
     assert ea[96:128] == bytes(31) + bytes([0x05])   # positive zero-extends
+
+
+def test_abi_decode_mixed_struct(harness):
+    """conversions/contracts/abi_roundtrip_mixed.sol  (CUSTOM)
+
+    abi.decode of a struct with mixed-width fields must field-walk (each
+    field at its own 32-byte EVM slot), not slab-reinterpret the whole
+    thing — the slab shortcut only works when ARC4 size == EVM size (all
+    32-byte fields). With an int128 field (16 ARC4 bytes / 32 EVM bytes)
+    the reinterpret mis-read every field from there on (b=-1, c wrong).
+    The decode counterpart to the signed-aggregate encode fix; together
+    they make abi.decode(abi.encode(P)) round-trip."""
+    from algosdk import account
+    asint = as_int
+    def signed(x, bits=256):
+        v = asint(x); return v - (1 << bits) if v >= (1 << (bits - 1)) else v
+    app = harness.compile_and_deploy("conversions/contracts/abi_roundtrip_mixed.sol")
+    a = account.generate_account()[1]
+    rr = harness.call(app, "rt((uint256,int128,address,bool))", [42, -7, a, True]).abi_return
+    assert asint(rr[0]) == 42
+    assert signed(rr[1]) == -7
+    assert rr[2] == a
+    assert rr[3] is True
+    rs = harness.call(app, "rtSmall((int128,uint8,bool))", [-9, 200, True]).abi_return
+    assert signed(rs[0]) == -9
+    assert asint(rs[1]) == 200
+    assert rs[2] is True

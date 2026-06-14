@@ -26,6 +26,44 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::uint64FromAbiWord(
 	return awst::makeWord32ToUInt64(std::move(_word32), _loc);
 }
 
+namespace
+{
+// EVM-ABI static byte size of a Solidity type: every value type occupies a
+// 32-byte slot, a static array T[N] is N slots, a static struct is the sum
+// of its fields. Returns -1 for dynamically-encoded types. Used to decide
+// whether the ARC4 byte layout coincides with the EVM layout (it does iff
+// ARC4 size == EVM size — i.e. every leaf is a full 32-byte word); when they
+// differ (an int128 field is 16 ARC4 bytes but a 32-byte EVM slot) the slab
+// reinterpret is wrong and we must walk fields.
+int evmStaticSize(solidity::frontend::Type const* _t)
+{
+	using namespace solidity::frontend;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_t))
+		_t = &udvt->underlyingType();
+	if (auto const* arr = dynamic_cast<ArrayType const*>(_t))
+	{
+		if (arr->isByteArrayOrString() || arr->isDynamicallySized())
+			return -1;
+		int elem = evmStaticSize(arr->baseType());
+		if (elem < 0) return -1;
+		return static_cast<int>(arr->length()) * elem;
+	}
+	if (auto const* st = dynamic_cast<StructType const*>(_t))
+	{
+		if (_t->isDynamicallyEncoded()) return -1;
+		int sum = 0;
+		for (auto const& m : st->structDefinition().members())
+		{
+			int fs = evmStaticSize(m->type());
+			if (fs < 0) return -1;
+			sum += fs;
+		}
+		return sum;
+	}
+	return 32;
+}
+} // namespace
+
 // ── decodeAbiValue: decode one value from EVM ABI bytes ──
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
@@ -102,7 +140,17 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			|| kind == awst::WTypeKind::ARC4Tuple)
 		{
 			int totalSize = ::puyasol::builder::computeEncodedElementSize(wtype);
-			if (totalSize > 32)
+			// For an ARC4Struct the slab reinterpret is only valid when the
+			// ARC4 layout coincides with EVM's — i.e. ARC4 size == EVM size, so
+			// every field is a full 32-byte word. A sub-32 field (int128=16B,
+			// uint8/bool=1B) makes ARC4 size SMALLER, so reinterpreting
+			// `totalSize` EVM bytes reads the wrong fields; those structs go to
+			// the field-walk below. (Tuples/arrays keep the original condition
+			// — narrowing to the confirmed struct bug to avoid touching the
+			// multi-value-decode path.)
+			bool structLayoutOk = kind != awst::WTypeKind::ARC4Struct
+				|| evmStaticSize(_solType) == totalSize;
+			if (totalSize > 32 && structLayoutOk)
 			{
 				auto slab = awst::makeExtract3(
 					std::move(_data),
@@ -112,6 +160,46 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 				return awst::makeReinterpretCast(std::move(slab), wtype, _loc);
 			}
 		}
+	}
+
+	// ── Static struct with a sub-32 field: walk fields at EVM offsets ──
+	//
+	// A static struct whose ARC4 layout differs from EVM (because some field
+	// is narrower than a full 32-byte word — int128=16B, uint8/bool=1B) can't
+	// be slab-reinterpreted. Each static field occupies evmStaticSize bytes in
+	// the EVM encoding (value types = 32), inline at `_offset`; decode each to
+	// its ARC4 field type and assemble a NewStruct. (All fields are static —
+	// a dynamic field would make the whole struct dynamically-encoded, handled
+	// below.) This is the decode counterpart to the signed/sub-32 aggregate
+	// ENCODE fix.
+	if (auto const* sStructType = dynamic_cast<solidity::frontend::StructType const*>(_solType);
+		sStructType && !_solType->isDynamicallyEncoded()
+		&& wtype->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		auto const* arc4Struct = static_cast<awst::ARC4Struct const*>(wtype);
+		auto newStruct = awst::makeNewStruct(wtype, _loc);
+		int evmOff = 0;
+		for (auto const& memberDecl : sStructType->structDefinition().members())
+		{
+			auto const* fieldSolType = memberDecl->type();
+			auto* fieldNativeType = _ctx.typeMapper.map(fieldSolType);
+			awst::WType const* arc4FieldType = nullptr;
+			for (auto const& [fname, ftype] : arc4Struct->fields())
+				if (fname == memberDecl->name()) { arc4FieldType = ftype; break; }
+			if (!arc4FieldType) arc4FieldType = fieldNativeType;
+
+			auto fieldOffset = awst::makeUInt64BinOp(
+				_offset, awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(evmOff, _loc), _loc);
+			auto fieldVal = decodeAbiValue(_ctx, _data, std::move(fieldOffset), fieldSolType, _loc);
+			if (fieldVal->wtype != arc4FieldType && fieldNativeType != arc4FieldType)
+				fieldVal = awst::makeARC4Encode(std::move(fieldVal), arc4FieldType, _loc);
+			newStruct->values[memberDecl->name()] = std::move(fieldVal);
+
+			int fs = evmStaticSize(fieldSolType);
+			evmOff += (fs > 0 ? fs : 32);
+		}
+		return newStruct;
 	}
 
 	// ── Dynamic struct: walk fields, build NewStruct ──
