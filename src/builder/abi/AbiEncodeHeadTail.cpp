@@ -248,8 +248,15 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			// (b) Small static element: per-element pad via runtime loop.
 			if (!elemIsDyn && elemByteSize > 0 && elemByteSize < 32)
 			{
+				// Signed sub-256 elements sign-extend (not zero-pad) when
+				// widened to the 32-byte ABI word.
+				auto const* elemIntBase = elemSolType;
+				if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(elemIntBase))
+					elemIntBase = &udvt->underlyingType();
+				auto const* elemIntType = dynamic_cast<IntegerType const*>(elemIntBase);
+				bool elemSigned = elemIntType && elemIntType->isSigned();
 				return encodeDynArrayPadSmallElems(
-					_ctx, _expr, elemSolType, elemByteSize, isFixedBytes, _loc);
+					_ctx, _expr, elemSolType, elemByteSize, isFixedBytes, elemSigned, _loc);
 			}
 
 			// (c) Dynamic element: head/tail re-encoding via runtime loop.

@@ -388,3 +388,24 @@ def test_encodepacked_widths(harness):
     _, addr = account.generate_account()
     r = bytes(harness.call(app, "pAddr(address)", addr).abi_return)
     assert len(r) == 32 and r == encoding.decode_address(addr)
+
+
+def test_abi_encode_signed_aggregate(harness):
+    """conversions/contracts/abi_signed_agg.sol  (CUSTOM)
+
+    abi.encode of a negative signed sub-256 (int128) value inside an
+    aggregate must SIGN-extend to the 32-byte word, not zero-pad. The struct
+    field path (toPackedBytes) and the array-element path
+    (encodeDynArrayPadSmallElems) both zero-padded — int128(-7) encoded as
+    0x00..00fff9 instead of 0xff..fff9, corrupting keccak/external decode."""
+    from algosdk import account
+    app = harness.compile_and_deploy("conversions/contracts/abi_signed_agg.sol")
+    a = account.generate_account()[1]
+    neg7 = bytes([0xff] * 31 + [0xf9])   # int128(-7) sign-extended to 256-bit
+    # struct: int128 field is slot 1 of [a|b|c|d]
+    eb = bytes(harness.call(app, "encS((uint256,int128,address,bool))", [42, -7, a, True]).abi_return)
+    assert eb[32:64] == neg7
+    # array int128[]: [offset][len][elem0=-7][elem1=5]
+    ea = bytes(harness.call(app, "encArr(int128[])", [-7, 5]).abi_return)
+    assert ea[64:96] == neg7
+    assert ea[96:128] == bytes(31) + bytes([0x05])   # positive zero-extends

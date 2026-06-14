@@ -158,6 +158,7 @@ private:
 		solidity::frontend::Type const* _elemSolType,
 		unsigned _elemByteSize,
 		bool _isFixedBytes,
+		bool _isSigned,
 		awst::SourceLocation const& _loc);
 
 	/// Encode a dynamic array of dynamic elements (nested dynamic) as

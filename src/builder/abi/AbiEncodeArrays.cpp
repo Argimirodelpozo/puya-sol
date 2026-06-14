@@ -26,6 +26,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 	solidity::frontend::Type const* _elemSolType,
 	unsigned _elemByteSize,
 	bool _isFixedBytes,
+	bool _isSigned,
 	awst::SourceLocation const& _loc)
 {
 	(void) _elemSolType;
@@ -88,18 +89,40 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynArrayPadSmallElems
 
 	// padded = (left|right)pad32(elem)
 	std::shared_ptr<awst::Expression> padded;
+	int const padN = 32 - static_cast<int>(_elemByteSize);
 	if (_isFixedBytes)
 	{
 		// bytesN: right-pad with zeros to 32 (low bytes).
 		// elem ++ bzero(32 - sz)
-		auto pad = awst::makeBzero(u64Const(std::to_string(32 - _elemByteSize), _loc), _loc);
+		auto pad = awst::makeBzero(u64Const(std::to_string(padN), _loc), _loc);
 		padded = bytesConcat(std::move(elem), std::move(pad), _loc);
+	}
+	else if (_isSigned)
+	{
+		// Signed sub-256: SIGN-extend to 32 (pad high bytes with the sign),
+		// not zero-pad — else a negative element (high bit of byte 0 set)
+		// encodes as 0x00…<magnitude> instead of 0xff…<magnitude>. Select a
+		// constant-width 0xff / 0x00 pad on the element's sign bit at runtime.
+		std::string elemName = "__abi_smelem_e_" + suffix;
+		auto elemVar = awst::makeVarExpression(elemName, bytesT, _loc);
+		body->body.push_back(assignFresh(elemVar, std::move(elem), _loc));
+
+		auto signByte = awst::makeBtoi(
+			bytesExtract3(elemVar, u64Const("0", _loc), u64Const("1", _loc), _loc), _loc);
+		auto isNeg = awst::makeNumericCompare(
+			std::move(signByte), awst::NumericComparison::Gte, u64Const("128", _loc), _loc);
+		auto ffPad = awst::makeBytesConstant(
+			std::vector<uint8_t>(static_cast<size_t>(padN), 0xffu), _loc);
+		auto zeroPad = awst::makeBzero(u64Const(std::to_string(padN), _loc), _loc);
+		auto pad = awst::makeConditional(
+			std::move(isNeg), std::move(ffPad), std::move(zeroPad), bytesT, _loc);
+		padded = bytesConcat(std::move(pad), elemVar, _loc);
 	}
 	else
 	{
 		// uint/bool/address: left-pad with zeros to 32 (high bytes).
 		// bzero(32 - sz) ++ elem
-		auto pad = awst::makeBzero(u64Const(std::to_string(32 - _elemByteSize), _loc), _loc);
+		auto pad = awst::makeBzero(u64Const(std::to_string(padN), _loc), _loc);
 		padded = bytesConcat(std::move(pad), std::move(elem), _loc);
 	}
 

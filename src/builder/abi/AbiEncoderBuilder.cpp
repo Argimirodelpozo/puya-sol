@@ -109,8 +109,18 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	}
 	else if (_expr->wtype == awst::WType::biguintType())
 	{
+		// Non-packed (abi.encode) pads the value to a 32-byte word. A SIGNED
+		// sub-256 value (int128 etc.) must SIGN-extend, not zero-pad: a
+		// negative aggregate field decodes to a non-canonical biguint (e.g.
+		// int128(-7) → 16-byte 0xff…f9), and a plain leftpad would produce
+		// 0x00…00fff9 instead of 0xff…fff9. signExtendSignedElement is a no-op
+		// for unsigned / int256 / <=64-bit / already-canonical values, so it
+		// is safe to apply unconditionally here. (Packed keeps the raw bytes;
+		// the packed-width logic slices to the declared N.)
+		if (!_isPacked)
+			_expr = builder::TypeCoercion::signExtendSignedElement(
+				std::move(_expr), _solType, _loc);
 		auto cast = awst::makeAsBytes(std::move(_expr), _loc);
-		// For non-packed, ensure 32-byte padding
 		bytesExpr = _isPacked ? std::move(cast) : leftPadBytes(std::move(cast), 32, _loc);
 	}
 	else if (_expr->wtype == awst::WType::accountType())
