@@ -69,6 +69,17 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		}
 		else if (cat == Type::Category::Bool)
 			packedWidth = 1;
+		else if (cat == Type::Category::Enum)
+		{
+			// Enums pack as their underlying uint (uint8 for <=256 members),
+			// not the 8-byte native word. Without this an enum in
+			// abi.encodePacked occupied 8 bytes — corrupting the keccak hash
+			// and shifting every following argument.
+			auto const* enumType = dynamic_cast<EnumType const*>(_solType);
+			if (enumType)
+				if (auto const* enc = dynamic_cast<IntegerType const*>(enumType->encodingType()))
+					packedWidth = static_cast<int>(enc->numBits() / 8);
+		}
 	}
 
 	std::shared_ptr<awst::Expression> bytesExpr;

@@ -367,3 +367,24 @@ def test_getter_abi_validation(harness):
     # out-of-range key (256 > uint8 max) must REVERT, not read m[256 & 0xff]=m[0]
     r = harness.call(app, "m(uint64)", 256, expect_revert=True)
     assert r.reverted
+
+
+def test_encodepacked_widths(harness):
+    """conversions/contracts/encodepacked_widths.sol  (CUSTOM)
+
+    abi.encodePacked uses EVM packed widths. Enum was the bug: packed as the
+    8-byte native word instead of its 1-byte uint8 encoding — corrupting
+    keccak256(abi.encodePacked(...)) and shifting every following argument.
+    EVM_DIVERGENCE: address packs as the full 32-byte AVM account (EVM packs
+    20) — AVM addresses are natively 32 bytes, so 20-byte packing would
+    truncate a real account."""
+    app = harness.compile_and_deploy("conversions/contracts/encodepacked_widths.sol")
+    assert bytes(harness.call(app, "pEnum(uint8)", 1).abi_return) == b"\x01"
+    assert bytes(harness.call(app, "pMix(uint8,uint8)", 5, 1).abi_return) == b"\x05\x01"
+    assert bytes(harness.call(app, "pI8neg()").abi_return) == b"\xfd"
+    assert bytes(harness.call(app, "pI128neg()").abi_return) == bytes.fromhex("ff" * 15 + "fd")
+    # EVM_DIVERGENCE: 32-byte account, not EVM's 20.
+    from algosdk import account, encoding
+    _, addr = account.generate_account()
+    r = bytes(harness.call(app, "pAddr(address)", addr).abi_return)
+    assert len(r) == 32 and r == encoding.decode_address(addr)

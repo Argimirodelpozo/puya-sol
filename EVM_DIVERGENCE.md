@@ -112,6 +112,15 @@ new EVM-shaped bytes anywhere else is a bug.
    with fields were already sha512_256 via puya Emit. Still open in the
    same class: `f.selector` (SolSelectorAccess) returns keccak bytes —
    folded into seam #2's decision.
+**abi.encodePacked widths** (2026-06-14): packs EVM widths per type
+(uint8→1B, bool→1B, bytesN→NB, enum→1B as its uint8 encoding — the enum
+case was a bug, packed 8B; fixed). One AVM-fundamental divergence:
+`address` packs as the full **32-byte** AVM account, not EVM's 20 bytes —
+AVM addresses are natively 32 bytes and exceed 2^160, so 20-byte packing
+would truncate a real account. So `keccak256(abi.encodePacked(addr,...))`
+diverges from EVM (signatures/CREATE2-style derivations over packed
+addresses won't match). Guard conversions::test_encodepacked_widths.
+
 4. **bytes/string length-prefix re-framing is scattered.** ✅ DONE — the
    canonical bridge set is: `uint64FromAbiWord` (EVM 32-byte word → uint64,
    builder/abi), `awst::makeUInt16Bytes` (uint64 → ARC4 uint16 header) and
