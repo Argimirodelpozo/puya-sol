@@ -1,3 +1,19 @@
+# Semantic Test Status — v361
+
+> **abi.encode(address[]) ELEMENT WIDTH (36ddf1095c, 2026-06-14):** zero-reg,
+> **60 failed / 1236 passed / 83 xf** (+1 = the new test). The dynamic-array
+> encoder set elemByteSize=20 for an address element (an EVM-address
+> assumption) but the ARC4 repr of address is a 32-byte account — so
+> address[] hit the small-element loop and strode the 32-byte-per-element
+> array at 20 bytes, mis-counting the length and mis-aligning every element
+> into garbage. contract[] dodged it (Contract category -> default 32 ->
+> fast path; contract_array_v2 passed); only explicit address[] broke.
+> Fixed both sites (direct + nested) to 32. The decode side was already
+> correct (computeEncodedElementSize derives 32). Third bug from the
+> encoding-inconsistency hunt (struct-selector, encodePacked-enum, this);
+> all the same "type-category dispatch with wrong width" class. See
+> [[encoding-model]].
+
 # Semantic Test Status — v360
 
 > **abi.encodePacked ENUM WIDTH + selfdestruct on-chain (0a53d90291, 2026-06-14):**
