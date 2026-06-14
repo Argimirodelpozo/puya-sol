@@ -371,3 +371,23 @@ def test_decode_roundtrip_matrix(harness):
     assert (as_int(r[0]), bytes(r[1]).hex(), as_int(r[2]), bool(r[3])) == (9, "deadbeef", 513, True), r
     r = harness.call(app, "rtFixed()")
     assert r.abi_return is not None
+
+
+def test_encode_address_array(harness):
+    """abiEncodeDecode/contracts/encode_address_array.sol  (CUSTOM)
+
+    abi.encode(address[]) must lay out each element as a 32-byte word (the
+    ARC4 account), 32-byte-aligned. The encoder strode the array at 20 bytes
+    (an EVM-address assumption) over 32-byte-per-element ARC4 accounts,
+    mis-counting and mis-aligning every element. contract[] dodged it via
+    the default-32 path; explicit address[] hit the broken slow path."""
+    from algosdk import account, encoding
+    app = harness.compile_and_deploy("abiEncodeDecode/contracts/encode_address_array.sol")
+    addrs = [account.generate_account()[1] for _ in range(3)]
+    raw = [encoding.decode_address(a) for a in addrs]
+    r = bytes(harness.call(app, "enc(address[])", addrs).abi_return)
+    assert len(r) == 32 + 32 + 3 * 32
+    assert int.from_bytes(r[0:32], "big") == 0x20   # offset
+    assert int.from_bytes(r[32:64], "big") == 3      # length
+    for i in range(3):
+        assert r[64 + i * 32 : 64 + (i + 1) * 32] == raw[i]

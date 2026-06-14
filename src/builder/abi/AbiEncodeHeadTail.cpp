@@ -182,7 +182,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				elemByteSize = 1;
 			else if (elemSolType
 				&& elemSolType->category() == Type::Category::Address)
-				elemByteSize = 20;
+				// An address is a 32-byte ARC4 account (NOT 20). Using 20 here
+				// sent address[] to the small-element loop, which strode the
+				// 32-byte-per-element array at 20 bytes and mis-aligned every
+				// element. 32 → the 32-byte-aligned fast path, like contract[].
+				elemByteSize = 32;
 			else if (auto const* innerArr = dynamic_cast<ArrayType const*>(elemSolType))
 			{
 				// Nested static array of static elements (e.g. uint256[3] as
@@ -202,7 +206,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 					else if (auto const* fb2 = dynamic_cast<FixedBytesType const*>(innerBase))
 						innerElemSize = std::max(1u, (unsigned) fb2->numBytes());
 					else if (innerBase && innerBase->category() == Type::Category::Address)
-						innerElemSize = 20;
+						innerElemSize = 32;  // 32-byte ARC4 account, not 20
 					else if (innerBase && innerBase->category() == Type::Category::Bool)
 						innerElemSize = 1;
 					if (innerElemSize == 32)
