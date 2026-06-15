@@ -50,13 +50,26 @@ contract C {
     }
 
     // abi.encode(string[]) / abi.encode(bytes[]) — decode then RE-ENCODE; the
-    // output must be byte-identical to the input EVM blob. (The array is built
-    // via decode, not literal element assignment, which is a separate
-    // still-open codegen gap — see task #22.)
+    // output must be byte-identical to the input EVM blob.
     function reencStrArr(bytes calldata data) public pure returns (bytes memory) {
         return abi.encode(abi.decode(data, (string[])));
     }
     function reencBytesArr(bytes calldata data) public pure returns (bytes memory) {
         return abi.encode(abi.decode(data, (bytes[])));
+    }
+
+    // FULL literal-built round-trip: construct via element assignment (the
+    // element store, formerly a hard-error), abi.encode, abi.decode, read back.
+    function rtStrArr() public pure returns (string memory, string memory, uint256) {
+        string[] memory s = new string[](2);
+        s[0] = "foo"; s[1] = "barbaz";
+        string[] memory d = abi.decode(abi.encode(s), (string[]));
+        return (d[0], d[1], d.length);
+    }
+    function rtBytesArr() public pure returns (uint256, uint256, bytes1) {
+        bytes[] memory b = new bytes[](2);
+        b[0] = hex"aabb"; b[1] = hex"ccddee";
+        bytes[] memory d = abi.decode(abi.encode(b), (bytes[]));
+        return (d[0].length, d[1].length, d[1][2]);
     }
 }

@@ -488,6 +488,28 @@ SolAssignment::applyArc4EncodeIfNeeded(
 			_value, _target->wtype, m_loc))
 		return narrowed;
 
+	// Assigning a bytes/string VALUE to a dynamic ARC4 byte-array
+	// (arc4.string / arc4.dynamic_bytes / uint8[] / bool[]):
+	// makeARC4Encode(bytes, arc4.string) is rejected by the puya backend
+	// ("cannot encode bytes to (len+utf8[])"). The ARC4 encoding of a byte
+	// array is simply [uint16 len][raw bytes], so build it directly and
+	// reinterpret — e.g. `string[] s; s[0] = "hi"` whose element store hit
+	// this. (Inverse of the abi.encode string-element fix in encodeFromArc4Bytes.)
+	if (_target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
+		&& (_value->wtype == awst::WType::bytesType()
+			|| (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes)))
+	{
+		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_target->wtype);
+		if (da->elementType()
+			&& ::puyasol::builder::computeEncodedElementSize(da->elementType()) == 1)
+		{
+			auto once = awst::makeEvalOnce(std::move(_value), m_loc);
+			auto header = awst::makeUInt16Bytes(awst::makeLen(once, m_loc), m_loc);
+			auto arc4Bytes = awst::makeConcat(std::move(header), once, m_loc);
+			return awst::makeReinterpretCast(std::move(arc4Bytes), _target->wtype, m_loc);
+		}
+	}
+
 	return awst::makeARC4Encode(std::move(_value), _target->wtype, m_loc);
 }
 

@@ -541,3 +541,8 @@ def test_abi_encode_dynamic_element_arrays(harness):
     assert bytes(harness.call(app, "reencStrArr(byte[])", list(blob)).abi_return) == blob
     blob2 = eth_abi.encode(["bytes[]"], [[b"\xaa\xbb", b"\xcc\xdd\xee"]])
     assert bytes(harness.call(app, "reencBytesArr(byte[])", list(blob2)).abi_return) == blob2
+    # full literal-built round-trip: element assignment -> encode -> decode -> read
+    s = harness.call(app, "rtStrArr()").abi_return
+    assert s[0] == "foo" and s[1] == "barbaz" and as_int(s[2]) == 2, s
+    b = harness.call(app, "rtBytesArr()").abi_return
+    assert as_int(b[0]) == 2 and as_int(b[1]) == 3 and bytes(b[2]) == b"\xee", b
