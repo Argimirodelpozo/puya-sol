@@ -150,66 +150,12 @@ public:
 			"try, or guard with an explicit if-check) before recompiling.",
 			loc);
 
-		ResultT result;
-		auto& bc = m_blk.builderCtx();
-
-		// 1. Evaluate the external call.
-		auto callExpr = bc.build(_n.externalCall());
-
-		// 2. Find the success clause and assign return values to its named
-		//    parameters (declaring locals first).
-		auto const* successClause = _n.successClause();
-		if (successClause && successClause->parameters())
-		{
-			auto const& params = successClause->parameters()->parameters();
-			if (!params.empty() && callExpr)
-			{
-				if (params.size() == 1)
-				{
-					auto* paramType = m_blk.typeMapper().map(params[0]->type());
-					auto target = awst::makeVarExpression(params[0]->name(), paramType, loc);
-					auto assign = awst::makeAssignmentStatement(std::move(target), std::move(callExpr), loc);
-					result.push_back(std::move(assign));
-				}
-				else
-				{
-					// Multiple returns: tuple-unpack into named locals.
-					auto tupleTarget = awst::makeTupleExpression(nullptr, loc);
-					std::vector<awst::WType const*> tupleTypes;
-					for (auto const& p : params)
-					{
-						auto* paramType = m_blk.typeMapper().map(p->type());
-						auto v = awst::makeVarExpression(p->name(), paramType, loc);
-						tupleTarget->items.push_back(std::move(v));
-						tupleTypes.push_back(paramType);
-					}
-					tupleTarget->wtype = m_blk.typeMapper().createType<awst::WTuple>(
-						std::move(tupleTypes), std::nullopt);
-					auto assign = awst::makeAssignmentStatement(std::move(tupleTarget), std::move(callExpr), loc);
-					result.push_back(std::move(assign));
-				}
-			}
-			else if (callExpr)
-			{
-				// No return params: call as an expression statement for side effects.
-				auto exprStmt = awst::makeExpressionStatement(std::move(callExpr), loc);
-				result.push_back(std::move(exprStmt));
-			}
-
-			// 3. Emit the success-clause block inline.
-			SolBlock successHandler(m_blk, successClause->block(),
-				m_blk.makeLoc(successClause->block().location()));
-			auto successBlock = successHandler.toAwstBlock();
-			for (auto& s : successBlock->body)
-				result.push_back(std::move(s));
-		}
-		else if (callExpr)
-		{
-			auto exprStmt = awst::makeExpressionStatement(std::move(callExpr), loc);
-			result.push_back(std::move(exprStmt));
-		}
-
-		return result;
+		// The error above fails the compile; emitting the old best-effort
+		// success-path lowering (evaluate the call, bind the success-clause
+		// returns, inline the success block) was pointless — that AWST is
+		// discarded, and running only the happy path is exactly the
+		// silently-wrong code the hard error exists to prevent.
+		return {};
 	}
 
 	ResultT visitBlock(Block const& _n) override
