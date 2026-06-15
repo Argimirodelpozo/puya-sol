@@ -1,3 +1,25 @@
+# Semantic Test Status — v365
+
+> **abi SIGNED ENCODE + static-array sub-32 DECODE (739292b7c1, 2026-06-15):**
+> zero-reg, **60 failed / 1238 passed / 86 xf** (+2 new CUSTOM tests; fail set
+> byte-identical to v364 baseline, empty diff both ways). Two fixes since v364:
+> **(1) static-array sub-32 DECODE** (9ec089d9bd): abi.decode of uint128[3] etc.
+> slab-reinterpreted the ARC4-packed bytes (read 48 of 96 → [0,11,0]); now
+> field-walks each 32-byte EVM slot (decode counterpart to the static-array
+> element encode widening). **(2) SIGNED ENCODE sign-extension** (739292b7c1):
+> abi.encode / abi.encodePacked of a negative <=64-bit scalar OR a signed
+> static-array element (int64[]/int128[]) zero-extended (0x00..00fffd) instead
+> of sign-extending (0xff..fffd) — array elements arrive as their ARC4 element
+> type (8B int64 / 16B int128), bypassing the scalar uint64/biguint branches and
+> getting zero-padded at the array-element site. Fix = one width-agnostic,
+> idempotent signExtendBytesTo32 (replace3 over a runtime 0xff/0x00 sign fill)
+> wired into the uint64 scalar branch + the array-element widening site. Struct
+> fields were already correct (encodeDynamicTail decodes each field to native
+> before toPackedBytes). Closes the signed-encode bug class across
+> scalar / static-array / dynamic-array / struct / packed. NEXT: #20
+> nested-dynamic decode (drafted, awaiting build). [[encoding-model]]
+> [[int24-subword-codec]]
+
 # Semantic Test Status — v364
 
 > **abi.decode array-of-dynamic FAIL-LOUD (0a07f57eca, 2026-06-15):** **60 failed
