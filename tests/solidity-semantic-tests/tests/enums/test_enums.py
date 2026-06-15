@@ -103,11 +103,12 @@ def test_enum_with_256_members(harness):
     # enumToInt(uint8): 256 -> FAILURE
     r = harness.call(app, "enumToInt(uint8)", 256, expect_revert=True)
     assert r.reverted
-    # decodeEnum(bytes) takes a 32-byte payload encoding a single uint and
-    # decodes it as the enum.
-    assert as_int(harness.call(app, "decodeEnum(bytes)", (0).to_bytes(32, "big")).abi_return) == 0
-    assert as_int(harness.call(app, "decodeEnum(bytes)", (255).to_bytes(32, "big")).abi_return) == 255
-    assert harness.call(app, "decodeEnum(bytes)", (256).to_bytes(32, "big"), expect_revert=True).reverted
+    # EVM_DIVERGENCE: abi.decode now consumes ARC4 — an enum is arc4.uint8 (a
+    # single byte), not a 32-byte EVM word. (The >255 out-of-range case isn't
+    # expressible in a 1-byte slot; the enumToInt(256) revert above covers the
+    # range check.)
+    assert as_int(harness.call(app, "decodeEnum(bytes)", (0).to_bytes(1, "big")).abi_return) == 0
+    assert as_int(harness.call(app, "decodeEnum(bytes)", (255).to_bytes(1, "big")).abi_return) == 255
 
 def test_invalid_enum_logged(harness):
     """enums/contracts/invalid_enum_logged.sol"""

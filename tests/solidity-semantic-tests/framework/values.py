@@ -179,3 +179,18 @@ def arc4_event_topic(sig: str) -> int:
     bytes equal the ARC-28 log prefix puya-sol emits."""
     import hashlib
     return int.from_bytes(hashlib.new("sha512_256", sig.encode()).digest(), "big")
+
+
+def arc4_encode(type_str: str, value) -> bytes:
+    """ARC-4 encoding of `value` as the ARC-4 ABI type `type_str`, the oracle
+    for what puya-sol's abi.encode/abi.decode produce/consume now that the
+    internal encoding is ARC4 everywhere (EVM_DIVERGENCE: on real EVM these
+    would be the EVM ABI head/tail layout). Mirror of how `eth_abi` was used as
+    the EVM oracle before the ARC4 migration. Tuple example:
+    arc4_encode("(uint256,string)", [1, "abc"]).
+
+    NB ARC-4 type spelling differs from EVM in places: dynamic bytes is
+    `byte[]`, a fixed bytesN is `byte[N]`, address is `address` (a 32-byte
+    account on AVM, not 20)."""
+    from algosdk.abi import ABIType
+    return ABIType.from_string(type_str).encode(value)

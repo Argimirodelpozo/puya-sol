@@ -10,9 +10,10 @@ from framework import (
 def test_abi_decode_dynamic_array(harness):
     """abiEncoderV1/contracts/abi_decode_dynamic_array.sol"""
     app = harness.compile_and_deploy("abiEncoderV1/contracts/abi_decode_dynamic_array.sol")
-    # f(bytes) decodes its arg as (uint256[]) — pack the EVM-ABI bytes payload
-    # of an array [3, 4, 5, 6] (offset=32, length=4, elements).
-    payload = b"".join(v.to_bytes(32, "big") for v in (32, 4, 3, 4, 5, 6))
+    # EVM_DIVERGENCE: abi.decode now consumes ARC4 ([uint16 len][elements]); on
+    # real EVM the payload was head/tail (offset=32, length=4, elements).
+    from framework import arc4_encode
+    payload = arc4_encode("uint256[]", [3, 4, 5, 6])
     r = harness.call(app, "f(bytes)", payload)
     assert [as_int(x) for x in r.abi_return] == [3, 4, 5, 6]
 
@@ -81,7 +82,10 @@ def test_abi_decode_v2_calldata(harness):
     to (a, b_list).
     """
     app = harness.compile_and_deploy('abiEncoderV1/contracts/abi_decode_v2_calldata.sol')
-    data = b''.join(v.to_bytes(32, "big") for v in (0x20, 0x21, 0x40, 0x3, 0xa, 0xb, 0xc))
+    # EVM_DIVERGENCE: abi.decode consumes ARC4 — the struct is the ARC4 tuple
+    # (uint256, uint256[]); EVM head/tail (0x20/0x40 offsets) on real EVM.
+    from framework import arc4_encode
+    data = arc4_encode("(uint256,uint256[])", [0x21, [0xa, 0xb, 0xc]])
     r = harness.call(app, 'f(bytes)', data)
     a, b = r.abi_return
     assert as_int(a) == 0x21
@@ -98,17 +102,19 @@ def test_abi_decode_v2_storage(harness):
 def test_abi_encode(harness):
     """abiEncoderV1/contracts/abi_encode.sol"""
     app = harness.compile_and_deploy("abiEncoderV1/contracts/abi_encode.sol")
+    # EVM_DIVERGENCE: abi.encode now emits the ARC4 encoding (on real EVM these
+    # were 32-byte head/tail words). Integer literals are uint64 on the AVM, not
+    # EVM's uint256.
+    from framework import arc4_encode
     # f0() returns abi.encode() = no bytes.
     assert bytes(harness.call(app, "f0()").abi_return) == b""
-    # f1() returns abi.encode(1, 2) = two uint256 words.
-    assert bytes(harness.call(app, "f1()").abi_return) == (1).to_bytes(32, "big") + (2).to_bytes(32, "big")
-    # f2()/f3() return abi.encode(1, "abc", 2):
-    #   uint(1), offset_to_string(0x60), uint(2), length(3), "abc" right-padded.
-    expected_f2 = b"".join(v.to_bytes(32, "big") for v in (1, 0x60, 2, 3)) + b"abc".ljust(32, b"\x00")
+    # f1() = abi.encode(1, 2) — ARC4 (uint64, uint64) = two 8-byte words.
+    assert bytes(harness.call(app, "f1()").abi_return) == arc4_encode("(uint64,uint64)", [1, 2])
+    # f2()/f3() = abi.encode(1, "abc", 2) — ARC4 tuple (uint64, string, uint64).
+    expected_f2 = arc4_encode("(uint64,string,uint64)", [1, "abc", 2])
     assert bytes(harness.call(app, "f2()").abi_return) == expected_f2
     assert bytes(harness.call(app, "f3()").abi_return) == expected_f2
-    # f4() returns abi.encode(bytes2("ab")). AVM ARC4 encodes bytes2 as
-    # two raw bytes (no 32-byte word padding).
+    # f4() = abi.encode(bytes2("ab")). ARC4 encodes bytes2 as two raw bytes.
     assert bytes(harness.call(app, "f4()").abi_return) == b"ab"
 
 def test_abi_encode_call(harness):
@@ -139,26 +145,34 @@ def test_abi_encode_decode_simple(harness):
 def test_abi_encode_empty_string(harness):
     """abiEncoderV1/contracts/abi_encode_empty_string.sol"""
     app = harness.compile_and_deploy("abiEncoderV1/contracts/abi_encode_empty_string.sol")
-    encoded_empty = (32).to_bytes(32, "big") + (0).to_bytes(32, "big")  # abi.encode("") = (offset, length)
+    from framework import arc4_encode
     sel1 = b"\x00\x00\x00\x01"
 
-    # f1 / f2 — abi.encode of "".
-    assert bytes(harness.call(app, "f1()").abi_return) == encoded_empty
-    assert bytes(harness.call(app, "f2(string)", "").abi_return) == encoded_empty
+    # EVM_DIVERGENCE: abi.encode("") is now ARC4 arc4.string "" = [uint16 0] (2
+    # bytes); EVM was the 64-byte (offset=32, length=0) head/tail form.
+    arc4_empty = arc4_encode("string", "")
+    assert bytes(harness.call(app, "f1()").abi_return) == arc4_empty
+    assert bytes(harness.call(app, "f2(string)", "").abi_return) == arc4_empty
 
     # g1 / g2 — abi.encodePacked of "".
     assert bytes(harness.call(app, "g1()").abi_return) == b""
     assert bytes(harness.call(app, "g2(string)", "").abi_return) == b""
 
-    # h1 / h2 — abi.encodeWithSelector(0x00000001, "").
-    assert bytes(harness.call(app, "h1()").abi_return) == sel1 + encoded_empty
-    assert bytes(harness.call(app, "h2(string)", "").abi_return) == sel1 + encoded_empty
+    # h1 / h2 — abi.encodeWithSelector(0x00000001, ""). NOTE: encodeWithSelector
+    # ARGS are still EVM head/tail pending the encodeWith* ARC4 migration (Phase 2);
+    # the selector itself is the literal 0x00000001 either way.
+    evm_empty = (32).to_bytes(32, "big") + (0).to_bytes(32, "big")
+    assert bytes(harness.call(app, "h1()").abi_return) == sel1 + evm_empty
+    assert bytes(harness.call(app, "h2(string)", "").abi_return) == sel1 + evm_empty
 
 def test_abi_encode_rational(harness):
     """abiEncoderV1/contracts/abi_encode_rational.sol"""
     app = harness.compile_and_deploy("abiEncoderV1/contracts/abi_encode_rational.sol")
-    # f() returns abi.encode(1, -2): two words, with -2 as int256 two's complement.
-    expected = (1).to_bytes(32, "big") + ((1 << 256) - 2).to_bytes(32, "big")
+    # EVM_DIVERGENCE: abi.encode now emits ARC4 (32-byte head/tail on real EVM).
+    # abi.encode(1, -2): the positive literal 1 is uint64 (8 bytes); -2 is int256
+    # (ARC-4 has no signed type, so it encodes as the raw 32-byte two's complement).
+    from framework import arc4_encode
+    expected = arc4_encode("uint64", 1) + ((1 << 256) - 2).to_bytes(32, "big")
     assert bytes(harness.call(app, "f()").abi_return) == expected
 
 def test_bool_out_of_bounds(harness):
@@ -265,14 +279,10 @@ def test_memory_dynamic_array_and_calldata_bytes(harness):
     """abiEncoderV1/contracts/memory_dynamic_array_and_calldata_bytes.sol"""
     app = harness.compile_and_deploy("abiEncoderV1/contracts/memory_dynamic_array_and_calldata_bytes.sol")
 
+    # EVM_DIVERGENCE: abi.encode now emits ARC4 (EVM head/tail on real EVM).
+    from framework import arc4_encode
     def encoded(a: list[int], b: bytes) -> bytes:
-        # abi.encode(uint256[], bytes): head pointers, then a's (len, elems),
-        # then b's (len, data right-padded to a 32-byte word).
-        head_a = 0x40
-        head_b = head_a + 32 + 32 * len(a)
-        body_a = len(a).to_bytes(32, "big") + b"".join(v.to_bytes(32, "big") for v in a)
-        body_b = len(b).to_bytes(32, "big") + b.ljust(((len(b) + 31) // 32) * 32, b"\x00")
-        return head_a.to_bytes(32, "big") + head_b.to_bytes(32, "big") + body_a + body_b
+        return arc4_encode("(uint256[],byte[])", [a, list(b)])
 
     r = harness.call(app, "f(uint256[],bytes)", [0xFF], b"123456")
     assert bytes(r.abi_return) == encoded([0xFF], b"123456")

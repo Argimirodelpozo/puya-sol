@@ -3,14 +3,16 @@ import pytest
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
-    as_int, as_bytes,
+    as_int, as_bytes, arc4_encode,
 )
 
 
 def _evm_abi_encode_uint_bytes(uint_val: int, raw_bytes: bytes) -> bytes:
-    """Build the EVM-ABI encoding of `(uint256, bytes)` — used by the
-    abi_decode_* fixtures whose `bytes data` argument is itself the
-    EVM-encoded payload that the contract then `abi.decode`s."""
+    """Build the EVM-ABI encoding of `(uint256, bytes)`.
+
+    EVM_DIVERGENCE: abi.decode now consumes ARC4, so the decode fixtures use
+    _arc4_uint_bytes below instead; this EVM form is kept for reference.
+    """
     return (
         uint_val.to_bytes(32, "big")          # uint256 head
         + (0x40).to_bytes(32, "big")          # offset of bytes payload (after the two heads)
@@ -19,12 +21,18 @@ def _evm_abi_encode_uint_bytes(uint_val: int, raw_bytes: bytes) -> bytes:
     )
 
 
+def _arc4_uint_bytes(uint_val: int, raw_bytes: bytes) -> bytes:
+    """ARC4 encoding of `(uint256, bytes)` — what abi.decode now consumes
+    (EVM_DIVERGENCE: real EVM used the _evm_abi_encode_uint_bytes head/tail form)."""
+    return arc4_encode("(uint256,byte[])", [uint_val, list(raw_bytes)])
+
+
 def test_abi_decode_calldata(harness):
     """abiEncodeDecode/contracts/abi_decode_calldata.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_calldata.sol")
     # The function decodes its bytes arg as `(uint256, bytes)` and returns
     # `(33, "abcdefg")`. We pass the EVM-encoded payload as a single bytes arg.
-    payload = _evm_abi_encode_uint_bytes(33, b"abcdefg")
+    payload = _arc4_uint_bytes(33, b"abcdefg")
     r = harness.call(app, "f(bytes)", payload)
     assert as_int(r.abi_return[0]) == 33
     assert bytes(r.abi_return[1]) == b"abcdefg"
@@ -32,7 +40,7 @@ def test_abi_decode_calldata(harness):
 def test_abi_decode_simple(harness):
     """abiEncodeDecode/contracts/abi_decode_simple.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_simple.sol")
-    payload = _evm_abi_encode_uint_bytes(33, b"abcdefg")
+    payload = _arc4_uint_bytes(33, b"abcdefg")
     r = harness.call(app, "f(bytes)", payload)
     assert as_int(r.abi_return[0]) == 33
     assert bytes(r.abi_return[1]) == b"abcdefg"
@@ -40,7 +48,7 @@ def test_abi_decode_simple(harness):
 def test_abi_decode_simple_storage(harness):
     """abiEncodeDecode/contracts/abi_decode_simple_storage.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_decode_simple_storage.sol")
-    payload = _evm_abi_encode_uint_bytes(33, b"abcdefg")
+    payload = _arc4_uint_bytes(33, b"abcdefg")
     r = harness.call(app, "f(bytes)", payload)
     assert as_int(r.abi_return[0]) == 33
     assert bytes(r.abi_return[1]) == b"abcdefg"
@@ -277,12 +285,14 @@ def test_contract_array(harness):
     from algosdk import encoding
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/contract_array.sol")
     # f decodes a bytes payload encoding `(C[])` and returns the C[].
-    payload = b"".join(v.to_bytes(32, "big") for v in (32, 3, 1, 2, 3))
+    # EVM_DIVERGENCE: abi.decode/encode now use ARC4 — an address[] is
+    # [uint16 count][count × 32-byte account] (EVM: offset, length, 32-byte words).
+    payload = (3).to_bytes(2, "big") + b"".join(v.to_bytes(32, "big") for v in (1, 2, 3))
     r = harness.call(app, "f(bytes)", payload)
     expected_addrs = [encoding.encode_address(v.to_bytes(32, "big")) for v in (1, 2, 3)]
     assert list(r.abi_return) == expected_addrs
-    # g() returns the abi.encode of the in-contract array (addresses 0x42, 0x21, 0x23).
-    expected_g = b"".join(v.to_bytes(32, "big") for v in (32, 3, 0x42, 0x21, 0x23))
+    # g() returns abi.encode of the in-contract array (addresses 0x42, 0x21, 0x23).
+    expected_g = (3).to_bytes(2, "big") + b"".join(v.to_bytes(32, "big") for v in (0x42, 0x21, 0x23))
     assert bytes(harness.call(app, "g()").abi_return) == expected_g
 
 def test_contract_array_v2(harness):
@@ -293,23 +303,28 @@ def test_contract_array_v2(harness):
     f returns C[] (decoded from the bytes); g returns abi.encode(C[3]).
     """
     from algosdk import encoding
-    from framework import evm_words
     app = harness.compile_and_deploy('abiEncodeDecode/contracts/contract_array_v2.sol')
-    r = harness.call(app, 'f(bytes)', 0x20, 0xA0, 0x20, 3, 0x01, 0x02, 0x03)
+    # EVM_DIVERGENCE: f/g now consume/produce ARC4. The f(bytes) arg is the ARC4
+    # address[] = [uint16 count][count × 32-byte account] (EVM passed the value as
+    # nested offset/length 32-byte words).
+    def arc4_caddr(vs):
+        return len(vs).to_bytes(2, "big") + b"".join(v.to_bytes(32, "big") for v in vs)
+    r = harness.call(app, 'f(bytes)', arc4_caddr([1, 2, 3]))
     expected = [encoding.encode_address(v.to_bytes(32, "big")) for v in (1, 2, 3)]
     assert list(r.abi_return) == expected, r.abi_return
     addr20 = 0x0102030405060708090A0B0C0D0E0F1011121314
-    r = harness.call(app, 'f(bytes)', 0x20, 0x60, 0x20, 1, addr20)
+    r = harness.call(app, 'f(bytes)', arc4_caddr([addr20]))
     assert list(r.abi_return) == [encoding.encode_address(addr20.to_bytes(32, "big"))]
     # EVM_DIVERGENCE: upstream expects FAILURE (abicoder v2 rejects address
     # words wider than 160 bits). On the AVM a contract address is natively
     # 32 bytes — real app addresses exceed 2**160, so width validation would
-    # break legitimate encode/decode round-trips. The wide value decodes.
+    # break legitimate round-trips. The wide value decodes.
     addr21 = addr20 << 8
-    r = harness.call(app, 'f(bytes)', 0x20, 0x60, 0x20, 1, addr21)
+    r = harness.call(app, 'f(bytes)', arc4_caddr([addr21]))
     assert list(r.abi_return) == [encoding.encode_address(addr21.to_bytes(32, "big"))]
+    # g() returns abi.encode(C[...]) — ARC4 address[] (EVM: nested offset/length).
     r = harness.call(app, 'g()')
-    assert evm_words(r.abi_return) == (0x20, 0xa0, 0x20, 3, 0x42, 0x21, 0x23)
+    assert bytes(r.abi_return) == arc4_caddr([0x42, 0x21, 0x23])
 
 def test_offset_overflow_in_array_decoding(harness):
     """abiEncodeDecode/contracts/offset_overflow_in_array_decoding.sol"""
@@ -393,18 +408,20 @@ def test_decode_roundtrip_matrix(harness):
 def test_encode_address_array(harness):
     """abiEncodeDecode/contracts/encode_address_array.sol  (CUSTOM)
 
-    abi.encode(address[]) must lay out each element as a 32-byte word (the
-    ARC4 account), 32-byte-aligned. The encoder strode the array at 20 bytes
-    (an EVM-address assumption) over 32-byte-per-element ARC4 accounts,
-    mis-counting and mis-aligning every element. contract[] dodged it via
-    the default-32 path; explicit address[] hit the broken slow path."""
+    abi.encode(address[]) lays out each element as a 32-byte account in the ARC4
+    dynamic-array form [uint16 count][count × 32-byte account]. (Pre-ARC4-migration
+    the encoder also strode the array at 20 bytes — an EVM-address assumption —
+    over 32-byte ARC4 accounts; that earlier bug is still covered.)
+
+    EVM_DIVERGENCE: ARC4 layout [uint16 count][elements]; real EVM is
+    [offset][length][elements]."""
     from algosdk import account, encoding
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/encode_address_array.sol")
     addrs = [account.generate_account()[1] for _ in range(3)]
     raw = [encoding.decode_address(a) for a in addrs]
     r = bytes(harness.call(app, "enc(address[])", addrs).abi_return)
-    assert len(r) == 32 + 32 + 3 * 32
-    assert int.from_bytes(r[0:32], "big") == 0x20   # offset
-    assert int.from_bytes(r[32:64], "big") == 3      # length
+    # ARC4 dynamic array: [uint16 count][3 × 32-byte account]
+    assert len(r) == 2 + 3 * 32
+    assert int.from_bytes(r[0:2], "big") == 3      # uint16 count
     for i in range(3):
-        assert r[64 + i * 32 : 64 + (i + 1) * 32] == raw[i]
+        assert r[2 + i * 32 : 2 + (i + 1) * 32] == raw[i]

@@ -42,4 +42,4 @@ __all__ = [
     "RawRevert",
 ]
 
-from .values import arc4_selector, arc4_event_topic
+from .values import arc4_selector, arc4_event_topic, arc4_encode

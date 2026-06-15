@@ -497,6 +497,41 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	if (!targetType || decoded->wtype == targetType)
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(decoded));
 
+	// ── ARC4-everywhere: the input bytes ARE the ARC4 encoding. Reinterpret to
+	// the target's ARC4 type and ARC4Decode to native — NO EVM offset-table
+	// walk. (Kills decodeAbiValue + the nested-array/struct decode helpers,
+	// which were bridging an EVM layout we no longer produce.)
+	{
+		auto dataExpr = decoded;
+		if (dataExpr->wtype != awst::WType::bytesType())
+			dataExpr = awst::makeAsBytes(std::move(dataExpr), _loc);
+
+		auto const* callType = _callNode.annotation().type;
+		if (auto const* tupleType =
+			dynamic_cast<solidity::frontend::TupleType const*>(callType))
+		{
+			std::vector<awst::WType const*> arc4Types;
+			for (auto const* comp : tupleType->components())
+				arc4Types.push_back(
+					_ctx.typeMapper.mapToARC4Type(_ctx.typeMapper.map(comp)));
+			auto const* arc4TupleT = _ctx.typeMapper.createType<awst::ARC4Tuple>(arc4Types);
+			auto arc4Val = awst::makeReinterpretCast(std::move(dataExpr), arc4TupleT, _loc);
+			// targetType is the native WTuple for this tuple decode.
+			auto nativeTuple = awst::makeARC4Decode(std::move(arc4Val), targetType, _loc);
+			return std::make_unique<GenericAbiResult>(_ctx, std::move(nativeTuple));
+		}
+
+		auto const* arc4T = _ctx.typeMapper.mapToARC4Type(targetType);
+		std::shared_ptr<awst::Expression> arc4Val =
+			awst::makeReinterpretCast(std::move(dataExpr), arc4T, _loc);
+		std::shared_ptr<awst::Expression> result;
+		if (targetType == arc4T)
+			result = std::move(arc4Val);
+		else
+			result = awst::makeARC4Decode(std::move(arc4Val), targetType, _loc);
+		return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
+	}
+
 	// Bool decode: ABI bool is a 32-byte big-endian word (0/1). Extract the head
 	// word and narrow via its low 8 bytes (uint64FromAbiWord) before comparing to
 	// zero — a bare btoi on the full 32-byte word fails at runtime with
@@ -585,6 +620,48 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 	if (args.empty())
 		return std::make_unique<GenericAbiResult>(
 			_ctx, awst::makeBytesConstant({}, _loc));
+
+	// ── ARC4-everywhere: abi.encode emits the ARC4 encoding of the argument
+	// tuple. The internal representation IS ARC4, so this is a thin wrapper over
+	// puya's ARC4 codec — NO EVM head/tail/offset/padding layout. Single arg →
+	// that value's ARC4 bytes; multiple → an ARC4 tuple. (EVM-compat is a future
+	// flag; the dead EVM head/tail code below is retained pending its removal.)
+	{
+		// The ARC4 type comes from the VALUE's own native wtype (a canonical
+		// singleton — no literal/pointer pitfalls), which matches what abi.decode
+		// lands on for the same declared type (map(solType) == the value wtype for
+		// a typed arg). The native value is already canonical two's-complement at
+		// its width, so makeARC4Encode needs no extra sign-extension. (Sub-256
+		// ints ride at arc4.uint256 width since puya represents them as biguint —
+		// consistent on both sides; minimal arc4.uintN widths are a refinement.)
+		auto toBytes = [&](std::shared_ptr<awst::Expression> _val)
+			-> std::shared_ptr<awst::Expression>
+		{
+			auto const* arc4T = _ctx.typeMapper.mapToARC4Type(_val->wtype);
+			if (_val->wtype == arc4T)
+				return awst::makeAsBytes(std::move(_val), _loc);
+			return awst::makeAsBytes(awst::makeARC4Encode(std::move(_val), arc4T, _loc), _loc);
+		};
+
+		if (args.size() == 1)
+			return std::make_unique<GenericAbiResult>(_ctx, toBytes(_ctx.buildExpr(*args[0])));
+
+		std::vector<std::shared_ptr<awst::Expression>> items;
+		std::vector<awst::WType const*> nativeTypes, arc4Types;
+		for (auto const& arg : args)
+		{
+			auto val = _ctx.buildExpr(*arg);
+			arc4Types.push_back(_ctx.typeMapper.mapToARC4Type(val->wtype));
+			nativeTypes.push_back(val->wtype);
+			items.push_back(std::move(val));
+		}
+		auto const* wtupleT = _ctx.typeMapper.createType<awst::WTuple>(nativeTypes);
+		auto tupleExpr = awst::makeTupleExpression(wtupleT, _loc);
+		tupleExpr->items = std::move(items);
+		auto const* arc4TupleT = _ctx.typeMapper.createType<awst::ARC4Tuple>(arc4Types);
+		auto enc = awst::makeARC4Encode(std::move(tupleExpr), arc4TupleT, _loc);
+		return std::make_unique<GenericAbiResult>(_ctx, awst::makeAsBytes(std::move(enc), _loc));
+	}
 
 	// Check if any argument is dynamically encoded.
 	// StringLiteralType is static per Solidity's type system, but its

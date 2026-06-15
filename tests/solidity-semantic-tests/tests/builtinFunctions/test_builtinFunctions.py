@@ -114,9 +114,11 @@ def test_erc7201_param_abi_encode(harness):
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert bool(as_int(r.abi_return)) is True
-    # builtinOutput() -> -14651554186193368082021334953908208762193027200365752719897746810709432803072
+    # EVM_DIVERGENCE: ERC-7201 slot = keccak256(abi.encode(...)) & ~0xff. abi.encode
+    # is now ARC4, so the hashed bytes (and thus the slot) differ from Ethereum's.
+    # builtinMatchesSolidityImplementation() still passes (builtin == in-contract impl).
     r = harness.call(app, "builtinOutput()")
-    assert as_int(r.abi_return) in (-14651554186193368082021334953908208762193027200365752719897746810709432803072, 101140535051122827341549650054779699091076957465274811319559837197203696836864)
+    assert as_int(r.abi_return) == 881639522005840632344347799736577674232967879903515221347264931551892978432
 
 def test_erc7201_param_array_string_literal(harness):
     """builtinFunctions/contracts/erc7201_param_array_string_literal.sol"""
