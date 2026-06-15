@@ -464,3 +464,29 @@ def test_abi_static_array_subword_decode(harness):
     assert tuple(as_int(x) for x in r) == (11, 22, 33), r
     # unsigned static array encodes to EVM 32-byte-per-element layout (96B)
     assert len(bytes(harness.call(app, "encU128()").abi_return)) == 96
+
+
+def _word(v: int) -> bytes:
+    """EVM 32-byte two's-complement ABI word for a (possibly negative) int."""
+    return (v % (1 << 256)).to_bytes(32, "big")
+
+
+def test_abi_encode_signed_sign_extends(harness):
+    """conversions/contracts/abi_static_arr.sol  (CUSTOM)
+
+    abi.encode of a SIGNED integer must sign-extend the value to the 32-byte
+    ABI word (negative -> 0xff..<mag>), not zero-pad (0x00..<mag>). Covers the
+    multi-path encode tangle: a <=64-bit scalar (uint64-backed) AND signed
+    static-array elements (ARC4 element width: int64 8B, int128 16B), each of
+    which previously zero-extended. Decode counterpart is
+    test_abi_static_array_subword_decode."""
+    app = harness.compile_and_deploy("conversions/contracts/abi_static_arr.sol")
+    # signed <=64-bit scalar
+    assert bytes(harness.call(app, "encI64()").abi_return) == _word(-3)
+    # signed <=64-bit static-array elements (negative sign-extends, positive 0-pads)
+    assert bytes(harness.call(app, "encI64arr()").abi_return) == _word(-3) + _word(5)
+    # signed int128[3] static array (16-byte ARC4 elements widen + sign-extend)
+    assert bytes(harness.call(app, "encI128()").abi_return) == _word(-7) + _word(5) + _word(-1)
+    # round-trip a signed static array through encode -> decode
+    rt = harness.call(app, "rtI128()").abi_return
+    assert tuple(as_signed_int(x) for x in rt) == (-7, 5, -1), rt

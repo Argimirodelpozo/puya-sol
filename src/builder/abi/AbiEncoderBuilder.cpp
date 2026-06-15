@@ -24,6 +24,35 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 	return awst::makeLeftPadToN(std::move(_expr), _n, _loc);
 }
 
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::signExtendBytesTo32(
+	std::shared_ptr<awst::Expression> _bytes, awst::SourceLocation const& _loc)
+{
+	// Evaluate the source once: it feeds both the sign test (byte 0), its own
+	// length, and the replace3 payload. makeEvalOnce wraps non-trivial exprs in
+	// a SingleEvaluation so they evaluate exactly once.
+	auto once = awst::makeEvalOnce(std::move(_bytes), _loc);
+	// sign = top bit of byte 0 set?  (the value is canonical two's-complement
+	// at its current width, so byte 0 carries the sign regardless of width)
+	auto signByte = awst::makeBtoi(awst::makeExtract(once, 0, 1, _loc), _loc);
+	auto isNeg = awst::makeNumericCompare(
+		std::move(signByte), awst::NumericComparison::Gte,
+		awst::makeIntegerConstant(128, _loc), _loc);
+	// base = 32 bytes of the sign fill (all-0xff for negative, all-0x00 else)
+	auto ones = awst::makeBytesConstant(std::vector<uint8_t>(32, 0xffu), _loc);
+	auto zeros = awst::makeBzero(32, _loc);
+	auto base = awst::makeConditional(
+		std::move(isNeg), std::move(ones), std::move(zeros),
+		awst::WType::bytesType(), _loc);
+	// overwrite the low `len(once)` bytes of the fill with the value:
+	// replace3(base, 32 - len(once), once). For a 32-byte input start=0 (whole
+	// value preserved) → idempotent; for an 8-byte input the high 24 keep the
+	// sign fill.
+	auto start = awst::makeUInt64BinOp(
+		awst::makeIntegerConstant(32, _loc), awst::UInt64BinaryOperator::Sub,
+		awst::makeLen(once, _loc), _loc);
+	return awst::makeReplace3(std::move(base), std::move(start), once, _loc);
+}
+
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::concatByteExprs(
 	std::vector<std::shared_ptr<awst::Expression>> _parts, awst::SourceLocation const& _loc)
 {
@@ -104,8 +133,19 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	else if (_expr->wtype == awst::WType::uint64Type())
 	{
 		auto itob = awst::makeItob(std::move(_expr), _loc);
-		// For non-packed (abi.encode), pad to 32-byte ABI word
-		bytesExpr = _isPacked ? std::move(itob) : leftPadBytes(std::move(itob), 32, _loc);
+		// For non-packed (abi.encode), pad to the 32-byte ABI word. A SIGNED
+		// <=64-bit value arrives as a 64-bit sign-extended uint64 (itob ->
+		// 0xff..fffd for a negative); a plain leftpad would ZERO-fill the high
+		// 24 bytes (0x00..00fffd != EVM's 0xff..fffd). Sign-extend instead — the
+		// 0xff/0x00 pad is selected on the sign bit at runtime. (Unsigned and
+		// packed keep the existing zero-pad / raw-width behaviour.)
+		if (_isPacked)
+			bytesExpr = std::move(itob);
+		else if (auto const* it = dynamic_cast<IntegerType const*>(_solType);
+			it && it->isSigned())
+			bytesExpr = signExtendBytesTo32(std::move(itob), _loc);
+		else
+			bytesExpr = leftPadBytes(std::move(itob), 32, _loc);
 	}
 	else if (_expr->wtype == awst::WType::biguintType())
 	{
@@ -389,7 +429,20 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					// instead of EVM's 96, breaking the keccak hash
 					// (see builtinFunctions/keccak256_packed_complex_types).
 					if (elemBytes)
-						elemBytes = leftPadBytes(std::move(elemBytes), 32, _loc);
+					{
+						// Signed integer elements SIGN-extend to the 32-byte
+						// word (negative -> 0xff..<mag>), not zero-pad. The
+						// element arrives as its raw ARC4 width (8 bytes for
+						// int64, 16 for int128, …); signExtendBytesTo32 is
+						// width-agnostic and idempotent so it is safe in both
+						// abi.encode and abi.encodePacked array modes.
+						auto const* eit =
+							dynamic_cast<solidity::frontend::IntegerType const*>(elemSolType);
+						if (eit && eit->isSigned())
+							elemBytes = signExtendBytesTo32(std::move(elemBytes), _loc);
+						else
+							elemBytes = leftPadBytes(std::move(elemBytes), 32, _loc);
+					}
 					if (!packed)
 						packed = std::move(elemBytes);
 					else
