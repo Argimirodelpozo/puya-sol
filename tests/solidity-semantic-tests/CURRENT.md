@@ -1,3 +1,21 @@
+# Semantic Test Status — v368
+
+> **string[]/bytes[] element ASSIGNMENT (5d2d2326b1, 2026-06-15):** zero-reg,
+> **60 failed / 1240 passed / 86 xf** (fail set byte-identical to v367, empty
+> diff both ways). `string[] memory s = new string[](2); s[0] = "hi";` FAILED
+> TO COMPILE — the element/field store coerced the value via
+> makeARC4Encode(bytes, arc4.string), rejected by the puya backend ("cannot
+> encode bytes to (len+utf8[])"). No abi.encode involved; the bare element WRITE
+> was the blocker, masking the whole literal-built abi.encode(string[]) workflow.
+> applyArc4EncodeIfNeeded (SolAssignment.cpp) now special-cases a dynamic ARC4
+> byte-array target (arc4.string / arc4.dynamic_bytes / uint8[] / bool[], element
+> encoded size 1) with a bytes value: build the ARC4 [uint16 len][raw bytes]
+> directly + reinterpret, instead of the rejected encode (inverse of the bug-A
+> encodeFromArc4Bytes fix). **CLOSES the string[]/bytes[] story** (#20 decode +
+> bug-A encode v367 + bug-B assignment): literal s[i]="x" -> abi.encode ->
+> abi.decode -> read works BYTE-EXACT vs eth_abi. Task #22 done.
+> [[encoding-model]]
+
 # Semantic Test Status — v367
 
 > **abi.encode of string[]/bytes[] (991cd65799, 2026-06-15):** zero-reg,
