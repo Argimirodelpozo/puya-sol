@@ -1,3 +1,15 @@
+# Semantic Test Status — v364
+
+> **abi.decode array-of-dynamic FAIL-LOUD (0a07f57eca, 2026-06-15):** **60 failed
+> / 1236 passed / 86 xf** (net -2 pass = +1 new test, -3 offset_overflow
+> tests xfailed). abi.decode of uint256[][]/bytes[]/string[]/uint[][2]
+> silently returned [] (misread elem count as byte count); encode is correct
+> (byte-identical to EVM). Hard-errored per fail-loud; recursive-offset-table
+> decode tracked as #20. 3 vendored offset-overflow tests passed accidentally
+> (broken decode crashed on corrupt input) → xfailed; matrix's dead rtNested
+> trimmed. 6th encoding-hunt finding. NEXT: #21 static-array sub-32 elements.
+> [[encoding-model]]
+
 # Semantic Test Status — v363
 
 > **abi.decode MIXED-WIDTH STRUCT field-walk (baff492d67, 2026-06-14):** zero-reg,
