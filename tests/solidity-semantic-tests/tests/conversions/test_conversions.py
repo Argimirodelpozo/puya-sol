@@ -492,6 +492,8 @@ def test_abi_encode_signed_sign_extends(harness):
     # round-trip a signed static array through encode -> decode
     rt = harness.call(app, "rtI128()").abi_return
     assert tuple(as_signed_int(x) for x in rt) == (-7, 5, -1), rt
+    # abi.encodePacked of a signed static array sign-extends each 32-byte element
+    assert bytes(harness.call(app, "packI64arr()").abi_return) == _word(-3) + _word(5)
 
 
 def test_abi_decode_nested_dynamic_arrays(harness):

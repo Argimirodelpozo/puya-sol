@@ -28,4 +28,10 @@ contract C {
         int128[3] memory b = abi.decode(abi.encode(a), (int128[3]));
         return (b[0], b[1], b[2]);
     }
+    // abi.encodePacked of a signed static array: EVM still pads each element to
+    // 32 bytes, sign-extending negatives (separate handleEncode packed path).
+    function packI64arr() public pure returns (bytes memory) {
+        int64[2] memory a; a[0]=-3; a[1]=5;
+        return abi.encodePacked(a);
+    }
 }
