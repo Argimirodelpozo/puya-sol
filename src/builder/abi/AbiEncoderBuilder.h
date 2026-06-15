@@ -135,6 +135,21 @@ private:
 		awst::WType const* _arc4Type,
 		awst::SourceLocation const& _loc);
 
+	/// Decode a dynamically-encoded struct whose EVM head section begins at the
+	/// absolute offset `_structStart` in `_data` (its dynamic fields hold offsets
+	/// relative to `_structStart`). Returns a NewStruct value, or nullptr if the
+	/// struct has a field shape the walk can't handle (a field not fitting one
+	/// 32-byte head slot, or a dynamic field other than a width-32/1 array) so
+	/// the caller can fall back / fail loud. Extracted from decodeAbiValue so the
+	/// nested-array decoder can decode struct elements at a resolved offset.
+	static std::shared_ptr<awst::Expression> decodeDynStructAt(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _data,
+		std::shared_ptr<awst::Expression> _structStart,
+		solidity::frontend::StructType const* _structType,
+		awst::WType const* _wtype,
+		awst::SourceLocation const& _loc);
+
 	/// Decode ONE dynamic value (whose `[len][...]` EVM encoding begins at the
 	/// absolute offset `_tailStart` in `_data`) to its ARC4 element byte layout.
 	/// Handles bytes/string ([uint16 len][bytes]), dynamic arrays of 32-byte

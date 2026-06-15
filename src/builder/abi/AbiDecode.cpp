@@ -262,132 +262,16 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		&& wtype->kind() == awst::WTypeKind::ARC4Struct)
 	{
 		using namespace solidity::frontend;
-		auto const* arc4Struct = static_cast<awst::ARC4Struct const*>(wtype);
-		auto const& structDef = structType->structDefinition();
-		auto const& members = structDef.members();
-
-		// All fields must fit in 32-byte head slots (covers value types and
-		// any dynamic type — the head slot is either the value or an offset).
-		bool allFieldsSimple = true;
-		for (auto const& m : members)
-		{
-			auto const* ft = m->type();
-			if (!ft) { allFieldsSimple = false; break; }
-			if (!ft->isDynamicallyEncoded())
-			{
-				// Static field: must fit in one EVM head slot (32 bytes).
-				auto* fwt = _ctx.typeMapper.map(ft);
-				bool oneSlot = fwt == awst::WType::biguintType()
-					|| fwt == awst::WType::uint64Type()
-					|| fwt == awst::WType::boolType()
-					|| fwt == awst::WType::accountType()
-					|| fwt->kind() == awst::WTypeKind::Bytes
-					|| fwt->kind() == awst::WTypeKind::ARC4UIntN;
-				if (!oneSlot) { allFieldsSimple = false; break; }
-			}
-		}
-
-		if (allFieldsSimple && !members.empty())
-		{
-			// struct_start = _offset + read_uint64(_data, _offset, 32 bytes)
-			auto headOffsetWord = awst::makeExtract3(_data, _offset, awst::makeIntegerConstant("32", _loc), _loc);
-			auto headOffset = uint64FromAbiWord(std::move(headOffsetWord), _loc);
-			auto structStart = awst::makeUInt64BinOp(
-				_offset, awst::UInt64BinaryOperator::Add, std::move(headOffset), _loc);
-
-			auto newStruct = awst::makeNewStruct(wtype, _loc);
-			for (size_t i = 0; i < members.size(); ++i)
-			{
-				auto const& memberDecl = members[i];
-				auto const* fieldSolType = memberDecl->type();
-				auto* fieldNativeType = _ctx.typeMapper.map(fieldSolType);
-
-				// Find the ARC4 wtype for this field (if it differs from native).
-				awst::WType const* arc4FieldType = nullptr;
-				for (auto const& [fname, ftype]: arc4Struct->fields())
-					if (fname == memberDecl->name()) { arc4FieldType = ftype; break; }
-				if (!arc4FieldType) arc4FieldType = fieldNativeType;
-
-				auto fieldHeadOffset = awst::makeUInt64BinOp(
-					structStart, awst::UInt64BinaryOperator::Add,
-					awst::makeIntegerConstant(i * 32, _loc), _loc);
-
-				std::shared_ptr<awst::Expression> fieldVal;
-				if (!fieldSolType->isDynamicallyEncoded())
-				{
-					// Static field: head slot IS the value, recurse normally.
-					fieldVal = decodeAbiValue(_ctx, _data, std::move(fieldHeadOffset), fieldSolType, _loc);
-				}
-				else
-				{
-					// Dynamic field: head slot holds offset relative to struct_start.
-					auto fieldOffsetWordExpr = awst::makeExtract3(_data, std::move(fieldHeadOffset),
-						awst::makeIntegerConstant("32", _loc), _loc);
-					auto fieldOffsetWord = uint64FromAbiWord(std::move(fieldOffsetWordExpr), _loc);
-					auto absoluteTail = awst::makeUInt64BinOp(
-						structStart, awst::UInt64BinaryOperator::Add, std::move(fieldOffsetWord), _loc);
-
-					// Inline the dyn-array-tail decode for the common cases:
-					// 32-byte EVM element width (uint256[]/bytes32[]/address[]
-					// fields) and 1-byte width (string/bytes fields — the EVM
-					// tail is raw contiguous bytes, identical to the ARC4 body,
-					// so only the [32-byte len] → [uint16 len] header differs).
-					// Without the 1-byte case a string field fell to the
-					// ARC4FromBytes fallback, which treats the first 2 DATA
-					// bytes as the ARC4 header — `S(42,"hi there",7)` decoded
-					// its string as " there" (silent 2-byte truncation).
-					if (arc4FieldType->kind() == awst::WTypeKind::ARC4DynamicArray)
-					{
-						auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(arc4FieldType);
-						int elemSize = ::puyasol::builder::computeEncodedElementSize(dynArr->elementType());
-						if (elemSize == 32 || elemSize == 1)
-						{
-							// length word at absoluteTail (first 32 bytes)
-							auto lenWord = awst::makeExtract3(_data, absoluteTail,
-								awst::makeIntegerConstant("32", _loc), _loc);
-							auto elemCount = uint64FromAbiWord(std::move(lenWord), _loc);
-							auto dataStart = awst::makeUInt64BinOp(
-								std::move(absoluteTail), awst::UInt64BinaryOperator::Add,
-								awst::makeIntegerConstant("32", _loc), _loc);
-							auto byteCount = awst::makeUInt64BinOp(
-								elemCount, awst::UInt64BinaryOperator::Mult,
-								awst::makeIntegerConstant(elemSize, _loc), _loc);
-							auto elemBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
-							auto header = awst::makeUInt16Bytes(std::move(elemCount), _loc);
-							auto arc4Bytes = awst::makeConcat(std::move(header), std::move(elemBytes), _loc);
-							fieldVal = awst::makeReinterpretCast(std::move(arc4Bytes), arc4FieldType, _loc);
-						}
-					}
-					// Unsupported dynamic field shape (dyn array with element
-					// width other than 32/1, nested dynamic arrays, struct
-					// elements): refuse to compile. The old ARC4FromBytes-on-
-					// EVM-slab fallback handed downstream code a value whose
-					// bytes are NOT the ARC4 layout its type claims — silent
-					// wrong data when access happens not to trap.
-					if (!fieldVal)
-					{
-						Logger::instance().error(
-							"abi.decode of struct field type '"
-							+ arc4FieldType->name()
-							+ "' is not supported: the EVM tail layout for this "
-							"shape has no ARC4 translation here, and a "
-							"reinterpreted value would be silently wrong.", _loc);
-						fieldVal = awst::makeARC4FromBytes(
-							awst::makeBytesConstant({}, _loc), arc4FieldType, _loc);
-					}
-				}
-
-				// If the decoded native value differs from the ARC4 field type,
-				// wrap in ARC4Encode (e.g. biguint → arc4.uint256).
-				if (fieldVal->wtype != arc4FieldType && fieldNativeType != arc4FieldType)
-				{
-					auto encoded = awst::makeARC4Encode(std::move(fieldVal), arc4FieldType, _loc);
-					fieldVal = std::move(encoded);
-				}
-				newStruct->values[memberDecl->name()] = std::move(fieldVal);
-			}
-			return newStruct;
-		}
+		// struct_start = _offset + read_uint64(_data, _offset): the head word at
+		// _offset is the offset to the struct's encoding. Decode at that start;
+		// decodeDynStructAt returns nullptr for an unhandleable field shape, in
+		// which case we fall through to the generic dynamic handling below.
+		auto headOffsetWord = awst::makeExtract3(_data, _offset, awst::makeIntegerConstant("32", _loc), _loc);
+		auto headOffset = uint64FromAbiWord(std::move(headOffsetWord), _loc);
+		auto structStart = awst::makeUInt64BinOp(
+			_offset, awst::UInt64BinaryOperator::Add, std::move(headOffset), _loc);
+		if (auto v = decodeDynStructAt(_ctx, _data, std::move(structStart), structType, wtype, _loc))
+			return v;
 	}
 
 	// ── Dynamic types: head word contains offset to tail data ──
@@ -515,6 +399,24 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeDynTailToArc4Bytes(
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
+
+	// Struct element: a struct has NO leading length word — its encoding starts
+	// directly with the field head section at _tailStart. Decode it to a struct
+	// value and reinterpret to its ARC4 bytes for embedding in the array tail.
+	if (auto const* st = dynamic_cast<StructType const*>(_elemSolType))
+	{
+		if (auto v = decodeDynStructAt(_ctx, _data, _tailStart, st, _arc4Type, _loc))
+			return awst::makeAsBytes(std::move(v), _loc);
+		// nullptr = a field shape decodeDynStructAt can't handle (nested static
+		// struct / multi-word static array field) WITHOUT having logged — fail
+		// loud here rather than return silently-wrong bytes.
+		Logger::instance().error(
+			"abi.decode: unsupported struct element '"
+			+ (_elemSolType ? _elemSolType->toString(true) : std::string("?"))
+			+ "' in a nested array (a field does not fit the simple-struct "
+			"decoder).", _loc);
+		return awst::makeBzero(u64Const("0", _loc), _loc);
+	}
 
 	// The EVM encoding at _tailStart starts with a 32-byte word holding the
 	// element/byte count, then the data at _tailStart + 32.
@@ -673,6 +575,134 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeDynArrayDynElemsBytes
 	auto countHdr = awst::makeUInt16Bytes(nVar, _loc);
 	auto headTail = bytesConcat(headVar, tailVar, _loc);
 	return bytesConcat(std::move(countHdr), std::move(headTail), _loc);
+}
+
+// ── decodeDynStructAt: decode a dynamic struct at a resolved offset ──
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeDynStructAt(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _data,
+	std::shared_ptr<awst::Expression> _structStart,
+	solidity::frontend::StructType const* _structType,
+	awst::WType const* _wtype,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	if (!_structType || !_wtype || _wtype->kind() != awst::WTypeKind::ARC4Struct)
+		return nullptr;
+	auto const* arc4Struct = static_cast<awst::ARC4Struct const*>(_wtype);
+	auto const& structDef = _structType->structDefinition();
+	auto const& members = structDef.members();
+	if (members.empty())
+		return nullptr;
+
+	// All fields must fit in a 32-byte head slot (value types, or a dynamic
+	// field whose head slot is an offset). Anything else (nested static struct /
+	// multi-word static array field) → caller falls back / fails loud.
+	for (auto const& m : members)
+	{
+		auto const* ft = m->type();
+		if (!ft) return nullptr;
+		if (!ft->isDynamicallyEncoded())
+		{
+			auto* fwt = _ctx.typeMapper.map(ft);
+			bool oneSlot = fwt == awst::WType::biguintType()
+				|| fwt == awst::WType::uint64Type()
+				|| fwt == awst::WType::boolType()
+				|| fwt == awst::WType::accountType()
+				|| fwt->kind() == awst::WTypeKind::Bytes
+				|| fwt->kind() == awst::WTypeKind::ARC4UIntN;
+			if (!oneSlot) return nullptr;
+		}
+	}
+
+	auto newStruct = awst::makeNewStruct(_wtype, _loc);
+	for (size_t i = 0; i < members.size(); ++i)
+	{
+		auto const& memberDecl = members[i];
+		auto const* fieldSolType = memberDecl->type();
+		auto* fieldNativeType = _ctx.typeMapper.map(fieldSolType);
+
+		awst::WType const* arc4FieldType = nullptr;
+		for (auto const& [fname, ftype]: arc4Struct->fields())
+			if (fname == memberDecl->name()) { arc4FieldType = ftype; break; }
+		if (!arc4FieldType) arc4FieldType = fieldNativeType;
+
+		auto fieldHeadOffset = awst::makeUInt64BinOp(
+			_structStart, awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(i * 32, _loc), _loc);
+
+		std::shared_ptr<awst::Expression> fieldVal;
+		if (!fieldSolType->isDynamicallyEncoded())
+		{
+			fieldVal = decodeAbiValue(_ctx, _data, std::move(fieldHeadOffset), fieldSolType, _loc);
+		}
+		else
+		{
+			// Dynamic field: head slot holds an offset relative to struct start.
+			auto fieldOffsetWordExpr = awst::makeExtract3(_data, std::move(fieldHeadOffset),
+				awst::makeIntegerConstant("32", _loc), _loc);
+			auto fieldOffsetWord = uint64FromAbiWord(std::move(fieldOffsetWordExpr), _loc);
+			auto absoluteTail = awst::makeUInt64BinOp(
+				_structStart, awst::UInt64BinaryOperator::Add, std::move(fieldOffsetWord), _loc);
+
+			// Width-32 (uint256[]/bytes32[]/address[]) and width-1 (string/bytes)
+			// dynamic array fields translate inline; deeper shapes recurse into
+			// decodeDynTailToArc4Bytes (nested dynamic-element arrays / bytes/
+			// string), so a struct may now hold e.g. a string[] or uint256[][].
+			if (arc4FieldType->kind() == awst::WTypeKind::ARC4DynamicArray)
+			{
+				auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(arc4FieldType);
+				int elemSize = ::puyasol::builder::computeEncodedElementSize(dynArr->elementType());
+				if (elemSize == 32 || elemSize == 1)
+				{
+					auto lenWord = awst::makeExtract3(_data, absoluteTail,
+						awst::makeIntegerConstant("32", _loc), _loc);
+					auto elemCount = uint64FromAbiWord(std::move(lenWord), _loc);
+					auto dataStart = awst::makeUInt64BinOp(
+						std::move(absoluteTail), awst::UInt64BinaryOperator::Add,
+						awst::makeIntegerConstant("32", _loc), _loc);
+					auto byteCount = awst::makeUInt64BinOp(
+						elemCount, awst::UInt64BinaryOperator::Mult,
+						awst::makeIntegerConstant(elemSize, _loc), _loc);
+					auto elemBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
+					auto header = awst::makeUInt16Bytes(std::move(elemCount), _loc);
+					auto arc4Bytes = awst::makeConcat(std::move(header), std::move(elemBytes), _loc);
+					fieldVal = awst::makeReinterpretCast(std::move(arc4Bytes), arc4FieldType, _loc);
+				}
+				else if (auto const* arrT = dynamic_cast<ArrayType const*>(fieldSolType);
+					arrT && !arrT->isByteArrayOrString()
+					&& arrT->baseType() && arrT->baseType()->isDynamicallyEncoded())
+				{
+					// Nested dynamic-element array field (string[], uint256[][]).
+					fieldVal = awst::makeReinterpretCast(
+						decodeDynArrayDynElemsBytes(_ctx, _data, std::move(absoluteTail),
+							arrT, arc4FieldType, _loc),
+						arc4FieldType, _loc);
+				}
+			}
+
+			if (!fieldVal)
+			{
+				Logger::instance().error(
+					"abi.decode of struct field type '"
+					+ arc4FieldType->name()
+					+ "' is not supported: the EVM tail layout for this "
+					"shape has no ARC4 translation here, and a "
+					"reinterpreted value would be silently wrong.", _loc);
+				fieldVal = awst::makeARC4FromBytes(
+					awst::makeBytesConstant({}, _loc), arc4FieldType, _loc);
+			}
+		}
+
+		if (fieldVal->wtype != arc4FieldType && fieldNativeType != arc4FieldType)
+		{
+			auto encoded = awst::makeARC4Encode(std::move(fieldVal), arc4FieldType, _loc);
+			fieldVal = std::move(encoded);
+		}
+		newStruct->values[memberDecl->name()] = std::move(fieldVal);
+	}
+	return newStruct;
 }
 
 // ── rightPadTo32: pad bytes to next 32-byte boundary ──

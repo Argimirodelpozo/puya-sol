@@ -8,6 +8,23 @@
 // dynamic ARC4 element is rejected), so the decode is exercised in isolation
 // against a real eth_abi-encoded input.
 contract C {
+    struct S { uint256 a; string b; }  // dynamic struct (has a string field)
+
+    // S[] : array of DYNAMIC structs — full literal-built round-trip
+    // (construct via element assignment -> abi.encode -> abi.decode -> read).
+    function rtStructArr() public pure returns (uint256, string memory, uint256, string memory, uint256) {
+        S[] memory arr = new S[](2);
+        arr[0] = S(42, "hi");
+        arr[1] = S(7, "world!!");
+        S[] memory d = abi.decode(abi.encode(arr), (S[]));
+        return (d[0].a, d[0].b, d[1].a, d[1].b, d.length);
+    }
+    // S[] decode from a real EVM blob (oracle cross-check)
+    function decStructArr(bytes calldata data) public pure returns (uint256, uint256, uint256) {
+        S[] memory arr = abi.decode(data, (S[]));
+        return (arr[0].a, arr[1].a, arr.length);
+    }
+
     // uint256[][] : outer dyn array of dyn arrays of 32-byte elements
     function rtU256_2d() public pure returns (uint256, uint256, uint256, uint256) {
         uint256[][] memory a = new uint256[][](2);

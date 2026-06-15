@@ -524,6 +524,14 @@ def test_abi_decode_nested_dynamic_arrays(harness):
     b = harness.call(app, "decBytesArr(byte[])", list(blob)).abi_return
     assert as_int(b[0]) == 2 and as_int(b[1]) == 2 and as_int(b[2]) == 3, b
     assert bytes(b[3]) == b"\xcc", b  # d[1][0]
+    # S[] : array of dynamic structs (struct{uint256,string}) — full round-trip
+    rs = harness.call(app, "rtStructArr()").abi_return
+    assert as_int(rs[0]) == 42 and rs[1] == "hi" and as_int(rs[2]) == 7 \
+        and rs[3] == "world!!" and as_int(rs[4]) == 2, rs
+    # S[] decode cross-checked against a real eth_abi blob
+    sblob = eth_abi.encode(["(uint256,string)[]"], [[(99, "x"), (5, "yz"), (1, "")]])
+    ds = harness.call(app, "decStructArr(byte[])", list(sblob)).abi_return
+    assert as_int(ds[0]) == 99 and as_int(ds[1]) == 5 and as_int(ds[2]) == 3, ds
 
 
 def test_abi_encode_dynamic_element_arrays(harness):
