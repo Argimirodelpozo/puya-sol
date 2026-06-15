@@ -1,3 +1,22 @@
+# Semantic Test Status — v367
+
+> **abi.encode of string[]/bytes[] (991cd65799, 2026-06-15):** zero-reg,
+> **60 failed / 1240 passed / 86 xf** (+1 test; fail set byte-identical to v366,
+> empty diff both ways). abi.encode of an array whose elements are dynamic
+> byte-arrays (string[]/bytes[]) FAILED TO COMPILE — encodeFromArc4Bytes
+> reinterpreted each element's raw ARC4 bytes to a dynamic ARC4 byte-array type
+> (arc4.string / arc4.dynamic_bytes), which the puya backend rejects ("cannot
+> encode bytes to (len+utf8[])"). Now the byteArrayOrString case builds the EVM
+> tail [32-byte len][body padded to 32] DIRECTLY from the ARC4 [uint16 len][body]
+> (no reinterpret); the generic path is unchanged for all other element types.
+> Validated BYTE-EXACT vs a real eth_abi oracle (decode->re-encode reproduces the
+> blob; string[] 352B + bytes[]). uint256[][] encode was unaffected (its
+> reinterpret target is accepted). **REMAINING (#22):** string[]/bytes[] element
+> ASSIGNMENT (`string[] s; s[0]="x"`) still emits a rejected
+> ARC4Encode(bytes->arc4.string) in the element-store codegen — a separate,
+> deeper gap that blocks the common literal-built abi.encode(string[]) workflow.
+> [[encoding-model]]
+
 # Semantic Test Status — v366
 
 > **abi.decode NESTED-DYNAMIC arrays (35f1bfd0d3, 2026-06-15):** zero-reg,
