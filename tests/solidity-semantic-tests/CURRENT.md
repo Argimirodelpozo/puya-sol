@@ -1,3 +1,25 @@
+# Semantic Test Status — v370
+
+> **abi.* → ARC4 (Phase 1) (16c7d62667, 2026-06-15):** zero-reg, **60 failed /
+> 1238 passed / 86 xf** (fail-set byte-identical to v369; −2 pass = 2 obsolete
+> EVM-only tests deleted). MAJOR DESIGN REVERSAL (per maintainer, AVM-first): the
+> internal encoding is ARC4 EVERYWHERE — abi.encode/abi.decode now emit/consume
+> the ARC4 encoding directly, NOT the EVM ABI head/tail layout. Reverses the
+> 2026-06-12 "abi.* is an EVM bridge" ruling; no --evm-compat flag (future).
+> handleEncode: per-arg ARC4 type = mapToARC4Type(value's native wtype) [canonical
+> singleton — sidesteps literal/pointer traps + matches decode]; single → value's
+> ARC4 bytes, multi → ARC4 tuple. handleDecode: reinterpret ARC4 bytes → ARC4 type
+> + ARC4Decode → native. The EVM offset-table decode (decodeAbiValue + nested
+> walks) is now DEAD — nested/struct abi.decode is a plain reinterpret, so the old
+> uint128[][]/struct-field gaps are MOOT. Byte effects: literals are uint64 (8B,
+> not EVM uint256); strings/arrays carry uint16 length prefixes; bool 1B; address
+> 32B account; keccak-of-abi.encode (ERC-7201) diverges from Ethereum. 27 broken
+> tests migrated (abiEncoderV1/V2/abiEncodeDecode/conversions/enums/builtinFunctions)
+> with # EVM_DIVERGENCE comments on vendored ones; new framework.arc4_encode
+> (algosdk ABIType) is the ARC4 oracle. PHASE 2+ remaining: encodeWith*/encodeCall
+> + encodePacked → ARC4; delete dead EVM machinery; update EVM_DIVERGENCE.md +
+> memory. [[encoding-model]] (inline-assembly bridges unaffected.)
+
 # Semantic Test Status — v369
 
 > **abi.decode of struct[] (arrays of dynamic structs) (b764f19e65, 2026-06-15):**
