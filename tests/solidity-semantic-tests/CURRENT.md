@@ -1,3 +1,23 @@
+# Semantic Test Status — v369
+
+> **abi.decode of struct[] (arrays of dynamic structs) (b764f19e65, 2026-06-15):**
+> zero-reg, **60 failed / 1240 passed / 86 xf** (fail set byte-identical to v368,
+> empty diff both ways). abi.decode of S[] where S is a dynamic struct (e.g.
+> struct{uint256,string}) was a fail-loud hard-error. Extracted the
+> dynamic-struct walk into decodeDynStructAt(ctx, data, structStart, structType,
+> arc4Type) -> NewStruct|nullptr (parameterized by an absolute struct start, not
+> a head-offset read), shared by decodeAbiValue (top-level struct: structStart =
+> _offset + read(_offset)) and decodeDynTailToArc4Bytes (array element: call at
+> _tailStart, reinterpret NewStruct -> ARC4 bytes; checked BEFORE the count read
+> since a struct has no leading length word). decodeDynStructAt also gained
+> nested dynamic-element array FIELDS (a struct may hold string[]/uint256[][]).
+> On-chain: S{uint256,string}[] FULL literal-built round-trip (construct via
+> element assignment -> abi.encode -> abi.decode -> read) + decode of a real
+> eth_abi blob (oracle); top-level single-struct decode preserved (refactor
+> regression clean). struct[] ENCODE works natively (no bug-A equivalent). Still
+> fail-loud: a field not fitting one 32-byte head slot (nested static struct /
+> multi-word static array field). Task #23 done. [[encoding-model]]
+
 # Semantic Test Status — v368
 
 > **string[]/bytes[] element ASSIGNMENT (5d2d2326b1, 2026-06-15):** zero-reg,
