@@ -385,6 +385,26 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeFromArc4Bytes(
 	solidity::frontend::Type const* _solType,
 	awst::SourceLocation const& _loc)
 {
+	using namespace solidity::frontend;
+
+	// bytes/string element: the ARC4 bytes are [uint16 len][body]. Build the EVM
+	// tail [32-byte len][body padded to 32] DIRECTLY from those bytes — the
+	// generic path below reinterprets raw bytes to a dynamic ARC4 byte-array type
+	// (arc4.string / arc4.dynamic_bytes), which the puya backend rejects ("cannot
+	// encode bytes to (len+utf8[])"). 32-byte-element arrays (uint256[] etc.) do
+	// NOT hit this — their reinterpret target is accepted — so they keep the
+	// generic path.
+	if (auto const* arrT = dynamic_cast<ArrayType const*>(_solType);
+		arrT && arrT->isByteArrayOrString())
+	{
+		auto once = awst::makeEvalOnce(std::move(_bytesExpr), _loc);
+		auto len = bytesExtractU16(once, u64Const("0", _loc), _loc);
+		auto body = bytesExtract3(once, u64Const("2", _loc), len, _loc);
+		auto lenWord = leftPadBytes(awst::makeItob(len, _loc), 32, _loc);
+		auto bodyPadded = rightPadTo32(std::move(body), _loc);
+		return awst::makeConcat(std::move(lenWord), std::move(bodyPadded), _loc);
+	}
+
 	auto* nativeType = _ctx.typeMapper.map(_solType);
 	auto const* arc4Type = _ctx.typeMapper.mapToARC4Type(nativeType);
 	auto recast = awst::makeReinterpretCast(std::move(_bytesExpr), arc4Type, _loc);

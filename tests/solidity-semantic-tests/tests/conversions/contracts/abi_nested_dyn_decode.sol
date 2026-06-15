@@ -48,4 +48,15 @@ contract C {
         bytes[] memory d = abi.decode(data, (bytes[]));
         return (d.length, d[0].length, d[1].length, d[1][0]);
     }
+
+    // abi.encode(string[]) / abi.encode(bytes[]) — decode then RE-ENCODE; the
+    // output must be byte-identical to the input EVM blob. (The array is built
+    // via decode, not literal element assignment, which is a separate
+    // still-open codegen gap — see task #22.)
+    function reencStrArr(bytes calldata data) public pure returns (bytes memory) {
+        return abi.encode(abi.decode(data, (string[])));
+    }
+    function reencBytesArr(bytes calldata data) public pure returns (bytes memory) {
+        return abi.encode(abi.decode(data, (bytes[])));
+    }
 }

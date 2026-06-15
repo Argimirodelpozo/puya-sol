@@ -524,3 +524,20 @@ def test_abi_decode_nested_dynamic_arrays(harness):
     b = harness.call(app, "decBytesArr(byte[])", list(blob)).abi_return
     assert as_int(b[0]) == 2 and as_int(b[1]) == 2 and as_int(b[2]) == 3, b
     assert bytes(b[3]) == b"\xcc", b  # d[1][0]
+
+
+def test_abi_encode_dynamic_element_arrays(harness):
+    """conversions/contracts/abi_nested_dyn_decode.sol  (CUSTOM)
+
+    abi.encode(string[]) / abi.encode(bytes[]) — arrays whose elements are
+    dynamic byte-arrays. encodeFromArc4Bytes builds each element's EVM tail
+    directly from its ARC4 [uint16 len][body] bytes (reinterpreting raw bytes to
+    a dynamic ARC4 byte-array type is rejected by puya). Validated byte-exact: a
+    decode->re-encode must reproduce the original eth_abi blob. (Building such an
+    array via literal element assignment is a separate open codegen gap, #22.)"""
+    import eth_abi
+    app = harness.compile_and_deploy("conversions/contracts/abi_nested_dyn_decode.sol")
+    blob = eth_abi.encode(["string[]"], [["hi", "abc", "Z"]])
+    assert bytes(harness.call(app, "reencStrArr(byte[])", list(blob)).abi_return) == blob
+    blob2 = eth_abi.encode(["bytes[]"], [[b"\xaa\xbb", b"\xcc\xdd\xee"]])
+    assert bytes(harness.call(app, "reencBytesArr(byte[])", list(blob2)).abi_return) == blob2
