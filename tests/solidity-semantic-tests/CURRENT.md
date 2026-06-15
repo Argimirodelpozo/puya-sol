@@ -1,3 +1,22 @@
+# Semantic Test Status — v366
+
+> **abi.decode NESTED-DYNAMIC arrays (35f1bfd0d3, 2026-06-15):** zero-reg,
+> **60 failed / 1239 passed / 86 xf** (+1 new test; fail set byte-identical to
+> v365, empty diff both ways). abi.decode of uint256[][] / uint256[][][] /
+> string[] / bytes[] (a dynamic array whose ELEMENTS are dynamic) was a fail-loud
+> hard-error; now a recursive EVM offset-table walk → ARC4 layout
+> (decodeDynArrayDynElemsBytes = runtime WhileLoop reading [N][offset-table]
+> [tails] → [uint16 N][uint16 offs][ARC4 tails]; decodeDynTailToArc4Bytes =
+> per-element bytes/string / 32-byte-array / recurse; mirrors the encode side's
+> encodeDynArrayDynElems, arbitrary depth). On-chain validated: uint round-trips
+> (+ empty inner) and string[]/bytes[] decoded from a real eth_abi blob. Still
+> fail-loud: uint128[][] (EVM 32-pads / ARC4 packs sub-32 → repack unimplemented)
+> + struct elements (the old hard-error test repurposed to uint128[][]).
+> **DISCOVERED #22:** abi.ENCODE of string[]/bytes[] FAILS TO COMPILE (puya
+> rejects reinterpret-of-bytes → dynamic ARC4 element) — the v364 "encode correct"
+> claim held only for uint256[][]; decode works, encode is the gap. Also locked
+> abi.encodePacked signed static-array coverage (44bcd25dcb). [[encoding-model]]
+
 # Semantic Test Status — v365
 
 > **abi SIGNED ENCODE + static-array sub-32 DECODE (739292b7c1, 2026-06-15):**
