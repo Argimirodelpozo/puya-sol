@@ -436,3 +436,16 @@ def test_abi_decode_mixed_struct(harness):
     assert signed(rs[0]) == -9
     assert asint(rs[1]) == 200
     assert rs[2] is True
+
+
+def test_abi_decode_nested_dynamic_hard_errors(harness):
+    """conversions/contracts/abi_decode_nested_dyn.sol  (CUSTOM)
+
+    abi.decode of an array-of-dynamic-elements (uint256[][]/bytes[]/string[])
+    must hard-error rather than silently return [] — the decoder lacks the
+    recursive offset-table walk (the encode side is correct; #20 tracks the
+    feature). Fail-loud per EVM_DIVERGENCE."""
+    import pytest
+    from framework.compile import CompileError
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("conversions/contracts/abi_decode_nested_dyn.sol")

@@ -2,15 +2,8 @@
 pragma solidity ^0.8.0;
 contract C {
     struct S { uint256 a; string s; uint16 b; }
-    // nested dynamic array round-trip
-    function rtNested() external pure returns (uint256, uint256, uint256) {
-        uint256[][] memory x = new uint256[][](2);
-        x[0] = new uint256[](1); x[0][0] = 11;
-        x[1] = new uint256[](2); x[1][0] = 22; x[1][1] = 33;
-        bytes memory e = abi.encode(x);
-        uint256[][] memory y = abi.decode(e, (uint256[][]));
-        return (y[0][0], y[1][0], y[1][1]);   // (11,22,33)
-    }
+    // (nested-dynamic-array decode — uint256[][] — is a compile hard-error;
+    //  abi.encode of it is correct, decode is unimplemented. See test.)
     // struct with string round-trip
     function rtStruct() external pure returns (uint256, string memory, uint16) {
         S memory s = S(42, "hi there", 7);

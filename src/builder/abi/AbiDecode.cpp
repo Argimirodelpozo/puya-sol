@@ -402,6 +402,28 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			}
 		}
 
+		// abi.decode of a dynamic array whose ELEMENTS are themselves dynamic
+		// (uint256[][], bytes[], string[]) needs a recursive offset-table walk
+		// the decoder doesn't implement. The bytes/string fallback below would
+		// misread the element COUNT as a byte count and silently return an
+		// empty/garbage array (verified: abi.decode(uint256[][]) → length 0).
+		// Fail loud instead — the abi.encode side IS correct, so the round-trip
+		// is one decode feature away (tracked separately). bytes/string
+		// themselves have a non-dynamic (byte) element and take the path below.
+		if (auto const* arrT = dynamic_cast<ArrayType const*>(_solType);
+			arrT && !arrT->isByteArrayOrString()
+			&& arrT->baseType() && arrT->baseType()->isDynamicallyEncoded())
+		{
+			Logger::instance().error(
+				"abi.decode of '" + _solType->toString(true) + "' (a dynamic "
+				"array with dynamic elements) is not supported: the decoder "
+				"would silently return an empty array. abi.encode of this type "
+				"is correct; only the nested-offset-table decode is missing.",
+				_loc);
+			return awst::makeARC4FromBytes(
+				awst::makeBytesConstant({}, _loc), wtype, _loc);
+		}
+
 		// Extract data bytes (length word is interpreted as byte count — correct
 		// for bytes/string where elements are 1 byte each)
 		auto dataBytes = awst::makeExtract3(_data, std::move(dataStart), std::move(elemCount), _loc);
