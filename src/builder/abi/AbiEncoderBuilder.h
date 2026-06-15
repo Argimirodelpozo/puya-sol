@@ -120,6 +120,35 @@ private:
 		solidity::frontend::Type const* _solType,
 		awst::SourceLocation const& _loc);
 
+	/// Decode a dynamic array whose ELEMENTS are themselves dynamically encoded
+	/// (uint256[][], bytes[], string[], …) from EVM ABI bytes, returning the
+	/// ARC4 byte layout of the array. `_tailStart` is the absolute byte offset
+	/// within `_data` where the array's `[len][offset-table][tails]` encoding
+	/// begins. Mirrors encodeDynArrayDynElems (the inverse direction) and
+	/// recurses through decodeDynTailToArc4Bytes for each element, so it handles
+	/// arbitrary nesting depth. Emits a runtime loop via _ctx.prePendingStatements.
+	static std::shared_ptr<awst::Expression> decodeDynArrayDynElemsBytes(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _data,
+		std::shared_ptr<awst::Expression> _tailStart,
+		solidity::frontend::Type const* _arrSolType,
+		awst::WType const* _arc4Type,
+		awst::SourceLocation const& _loc);
+
+	/// Decode ONE dynamic value (whose `[len][...]` EVM encoding begins at the
+	/// absolute offset `_tailStart` in `_data`) to its ARC4 element byte layout.
+	/// Handles bytes/string ([uint16 len][bytes]), dynamic arrays of 32-byte
+	/// EVM elements ([uint16 count][count×32]), and nested dynamic-element
+	/// arrays (recurses into decodeDynArrayDynElemsBytes). Used as the per-element
+	/// step of the nested-array offset-table walk.
+	static std::shared_ptr<awst::Expression> decodeDynTailToArc4Bytes(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _data,
+		std::shared_ptr<awst::Expression> _tailStart,
+		solidity::frontend::Type const* _elemSolType,
+		awst::WType const* _arc4Type,
+		awst::SourceLocation const& _loc);
+
 	// ── Individual handlers ──
 
 	static std::unique_ptr<InstanceBuilder> handleEncodePacked(

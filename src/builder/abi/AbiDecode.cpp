@@ -445,25 +445,23 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		}
 
 		// abi.decode of a dynamic array whose ELEMENTS are themselves dynamic
-		// (uint256[][], bytes[], string[]) needs a recursive offset-table walk
-		// the decoder doesn't implement. The bytes/string fallback below would
-		// misread the element COUNT as a byte count and silently return an
-		// empty/garbage array (verified: abi.decode(uint256[][]) → length 0).
-		// Fail loud instead — the abi.encode side IS correct, so the round-trip
-		// is one decode feature away (tracked separately). bytes/string
-		// themselves have a non-dynamic (byte) element and take the path below.
+		// (uint256[][], bytes[], string[]): walk the EVM offset table and
+		// rebuild the ARC4 layout. _offset still points at this value's head
+		// word (an offset to the tail); resolve it to the absolute tail start
+		// and hand it to the recursive decoder, then reinterpret the produced
+		// ARC4 bytes as the target array type. (bytes/string themselves have a
+		// non-dynamic byte element and take the raw path below.)
 		if (auto const* arrT = dynamic_cast<ArrayType const*>(_solType);
 			arrT && !arrT->isByteArrayOrString()
 			&& arrT->baseType() && arrT->baseType()->isDynamicallyEncoded())
 		{
-			Logger::instance().error(
-				"abi.decode of '" + _solType->toString(true) + "' (a dynamic "
-				"array with dynamic elements) is not supported: the decoder "
-				"would silently return an empty array. abi.encode of this type "
-				"is correct; only the nested-offset-table decode is missing.",
-				_loc);
-			return awst::makeARC4FromBytes(
-				awst::makeBytesConstant({}, _loc), wtype, _loc);
+			auto tailStart = uint64FromAbiWord(
+				awst::makeExtract3(_data, _offset,
+					awst::makeIntegerConstant("32", _loc), _loc), _loc);
+			return awst::makeReinterpretCast(
+				decodeDynArrayDynElemsBytes(
+					_ctx, _data, std::move(tailStart), arrT, wtype, _loc),
+				wtype, _loc);
 		}
 
 		// Extract data bytes (length word is interpreted as byte count — correct
@@ -504,6 +502,177 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	// Fallback: ReinterpretCast the 32-byte word
 	auto cast = awst::makeReinterpretCast(std::move(headWord), wtype, _loc);
 	return cast;
+}
+
+// ── decodeDynTailToArc4Bytes: one dynamic element → ARC4 element bytes ──
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeDynTailToArc4Bytes(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _data,
+	std::shared_ptr<awst::Expression> _tailStart,
+	solidity::frontend::Type const* _elemSolType,
+	awst::WType const* _arc4Type,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+
+	// The EVM encoding at _tailStart starts with a 32-byte word holding the
+	// element/byte count, then the data at _tailStart + 32.
+	auto count = uint64FromAbiWord(
+		bytesExtract3(_data, _tailStart, u64Const("32", _loc), _loc), _loc);
+	auto dataStart = awst::makeUInt64BinOp(
+		_tailStart, awst::UInt64BinaryOperator::Add, u64Const("32", _loc), _loc);
+
+	auto const* arrT = dynamic_cast<ArrayType const*>(_elemSolType);
+
+	// Case C: bytes/string element → ARC4 [uint16 len][raw bytes]. The EVM tail
+	// is [32-byte len][raw bytes] (the raw bytes are NOT 32-padded inside the
+	// length), identical body to ARC4 except the 32→uint16 length header.
+	if (arrT && arrT->isByteArrayOrString())
+	{
+		auto raw = bytesExtract3(_data, std::move(dataStart), count, _loc);
+		auto header = awst::makeUInt16Bytes(count, _loc);
+		return bytesConcat(std::move(header), std::move(raw), _loc);
+	}
+
+	// Case B: the element is itself a dynamic-element array (deeper nesting) →
+	// recurse on its own offset table.
+	if (arrT && arrT->baseType() && arrT->baseType()->isDynamicallyEncoded())
+		return decodeDynArrayDynElemsBytes(_ctx, _data, _tailStart, arrT, _arc4Type, _loc);
+
+	// Case A: dynamic array of 32-byte EVM elements (uint256[]/bytes32[]/
+	// address[]) → ARC4 [uint16 count][count × 32 bytes]. EVM slot-pads each
+	// element to 32 bytes, which coincides with the ARC4 width exactly when the
+	// element's ARC4 size is also 32.
+	if (_arc4Type && _arc4Type->kind() == awst::WTypeKind::ARC4DynamicArray)
+	{
+		auto const* dynArr = static_cast<awst::ARC4DynamicArray const*>(_arc4Type);
+		int elemSize = ::puyasol::builder::computeEncodedElementSize(dynArr->elementType());
+		if (elemSize == 32)
+		{
+			auto byteCount = awst::makeUInt64BinOp(
+				count, awst::UInt64BinaryOperator::Mult, u64Const("32", _loc), _loc);
+			auto elemBytes = bytesExtract3(_data, std::move(dataStart), std::move(byteCount), _loc);
+			auto header = awst::makeUInt16Bytes(count, _loc);
+			return bytesConcat(std::move(header), std::move(elemBytes), _loc);
+		}
+	}
+
+	// Unsupported element shape (uint128[]-style sub-32 dynamic arrays where EVM
+	// 32-pads but ARC4 packs, struct elements, …). Fail loud — never silently
+	// wrong.
+	Logger::instance().error(
+		"abi.decode: unsupported dynamic element type '"
+		+ (_elemSolType ? _elemSolType->toString(true) : std::string("?"))
+		+ "' in a nested array; supported elements are bytes/string, arrays of "
+		"32-byte values (uintN/bytesN/address), and further nested dynamic "
+		"arrays.", _loc);
+	return awst::makeBzero(u64Const("0", _loc), _loc);
+}
+
+// ── decodeDynArrayDynElems: EVM offset-table walk → ARC4 array bytes ──
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeDynArrayDynElemsBytes(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _data,
+	std::shared_ptr<awst::Expression> _tailStart,
+	solidity::frontend::Type const* _arrSolType,
+	awst::WType const* _arc4Type,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	auto const bytesT = awst::WType::bytesType();
+	auto const u64T = awst::WType::uint64Type();
+
+	auto const* arrType = dynamic_cast<ArrayType const*>(_arrSolType);
+	auto const* elemSolType = arrType ? arrType->baseType() : nullptr;
+	auto const* dynArr = (_arc4Type && _arc4Type->kind() == awst::WTypeKind::ARC4DynamicArray)
+		? static_cast<awst::ARC4DynamicArray const*>(_arc4Type) : nullptr;
+	auto const* elemArc4Type = dynArr ? dynArr->elementType() : nullptr;
+
+	int tc = s_decLoopCounter++;
+	auto sfx = std::to_string(tc);
+
+	// ts = _tailStart  (materialise — feeds both N and headBase)
+	auto tsVar = awst::makeVarExpression("__dec_ts_" + sfx, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(tsVar, _tailStart, _loc));
+
+	// N = evmWord(_data, ts)   (outer element count)
+	auto nVar = awst::makeVarExpression("__dec_n_" + sfx, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(nVar,
+		uint64FromAbiWord(bytesExtract3(_data, tsVar, u64Const("32", _loc), _loc), _loc), _loc));
+
+	// headBase = ts + 32   (start of the EVM offset table; offsets are relative
+	// to here)
+	auto hbVar = awst::makeVarExpression("__dec_hb_" + sfx, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(hbVar,
+		awst::makeUInt64BinOp(tsVar, awst::UInt64BinaryOperator::Add, u64Const("32", _loc), _loc), _loc));
+
+	// arc4_head = "" ; arc4_tail = ""
+	auto headVar = awst::makeVarExpression("__dec_head_" + sfx, bytesT, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(headVar, awst::makeBzero(u64Const("0", _loc), _loc), _loc));
+	auto tailVar = awst::makeVarExpression("__dec_tail_" + sfx, bytesT, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(tailVar, awst::makeBzero(u64Const("0", _loc), _loc), _loc));
+
+	// arc4_off = N * 2   (ARC4 uint16 offsets; the head section is N*2 bytes)
+	auto offVar = awst::makeVarExpression("__dec_off_" + sfx, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(offVar,
+		awst::makeUInt64BinOp(nVar, awst::UInt64BinaryOperator::Mult, u64Const("2", _loc), _loc), _loc));
+
+	// i = 0
+	auto iVar = awst::makeVarExpression("__dec_i_" + sfx, u64T, _loc);
+	_ctx.prePendingStatements.push_back(assignFresh(iVar, u64Const("0", _loc), _loc));
+
+	auto loopCond = awst::makeNumericCompare(iVar, awst::NumericComparison::Lt, nVar, _loc);
+	auto body = awst::makeBlock(_loc);
+
+	// evm_off_i = evmWord(_data, headBase + i*32)
+	auto eoffVar = awst::makeVarExpression("__dec_eoff_" + sfx, u64T, _loc);
+	{
+		auto iX32 = awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Mult, u64Const("32", _loc), _loc);
+		auto pos = awst::makeUInt64BinOp(hbVar, awst::UInt64BinaryOperator::Add, std::move(iX32), _loc);
+		body->body.push_back(assignFresh(eoffVar,
+			uint64FromAbiWord(bytesExtract3(_data, std::move(pos), u64Const("32", _loc), _loc), _loc), _loc));
+	}
+
+	// inner_abs = headBase + evm_off_i   (absolute start of element i's encoding)
+	auto iaVar = awst::makeVarExpression("__dec_ia_" + sfx, u64T, _loc);
+	body->body.push_back(assignFresh(iaVar,
+		awst::makeUInt64BinOp(hbVar, awst::UInt64BinaryOperator::Add, eoffVar, _loc), _loc));
+
+	// inner_arc4 = decode element i to ARC4 bytes. A deeper-nested element emits
+	// its OWN loop into prePendingStatements; swap them out and splice into this
+	// loop body so they don't escape to the function level (mirrors the encode
+	// side's child-statement capture).
+	auto ibVar = awst::makeVarExpression("__dec_ib_" + sfx, bytesT, _loc);
+	{
+		std::vector<std::shared_ptr<awst::Statement>> saved;
+		saved.swap(_ctx.prePendingStatements);
+		auto innerArc4 = decodeDynTailToArc4Bytes(_ctx, _data, iaVar, elemSolType, elemArc4Type, _loc);
+		for (auto& s : _ctx.prePendingStatements)
+			body->body.push_back(std::move(s));
+		_ctx.prePendingStatements = std::move(saved);
+		body->body.push_back(assignFresh(ibVar, std::move(innerArc4), _loc));
+	}
+
+	// arc4_head ++= uint16(arc4_off)
+	body->body.push_back(assignFresh(headVar,
+		bytesConcat(headVar, awst::makeUInt16Bytes(offVar, _loc), _loc), _loc));
+	// arc4_tail ++= inner_arc4
+	body->body.push_back(assignFresh(tailVar, bytesConcat(tailVar, ibVar, _loc), _loc));
+	// arc4_off += len(inner_arc4)
+	body->body.push_back(assignFresh(offVar,
+		awst::makeUInt64BinOp(offVar, awst::UInt64BinaryOperator::Add, bytesLen(ibVar, _loc), _loc), _loc));
+	// i += 1
+	body->body.push_back(assignFresh(iVar,
+		awst::makeUInt64BinOp(iVar, awst::UInt64BinaryOperator::Add, u64Const("1", _loc), _loc), _loc));
+
+	_ctx.prePendingStatements.push_back(awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
+
+	// result = uint16(N) ++ arc4_head ++ arc4_tail
+	auto countHdr = awst::makeUInt16Bytes(nVar, _loc);
+	auto headTail = bytesConcat(headVar, tailVar, _loc);
+	return bytesConcat(std::move(countHdr), std::move(headTail), _loc);
 }
 
 // ── rightPadTo32: pad bytes to next 32-byte boundary ──

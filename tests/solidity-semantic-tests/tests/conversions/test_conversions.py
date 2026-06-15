@@ -441,10 +441,12 @@ def test_abi_decode_mixed_struct(harness):
 def test_abi_decode_nested_dynamic_hard_errors(harness):
     """conversions/contracts/abi_decode_nested_dyn.sol  (CUSTOM)
 
-    abi.decode of an array-of-dynamic-elements (uint256[][]/bytes[]/string[])
-    must hard-error rather than silently return [] — the decoder lacks the
-    recursive offset-table walk (the encode side is correct; #20 tracks the
-    feature). Fail-loud per EVM_DIVERGENCE."""
+    The recursive offset-table decode (test_abi_decode_nested_dynamic_arrays)
+    now handles uint256[][]/uint256[][][]/string[]/bytes[]. The REMAINING
+    unsupported shape — a dynamic array of sub-32-byte dynamic arrays
+    (uint128[][], where EVM 32-pads each element but ARC4 packs it to 16 bytes)
+    — must still hard-error rather than silently return wrong data. Fail-loud
+    per EVM_DIVERGENCE."""
     import pytest
     from framework.compile import CompileError
     with pytest.raises(CompileError):
@@ -490,3 +492,33 @@ def test_abi_encode_signed_sign_extends(harness):
     # round-trip a signed static array through encode -> decode
     rt = harness.call(app, "rtI128()").abi_return
     assert tuple(as_signed_int(x) for x in rt) == (-7, 5, -1), rt
+
+
+def test_abi_decode_nested_dynamic_arrays(harness):
+    """conversions/contracts/abi_nested_dyn_decode.sol  (CUSTOM)
+
+    abi.decode of a dynamic array whose ELEMENTS are themselves dynamic
+    (uint256[][], uint256[][][], string[], bytes[]) — a recursive EVM
+    offset-table walk that rebuilds the ARC4 layout. Previously a fail-loud
+    hard-error. uint-element nesting round-trips through abi.encode (supported);
+    string[]/bytes[] decode a real eth_abi-encoded blob (their abi.ENCODE is a
+    separate pre-existing puya-backend limitation)."""
+    import eth_abi
+    app = harness.compile_and_deploy("conversions/contracts/abi_nested_dyn_decode.sol")
+    # uint256[][] round-trip
+    r = harness.call(app, "rtU256_2d()").abi_return
+    assert tuple(as_int(x) for x in r) == (2, 11, 22, 33), r
+    # uint256[][][] round-trip (recursion)
+    r3 = harness.call(app, "rtU256_3d()").abi_return
+    assert tuple(as_int(x) for x in r3) == (2, 8, 2, 10), r3
+    # empty inner array edge case
+    re = harness.call(app, "rtEmptyInner()").abi_return
+    assert tuple(as_int(x) for x in re) == (2, 0, 3), re
+    # string[] decode from a real EVM ABI blob
+    s = harness.call(app, "decStrArr(byte[])", list(eth_abi.encode(["string[]"], [["hi", "abc"]]))).abi_return
+    assert s[0] == "hi" and s[1] == "abc" and as_int(s[2]) == 2, s
+    # bytes[] decode from a real EVM ABI blob
+    blob = eth_abi.encode(["bytes[]"], [[b"\xaa\xbb", b"\xcc\xdd\xee"]])
+    b = harness.call(app, "decBytesArr(byte[])", list(blob)).abi_return
+    assert as_int(b[0]) == 2 and as_int(b[1]) == 2 and as_int(b[2]) == 3, b
+    assert bytes(b[3]) == b"\xcc", b  # d[1][0]

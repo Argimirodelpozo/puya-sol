@@ -18,6 +18,11 @@ namespace puyasol::builder::eb::abi_codec
 /// body.
 inline int s_encLoopCounter = 0;
 
+/// Companion counter for the decode-side loop emitters (nested-dynamic
+/// abi.decode). Separate from s_encLoopCounter so encode/decode var names in
+/// the same function body never collide.
+inline int s_decLoopCounter = 0;
+
 inline std::shared_ptr<awst::AssignmentStatement> assignFresh(
 	std::shared_ptr<awst::Expression> _target,
 	std::shared_ptr<awst::Expression> _value,
