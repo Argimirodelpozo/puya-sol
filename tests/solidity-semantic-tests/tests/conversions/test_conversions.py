@@ -449,3 +449,18 @@ def test_abi_decode_nested_dynamic_hard_errors(harness):
     from framework.compile import CompileError
     with pytest.raises(CompileError):
         harness.compile_and_deploy("conversions/contracts/abi_decode_nested_dyn.sol")
+
+
+def test_abi_static_array_subword_decode(harness):
+    """conversions/contracts/abi_static_arr.sol  (CUSTOM)
+
+    abi.decode of a static array with sub-32-byte elements (uint128[3]) must
+    field-walk each 32-byte EVM slot, not slab-reinterpret the ARC4-packed
+    bytes (which read 48 of 96 bytes → garbage, e.g. [0,11,0]). Decode
+    counterpart to the static-array element ENCODE widening. (Signed
+    static-array ENCODE sign-extension is a separate multi-path follow-up.)"""
+    app = harness.compile_and_deploy("conversions/contracts/abi_static_arr.sol")
+    r = harness.call(app, "rtU128()").abi_return
+    assert tuple(as_int(x) for x in r) == (11, 22, 33), r
+    # unsigned static array encodes to EVM 32-byte-per-element layout (96B)
+    assert len(bytes(harness.call(app, "encU128()").abi_return)) == 96

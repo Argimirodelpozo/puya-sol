@@ -140,17 +140,18 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			|| kind == awst::WTypeKind::ARC4Tuple)
 		{
 			int totalSize = ::puyasol::builder::computeEncodedElementSize(wtype);
-			// For an ARC4Struct the slab reinterpret is only valid when the
-			// ARC4 layout coincides with EVM's — i.e. ARC4 size == EVM size, so
-			// every field is a full 32-byte word. A sub-32 field (int128=16B,
+			// The slab reinterpret is only valid when the ARC4 layout
+			// coincides with EVM's — i.e. ARC4 size == EVM size, so every leaf
+			// is a full 32-byte word. A sub-32 field/element (int128=16B,
 			// uint8/bool=1B) makes ARC4 size SMALLER, so reinterpreting
-			// `totalSize` EVM bytes reads the wrong fields; those structs go to
-			// the field-walk below. (Tuples/arrays keep the original condition
-			// — narrowing to the confirmed struct bug to avoid touching the
+			// `totalSize` EVM bytes reads the wrong data; those structs and
+			// static arrays go to the field/element-walk below. (TUPLES keep
+			// the original condition — not gated, to avoid touching the
 			// multi-value-decode path.)
-			bool structLayoutOk = kind != awst::WTypeKind::ARC4Struct
+			bool layoutOk = (kind != awst::WTypeKind::ARC4Struct
+					&& kind != awst::WTypeKind::ARC4StaticArray)
 				|| evmStaticSize(_solType) == totalSize;
-			if (totalSize > 32 && structLayoutOk)
+			if (totalSize > 32 && layoutOk)
 			{
 				auto slab = awst::makeExtract3(
 					std::move(_data),
@@ -200,6 +201,47 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 			evmOff += (fs > 0 ? fs : 32);
 		}
 		return newStruct;
+	}
+
+	// ── Static array with sub-32 elements: walk elements at EVM slots ──
+	//
+	// A static array T[N] whose element is narrower than 32 bytes (uint128[3],
+	// int128[3], uint8[3]) can't be slab-reinterpreted (EVM pads each element
+	// to a 32-byte slot; ARC4 packs at the element width). Decode each element
+	// from its 32-byte EVM slot at `_offset + i*32` and concat the ARC4 element
+	// bytes, then reinterpret to the ARC4 static-array type. Decode-counterpart
+	// to the static-array element ENCODE widening.
+	if (auto const* sArrType = dynamic_cast<ArrayType const*>(_solType);
+		sArrType && !sArrType->isDynamicallySized()
+		&& !sArrType->isByteArrayOrString()
+		&& !_solType->isDynamicallyEncoded()
+		&& wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+	{
+		auto const* arc4Arr = static_cast<awst::ARC4StaticArray const*>(wtype);
+		auto const* elemArc4Type = arc4Arr->elementType();
+		auto const* elemSolType = sArrType->baseType();
+		auto* elemNativeType = _ctx.typeMapper.map(elemSolType);
+		int n = static_cast<int>(sArrType->length());
+		int evmElemSize = evmStaticSize(elemSolType);
+		if (evmElemSize <= 0) evmElemSize = 32;
+
+		std::shared_ptr<awst::Expression> arc4Bytes;
+		for (int i = 0; i < n; ++i)
+		{
+			auto elemOffset = awst::makeUInt64BinOp(
+				_offset, awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(i * evmElemSize, _loc), _loc);
+			auto elemVal = decodeAbiValue(_ctx, _data, std::move(elemOffset), elemSolType, _loc);
+			if (elemVal->wtype != elemArc4Type && elemNativeType != elemArc4Type)
+				elemVal = awst::makeARC4Encode(std::move(elemVal), elemArc4Type, _loc);
+			std::shared_ptr<awst::Expression> elemBytes = awst::makeAsBytes(std::move(elemVal), _loc);
+			if (arc4Bytes)
+				arc4Bytes = awst::makeConcat(std::move(arc4Bytes), std::move(elemBytes), _loc);
+			else
+				arc4Bytes = std::move(elemBytes);
+		}
+		if (arc4Bytes)
+			return awst::makeReinterpretCast(std::move(arc4Bytes), wtype, _loc);
 	}
 
 	// ── Dynamic struct: walk fields, build NewStruct ──
