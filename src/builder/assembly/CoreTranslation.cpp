@@ -98,21 +98,25 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 	return nullptr;
 }
 
+std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id) const
+{
+	// Registered external reference (an outer Solidity local/param, or a fn-ptr
+	// .selector/.address) → its mangled AWST name; everything else → the bare Yul
+	// name. Keyed by the yul::Identifier node ptr so a same-named Yul-local isn't
+	// mis-remapped.
+	auto it = m_externalVarNames.find(&_id);
+	return it != m_externalVarNames.end() ? it->second : _id.name.str();
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	solidity::yul::Identifier const& _id
 )
 {
 	auto loc = makeLoc(_id.debugData);
-	std::string name = _id.name.str();
-
-	// External reference to an outer Solidity local → its mangled AWST name
-	// (locals are `name__<declId>` now — Context::awstVarName). Keyed by the
-	// yul::Identifier node ptr so a same-named Yul-local isn't mis-remapped; only
-	// value refs are in the map (suffixed .slot/.offset refs keep their dotted
-	// name for the handling below). Done here at the top so every downstream
-	// lookup (m_locals, m_paramBitWidths, m_blobOffsetVars) uses the mangled key.
-	if (auto evIt = m_externalVarNames.find(&_id); evIt != m_externalVarNames.end())
-		name = evIt->second;
+	// resolveVarRef remaps an outer-Solidity-var reference to its mangled AWST
+	// name at the top, so every downstream lookup (m_locals, m_paramBitWidths,
+	// m_blobOffsetVars) and the dotPos split below uses the mangled key.
+	std::string name = resolveVarRef(_id);
 
 	// Handle .offset / .length suffix on calldata parameter references
 	// e.g., proofPayload.offset → calldata byte offset of proofPayload

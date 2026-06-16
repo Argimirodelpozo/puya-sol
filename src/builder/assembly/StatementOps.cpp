@@ -203,10 +203,7 @@ void AssemblyBuilder::buildAssignment(
 						std::string retName = fromSub
 							? m_yulSubReturnTemps[i]
 							: funcDef.returnVariables[i].name.str();
-						std::string varName = _assign.variableNames[i].name.str();
-						if (auto evIt = m_externalVarNames.find(&_assign.variableNames[i]);
-							evIt != m_externalVarNames.end())
-							varName = evIt->second;
+						std::string varName = resolveVarRef(_assign.variableNames[i]);
 
 						auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 
@@ -226,13 +223,9 @@ void AssemblyBuilder::buildAssignment(
 		return;
 	}
 
-	std::string name = _assign.variableNames[0].name.str();
-	// Outer-Solidity-var write: locals are mangled `name__<declId>` now — use the
-	// mangled AWST name. Only value refs (no .slot/.selector suffix) are in the map,
-	// so dotted refs fall through to the suffix machinery below unchanged.
-	if (auto evIt = m_externalVarNames.find(&_assign.variableNames[0]);
-		evIt != m_externalVarNames.end())
-		name = evIt->second;
+	// Outer-Solidity-var write target → mangled AWST name (dotted .selector/
+	// .address resolve to `base__id.suffix`, split below).
+	std::string name = resolveVarRef(_assign.variableNames[0]);
 
 	// fn-ptr selector/address writes: fp.selector := expr  /  fp.address := expr
 	// Update the corresponding 4-byte (selector) or 8-byte (address) slice of the

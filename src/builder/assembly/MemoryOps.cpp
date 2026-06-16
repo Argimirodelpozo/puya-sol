@@ -353,9 +353,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	if (!paramId)
 		return nullptr;
 
-	std::string paramName = paramId->name.str();
-	if (auto evIt = m_externalVarNames.find(paramId); evIt != m_externalVarNames.end())
-		paramName = evIt->second;
+	std::string paramName = resolveVarRef(*paramId);
 	auto paramIt = m_locals.find(paramName);
 	if (paramIt == m_locals.end())
 		return nullptr;
@@ -434,9 +432,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	if (!varId)
 		return false;
 
-	std::string varName = varId->name.str();
-	if (auto evIt = m_externalVarNames.find(varId); evIt != m_externalVarNames.end())
-		varName = evIt->second;
+	std::string varName = resolveVarRef(*varId);
 	auto localIt = m_locals.find(varName);
 	if (localIt == m_locals.end())
 		return false;
@@ -543,10 +539,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 
 				// dynOffset is the other arg of the outer add
 				auto const* dynOff = &outerAdd->arguments[1 - innerIdx];
-				std::string vn = varId->name.str();
-				if (auto evIt = m_externalVarNames.find(varId); evIt != m_externalVarNames.end())
-					vn = evIt->second;
-				return {vn, dynOff};
+				return {resolveVarRef(*varId), dynOff};
 			}
 		}
 		return {};

@@ -195,6 +195,16 @@ private:
 		solidity::yul::Identifier const& _id
 	);
 
+	/// The ONE sanctioned way to turn a Yul identifier into the AWST name of the
+	/// outer Solidity variable it references. Returns the mangled local name
+	/// (name__<declId>) when `_id` is an external reference we registered (value
+	/// refs + fn-ptr .selector/.address — see SolInlineAssembly::externalVarNames),
+	/// else the bare Yul name (Yul-locals, params, .slot/.offset/.length, state
+	/// vars, constants). EVERY assembly site that names an outer var MUST go
+	/// through this — a raw `_id.name.str()` would emit a bare name that no longer
+	/// matches the mangled local and silently read/write the wrong variable.
+	std::string resolveVarRef(solidity::yul::Identifier const& _id) const;
+
 	// ── Statement translation ───────────────────────────────────────────
 
 	void buildStatement(
