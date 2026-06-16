@@ -104,11 +104,10 @@ std::string AssemblyBuilder::externalRefAwstName(
 	std::function<std::string(solidity::frontend::VariableDeclaration const&)> const& _declName)
 {
 	auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(_info.declaration);
-	// Only outer Solidity LOCALS get renamed to their mangled AWST name — value
-	// refs and fn-ptr .selector/.address (the dotted base must mangle so the
-	// dotPos split downstream yields the mangled base). State vars, constants, and
-	// .slot/.offset/.length refs keep the bare (possibly dotted) Yul name: their
-	// meaning is resolved by the storage/calldata machinery, not by var identity.
+	// Rename only outer Solidity LOCALS to the mangled AWST name (value refs +
+	// fn-ptr .selector/.address — the dotted base must mangle for the downstream
+	// dotPos split). State vars/constants/.slot/.offset/.length keep the bare Yul
+	// name; their meaning comes from the storage/calldata machinery, not identity.
 	bool const eligible = vd && _declName && !vd->isStateVariable() && !vd->isConstant()
 		&& (_info.suffix.empty() || _info.suffix == "selector" || _info.suffix == "address");
 	if (!eligible)
@@ -118,12 +117,9 @@ std::string AssemblyBuilder::externalRefAwstName(
 
 std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id) const
 {
-	// solc resolves every Yul reference to an outer Solidity declaration in
-	// externalReferences (yul id → {decl, suffix}); use that — the same decl-based
-	// path the rest of the compiler uses — to name the outer var (m_declName =
-	// Context::awstVarName). A Yul-INTERNAL id (a `let` local or a Yul-function
-	// param/return — not in externalReferences, no Solidity decl) keeps its bare
-	// Yul name.
+	// solc lists every outer-var Yul reference in externalReferences (yul id →
+	// {decl, suffix}); name it via the shared decl path (m_declName = awstVarName).
+	// Yul-internal ids (let-locals, Yul-fn params — not in the map) keep their name.
 	auto it = m_externalRefs.find(&_id);
 	if (it == m_externalRefs.end())
 		return _id.name.str();
@@ -135,9 +131,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 )
 {
 	auto loc = makeLoc(_id.debugData);
-	// resolveVarRef remaps an outer-Solidity-var reference to its mangled AWST
-	// name at the top, so every downstream lookup (m_locals, m_paramBitWidths,
-	// m_blobOffsetVars) and the dotPos split below uses the mangled key.
+	// resolveVarRef remaps outer-var refs to the mangled AWST name up front, so every
+	// downstream lookup (m_locals, m_blobOffsetVars, the dotPos split) uses that key.
 	std::string name = resolveVarRef(_id);
 
 	// Handle .offset / .length suffix on calldata parameter references

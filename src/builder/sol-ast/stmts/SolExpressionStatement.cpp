@@ -81,13 +81,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 	{
 		errorName = errorDef->name();
 
-		// Custom-error payload, logged before the failing `err` so clients
-		// read it via simulate: sha512_256(canonicalSignature)[:4] ++
-		// abi.encode(args…). The selector follows the AVM convention — the
-		// SAME sha512_256 hashing ARC-28 events and ARC-4 methods use (via
-		// MethodConstant → TEAL `method "sig"`), NOT EVM keccak; this matches
-		// abi.encodeCall's deliberate AVM-selector divergence. Only the fixed
-		// Error(string)/Panic magic constants stay EVM-literal.
+		// Custom-error payload, logged before the failing `err` so clients read it via
+		// simulate: sha512_256(canonicalSignature)[:4] ++ abi.encode(args…). Selector
+		// uses the AVM convention (same sha512_256 as ARC-28 events / ARC-4 methods via
+		// MethodConstant), NOT EVM keccak — matching abi.encodeCall. Only the fixed
+		// Error(string)/Panic magics stay EVM-literal.
 		auto sig = errorDef->functionType(true)->externalSignature();
 		std::shared_ptr<awst::Expression> blob =
 			awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);

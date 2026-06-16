@@ -28,21 +28,14 @@ void Context::setInConstructor(bool _flag)
 
 std::string Context::awstVarName(solidity::frontend::VariableDeclaration const& _vd) const
 {
-	// Modifier-inliner remap wins: when the same modifier (with its own locals) is
-	// applied multiple times in one function, each instance's locals get a unique
-	// mangled name, registered by the inliner keyed on the decl id.
+	// Modifier-inliner remap wins (same modifier applied twice → unique per-instance
+	// local names, keyed by decl id).
 	if (auto const* remap = findParamRemap(_vd.id()))
 		return remap->name;
 
-	// Function input/return parameters keep their bare name — unique within the
-	// function and surfaced in the ABI (and the named-return tuple). Everything
-	// else function-scoped — local variables and catch-clause params — is mangled
-	// `name__<declId>` so name shadowing across sibling/nested blocks can't
-	// collide in the flat AWST frame. solc assigns globally-unique decl ids, so
-	// this is a pure function of the decl: no per-block shadow map or parent-chain
-	// name walk is needed (the old resolveVarName/lookupVarName + varNameToId).
-	// References in inline assembly resolve through the same rule via
-	// SolInlineAssembly's externalReferences → AssemblyBuilder external-var map.
+	// Params/returns keep their bare name (unique in the fn, ABI-facing); locals and
+	// catch params mangle to name__<declId> so shadows can't collide in the flat AWST
+	// frame. Pure function of the decl — solc ids are globally unique.
 	if (_vd.isCallableOrCatchParameter() && !_vd.isTryCatchParameter())
 		return _vd.name();
 	return _vd.name() + "__" + std::to_string(_vd.id());

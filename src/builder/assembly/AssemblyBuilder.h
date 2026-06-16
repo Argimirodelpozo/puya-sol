@@ -902,13 +902,10 @@ private:
 	/// aggregate value. Populated by SolInlineAssembly from findBlobAggregate.
 	std::map<std::string, std::string> m_blobOffsetVars;
 
-	/// Yul-identifier node ptr → mangled AWST name for references to outer
-	/// Solidity variables (locals are `name__<declId>` — see Context::awstVarName
-	/// + SolInlineAssembly). Pointer-keyed (the externalReferences key) so a
-	/// Yul-local shadowing an outer var of the same name isn't mis-resolved.
-	/// solc's resolved external references for the current assembly block
-	/// (yul id → {decl, suffix}) — the decl-based source of truth for naming
-	/// outer Solidity vars. See resolveVarRef / externalRefAwstName.
+	/// solc's resolved external references for the current assembly block (yul id ptr
+	/// → {decl, suffix}) — the decl-based source of truth for naming outer Solidity
+	/// vars. Pointer-keyed so a Yul-local shadowing an outer var isn't mis-resolved.
+	/// See resolveVarRef / externalRefAwstName.
 	std::map<solidity::yul::Identifier const*,
 		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> m_externalRefs;
 	/// Resolves a Solidity VariableDeclaration to its AWST name (Context::awstVarName).

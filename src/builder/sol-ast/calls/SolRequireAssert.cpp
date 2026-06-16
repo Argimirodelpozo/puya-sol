@@ -47,12 +47,10 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				message = id->name();
 				isCustomError = true;
 			}
-			// Solidity evaluates require's error args eagerly — even on the
-			// success path (see errors/require_error_evaluation_order_1.sol).
-			// Build the EVM-shaped payload — selector ++ abi.encode(args) —
-			// and hoist it to a temp NOW: that evaluates each arg exactly
-			// once, eagerly (replacing the old bare-prepend mechanism), while
-			// the log itself only fires on failure via the conditional below.
+			// Solidity evaluates require's error args eagerly, even on the success
+			// path (errors/require_error_evaluation_order_1.sol). Build the payload
+			// (selector ++ abi.encode(args)) and hoist to a temp NOW so each arg
+			// evaluates once; the log only fires on failure (conditional below).
 			if (isCustomError)
 			{
 				auto const* errorDef =
@@ -67,13 +65,11 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 					std::shared_ptr<awst::Expression> blob =
 						awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
 					if (!errorCall->arguments().empty())
-						// AVM-first: selector ++ ARC4(args), args coerced to the
-						// error's DECLARED param types (so a literal rides at the
-						// declared width, e.g. uint256 = 32B, matching the selector
-						// signature). Both the sha512_256 selector and the args are
-						// ARC4 (abi.* is ARC4 everywhere — see [[abi-arc4-migration]]);
-						// only Error(string)/Panic magic constants stay EVM-literal
-						// (separate errorString path).
+						// AVM-first: selector ++ ARC4(args), args coerced to the error's
+						// DECLARED param types (literal rides at the declared width, e.g.
+						// uint256 = 32B, matching the signature). abi.* is ARC4 everywhere
+						// ([[abi-arc4-migration]]); only Error(string)/Panic magics stay
+						// EVM-literal (separate errorString path).
 						blob = awst::makeConcat(
 							std::move(blob),
 							eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(

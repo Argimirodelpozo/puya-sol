@@ -63,13 +63,9 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 	else
 		callArgs.push_back(_callNode.arguments()[1]);
 
-	// Encode each arg at its DECLARED parameter type (not the source expression
-	// type) so implicit conversions at the callsite — `0x1234` → bytes2, `"ab"`
-	// → bytes2, a small literal → a uint256 param — land on the parameter's ARC4
-	// width. coerceForAssignment performs that value→param coercion (incl.
-	// IntegerConstant→bytes[N], string→bytes[N], uint64↔biguint); the coerced
-	// values then ARC4-encode exactly like abi.encode: one arg → its bare value
-	// bytes, several → an ARC4 tuple (which lays out any dynamic-arg offsets).
+	// Encode each arg at its DECLARED param type (not the source expr type) so
+	// callsite conversions land on the param's ARC4 width (`0x1234`→bytes2,
+	// `"ab"`→bytes2, a small literal→uint256), then ARC4-encode like abi.encode.
 	std::vector<solidity::frontend::Type const*> paramTypes;
 	if (targetFuncDef)
 	{
@@ -99,10 +95,8 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
 	auto const& args = _callNode.arguments();
 	if (args.empty()) return nullptr;
 
-	// selector (4 bytes) + abi.encode(remaining args).
-	// The selector argument is `bytes4` in Solidity (integer literals are
-	// implicitly cast). Our buildExpr may return a uint64 or biguint for
-	// integer literals, so coerce to exactly 4 bytes here.
+	// selector (4 bytes) + abi.encode(remaining args). Solidity types the selector
+	// bytes4, but buildExpr may hand back uint64/biguint for literals — coerce to 4B.
 	auto selector = _ctx.buildExpr(*args[0]);
 	auto const* selType = args[0]->annotation().type;
 	bool selIsBytesN = false;
@@ -123,10 +117,8 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
 			asBytes = std::move(cast);
 		}
 
-		// Left-pad to ≥4 bytes then take the last 4. makeExtractLastN wraps
-		// its input in a SingleEvaluation, so a side-effecting selector
-		// expression evaluates once (the previous hand-rolled len+extract3
-		// referenced the padded value twice).
+		// Left-pad to ≥4B, take the last 4. makeExtractLastN wraps its input in
+		// a SingleEvaluation, so a side-effecting selector evaluates once.
 		selector = awst::makeExtractLastN(
 			awst::makeLeftPad(std::move(asBytes), 4, _loc), 4, _loc);
 	}

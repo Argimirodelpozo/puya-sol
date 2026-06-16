@@ -700,10 +700,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 				}
 				else
 				{
-					// Read the fn-ptr LOCAL's value — use its mangled AWST name
-					// (locals are `name__<declId>` now; the bare `name` is only the
-					// state-var key above). Otherwise the call reads an unassigned
-					// bare-named var (puya "used before assignment").
+					// Read the fn-ptr LOCAL's value by its mangled AWST name (locals are
+					// name__<declId>; the bare name is the state-var key above). Bare here
+					// would read an unassigned var (puya "used before assignment").
 					auto var = awst::makeVarExpression(
 						m_scope.awstVarName(*varDecl), ptrWType, m_loc);
 					ptrExpr = std::move(var);

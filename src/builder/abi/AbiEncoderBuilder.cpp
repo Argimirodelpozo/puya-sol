@@ -438,13 +438,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 }
 
 // ── arc4EncodeValues / encodeArgsAsArc4 ──
-//
-// The shared ARC4 argument encoder used by abi.encode and
-// abi.encodeWith{Selector,Signature}. The internal representation IS ARC4, so
-// this is a thin wrapper over puya's ARC4 codec — NO EVM head/tail/offset/
-// padding layout. A single value encodes to its bare ARC4 bytes; multiple
-// values encode to an ARC4 tuple (puya lays out the in-tuple head/tail offsets
-// for any dynamic elements).
+// Shared ARC4 arg encoder for abi.encode + abi.encodeWith{Selector,Signature}.
+// Internal repr is ARC4, so this is a thin wrapper over puya's codec (no EVM
+// head/tail layout): 0 args → empty bytes, 1 → its ARC4 bytes, N → an ARC4 tuple.
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeValues(
 	ContractContext& _ctx,
@@ -454,13 +450,9 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeValues(
 	if (_vals.empty())
 		return awst::makeBytesConstant({}, _loc);
 
-	// Each value's ARC4 type comes from its own native wtype (a canonical
-	// singleton — no integer-literal/pointer pitfalls), which matches what
-	// abi.decode lands on for the same declared type. The native value is
-	// already canonical two's-complement at its width, so makeARC4Encode needs
-	// no extra sign-extension. A value already in ARC4 form just reinterprets
-	// to bytes. (Sub-256 ints ride at their native arc4 width — uint64 for
-	// <=64-bit, uint256 for the rest — consistent on encode and decode.)
+	// ARC4 type from the value's own native wtype (a canonical singleton — matches
+	// what abi.decode lands on; native value is already canonical two's-complement,
+	// so no extra sign-extension). Already-ARC4 values just reinterpret to bytes.
 	auto toBytes = [&](std::shared_ptr<awst::Expression> _val)
 		-> std::shared_ptr<awst::Expression>
 	{
@@ -510,10 +502,9 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
 		auto expr = _ctx.buildExpr(*_args[i]);
-		// Coerce to the DECLARED param type so a literal lands on the param's
-		// ARC4 width (e.g. `7` → uint256 = 32B, not the value's arc4.uint64 8B;
-		// `0x1234` → bytes2). coerceForAssignment is a no-op when the value
-		// already matches; args past _paramTypes keep their value type.
+		// Coerce to the DECLARED param type so a literal lands on the param's ARC4
+		// width (`7` → uint256/32B, not arc4.uint64/8B). No-op if already matching;
+		// args past _paramTypes keep their value type.
 		solidity::frontend::Type const* pt =
 			i < _paramTypes.size() ? _paramTypes[i] : nullptr;
 		if (pt)
@@ -537,10 +528,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 		return std::make_unique<GenericAbiResult>(
 			_ctx, awst::makeBytesConstant({}, _loc));
 
-	// ── ARC4-everywhere: abi.encode emits the ARC4 encoding of the argument
-	// tuple (single arg → that value's ARC4 bytes; multiple → an ARC4 tuple).
-	// Delegates to the shared ARC4 encoder. The EVM head/tail machinery below is
-	// now dead (unreachable) and is retained pending Phase-3 removal.
+	// ARC4-everywhere: emit the ARC4 encoding of the arg tuple via the shared encoder.
 	return std::make_unique<GenericAbiResult>(
 		_ctx, encodeArgsAsArc4(_ctx, _callNode, 0, _loc));
 

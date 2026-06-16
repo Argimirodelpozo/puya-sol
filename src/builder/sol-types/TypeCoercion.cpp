@@ -573,14 +573,10 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 
 std::vector<uint8_t> TypeCoercion::intLiteralToBytesN(std::string const& _decimal, int _n)
 {
-	// Low-N-byte big-endian form of a non-negative integer literal. The literal
-	// was already parsed to a solidity::u256 by solc's frontend (then stringified
-	// onto the IntegerConstant), so re-parse with boost::multiprecision rather
-	// than hand-rolling a digit-by-digit base-256 multiply. A bytesN target has
-	// N<=32, so the value fits in u256; bytes beyond N are dropped and missing
-	// high bytes stay 0 — matching the previous hand-rolled behaviour. (u256 also
-	// accepts a `0x…` literal, so this is strictly more robust than the old
-	// decimal-only loop.)
+	// Low-N-byte big-endian form of a non-negative integer literal. solc already
+	// parsed it to a u256, so re-parse with boost::multiprecision instead of a
+	// hand-rolled base-256 multiply (bytesN has N<=32, so it fits; also handles
+	// 0x… literals). Bytes beyond N drop; missing high bytes stay 0.
 	std::vector<uint8_t> out(_n > 0 ? static_cast<size_t>(_n) : 0, 0);
 	if (_n <= 0 || _decimal.empty())
 		return out;

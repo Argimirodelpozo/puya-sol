@@ -209,13 +209,10 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
 
 
-				// Elements with unknown fixed size (e.g. nested dynamic
-				// arrays, mappings) can't use the `(box_len - 2) / elemSize`
-				// trick. The ARC4 dynamic-array encoding still has a
-				// uint16 length prefix at offset 0 of the box, so read
-				// that directly. `box_get` returns `(contents, exists)`;
-				// we ternary against `exists` so an uninitialised box
-				// reads as length 0 (Solidity semantics for uninit arrays).
+				// Elements of unknown fixed size (nested dynamic arrays, mappings) can't
+				// use the (box_len - 2) / elemSize trick. The ARC4 dynamic-array encoding
+				// keeps a uint16 length prefix at box offset 0 — read that. box_get returns
+				// (contents, exists); ternary on exists so an uninit box reads as length 0.
 				if (elemSize == 0)
 				{
 					auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);

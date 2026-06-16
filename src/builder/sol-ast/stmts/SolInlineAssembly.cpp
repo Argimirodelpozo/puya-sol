@@ -186,20 +186,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		}
 	}
 
-	// Resolve a Solidity VariableDeclaration to its AWST name — the SAME rule the
-	// rest of the compiler uses (Context::awstVarName: locals → name__<declId>,
-	// params/returns bare). The AssemblyBuilder names outer-var references decl-based
-	// off solc's externalReferences via this callback (so it never hard-depends on
-	// the scope Context), through AssemblyBuilder::externalRefAwstName.
+	// Resolve a Solidity VariableDeclaration to its AWST name (Context::awstVarName:
+	// locals → name__<declId>, params/returns bare). AssemblyBuilder names outer-var
+	// refs decl-based off solc's externalReferences via this callback.
 	auto declNameFn = [this](solidity::frontend::VariableDeclaration const& _vd) {
 		return m_blk.awstVarName(_vd);
 	};
 
-	// Build a map of local storage aliases: local_var_name → state_var_declaration.
-	// Needed because `uint256[] storage x = a;` stores the initializer in the
-	// VariableDeclarationStatement, NOT in VariableDeclaration::value().
-	// For each external reference that is a local variable with a .slot suffix,
-	// find its scope block and walk its statements to find the initialiser.
+	// local storage aliases: local name → state-var decl. `uint256[] storage x = a;`
+	// keeps the initializer in the VariableDeclarationStatement, not in
+	// VariableDeclaration::value() — so walk the scope block for each .slot local.
 	std::map<std::string, VariableDeclaration const*> storageLocalAliases;
 	{
 		for (auto const& [yulId, extInfo]: annotation.externalReferences)
@@ -365,9 +361,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || varDecl->isConstant()) continue;
 
-		// Key m_locals / paramBitWidths / blobOffsetVars by the SAME name the
-		// resolver will produce for references to this var (AssemblyBuilder::
-		// resolveVarRef → externalRefAwstName): mangled for value-ref locals + fn-ptr
+		// Key m_locals/paramBitWidths/blobOffsetVars by the SAME name the resolver
+		// produces (externalRefAwstName): mangled for value-ref locals + fn-ptr
 		// .selector/.address, bare for .slot/.offset/.length + state vars.
 		std::string name = AssemblyBuilder::externalRefAwstName(
 			extInfo, yulId->name.str(), declNameFn);
@@ -404,10 +399,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		blobOffsetVars,
 		annotation.externalReferences,
 		declNameFn);
-	// An unconditional top-level halt (EVM `return`/`revert` lowered to the
-	// AVM program exit) makes everything after this assembly block statically
-	// dead — flag the enclosing block so SolBlock skips the remaining
-	// statements (puya rejects functions with unreachable code).
+	// An unconditional top-level halt (EVM return/revert → AVM program exit) makes
+	// everything after this block dead — flag the enclosing block so SolBlock skips
+	// the rest (puya rejects unreachable code).
 	if (asmTranslator.haltEmitted())
 		m_blk.terminated = true;
 	return stmts;
