@@ -1,3 +1,25 @@
+# Semantic Test Status — v373
+
+> **custom-error revert payloads → ARC4 + delete freed head/tail machinery
+> (8717c2a21b, 2026-06-16):** zero-reg, **60 failed / 1238 passed / 86 xf** (fail
+> set byte-identical to v372). Migrated the LAST 2 encodeArgsHeadTail callers —
+> custom-error payloads in SolRequireAssert (`require(c, E(args))`) +
+> SolRevertStatement (`revert E(args)`) — from EVM head/tail to ARC4: now
+> `sha512_256(sig)[:4] ++ ARC4(args)` with args coerced to the error's DECLARED
+> param types (literal `7`→uint256 32B, matching the selector signature, like
+> abi.encodeCall). Error(string)/Panic stay EVM-literal magic constants (separate
+> errorStringRevertBlobBytes path). New shared AbiEncoderBuilder::
+> arc4EncodeArgsAtParamTypes (coerce-to-param-type + arc4EncodeValues);
+> handleEncodeCall now uses it too (was a duplicate loop). With 0 callers left,
+> DELETED AbiEncodeHeadTail.cpp (encodeArgsHeadTail + encodeDynamicTail +
+> encodeFromArc4Bytes + rightPadTo32) + AbiEncodeArrays.cpp (3 dyn-array loop
+> builders) + toPackedBytes's dead struct→encodeDynamicTail branch + 7 .h decls +
+> 2 CMake entries (~870 net lines). KEPT toPackedBytes/leftPadBytes/
+> signExtendBytesTo32/concatByteExprs (live via encodePacked + selectors). Only
+> behavioral change = custom-error arg bytes (EVM→ARC4), covered by
+> errors::test_custom_error_payload (re-baselined to arc4_encode). The abi.* →
+> ARC4 migration encode side is now COMPLETE. [[abi-arc4-migration]] [[evm-revert-payloads]]
+
 # Semantic Test Status — v372
 
 > **abi.* ARC4 Phase 3/4 — delete dead EVM machinery + doc reversal (40708bbbce,
