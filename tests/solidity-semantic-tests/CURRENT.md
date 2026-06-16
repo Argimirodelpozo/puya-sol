@@ -1,3 +1,30 @@
+# Semantic Test Status — v371
+
+> **abi.encodeWith*/encodeCall → ARC4 (Phase 2a/2b) (7443020122, 2026-06-15):**
+> zero-reg, **60 failed / 1238 passed / 86 xf** (fail set byte-identical to v370,
+> empty diff both ways). encodeWithSelector/encodeWithSignature arg payloads AND
+> encodeCall args now emit ARC4 instead of EVM head/tail. New shared encoder
+> AbiEncoderBuilder::arc4EncodeValues (pre-built values) + encodeArgsAsArc4
+> (callNode arg range): 0→empty bytes, 1→bare value ARC4 bytes, N→ARC4 tuple;
+> handleEncode delegates to it (byte-identical to its old inline block —
+> abiEncoderV2 zero-diff confirms). 2a: swapped encodeArgsHeadTail→encodeArgsAsArc4
+> at the 2 selector-builder sites (the OTHER 2 encodeArgsHeadTail callers —
+> SolExpressionStatement/SolRequireAssert revert payloads — stay EVM, out of scope,
+> so encodeArgsHeadTail lives on). 2b: encodeCall coerces each arg to its DECLARED
+> param type (coerceForAssignment: IntegerConstant→bytes[N], string→bytes[N],
+> uint64↔biguint) then arc4EncodeValues — bytes2→byte[2] (2B), uint16→arc4.uint64
+> (native width, consistent w/ abi.encode/decode), struct→nested ARC4 tuple;
+> dropped the EVM 32-byte FixedBytes branch. 2c encodePacked = NO CODE CHANGE
+> (already correct tight declared-width packing; enum=1B, address=32B, signed
+> sign-extend already handled; all packed/keccak tests pass; literal-ARC4-of-native
+> would regress uint8 1B→8B + risk honk Fiat-Shamir transcripts). Tests migrated to
+> framework.arc4_encode: abiEncodeDecode encode_with_selector/_selectorv2/_signature/
+> _signaturev2 (incl. the f4 nested struct (uint256,(uint256,string,uint16),uint256),
+> on-chain-captured + oracle-verified), encode_call_uint_bytes, encode_empty_string_v1;
+> abiEncoderV1 abi_encode_empty_string h1/h2. Pre-existing encodeCall fails unchanged
+> (declaration = staticcall hard-error; special_args = sha512_256 vs keccak selectors).
+> encodeArgAsARC4Bytes now dead (Phase 3 cleanup). [[abi-arc4-migration]] [[encoding-model]]
+
 # Semantic Test Status — v370
 
 > **abi.* → ARC4 (Phase 1) (16c7d62667, 2026-06-15):** zero-reg, **60 failed /
