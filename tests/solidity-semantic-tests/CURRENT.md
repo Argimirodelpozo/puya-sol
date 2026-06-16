@@ -1,3 +1,16 @@
+# Semantic Test Status — v375
+
+> **shared intLiteralToBytesN via boost::multiprecision (591f71a928, 2026-06-16):**
+> zero-reg, **60 failed / 1238 passed / 86 xf** (fail set byte-identical to v374).
+> The int-literal→bytes[N] conversion hand-rolled a digit-by-digit base-256 multiply
+> (decimal→little-endian bignum→big-endian N bytes), duplicated verbatim in
+> TypeCoercion::coerceForAssignment + SolIdentifier (bytesN constant from int
+> literal). solc already parsed the literal to solidity::u256 (we only stringified
+> it onto the IntegerConstant), so the new TypeCoercion::intLiteralToBytesN re-parses
+> with boost::multiprecision (solidity::u256, already a dep) — low-N-byte big-endian,
+> byte-identical for in-range values (bytesN ⇒ N≤32 fits u256). ~40 hand-rolled lines
+> → one helper, both copies gone. Leverage-of-solc-frontend cleanup. [[encoding-model]]
+
 # Semantic Test Status — v374
 
 > **delete dead AbiCodecHelpers.h (38a32bc75c, 2026-06-16):** zero-reg, **60 failed
