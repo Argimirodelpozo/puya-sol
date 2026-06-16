@@ -457,17 +457,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		fnCtx.paramBitWidths = bitWidths;
 	}
 
-	// Construct the function-body block context BEFORE registering named
-	// returns — `resolveVarName` writes into the innermost BlockContext via
-	// `nearestBlock(currentScope)`, so the block must already be the
-	// current scope.
+	// Construct the function-body block context for the body.
 	auto blk = sol_ast::BlockContext::top(fnCtx);
 	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
-
-	// Register named return variable names so inner scoping detects shadowing.
-	for (auto const& rp: returnParams)
-		if (!rp->name().empty())
-			blk.resolveVarName(rp->name(), rp->id());
 
 	// Register mapping-storage-ref return params: `function f() returns (mapping(K=>V) storage r)`
 	// — `r` is a local pointer to a mapping; r[k] resolves to box access prefixed

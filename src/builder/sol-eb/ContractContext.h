@@ -245,18 +245,6 @@ public:
 		return loc;
 	}
 
-	// ── Variable-name resolution (handles shadowing) ──
-	/// Get the AWST variable name for a declaration, handling shadowing.
-	/// If the name is already taken by a different declaration in an outer
-	/// scope, appends "__<id>" to make it unique. Bindings are inserted
-	/// into the innermost enclosing BlockContext.
-	std::string resolveVarName(std::string const& _name, int64_t _declId);
-
-	/// Look up the AWST variable name for a referenced declaration.
-	/// Returns `_name__declId` if such a unique-name binding exists in
-	/// any enclosing block, otherwise the bare `_name`.
-	std::string lookupVarName(std::string const& _name, int64_t _declId) const;
-
 };
 
 } // namespace puyasol::builder::eb

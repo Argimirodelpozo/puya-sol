@@ -105,6 +105,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	auto loc = makeLoc(_id.debugData);
 	std::string name = _id.name.str();
 
+	// External reference to an outer Solidity local → its mangled AWST name
+	// (locals are `name__<declId>` now — Context::awstVarName). Keyed by the
+	// yul::Identifier node ptr so a same-named Yul-local isn't mis-remapped; only
+	// value refs are in the map (suffixed .slot/.offset refs keep their dotted
+	// name for the handling below). Done here at the top so every downstream
+	// lookup (m_locals, m_paramBitWidths, m_blobOffsetVars) uses the mangled key.
+	if (auto evIt = m_externalVarNames.find(&_id); evIt != m_externalVarNames.end())
+		name = evIt->second;
+
 	// Handle .offset / .length suffix on calldata parameter references
 	// e.g., proofPayload.offset → calldata byte offset of proofPayload
 	auto dotPos = name.rfind('.');

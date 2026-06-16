@@ -174,9 +174,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	std::string const& _nameOverride
 )
 {
-	// Per-method scope state (varNameToId, funcPtrTargets, storageAliases,
-	// constantLocals) now lives on the BlockContext that buildBlock pushes
-	// for the function body — no manual snapshot/restore needed here.
+	// Per-method scope state (funcPtrTargets, storageAliases, constantLocals)
+	// lives on the flat ScopeState reached via the BlockContext that buildBlock
+	// pushes for the function body — no manual snapshot/restore needed here.
 
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());
@@ -487,10 +487,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
-		// Register named return variable names so inner scoping detects
-		// shadowing. The actual `resolveVarName` calls happen inside
-		// `buildBlock` after the function-body BlockContext is pushed —
-		// stash the decls in `m_currentNamedReturns` for it to pick up.
+		// Stash the named-return decls in m_currentNamedReturns for buildBlock,
+		// which uses them to register large (>4KB) memory returns as blob-backed
+		// aggregates. (No shadow-rename registration any more: local names are
+		// mangled by decl id — see sol_ast::Context::awstVarName.)
 		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnDecls;
 		for (auto const& rp: returnParams)
 			if (!rp->name().empty())

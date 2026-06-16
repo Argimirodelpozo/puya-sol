@@ -126,14 +126,6 @@ std::shared_ptr<awst::Block> buildBlock(
 		: sol_ast::BlockContext::top(fn);
 	auto blkGuard = _ctx.exprBuilder.pushScopeRaii(&blk);
 
-	// Register named return parameters so inner-block declarations of the
-	// same name get the unique-name shadow rename. Must happen *after* the
-	// BlockContext is pushed — `resolveVarName` writes into the innermost
-	// enclosing block via `nearestBlock(currentScope)`.
-	for (auto const* rp: _ctx.namedReturns)
-		if (rp && !rp->name().empty())
-			blk.resolveVarName(rp->name(), rp->id());
-
 	// Register mapping-storage-ref params on the FunctionContext so that
 	// `m[k]` inside the body resolves the dynamic box-key prefix at
 	// runtime. Same scope-push ordering constraint as the named returns.

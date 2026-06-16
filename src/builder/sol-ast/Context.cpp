@@ -18,13 +18,6 @@ FunctionContext* nearestFunction(Context* _ctx)
 	return nullptr;
 }
 
-BlockContext* nearestBlock(Context* _ctx)
-{
-	for (Context* c = _ctx; c; c = c->parent())
-		if (auto* blk = dynamic_cast<BlockContext*>(c))
-			return blk;
-	return nullptr;
-}
 }
 
 void Context::setInConstructor(bool _flag)
@@ -33,32 +26,26 @@ void Context::setInConstructor(bool _flag)
 		fn->inConstructor = _flag;
 }
 
-std::string Context::resolveVarName(std::string const& _name, int64_t _declId)
+std::string Context::awstVarName(solidity::frontend::VariableDeclaration const& _vd) const
 {
-	// Honour explicit remaps (used by modifier inliner when the same
-	// modifier — with its own local vars — is applied multiple times).
-	if (auto const* remap = findParamRemap(_declId))
+	// Modifier-inliner remap wins: when the same modifier (with its own locals) is
+	// applied multiple times in one function, each instance's locals get a unique
+	// mangled name, registered by the inliner keyed on the decl id.
+	if (auto const* remap = findParamRemap(_vd.id()))
 		return remap->name;
 
-	auto* blk = nearestBlock(this);
-	int64_t existing = lookupVarId(_name);
-	if (existing != 0 && existing != _declId)
-	{
-		// Name is shadowed — use unique name
-		std::string unique = _name + "__" + std::to_string(_declId);
-		if (blk) blk->varNameToId[unique] = _declId;
-		return unique;
-	}
-	if (blk) blk->varNameToId[_name] = _declId;
-	return _name;
-}
-
-std::string Context::lookupVarName(std::string const& _name, int64_t _declId) const
-{
-	std::string unique = _name + "__" + std::to_string(_declId);
-	if (lookupVarId(unique) == _declId)
-		return unique;
-	return _name;
+	// Function input/return parameters keep their bare name — unique within the
+	// function and surfaced in the ABI (and the named-return tuple). Everything
+	// else function-scoped — local variables and catch-clause params — is mangled
+	// `name__<declId>` so name shadowing across sibling/nested blocks can't
+	// collide in the flat AWST frame. solc assigns globally-unique decl ids, so
+	// this is a pure function of the decl: no per-block shadow map or parent-chain
+	// name walk is needed (the old resolveVarName/lookupVarName + varNameToId).
+	// References in inline assembly resolve through the same rule via
+	// SolInlineAssembly's externalReferences → AssemblyBuilder external-var map.
+	if (_vd.isCallableOrCatchParameter() && !_vd.isTryCatchParameter())
+		return _vd.name();
+	return _vd.name() + "__" + std::to_string(_vd.id());
 }
 
 } // namespace puyasol::builder::sol_ast

@@ -182,14 +182,6 @@ public:
 		return m_parent && m_parent->isUnchecked();
 	}
 
-	/// Variable-name → AST decl ID for shadow detection. Returns 0 if the
-	/// name isn't bound in any enclosing block. Inner-block bindings shadow
-	/// outer ones (chain walk returns the innermost hit).
-	virtual int64_t lookupVarId(std::string const& _name) const
-	{
-		return m_parent ? m_parent->lookupVarId(_name) : 0;
-	}
-
 	/// True iff the enclosing function is a constructor body. Constructor-only
 	/// behaviour (e.g. immutable writes via direct app-global init) gates on
 	/// this flag.
@@ -317,16 +309,12 @@ public:
 		return m_state->superTargetNames;
 	}
 
-	/// Get the AWST variable name for a declaration, handling shadowing.
-	/// If the name is already taken by a different declaration in an outer
-	/// block, appends "__<id>" to make it unique. Bindings are inserted
-	/// into the innermost enclosing BlockContext.
-	std::string resolveVarName(std::string const& _name, int64_t _declId);
-
-	/// Look up the AWST variable name for a referenced declaration.
-	/// Returns `_name__declId` if such a unique-name binding exists in
-	/// any enclosing block, otherwise the bare `_name`.
-	std::string lookupVarName(std::string const& _name, int64_t _declId) const;
+	/// AWST local name for a Solidity VariableDeclaration. Function input/return
+	/// parameters keep their bare name (unique within the function, ABI-facing);
+	/// locals and catch-clause params are mangled `name__<declId>` so name
+	/// shadowing across blocks can't collide in the flat AWST frame. Pure function
+	/// of the decl (+ the modifier-inliner remap) — no per-block shadow map.
+	std::string awstVarName(solidity::frontend::VariableDeclaration const& _vd) const;
 
 protected:
 	Context(Context* _parent, ScopeState* _state)
@@ -466,22 +454,9 @@ struct BlockContext: Context
 	/// `isUnchecked()`, which walks the chain.
 	bool unchecked = false;
 
-	/// Variable-name → AST decl ID for shadowing checks. Inserts go to the
-	/// current block (the innermost when reading via `lookupVarId`). This
-	/// genuinely needs lexical nesting, so it stays per-block.
-	std::map<std::string, int64_t> varNameToId;
-
 	bool isUnchecked() const override
 	{
 		return unchecked || (m_parent && m_parent->isUnchecked());
-	}
-
-	int64_t lookupVarId(std::string const& _name) const override
-	{
-		auto it = varNameToId.find(_name);
-		if (it != varNameToId.end())
-			return it->second;
-		return m_parent ? m_parent->lookupVarId(_name) : 0;
 	}
 
 	BlockContext(

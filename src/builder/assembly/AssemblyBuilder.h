@@ -92,7 +92,8 @@ public:
 		std::map<std::string, unsigned> const& _paramBitWidths = {},
 		std::map<std::string, std::string> const& _storageSlotVars = {},
 		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {},
-		std::map<std::string, std::string> const& _blobOffsetVars = {}
+		std::map<std::string, std::string> const& _blobOffsetVars = {},
+		std::map<solidity::yul::Identifier const*, std::string> const& _externalVarNames = {}
 	);
 
 	/// Extract function name string from a Yul FunctionName variant.
@@ -881,6 +882,12 @@ private:
 	/// A reference to such a name resolves to the memory pointer (offset), not the
 	/// aggregate value. Populated by SolInlineAssembly from findBlobAggregate.
 	std::map<std::string, std::string> m_blobOffsetVars;
+
+	/// Yul-identifier node ptr → mangled AWST name for references to outer
+	/// Solidity variables (locals are `name__<declId>` — see Context::awstVarName
+	/// + SolInlineAssembly). Pointer-keyed (the externalReferences key) so a
+	/// Yul-local shadowing an outer var of the same name isn't mis-resolved.
+	std::map<solidity::yul::Identifier const*, std::string> m_externalVarNames;
 
 	// ── Assembly function support ───────────────────────────────────────
 

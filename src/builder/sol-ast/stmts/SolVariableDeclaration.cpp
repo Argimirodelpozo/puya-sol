@@ -35,7 +35,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_blk.typeMapper().map(decl.type());
 
-		auto target = awst::makeVarExpression(m_blk.resolveVarName(decl.name(), decl.id()), type, m_blk.makeLoc(decl.location()));
+		auto target = awst::makeVarExpression(m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
@@ -338,7 +338,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// unique name, else `uint a=100; { (uint a,)=f(); } return a;` lets the
 			// inner `a` overwrite the outer one.
 			auto target = awst::makeVarExpression(
-				m_blk.resolveVarName(decl.name(), decl.id()), type, m_blk.makeLoc(decl.location()));
+				m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
 
 			auto baseRef = awst::makeVarExpression(tempName, tupleType, m_loc);
 			auto itemExpr = awst::makeTupleItem(std::move(baseRef), static_cast<int>(i), type, m_loc);
