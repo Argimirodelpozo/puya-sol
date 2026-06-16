@@ -98,14 +98,36 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 	return nullptr;
 }
 
+std::string AssemblyBuilder::externalRefAwstName(
+	solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo const& _info,
+	std::string const& _bareName,
+	std::function<std::string(solidity::frontend::VariableDeclaration const&)> const& _declName)
+{
+	auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(_info.declaration);
+	// Only outer Solidity LOCALS get renamed to their mangled AWST name — value
+	// refs and fn-ptr .selector/.address (the dotted base must mangle so the
+	// dotPos split downstream yields the mangled base). State vars, constants, and
+	// .slot/.offset/.length refs keep the bare (possibly dotted) Yul name: their
+	// meaning is resolved by the storage/calldata machinery, not by var identity.
+	bool const eligible = vd && _declName && !vd->isStateVariable() && !vd->isConstant()
+		&& (_info.suffix.empty() || _info.suffix == "selector" || _info.suffix == "address");
+	if (!eligible)
+		return _bareName;
+	return _declName(*vd) + (_info.suffix.empty() ? "" : "." + _info.suffix);
+}
+
 std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id) const
 {
-	// Registered external reference (an outer Solidity local/param, or a fn-ptr
-	// .selector/.address) → its mangled AWST name; everything else → the bare Yul
-	// name. Keyed by the yul::Identifier node ptr so a same-named Yul-local isn't
-	// mis-remapped.
-	auto it = m_externalVarNames.find(&_id);
-	return it != m_externalVarNames.end() ? it->second : _id.name.str();
+	// solc resolves every Yul reference to an outer Solidity declaration in
+	// externalReferences (yul id → {decl, suffix}); use that — the same decl-based
+	// path the rest of the compiler uses — to name the outer var (m_declName =
+	// Context::awstVarName). A Yul-INTERNAL id (a `let` local or a Yul-function
+	// param/return — not in externalReferences, no Solidity decl) keeps its bare
+	// Yul name.
+	auto it = m_externalRefs.find(&_id);
+	if (it == m_externalRefs.end())
+		return _id.name.str();
+	return externalRefAwstName(it->second, _id.name.str(), m_declName);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(

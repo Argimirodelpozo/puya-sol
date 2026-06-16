@@ -186,24 +186,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		}
 	}
 
-	// Map each external reference (a Yul ref to an outer Solidity variable) to its
-	// mangled AWST local name. Locals are `name__<declId>` now (see awstVarName), so
-	// the assembly resolver must use the mangled name for outer-var reads/writes;
-	// params/returns map to their bare name (identity). Keyed by the yul::Identifier
-	// node pointer (NOT the name) so a Yul-local `let x` shadowing an outer `x`
-	// can't be mis-resolved to the outer var's mangled name.
-	std::map<solidity::yul::Identifier const*, std::string> externalVarNames;
-	// Value refs map to the mangled local name; fn-ptr `.selector`/`.address` refs
-	// map to `mangledBase.suffix` so the dotPos split in buildIdentifier/assignment
-	// yields the mangled base automatically (and m_locals is keyed the same way via
-	// augmentedParams). `.slot`/`.offset`/`.length` (storage/calldata machinery) are
-	// left bare — their base is a state var or param, not a mangled local.
-	for (auto const& [yulId, extInfo]: annotation.externalReferences)
-		if (extInfo.suffix.empty() || extInfo.suffix == "selector" || extInfo.suffix == "address")
-			if (auto const* vd = dynamic_cast<VariableDeclaration const*>(extInfo.declaration))
-				if (!vd->isStateVariable() && !vd->isConstant())
-					externalVarNames[yulId] = m_blk.awstVarName(*vd)
-						+ (extInfo.suffix.empty() ? "" : "." + extInfo.suffix);
+	// Resolve a Solidity VariableDeclaration to its AWST name — the SAME rule the
+	// rest of the compiler uses (Context::awstVarName: locals → name__<declId>,
+	// params/returns bare). The AssemblyBuilder names outer-var references decl-based
+	// off solc's externalReferences via this callback (so it never hard-depends on
+	// the scope Context), through AssemblyBuilder::externalRefAwstName.
+	auto declNameFn = [this](solidity::frontend::VariableDeclaration const& _vd) {
+		return m_blk.awstVarName(_vd);
+	};
 
 	// Build a map of local storage aliases: local_var_name → state_var_declaration.
 	// Needed because `uint256[] storage x = a;` stores the initializer in the
@@ -375,13 +365,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || varDecl->isConstant()) continue;
 
-		// Use the mangled AWST name for value-ref locals (so m_locals / paramBitWidths
-		// / blobOffsetVars are keyed the same way buildIdentifier resolves them — see
-		// externalVarNames). Suffixed (.slot/.offset) and state-var refs keep the bare
-		// dotted yul name (they're not in externalVarNames).
-		std::string name = yulId->name.str();
-		if (auto evIt = externalVarNames.find(yulId); evIt != externalVarNames.end())
-			name = evIt->second;
+		// Key m_locals / paramBitWidths / blobOffsetVars by the SAME name the
+		// resolver will produce for references to this var (AssemblyBuilder::
+		// resolveVarRef → externalRefAwstName): mangled for value-ref locals + fn-ptr
+		// .selector/.address, bare for .slot/.offset/.length + state vars.
+		std::string name = AssemblyBuilder::externalRefAwstName(
+			extInfo, yulId->name.str(), declNameFn);
 		if (auto blobOff = m_blk.findBlobAggregate(varDecl->id()); !blobOff.empty())
 			blobOffsetVars[name] = blobOff;
 		bool found = false;
@@ -413,7 +402,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		storageSlotVars,
 		boxKeyedStructSlots,
 		blobOffsetVars,
-		externalVarNames);
+		annotation.externalReferences,
+		declNameFn);
 	// An unconditional top-level halt (EVM `return`/`revert` lowered to the
 	// AVM program exit) makes everything after this assembly block statically
 	// dead — flag the enclosing block so SolBlock skips the remaining

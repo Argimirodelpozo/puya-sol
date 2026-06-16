@@ -6,6 +6,9 @@
 #include <liblangutil/EVMVersion.h>
 #include <libyul/AST.h>
 #include <libyul/ASTForward.h>
+#include <libsolidity/ast/ASTAnnotations.h>
+
+#include <functional>
 
 #include <map>
 #include <memory>
@@ -93,12 +96,23 @@ public:
 		std::map<std::string, std::string> const& _storageSlotVars = {},
 		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {},
 		std::map<std::string, std::string> const& _blobOffsetVars = {},
-		std::map<solidity::yul::Identifier const*, std::string> const& _externalVarNames = {}
+		std::map<solidity::yul::Identifier const*,
+			solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs = {},
+		std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName = {}
 	);
 
 	/// Extract function name string from a Yul FunctionName variant.
 	/// Works for both Identifier (user-defined) and BuiltinName (opcode) variants.
 	static std::string getFunctionName(solidity::yul::FunctionName const& _name);
+
+	/// AWST name for a Yul external ref (from solc's resolved info): outer-Solidity
+	/// locals + fn-ptr .selector/.address → mangled via _declName (+suffix); state
+	/// vars, constants, .slot/.offset/.length → bare Yul name. Shared by
+	/// resolveVarRef and SolInlineAssembly's augmentedParams keying.
+	static std::string externalRefAwstName(
+		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo const& _info,
+		std::string const& _bareName,
+		std::function<std::string(solidity::frontend::VariableDeclaration const&)> const& _declName);
 
 	// ── Memory blob constants ──────────────────────────────────────────
 
@@ -195,14 +209,9 @@ private:
 		solidity::yul::Identifier const& _id
 	);
 
-	/// The ONE sanctioned way to turn a Yul identifier into the AWST name of the
-	/// outer Solidity variable it references. Returns the mangled local name
-	/// (name__<declId>) when `_id` is an external reference we registered (value
-	/// refs + fn-ptr .selector/.address — see SolInlineAssembly::externalVarNames),
-	/// else the bare Yul name (Yul-locals, params, .slot/.offset/.length, state
-	/// vars, constants). EVERY assembly site that names an outer var MUST go
-	/// through this — a raw `_id.name.str()` would emit a bare name that no longer
-	/// matches the mangled local and silently read/write the wrong variable.
+	/// The one way to name the outer Solidity var a Yul identifier references:
+	/// mangled local name for registered externals, else the bare Yul name. Every
+	/// assembly site naming an outer var must use this, not a raw name.str().
 	std::string resolveVarRef(solidity::yul::Identifier const& _id) const;
 
 	// ── Statement translation ───────────────────────────────────────────
@@ -897,7 +906,13 @@ private:
 	/// Solidity variables (locals are `name__<declId>` — see Context::awstVarName
 	/// + SolInlineAssembly). Pointer-keyed (the externalReferences key) so a
 	/// Yul-local shadowing an outer var of the same name isn't mis-resolved.
-	std::map<solidity::yul::Identifier const*, std::string> m_externalVarNames;
+	/// solc's resolved external references for the current assembly block
+	/// (yul id → {decl, suffix}) — the decl-based source of truth for naming
+	/// outer Solidity vars. See resolveVarRef / externalRefAwstName.
+	std::map<solidity::yul::Identifier const*,
+		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> m_externalRefs;
+	/// Resolves a Solidity VariableDeclaration to its AWST name (Context::awstVarName).
+	std::function<std::string(solidity::frontend::VariableDeclaration const&)> m_declName;
 
 	// ── Assembly function support ───────────────────────────────────────
 
