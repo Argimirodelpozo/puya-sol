@@ -10,6 +10,8 @@
 #include <libsolidity/ast/AST.h>
 
 #include <sstream>
+#include <cstdint>
+#include <limits>
 
 namespace puyasol::builder::sol_ast
 {
@@ -182,7 +184,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 						if (intType && intType->numBits() > 64)
 							lenWtype = awst::WType::biguintType();
 					}
-					else if (arrType->length() > solidity::u256("18446744073709551615"))
+					else if (arrType->length() > std::numeric_limits<uint64_t>::max())
 					{
 						lenWtype = awst::WType::biguintType();
 					}
