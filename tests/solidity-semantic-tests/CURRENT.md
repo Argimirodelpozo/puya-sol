@@ -1,3 +1,17 @@
+# Semantic Test Status — v378
+
+> **funnel asm outer-var naming through one resolveVarRef (203f53340d, 2026-06-16):**
+> zero-reg, **60 failed / 1238 passed / 86 xf** (identical fail set; pure refactor).
+> Follow-up to v377: the always-mangle change had ~6 scattered assembly sites each
+> doing `m_externalVarNames.find(&id) ? mapped : id.name.str()` (buildIdentifier, 2
+> assignment handlers, 3 bytes-memory MemoryOps helpers). Collapsed into one
+> AssemblyBuilder::resolveVarRef(yul::Identifier) choke point; m_externalVarNames is
+> consumed in exactly one place. Same codegen — the win is structural (one sanctioned
+> way to name an outer Solidity var; raw id.name.str() now stands out as the wrong
+> path). NOTE: not a hard fail-loud — puya-sol has no AWST output-visitor, so a
+> brand-new bypass site still isn't caught at runtime (suite is the backstop).
+> [[scope-refactor]]
+
 # Semantic Test Status — v377
 
 > **always-mangle local var names by decl id; drop shadow map + decl-aware asm
