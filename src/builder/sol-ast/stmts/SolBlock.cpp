@@ -150,11 +150,6 @@ public:
 			"try, or guard with an explicit if-check) before recompiling.",
 			loc);
 
-		// The error above fails the compile; emitting the old best-effort
-		// success-path lowering (evaluate the call, bind the success-clause
-		// returns, inline the success block) was pointless — that AWST is
-		// discarded, and running only the happy path is exactly the
-		// silently-wrong code the hard error exists to prevent.
 		return {};
 	}
 
