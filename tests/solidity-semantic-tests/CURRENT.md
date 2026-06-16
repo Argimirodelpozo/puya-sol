@@ -1,3 +1,24 @@
+# Semantic Test Status — v372
+
+> **abi.* ARC4 Phase 3/4 — delete dead EVM machinery + doc reversal (40708bbbce,
+> 2026-06-16):** zero-reg, **60 failed / 1238 passed / 86 xf** (fail set
+> byte-identical to v371, empty diff both ways — pure dead-code removal). After
+> the abi.* → ARC4 migration the EVM head/tail + offset-decode paths were
+> unreachable: removed handleEncode's dead tail (now a one-line delegate to
+> encodeArgsAsArc4), handleDecode's dead bool/uint64/decodeAbiValue tail (the ARC4
+> reinterpret block always returns), encodeArgAsARC4Bytes (0 callers), and the
+> WHOLE AbiDecode.cpp (decodeAbiValue + nested-array/struct walks + uint64FromAbiWord
+> + evmStaticSize — all reachable only from handleDecode's dead tail) + its 6
+> AbiEncoderBuilder.h decls + CMakeLists entry. −355 src lines + a deleted file.
+> KEPT (still LIVE, not dead): encodeArgsHeadTail + encodeDynamicTail +
+> AbiEncodeArrays.cpp + toPackedBytes — reachable via the revert-payload encoders
+> (SolExpressionStatement/SolRequireAssert), which stay EVM-layout (out of scope).
+> Build + targeted + full regression all confirm byte-identical codegen (clean
+> link = nothing live referenced a deleted symbol). Phase 4: EVM_DIVERGENCE.md
+> "Encoding model" gained the 2026-06-15 reversal note + retracted abi.encode*
+> bridge row; rm'd orphaned contracts abi_signed_agg.sol + abi_decode_nested_dyn.sol.
+> [[abi-arc4-migration]] [[encoding-model]]
+
 # Semantic Test Status — v371
 
 > **abi.encodeWith*/encodeCall → ARC4 (Phase 2a/2b) (7443020122, 2026-06-15):**
