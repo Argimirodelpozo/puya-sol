@@ -55,6 +55,24 @@ findings + the abort mechanism were spot-verified against source by hand.)
 
 ## Encoding model (design rule + known seams)
 
+> ⚠️ **UPDATE 2026-06-15 — the `abi.*` family is now ARC4, NOT an EVM bridge
+> (AVM-first).** Per the maintainer, the internal encoding is ARC4 EVERYWHERE,
+> including `abi.*`. **abi.encode / abi.decode** (Phase 1, `16c7d62667`) and
+> **abi.encodeWithSelector / encodeWithSignature / encodeCall** (Phase 2a/2b,
+> `7443020122`) now emit/consume the ARC4 encoding DIRECTLY — single arg → its
+> ARC4 bytes, multiple → an ARC4 tuple; encodeCall coerces each arg to its
+> declared param type first — NOT the EVM head/tail layout. **abi.encodePacked**
+> already produces tight declared-width packing (scalars are byte-identical EVM
+> vs ARC4). The old EVM offset-table decoder (`AbiDecode.cpp`: decodeAbiValue +
+> the nested-array/struct walks) is DELETED; `abi.decode` is now a reinterpret to
+> the target's ARC4 type + ARC4Decode. The bridge table's `abi.encode*` row below
+> is RETRACTED. STILL EVM (by necessity — these emulate the contract's OWN
+> observable bytes): revert-payload logs (`encodeArgsHeadTail` is now their sole
+> caller), inline-assembly mload/calldataload/.slot, storage `.slot` packing. Test
+> oracle: `framework.arc4_encode` (algosdk ABIType). See memory
+> [[abi-arc4-migration]] / [[encoding-model]]. The Rule paragraph and seam table
+> below are HISTORICAL — read them as the EVM-bridge era before the reversal.
+
 **Rule (2026-06-12, confirmed with maintainer): the internal encoding is
 ALWAYS ARC4.** Everything in the typed AWST world is ARC4/native — params
 decode from ARC4 app args, returns ARC4-encode (`0x151f7c75` log),
@@ -64,8 +82,8 @@ Solidity semantics make the bytes observable to the contract:
 
 | EVM-shaped artifact | Bridge (ARC4 ↔ EVM) |
 |---|---|
-| `abi.encode*` output / `abi.decode` input | `builder/abi/` encodeArgsHeadTail / AbiDecode |
-| revert payload logs (Error/custom) | RevertBlob builders |
+| ~~`abi.encode*` / `abi.decode`~~ → **ARC4** (RETRACTED 2026-06-15) | none — ARC4 codec, no EVM bridge (see update note above) |
+| revert payload logs (Error/custom) | `builder/abi/` encodeArgsHeadTail (sole remaining caller) |
 | assembly calldata view | SyntheticCalldataOps `__cd_blob` |
 | assembly memory (mload/mstore words) | blob memory model |
 | storage slot packing (`.slot` asm compat) | StorageMapper |
