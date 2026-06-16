@@ -1,3 +1,14 @@
+# Semantic Test Status — v374
+
+> **delete dead AbiCodecHelpers.h (38a32bc75c, 2026-06-16):** zero-reg, **60 failed
+> / 1238 passed / 86 xf** (fail set byte-identical to v373; provably inert). The
+> header-only bag of thin awst::make* wrappers (u64Const/bytesConcat/bytesExtract3/
+> bytesLen/u64Itob/bytesExtractU16/assignFresh) + 2 loop-name counters had only one
+> remaining #includer (AbiEncoderBuilder.cpp), which used NONE of its 9 symbols
+> after the head/tail deletions — the include + `using namespace abi_codec` were
+> vestigial. Deleted the header + vestigial include/using. Same-named u64Const/
+> bytesLen elsewhere = independent local lambdas (untouched). [[abi-arc4-migration]]
+
 # Semantic Test Status — v373
 
 > **custom-error revert payloads → ARC4 + delete freed head/tail machinery
