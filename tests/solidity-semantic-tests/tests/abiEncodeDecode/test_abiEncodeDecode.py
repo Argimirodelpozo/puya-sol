@@ -132,27 +132,26 @@ def test_abi_encode_call_special_args(harness):  # currently fails
 def test_abi_encode_call_uint_bytes(harness):
     """abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol")
-    # f() returns the encoded args (selector stripped) for
-    # g(bytes2, bytes2, bytes2). Each bytes2 is right-padded to a 32-byte
-    # word: 0x1234, "ab" = 0x6162, 0x1234.
+    # f() returns the encoded args (selector stripped) for g(bytes2,bytes2,bytes2),
+    # coerced at the declared param type. EVM_DIVERGENCE: ARC4 tuple (byte[2],
+    # byte[2],byte[2]) — each bytes2 is its raw 2 bytes, NOT right-padded to a
+    # 32-byte word. Args: 0x1234, "ab" = 0x6162, bytes2(0x1234).
     r = harness.call(app, "f()")
-    expected = (
-        b"\x12\x34" + b"\x00" * 30
-        + b"\x61\x62" + b"\x00" * 30
-        + b"\x12\x34" + b"\x00" * 30
-    )
-    assert bytes(r.abi_return) == expected
-    # f2() returns encoded args for h(uint16, uint16): two left-padded uints.
+    assert bytes(r.abi_return) == bytes.fromhex("123461621234")
+    # f2() returns encoded args for h(uint16, uint16). EVM_DIVERGENCE: puya
+    # represents a sub-64-bit int as native uint64, so each uint16 rides at
+    # arc4.uint64 (8 bytes), not the EVM 32-byte word.
     r = harness.call(app, "f2()")
-    assert bytes(r.abi_return) == (0x1234).to_bytes(32, "big") + (0x1234).to_bytes(32, "big")
+    assert bytes(r.abi_return) == bytes.fromhex("00000000000012340000000000001234")
 
 def test_abi_encode_empty_string_v1(harness):
     """abiEncodeDecode/contracts/abi_encode_empty_string_v1.sol"""
     app = harness.compile_and_deploy("abiEncodeDecode/contracts/abi_encode_empty_string_v1.sol")
-    # f() -> 0x40, 0xa0, 0x40, 0x20, 0x0, 0x0
+    # (abi.encode(""), abi.encodePacked("")). EVM_DIVERGENCE: ARC4 — abi.encode("")
+    # is the ARC4 string header for length 0 (0x0000); encodePacked("") is empty.
     r = harness.call(app, "f()")
-    # TODO: verify structural decoding matches expected: 64, 160, 64, 32, 0, 0
-    assert not r.reverted
+    assert bytes(r.abi_return[0]) == bytes.fromhex("0000")
+    assert bytes(r.abi_return[1]) == b""
 
 def test_abi_encode_with_selector(harness):
     """abiEncodeDecode/contracts/abi_encode_with_selector.sol"""
@@ -160,12 +159,13 @@ def test_abi_encode_with_selector(harness):
     sel = bytes.fromhex("12345678")
     # f0() -> just the selector
     assert bytes(harness.call(app, "f0()").abi_return) == sel
-    # f1()/f2() -> selector + abicoded "abc" (offset, length, data padded to a word)
-    payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    # f1()/f2() -> selector + abi.encode("abc"). EVM_DIVERGENCE: ARC4 string is
+    # [uint16 len][data] (EVM was [offset][length][data padded to a 32-byte word]).
+    payload_abc = sel + arc4_encode("string", "abc")
     assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
     assert bytes(harness.call(app, "f2()").abi_return) == payload_abc
-    # f3() -> selector + uint256(max). abicoder v1 doesn't word-align the
-    # selector, so the result is 36 raw bytes, not a 32-byte-padded layout.
+    # f3() -> selector + uint256(max). ARC4 uint256 is the same 32-byte big-endian
+    # word as the EVM encoding, so this case is unchanged.
     assert bytes(harness.call(app, "f3()").abi_return) == sel + (2**256 - 1).to_bytes(32, "big")
 
 def test_abi_encode_with_selectorv2(harness):
@@ -175,32 +175,20 @@ def test_abi_encode_with_selectorv2(harness):
 
     assert bytes(harness.call(app, "f0()").abi_return) == sel
 
-    payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    payload_abc = sel + arc4_encode("string", "abc")
     assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
     assert bytes(harness.call(app, "f2()").abi_return) == payload_abc
 
     assert bytes(harness.call(app, "f3()").abi_return) == sel + (2**256 - 1).to_bytes(32, "big")
 
-    # f4 encodes (uint256.max, S{a,b,c}, uint(3)). The struct has a dynamic
-    # `b` field, so the head is (max, offset_to_S, 3) followed by the S tail:
-    # (a, offset_to_b, c, length, b_padded).
-    s_a = 0x1234567
-    s_b = b"Lorem ipsum dolor sit ethereum........"
-    s_c = 0x1234
-    s_tail = (
-        s_a.to_bytes(32, "big")
-        + (0x60).to_bytes(32, "big")
-        + s_c.to_bytes(32, "big")
-        + len(s_b).to_bytes(32, "big")
-        + s_b.ljust(((len(s_b) + 31) // 32) * 32, b"\x00")
-    )
-    f4_payload = (
-        sel
-        + (2**256 - 1).to_bytes(32, "big")
-        + (0x60).to_bytes(32, "big")  # offset to S relative to args region
-        + (3).to_bytes(32, "big")
-        + s_tail
-    )
+    # f4 encodes (uint256.max, S{uint a, string b, uint16 c}, uint(3)).
+    # EVM_DIVERGENCE: ARC4 tuple (uint256,(uint256,string,uint16),uint256) — the
+    # struct rides as a nested ARC4 tuple carrying a 2-byte offset to its dynamic
+    # `b` field (EVM used 32-byte head/tail offsets throughout).
+    s_b = "Lorem ipsum dolor sit ethereum........"
+    f4_payload = sel + arc4_encode(
+        "(uint256,(uint256,string,uint16),uint256)",
+        [2**256 - 1, [0x1234567, s_b, 0x1234], 3])
     assert bytes(harness.call(app, "f4()").abi_return) == f4_payload
 
 def test_abi_encode_with_signature(harness):
@@ -211,7 +199,8 @@ def test_abi_encode_with_signature(harness):
     sel = arc4_selector("f(uint256)")
     assert bytes(harness.call(app, "f0()").abi_return) == sel
 
-    payload_abc = sel + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    # EVM_DIVERGENCE: args are ARC4 — string "abc" is [uint16 len][data].
+    payload_abc = sel + arc4_encode("string", "abc")
     assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
     assert bytes(harness.call(app, "f1s()").abi_return) == payload_abc
 
@@ -222,12 +211,8 @@ def test_abi_encode_with_signature(harness):
         "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
     r = harness.call(app, "f2()")
     elems = [(2**256 - 1) - i for i in range(4)]
-    expected_r = (
-        sel_long
-        + (32).to_bytes(32, "big")
-        + (4).to_bytes(32, "big")
-        + b"".join(v.to_bytes(32, "big") for v in elems)
-    )
+    # EVM_DIVERGENCE: ARC4 uint256[] is [uint16 count][elements] (EVM head/tail).
+    expected_r = sel_long + arc4_encode("uint256[]", elems)
     assert bytes(r.abi_return[0]) == expected_r
     assert list(r.abi_return[1]) == [0, 0]
 
@@ -239,45 +224,31 @@ def test_abi_encode_with_signaturev2(harness):
     sel_f = arc4_selector("f(uint256)")
     assert bytes(harness.call(app, "f0()").abi_return) == sel_f
 
-    payload_abc = sel_f + (32).to_bytes(32, "big") + (3).to_bytes(32, "big") + b"abc".ljust(32, b"\x00")
+    # EVM_DIVERGENCE: args are ARC4 — string "abc" is [uint16 len][data].
+    payload_abc = sel_f + arc4_encode("string", "abc")
     assert bytes(harness.call(app, "f1()").abi_return) == payload_abc
     assert bytes(harness.call(app, "f1s()").abi_return) == payload_abc
 
     # f2: selector for the long Lorem ipsum signature (runtime string ->
-    # runtime sha512_256) + encoded uint[4]
+    # runtime sha512_256) + ARC4-encoded uint[4]. EVM_DIVERGENCE: ARC4 uint256[]
+    # is [uint16 count][elements] (EVM head/tail).
     sel_long = arc4_selector(
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
         "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
     elems = [(2**256 - 1) - i for i in range(4)]
-    expected_r = (
-        sel_long
-        + (32).to_bytes(32, "big")
-        + (4).to_bytes(32, "big")
-        + b"".join(v.to_bytes(32, "big") for v in elems)
-    )
+    expected_r = sel_long + arc4_encode("uint256[]", elems)
     r = harness.call(app, "f2()")
     assert bytes(r.abi_return[0]) == expected_r
     assert list(r.abi_return[1]) == [0, 0]
 
-    # f4: selector("Lorem ipsum dolor sit ethereum........") + uintmax + offset + 3 + S tail
-    # EVM_DIVERGENCE: runtime string signature → sha512_256 as given.
+    # f4: selector("Lorem ipsum dolor sit ethereum........") + ARC4 tuple
+    # (uint256,(uint256,string,uint16),uint256). EVM_DIVERGENCE: runtime string
+    # signature → sha512_256 as given; struct rides as a nested ARC4 tuple.
     sel_s_b = arc4_selector("Lorem ipsum dolor sit ethereum........")
-    s_a, s_c = 0x1234567, 0x1234
-    s_b = b"Lorem ipsum dolor sit ethereum........"
-    s_tail = (
-        s_a.to_bytes(32, "big")
-        + (0x60).to_bytes(32, "big")
-        + s_c.to_bytes(32, "big")
-        + len(s_b).to_bytes(32, "big")
-        + s_b.ljust(((len(s_b) + 31) // 32) * 32, b"\x00")
-    )
-    f4_payload = (
-        sel_s_b
-        + (2**256 - 1).to_bytes(32, "big")
-        + (0x60).to_bytes(32, "big")
-        + (3).to_bytes(32, "big")
-        + s_tail
-    )
+    s_b = "Lorem ipsum dolor sit ethereum........"
+    f4_payload = sel_s_b + arc4_encode(
+        "(uint256,(uint256,string,uint16),uint256)",
+        [2**256 - 1, [0x1234567, s_b, 0x1234], 3])
     assert bytes(harness.call(app, "f4()").abi_return) == f4_payload
 
 def test_contract_array(harness):

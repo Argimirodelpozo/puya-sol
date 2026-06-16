@@ -158,12 +158,11 @@ def test_abi_encode_empty_string(harness):
     assert bytes(harness.call(app, "g1()").abi_return) == b""
     assert bytes(harness.call(app, "g2(string)", "").abi_return) == b""
 
-    # h1 / h2 — abi.encodeWithSelector(0x00000001, ""). NOTE: encodeWithSelector
-    # ARGS are still EVM head/tail pending the encodeWith* ARC4 migration (Phase 2);
-    # the selector itself is the literal 0x00000001 either way.
-    evm_empty = (32).to_bytes(32, "big") + (0).to_bytes(32, "big")
-    assert bytes(harness.call(app, "h1()").abi_return) == sel1 + evm_empty
-    assert bytes(harness.call(app, "h2(string)", "").abi_return) == sel1 + evm_empty
+    # h1 / h2 — abi.encodeWithSelector(0x00000001, ""). EVM_DIVERGENCE: encodeWith*
+    # ARGS are now ARC4 (Phase 2) — arc4.string "" = [uint16 0]; the selector is
+    # the literal 0x00000001.
+    assert bytes(harness.call(app, "h1()").abi_return) == sel1 + arc4_empty
+    assert bytes(harness.call(app, "h2(string)", "").abi_return) == sel1 + arc4_empty
 
 def test_abi_encode_rational(harness):
     """abiEncoderV1/contracts/abi_encode_rational.sol"""

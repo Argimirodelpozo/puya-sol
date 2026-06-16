@@ -1,5 +1,7 @@
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/TypeMapper.h"
 
 namespace puyasol::builder::eb
 {
@@ -61,10 +63,13 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 	else
 		callArgs.push_back(_callNode.arguments()[1]);
 
-	// Encode each arg using the target parameter type (not the source
-	// expression type) so that implicit conversions at the callsite — e.g.
-	// `0x1234` → bytes2, `"ab"` → bytes2 — produce the EVM ABI layout for
-	// that parameter (bytesN left-aligned in a 32-byte word).
+	// Encode each arg at its DECLARED parameter type (not the source expression
+	// type) so implicit conversions at the callsite — `0x1234` → bytes2, `"ab"`
+	// → bytes2, a small literal → a uint256 param — land on the parameter's ARC4
+	// width. coerceForAssignment performs that value→param coercion (incl.
+	// IntegerConstant→bytes[N], string→bytes[N], uint64↔biguint); the coerced
+	// values then ARC4-encode exactly like abi.encode: one arg → its bare value
+	// bytes, several → an ARC4 tuple (which lays out any dynamic-arg offsets).
 	std::vector<solidity::frontend::Type const*> paramTypes;
 	if (targetFuncDef)
 	{
@@ -76,63 +81,19 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 		for (auto const* pt : fnType->parameterTypes())
 			paramTypes.push_back(pt);
 	}
+
+	std::vector<std::shared_ptr<awst::Expression>> vals;
 	for (size_t i = 0; i < callArgs.size(); ++i)
 	{
-		auto const& arg = callArgs[i];
-		auto expr = _ctx.buildExpr(*arg);
-		std::shared_ptr<awst::Expression> encoded;
-
+		auto expr = _ctx.buildExpr(*callArgs[i]);
 		solidity::frontend::Type const* paramType =
 			i < paramTypes.size() ? paramTypes[i] : nullptr;
-		auto const* fb = dynamic_cast<FixedBytesType const*>(paramType);
-		if (fb)
-		{
-			unsigned n = fb->numBytes();
-			// Coerce source to exactly n bytes, left-aligned.
-			std::shared_ptr<awst::Expression> bytesN;
-			if (expr->wtype == awst::WType::uint64Type())
-			{
-				auto itob = awst::makeItob(std::move(expr), _loc);
-				if (n <= 8)
-				{
-					// Take last n bytes of the 8-byte itob result.
-					auto off = awst::makeIntegerConstant(8 - n, _loc);
-					auto nConst = awst::makeIntegerConstant(n, _loc);
-					auto extract = awst::makeExtract3(std::move(itob), std::move(off), std::move(nConst), _loc);
-					bytesN = std::move(extract);
-				}
-				else
-				{
-					// n > 8: left-pad itob to n bytes.
-					bytesN = awst::makeLeftPad(std::move(itob), n - 8, _loc);
-				}
-			}
-			else if (expr->wtype == awst::WType::biguintType())
-			{
-				auto asBytes = awst::makeAsBytes(std::move(expr), _loc);
-				// biguint is 32-byte big-endian: take last n bytes.
-				auto off = awst::makeIntegerConstant(32 - n, _loc);
-				auto nConst = awst::makeIntegerConstant(n, _loc);
-				auto extract = awst::makeExtract3(std::move(asBytes), std::move(off), std::move(nConst), _loc);
-				bytesN = std::move(extract);
-			}
-			else
-			{
-				// Source is already bytes (string literal, bytesN, etc.).
-				bytesN = awst::makeAsBytes(std::move(expr), _loc);
-			}
-
-			// Right-pad bytesN to 32 bytes.
-			if (n < 32)
-				encoded = awst::makeRightPad(std::move(bytesN), 32 - n, _loc);
-			else
-				encoded = std::move(bytesN);
-		}
-		else
-			encoded = AbiEncoderBuilder::encodeArgAsARC4Bytes(_ctx, std::move(expr), _loc);
-
-		parts.push_back(std::move(encoded));
+		if (paramType)
+			if (auto const* pw = _ctx.typeMapper.map(paramType))
+				expr = builder::TypeCoercion::coerceForAssignment(std::move(expr), pw, _loc);
+		vals.push_back(std::move(expr));
 	}
+	parts.push_back(AbiEncoderBuilder::arc4EncodeValues(_ctx, std::move(vals), _loc));
 
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
@@ -185,7 +146,7 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 	parts.push_back(std::move(selector));
-	parts.push_back(AbiEncoderBuilder::encodeArgsHeadTail(_ctx, _callNode, 1, _loc));
+	parts.push_back(AbiEncoderBuilder::encodeArgsAsArc4(_ctx, _callNode, 1, _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
 
@@ -224,7 +185,7 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 
-	parts.push_back(AbiEncoderBuilder::encodeArgsHeadTail(_ctx, _callNode, 1, _loc));
+	parts.push_back(AbiEncoderBuilder::encodeArgsAsArc4(_ctx, _callNode, 1, _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
 
