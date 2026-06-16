@@ -66,9 +66,12 @@ findings + the abort mechanism were spot-verified against source by hand.)
 > vs ARC4). The old EVM offset-table decoder (`AbiDecode.cpp`: decodeAbiValue +
 > the nested-array/struct walks) is DELETED; `abi.decode` is now a reinterpret to
 > the target's ARC4 type + ARC4Decode. The bridge table's `abi.encode*` row below
-> is RETRACTED. STILL EVM (by necessity — these emulate the contract's OWN
-> observable bytes): revert-payload logs (`encodeArgsHeadTail` is now their sole
-> caller), inline-assembly mload/calldataload/.slot, storage `.slot` packing. Test
+> is RETRACTED. Custom-error revert payloads ALSO migrated to ARC4 (`8717c2a21b`)
+> — so `encodeArgsHeadTail` + AbiEncodeHeadTail.cpp + AbiEncodeArrays.cpp are now
+> DELETED; the only EVM-literal abi-ish holdout is the fixed Error(string)/Panic
+> magic-constant payloads (RevertBlob.h, by design). STILL EVM (by necessity —
+> these emulate the contract's OWN observable bytes): inline-assembly
+> mload/calldataload/.slot, storage `.slot` packing. Test
 > oracle: `framework.arc4_encode` (algosdk ABIType). See memory
 > [[abi-arc4-migration]] / [[encoding-model]]. The Rule paragraph and seam table
 > below are HISTORICAL — read them as the EVM-bridge era before the reversal.
@@ -83,7 +86,8 @@ Solidity semantics make the bytes observable to the contract:
 | EVM-shaped artifact | Bridge (ARC4 ↔ EVM) |
 |---|---|
 | ~~`abi.encode*` / `abi.decode`~~ → **ARC4** (RETRACTED 2026-06-15) | none — ARC4 codec, no EVM bridge (see update note above) |
-| revert payload logs (Error/custom) | `builder/abi/` encodeArgsHeadTail (sole remaining caller) |
+| ~~custom-error revert payloads~~ → **ARC4** (8717c2a21b) | none — sha512_256 sel + ARC4(args at param types) |
+| Error(string)/Panic magic-constant payloads | EVM-literal (0x08c379a0/…) — RevertBlob.h, by design |
 | assembly calldata view | SyntheticCalldataOps `__cd_blob` |
 | assembly memory (mload/mstore words) | blob memory model |
 | storage slot packing (`.slot` asm compat) | StorageMapper |
