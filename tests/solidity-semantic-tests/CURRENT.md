@@ -1,3 +1,22 @@
+# Semantic Test Status — v377
+
+> **always-mangle local var names by decl id; drop shadow map + decl-aware asm
+> resolver (70d0799c8d, 2026-06-16):** zero-reg, **60 failed / 1238 passed / 86 xf**
+> (fail set byte-identical to v376). Replaced the per-block name→id shadow map
+> (BlockContext::varNameToId) + lookupVarId virtual + resolveVarName/lookupVarName
+> with a pure rule sol_ast::Context::awstVarName: input/return params stay bare
+> (ABI-facing), locals + catch params are always `name__<declId>` (solc decl ids
+> are globally unique → no collisions, no scope tracking; kills the v186/v189
+> init-order silent-drop class). Deleted the named-return shadow-registration +
+> orphan ContractContext decls; SolVariableDeclaration/SolIdentifier/SolInternalCall
+> (fn-ptr local read) use awstVarName. PREREQUISITE done: inline assembly resolves
+> outer-var refs by name, so SolInlineAssembly now precomputes externalVarNames
+> (yulId* → mangled name; value refs + fn-ptr .selector/.address as `local.suffix`;
+> .slot/.offset/.length + state/const bare) consulted by buildIdentifier (reads),
+> the assignment handlers (writes), MemoryOps bytes-memory read/write/mcopy, and the
+> augmentedParams/m_locals keying. (First attempt without the asm fix = 46 regressions;
+> iterated 46→23→7→0.) [[scope-refactor]]
+
 # Semantic Test Status — v376
 
 > **SolLengthAccess compares u256 directly (10de51d714, 2026-06-16):** zero-reg,
