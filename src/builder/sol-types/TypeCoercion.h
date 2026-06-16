@@ -95,6 +95,12 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Low-N-byte big-endian bytes of a non-negative integer-literal decimal
+	/// string (for `bytesN x = <intlit>`). Re-parses via solidity::u256
+	/// (boost::multiprecision) rather than a hand-rolled digit loop; bytes
+	/// beyond N are dropped, missing high bytes stay 0. N<=32 so it fits u256.
+	static std::vector<uint8_t> intLiteralToBytesN(std::string const& _decimal, int _n);
+
 	/// Create a ReinterpretCast wrapping _expr with _targetType.
 	static std::shared_ptr<awst::ReinterpretCast> reinterpretCast(
 		std::shared_ptr<awst::Expression> _expr,

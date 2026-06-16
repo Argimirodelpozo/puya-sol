@@ -98,30 +98,9 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				if (auto* intConst = dynamic_cast<awst::IntegerConstant*>(val.get()))
 				{
 					int len = bytesType->length().value_or(0);
-					std::vector<unsigned char> bytes(static_cast<size_t>(len), 0);
-					std::string numStr = intConst->value;
-					std::vector<unsigned char> bignum;
-					for (char c : numStr)
-					{
-						int digit = c - '0';
-						int carry = digit;
-						for (auto& b : bignum)
-						{
-							int v = b * 10 + carry;
-							b = static_cast<unsigned char>(v & 0xFF);
-							carry = v >> 8;
-						}
-						while (carry > 0)
-						{
-							bignum.push_back(static_cast<unsigned char>(carry & 0xFF));
-							carry >>= 8;
-						}
-					}
-					for (size_t i = 0; i < bignum.size() && i < bytes.size(); ++i)
-						bytes[bytes.size() - 1 - i] = bignum[i];
-
 					return awst::makeBytesConstant(
-						std::move(bytes), val->sourceLocation, awst::BytesEncoding::Base16, targetType);
+						builder::TypeCoercion::intLiteralToBytesN(intConst->value, len),
+						val->sourceLocation, awst::BytesEncoding::Base16, targetType);
 				}
 			}
 			// String → bytes[N] right-pad

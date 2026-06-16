@@ -571,6 +571,29 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 }
 
 
+std::vector<uint8_t> TypeCoercion::intLiteralToBytesN(std::string const& _decimal, int _n)
+{
+	// Low-N-byte big-endian form of a non-negative integer literal. The literal
+	// was already parsed to a solidity::u256 by solc's frontend (then stringified
+	// onto the IntegerConstant), so re-parse with boost::multiprecision rather
+	// than hand-rolling a digit-by-digit base-256 multiply. A bytesN target has
+	// N<=32, so the value fits in u256; bytes beyond N are dropped and missing
+	// high bytes stay 0 — matching the previous hand-rolled behaviour. (u256 also
+	// accepts a `0x…` literal, so this is strictly more robust than the old
+	// decimal-only loop.)
+	std::vector<uint8_t> out(_n > 0 ? static_cast<size_t>(_n) : 0, 0);
+	if (_n <= 0 || _decimal.empty())
+		return out;
+	solidity::u256 v(_decimal);
+	for (int i = 0; i < _n; ++i)
+	{
+		out[static_cast<size_t>(_n - 1 - i)] =
+			static_cast<uint8_t>(static_cast<uint64_t>(v & 0xFFu));
+		v >>= 8;
+	}
+	return out;
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::WType const* _targetType,
@@ -830,32 +853,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 			// IntegerConstant → bytes[N]
 			if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
 			{
-				// Parse the decimal string to big-endian bytes
-				std::vector<unsigned char> bytes(N, 0);
-				std::string numStr = intConst->value;
-				std::vector<unsigned char> bignum;
-				for (char c : numStr)
-				{
-					int digit = c - '0';
-					int carry = digit;
-					for (auto& b : bignum)
-					{
-						int v = b * 10 + carry;
-						b = static_cast<unsigned char>(v & 0xFF);
-						carry = v >> 8;
-					}
-					while (carry > 0)
-					{
-						bignum.push_back(static_cast<unsigned char>(carry & 0xFF));
-						carry >>= 8;
-					}
-				}
-				// bignum is little-endian; copy to big-endian bytes
-				for (size_t i = 0; i < bignum.size() && i < bytes.size(); ++i)
-					bytes[bytes.size() - 1 - i] = bignum[i];
-
 				return awst::makeBytesConstant(
-					std::move(bytes), _loc, awst::BytesEncoding::Base16, _targetType);
+					intLiteralToBytesN(intConst->value, N), _loc,
+					awst::BytesEncoding::Base16, _targetType);
 			}
 
 			// String → bytes[N] (right-padded)
