@@ -1,3 +1,15 @@
+# Semantic Test Status — v379
+
+> **asm resolves external Yul refs via solc's externalReferences, not a name map
+> (09b8076dd6, 2026-06-16):** zero-reg, **60 failed / 1238 passed / 86 xf** (identical
+> fail set; same naming result). Follow-up to v378: replaced the precomputed
+> externalVarNames bridge with decl-based resolution — resolveVarRef looks up the Yul
+> id in solc's externalReferences (id→{decl,suffix}) and names the decl via a declName
+> callback (Context::awstVarName), so the assembly path names outer vars the same way
+> the rest of the compiler does. One shared rule externalRefAwstName(info,bare,declName)
+> used by resolveVarRef + SolInlineAssembly's augmentedParams keying. AssemblyBuilder
+> stays decoupled from the scope Context (callback, not a Context dep). [[scope-refactor]]
+
 # Semantic Test Status — v378
 
 > **funnel asm outer-var naming through one resolveVarRef (203f53340d, 2026-06-16):**
