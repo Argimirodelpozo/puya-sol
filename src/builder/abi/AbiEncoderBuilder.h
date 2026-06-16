@@ -75,16 +75,18 @@ public:
 		size_t _startIdx,
 		awst::SourceLocation const& _loc);
 
-	/// Encode a range of FunctionCall arguments using EVM ABI head/tail
-	/// layout (single bytes blob). Used by abi.encodeWithSelector /
-	/// abi.encodeWithSignature after they've consumed the leading
-	/// selector/signature arg. The range is [_startIdx, args.size()).
-	/// Returns a single concatenated bytes expression; if all args are
-	/// static the result is just packed bytes without offsets.
-	static std::shared_ptr<awst::Expression> encodeArgsHeadTail(
+	/// ARC4-encode a list of call arguments coerced to the callee's DECLARED
+	/// parameter types (NOT the value wtypes): each arg is coerced via
+	/// coerceForAssignment(buildExpr(arg), map(paramType_i)) then encoded (single →
+	/// bare value bytes; multiple → ARC4 tuple). Used where the encoding must match
+	/// a known callee signature — abi.encodeCall and custom-error revert payloads —
+	/// so e.g. a literal `7` to a uint256 param rides at arc4.uint256 (32B), not
+	/// the value's arc4.uint64. `_paramTypes` is matched by index; args past its
+	/// end fall back to their value type.
+	static std::shared_ptr<awst::Expression> arc4EncodeArgsAtParamTypes(
 		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		size_t _startIdx,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
+		std::vector<solidity::frontend::Type const*> const& _paramTypes,
 		awst::SourceLocation const& _loc);
 
 private:
@@ -124,70 +126,10 @@ private:
 		bool _isPacked,
 		awst::SourceLocation const& _loc);
 
-	/// EVM ABI encode with proper head/tail encoding for dynamic types.
+	/// abi.encode → ARC4 (delegates to encodeArgsAsArc4; no EVM head/tail).
 	static std::unique_ptr<InstanceBuilder> handleEncode(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
-		awst::SourceLocation const& _loc);
-
-	/// Right-pad bytes to 32-byte boundary (for dynamic data in tail).
-	static std::shared_ptr<awst::Expression> rightPadTo32(
-		std::shared_ptr<awst::Expression> _expr,
-		awst::SourceLocation const& _loc);
-
-	/// Encode a dynamic type's tail data: [length as 32 bytes][data right-padded to 32].
-	static std::shared_ptr<awst::Expression> encodeDynamicTail(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _expr,
-		solidity::frontend::Type const* _solType,
-		awst::SourceLocation const& _loc);
-
-	/// Convert ARC4-encoded bytes blob to EVM-ABI tail bytes for the given
-	/// Solidity type. Recursive entry point used by the nested-dynamic
-	/// encoder. Unlike `encodeDynamicTail` (which expects a typed
-	/// expression), this takes raw bytes already extracted from a parent
-	/// container so it can be called from inside a runtime loop body.
-	static std::shared_ptr<awst::Expression> encodeFromArc4Bytes(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _bytesExpr,
-		solidity::frontend::Type const* _solType,
-		awst::SourceLocation const& _loc);
-
-	/// Encode a dynamic array of small (non-32-byte) static elements as
-	/// EVM-ABI bytes via a runtime loop. Handles uint8/uint16/.../uint128,
-	/// int8/.../int128 (zero-extended; signed isn't yet sign-extended),
-	/// bytes1..bytes31, bool, address. Emits a `while` loop into
-	/// `_ctx.prePendingStatements` and returns a fresh local var holding
-	/// the encoded bytes.
-	static std::shared_ptr<awst::Expression> encodeDynArrayPadSmallElems(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _expr,
-		solidity::frontend::Type const* _elemSolType,
-		unsigned _elemByteSize,
-		bool _isFixedBytes,
-		bool _isSigned,
-		awst::SourceLocation const& _loc);
-
-	/// Encode a dynamic array of dynamic elements (nested dynamic) as
-	/// EVM-ABI bytes via a runtime loop. Walks the ARC4 outer offset
-	/// table, recursively encodes each inner via `encodeFromArc4Bytes`,
-	/// builds new EVM-ABI head (uint256 offsets) + tail (re-encoded
-	/// bodies). Emits a `while` loop into `_ctx.prePendingStatements`.
-	static std::shared_ptr<awst::Expression> encodeDynArrayDynElems(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _expr,
-		solidity::frontend::Type const* _elemSolType,
-		awst::SourceLocation const& _loc);
-
-	/// Encode a static-size array of dynamic elements (e.g. `bytes[3]`,
-	/// `uint256[][3]`) as EVM-ABI bytes via a runtime loop. Same shape
-	/// as `encodeDynArrayDynElems` but no leading uint256 length word
-	/// and `n` is a compile-time constant.
-	static std::shared_ptr<awst::Expression> encodeStaticArrayDynElems(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _expr,
-		solidity::frontend::Type const* _elemSolType,
-		unsigned _n,
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> handleDecode(

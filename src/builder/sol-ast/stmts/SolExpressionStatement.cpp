@@ -94,8 +94,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 		if (!m_node.errorCall().arguments().empty())
 			blob = awst::makeConcat(
 				std::move(blob),
-				eb::AbiEncoderBuilder::encodeArgsHeadTail(
-					m_blk.builderCtx(), m_node.errorCall(), 0, m_loc),
+				eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
+					m_blk.builderCtx(), m_node.errorCall().arguments(),
+					errorDef->functionType(true)->parameterTypes(), m_loc),
 				m_loc);
 		// Arg builds may hoist side effects / loop encoders to prePending.
 		for (auto& pstmt: m_blk.builderCtx().takePrePending())

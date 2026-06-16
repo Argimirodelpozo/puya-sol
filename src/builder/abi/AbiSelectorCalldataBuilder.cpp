@@ -82,18 +82,8 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 			paramTypes.push_back(pt);
 	}
 
-	std::vector<std::shared_ptr<awst::Expression>> vals;
-	for (size_t i = 0; i < callArgs.size(); ++i)
-	{
-		auto expr = _ctx.buildExpr(*callArgs[i]);
-		solidity::frontend::Type const* paramType =
-			i < paramTypes.size() ? paramTypes[i] : nullptr;
-		if (paramType)
-			if (auto const* pw = _ctx.typeMapper.map(paramType))
-				expr = builder::TypeCoercion::coerceForAssignment(std::move(expr), pw, _loc);
-		vals.push_back(std::move(expr));
-	}
-	parts.push_back(AbiEncoderBuilder::arc4EncodeValues(_ctx, std::move(vals), _loc));
+	parts.push_back(AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
+		_ctx, callArgs, paramTypes, _loc));
 
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }

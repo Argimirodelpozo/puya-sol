@@ -75,13 +75,6 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 {
 	using namespace solidity::frontend;
 
-	// Structs need head/tail EVM encoding (each field in a 32-byte slot);
-	// route through encodeDynamicTail even when the struct is statically
-	// sized so small uint fields get 32-byte padding rather than the raw
-	// ARC4 packed width.
-	if (!_isPacked && dynamic_cast<StructType const*>(_solType))
-		return encodeDynamicTail(_ctx, std::move(_expr), _solType, _loc);
-
 	int packedWidth = 0;
 	if (_isPacked && _solType)
 	{
@@ -509,6 +502,30 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsAsArc4(
 	std::vector<std::shared_ptr<awst::Expression>> vals;
 	for (size_t i = _startIdx; i < args.size(); ++i)
 		vals.push_back(_ctx.buildExpr(*args[i]));
+	return arc4EncodeValues(_ctx, std::move(vals), _loc);
+}
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
+	ContractContext& _ctx,
+	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
+	std::vector<solidity::frontend::Type const*> const& _paramTypes,
+	awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Expression>> vals;
+	for (size_t i = 0; i < _args.size(); ++i)
+	{
+		auto expr = _ctx.buildExpr(*_args[i]);
+		// Coerce to the DECLARED param type so a literal lands on the param's
+		// ARC4 width (e.g. `7` → uint256 = 32B, not the value's arc4.uint64 8B;
+		// `0x1234` → bytes2). coerceForAssignment is a no-op when the value
+		// already matches; args past _paramTypes keep their value type.
+		solidity::frontend::Type const* pt =
+			i < _paramTypes.size() ? _paramTypes[i] : nullptr;
+		if (pt)
+			if (auto const* pw = _ctx.typeMapper.map(pt))
+				expr = builder::TypeCoercion::coerceForAssignment(std::move(expr), pw, _loc);
+		vals.push_back(std::move(expr));
+	}
 	return arc4EncodeValues(_ctx, std::move(vals), _loc);
 }
 

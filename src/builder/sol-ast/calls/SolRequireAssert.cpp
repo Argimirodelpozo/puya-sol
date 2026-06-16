@@ -67,10 +67,18 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 					std::shared_ptr<awst::Expression> blob =
 						awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
 					if (!errorCall->arguments().empty())
+						// AVM-first: selector ++ ARC4(args), args coerced to the
+						// error's DECLARED param types (so a literal rides at the
+						// declared width, e.g. uint256 = 32B, matching the selector
+						// signature). Both the sha512_256 selector and the args are
+						// ARC4 (abi.* is ARC4 everywhere — see [[abi-arc4-migration]]);
+						// only Error(string)/Panic magic constants stay EVM-literal
+						// (separate errorString path).
 						blob = awst::makeConcat(
 							std::move(blob),
-							eb::AbiEncoderBuilder::encodeArgsHeadTail(
-								m_ctx, *errorCall, 0, m_loc),
+							eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
+								m_ctx, errorCall->arguments(),
+								errorDef->functionType(true)->parameterTypes(), m_loc),
 							m_loc);
 					static int s_reqErrBlobCounter = 0;
 					std::string tmpName = "__require_err_blob_"

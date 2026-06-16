@@ -111,8 +111,6 @@ set(SOURCES
 	src/builder/itxn/AsaIntrinsics.cpp
 	src/builder/storage/StorageBackend.cpp
 	src/builder/abi/AbiEncoderBuilder.cpp
-	src/builder/abi/AbiEncodeHeadTail.cpp
-	src/builder/abi/AbiEncodeArrays.cpp
 	src/builder/itxn/FunctionPointerBuilder.cpp
 	src/builder/itxn/FunctionPointerDispatchTypes.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp
