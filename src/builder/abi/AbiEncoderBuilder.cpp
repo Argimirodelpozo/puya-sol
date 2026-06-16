@@ -2,17 +2,12 @@
 /// Handles abi.encode*, abi.decode — extracted from FunctionCallBuilder.
 
 #include "builder/abi/AbiEncoderBuilder.h"
-#include "builder/abi/AbiCodecHelpers.h"
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/TypeProvider.h>
 
-namespace puyasol::builder::eb
-{
-using namespace abi_codec;
-}
 namespace puyasol::builder::eb
 {
 
