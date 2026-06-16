@@ -1,3 +1,12 @@
+# Semantic Test Status — v376
+
+> **SolLengthAccess compares u256 directly (10de51d714, 2026-06-16):** zero-reg,
+> **60 failed / 1238 passed / 86 xf** (fail set byte-identical to v375). The
+> statically-sized state-array `.length` >uint64 width check constructed a u256
+> from the decimal string "18446744073709551615" each call; ArrayType::length() is
+> already a u256, so compare against std::numeric_limits<uint64_t>::max() directly
+> (boost::multiprecision handles mixed compare). Trivial leverage cleanup.
+
 # Semantic Test Status — v375
 
 > **shared intLiteralToBytesN via boost::multiprecision (591f71a928, 2026-06-16):**
