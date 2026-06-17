@@ -40,10 +40,9 @@ std::string AssemblyBuilder::getFunctionName(solidity::yul::FunctionName const& 
 		return ident->name.str();
 	if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(&_name))
 	{
-		// Use the same EVM version the Solidity front-end parsed with —
-		// BuiltinHandle is a dialect-specific index, so iterating over
-		// dialects is wrong (the handle either throws in an unrelated
-		// dialect or worse, silently resolves to a different builtin).
+		// Use the same EVM version the Solidity front-end parsed with:
+		// BuiltinHandle is dialect-specific; a different dialect silently resolves
+		// to the wrong builtin or throws.
 		using solidity::langutil::EVMVersion;
 		EVMVersion const ver = globalEVMVersion().value_or(EVMVersion::cancun());
 		try
@@ -54,8 +53,7 @@ std::string AssemblyBuilder::getFunctionName(solidity::yul::FunctionName const& 
 		}
 		catch (...)
 		{
-			// Fallback: try each dialect and pick the first that accepts
-			// the handle. This is a last-resort for the rare case where
+			// Fallback: try each dialect in version order. Last-resort when
 			// the global isn't set (e.g. unit-test paths).
 			static const std::array<EVMVersion, 14> versions = {
 				EVMVersion::osaka(),
@@ -135,15 +133,13 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_arrayParamSize = 0;
 	m_haltEmitted = false;
 
-	// Register function parameters as known locals (so they resolve with proper types)
 	for (auto const& [name, type]: _params)
 		m_locals[name] = type ? type : awst::WType::biguintType();
 
 	initializeCalldataMap(_params);
 
-	// If the Yul block accesses calldata at non-constant offsets (or uses
-	// calldatasize), enable the synthetic-calldata blob path. The blob is
-	// emitted in the prelude statements below, after array-param init.
+	// Enable synthetic-calldata blob if Yul accesses calldata at non-constant offsets
+	// or uses calldatasize. Blob is emitted in the prelude below, after array-param init.
 	m_useSyntheticCalldata = detectDynamicCalldataAccess(_block);
 	m_calldataParams = _params;
 
@@ -162,8 +158,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		}
 	}
 
-	// First pass: collect assembly function definitions (recursively,
-	// since Yul allows nested function definitions inside other functions)
+	// First pass: collect assembly function definitions (Yul allows nesting)
 	std::function<void(std::vector<solidity::yul::Statement> const&)> collectFunctions =
 		[&](std::vector<solidity::yul::Statement> const& stmts)
 	{
@@ -182,9 +177,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	};
 	collectFunctions(_block.statements);
 
-	// Build direct-call graph between collected Yul functions (only calls to
-	// other Yul-user-defined functions count — builtins are irrelevant for
-	// recursion detection).
+	// Build direct-call graph (user-defined Yul calls only; builtins irrelevant for recursion).
 	m_recursiveYulFuncs.clear();
 	m_yulFuncSubroutineIds.clear();
 	std::map<std::string, std::set<std::string>> yulDirectCalls;
@@ -247,7 +240,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		scanStmts(def->body.statements, callees);
 		yulDirectCalls[name] = std::move(callees);
 	}
-	// Reachable-from-self (each function) → recursive iff reaches itself.
+	// Mark each function recursive iff it reaches itself.
 	for (auto const& [name, _]: m_asmFunctions)
 	{
 		std::set<std::string> visited;
@@ -266,7 +259,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		if (reaches(name))
 			m_recursiveYulFuncs.insert(name);
 	}
-	// Emit a Subroutine for each recursive Yul function.
 	for (auto const& name: m_recursiveYulFuncs)
 	{
 		std::string safeCtx = m_contextName;
@@ -277,12 +269,9 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		buildRecursiveYulSubroutine(*m_asmFunctions.at(name), subId, subName);
 	}
 
-	// Second pass: translate statements (skipping function definitions)
+	// Second pass: translate statements (skip function definitions already collected)
 	std::vector<std::shared_ptr<awst::Statement>> result;
-
-	// Initialize memory blob: load from scratch slot 0, write params into it.
-	// The blob is pre-allocated with bzero(SLOT_SIZE) in the approval program preamble.
-	// Each assembly block loads it, works on it, and flushes it back.
+	// Load scratch blob, write params into it; blob pre-allocated in preamble.
 	initializeMemoryBlob(_params, result);
 
 	for (auto const& stmt: _block.statements)
@@ -292,9 +281,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		buildStatement(stmt, result);
 	}
 
-	// Flush memory blob back to scratch at block end. Skip if the block
-	// already emitted a `return` or `revert` halt intrinsic — any trailing
-	// store would be flagged as unreachable code by puya.
+	// Flush blob at block end; skip when halt already emitted (trailing store = unreachable).
 	if (!m_haltEmitted)
 	{
 		awst::SourceLocation loc;
@@ -302,9 +289,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		flushMemoryToScratch(loc, result);
 	}
 
-	// Coerce upgraded variables back to their original types at block end.
-	// Within the assembly block, variables may be promoted to biguint for 256-bit
-	// Yul semantics. After the block, Solidity code expects the original types.
+	// Coerce biguint-upgraded variables back to their original types at block end.
 	if (m_haltEmitted)
 		m_upgradedLocals.clear();
 	for (auto const& [name, origType]: m_upgradedLocals)
@@ -312,11 +297,9 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
 
-		// Read the biguint-typed variable
 		auto src = awst::makeVarExpression(name, awst::WType::biguintType(), loc);
-
-		// If the Solidity type is narrower than 64 bits, mask to the correct width
-		// before converting to uint64. E.g., uint16 a := 0x0f0f0f0f0f → mask to 0x0f0f.
+		// For sub-64-bit Solidity types, mask to width before converting to uint64
+		// (e.g. uint16 a := 0x0f0f0f0f0f → mask to 0x0f0f).
 		std::shared_ptr<awst::Expression> valueToCast = src;
 		auto bwIt = m_paramBitWidths.find(name);
 		if (bwIt != m_paramBitWidths.end() && bwIt->second < 64)
@@ -332,15 +315,9 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 			valueToCast = std::move(andOp);
 		}
 
-		// Convert to original type (uint64)
 		auto converted = safeBtoi(std::move(valueToCast), loc);
-
 		auto target = awst::makeVarExpression(name, origType, loc);
-
-		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(converted), loc);
-		result.push_back(std::move(assign));
-
-		// Restore the type in m_locals
+		result.push_back(awst::makeAssignmentStatement(std::move(target), std::move(converted), loc));
 		m_locals[name] = origType;
 	}
 
@@ -355,8 +332,7 @@ std::vector<int> AssemblyBuilder::reservedScratchSlots()
 	for (int i = MEMORY_SLOT_FIRST; i <= MEMORY_SLOT_LAST; ++i)
 		slots.push_back(i);
 	slots.push_back(TRANSIENT_SLOT);
-	// AVM.sol `Scratch` library slots (flash-accounting deltas) — reserved so the
-	// puya backend never reuses them for its own temps.
+	// AVM.sol Scratch library slots (flash-accounting deltas) — reserved so puya never reuses them.
 	for (int i = FLASH_SCRATCH_FIRST; i <= FLASH_SCRATCH_LAST; ++i)
 		slots.push_back(i);
 	return slots;
@@ -405,34 +381,24 @@ void AssemblyBuilder::initializeMemoryBlob(
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
 
-	// Slot 0 lives directly in scratch (pre-allocated bzero(SLOT_SIZE) in the
-	// approval-program preamble); there is no __evm_memory local cache anymore, so
-	// this re-stores slot 0 from itself (no-op). MEMORY_VAR stays declared but
-	// vestigial — memoryVar()/assignMemoryVar() go straight to scratch slot 0.
+	// Slot 0 lives directly in scratch (no __evm_memory local cache).
+	// MEMORY_VAR declared as vestigial; memoryVar()/assignMemoryVar() go straight to scratch slot 0.
 	m_locals[MEMORY_VAR] = awst::WType::bytesType();
 	{
 		auto blob = loadMemoryBlob(loc, MEMORY_SLOT_FIRST);
 		assignMemoryVar(std::move(blob), loc, _out);
 	}
 
-	// NOTE: We do NOT write the free memory pointer (FMP) here.
-	// The FMP at offset 0x40 is initialized to 0x80 in the approval program preamble
-	// (via the blob init in ContractBuilder). Subsequent assembly blocks must NOT
-	// re-initialize it, because previous blocks may have advanced it.
-
-	// Set __free_memory_ptr as a local constant for resolveConstantOffset.
-	// This is the initial value; actual runtime value may differ after mstore(0x40,...).
+	// Do NOT re-initialize FMP: it's set to 0x80 in the approval preamble and
+	// subsequent blocks must not reset it (previous blocks may have advanced it).
+	// __free_memory_ptr is the initial value; mstore(0x40,...) may change it at runtime.
 	m_localConstants["__free_memory_ptr"] = 0x80;
 
-	// Synthesize the EVM-ABI calldata blob if the Yul accesses calldata
-	// at a dynamic offset (or uses calldatasize). Builds a `__cd_blob`
-	// local that mirrors Solidity's calldata layout
-	// (selector + head section + tail section), letting any
-	// calldataload(off) translate to extract3(__cd_blob, off, 32).
+	// Build __cd_blob (selector + head + tail) for dynamic-offset calldataload/calldatasize.
 	if (m_useSyntheticCalldata)
 		buildSyntheticCalldataBlob(_params, _out, loc);
 
-	// Write array parameter elements into the blob at 0x80 + i*0x20
+	// Write array param elements into blob at 0x80 + i*0x20
 	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)
 	{
 		for (int64_t i = 0; i < m_arrayParamSize; ++i)
@@ -441,16 +407,10 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 			// Access param[i]
 			auto base = awst::makeVarExpression(m_arrayParamName, m_arrayParamType, loc);
-
 			auto index = awst::makeIntegerConstant(i, loc);
-
 			auto indexExpr = awst::makeIndexExpression(std::move(base), std::move(index), awst::WType::biguintType(), loc);
-
-			// Pad to 32 bytes and write into blob
 			auto padded = padTo32Bytes(std::move(indexExpr), loc);
-
 			auto offsetConst = awst::makeIntegerConstant(offset, loc);
-
 			auto replace = awst::makeReplace3(memoryVar(loc), std::move(offsetConst), std::move(padded), loc);
 			assignMemoryVar(std::move(replace), loc, _out);
 		}
@@ -459,10 +419,9 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocation const& _loc)
 {
-	// Slot 0 is read straight from scratch (no local cache). The local cache made
-	// __evm_memory a long-lived L-stack value; in very large split pieces puya
-	// miscounted its dig at the flush (storing uint64 to slot 0). Going through
-	// scratch loads/stores removes that whole bug class.
+	// Read slot 0 straight from scratch — no __evm_memory local cache.
+	// The cached form caused puya to miscount the dig in large split pieces,
+	// storing uint64 into slot 0; direct scratch loads/stores avoid that.
 	return awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc);
 }
 
@@ -472,7 +431,6 @@ void AssemblyBuilder::assignMemoryVar(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Write slot 0 straight to scratch (no local cache). See memoryVar().
 	_out.push_back(awst::makeExpressionStatement(
 		awst::makeStoreSlot(MEMORY_SLOT_FIRST, std::move(_value), _loc), _loc));
 }
@@ -502,8 +460,7 @@ void AssemblyBuilder::flushMemoryToScratch(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Re-store slot 0 from itself — a no-op now that slot 0 lives directly in
-	// scratch (no __evm_memory local cache). Retained as a splitter sync hook.
+	// No-op now that slot 0 lives directly in scratch; retained as a splitter sync hook.
 	storeMemoryBlob(memoryVar(_loc), _loc, _out, 0);
 }
 
@@ -536,7 +493,6 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantOffset(
 		}
 	}
 
-	// Check if it's a variable reference with a known constant value
 	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_expr.get()))
 	{
 		auto it = m_localConstants.find(varExpr->name);
@@ -544,7 +500,6 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantOffset(
 			return it->second;
 	}
 
-	// Handle BigUInt binary operations with constant operands
 	if (auto const* binOp = dynamic_cast<awst::BigUIntBinaryOperation const*>(_expr.get()))
 	{
 		auto left = resolveConstantOffset(binOp->left);
@@ -562,8 +517,7 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantOffset(
 			if (binOp->op == awst::BigUIntBinaryOperator::FloorDiv && *right > 0)
 				return *left / *right;
 		}
-		// For Mod where the right operand is too large for uint64_t (e.g. 2^256),
-		// if the left operand resolves to uint64_t, the mod is a no-op since left < right.
+		// Mod where right > uint64_t (e.g. 2^256): if left resolves, it's a no-op (left < right).
 		if (binOp->op == awst::BigUIntBinaryOperator::Mod && left && !right)
 		{
 			auto const* rc = dynamic_cast<awst::IntegerConstant const*>(binOp->right.get());
@@ -602,15 +556,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 	if (!_expr)
 		return _expr;
 
-	// Already biguint — no conversion needed
 	if (_expr->wtype == awst::WType::biguintType())
 		return _expr;
 
 	if (_expr->wtype == awst::WType::boolType())
 	{
-		// bool → biguint: (expr ? 1 : 0)
 		auto one = awst::makeBiguintConstant("1", _loc);
-
 		auto zero = awst::makeBiguintConstant("0", _loc);
 
 		return awst::makeConditional(
@@ -620,24 +571,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 
 	if (_expr->wtype == awst::WType::uint64Type())
 	{
-		// uint64 → biguint: itob(expr) then ReinterpretCast bytes→biguint
 		auto itob = awst::makeItob(std::move(_expr), _loc);
 		return awst::makeAsBiguint(std::move(itob), _loc);
 	}
 
 	if (_expr->wtype->kind() == awst::WTypeKind::Bytes)
-	{
-		// bytes → biguint: ReinterpretCast
-		auto cast = awst::makeAsBiguint(std::move(_expr), _loc);
-		return cast;
-	}
+		return awst::makeAsBiguint(std::move(_expr), _loc);
 
-	// account → biguint: AVM addresses are 32 raw bytes — reinterpret through
-	// `bytes` (biguint is variable-length-bytes-backed). Without this the
-	// non-scalar fallback below would zero the value, silently miscompiling
-	// every assembly read of an `address` parameter (e.g. Solady's
-	// `or(newOwner, shl(255, iszero(newOwner)))` in `_setOwner`, which makes
-	// `owner()` read back zero across every Solady-Ownable-derived contract).
+	// account → biguint: AVM addresses are 32 raw bytes; reinterpret via bytes.
+	// Without this the fallback below would zero the value — silently miscompiling
+	// every assembly read of an `address` param (e.g. Solady's
+	// `or(newOwner, shl(255, iszero(newOwner)))` in `_setOwner` → owner() reads zero).
 	if (_expr->wtype == awst::WType::accountType())
 	{
 		auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
@@ -645,24 +589,19 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 		return asBiguint;
 	}
 
-	// arc4.uintN (e.g. arc4.uint256) — the ABI/storage encoding of an integer:
-	// exactly N/8 big-endian bytes, no length prefix, so its raw bytes ARE the
-	// value. Reinterpret straight through bytes → biguint (value-preserving).
-	// In-expression integers are already biguint (TypeMapper maps >64-bit ints to
-	// biguint), so this only fires if an arc4 numeric leaks in from the ABI/storage
-	// boundary — previously such a value was silently coerced to 0 by the fallback.
+	// arc4.uintN: exactly N/8 big-endian bytes, no length prefix — raw bytes ARE the value.
+	// In-expression integers are already biguint; this fires when an arc4 numeric leaks
+	// from the ABI/storage boundary (was silently coerced to 0 by the old fallback).
 	if (_expr->wtype->kind() == awst::WTypeKind::ARC4UIntN)
 	{
 		auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
 		return awst::makeAsBiguint(std::move(asBytes), _loc);
 	}
 
-	// Anything left — array / struct / tuple / reference-array — has no integer
-	// value (e.g. EVM memory-pointer arithmetic like add(array, 0x20), meaningless
-	// on the AVM's slot-backed memory model). Hard-error rather than silently
-	// coercing to 0, which would miscompile the value with no signal. (Return a
-	// placeholder so the rest of the program still compiles and surfaces any
-	// further errors in the same run; the logged error fails the build.)
+	// Non-scalar (array/struct/tuple/reference-array) has no integer value (e.g. EVM
+	// pointer arithmetic like add(array, 0x20) is meaningless on AVM's slot model).
+	// Hard-error instead of coercing to 0 silently; return placeholder so the build
+	// surfaces further errors in the same run.
 	Logger::instance().error(
 		"cannot coerce non-scalar type '" + _expr->wtype->name()
 		+ "' to biguint in assembly arithmetic — no integer value",
@@ -679,15 +618,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	if (!_expr)
 		return _expr;
 
-	// Already bool — no conversion needed
 	if (_expr->wtype == awst::WType::boolType())
 		return _expr;
 
-	// Yul uses non-zero = true. Convert biguint/uint64 to bool via != 0
+	// Yul: non-zero = true.
 	if (_expr->wtype == awst::WType::biguintType())
 	{
 		auto zero = awst::makeBiguintConstant("0", _loc);
-
 		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
@@ -695,15 +632,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	if (_expr->wtype == awst::WType::uint64Type())
 	{
 		auto zero = awst::makeZero(_loc);
-
 		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
 
-	// Yul `if value {}` admits any uint256, including stack words that we
-	// type as fixed-size bytes (e.g., bytes32 EIP-712 hashes, Solady
-	// _ERC1967_IMPLEMENTATION_SLOT). Compare to a zero buffer of matching
-	// length — same semantics, satisfies puya's bool-only IfElse validator.
+	// Yul `if value {}` admits any uint256, including fixed-size bytes (e.g. bytes32 EIP-712
+	// hashes, Solady _ERC1967_IMPLEMENTATION_SLOT). Compare to zero buffer of matching length —
+	// satisfies puya's bool-only IfElse validator.
 	if (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes)
 	{
 		auto const* bw = dynamic_cast<awst::BytesWType const*>(_expr->wtype);
@@ -725,16 +660,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeBigUIntBinOp(
 	awst::SourceLocation const& _loc
 )
 {
-	auto node = awst::makeBigUIntBinOp(ensureBiguint(std::move(_left), _loc), _op, ensureBiguint(std::move(_right), _loc), _loc);
-	return node;
+	return awst::makeBigUIntBinOp(ensureBiguint(std::move(_left), _loc), _op, ensureBiguint(std::move(_right), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::makeTwoPow256(
 	awst::SourceLocation const& _loc
 )
 {
-	auto c = makePow256(_loc);
-	return c;
+	return makePow256(_loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::wrapMod256(
@@ -752,12 +685,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 	awst::SourceLocation const& _loc
 )
 {
-	// EVM div/mod by zero returns 0; AVM panics.
-	// Emit: right != 0 ? left op right : 0
-	// The divisor appears in both the zero-check and the operation, so wrap it
-	// in a SingleEvaluation — the backend evaluates it once and reuses the
-	// cached result, instead of re-running a non-trivial / side-effecting
-	// divisor expression twice (which the prior shared-pointer reuse did).
+	// EVM div/mod by zero returns 0; AVM panics. Emit: right != 0 ? left op right : 0.
+	// Wrap divisor in SingleEvaluation — it appears in both the guard and the op;
+	// shared-pointer reuse re-ran non-trivial expressions twice.
 	auto right = awst::makeSingleEvaluation(
 		ensureBiguint(std::move(_right), _loc), awst::WType::biguintType(),
 		awst::nextSingleEvalId(), _loc);
@@ -777,8 +707,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	awst::SourceLocation const& _loc
 )
 {
-	// Safe btoi: take the low 8 bytes — handles biguint values > 8 bytes
-	// (e.g. from b&/b|/b^ padding).
+	// Take low 8 bytes: handles biguint > 8 bytes (e.g. from b&/b|/b^ padding).
 	return awst::makeBiguintToUInt64(std::move(_biguintExpr), _loc);
 }
 
@@ -810,7 +739,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 {
 	auto loc = makeLoc(_funcDef.debugData);
 
-	// Save state that translateStatement touches so the outer block can resume.
+	// Save state so the outer block can resume after the subroutine is built.
 	auto savedLocals = std::move(m_locals);
 	auto savedConstants = std::move(m_localConstants);
 	auto savedUpgraded = std::move(m_upgradedLocals);
@@ -834,7 +763,6 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_arrayParamSize = 0;
 	m_returnType = awst::WType::biguintType();
 
-	// Params
 	std::vector<awst::SubroutineArgument> subArgs;
 	for (auto const& p: _funcDef.parameters)
 	{
@@ -847,13 +775,11 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 		subArgs.push_back(std::move(arg));
 	}
 
-	// Return variables as locals
 	for (auto const& r: _funcDef.returnVariables)
 		m_locals[r.name.str()] = awst::WType::biguintType();
 
 	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
-
-	// Init return vars to 0 (Yul semantics)
+	// Init return vars to 0 (Yul default)
 	for (auto const& r: _funcDef.returnVariables)
 	{
 		auto rLoc = makeLoc(r.debugData);
@@ -863,11 +789,9 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 		bodyStmts.push_back(std::move(init));
 	}
 
-	// Translate body
 	for (auto const& stmt: _funcDef.body.statements)
 		buildStatement(stmt, bodyStmts);
 
-	// Final return
 	awst::WType const* retType = awst::WType::voidType();
 	size_t nRet = _funcDef.returnVariables.size();
 	if (nRet == 1)
@@ -879,7 +803,6 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	}
 	else if (nRet > 1)
 	{
-		// Multi-return: return a tuple of the N return-variable values.
 		std::vector<awst::WType const*> rts(nRet, awst::WType::biguintType());
 		retType = new awst::WTuple(std::move(rts));
 		auto tupleExpr = awst::makeTupleExpression(retType, loc);
@@ -902,7 +825,6 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	pendingSubroutinesRef().push_back(std::move(sub));
 
-	// Restore outer state
 	m_locals = std::move(savedLocals);
 	m_localConstants = std::move(savedConstants);
 	m_upgradedLocals = std::move(savedUpgraded);

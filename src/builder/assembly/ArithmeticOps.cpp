@@ -34,7 +34,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeYulCompare(
 	awst::SourceLocation const& _loc
 )
 {
-	// eq/lt/gt: coerce both operands to biguint and compare; result is a bool.
 	if (!checkArity(_args, 2, _name, _loc))
 		return nullptr;
 	return awst::makeNumericCompare(
@@ -47,10 +46,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeYulBitwise(
 	char const* _name, awst::SourceLocation const& _loc
 )
 {
-	// and/or/xor: byte-wise opcode on both operands (coerced biguint→bytes),
-	// reinterpreting the result back to biguint. No 32-byte padding is needed —
-	// the missing high bytes of a shorter minimal-encoded operand act as zeros,
-	// which is the correct result for &, | and ^ (only `not` must pad to 32).
+	// No 32-byte padding needed — missing high bytes of minimal-encoded operands act as
+	// zeros, giving the right result for &, |, ^ (only `not` must pad to 32).
 	if (!checkArity(_args, 2, _name, _loc))
 		return nullptr;
 	auto call = awst::makeIntrinsicCall(_op, awst::WType::bytesType(), _loc);
@@ -66,9 +63,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMulmod(
 	awst::SourceLocation const& _loc
 )
 {
-	// mulmod(a, b, c) = (a * b) % c, with the product computed in full precision
-	// (no 2^256 wrap — that is the defining property of EVM mulmod). EVM defines
-	// mulmod(a, b, 0) = 0; safeDivMod guards the AVM divide-by-zero panic.
+	// mulmod(a,b,c) = (a*b)%c in full precision (no 2^256 wrap). EVM defines mulmod(a,b,0)=0;
+	// safeDivMod guards the AVM divide-by-zero panic.
 	if (!checkArity(_args, 3, "mulmod", _loc))
 		return nullptr;
 	auto product = makeBigUIntBinOp(
@@ -84,9 +80,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleAddmod(
 	awst::SourceLocation const& _loc
 )
 {
-	// addmod(a, b, c) = (a + b) % c, with the sum computed in full precision
-	// (no 2^256 wrap). EVM defines addmod(a, b, 0) = 0; safeDivMod guards the
-	// AVM divide-by-zero panic.
+	// addmod(a,b,c) = (a+b)%c in full precision (no 2^256 wrap). EVM defines addmod(a,b,0)=0;
+	// safeDivMod guards the AVM divide-by-zero panic.
 	if (!checkArity(_args, 3, "addmod", _loc))
 		return nullptr;
 	auto sum = makeBigUIntBinOp(
@@ -146,8 +141,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSub(
 {
 	if (!checkArity(_args, 2, "sub", _loc))
 		return nullptr;
-	// EVM sub wraps modulo 2^256: result = (a + 2^256 - b) mod 2^256
-	// This avoids AVM biguint underflow when a < b
+	// EVM sub wraps mod 2^256: (a + 2^256 - b) mod 2^256. Avoids AVM biguint underflow when a < b.
 	auto aPlusPow = makeBigUIntBinOp(
 		_args[0], awst::BigUIntBinaryOperator::Add, makeTwoPow256(_loc), _loc
 	);
@@ -166,7 +160,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleIszero(
 {
 	if (!checkArity(_args, 1, "iszero", _loc))
 		return nullptr;
-	// iszero(x): if x is already bool, emit Not; otherwise x == 0
 	if (_args[0]->wtype == awst::WType::boolType())
 		return awst::makeNot(_args[0], _loc);
 
@@ -233,8 +226,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleNot(
 {
 	if (!checkArity(_args, 1, "not", _loc))
 		return nullptr;
-	// EVM `not` operates on 256-bit values. AVM `b~` operates on actual byte length.
-	// Pad input to 32 bytes so b~ produces a 256-bit result (e.g. not(0) = MAX_UINT256).
+	// AVM `b~` operates on actual byte length; pad to 32 so b~ gives the 256-bit result (not(0) = MAX_UINT256).
 	auto padded = padTo32Bytes(ensureBiguint(_args[0], _loc), _loc);
 	auto call = awst::makeIntrinsicCall("b~", awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(padded));

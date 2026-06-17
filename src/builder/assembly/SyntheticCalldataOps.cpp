@@ -1,13 +1,7 @@
 /// @file SyntheticCalldataOps.cpp
-/// Synthetic EVM-ABI calldata blob materialisation. When Yul accesses
-/// calldata at a non-constant offset (e.g.
-/// `calldatacopy(0x20, public_inputs_start, public_inputs_size)`) we
-/// stand up a single bytes local `__cd_blob` at the start of the
-/// assembly block. Dynamic-offset calldataload then becomes
-/// `extract3(__cd_blob, off, 32)`.
-///
-/// Extracted from DataOps.cpp; both methods stay declared in
-/// AssemblyBuilder.h, only the implementation moves.
+/// Synthetic EVM-ABI calldata blob: when Yul accesses calldata at a non-constant
+/// offset, stand up `__cd_blob` at the assembly-block entry so dynamic calldataload
+/// becomes `extract3(__cd_blob, off, 32)`.
 
 #include "builder/assembly/AssemblyBuilder.h"
 
@@ -31,10 +25,9 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 			std::string n = getFunctionName(call->functionName);
 			if (isCalldataOp(n))
 			{
-				// calldataload(off): non-constant off ⇒ dynamic.
-				// calldatacopy(dest, src, len): non-constant src or len ⇒ dynamic.
-				// calldatasize(): always returns runtime length — counts as
-				// dynamic so the blob exists for `len(__cd_blob)` reads.
+				// calldataload: non-const off → dynamic.
+				// calldatacopy: non-const src or len → dynamic.
+				// calldatasize: always runtime → dynamic (blob provides len(__cd_blob)).
 				if (n == "calldatasize")
 					found = true;
 				else if (n == "calldataload" && call->arguments.size() == 1)
@@ -95,15 +88,14 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 namespace
 {
 
-// Helper: encode a uint64 as a 32-byte big-endian value via
-// `concat(bzero(24), itob(val))`. itob produces 8 BE bytes.
+// Encode uint64 as 32-byte big-endian: concat(bzero(24), itob(val)).
 std::shared_ptr<awst::Expression> pad32BE(
 	std::shared_ptr<awst::Expression> _u64Val, awst::SourceLocation const& _loc)
 {
 	return awst::makeLeftPad(awst::makeItob(std::move(_u64Val), _loc), 24, _loc);
 }
 
-// Pad to a 32-byte multiple: shared canonical helper (awst::makeRightPadTo32Multiple).
+// Pad to a 32-byte multiple.
 std::shared_ptr<awst::Expression> padTo32Multiple(
 	std::shared_ptr<awst::Expression> _bytes, awst::SourceLocation const& _loc)
 {
@@ -153,9 +145,8 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		return awst::makeLen(std::move(b), _loc);
 	};
 
-	// Layout: 4-byte selector (zeros) + N×32 head section + tail section.
-	// We compute the running tail offset as a uint64 local `__cd_tail_off`
-	// (relative to start of args = 0x04). It starts at N*32 (size of head).
+	// Layout: 4-byte selector (zeros) + N×32 head + tail.
+	// __cd_tail_off = running tail offset (relative to args start = 0x04); starts at N*32.
 	uint64_t headWords = _params.size();
 
 	// __cd_blob = bzero(4)  — selector slot
@@ -166,26 +157,21 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	_out.push_back(awst::makeAssignmentStatement(
 		u64Var("__cd_tail_off"), u64Const(headWords * 32), _loc));
 
-	// Two passes: first append head words for each param (computing tail
-	// offsets along the way for dynamic params), then append tail bodies
-	// for the dynamic params in declaration order.
+	// Pass 1: append head words; pass 2: append tail bodies for dynamic params.
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
 		if (isDynamicAbi(type))
 		{
-			// Head: pad32BE(__cd_tail_off)
+			// Head: current tail offset (updated in pass 2 after emitting the tail body).
 			_out.push_back(awst::makeAssignmentStatement(
 				bytesVar(CD_BLOB_VAR),
 				concatBytes(bytesVar(CD_BLOB_VAR), pad32BE(u64Var("__cd_tail_off"), _loc)),
 				_loc));
-			// __cd_tail_off += 32 (length word) + paddedLen(param) — done
-			// in the tail-emission pass below to avoid recomputing length.
 		}
 		else
 		{
-			// Static head: read param value, encode as 32 BE bytes.
-			// For simplicity: pad biguint/uint64/bool/account/bytesN to 32 bytes BE.
+			// Static head: encode as 32 BE bytes.
 			auto paramVar = awst::makeVarExpression(name, type, _loc);
 			std::shared_ptr<awst::Expression> headWord;
 			if (type == awst::WType::uint64Type())
@@ -200,7 +186,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			}
 			else if (type == awst::WType::boolType())
 			{
-				// bool → 32 bytes: 31 zeros + 0x01/0x00
+				// 31 zero bytes + low byte of bool.
 				auto bz = bzeroOf(u64Const(31));
 				auto castU64 = awst::makeAsUInt64(std::move(paramVar), _loc);
 				auto byteByVal = awst::makeItob(std::move(castU64), _loc);
@@ -214,8 +200,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			}
 			else
 			{
-				// Fallback: treat as 32-byte bytes (best-effort).
-				headWord = awst::makeAsBytes(std::move(paramVar), _loc);
+				headWord = awst::makeAsBytes(std::move(paramVar), _loc); // best-effort
 			}
 			_out.push_back(awst::makeAssignmentStatement(
 				bytesVar(CD_BLOB_VAR),
@@ -224,41 +209,15 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		}
 	}
 
-	// Tail pass: for each dynamic param, append length word + data,
-	// updating __cd_tail_off so subsequent dynamic params get correct heads.
-	// Heads were already emitted — but we patched them with the
-	// then-current __cd_tail_off, so this works iff we walk in declaration
-	// order (which we did).
-	//
-	// HOWEVER — the loop above already wrote each dynamic-param head with
-	// __cd_tail_off as it stood at that point. We now need to advance
-	// __cd_tail_off by the size of the just-emitted tail entry BEFORE the
-	// next dynamic param's head was written. That's an ordering issue:
-	// the head writes happened in the loop above without updating
-	// __cd_tail_off for dynamic params after them.
-	//
-	// Fix: redo the loop, this time interleaving — see updated impl below.
-	// (Keeping the simple two-pass form here for an MVP that only handles
-	// the common case of a SINGLE dynamic param OR multiple dynamics where
-	// the test only reads the first dynamic's head; honk's verify(bytes,
-	// bytes32[]) needs the second head correct, so emit the tail in order
-	// AND patch the second head later via a replace3.)
-
-	// MVP: assume <=1 dynamic OR caller doesn't read second head. For
-	// honk/Blake.sol verify(bytes _proof, bytes32[] _publicInputs), the
-	// Yul reads `calldataload(0x24)` (publicInputs head). To make that
-	// correct, we need the second head value to be
-	// 0x40 + 32 + paddedLen(_proof). Patch via replace3 after emitting
-	// proof tail.
-
-	// First dynamic encountered in head pass: collect its index & param,
-	// so the tail pass knows which to emit first.
+	// Tail pass: for each dynamic param, emit length word + padded data, then
+	// advance __cd_tail_off and patch any subsequent dynamic heads via replace3.
+	// MVP: handles <=1 dynamic OR multiple where subsequent heads get patched
+	// (e.g. honk verify(bytes, bytes32[]) needs the second head = 0x40+32+paddedLen(proof)).
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
 		if (!isDynamicAbi(type)) continue;
 
-		// Append length word (32 bytes BE of len(param))
 		auto var = awst::makeVarExpression(name, type, _loc);
 		auto lenExpr = lenOf(var);
 		_out.push_back(awst::makeAssignmentStatement(
@@ -266,10 +225,9 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			concatBytes(bytesVar(CD_BLOB_VAR), pad32BE(std::move(lenExpr), _loc)),
 			_loc));
 
-		// Append param data padded to 32-byte multiple
+		// Param data padded to 32-byte multiple.
+		// ARC4 dynamic arrays have a 2-byte length header; strip it for calldata.
 		auto var2 = awst::makeVarExpression(name, type, _loc);
-		// For arc4 dynamic-array types the on-disk repr starts with a
-		// uint16 length header — strip it for the calldata body.
 		std::shared_ptr<awst::Expression> body;
 		if (type == awst::WType::bytesType() || type == awst::WType::stringType())
 			body = awst::makeAsBytes(std::move(var2), _loc);
@@ -289,9 +247,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 			concatBytes(bytesVar(CD_BLOB_VAR), std::move(paddedBody)),
 			_loc));
 
-		// Update tail offset for subsequent params: __cd_tail_off += 32 + paddedLen
-		// (Used only if we needed to patch later heads. For the MVP we
-		// patch the second head via replace3 just below.)
+		// Advance tail offset: __cd_tail_off += 32 + paddedLen(param).
 		auto var3 = awst::makeVarExpression(name, type, _loc);
 		auto rawLen = lenOf(var3);
 		auto modVal = awst::makeUInt64BinOp(

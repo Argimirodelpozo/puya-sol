@@ -29,7 +29,6 @@ void AssemblyBuilder::buildStatement(
 				buildFunctionDefinition(_node, _out);
 			else if constexpr (std::is_same_v<T, solidity::yul::Block>)
 			{
-				// Nested block — translate all its statements
 				for (auto const& innerStmt: _node.statements)
 					buildStatement(innerStmt, _out);
 			}
@@ -71,28 +70,22 @@ void AssemblyBuilder::buildVariableDeclaration(
 				return;
 			}
 
-			// User-defined assembly function called in variable declaration context
-			// Handles both single (let x := f()) and multi (let a, b, c := f()) returns
+			// User-defined Yul function: single (let x := f()) or multi (let a,b := f()) return.
 			if (m_asmFunctions.count(callName))
 			{
 				auto const& funcDef = *m_asmFunctions[callName];
 
-				// Register all declared variables
 				for (auto const& var: _decl.variables)
 					m_locals[var.name.str()] = awst::WType::biguintType();
 
-				// Translate arguments
 				std::vector<std::shared_ptr<awst::Expression>> args;
 				for (auto const& arg: call->arguments)
 					args.push_back(buildExpression(arg));
 
-				// Inline the function body (populates return variables)
 				handleUserFunctionCall(callName, args, loc, _out);
 
-				// Map the function's return values to the declared variables. A
-				// subroutine-dispatched call lands its results in fresh temps
-				// (m_yulSubReturnTemps); an inlined call assigns the function's
-				// own return-var names. Read whichever applies.
+				// Subroutine call → return values in m_yulSubReturnTemps;
+				// inlined call → return values in the function's own return-var names.
 				bool fromSub = !m_yulSubReturnTemps.empty();
 				size_t numReturns = std::min(
 					_decl.variables.size(), funcDef.returnVariables.size()
@@ -121,7 +114,6 @@ void AssemblyBuilder::buildVariableDeclaration(
 		std::string name = var.name.str();
 		m_locals[name] = awst::WType::biguintType();
 
-		// Try to resolve compile-time constant value for tracking
 		if (_decl.value)
 		{
 			auto constVal = resolveConstantYulValue(*_decl.value);
@@ -139,24 +131,16 @@ void AssemblyBuilder::buildVariableDeclaration(
 		if (_decl.value)
 		{
 			value = buildExpression(*_decl.value);
-			// Drain any pending statements from inlined assembly functions
 			drainPendingStatements(_out);
-
 			if (!value)
-			{
-				// Expression failed to translate (error already logged), use zero fallback
-				auto zero = awst::makeZero(loc, awst::WType::biguintType());
-				value = std::move(zero);
-			}
+				value = awst::makeZero(loc, awst::WType::biguintType());
 		}
 		else
 		{
-			// Default: zero
-			auto zero = awst::makeZero(loc, awst::WType::biguintType());
-			value = std::move(zero);
+			value = awst::makeZero(loc, awst::WType::biguintType());
 		}
 
-		// Coerce value to match target (biguint) — Yul values are always 256-bit
+		// Yul values are always 256-bit.
 		value = ensureBiguint(std::move(value), loc);
 
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), loc);
@@ -171,8 +155,7 @@ void AssemblyBuilder::buildAssignment(
 {
 	auto loc = makeLoc(_assign.debugData);
 
-	// Multi-variable assignment from assembly function: a, b, c := f(...)
-	if (_assign.variableNames.size() > 1)
+	if (_assign.variableNames.size() > 1) // multi-var: a, b, c := f(...)
 	{
 		if (_assign.value)
 		{
@@ -183,17 +166,12 @@ void AssemblyBuilder::buildAssignment(
 				{
 					auto const& funcDef = *m_asmFunctions[callName];
 
-					// Translate arguments
 					std::vector<std::shared_ptr<awst::Expression>> args;
 					for (auto const& arg: call->arguments)
 						args.push_back(buildExpression(arg));
 
-					// Inline the function body
 					handleUserFunctionCall(callName, args, loc, _out);
 
-					// Map return values to assignment targets — fresh subroutine
-					// temps (m_yulSubReturnTemps) if dispatched as a subroutine,
-					// else the function's own return-var names (inlined).
 					bool fromSub = !m_yulSubReturnTemps.empty();
 					size_t numReturns = std::min(
 						_assign.variableNames.size(), funcDef.returnVariables.size()
@@ -223,15 +201,10 @@ void AssemblyBuilder::buildAssignment(
 		return;
 	}
 
-	// Outer-Solidity-var write target → mangled AWST name (dotted .selector/
-	// .address resolve to `base__id.suffix`, split below).
 	std::string name = resolveVarRef(_assign.variableNames[0]);
 
-	// fn-ptr selector/address writes: fp.selector := expr  /  fp.address := expr
-	// Update the corresponding 4-byte (selector) or 8-byte (address) slice of the
-	// 12-byte fn-ptr local via replace3. The base local is identified by looking
-	// up the dotted name in m_locals (SolInlineAssembly registers fp.selector with
-	// the underlying fn-ptr type bytes[12]).
+	// fn-ptr writes: fp.selector := expr / fp.address := expr
+	// → replace3 the 4- or 8-byte slice of the 12-byte fn-ptr local.
 	{
 		auto dotIdx = name.rfind('.');
 		if (dotIdx != std::string::npos && _assign.value)
@@ -254,11 +227,9 @@ void AssemblyBuilder::buildAssignment(
 						int sliceWidth = (suffix == "selector") ? 4 : 8;
 						int sliceOffset = (suffix == "selector") ? 8 : 0;
 
-						// Build the rhs slice as exactly `sliceWidth` bytes.
-						// - account/bytes input (e.g. fp.address := someAddress): take the
-						//   low `sliceWidth` bytes via extract3(rhs, len(rhs)-w, w). EVM
-						//   right-aligns address values inside a 32-byte word.
-						// - numeric input: itob to 8 bytes, then take the low `sliceWidth`.
+						// Slice to exactly sliceWidth bytes:
+						// - bytes/account: take low sliceWidth bytes (EVM right-aligns addresses).
+						// - numeric: itob(8) then extract low sliceWidth.
 						std::shared_ptr<awst::Expression> sliceBytes;
 						bool rhsIsBytesLike =
 							rhs->wtype == awst::WType::accountType()
@@ -337,10 +308,6 @@ void AssemblyBuilder::buildAssignment(
 		}
 	}
 
-	// Handle storage slot assignments: _x.slot := expr
-	// Compute the slot value and assign to the base variable name.
-	// The variable holds the slot number as biguint, enabling slot-based
-	// storage operations (sload/sstore) for storage references.
 	if (name.find(".slot") != std::string::npos)
 	{
 		std::string baseName = name.substr(0, name.find(".slot"));
@@ -349,11 +316,7 @@ void AssemblyBuilder::buildAssignment(
 			auto slotExpr = buildExpression(*_assign.value);
 			if (slotExpr)
 			{
-				// Drain prerequisites the slot expression produced before the
-				// assignment (this early-return path bypasses the drain on the
-				// normal assignment path). No-op when the RHS is pure.
-				drainPendingStatements(_out);
-				// Ensure biguint type for the slot value
+				drainPendingStatements(_out); // early-return bypasses normal drain
 				if (slotExpr->wtype == awst::WType::uint64Type())
 				{
 					auto itob = awst::makeItob(std::move(slotExpr), loc);
@@ -361,9 +324,7 @@ void AssemblyBuilder::buildAssignment(
 				}
 				else if (slotExpr->wtype != awst::WType::biguintType())
 				{
-					// bytes[N] or other non-biguint → reinterpret as biguint
-					auto cast = awst::makeAsBiguint(std::move(slotExpr), loc);
-					slotExpr = std::move(cast);
+					slotExpr = awst::makeAsBiguint(std::move(slotExpr), loc);
 				}
 
 				auto target = awst::makeVarExpression(baseName, awst::WType::biguintType(), loc);
@@ -375,7 +336,6 @@ void AssemblyBuilder::buildAssignment(
 		return;
 	}
 
-	// Check for staticcall pattern: success := staticcall(...)
 	if (_assign.value)
 	{
 		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_assign.value.get()))
@@ -394,34 +354,25 @@ void AssemblyBuilder::buildAssignment(
 	auto target = awst::makeVarExpression(name, wtype, loc);
 
 	auto value = buildExpression(*_assign.value);
-	// Drain any pending statements from inlined assembly functions
 	drainPendingStatements(_out);
 
 	if (!value)
-	{
-		// Expression failed to translate (error already logged), use zero fallback
-		auto zero = awst::makeZero(loc, target->wtype);
-		value = std::move(zero);
-	}
+		value = awst::makeZero(loc, target->wtype);
 
-	// Coerce value type to match target type when they differ
 	if (target->wtype != value->wtype)
 	{
 		if (target->wtype == awst::WType::biguintType())
 		{
-			// Target is biguint — coerce value to biguint
 			value = ensureBiguint(std::move(value), loc);
 		}
 		else if (target->wtype == awst::WType::boolType())
 		{
-			// Target is bool — coerce value to bool
 			value = ensureBool(std::move(value), loc);
 		}
 		else if (target->wtype->kind() == awst::WTypeKind::Bytes)
 		{
 			auto const* bytesType = dynamic_cast<awst::BytesWType const*>(target->wtype);
-			// For fixed-size bytes[N], pad biguint to 32 bytes then extract first N bytes
-			// (EVM stores bytesN left-aligned in 256-bit words)
+			// bytes[N]: pad biguint to 32 bytes then extract first N (EVM: left-aligned).
 			if (bytesType && bytesType->length() && *bytesType->length() > 0)
 			{
 				int n = *bytesType->length();
@@ -437,7 +388,6 @@ void AssemblyBuilder::buildAssignment(
 			}
 			else
 			{
-				// Untyped bytes — coerce biguint to bytes via ReinterpretCast
 				auto biguintVal = ensureBiguint(std::move(value), loc);
 				auto cast = awst::makeReinterpretCast(std::move(biguintVal), target->wtype, loc);
 				value = std::move(cast);
@@ -445,7 +395,6 @@ void AssemblyBuilder::buildAssignment(
 		}
 		else if (target->wtype == awst::WType::accountType())
 		{
-			// Account (address) — pad biguint to 32 bytes for AVM address
 			auto biguintVal = ensureBiguint(std::move(value), loc);
 			auto padded = padTo32Bytes(std::move(biguintVal), loc);
 			auto cast = awst::makeAsAccount(std::move(padded), loc);
@@ -453,12 +402,10 @@ void AssemblyBuilder::buildAssignment(
 		}
 		else if (target->wtype == awst::WType::uint64Type())
 		{
-			// Target is uint64 but value is biguint (e.g. from mload).
-			// Truncate to uint64 using safeBtoi to keep the variable type consistent
-			// across all control flow paths (avoids phi node type mismatches).
+			// Truncate biguint→uint64 via safeBtoi (keeps phi-node types consistent).
 			if (value->wtype == awst::WType::biguintType())
 			{
-				// If the Solidity type is sub-64-bit (uint8/uint16/uint32), mask first
+				// Sub-64-bit Solidity type (uint8/16/32): mask before btoi.
 				auto bwIt = m_paramBitWidths.find(name);
 				if (bwIt != m_paramBitWidths.end() && bwIt->second < 64)
 				{
@@ -476,14 +423,9 @@ void AssemblyBuilder::buildAssignment(
 		}
 		else if (target->wtype == awst::WType::accountType())
 		{
-			// Target is account — coerce biguint/bytes to account
 			if (value->wtype == awst::WType::biguintType())
 			{
-				// biguint → bytes → account
-				auto toBytes = awst::makeAsBytes(std::move(value), loc);
-
-				auto toAccount = awst::makeAsAccount(std::move(toBytes), loc);
-				value = std::move(toAccount);
+				value = awst::makeAsAccount(awst::makeAsBytes(std::move(value), loc), loc);
 			}
 			else if (value->wtype != awst::WType::accountType())
 			{
@@ -493,17 +435,12 @@ void AssemblyBuilder::buildAssignment(
 		}
 		else
 		{
-			// Fallback: assembly pointer reinterpretation (e.g., result := store
-			// where result is address[] and store is bytes32[] — same layout on EVM).
+			// Pointer reinterpretation (e.g. address[] ↔ bytes32[] — same EVM layout).
 			auto const* targetArr = dynamic_cast<awst::ReferenceArray const*>(target->wtype);
 			auto const* valueArr = dynamic_cast<awst::ReferenceArray const*>(value->wtype);
 			if (targetArr && valueArr)
 			{
-				// Both are arrays — EVM memory pointer alias.
-				// Force the value's type to match the target so the assignment is valid.
-				// On AVM, arrays of bytes32 and addresses are both 32-byte elements.
 				value->wtype = target->wtype;
-				// Also update the source variable's registered type so future references match
 				if (auto* srcVar = dynamic_cast<awst::VarExpression*>(value.get()))
 					m_locals[srcVar->name] = target->wtype;
 			}
@@ -512,20 +449,12 @@ void AssemblyBuilder::buildAssignment(
 				Logger::instance().debug(
 					"assembly type coercion: " + value->wtype->name() + " → " + target->wtype->name()
 				);
-				// Don't mutate IntegerConstant wtype to a non-integer type
-				// (struct, array, etc.) — puya rejects it during deserialization.
-				// Wrap with a ReinterpretCast instead. For aggregate targets the
-				// runtime semantics may still be wrong, but at least the contract
-				// compiles and downstream tests can run.
+				// Don't mutate IntegerConstant wtype to struct/array — puya rejects it.
+				// Wrap with ReinterpretCast instead.
 				if (dynamic_cast<awst::IntegerConstant const*>(value.get()))
-				{
-					auto cast = awst::makeReinterpretCast(std::move(value), target->wtype, loc);
-					value = std::move(cast);
-				}
+					value = awst::makeReinterpretCast(std::move(value), target->wtype, loc);
 				else
-				{
 					value->wtype = target->wtype;
-				}
 			}
 		}
 	}
@@ -541,31 +470,19 @@ void AssemblyBuilder::buildExpressionStatement(
 {
 	auto loc = makeLoc(_stmt.debugData);
 
-	// Expression statements in Yul are typically side-effecting calls
-	// like mstore(), return(), or user-defined function calls.
 	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_stmt.expression))
 	{
 		std::string funcName = getFunctionName(call->functionName);
 
-		// Before translating args, check for patterns that need raw Yul AST access.
-		if (funcName == "mstore")
-		{
-			// Try to detect mstore(add(bytes_var, 32), value) pattern
-			if (tryHandleBytesMemoryWrite(*call, loc, _out))
-				return;
-		}
-		if (funcName == "mcopy")
-		{
-			// Try to detect mcopy(add(add(bytes_var, 0x20), dstOff), ...) pattern
-			if (tryHandleBytesMemoryMcopy(*call, loc, _out))
-				return;
-		}
+		// Pattern checks that need the raw Yul AST must run before arg translation.
+		if (funcName == "mstore" && tryHandleBytesMemoryWrite(*call, loc, _out))
+			return;
+		if (funcName == "mcopy" && tryHandleBytesMemoryMcopy(*call, loc, _out))
+			return;
 
-		// Translate arguments (stored in source order)
 		std::vector<std::shared_ptr<awst::Expression>> args;
 		for (auto const& arg: call->arguments)
 			args.push_back(buildExpression(arg));
-		// Drain any pending statements from inlined assembly functions
 		drainPendingStatements(_out);
 
 		if (funcName == "mstore")
@@ -605,34 +522,27 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "invalid")
 		{
-			// EVM INVALID opcode — unconditional revert
 			auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(loc), loc, "invalid"), loc);
 			_out.push_back(std::move(stmt));
 			return;
 		}
 		if (funcName == "stop")
 		{
-			// EVM STOP — halt execution successfully
 			auto retStmt = awst::makeReturnStatement(nullptr, loc);
 			_out.push_back(std::move(retStmt));
 			return;
 		}
 		if (funcName == "returndatacopy")
 		{
-			// Copy the last inner txn's log (itxn LastLog) into memory.
 			emitReturndatacopy(args, loc, _out);
 			return;
 		}
 		if (funcName == "pop")
-		{
-			// pop(x) — discard value, no-op
-			return;
-		}
+			return; // discard value, no-op
+
 		if (funcName == "delegatecall")
 		{
-			// delegatecall has no AVM equivalent — HARD ERROR. Stubbing it as a
-			// no-op would silently drop the call. Matches the hard error on
-			// high-level `.delegatecall(...)`.
+			// No AVM equivalent; stubbing as no-op would silently drop the call.
 			Logger::instance().error(
 				"`delegatecall(...)` in inline assembly is not supported on AVM. "
 				"It runs another contract's code in the caller's storage context, "
@@ -645,13 +555,10 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "mcopy")
 		{
-			// Copy whole 32-byte words: a constant multiple-of-32 length
-			// lowers to that many mstore(mload) word copies (forward order:
-			// correct for non-overlapping / copy-down; EVM memmove-style
-			// overlapping copy-up is not modeled). Byte-granular, dynamic,
-			// or huge lengths cannot be sized statically here -> fail loud,
-			// instead of the previous silent single-word copy that dropped
-			// every byte past the first word for len > 32.
+			// Constant multiple-of-32 length: unroll to mstore(mload) word copies
+			// (forward order: correct for non-overlapping/copy-down).
+			// Dynamic/byte-granular/huge lengths hard-error (old code silently
+			// dropped bytes past the first word for len > 32).
 			auto const* lenConst = (args.size() >= 3)
 				? dynamic_cast<awst::IntegerConstant const*>(args[2].get())
 				: nullptr;
@@ -709,7 +616,6 @@ void AssemblyBuilder::buildExpressionStatement(
 			return;
 		}
 
-		// Check for user-defined assembly function call
 		auto asmIt = m_asmFunctions.find(funcName);
 		if (asmIt != m_asmFunctions.end())
 		{
@@ -717,7 +623,6 @@ void AssemblyBuilder::buildExpressionStatement(
 			return;
 		}
 
-		// Other side-effecting calls: wrap as ExpressionStatement
 		auto expr = buildExpression(_stmt.expression);
 		if (expr)
 		{
@@ -727,7 +632,6 @@ void AssemblyBuilder::buildExpressionStatement(
 	}
 	else
 	{
-		// Non-call expression statement
 		auto expr = buildExpression(_stmt.expression);
 		if (expr)
 		{

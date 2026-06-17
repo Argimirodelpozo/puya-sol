@@ -1,16 +1,8 @@
 /// @file CalldataMapOps.cpp
-/// EVM-calldata offset mapping + recursive flat-element access for
-/// inline-assembly Yul translation. Extracted from AssemblyBuilder.cpp;
-/// these four helpers form a self-contained type/index-math cluster
-/// (sister TUs DataOps and MemoryOps call into them but never touch
-/// the per-block state they operate on).
-///
-/// `computeFlatElementCount` + `computeARC4ByteSize` are pure type
-/// walks. `initializeCalldataMap` populates `m_calldataMap` +
-/// `m_localConstants` at the start of every Yul block.
-/// `accessFlatElement` recursively traverses a parameter's structural
-/// shape to materialise an AWST expression for the i-th 32-byte slot
-/// of EVM calldata.
+/// EVM-calldata offset map + flat-element access for Yul translation.
+/// computeFlatElementCount/computeARC4ByteSize: pure type walks.
+/// initializeCalldataMap: populates m_calldataMap + m_localConstants per block.
+/// accessFlatElement: AWST expression for the i-th 32-byte EVM calldata slot.
 
 #include "builder/assembly/AssemblyBuilder.h"
 
@@ -33,12 +25,8 @@ int AssemblyBuilder::computeFlatElementCount(awst::WType const* _type)
 		if (arc4Arr)
 			return arc4Arr->arraySize() * computeFlatElementCount(arc4Arr->elementType());
 	}
-	// ARC4Struct (e.g. Honk.G1Point { x, y }): sum of field counts. Without
-	// this, computeFlatElementCount(G1Point) was 1, so a ReferenceArray<G1Point>
-	// pretended to have 1 flat slot per element — and `mload(mload(base))` patterns
-	// folded the whole struct into a single ARC4Decode<biguint>(struct), which
-	// puya rejects. Counting fields lets accessFlatElement's struct branch
-	// (above) extract the right field at the right flat index.
+	// ARC4Struct: must sum field counts. Without this, G1Point appeared as 1 slot,
+	// so mload(mload(base)) folded the whole struct into ARC4Decode<biguint> — puya rejects that.
 	if (_type->kind() == awst::WTypeKind::ARC4Struct)
 	{
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(_type);
@@ -80,15 +68,11 @@ void AssemblyBuilder::initializeCalldataMap(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params
 )
 {
-	uint64_t offset = 4; // Skip 4-byte function selector
+	uint64_t offset = 4; // skip 4-byte selector
 	for (auto const& [name, type]: _params)
 	{
 		int elementCount = computeFlatElementCount(type);
-
-		// Store the EVM calldata base offset for this parameter
 		m_localConstants[name] = offset;
-
-		// Map each 32-byte element to its parameter and flat index
 		for (int i = 0; i < elementCount; ++i)
 		{
 			CalldataElement elem;
@@ -97,7 +81,6 @@ void AssemblyBuilder::initializeCalldataMap(
 			elem.paramType = type;
 			m_calldataMap[offset + static_cast<uint64_t>(i) * 32] = elem;
 		}
-
 		offset += static_cast<uint64_t>(elementCount) * 32;
 	}
 }
@@ -109,7 +92,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 	awst::SourceLocation const& _loc
 )
 {
-	// Handle ReferenceArray
 	if (_type && _type->kind() == awst::WTypeKind::ReferenceArray)
 	{
 		auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(_type);
@@ -130,7 +112,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		return accessFlatElement(indexExpr, refArr->elementType(), innerFlatIndex, _loc);
 	}
 
-	// Handle ARC4StaticArray
 	if (_type && _type->kind() == awst::WTypeKind::ARC4StaticArray)
 	{
 		auto const* arc4Arr = dynamic_cast<awst::ARC4StaticArray const*>(_type);
@@ -146,22 +127,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 		auto indexExpr = awst::makeIndexExpression(_base, std::move(index), arc4Arr->elementType(), _loc);
 
 		if (innerSize == 1)
-		{
-			// For leaf ARC4 elements (like arc4.uint256), decode to native biguint
-			auto decode = awst::makeARC4Decode(indexExpr, awst::WType::biguintType(), _loc);
-			return decode;
-		}
+			return awst::makeARC4Decode(indexExpr, awst::WType::biguintType(), _loc);
 
 		return accessFlatElement(indexExpr, arc4Arr->elementType(), innerFlatIndex, _loc);
 	}
 
-	// Handle ARC4Struct (e.g. Honk's G1Point { x: uint256, y: uint256 }).
-	// Inline assembly that does `mload(mload(struct_ptr_array))` ends up
-	// here once the calldata-map walk recurses into a struct element. We
-	// pick the field at `_flatIndex` (counting nested fields by size) and
-	// emit a FieldExpression. Without this branch the call would fall
-	// through to the scalar return and the caller would wrap the raw
-	// struct in ARC4Decode<biguint>, which puya rejects.
+	// ARC4Struct: pick field at _flatIndex and emit FieldExpression.
+	// Without this, mload(mload(struct_ptr_array)) would wrap the whole struct
+	// in ARC4Decode<biguint>, which puya rejects.
 	if (_type && _type->kind() == awst::WTypeKind::ARC4Struct)
 	{
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(_type);
@@ -178,27 +151,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 				auto fieldExpr = awst::makeFieldExpression(
 					_base, name, fieldType, _loc);
 				if (fieldSize == 1)
-				{
-					// Leaf field — decode to biguint to match the
-					// shape every other accessFlatElement leaf returns
-					// (mload's caller expects a biguint scalar).
-					return awst::makeARC4Decode(
-						std::move(fieldExpr),
-						awst::WType::biguintType(), _loc);
-				}
+					return awst::makeARC4Decode(std::move(fieldExpr), awst::WType::biguintType(), _loc);
 				return accessFlatElement(
 					std::move(fieldExpr), fieldType,
 					innerFlatIndex, _loc);
 			}
 			cursor += fieldSize;
 		}
-		// _flatIndex past all fields — should be unreachable; bail to
-		// scalar so we at least don't crash the compile.
-		return _base;
+		return _base; // _flatIndex past all fields — unreachable; avoid crash
 	}
 
-	// Scalar — _flatIndex should be 0
-	return _base;
+	return _base; // scalar; _flatIndex should be 0
 }
 
 } // namespace puyasol::builder

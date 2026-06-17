@@ -1,6 +1,5 @@
 /// @file MemoryHelpers.cpp
-/// Memory helper functions: readMemSlot, padTo32Bytes, concatSlots, storeResultToMemory.
-/// All operations work on the __evm_memory bytes blob backed by scratch slots.
+/// readMemSlot, padTo32Bytes, concatSlots, storeResultToMemory — scratch-slot memory helpers.
 
 #include "builder/assembly/AssemblyBuilder.h"
 
@@ -14,15 +13,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 	awst::SourceLocation const& _loc
 )
 {
-	// Read 32 bytes from the memory blob at a constant offset.
-	// extract3(__evm_memory, offset, 32) → cast to biguint
-	auto offsetConst = awst::makeIntegerConstant(_offset, _loc);
-
-	auto len32 = awst::makeIntegerConstant("32", _loc);
-
-	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(len32), _loc);
-	auto cast = awst::makeAsBiguint(std::move(extract), _loc);
-	return cast;
+	return awst::makeAsBiguint(
+		awst::makeExtract3(memoryVar(_loc),
+			awst::makeIntegerConstant(_offset, _loc),
+			awst::makeIntegerConstant("32", _loc), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
@@ -40,17 +34,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 	awst::SourceLocation const& _loc
 )
 {
-	// With the blob model, this is a single extract3 instead of N reads + pads + concats.
-	// extract3(__evm_memory, baseOffset + startSlot*32, count*32)
 	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
 	uint64_t byteLen = static_cast<uint64_t>(_count) * 0x20;
-
-	auto offsetConst = awst::makeIntegerConstant(byteOffset, _loc);
-
-	auto lenConst = awst::makeIntegerConstant(byteLen, _loc);
-
-	auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(lenConst), _loc);
-	return extract;
+	return awst::makeExtract3(memoryVar(_loc),
+		awst::makeIntegerConstant(byteOffset, _loc),
+		awst::makeIntegerConstant(byteLen, _loc), _loc);
 }
 
 void AssemblyBuilder::storeResultToMemory(
@@ -63,80 +51,48 @@ void AssemblyBuilder::storeResultToMemory(
 {
 	if (_isBoolResult)
 	{
-		// Bool result → convert to 32-byte biguint (1 or 0), store at offset
-		auto one = awst::makeBiguintConstant("1", _loc);
-		auto zero = awst::makeBiguintConstant("0", _loc);
-
-		auto cond = awst::makeConditional(
-			std::move(_result), std::move(one), std::move(zero),
+		auto cond = awst::makeConditional(std::move(_result),
+			awst::makeBiguintConstant("1", _loc), awst::makeBiguintConstant("0", _loc),
 			awst::WType::biguintType(), _loc);
-
-		auto padded = padTo32Bytes(std::move(cond), _loc);
-
-		auto offsetConst = awst::makeIntegerConstant(_outputOffset, _loc);
-
-		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetConst), std::move(padded), _loc);
-		assignMemoryVar(std::move(replace), _loc, _out);
+		assignMemoryVar(awst::makeReplace3(memoryVar(_loc),
+			awst::makeIntegerConstant(_outputOffset, _loc),
+			padTo32Bytes(std::move(cond), _loc), _loc), _loc, _out);
 		return;
 	}
 
 	if (_outputSlots == 1)
 	{
-		// Single 32-byte slot: pad result and write to blob
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
-		{
-			auto cast = awst::makeAsBiguint(std::move(storeVal), _loc);
-			storeVal = std::move(cast);
-		}
-
-		auto padded = padTo32Bytes(std::move(storeVal), _loc);
-
-		auto offsetConst = awst::makeIntegerConstant(_outputOffset, _loc);
-
-		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetConst), std::move(padded), _loc);
-		assignMemoryVar(std::move(replace), _loc, _out);
+			storeVal = awst::makeAsBiguint(std::move(storeVal), _loc);
+		assignMemoryVar(awst::makeReplace3(memoryVar(_loc),
+			awst::makeIntegerConstant(_outputOffset, _loc),
+			padTo32Bytes(std::move(storeVal), _loc), _loc), _loc, _out);
 		return;
 	}
 
-	// Multi-slot: store result bytes to a temp var, then replace the whole region.
-	// If result is already bytes of the right length, write directly.
-	// Otherwise store to temp, then extract chunks.
+	// Multi-slot: stash result in temp, then write each 32-byte chunk.
 	std::string resultVar = "__precompile_result";
 	m_locals[resultVar] = awst::WType::bytesType();
 
-	auto resultTarget = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc),
+		std::move(_result), _loc));
 
-	auto assignResult = awst::makeAssignmentStatement(resultTarget, std::move(_result), _loc);
-	_out.push_back(std::move(assignResult));
-
-	// Write each 32-byte chunk from the result into the blob
 	for (int i = 0; i < _outputSlots; ++i)
 	{
 		uint64_t outOff = _outputOffset + static_cast<uint64_t>(i) * 0x20;
-
-		auto resultRead = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
-
-		// extract3(result, i*32, 32)
-		auto slotStart = awst::makeIntegerConstant(i * 32, _loc);
-
-		auto slotLen = awst::makeIntegerConstant("32", _loc);
-
-		auto extractSlot = awst::makeExtract3(resultRead, slotStart, slotLen, _loc);
-		// replace3(__evm_memory, outOff, chunk)
-		auto offsetConst = awst::makeIntegerConstant(outOff, _loc);
-
-		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetConst), std::move(extractSlot), _loc);
-		assignMemoryVar(std::move(replace), _loc, _out);
+		auto extractSlot = awst::makeExtract3(
+			awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc),
+			awst::makeIntegerConstant(i * 32, _loc),
+			awst::makeIntegerConstant("32", _loc), _loc);
+		assignMemoryVar(awst::makeReplace3(memoryVar(_loc),
+			awst::makeIntegerConstant(outOff, _loc), std::move(extractSlot), _loc), _loc, _out);
 	}
 }
 
 // ─── Runtime-offset variants ────────────────────────────────────────────
-//
-// Used when a Yul precompile staticcall has dynamic memory offsets/sizes
-// (e.g. honk's `add(free, 0x40)` where `free = mload(0x40)` is variable).
-// These compute `extract3(__evm_memory, baseOffset + slotOffset, count*32)`
-// at runtime instead of baking constants into the AWST.
+// Used when precompile staticcall has dynamic offsets (e.g. honk: add(free, 0x40)).
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 	std::shared_ptr<awst::Expression> _baseOffset, int _startSlot, int _count,
@@ -151,9 +107,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 			awst::makeIntegerConstant(_startSlot * 0x20, _loc),
 			_loc))
 		: base;
-	// Evaluate the base offset once — it is referenced once per word below, so a
-	// runtime free-pointer base (the EC-precompile case) would otherwise be
-	// re-read _count times.
+	// SE guard: EC-precompile free-pointer base otherwise re-read _count times.
 	if (_count > 1)
 	{
 		offsetExpr = awst::makeSingleEvaluation(
@@ -161,11 +115,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 			awst::nextSingleEvalId(), _loc);
 	}
 
-	// Slot-aware per-word read (readMemWordDyn = `off<SLOT_SIZE ? memoryVar : loads`)
-	// rather than extract3 on the slot-0 memoryVar cache. EC precompile inputs live at
-	// the runtime free pointer; in a split piece slot-0 memory is only in the local
-	// while slot 1+ is in scratch, so the Dyn conditional is required (a loads-only
-	// read mishandles slot 0). Words may straddle a SLOT_SIZE boundary; each re-derives.
+	// readMemWordDyn: slot-0 vs scratch conditional needed because EC precompile inputs
+	// live at the runtime FMP; in a split piece slot-0 is in local while slot 1+ is in
+	// scratch — loads-only would mishandle slot 0. Words may straddle SLOT_SIZE.
 	std::shared_ptr<awst::Expression> acc;
 	for (int i = 0; i < _count; ++i)
 	{
@@ -216,15 +168,13 @@ void AssemblyBuilder::storeResultToMemoryRT(
 		return;
 	}
 
-	// Multi-slot: stash result bytes in a temp local, then write each
-	// 32-byte chunk into the memory blob at runtime offsets.
+	// Multi-slot: stash result and base offset in temps to avoid per-chunk duplication.
 	std::string resultVar = "__precompile_result";
 	m_locals[resultVar] = awst::WType::bytesType();
-	auto resultTarget = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
-	_out.push_back(awst::makeAssignmentStatement(resultTarget, std::move(_result), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc),
+		std::move(_result), _loc));
 
-	// Bind base offset to a local so we don't duplicate the offset
-	// expression once per chunk.
 	std::string offsetVar = "__precompile_outoff";
 	m_locals[offsetVar] = awst::WType::uint64Type();
 	_out.push_back(awst::makeAssignmentStatement(

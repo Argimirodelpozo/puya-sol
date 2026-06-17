@@ -9,14 +9,9 @@
 namespace puyasol::builder
 {
 
-// ─── BN254 precompile handlers (ecAdd, ecMul, ecPairing) live in the
-// runtime-offset variants below; the constant-offset dispatch path
-// in PrecompileDispatch wraps offsets as IntegerConstants and calls
-// the same handlers. Puya constant-folds at the backend, so the TEAL
-// for the static-arg case is identical to the previous twin path.
-//
-// ecRecover keeps its constant-only variant since the RT path isn't
-// implemented for it (and no test exercises a dynamic-offset call).
+// ecRecover: constant-only (no RT path implemented; no test exercises dynamic offsets).
+// ecAdd/ecMul/ecPairing/SHA-256/Identity: RT handlers below; constant-offset dispatch
+// wraps as IntegerConstants and calls the same handlers (puya folds at backend).
 
 void AssemblyBuilder::handleEcRecover(
 	uint64_t _inputOffset, uint64_t /*_inputSize*/,
@@ -25,33 +20,22 @@ void AssemblyBuilder::handleEcRecover(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Input (128 bytes = 4 slots): msgHash(0), v(1), r(2), s(3)
-	// Output (32 bytes = 1 slot): left-padded 20-byte Ethereum address
-
-	// 1. Read input slots as 32-byte padded values
+	// Input (128 bytes): msgHash(+0), v(+0x20), r(+0x40), s(+0x60).
+	// Output: left-padded 20-byte Ethereum address (1 slot).
 	auto msgHash = padTo32Bytes(readMemSlot(_inputOffset, _loc), _loc);
 	auto vBiguint = readMemSlot(_inputOffset + 0x20, _loc);
 	auto r = padTo32Bytes(readMemSlot(_inputOffset + 0x40, _loc), _loc);
 	auto s = padTo32Bytes(readMemSlot(_inputOffset + 0x60, _loc), _loc);
 
-	// 2. Compute recovery_id = v - 27 as uint64
-	auto twentySeven = awst::makeBiguintConstant("27", _loc);
-
+	// recovery_id = btoi(v - 27)
 	auto vMinus27 = makeBigUIntBinOp(
 		std::move(vBiguint), awst::BigUIntBinaryOperator::Sub,
-		std::move(twentySeven), _loc
-	);
+		awst::makeBiguintConstant("27", _loc), _loc);
+	auto recoveryId = awst::makeBtoi(awst::makeAsBytes(std::move(vMinus27), _loc), _loc);
 
-	// Cast biguint → bytes → btoi → uint64
-	auto vBytes = awst::makeAsBytes(std::move(vMinus27), _loc);
-	auto recoveryId = awst::makeBtoi(std::move(vBytes), _loc);
-
-	// 3. Call ecdsa_pk_recover Secp256k1
-	// Returns (bytes, bytes) — pubkey_x and pubkey_y, each 32 bytes
 	awst::WType const* tupleTypePtr = m_typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()}
 	);
-
 	auto ecdsaRecover = awst::makeIntrinsicCall("ecdsa_pk_recover", tupleTypePtr, _loc);
 	ecdsaRecover->immediates.push_back("Secp256k1");
 	ecdsaRecover->stackArgs.push_back(std::move(msgHash));
@@ -59,47 +43,26 @@ void AssemblyBuilder::handleEcRecover(
 	ecdsaRecover->stackArgs.push_back(std::move(r));
 	ecdsaRecover->stackArgs.push_back(std::move(s));
 
-	// Store the tuple result in a temporary
 	std::string tupleVar = "__ecdsa_result";
 	m_locals[tupleVar] = tupleTypePtr;
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tupleVar, tupleTypePtr, _loc), std::move(ecdsaRecover), _loc));
 
-	auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
-
-	auto assignTuple = awst::makeAssignmentStatement(tupleTarget, std::move(ecdsaRecover), _loc);
-	_out.push_back(std::move(assignTuple));
-
-	// 4. Extract pubkey_x (index 0) and pubkey_y (index 1)
-	auto tupleRead0 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
-
-	auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
-
-	auto tupleRead1 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
-
-	auto pubkeyY = awst::makeTupleItem(std::move(tupleRead1), 1, awst::WType::bytesType(), _loc);
-
-	// 5. concat(pubkey_x, pubkey_y) → 64 bytes
-	auto pubkeyConcat = awst::makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
-
-	// 6. keccak256(concat) → 32 bytes
-	auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
-
-	// 7. extract3(hash, 12, 20) → last 20 bytes (Ethereum address)
+	// keccak256(concat(pubkey_x, pubkey_y)) → last 20 bytes → left-pad to 32
+	auto pubkeyX = awst::makeTupleItem(
+		awst::makeVarExpression(tupleVar, tupleTypePtr, _loc), 0, awst::WType::bytesType(), _loc);
+	auto pubkeyY = awst::makeTupleItem(
+		awst::makeVarExpression(tupleVar, tupleTypePtr, _loc), 1, awst::WType::bytesType(), _loc);
+	auto hash = awst::makeKeccak256(
+		awst::makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc), _loc);
 	auto addr = awst::makeExtract(std::move(hash), 12, 20, _loc);
-
-	// 8. Left-pad to 32 bytes: concat(bzero(12), addr)
-	auto paddedAddr = awst::makeLeftPad(std::move(addr), 12, _loc);
-
-	// 9. Cast to biguint and store
-	auto addrBiguint = awst::makeAsBiguint(std::move(paddedAddr), _loc);
-
-	storeResultToMemory(std::move(addrBiguint), _outputOffset, 1, _loc, _out);
+	storeResultToMemory(
+		awst::makeAsBiguint(awst::makeLeftPad(std::move(addr), 12, _loc), _loc),
+		_outputOffset, 1, _loc, _out);
 }
 
 // ─── Runtime-offset precompile handlers ─────────────────────────────────────
-//
-// Same shape as the constant-offset handlers above, but the input/output
-// offsets and sizes are AWST Expressions (evaluated at runtime). Used when
-// the Yul staticcall has dynamic memory positions.
+// Same as the constant-offset handlers but offsets/sizes are AWST Expressions.
 
 void AssemblyBuilder::handleEcAddRT(
 	std::shared_ptr<awst::Expression> _inputOffset,
@@ -138,19 +101,9 @@ void AssemblyBuilder::handleEcPairingRT(
 )
 {
 	using O = awst::UInt64BinaryOperator;
-	// numPairs = inputSize / (6*32) — runtime value. Honk uses fixed 4-pair
-	// pairings, but we can't generally assume that. For an MVP, support
-	// only the 1-pair and 4-pair pairings the verifier actually emits by
-	// building a runtime-loop variant. For honk specifically (and the
-	// only path stressed today), inputSize is always a compile-time
-	// constant since the verifier does e.g. `staticcall(gas(), 8, ..., 0x180, ...)`.
-	// So we conservatively check: if inputSize resolves to a constant
-	// (integer constant in the AWST), unroll; otherwise fall back to a
-	// dynamic loop.
-	//
-	// Try the unroll path first. We accept any constant-integer expression
-	// regardless of whether the original Yul site was constant — puya may
-	// have constant-folded for us.
+	// numPairs = inputSize / (6*32). Unroll when inputSize is a compile-time constant
+	// (honk emits e.g. `staticcall(gas(), 8, ..., 0x180, ...)` so this always fires).
+	// Accept any IntegerConstant regardless of origin — puya may have folded it.
 	auto* sizeConst = dynamic_cast<awst::IntegerConstant const*>(_inputSize.get());
 	if (sizeConst)
 	{
@@ -168,15 +121,13 @@ void AssemblyBuilder::handleEcPairingRT(
 			return;
 		}
 		// Build G1+G2 inputs as concatenations across all pairs.
+		// readMemWordDyn is slot-aware: local for slot 0, loads() for slot 1+.
 		auto concatTwoSlotsRT = [&](std::shared_ptr<awst::Expression> off1,
 									std::shared_ptr<awst::Expression> off2)
 			-> std::shared_ptr<awst::Expression> {
-			auto extract = [&](std::shared_ptr<awst::Expression> off) {
-				return readMemWordDyn(std::move(off), _loc); // slot-aware (local for slot 0, loads beyond)
-			};
-			auto a = extract(std::move(off1));
-			auto b = extract(std::move(off2));
-			return awst::makeConcat(std::move(a), std::move(b), _loc);
+			return awst::makeConcat(
+				readMemWordDyn(std::move(off1), _loc),
+				readMemWordDyn(std::move(off2), _loc), _loc);
 		};
 		auto plusConst = [&](std::shared_ptr<awst::Expression> base, uint64_t k) {
 			if (k == 0) return base;
@@ -185,8 +136,7 @@ void AssemblyBuilder::handleEcPairingRT(
 				awst::makeIntegerConstant(k, _loc), _loc));
 		};
 
-		// Bind input offset to a local so we don't reduplicate the
-		// expression for each pair.
+		// Bind input offset to a local to avoid re-evaluating it per pair.
 		std::string inOffVar = "__pairing_in_off";
 		m_locals[inOffVar] = awst::WType::uint64Type();
 		_out.push_back(awst::makeAssignmentStatement(
@@ -203,7 +153,7 @@ void AssemblyBuilder::handleEcPairingRT(
 			uint64_t pairBase = static_cast<uint64_t>(p) * 6 * 0x20;
 			// G1: 2 slots starting at pairBase.
 			auto g1 = concatSlotsRT(plusConst(baseOff(), pairBase), 0, 2, _loc);
-			// G2: EVM (x_im, x_re, y_im, y_re); AVM expects (x_re, x_im, y_re, y_im).
+			// G2: swap EVM order (x_im, x_re, y_im, y_re) → AVM (x_re, x_im, y_re, y_im).
 			auto g2_x = concatTwoSlotsRT(
 				plusConst(baseOff(), pairBase + 3 * 0x20),
 				plusConst(baseOff(), pairBase + 2 * 0x20));
@@ -223,11 +173,8 @@ void AssemblyBuilder::handleEcPairingRT(
 		return;
 	}
 
-	// Fully-dynamic input size: not currently supported (would need a runtime
-	// loop emitting one ec_pairing_check per pair). HARD ERROR — stubbing as
-	// success would make a pairing/zk (e.g. Groth16) verifier on this path
-	// accept ANY proof, a direct fund-theft vector. Refuse to compile rather
-	// than emit an unsound verifier; use a compile-time-known pair count.
+	// Fully-dynamic input size not supported (needs runtime loop per pair).
+	// HARD ERROR: stubbing success would make a zk verifier accept any proof.
 	Logger::instance().error(
 		"ec_pairing (bn256 pairing precompile 0x08) with a dynamic input size "
 		"is not supported on AVM — there is no runtime pair-count loop yet, so "
@@ -247,8 +194,7 @@ void AssemblyBuilder::handleSha256PrecompileRT(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Read inputSize bytes from memory at inputOffset, hash, write 32 bytes
-	// at outputOffset. The output size for SHA-256 is always 32.
+	// SHA-256 output is always 32 bytes.
 	auto extract = awst::makeExtract3(memoryVar(_loc), offsetToUint64(std::move(_inputOffset), _loc), offsetToUint64(std::move(_inputSize), _loc), _loc);
 	auto sha = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
 	sha->stackArgs.push_back(std::move(extract));
@@ -265,7 +211,7 @@ void AssemblyBuilder::handleIdentityPrecompileRT(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Memory-to-memory copy of inputSize bytes from inputOffset to outputOffset.
+	// Copy inputSize bytes from inputOffset to outputOffset.
 	auto extract = awst::makeExtract3(memoryVar(_loc), offsetToUint64(std::move(_inputOffset), _loc), offsetToUint64(std::move(_inputSize), _loc), _loc);
 	auto replace = awst::makeReplace3(memoryVar(_loc), offsetToUint64(std::move(_outputOffset), _loc), std::move(extract), _loc);
 	assignMemoryVar(std::move(replace), _loc, _out);
@@ -280,14 +226,10 @@ void AssemblyBuilder::handleModExpRT(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// EIP-198 layout (Bsize=Esize=Msize=32 — the only shape we currently
-	// emit on the AVM side; same constraint as the constant variant). Slots:
-	//   +0x00 Bsize, +0x20 Esize, +0x40 Msize, +0x60 base, +0x80 exp,
-	//   +0xa0 mod. Output: 1 slot at outputOffset.
+	// EIP-198 layout (Bsize=Esize=Msize=32 only):
+	// +0x00 Bsize, +0x20 Esize, +0x40 Msize, +0x60 base, +0x80 exp, +0xa0 mod.
 	using O = awst::UInt64BinaryOperator;
 
-	// Bind input offset to a local so we don't reduplicate the expression
-	// for each slot read.
 	std::string inOffVar = "__modexp_in_off";
 	m_locals[inOffVar] = awst::WType::uint64Type();
 	_out.push_back(awst::makeAssignmentStatement(
@@ -305,14 +247,10 @@ void AssemblyBuilder::handleModExpRT(
 			std::move(b), O::Add,
 			awst::makeIntegerConstant(k, _loc), _loc));
 	};
+	// readMemWordDyn: slot-0 uses local, slot 1+ uses loads() — needed because modexp
+	// input lands at runtime FMP (honk verify ~18KB live; loads-only misses slot 0).
 	auto readSlot = [&](uint64_t slotOff) -> std::shared_ptr<awst::Expression>
 	{
-		// Slot-AWARE read via readMemWordDyn: `off < SLOT_SIZE ? memoryVar(slot-0
-		// local) : loads(off/SLOT_SIZE)`. The modexp input lands at the runtime free
-		// pointer; past slot 0 (honk verify ~18KB live memory) memoryVar reads garbage,
-		// but in a split piece slot-0 memory lives ONLY in the local (the blob prologue
-		// restores slot 0 → memoryVar, not scratch), so a loads-only read is wrong
-		// there. Dyn covers both, matching how runtime mload reads.
 		return awst::makeAsBiguint(readMemWordDyn(plusConst(baseOff(), slotOff), _loc), _loc);
 	};
 
@@ -320,12 +258,7 @@ void AssemblyBuilder::handleModExpRT(
 	auto exp = readSlot(0x80);
 	auto mod = readSlot(0xa0);
 
-	// Square-and-multiply (mirrors handleModExp's loop):
-	//   result = 1; base = base % mod
-	//   while exp > 0:
-	//       if exp & 1: result = (result * base) % mod
-	//       exp = exp / 2
-	//       base = (base * base) % mod
+	// Square-and-multiply: result=1; base%=mod; while exp>0: { if exp&1: result=result*base%mod; exp>>=1; base=base*base%mod; }
 	std::string resultVar = "__modexp_result";
 	std::string baseVar = "__modexp_base";
 	std::string expVar = "__modexp_exp";

@@ -18,7 +18,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	if (!checkArity(_args, 1, "mload", _loc))
 		return nullptr;
 
-	// First check calldata map for constant offsets (function parameters)
+	// Constant offset: check calldata map first; fall back to scratch slot.
 	auto constOffset = resolveConstantOffset(_args[0]);
 	if (constOffset)
 	{
@@ -32,32 +32,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 
 			return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
 		}
-		// Not a calldata parameter → read from EVM memory at this constant
-		// offset, routed to the scratch slot holding it (all slots, including 0,
-		// are read directly from scratch — no __evm_memory local cache).
 		return awst::makeAsBiguint(readMemWordConst(*constOffset, _loc), _loc);
 	}
 
-	// Dynamic offset → route to the correct slot at runtime (offsets < SLOT_SIZE
-	// hit slot 0; all slots read directly from scratch). mload → uint256.
 	return awst::makeAsBiguint(readMemWordDyn(_args[0], _loc), _loc);
 }
 
 // ── Multi-slot memory word access ───────────────────────────────────────────
 // EVM memory spans scratch slots [MEMORY_SLOT_FIRST, MEMORY_SLOT_LAST], each
-// SLOT_SIZE (4096) bytes. A byte offset maps to (slot = offset / SLOT_SIZE,
-// sub = offset % SLOT_SIZE). Every slot — including slot 0 — is read/written
-// directly against scratch (loads/stores); there is no __evm_memory local cache.
-// 32-byte-aligned accesses
-// never straddle a slot boundary (SLOT_SIZE % 32 == 0); unaligned straddling
-// words are stitched/split across the two adjacent slots.
+// SLOT_SIZE (4096) bytes. Offset → (slot = off/SLOT_SIZE, sub = off%SLOT_SIZE).
+// All slots (including 0) read/write directly to scratch; no __evm_memory cache.
+// 32-byte-aligned accesses never straddle a boundary (SLOT_SIZE % 32 == 0);
+// unaligned straddling words are stitched/split across the two adjacent slots.
 
 std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
 	std::shared_ptr<awst::Expression> _off, awst::SourceLocation const& _loc)
 {
-	// Blob capacity (bytes) = SLOT_SIZE * slot count; a 32-byte word must fit:
-	// assert(off + 32 <= cap). Beyond this the access would spill into a
-	// non-memory scratch slot (silent corruption) or error opaquely (slot>255).
+	// assert(off + 32 <= cap): spilling into non-memory scratch slots corrupts silently.
 	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE) * static_cast<uint64_t>(MEMORY_SLOT_LAST + 1);
 	auto end = awst::makeUInt64BinOp(std::move(_off), awst::UInt64BinaryOperator::Add,
 		awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
@@ -145,22 +136,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto off = offsetToUint64(std::move(_offset), _loc);
-	// Evaluate the offset once: it appears in the bounds assert, the slot-0 fast
-	// path, and the slot/sub slow path (~5 references); a side-effecting offset
-	// like mload(q) would otherwise re-run each time. writeMemWordDyn already
-	// materializes its offset for the same reason.
+	// SE: offset appears in bounds-assert + slot-0 fast + slot/sub slow (~5 refs);
+	// a side-effecting mload(q) would otherwise re-run each time.
 	off = awst::makeSingleEvaluation(
 		std::move(off), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
-	// Fail clearly if this offset spills past the modeled blob (vs silently
-	// reading a non-memory scratch slot); fires before the read is consumed.
 	m_pendingStatements.push_back(memBoundsAssert(off, _loc));
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 
-	// offset < SLOT_SIZE → cached slot-0 local (unchanged for ≤4KB memory).
+	// off < SLOT_SIZE → slot-0 local; else extract3(loads(off/SLOT_SIZE), off%SLOT_SIZE, 32).
 	auto cmp = awst::makeNumericCompare(off, awst::NumericComparison::Lt, ss(), _loc);
 	auto fast = awst::makeExtract3(memoryVar(_loc), off, awst::makeIntegerConstant("32", _loc), _loc);
 
-	// else extract3(loads(off / SLOT_SIZE), off % SLOT_SIZE, 32).
 	auto slot = awst::makeUInt64BinOp(off, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
 	auto sub = awst::makeUInt64BinOp(off, awst::UInt64BinaryOperator::Mod, ss(), _loc);
 	auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
@@ -179,7 +165,7 @@ void AssemblyBuilder::writeMemWordDyn(
 	int id = s_ctr++;
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 
-	// Materialise offset + value once so neither branch re-evaluates them.
+	// Materialise offset + value once; bounds-assert reuses the offset temp too.
 	std::string offN = "__mem_dyn_off_" + std::to_string(id);
 	std::string valN = "__mem_dyn_val_" + std::to_string(id);
 	_out.push_back(awst::makeAssignmentStatement(
@@ -190,18 +176,15 @@ void AssemblyBuilder::writeMemWordDyn(
 		std::move(_value32), _loc));
 	auto offR = [&]() { return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc); };
 	auto valR = [&]() { return awst::makeVarExpression(valN, awst::WType::bytesType(), _loc); };
-	// Fail clearly if the write spills past the modeled blob (would otherwise
-	// silently corrupt a non-memory scratch slot).
 	_out.push_back(memBoundsAssert(offR(), _loc));
 
-	// Fast: __evm_memory = replace3(__evm_memory, off, val)  [slot 0]
+	// Fast: slot 0 local; slow: stores(slot, replace3(loads(slot), sub, val)).
 	auto fastBlock = awst::makeBlock(_loc);
 	{
 		auto rep = awst::makeReplace3(memoryVar(_loc), offR(), valR(), _loc);
 		assignMemoryVar(std::move(rep), _loc, fastBlock->body);
 	}
 
-	// Slow: stores(slot, replace3(loads(slot), sub, val))  [slot 1+]
 	auto slowBlock = awst::makeBlock(_loc);
 	{
 		std::string slotN = "__mem_dyn_slot_" + std::to_string(id);
@@ -238,9 +221,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 	std::shared_ptr<awst::Expression> _offset, int _byteLen, awst::SourceLocation const& _loc)
 {
-	// Concatenate ceil(_byteLen/32) successive 32-byte words. Each word read
-	// re-derives its slot, so a range straddling a SLOT_SIZE boundary is handled
-	// transparently. `_offset` is shared (pure base offset) across all words.
+	// Concat ceil(_byteLen/32) successive words; each re-derives its slot
+	// so straddling SLOT_SIZE is handled transparently.
 	int words = (_byteLen + 31) / 32;
 	std::shared_ptr<awst::Expression> acc;
 	for (int i = 0; i < words; ++i)
@@ -267,7 +249,6 @@ void AssemblyBuilder::writeMemWordDirect(
 	int id = s_ctr++;
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 
-	// Fail clearly if the write spills past the modeled blob.
 	_out.push_back(memBoundsAssert(_offset, _loc));
 
 	std::string slotN = "__blobw_slot_" + std::to_string(id);
@@ -296,13 +277,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	awst::SourceLocation const& _loc
 )
 {
-	// Match: mload(add(add(bytes_param, 32), offset))
-	// or:    mload(add(offset, add(bytes_param, 32)))
-	//
-	// This is the standard Solidity pattern for reading 32 bytes from a
-	// bytes memory parameter at a variable byte offset.
-	// In EVM: data_ptr + 32 (skip length header) + offset → mload → 32 bytes
-	// In AVM: extract3(data, offset, 32) — bytes have no length header
+	// Match: mload(add(add(bytes_param, 32), offset)) or add commuted.
+	// EVM: data_ptr+32 (skip length header)+offset → mload.
+	// AVM: extract3(data, offset, 32) — bytes have no length header.
 
 	auto* outerAdd = std::get_if<solidity::yul::FunctionCall>(&_addrExpr);
 	if (!outerAdd || getFunctionName(outerAdd->functionName) != "add"
@@ -362,31 +339,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	if (paramType != awst::WType::bytesType() && paramType != awst::WType::stringType())
 		return nullptr;
 
-	// Pattern matched! Generate: extract3(param, btoi(offset), 32) → cast to biguint
-
 	Logger::instance().debug(
 		"mload bytes memory read: extract3(" + paramName + ", offset, 32)", _loc
 	);
 
-	// Build param reference
-	auto paramVar = awst::makeVarExpression(paramName, paramType, _loc);
-
-	// Translate the dynamic offset and convert biguint → uint64
 	auto offsetExpr = buildExpression(*offsetExprYul);
-
-	auto offsetBytes = awst::makeAsBytes(offsetExpr, _loc);
-
-	auto offsetU64 = awst::makeBtoi(std::move(offsetBytes), _loc);
-
-	// Length: 32 bytes
-	auto lenArg = awst::makeIntegerConstant("32", _loc);
-
-	// extract3(param, offset, 32)
-	auto extract = awst::makeExtract3(std::move(paramVar), std::move(offsetU64), std::move(lenArg), _loc);
-	// Cast bytes → biguint (mload returns uint256)
-	auto result = awst::makeAsBiguint(std::move(extract), _loc);
-
-	return result;
+	auto offsetU64 = awst::makeBtoi(awst::makeAsBytes(offsetExpr, _loc), _loc);
+	auto extract = awst::makeExtract3(
+		awst::makeVarExpression(paramName, paramType, _loc),
+		std::move(offsetU64), awst::makeIntegerConstant("32", _loc), _loc);
+	return awst::makeAsBiguint(std::move(extract), _loc);
 }
 
 bool AssemblyBuilder::tryHandleBytesMemoryWrite(
@@ -395,15 +357,9 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Match: mstore(add(bytes_var, 32), value)
-	// or:    mstore(add(32, bytes_var), value)
-	//
-	// In EVM: bytes memory x has layout [length(32)][data...] at address x.
-	// add(x, 32) points to the data region. mstore writes 32 bytes there.
-	// The variable's length is unchanged, so on return only len(x) bytes matter.
-	//
-	// In AVM: x is raw bytes (no length header). We overwrite x's content
-	// with the first len(x) bytes of the 32-byte value.
+	// Match: mstore(add(bytes_var, 32), value) or add(32, bytes_var).
+	// EVM: add(x,32) skips the length header, mstore writes 32 bytes; len(x) unchanged.
+	// AVM: x is raw bytes; overwrite first len(x) bytes of the 32-byte value.
 
 	if (_call.arguments.size() != 2)
 		return false;
@@ -441,63 +397,32 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	if (varType != awst::WType::bytesType() && varType != awst::WType::stringType())
 		return false;
 
-	// Pattern matched! Translate the value expression.
 	auto valueExpr = buildExpression(_call.arguments[1]);
 
 	Logger::instance().debug(
 		"mstore bytes memory write: replacing content of '" + varName + "'", _loc
 	);
 
-	// Build: x = extract3(pad32(value), 0, len(x))
-	// This overwrites x with the first len(x) bytes of the 32-byte value.
-
-	// Reference to the variable
-	auto varRef = awst::makeVarExpression(varName, varType, _loc);
-
-	// len(x)
-	auto lenCall = awst::makeLen(varRef, _loc);
-
-	// pad32(value) — get the 32 bytes representation
+	// x = extract3(pad32(value), 0, len(x))
+	auto lenCall = awst::makeLen(awst::makeVarExpression(varName, varType, _loc), _loc);
 	auto padded = padTo32Bytes(ensureBiguint(valueExpr, _loc), _loc);
-
-	// extract3(padded, 0, len(x))
-	auto zero = awst::makeZero(_loc);
-
-	auto extract = awst::makeExtract3(std::move(padded), std::move(zero), std::move(lenCall), _loc);
-	// Cast if needed for string type
+	auto extract = awst::makeExtract3(std::move(padded), awst::makeZero(_loc), std::move(lenCall), _loc);
 	std::shared_ptr<awst::Expression> newValue = std::move(extract);
 	if (varType == awst::WType::stringType())
-	{
-		auto cast = awst::makeReinterpretCast(std::move(newValue), awst::WType::stringType(), _loc);
-		newValue = std::move(cast);
-	}
+		newValue = awst::makeReinterpretCast(std::move(newValue), awst::WType::stringType(), _loc);
 
-	// x = newValue
-	auto target = awst::makeVarExpression(varName, varType, _loc);
-
-	auto assign = awst::makeAssignmentStatement(std::move(target), std::move(newValue), _loc);
-	_out.push_back(std::move(assign));
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(varName, varType, _loc), std::move(newValue), _loc));
 
 	return true;
 }
 
 // ── tryHandleBytesMemoryMcopy ──────────────────────────────────────────────
-//
-// Matches: mcopy(add(add(bytes_var, 0x20), dstOff),
-//                add(add(bytes_var, 0x20), srcOff),
-//                len)
-//
-// In EVM, `bytes memory x` has layout [uint256_len][data...] at pointer x.
-// `add(x, 0x20)` skips the 32-byte length header to reach the data region.
-// `add(add(x, 0x20), offset)` points to data[offset].
-//
-// In AVM, `x` is stored as raw bytes with NO length header, so `data[offset]`
-// is at position `offset` directly. The translation is:
-//   extract3(src_var, srcOff, len)  →  the source bytes
-//   replace3(dst_var, dstOff, ...)  →  write into dst at dstOff
-//
-// Supports both same-variable (intra-buffer overlap copy) and
-// cross-variable (inter-buffer) copies.
+// Matches: mcopy(add(add(bytes_var, 0x20), dstOff), add(add(src_var, 0x20), srcOff), len)
+// EVM: add(x,0x20) skips the 32-byte length header; data[off] = add(x,0x20)+off.
+// AVM: x is raw bytes (no header), so data[off] = off directly.
+// Translation: dst_var = replace3(dst_var, dstOff, extract3(src_var, srcOff, len)).
+// Handles same- and cross-variable copies.
 
 bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 	solidity::yul::FunctionCall const& _call,
@@ -508,8 +433,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 	if (_call.arguments.size() != 3)
 		return false;
 
-	// Match add(add(bytes_var, 0x20), dynOffset) in raw Yul.
-	// Returns {varName, dynOffsetExpr*} or {"", nullptr} if no match.
+	// Match add(add(bytes_var, 0x20), dynOffset): returns {varName, dynOffset*} or {"",nullptr}.
 	auto matchPtr = [&](solidity::yul::Expression const& _expr)
 		-> std::pair<std::string, solidity::yul::Expression const*>
 	{
@@ -593,17 +517,15 @@ void AssemblyBuilder::handleMstore(
 	if (!checkArity(_args, 2, "mstore", _loc))
 		return;
 
-	// Track last mstore value for dynamic-length keccak256 patterns
 	m_lastMstoreValue = _args[1];
 
-	// Track constant values stored to memory (especially free memory pointer)
+	// Track constant store values (e.g. FMP init at 0x40) for resolveConstantOffset.
 	auto constOffset = resolveConstantOffset(_args[0]);
 	if (constOffset)
 	{
 		auto storedVal = resolveConstantOffset(_args[1]);
 		if (storedVal)
 		{
-			// Track by offset for resolveConstantOffset to find later
 			std::string varName = "mem_0x" + ([&] {
 				std::ostringstream oss;
 				oss << std::hex << *constOffset;
@@ -613,19 +535,13 @@ void AssemblyBuilder::handleMstore(
 		}
 	}
 
-	// Write 32 bytes into EVM memory at the given offset.
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
-	// Constant offset → route to the scratch slot holding it (every slot,
-	// including 0, is load-modify-stored directly in scratch — no local cache).
 	if (constOffset)
 	{
 		writeMemWordConst(*constOffset, std::move(padded), _loc, _out);
 		return;
 	}
-
-	// Dynamic offset → route to the correct slot at runtime (offsets < SLOT_SIZE
-	// hit slot 0; all slots written directly to scratch).
 	writeMemWordDyn(_args[0], std::move(padded), _loc, _out);
 }
 
@@ -638,18 +554,14 @@ void AssemblyBuilder::handleMstore8(
 	if (!checkArity(_args, 2, "mstore8", _loc))
 		return;
 
-	// mstore8(ptr, value): write the low 8 bits of value as a single byte
-	// at memory[ptr]. Pad the value to 32 bytes and extract byte[31] (the
-	// low byte), then replace3 one byte at the target offset in the blob.
+	// Write the low 8 bits of value as one byte at memory[ptr].
+	// pad32(value)[31] = the low byte; replace3 one byte at the offset.
 	auto offsetU64 = offsetToUint64(_args[0], _loc);
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
-
-	auto start = awst::makeIntegerConstant("31", _loc);
-	auto len = awst::makeOne(_loc);
-
-	auto lowByte = awst::makeExtract3(std::move(padded), std::move(start), std::move(len), _loc);
-	auto replace = awst::makeReplace3(memoryVar(_loc), std::move(offsetU64), std::move(lowByte), _loc);
-	assignMemoryVar(std::move(replace), _loc, _out);
+	auto lowByte = awst::makeExtract3(
+		std::move(padded), awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);
+	assignMemoryVar(
+		awst::makeReplace3(memoryVar(_loc), std::move(offsetU64), std::move(lowByte), _loc), _loc, _out);
 }
 
 void AssemblyBuilder::handleReturn(
@@ -661,11 +573,8 @@ void AssemblyBuilder::handleReturn(
 	if (!checkArity(_args, 2, "return", _loc))
 		return;
 
-	// return(offset, size): Return the value stored at memory[offset]
-
-	// Void Solidity function with assembly return(offset, size) — EVM pattern
-	// that bypasses ABI encoding. On AVM, emit the data as a structured log
-	// so callers can read it from transaction logs.
+	// return(offset, size): EVM pattern bypassing ABI encoding.
+	// Void function: emit data as structured log so callers read it from logs.
 	if (!m_returnType || m_returnType == awst::WType::voidType())
 	{
 		auto returnOffset = resolveConstantOffset(_args[0]);
@@ -673,18 +582,12 @@ void AssemblyBuilder::handleReturn(
 
 		if (!returnOffset || !returnSize || *returnSize == 0)
 		{
-			// `assembly { return(_, 0) }` halts the entire program with
-			// success. Emit the raw AVM `return 1` intrinsic so puya lowers
-			// it to an unconditional program-exit (not just a subroutine
-			// return). Needed for Yul helpers that use the EVM `return`
-			// opcode as a hard exit from inside a nested call.
+			// return(_, 0) → unconditional program-exit via AVM `return 1`.
+			// Needed for Yul helpers using EVM `return` as a hard exit inside a nested call.
 			flushMemoryToScratch(_loc, _out);
-
 			auto returnOp = awst::makeIntrinsicCall("return", awst::WType::voidType(), _loc);
 			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
-
-			auto exitStmt = awst::makeExpressionStatement(std::move(returnOp), _loc);
-			_out.push_back(std::move(exitStmt));
+			_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
 			m_haltEmitted = true;
 			return;
 		}

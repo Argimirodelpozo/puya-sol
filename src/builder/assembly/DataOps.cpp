@@ -20,10 +20,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)
 	{
-		// Dynamic offset: read from the synthetic calldata blob if we
-		// detected dynamic calldata access in this assembly block at
-		// pre-translation. The blob mirrors EVM-ABI calldata layout
-		// (selector + head + tail) for the function's params.
+		// Dynamic offset: read from __cd_blob (EVM-ABI layout) when present.
 		if (m_useSyntheticCalldata)
 		{
 			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc);
@@ -47,16 +44,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			? m_locals[elem.paramName]
 			: awst::WType::biguintType(), _loc);
 
-		// For bytes/string parameters, calldataload reads 32 bytes at a relative offset.
-		// Extract 32 bytes from the parameter and convert to biguint.
+		// bytes/string: calldataload reads 32 bytes at a relative offset.
 		if (elem.paramType
 			&& (elem.paramType == awst::WType::bytesType()
 				|| elem.paramType == awst::WType::stringType()))
 		{
-			// Use .find() (not operator[]) — a calldata param name is never a Yul
-			// `let` constant, so operator[] would insert+return a spurious 0 entry,
-			// mutating the map during a read. Absent ⇒ base offset 0 (relative ==
-			// absolute), preserving the prior operator[] behaviour.
+			// Use find() not operator[]: operator[] would insert a spurious 0 entry.
 			auto lcIt = m_localConstants.find(elem.paramName);
 			uint64_t paramBase = lcIt != m_localConstants.end() ? lcIt->second : 0;
 			uint64_t relativeOffset = *offset - paramBase;
@@ -73,8 +66,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 		return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
 	}
 
-	// HARD ERROR — stubbing 0 silently zeros a real input word (amount /
-	// recipient / selector). Refuse to compile rather than substitute 0.
+	// Stubbing 0 would silently zero a real input word; hard-error instead.
 	Logger::instance().error(
 		"calldataload at unresolvable offset " + std::to_string(*offset) +
 		" is not supported on AVM — the calldata word can't be located, so it "
@@ -106,13 +98,11 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 		}
 	}
 
-	// Check identifiers against local constants and external constants
 	if (auto const* id = std::get_if<solidity::yul::Identifier>(&_expr))
 	{
 		std::string name = id->name.str();
 
-		// Handle .offset / .length suffix on calldata parameter references
-		// e.g., _pubSignals.offset → calldata byte offset of _pubSignals
+		// Handle .offset/.length suffix: _pubSignals.offset → calldata byte offset.
 		auto dotPos = name.rfind('.');
 		if (dotPos != std::string::npos)
 		{
@@ -126,9 +116,7 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 			}
 			else if (suffix == "length")
 			{
-				// .length for calldata arrays: element count * 32
-				// For bytes/string: not known at compile time
-				// Return nullopt for now (handled dynamically if needed)
+				// .length for bytes/string not known at compile time; fall through.
 			}
 		}
 
@@ -150,7 +138,6 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 		}
 	}
 
-	// Handle function calls: add, sub, mul, mload
 	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
 	{
 		std::string name = getFunctionName(call->functionName);
@@ -169,7 +156,6 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 			}
 		}
 
-		// mload(offset) → look up the constant value stored at that memory offset
 		if (name == "mload" && call->arguments.size() == 1)
 		{
 			auto offset = resolveConstantYulValue(call->arguments[0]);
@@ -198,11 +184,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	auto length = resolveConstantOffset(_args[1]);
 
-	// Check for struct (WTuple) parameter FIRST, before constant offset resolution.
-	// initializeCalldataMap stores calldata offsets in m_localConstants, which makes
-	// struct parameters resolve to false-positive "constant" memory offsets.
-	// If the offset expression is a VarExpression with WTuple type, always use the
-	// struct hash path regardless of whether the offset resolves to a constant.
+	// Check for WTuple FIRST: initializeCalldataMap stores calldata offsets in
+	// m_localConstants, causing struct params to resolve as false-positive constants.
 	auto const* varExprForTuple = dynamic_cast<awst::VarExpression const*>(_args[0].get());
 	if (varExprForTuple && length)
 	{
@@ -241,8 +224,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (!offset && length)
 	{
-		// Offset is a variable — check if it references a struct (WTuple) parameter.
-		// Pattern: keccak256(structVar, numFields*32) hashes struct fields concatenated.
+		// Variable offset: check for keccak256(structVar, numFields*32) pattern.
 		auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get());
 		if (varExpr)
 		{
@@ -256,21 +238,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 					int expectedLen = numFields * 32;
 					if (static_cast<int>(*length) == expectedLen)
 					{
-						// Concatenate all struct fields, each padded to 32 bytes
 						std::shared_ptr<awst::Expression> data;
 						for (int i = 0; i < numFields; ++i)
 						{
 							auto field = awst::makeTupleItem(_args[0], i, tupleType->types()[static_cast<size_t>(i)], _loc);
-
 							auto padded = padTo32Bytes(std::move(field), _loc);
-
-							if (!data)
-								data = std::move(padded);
-							else
-								data = awst::makeConcat(std::move(data), std::move(padded), _loc);
+							data = !data ? std::move(padded) : awst::makeConcat(std::move(data), std::move(padded), _loc);
 						}
-
-						// keccak256 the concatenated bytes
 						auto keccak = awst::makeKeccak256(std::move(data), _loc);
 						return awst::makeAsBiguint(std::move(keccak), _loc);
 					}
@@ -278,17 +252,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			}
 		}
 
-		// With blob model, read directly from the memory blob for dynamic offsets
 		if (length)
 		{
-			// extract3(__evm_memory, offset, length) → keccak256
 			auto offsetU64 = offsetToUint64(_args[0], _loc);
-
-			auto lenConst = awst::makeIntegerConstant(*length, _loc);
-
-			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(lenConst), _loc);
-			auto keccak = awst::makeKeccak256(std::move(data), _loc);
-			return awst::makeAsBiguint(std::move(keccak), _loc);
+			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64),
+				awst::makeIntegerConstant(*length, _loc), _loc);
+			return awst::makeAsBiguint(awst::makeKeccak256(std::move(data), _loc), _loc);
 		}
 
 		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
@@ -297,15 +266,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (offset && !length)
 	{
-		// Offset is constant but length is dynamic.
-		// Pattern: keccak256(begin, add(paramLength, 0x20)) from deriveMapping(string/bytes).
-		// This hashes: param_bytes + last_mstored_32bytes (slot value).
-		// Check if offset = calldataParam + 0x20 (pointing to string data area).
+		// Constant offset, dynamic length.
+		// Pattern: keccak256(begin, add(paramLen, 0x20)) from deriveMapping(string/bytes).
+		// Hashes param_bytes ++ padTo32(last mstored value).
 		for (auto const& [cdOffset, elem] : m_calldataMap)
 		{
 			if (*offset == cdOffset + 0x20 && m_lastMstoreValue)
 			{
-				// Build: keccak256(concat(param_bytes, padTo32(lastMstoreValue)))
 				auto paramType = m_locals.find(elem.paramName);
 				auto const* paramWtype = (paramType != m_locals.end() && paramType->second)
 					? paramType->second : awst::WType::bytesType();
@@ -331,11 +298,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (!offset || !length)
 	{
-		// Either offset, length, or both are runtime values. AVM's keccak256
-		// opcode accepts any-length bytes, so we just read the slice from the
-		// EVM memory blob via runtime extract3 and hash it. Solady's EIP-712
-		// typed-data hashing (PermissionedRamp.witnessed{Wrap,Unwrap}) builds
-		// the hash buffer dynamically and hits this path.
+		// Runtime offset or length: read slice via extract3 then hash.
+		// Solady EIP-712 (PermissionedRamp.witnessed*) hits this path.
 		auto offsetU64 = offset
 			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*offset, _loc))
 			: offsetToUint64(_args[0], _loc);
@@ -351,16 +315,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	int numSlots = static_cast<int>(*length / 0x20);
 	if (*length == 0)
 	{
-		// keccak256("") = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
-		// Hash empty bytes
 		auto emptyBytes = awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown);
 		auto keccak = awst::makeKeccak256(std::move(emptyBytes), _loc);
 		return awst::makeAsBiguint(std::move(keccak), _loc);
 	}
 	if (numSlots <= 0)
 	{
-		// Non-zero length but less than 32 bytes — partial slot
-		// Read from the memory blob and truncate to exact length
+		// Non-zero but <32 bytes — partial slot; read exact length from blob.
 		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
 		{
 			auto offsetConst = awst::makeIntegerConstant(*offset, _loc);
@@ -398,24 +359,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				return awst::makeAsBiguint(std::move(keccak), _loc);
 			}
 		}
-		// HARD ERROR — hashing 32 zero bytes yields a deterministic but WRONG
-		// digest that poisons commitments / EIP-712 / Merkle leaves / mapping
-		// keys. Refuse to compile rather than emit a wrong hash.
+		// Hashing 32 zero bytes gives a deterministic but wrong digest.
 		Logger::instance().error(
 			"keccak256 over a sub-32-byte length at an unresolvable memory offset "
 			"is not supported on AVM — the actual bytes can't be recovered, so the "
 			"hash would be computed over 32 zero bytes instead, a deterministic but "
 			"wrong digest.", _loc);
-		// Stub so AWST building completes; the error above aborts before bytecode.
-		auto keccak = awst::makeKeccak256(awst::makeBzero(32, _loc), _loc);
-		return awst::makeAsBiguint(std::move(keccak), _loc);
+		// Stub so AWST building completes; error aborts before bytecode.
+		return awst::makeAsBiguint(awst::makeKeccak256(awst::makeBzero(32, _loc), _loc), _loc);
 	}
 
-	// Check if the offset range falls within m_calldataMap (function parameters).
-	// When keccak256 hashes a struct parameter (e.g., PoolKey), the Yul optimizer
-	// may eliminate the abi_encode buffer copy, making the keccak256 offset point
-	// directly to the calldata offset. We detect this and extract struct fields
-	// from the ARC4-encoded parameter, padding each to 32 bytes for EVM ABI compat.
+	// If offset falls in m_calldataMap (e.g. Yul optimizer elided abi_encode buffer copy
+	// for a struct param like PoolKey), extract fields and pad each to 32 bytes.
 	auto firstSlotIt = m_calldataMap.find(*offset);
 	if (firstSlotIt != m_calldataMap.end())
 	{
@@ -423,62 +378,34 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(elem.paramType);
 		if (structType && numSlots == static_cast<int>(structType->fields().size()))
 		{
-			// ARC4Struct parameter: extract each field from raw bytes, pad to 32 bytes
 			auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
-				? m_locals[elem.paramName]
-				: elem.paramType, _loc);
-
-			// Cast struct to raw bytes for field extraction
+				? m_locals[elem.paramName] : elem.paramType, _loc);
 			auto structBytes = awst::makeAsBytes(base, _loc);
-
 			std::shared_ptr<awst::Expression> data;
 			int fieldByteOffset = 0;
 			for (auto const& [fieldName, fieldType]: structType->fields())
 			{
 				int fieldSize = computeARC4ByteSize(fieldType);
-
-				// extract3(structBytes, fieldByteOffset, fieldSize)
-				auto offExpr = awst::makeIntegerConstant(fieldByteOffset, _loc);
-
-				auto lenExpr = awst::makeIntegerConstant(fieldSize, _loc);
-
-				auto extract = awst::makeExtract3(structBytes, std::move(offExpr), std::move(lenExpr), _loc);
-				// Cast to biguint, then pad to 32 bytes
-				auto asBiguint = awst::makeAsBiguint(std::move(extract), _loc);
-
-				auto padded = padTo32Bytes(std::move(asBiguint), _loc);
-
-				if (!data)
-					data = std::move(padded);
-				else
-					data = awst::makeConcat(std::move(data), std::move(padded), _loc);
+				auto extract = awst::makeExtract3(structBytes,
+					awst::makeIntegerConstant(fieldByteOffset, _loc),
+					awst::makeIntegerConstant(fieldSize, _loc), _loc);
+				auto padded = padTo32Bytes(awst::makeAsBiguint(std::move(extract), _loc), _loc);
+				data = !data ? std::move(padded) : awst::makeConcat(std::move(data), std::move(padded), _loc);
 				fieldByteOffset += fieldSize;
 			}
-
-			auto keccak = awst::makeKeccak256(std::move(data), _loc);
-			return awst::makeAsBiguint(std::move(keccak), _loc);
+			return awst::makeAsBiguint(awst::makeKeccak256(std::move(data), _loc), _loc);
 		}
 	}
 
-	// Concatenate all memory slots using extracted helper
-	auto data = concatSlots(*offset, 0, numSlots, _loc);
-
-	// Apply keccak256
-	auto keccak = awst::makeKeccak256(std::move(data), _loc);
-
-	// Convert bytes result to biguint (for Yul's uint256 type)
-	return awst::makeAsBiguint(std::move(keccak), _loc);
+	return awst::makeAsBiguint(
+		awst::makeKeccak256(concatSlots(*offset, 0, numSlots, _loc), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
 	awst::SourceLocation const& _loc
 )
 {
-	// EVM returndatasize(): the size of the most recent call's return-data
-	// buffer. On AVM that buffer is the last inner transaction's last log
-	// (`itxn LastLog`); its byte length is the return-data size. Returned as
-	// uint64 (the natural type for a length; consumers coerce via
-	// ensureBiguint only when they need a biguint).
+	// itxn LastLog length; returned as uint64 (consumer coerces when needed).
 	return awst::makeLen(awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc);
 }
 
@@ -490,21 +417,16 @@ void AssemblyBuilder::emitReturndatacopy(
 {
 	if (!checkArity(_args, 3, "returndatacopy", _loc, "destOffset, offset, size"))
 		return;
-	// EVM returndatacopy(destOffset, offset, size): copy `size` bytes from the
-	// return-data buffer — on AVM the last inner transaction's last log
-	// (`itxn LastLog`) — starting at `offset`, into memory at `destOffset`.
-	// `extract3` reverts when offset+size exceeds the log length, which matches
-	// EVM's out-of-range revert for returndatacopy.
+	// Copy size bytes of itxn LastLog[offset..] into memory at destOffset.
+	// extract3 reverts on OOB, matching EVM returndatacopy semantics.
 	auto destOff = offsetToUint64(_args[0], _loc);
 	auto srcOff = offsetToUint64(_args[1], _loc);
 	auto size = offsetToUint64(_args[2], _loc);
 
 	auto log = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 	auto slice = awst::makeExtract3(std::move(log), std::move(srcOff), std::move(size), _loc);
-
-	// writeMemWordDyn is length-driven (its replace3 writes len(slice) bytes,
-	// not a fixed 32), so it copies the whole slice into the blob with the
-	// slot-0/slot-1+ conditional and the memory-bounds assert.
+	// writeMemWordDyn is length-driven (replace3 writes len(slice) bytes), so it
+	// handles the slot-0/slot-1+ conditional and bounds assert for the full slice.
 	writeMemWordDyn(std::move(destOff), std::move(slice), _loc, _out);
 }
 
@@ -514,13 +436,9 @@ void AssemblyBuilder::handleRevert(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// revert(offset, length) — on AVM, assert(false, "revert")
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(_loc), _loc, "revert"), _loc);
-	_out.push_back(std::move(stmt));
-	// Mark this Yul block as halt-terminated so the assembly-block
-	// epilog skips its `__evm_memory` writeback. assert(false) is a
-	// hard halt; any trailing store would be unreachable code, which
-	// puya's IR validator rejects (see AccessManager / LowLevelCall.bubbleRevert).
+	_out.push_back(awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(_loc), _loc, "revert"), _loc));
+	// Mark halted: assert(false) is unconditional; trailing blob writeback
+	// would be unreachable — puya's IR validator rejects it.
 	m_haltEmitted = true;
 }
 

@@ -29,21 +29,16 @@ void AssemblyBuilder::handlePrecompileCall(
 		return;
 	}
 
-	// Normalize argument positions: call has extra `value` at position 2
-	int argBase = _isCall ? 3 : 2;
+	int argBase = _isCall ? 3 : 2; // call has extra `value` at position 2
 
-	// Try to resolve the precompile address (arg index 1)
 	auto precompileAddr = resolveConstantYulValue(_call.arguments[1]);
 	if (!precompileAddr)
 	{
-		// Non-constant address ⇒ user-defined contract call. Lower to an
-		// inner app call against the address-encoded app id. (Solady's
-		// SafeTransferLib.safeTransferFrom and similar take this path.)
+		// Non-constant address → user-defined contract call (e.g. Solady SafeTransferLib).
 		handleAppCall(_call, _assignTarget, _loc, _out, _isCall);
 		return;
 	}
 
-	// Resolve input/output memory offsets and sizes
 	auto inputOffset = resolveConstantYulValue(_call.arguments[argBase]);
 	auto inputSize = resolveConstantYulValue(_call.arguments[argBase + 1]);
 	auto outputOffset = resolveConstantYulValue(_call.arguments[argBase + 2]);
@@ -51,10 +46,7 @@ void AssemblyBuilder::handlePrecompileCall(
 
 	if (!inputOffset || !inputSize || !outputOffset || !outputSize)
 	{
-		// Dynamic offsets/sizes: route to the runtime-offset handlers
-		// for the precompiles that have them implemented (ecAdd / ecMul /
-		// ecPairing / SHA-256 / Identity). Other precompiles still fall
-		// back to the legacy stub.
+		// Dynamic offsets: route to RT handlers (ecAdd/ecMul/ecPairing/SHA-256/Identity).
 		bool rtDispatched = false;
 		bool rtSuccess = true;
 		auto inOffExpr  = buildExpression(_call.arguments[argBase]);
@@ -98,9 +90,8 @@ void AssemblyBuilder::handlePrecompileCall(
 		}
 		if (!rtDispatched)
 		{
-			// HARD ERROR — stubbing success here lets the caller read
-			// uninitialized output memory as if the precompile (ecRecover,
-			// modexp, …) had run, silently passing crypto/fund-guard checks.
+			// HARD ERROR: no RT handler → output buffer is uninitialized; stubbing
+			// success would let crypto/fund-guard checks pass on garbage output.
 			Logger::instance().error(
 				"precompile call with non-constant memory offsets/sizes is not "
 				"supported on AVM — there is no runtime-offset handler for this "
@@ -109,7 +100,6 @@ void AssemblyBuilder::handlePrecompileCall(
 				"the precompile had run.", _loc
 			);
 		}
-		// Set success variable.
 		if (!_assignTarget.empty())
 		{
 			auto localIt = m_locals.find(_assignTarget);
@@ -126,10 +116,8 @@ void AssemblyBuilder::handlePrecompileCall(
 
 	bool success = true;
 
-	// Constant offsets/sizes route through the same RT handlers as the
-	// dynamic-offset path — puya constant-folds the wrapped IntegerConstant
-	// nodes back to a literal at the backend, so generated TEAL for the
-	// common static-arg case is unchanged.
+	// Wrap constants as IntegerConstant expressions so constant/dynamic paths
+	// share the same RT handlers; puya constant-folds them at the backend.
 	auto wrap = [&](uint64_t v) {
 		return awst::makeIntegerConstant(v, _loc);
 	};
@@ -206,30 +194,17 @@ void AssemblyBuilder::handlePrecompileCall(
 		break;
 	}
 
-	// Set the success variable — use the variable's declared type (bool for Solidity bool)
 	if (!_assignTarget.empty())
 	{
 		auto localIt = m_locals.find(_assignTarget);
 		auto* varType = (localIt != m_locals.end()) ? localIt->second : awst::WType::biguintType();
-		// Only set m_locals if not already tracked (preserve Solidity-declared type)
 		if (localIt == m_locals.end())
 			m_locals[_assignTarget] = varType;
-
-		auto target = awst::makeVarExpression(_assignTarget, varType, _loc);
-
-		std::shared_ptr<awst::Expression> val;
-		if (varType == awst::WType::boolType())
-		{
-			val = awst::makeBoolConstant(success, _loc);
-		}
-		else
-		{
-			auto intVal = awst::makeIntegerConstant(success ? "1" : "0", _loc, awst::WType::biguintType());
-			val = std::move(intVal);
-		}
-
-		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(val), _loc);
-		_out.push_back(std::move(assign));
+		std::shared_ptr<awst::Expression> val = (varType == awst::WType::boolType())
+			? std::shared_ptr<awst::Expression>(awst::makeBoolConstant(success, _loc))
+			: awst::makeIntegerConstant(success ? "1" : "0", _loc, awst::WType::biguintType());
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(_assignTarget, varType, _loc), std::move(val), _loc));
 	}
 }
 
@@ -246,19 +221,14 @@ void AssemblyBuilder::handleAppCall(
 	bool _isCall
 )
 {
-	// Argument layout (same shape as handlePrecompileCall):
-	//   call(gas, addr, value, inOff, inSize, outOff, outSize)        (7 args)
-	//   staticcall(gas, addr, inOff, inSize, outOff, outSize)         (6 args)
 	int argBase = _isCall ? 3 : 2;
 
 	Logger::instance().debug(
 		std::string(_isCall ? "call" : "staticcall") +
 		" to runtime address — lowering to inner app call", _loc);
 
-	// 1) Address argument → ApplicationID.
-	//    puya-sol encodes addresses as (\x00*24 ++ itob(app_id)). Numerically,
-	//    interpreting that as a uint256 yields exactly app_id (high bytes are
-	//    zero), so casting to uint64 recovers the application id.
+	// 1) Address → ApplicationID: puya-sol encodes as (\x00*24 ++ itob(app_id));
+	//    casting to uint64 recovers app_id (high bytes are zero).
 	auto addrAwst = buildExpression(_call.arguments[1]);
 
 	std::shared_ptr<awst::Expression> appIdExpr;
@@ -278,14 +248,12 @@ void AssemblyBuilder::handleAppCall(
 	}
 	else
 	{
-		// Treat as a numeric value already representing the app id (low 64 bits).
+		// Numeric value: low 64 bits = app_id.
 		auto asU64 = awst::makeReinterpretCast(std::move(addrAwst), awst::WType::uint64Type(), _loc);
 		appIdExpr = awst::makeReinterpretCast(std::move(asU64), awst::WType::applicationType(), _loc);
 	}
 
-	// 2) Split calldata into selector (first 4 bytes) and body (the rest),
-	//    matching Algorand's ApplicationArgs convention where args[0] is the
-	//    method selector. EVM-ABI calldata layout = selector(4) ++ args.
+	// 2) Split calldata: args[0]=selector(4B), args[1]=rest (EVM-ABI layout).
 	auto inOffAwst = buildExpression(_call.arguments[argBase]);
 	if (inOffAwst->wtype != awst::WType::uint64Type())
 		inOffAwst = awst::makeReinterpretCast(std::move(inOffAwst), awst::WType::uint64Type(), _loc);
@@ -313,7 +281,7 @@ void AssemblyBuilder::handleAppCall(
 	body->stackArgs.push_back(std::move(bodyOff));
 	body->stackArgs.push_back(std::move(bodyLen));
 
-	// 3) Build CreateInnerTransaction (TypeEnum=Appl=6, OnCompletion=NoOp=0).
+	// 3) Build inner app-call transaction.
 	static constexpr int TxnTypeAppl = 6;
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
 
@@ -341,43 +309,34 @@ void AssemblyBuilder::handleAppCall(
 
 	_out.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 
-	// 4) Optional: copy itxn LastLog back into memory[outOff..outOff+outSize).
+	// 4) Copy itxn LastLog into memory[outOff..outOff+outSize) if size > 0.
 	auto outOffOpt = resolveConstantYulValue(_call.arguments[argBase + 2]);
 	auto outSizeOpt = resolveConstantYulValue(_call.arguments[argBase + 3]);
 	if (outOffOpt && outSizeOpt && *outSizeOpt > 0)
 	{
 		auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 		readLog->immediates = {std::string("LastLog")};
-
-		// Slice the requested number of bytes from the front of the log.
 		auto sliced = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		sliced->stackArgs.push_back(std::move(readLog));
 		sliced->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
 		sliced->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(*outSizeOpt), _loc));
-
-		// outputSize is in bytes; storeResultToMemory takes 32-byte slot count,
-		// rounding up to whole slots.
 		int slots = static_cast<int>((*outSizeOpt + 31) / 32);
 		if (slots > 0)
 			storeResultToMemory(std::move(sliced), *outOffOpt, slots, _loc, _out);
 	}
 
-	// 5) Set _assignTarget to success (1). itxn submission aborts on failure,
-	//    so reaching this point implies success.
+	// 5) itxn submission aborts on failure, so reaching here implies success.
 	if (!_assignTarget.empty())
 	{
 		auto localIt = m_locals.find(_assignTarget);
 		auto* varType = (localIt != m_locals.end()) ? localIt->second : awst::WType::biguintType();
 		if (localIt == m_locals.end())
 			m_locals[_assignTarget] = varType;
-
-		auto target = awst::makeVarExpression(_assignTarget, varType, _loc);
-		std::shared_ptr<awst::Expression> val;
-		if (varType == awst::WType::boolType())
-			val = awst::makeBoolConstant(true, _loc);
-		else
-			val = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
-		_out.push_back(awst::makeAssignmentStatement(std::move(target), std::move(val), _loc));
+		std::shared_ptr<awst::Expression> val = (varType == awst::WType::boolType())
+			? std::shared_ptr<awst::Expression>(awst::makeBoolConstant(true, _loc))
+			: awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(_assignTarget, varType, _loc), std::move(val), _loc));
 	}
 }
 
