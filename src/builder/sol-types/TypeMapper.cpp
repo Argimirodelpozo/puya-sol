@@ -162,9 +162,27 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	default:
-		Logger::instance().warning("unsupported type '" + typeStr + "', falling back to bytes");
-		result = awst::WType::bytesType();
+	{
+		// Meta-types carry no runtime value — type(X), modules, abi/block/msg magic,
+		// modifiers, inaccessible-dynamic; real ops route through dedicated paths — and
+		// array slices (`x[a:b]`) are modeled as bytes. Both keep the bytes fallback.
+		// Any OTHER unmapped, value-carrying type reaching here would silently become
+		// bytes and diverge from EVM, so refuse to compile (was a silent warning).
+		auto const cat = _solType->category();
+		if (cat == Type::Category::TypeType || cat == Type::Category::Modifier
+			|| cat == Type::Category::Magic || cat == Type::Category::Module
+			|| cat == Type::Category::InaccessibleDynamic
+			|| cat == Type::Category::ArraySlice)
+			result = awst::WType::bytesType();
+		else
+		{
+			Logger::instance().error(
+				"unsupported type '" + typeStr + "' — no AVM mapping; refusing a "
+				"silent bytes fallback (would diverge from EVM semantics)");
+			result = awst::WType::bytesType(); // keep building until the error aborts
+		}
 		break;
+	}
 	}
 
 	if (result)

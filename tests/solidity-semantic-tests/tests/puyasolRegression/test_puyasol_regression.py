@@ -5,7 +5,10 @@ These pin behaviour for bugs fixed in the puya-sol AVM backend itself that the
 upstream Solidity semantic-test corpus does not exercise. Kept deliberately
 separate from the ported `tests/<cat>/` suites.
 """
+import pytest
+
 from framework import as_int
+from framework.compile import CompileError
 
 
 def test_checked_sub_evaluates_rhs_once(harness):
@@ -84,3 +87,15 @@ def test_asm_storage_routes_to_statevar(harness):
     app = harness.compile_and_deploy("puyasolRegression/contracts/asm_sstore_statevar.sol")
     assert as_int(harness.call(app, "f()").abi_return) == 42
     assert as_int(harness.call(app, "g()").abi_return) == 99
+
+
+def test_unmapped_value_type_hard_errors(harness):
+    """puyasolRegression/contracts/unmapped_type_fixed.sol — NOT an o.g. semantic test.
+
+    A value-carrying unmapped type (fixed-point) must HARD-ERROR, not silently fall
+    back to bytes (which would diverge from EVM). Guards the selective unmapped-type
+    hard-error in TypeMapper's default case. Meta-types (type(X)/module/abi) and array
+    slices still map to bytes — only genuine value types error.
+    """
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("puyasolRegression/contracts/unmapped_type_fixed.sol")
