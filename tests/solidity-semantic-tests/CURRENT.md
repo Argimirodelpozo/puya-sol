@@ -1,3 +1,20 @@
+# Semantic Test Status — v384
+
+> **.slot on a struct-with-mapping storage-ref local (a93107e64c + 63f84f9eca,
+> 2026-06-17):** **59 failed / 1242 passed / 86 xf** — gap CLOSED (60→59 fails).
+> `Items storage ptr = Lib.get()` (library returning a storage ref to a
+> mapping-bearing struct) is modeled as a biguint slot handle; inline asm
+> `ptr.slot` previously fell through the .slot resolver → "cannot coerce non-scalar
+> type Items to biguint". Fix: SolInlineAssembly registers such locals (init = a
+> storage-return + inline-asm fn, mirroring SolInternalCall's storage-ref→biguint
+> rule) in a new `structRefSlotLocals` map threaded through buildBlock; CoreTranslation
+> `.slot` resolver returns the local's biguint handle, keyed by the local's BARE name
+> to match SolVariableDeclaration's binding. Flips vendored
+> libraries::test_library_return_struct_with_mapping green + verified end-to-end
+> (f()→123, new puyasolRegression guard). STILL OPEN: structs::test_recursive_struct_2
+> — same `.slot` shape but on a dynamic-array-element ref (`s.x[0].slot`), needs
+> array-element slot derivation (deeper EVM-storage-layout work). [[struct-storage-ref-model]]
+
 # Semantic Test Status — v383
 
 > **leftover-dedup pass: 2 done, 3 declined (ce267c8c11, 2026-06-17):** zero-reg,
