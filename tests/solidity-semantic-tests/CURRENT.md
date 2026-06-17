@@ -1,3 +1,16 @@
+# Semantic Test Status — v383
+
+> **leftover-dedup pass: 2 done, 3 declined (ce267c8c11, 2026-06-17):** zero-reg,
+> **60 failed / 1240 passed / 86 xf** (identical set). DONE: SolIndexAccess two
+> biguint storage-slot read paths → `readStorageSlotBiguint` (unified the
+> extractLastN(8) vs extract(24,8) truncation — identical for full-width slots);
+> SuperCallResolution `collectAllSuperCalls` ran twice unconditionally → hoisted to
+> one AST pass feeding both id sets. DECLINED after verifying (not forced): itxn
+> `encodeArgForInnerTxn`/`encodeArgToBytes` encode genuinely differently (param-aware
+> widths + uint16 length-prefix vs fixed uint64/left-pad-32); msg.data 16-concat loop
+> + `__sel_to_id` companion non-trivial. Closes the agent-flagged dedup backlog from
+> the cleanup arc. [[feedback-terse-comments]]
+
 # Semantic Test Status — v382
 
 > **cross-file return-walk dedup + 2 regression guards (685c7962e6 + 789811f3e3,
