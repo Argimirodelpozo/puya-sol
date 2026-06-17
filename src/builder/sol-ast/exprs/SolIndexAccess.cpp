@@ -18,6 +18,22 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
+namespace
+{
+// Truncate a biguint storage slot to its low 8 bytes and read it via
+// __puyasol___storage_read. Slots are full-width (sha256-derived), so last-8
+// matches both prior call sites (one used extractLastN, one extract(24,8)).
+std::shared_ptr<awst::Expression> readStorageSlotBiguint(
+	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
+{
+	auto last8 = awst::makeExtractLastN(awst::makeAsBytes(std::move(_slot), _loc), 8, _loc);
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), _loc);
+	awst::pushCallArg(call->args, "__slot", awst::makeBtoi(std::move(last8), _loc));
+	return call;
+}
+} // namespace
+
 SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _node)
 	: SolExpression(_ctx, _node), m_indexAccess(_node)
 {
@@ -96,16 +112,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				if (indexExpr)
 				{
 					auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
-
-					// Truncate biguint slot to uint64 for __storage_read.
-					auto castToBytes = awst::makeAsBytes(std::move(add), m_loc);
-
-					auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, m_loc);
-					auto btoi = awst::makeBtoi(std::move(last8), m_loc);
-
-					auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
-					awst::pushCallArg(call->args, "__slot", std::move(btoi));
-					return call;
+					return readStorageSlotBiguint(std::move(add), m_loc);
 				}
 			}
 		}
@@ -134,17 +141,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					auto add = awst::makeBigUIntBinOp(std::move(baseExpr), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
 
 					if (!m_indexAccess.annotation().willBeWrittenTo) // read: __storage_read(truncated_slot)
-					{
-						auto castToBytes = awst::makeAsBytes(std::move(add), m_loc);
-						// truncate biguint slot to uint64
-						auto last8 = awst::makeExtract(std::move(castToBytes), 24, 8, m_loc);
-
-						auto btoi = awst::makeBtoi(std::move(last8), m_loc);
-
-						auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
-						awst::pushCallArg(call->args, "__slot", std::move(btoi));
-						return call;
-					}
+						return readStorageSlotBiguint(std::move(add), m_loc);
 					// Write: return computed slot for assignment handler
 					return add;
 				}

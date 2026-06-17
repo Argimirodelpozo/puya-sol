@@ -155,11 +155,12 @@ void ContractBuilder::collectSuperCallMetadata(
 
 	// Fallback: super.f() from a different-named function (g → super.f());
 	// MRO chain doesn't cover it — fall back to AST-ID-based resolution.
+	// One AST pass collects both super.f() and explicit Base.f() targets.
+	SuperCallCollector globalCollector;
+	collectAllSuperCalls(globalCollector);
+
 	m_fallbackSuperFuncs.clear();
 	{
-		SuperCallCollector globalCollector;
-		collectAllSuperCalls(globalCollector);
-
 		std::set<int64_t> handledSuperIds;
 		for (auto const& [callerId, overrides]: m_perFuncSuperOverrides)
 			for (auto const& [targetId, name]: overrides)
@@ -191,9 +192,6 @@ void ContractBuilder::collectSuperCallMetadata(
 	// Explicit Base.f() calls: fixed target regardless of MRO.
 	m_explicitBaseTargetFuncs.clear();
 	{
-		SuperCallCollector globalCollector;
-		collectAllSuperCalls(globalCollector);
-
 		for (int64_t id: globalCollector.explicitBaseTargetIds)
 		{
 			for (auto const* base: mro)
