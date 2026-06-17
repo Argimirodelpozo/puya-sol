@@ -1,3 +1,21 @@
+# Semantic Test Status — v386
+
+> **asm sstore/sload(uint256 stateVar.slot) → the var's own storage (4743ec614c,
+> 2026-06-17):** **58 failed / 1244 passed / 87 xf** (+1 guard, zero-reg). First cut
+> of "option (b)": unify the high-level box/global storage model with assembly for the
+> DIRECT `.slot` case. `sstore(v.slot,w)`/`sload(v.slot)` on a full-width uint256
+> app-global state var now read/write v's OWN app-global state (not the disjoint
+> __dyn_storage blob), so asm writes are visible to high-level reads and vice-versa.
+> Mechanism generalizes the V4 box sentinel: SolInlineAssembly carries (varName,wtype)
+> for the `.slot` ref (it has StorageMapper; AssemblyBuilder doesn't); tryHandleStateVarSstore/
+> Sload build the app-global access. GATED to full-width uint256 — sub-word vars pack
+> multiple-per-slot (sstore(packedSlot,word) sets several; reads mask) and structs use
+> ARC4 layout, so route-to-one-var can't replicate raw-slot semantics (proven: it
+> regressed variable_cleanup_sstore + struct_delete_storage_small; the uint256 gate
+> fixes both). Direct refs only (slot copied to a local loses identity → __dyn_storage).
+> General (b) = the EVM-slot-faithful storage model (box-per-slot / slot↔ARC4-field), the
+> deep work. Guard: puyasolRegression/asm_sstore_statevar. [[struct-storage-ref-model]]
+
 # Semantic Test Status — v385
 
 > **recursive structs with dynamic-array self-reference (high-level) NOW COMPILE +
