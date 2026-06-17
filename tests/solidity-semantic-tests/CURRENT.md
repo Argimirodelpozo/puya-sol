@@ -1,3 +1,17 @@
+# Semantic Test Status — v382
+
+> **cross-file return-walk dedup + 2 regression guards (685c7962e6 + 789811f3e3,
+> 2026-06-17):** **60 failed / 1240 passed / 86 xf** (identical fail set; +2 passed
+> from the new guards). Extracted `forEachReturnStatement(stmts, fn)` — the recursive
+> ReturnStatement walk (rewrite each return value, recurse IfElse/Block/WhileLoop) was
+> copy-pasted 5x (ReturnRewriter Passes 1/2/4/5 + PublicGetterBuilder); Pass 3 (mid-walk
+> `stmts.insert`) + Pass 6 (also rewrites AssignmentStatement) genuinely differ, left
+> as-is. PublicGetter's copy gained WhileLoop recursion (no-op for synthetic getters).
+> NEW tests/puyasolRegression/ category — clearly NOT vendored / not o.g. semantic:
+> eval_once_sub guards checked `a - f()` calling f() exactly once; balance_alias guards
+> two `address(c).balance` in one expr not aliasing the __app_balance_addr temp (sum ==
+> aBal+bBal, not 2*bBal). Both fail on the pre-fix code. [[feedback-terse-comments]]
+
 # Semantic Test Status — v381
 
 > **dedup helpers + 2 latent-bug fixes, follow-up to the comment sweep
