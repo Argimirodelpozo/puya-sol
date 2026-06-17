@@ -55,3 +55,19 @@ def test_struct_with_mapping_storage_ref_slot(harness):
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/struct_ref_slot_return.sol")
     assert as_int(harness.call(app, "f()").abi_return) == 123
+
+
+def test_recursive_struct_array(harness):
+    """puyasolRegression/contracts/recursive_struct_array.sol — NOT an o.g. semantic test.
+
+    A struct with a dynamic array of itself (`S[] x` inside S) is recursive; puya's
+    IR rejects inline recursive types. The frontend breaks the cycle by mapping the
+    recursive array field's element to a fixed projection, so the high-level
+    push/index/field read-write round-trips. Constructor sets s.v=21, pushes two
+    elements with v=101/102.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/recursive_struct_array.sol")
+    assert as_int(harness.call(app, "sv()").abi_return) == 21
+    assert as_int(harness.call(app, "len()").abi_return) == 2
+    assert as_int(harness.call(app, "v0()").abi_return) == 101
+    assert as_int(harness.call(app, "v1()").abi_return) == 102
