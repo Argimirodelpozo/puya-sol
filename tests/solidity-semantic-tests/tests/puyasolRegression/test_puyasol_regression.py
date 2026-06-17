@@ -42,3 +42,16 @@ def test_balance_temp_not_aliased(harness):
         f"sum {total} != aBal+bBal {a_bal + b_bal}; "
         f"an aliased temp would give 2*bBal={2 * b_bal}"
     )
+
+
+def test_struct_with_mapping_storage_ref_slot(harness):
+    """puyasolRegression/contracts/struct_ref_slot_return.sol — NOT an o.g. semantic test.
+
+    A library function returning a storage ref to a struct-with-mapping is modeled
+    as a biguint slot handle (puya can't hold the mapping-bearing struct value), so
+    `.slot` on the bound local must read that handle. Pre-fix this coerce-errored
+    ("cannot coerce non-scalar type 'Items' to biguint in assembly arithmetic").
+    get() sets x.slot := 123 and returns it; f() reads ptr.slot → 123.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/struct_ref_slot_return.sol")
+    assert as_int(harness.call(app, "f()").abi_return) == 123
