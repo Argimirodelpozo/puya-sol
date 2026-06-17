@@ -82,9 +82,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 			if (auto const* enumType = dynamic_cast<EnumType const*>(paramSolType))
 			{
 				unsigned numMembers = enumType->numberOfMembers();
-				// The value feeds both the range-assert and the event field —
-				// wrap so a side-effecting enum arg (`emit CE(f())`) evaluates
-				// once (verified: f() ran twice).
+				// EvalOnce: side-effecting enum arg (`emit CE(f())`) must not
+				// evaluate twice — verified f() ran twice without this.
 				translated = awst::makeEvalOnce(std::move(translated), m_loc);
 				auto val = builder::TypeCoercion::implicitNumericCast(translated, awst::WType::uint64Type(), m_loc);
 
@@ -115,12 +114,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 
 	if (fields.empty())
 	{
-		// Zero-argument event: raw log with the 4-byte ARC-28 selector.
-		// MethodConstant (TEAL `method "sig"`) IS the sha512_256 selector —
-		// the same hashing every other event (puya Emit), abi.encodeCall,
-		// and custom-error payload uses. This path previously hand-rolled
-		// keccak256(sig)[0:4], so zero-argument events logged a selector no
-		// ARC-28 subscriber would match.
+		// Zero-argument event: raw log with just the ARC-28 selector.
+		// Use MethodConstant (sha512_256, same as puya Emit / abi.encodeCall /
+		// custom-error payloads) — previously used keccak256, which no ARC-28
+		// subscriber would match.
 		auto selector = awst::makeMethodConstant(
 			eventSignature, awst::WType::bytesType(), m_loc);
 		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), m_loc);

@@ -113,14 +113,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	auto const* ident = dynamic_cast<Identifier const*>(&_baseExpr);
 	std::string arrayVarName = ident->name();
 
-	// Mapping-element arrays — `mapping(K=>V)[] a` and friends — store no
-	// element bytes inline. Each `a[i][k]` is its own box derived from
-	// `a`, `i`, and `sha256(k)` (handled in SolIndexAccess). The array
-	// box itself only tracks length: 2-byte big-endian header, no
-	// element tail. This is also what gives us EVM's "delete leaves
-	// data at hash" semantic for free — `delete a; a.push();` reuses the
-	// same `(i, k)` box keys, and the previously-written values persist
-	// because we never touched those boxes.
+	// `mapping(K=>V)[] a`: no element bytes inline; array box is just a
+	// 2-byte length header. `a[i][k]` boxes are derived from `a`+`i`+sha256(k)
+	// (SolIndexAccess). Gives EVM's "delete leaves data at hash" for free.
 	bool elemIsMapping = dynamic_cast<MappingType const*>(solArrType->baseType()) != nullptr;
 	if (elemIsMapping && (_memberName == "push" || _memberName == "pop"))
 		return handleMappingElementArrayLengthOp(_memberName, _varDecl, arrayVarName);
@@ -143,13 +138,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	}
 	else if (_memberName == "push" && m_call.arguments().empty())
 	{
-		// push() with no args — use ArrayExtend with a zero-valued element.
-		// This lets puya handle the ARC4 length header update correctly,
-		// instead of manual box_resize which doesn't update the header.
-		// When SolAssignment stashed a pending push value (pattern
-		// `arr.push() = value`), use that as the element and return the
-		// ArrayExtend directly so the assignment returns a real void
-		// expression (not a VoidConstant target, which puya rejects).
+		// push() with no args: ArrayExtend with a zero-valued element (puya
+		// handles ARC4 length header; manual box_resize doesn't). When
+		// SolAssignment left a pendingArrayPushValue, use it and return the
+		// extend directly (VoidConstant as assignment target is rejected by puya).
 		std::shared_ptr<awst::Expression> elem;
 		bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
 		if (fromAssign)
@@ -261,10 +253,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	solidity::frontend::VariableDeclaration const& /*_varDecl*/,
 	std::string const& _arrayVarName)
 {
-	// Box layout: 2-byte big-endian length, no element data.
-	// Read current length:  box_get → bytes; if empty (deleted/not-yet-created)
-	//                       len=0; else extract_uint16(0).
-	// Write new length:     itob(new_len) → 8 bytes → extract last 2 → box_put.
+	// Box: 2-byte big-endian length, no element data.
+	// Read: box_get; empty (deleted/never-created) → len=0; else extract_uint16(0).
+	// Write: itob(new_len) → extract last 2 bytes → box_put.
 
 	auto boxKey = awst::makeUtf8BytesConstant(
 		_arrayVarName, m_loc, awst::WType::boxKeyType());
@@ -275,11 +266,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 		return awst::makeStateGet(box, awst::makeBytesConstant({}, m_loc), awst::WType::bytesType(), m_loc);
 	};
 
-	// uint64 currentLen = (box_bytes.length() >= 2) ? extract_uint16(box, 0) : 0
-	// We just call extract_uint16 if length>=2; the only time length<2 is
-	// after a fresh `delete a` or never-written. Since we always write at
-	// least 2 bytes when the box exists, "exists implies len>=2" — guard
-	// with a `len(box) > 0` ternary to avoid extract_uint16 on an empty.
+	// currentLen = box_bytes.length() > 0 ? extract_uint16(box,0) : 0
+	// (exists → len>=2; guard to avoid extract_uint16 on empty bytes)
 	auto bytes = boxRead();
 	auto lenOfBytes = awst::makeLen(bytes, m_loc);
 	auto isNonEmpty = awst::makeNumericCompare(

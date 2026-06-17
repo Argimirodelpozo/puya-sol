@@ -21,10 +21,7 @@ void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 {
 	auto& logger = puyasol::Logger::instance();
 
-	// ─── --force-inline-sub: flip inlineOpt=true on matching nodes ──────
-	// We mutate inlineOpt on Subroutine root nodes AND on each Contract's
-	// methods (ContractMethod) — both have the field; puya treats them
-	// the same way (inline at every call site).
+	// --force-inline-sub: set inlineOpt=true on matching Subroutine / ContractMethod nodes.
 	if (!_opts.forceInlineSubs.empty())
 	{
 		std::set<std::string> wanted(
@@ -65,10 +62,8 @@ void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 				+ " node(s) for inlining");
 	}
 
-	// ─── --force-no-inline-sub: flip inlineOpt=false on matching nodes ──────
-	// Inverse of --force-inline-sub: keep a single-call subroutine/method a real
-	// callsub (NOT inlined) so --fn-split can use the call as a slice boundary
-	// and the body lives in exactly one piece's chunk.
+	// --force-no-inline-sub: set inlineOpt=false so a single-call sub stays a real
+	// callsub — keeps it as a --fn-split boundary and limits its body to one chunk.
 	if (!_opts.forceNoInlineSubs.empty())
 	{
 		std::set<std::string> wanted(
@@ -113,9 +108,7 @@ void applyFnSplits(AwstRoots& _roots, Options const& _opts)
 
 	auto& logger = puyasol::Logger::instance();
 
-	// Pieces are appended to roots as additional Subroutine nodes; the
-	// original subroutine is left in place (callers can still callsub it
-	// normally if they're not going through the orch dance).
+	// Pieces are appended to roots; the original subroutine is left in place.
 	std::vector<puyasol::splitter::FunctionSplitter::PieceSpec> specs;
 	for (auto const& fnSpec : _opts.fnSplits)
 	{
@@ -138,16 +131,10 @@ void applyFnSplits(AwstRoots& _roots, Options const& _opts)
 			std::to_string(fsResult.splitFunctions.size()) +
 			" function(s)");
 
-	// chain_groups.json: small artifact that records which split
-	// targets are cross-chunk chains. Only crossChunk specs make it
-	// in — non-cross pieces are in-program callsubs and don't need
-	// orch-side registration. The deploy harness reads this together
-	// with deploy.uros.json: for each group it finds the chunk_idx
-	// hosting each piece (by name), pulls the piece's ARC4 selector
-	// from that chunk's arc56.json, packs (chunk_app_id, selector)
-	// entries, and calls orch.register_chunk_method_chain at deploy
-	// time so user calls to orch.dispatch_chain(primary_selector,...)
-	// can fan out across the chain.
+	// chain_groups.json: records cross-chunk chains for the deploy harness.
+	// Non-cross pieces are in-program callsubs and don't need registration.
+	// Harness reads this with deploy.uros.json to call
+	// orch.register_chunk_method_chain for each group at deploy time.
 	bool anyCross = false;
 	for (auto const& fnSpec : _opts.fnSplits)
 		if (fnSpec.crossChunk) { anyCross = true; break; }
@@ -198,11 +185,8 @@ splitter::PureHelperExtractor::Result extractPureHelpers(
 			splitSpecs.push_back({s.subroutineName, s.splitPoints});
 		pureHelperResult = ex.extract(_roots, splitSpecs);
 	}
-	// pure_helpers.json: small artifact the deploy harness reads to
-	// (a) enumerate the synthesized helper Contracts, (b) deploy each
-	// as a standalone app, (c) substitute the corresponding TMPL_*
-	// variables into main + chunk TEAL at deploy time. Emitted under
-	// the contract output dir so it sits beside deploy.uros.json.
+	// pure_helpers.json: lists helper Contracts for the deploy harness to
+	// deploy as standalone apps and substitute TMPL_* vars into TEAL.
 	if (pureHelperResult.didExtract)
 	{
 		fs::create_directories(_opts.outputDir);
@@ -210,9 +194,7 @@ splitter::PureHelperExtractor::Result extractPureHelpers(
 		njson arr = njson::array();
 		for (auto const& h : pureHelperResult.extracted)
 		{
-			// Helper Contract's emitted file prefix is its bare name
-			// (last dotted segment); recover from the full id the same
-			// way buildHelperContract does.
+			// Bare name = last dotted segment of the full contract id.
 			auto dot = h.helperContractId.find_last_of('.');
 			std::string bareName = (dot == std::string::npos)
 				? h.helperContractId
@@ -275,7 +257,7 @@ void writeChildDeployTemplates(std::string const& _outputDir)
 	njson tmpl = njson::object();
 	for (auto const& childName : children)
 	{
-		// Read the child's compiled binaries from the output dir
+		// Read child's compiled binaries from the output dir.
 		auto approvalBin = fs::path(_outputDir) / (childName + ".approval.bin");
 		auto clearBin = fs::path(_outputDir) / (childName + ".clear.bin");
 		if (fs::exists(approvalBin))

@@ -1,16 +1,8 @@
 #pragma once
 
 /// @file SelectorRouter.h
-/// Emits the tail of the approval program — either the simple
-/// `return ARC4Router()` pattern (no fallback/receive) or the custom
-/// bare-call + router + fallback dispatch chain when the contract
-/// defines `fallback()` / `receive()`.
-///
-/// The simple pattern triggers puya's `can_exit_early=True`
-/// optimisation (router rejects on selector miss). The custom
-/// dispatch assigns the router result to a var instead, forcing
-/// `can_exit_early=False` so the program can fall through to the
-/// fallback on miss.
+/// Emit the approval-program tail: `return ARC4Router()` (no fallback/receive;
+/// can_exit_early=True) or bare-call + router + fallback chain (can_exit_early=False).
 
 #include "awst/Node.h"
 

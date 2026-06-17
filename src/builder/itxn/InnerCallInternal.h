@@ -1,17 +1,14 @@
 #pragma once
 
 /// @file InnerCallInternal.h
-/// Internal symbols shared between InnerCallHandlers.cpp and
-/// InnerCallShapes.cpp. Header-only / inline-linkage so each TU sees the same
-/// definitions.
+/// Symbols shared between InnerCallHandlers.cpp and InnerCallShapes.cpp.
 
 #include "builder/sol-eb/NodeBuilder.h"
 
 namespace puyasol::builder::eb
 {
 
-/// Generic InstanceBuilder result for inner-call handlers that produce a
-/// pre-built AWST expression (typically a (bool, bytes) tuple).
+/// InstanceBuilder wrapping a pre-built AWST expression (e.g. (bool, bytes) tuple).
 class GenericResultBuilder: public InstanceBuilder
 {
 public:

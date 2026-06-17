@@ -8,17 +8,13 @@
 namespace puyasol::builder
 {
 
-/// Walks a function body to find which of its parameters are written to.
+/// Walks a function body to find which parameters are assigned to.
 ///
-/// A parameter is considered written to if it (or any sub-component
-/// reached via index / member / tuple destructure) appears on the LHS of
-/// an Assignment. Use-def analysis for memory-ref / storage-ref param
-/// augmentation: callees that DON'T mutate a ref param need no caller-
-/// side write-back, which saves a tuple slot per uneeded param.
-///
-/// Two call sites use this — AWSTBuilder.cpp (during contract translation)
-/// and SolInternalCall.cpp (during internal-call lowering). Both need
-/// identical semantics; sharing the implementation here avoids drift.
+/// A param is "mutated" if it (or a sub-component via index/member/tuple)
+/// appears on the LHS of an Assignment. Used in memory-ref/storage-ref
+/// augmentation: callees that don't mutate a ref param skip the caller-side
+/// write-back, saving a tuple slot. Shared by AWSTBuilder.cpp and
+/// SolInternalCall.cpp to keep semantics identical.
 ///
 /// Usage:
 ///     ParamMutationDetector det;

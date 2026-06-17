@@ -14,11 +14,9 @@ using namespace solidity::frontend;
 namespace
 {
 
-/// Return library name if `_memberAccess` resolves to an AVM-stdlib
-/// library (AVM, Crypto, Group, Txn, Global), else "". Uses solc's
-/// `ASTNode::referencedDeclaration` so both `AVM.foo()` (Identifier)
-/// and module-aliased `import "tokens/AVM.sol" as Mod; Mod.AVM.foo()`
-/// (MemberAccess) resolve through one path.
+/// Return library name (AVM/Crypto/Group/Txn/Global/Scratch) if _memberAccess
+/// resolves to an AVM stdlib library, else "". Works for both direct and
+/// module-aliased (`import ... as Mod`) references via referencedDeclaration.
 std::string getAvmStdlibLibraryName(MemberAccess const& _memberAccess)
 {
 	auto const* contractDef = dynamic_cast<ContractDefinition const*>(
@@ -41,10 +39,9 @@ std::shared_ptr<awst::Expression> uint64ToBigUInt(
 	return awst::makeAsBiguint(std::move(itob), _loc);
 }
 
-/// Truncate a biguint (or bytes) to uint64. For biguint we first
-/// pad-prepend to 32 bytes (so length stays well-defined regardless of
-/// the source's minimal encoding) and then keep the trailing 8 bytes
-/// before applying `btoi`. For already-uint64 sources, pass through.
+/// Truncate biguint to uint64; pass through if already uint64.
+/// AVM big-int ops strip leading zeros (minimal encoding), so we left-pad
+/// to 8 bytes before extracting — avoids "extraction start beyond length".
 std::shared_ptr<awst::Expression> bigUIntToUint64(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
@@ -52,13 +49,8 @@ std::shared_ptr<awst::Expression> bigUIntToUint64(
 	if (_expr->wtype == awst::WType::uint64Type())
 		return _expr;
 
-	// biguint → low 8 bytes → btoi. NOTE: the AVM's big-int ops (b+, b%, …) STRIP
-	// leading zeros to a minimal-length result, so a previous `Add(b, 0)` did NOT
-	// normalise to a fixed 32-byte width — `extract3 24 8` then overran for any value
-	// whose minimal encoding was < 32 bytes (essentially every real amount; e.g. an
-	// 8-byte asaBalance result hit "extraction start 24 beyond length 8"). Instead
-	// left-pad by 8 (a bitwise pad, which keeps length unlike big-int add) and take
-	// the low 8 bytes — zero-extends a short value, truncates a long one to uint64.
+	// Left-pad to 8 bytes (bitwise, not b+), take last 8, btoi.
+	// `b+` strips to minimal encoding so extract3(24,8) overran for short values.
 	auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
 	auto low8 = awst::makeExtractLastN(
 		awst::makeLeftPad(std::move(asBytes), 8, _loc), 8, _loc);
@@ -72,8 +64,7 @@ std::shared_ptr<awst::Expression> currentAppAddress(awst::SourceLocation const& 
 	return addr;
 }
 
-/// Coerce a `string` AWST expr to bytes (reinterpret — strings are bytes
-/// at the AVM level).
+/// Coerce string→bytes (strings are bytes at the AVM level).
 std::shared_ptr<awst::Expression> stringToBytes(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc)
@@ -83,8 +74,7 @@ std::shared_ptr<awst::Expression> stringToBytes(
 	return awst::makeAsBytes(std::move(_expr), _loc);
 }
 
-/// Read field 0 of a (value, exists) tuple returned by asset_holding_get
-/// or asset_params_get.
+/// Extract field 0 from an asset_holding_get / asset_params_get tuple.
 std::shared_ptr<awst::Expression> tupleFirst(
 	std::shared_ptr<awst::Expression> _tuple,
 	awst::WType const* _firstType,
@@ -94,11 +84,8 @@ std::shared_ptr<awst::Expression> tupleFirst(
 	return out;
 }
 
-/// `asset_params_get <field> <assetId>` returning the (value, exists)
-/// tuple's first field only. `_firstType` selects between the two
-/// canonical ASA-params tuple shapes: `uint64+bool` for numeric
-/// fields (AssetTotal, AssetDecimals, AssetFrozen) and `bytes+bool`
-/// for string-ish fields (AssetUnitName, AssetName, AssetURL).
+/// `asset_params_get <field>`, returning field 0 only.
+/// _firstType: uint64 for numeric fields, bytes for string fields.
 std::shared_ptr<awst::Expression> assetParamFirst(
 	ContractContext& _ctx,
 	std::string _field,
@@ -160,12 +147,8 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	return std::nullopt;
 }
 
-// AVM scratch space (see AVM.sol library Scratch). Stack-form ops:
-//   store(slot, value)        -> `stores`   [slot, value]    (write own scratch)
-//   loadSelf(slot)            -> `loads`    [slot]   -> value (read own scratch)
-//   load(groupIndex, slot)    -> `gloadss`  [gidx, slot] -> value (read an EARLIER
-//                                group txn's scratch; AVM asserts gidx < GroupIndex)
-// uint64-valued (slots default to 0); see the AVM.sol note re: biguint future work.
+// AVM scratch (AVM.sol Scratch): store→stores, loadSelf→loads, load→gloadss.
+// gloadss requires gidx < GroupIndex (AVM assertion); uint64-valued.
 std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchScratch(
 	ContractContext& _ctx,
 	std::string const& _method,
@@ -209,8 +192,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchScratch(
 		return std::shared_ptr<awst::Expression>(std::move(ic));
 	}
 
-	// bytes-valued variants — same AVM ops (stores/loads/gloadss accept `any`),
-	// but the value/result is a bytes blob (no uint64 coercion).
+	// bytes variants: same ops (stores/loads/gloadss accept `any`), no uint64 coercion.
 	if (_method == "storeBytes")
 	{
 		if (_args.size() != 2)
@@ -269,8 +251,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	auto decimals = std::move(_args[1]);
 	auto name = stringToBytes(std::move(_args[2]), _loc);
 	auto symbol = stringToBytes(std::move(_args[3]), _loc);
-	// Optional 5th arg: default_frozen (bool). Omitted => unfrozen (the AVM default,
-	// so the existing 4-arg AERC20 path is unchanged).
+	// Optional 5th arg: default_frozen (bool). Omitted = unfrozen (4-arg AERC20 path unchanged).
 	std::shared_ptr<awst::Expression> defaultFrozen;
 	if (_args.size() == 5)
 		defaultFrozen = std::move(_args[4]);
@@ -298,8 +279,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	// Read the new asset id from the just-submitted itxn context. Stash
-	// in a temp local so subsequent itxn submissions don't clobber it.
+	// Stash CreatedAssetID in a temp — subsequent itxn submissions clobber itxn fields.
 	auto createdAsaCall = awst::makeItxn(
 		"CreatedAssetID", awst::WType::uint64Type(), _loc);
 
@@ -459,7 +439,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaOptIn(
 	}
 	auto assetId = std::move(_args[0]);
 
-	// axfer 0 units to self — the standard ASA opt-in pattern.
+	// axfer 0 units to self = standard ASA opt-in.
 	static awst::WInnerTransactionFields s_axferFields(4);
 	auto create = awst::makeCreateInnerTransaction(&s_axferFields, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("4", _loc);
@@ -487,7 +467,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDestroy(
 	}
 	auto assetId = std::move(_args[0]);
 
-	// acfg with ConfigAsset = assetId and no other config fields = destroy.
+	// acfg with ConfigAsset set and no other config fields = destroy.
 	static awst::WInnerTransactionFields s_acfgFields(3);
 	auto create = awst::makeCreateInnerTransaction(&s_acfgFields, _loc);
 	create->fields["TypeEnum"] = awst::makeIntegerConstant("3", _loc);

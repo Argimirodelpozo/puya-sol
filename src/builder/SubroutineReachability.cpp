@@ -10,13 +10,8 @@ namespace puyasol::builder
 namespace
 {
 
-/// Collect every SubroutineID reachable from a Block, using the generic
-/// AwstWalker so we don't have to hand-write per-Expression-subclass
-/// recursion. The walker visits every Expression slot in the block; we
-/// pick out SubroutineCallExpression targets.
-///
-/// const_cast is safe here: our callback always returns nullptr, so the
-/// walker only reads Expression nodes — no mutation occurs.
+/// Collect SubroutineIDs reachable from a Block via AwstWalker.
+/// const_cast is safe: callback always returns nullptr (read-only).
 void collectRefs(awst::Block const& _block, std::set<std::string>& _refs)
 {
 	puyasol::splitter::walkBlock(const_cast<awst::Block&>(_block),
@@ -43,7 +38,7 @@ std::vector<std::shared_ptr<awst::RootNode>> filterToReachableSubroutines(
 	std::set<std::string> reachable;
 	std::queue<std::string> worklist;
 
-	// Seed with contract method references AND logic-sig program references.
+	// Seed with contract method and logic-sig program references.
 	for (auto const& root: _roots)
 	{
 		std::set<std::string> refs;
@@ -56,8 +51,7 @@ std::vector<std::shared_ptr<awst::RootNode>> filterToReachableSubroutines(
 		}
 		else if (auto const* lsig = dynamic_cast<awst::LogicSignature const*>(root.get()))
 		{
-			// A logic-sig program is a reachability root too — seed the helper
-			// subroutines its body calls, else they'd be dropped as unreachable.
+			// Lsig program is a reachability root; seed subroutines its body calls.
 			if (lsig->program && lsig->program->body)
 				collectRefs(*lsig->program->body, refs);
 		}
@@ -70,13 +64,11 @@ std::vector<std::shared_ptr<awst::RootNode>> filterToReachableSubroutines(
 		}
 	}
 
-	// Build ID → Subroutine map for the worklist phase.
 	std::unordered_map<std::string, awst::Subroutine const*> subMap;
 	for (auto const& root: _roots)
 		if (auto const* sub = dynamic_cast<awst::Subroutine const*>(root.get()))
 			subMap[sub->id] = sub;
 
-	// Transitively find all reachable subroutines.
 	while (!worklist.empty())
 	{
 		std::string id = worklist.front();
@@ -97,7 +89,7 @@ std::vector<std::shared_ptr<awst::RootNode>> filterToReachableSubroutines(
 		}
 	}
 
-	// Filter: keep contracts (always) + reachable subroutines + everything else.
+	// Keep contracts always, reachable subroutines, and all other roots.
 	std::vector<std::shared_ptr<awst::RootNode>> filtered;
 	filtered.reserve(_roots.size());
 	for (auto& root: _roots)

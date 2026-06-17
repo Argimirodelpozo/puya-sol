@@ -29,55 +29,28 @@ struct Options
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
-	// --evm-memory-slots <N>: N scratch slots for EVM memory
-	// (=> AssemblyBuilder::MEMORY_SLOT_LAST = N-1). 0 = leave the default
-	// (5 slots = 20KB). Raise for memory-hungry contracts (UltraHonk => 32).
+	// --evm-memory-slots <N>: sets MEMORY_SLOT_LAST=N-1. 0=default (5 slots=20KB).
+	// UltraHonk needs 32.
 	int evmMemorySlots = 0;
-	// SimpleSplitter (alternative to UrosSplitter): static "extract-named-
-	// subroutines" splitter ported from polymarket-experiment. Moves whole
-	// subroutines from the primary contract into a sibling helper contract
-	// (template-var TMPL_<helperName>_APP_ID for app-id substitution). Used
-	// by polymarket v1+v2's compile_all.sh to keep CTFExchange under the
-	// 8 KB cap. Side-effect: also avoids the puya address-param→uint64
-	// over-elision bug in inner-call ApplicationID (puyabug.md #5) because
-	// the extraction changes the orch's stack layout.
+	// SimpleSplitter (alternative to UrosSplitter): moves subroutines into a
+	// sibling helper contract (TMPL_<helperName>_APP_ID substitution). Used by
+	// polymarket v1+v2 to keep CTFExchange under 8 KB. Also avoids puyabug.md
+	// #5 (address-param→uint64 over-elision) due to changed orch stack layout.
 	std::string splitConfig;       // --split-config <json-path>
 	std::vector<std::string> forceDelegate; // --force-delegate <names>
 
-	// --pin-to-main: methods that MUST stay on the main contract and never
-	// be moved into a uros chunk. The validator below rejects any
-	// --uros-splitter group that includes one of these names. Reasons a
-	// method needs to be pinned:
-	//
-	//   * Reads `msg.sender`. Inside a chunk body the call frame is an
-	//     itxn issued by the orch, so `Txn.Sender` resolves to orch's app
-	//     account instead of the user's address — every auth check, every
-	//     `_balances[msg.sender]` lookup, every `transferFrom(msg.sender,
-	//     ...)` silently misbehaves. Until sender forwarding lands in the
-	//     orch dance (args[0] packing or similar), the only safe option is
-	//     to keep these methods unsplit.
-	//
-	//   * Reads `address(this)` AND callers expect the result to match
-	//     main's address. Inside a chunk the runtime "this" is the
-	//     __storage app account, not main, so any external contract that
-	//     identifies the contract by address will misbehave.
-	//
-	// This flag does NOT auto-detect — it's a manual list. The compile
-	// script is responsible for naming the methods it wants pinned. A
-	// future iteration can add call-graph-based auto-detection on top.
+	// --pin-to-main: methods that must not be moved into a uros chunk. Pin if:
+	//   * Reads msg.sender — inside a chunk Txn.Sender = orch's app account,
+	//     not the user; every auth check / balances lookup silently misbehaves.
+	//   * Reads address(this) expecting main's address — chunks see __storage.
+	// Manual list; no auto-detection.
 	std::vector<std::string> pinnedToMain;
 
-	// --fn-split <Name>:<idx>,<idx>,...:g<N>[:cross]
-	//
-	// Slice the named subroutine / contract method's body into N+1
-	// pieces along the statement indices. The optional `:cross` suffix
-	// marks the chain as cross-chunk: pieces are intended to live on
-	// SEPARATE uros chunks and run as siblings inside one staged
-	// inner-txn group orchestrated by orch.dispatch_chain. Without
-	// `:cross`, pieces share the same txn frame (load 100); with it,
-	// they read each other via gload <prev_idx> 100.
-	//
-	// Repeatable: one flag invocation per target to split.
+	// --fn-split <Name>:<idx>,...:g<N>[:cross]
+	// Slice subroutine body into N+1 pieces at statement indices.
+	// Without :cross, pieces share the same txn frame (scratch 100).
+	// With :cross, pieces live on separate uros chunks and pass state
+	// via gload <prev_idx> 100. Repeatable.
 	struct FnSplitSpec
 	{
 		std::string subroutineName;
@@ -87,44 +60,24 @@ struct Options
 	};
 	std::vector<FnSplitSpec> fnSplits;
 
-	// --deploy-pure-helpers
-	//
-	// Lift every pure Subroutine (state-mutability `pure` in Solidity)
-	// into its own one-method sidecar Contract; rewrite the call sites
-	// in the rest of the contract set to inner-txn ApplicationCall the
-	// helper. Removes the helper's bytecode from the calling chunks
-	// (per-Contract DCE drops the now-unreached Subroutine).
+	// --deploy-pure-helpers: lift each `pure` Subroutine into a one-method
+	// sidecar Contract; rewrite call sites to inner-txn ApplicationCall.
+	// DCE drops the subroutine from calling chunks.
 	bool deployPureHelpers = false;
 
-	// --force-inline-sub <Name>
-	//
-	// Set inlineOpt=true on every Subroutine OR ContractMethod whose
-	// memberName/name matches. Puya's inliner expands the body at every
-	// call site instead of emitting a callsub, so the subroutine itself
-	// can be DCE'd from chunks where it would otherwise show up as a
-	// reachable internal.
-	//
-	// Useful for breaking subroutine-reachability closures that bloat
-	// FunctionSplitter chunks (e.g. inlining a heavy non-pure helper
-	// like `_calculateUserAccountData` so its body can be sliced via
-	// `--fn-split` rather than dragged in whole). Repeatable.
+	// --force-inline-sub <Name>: set inlineOpt=true so puya inlines at every
+	// call site (body can then be DCE'd from chunks). Useful for breaking
+	// reachability closures (e.g. inline `_calculateUserAccountData` so it
+	// can be sliced via --fn-split). Repeatable.
 	std::vector<std::string> forceInlineSubs;
-	// --force-no-inline-sub: the inverse — set inlineOpt=false so a single-call
-	// subroutine stays a real callsub (NOT inlined into its caller). Needed to
-	// expose phase functions as slice boundaries for --fn-split. Repeatable.
+	// --force-no-inline-sub: set inlineOpt=false to keep a real callsub as a
+	// --fn-split slice boundary. Repeatable.
 	std::vector<std::string> forceNoInlineSubs;
 
-	// --pure-helper-split <SubName>:<idx>,<idx>,...
-	//
-	// Slice the named pure subroutine's body at the given statement
-	// indices BEFORE lifting it via --deploy-pure-helpers. With N
-	// indices the body splits into N+1 pieces; PureHelperExtractor
-	// builds one sidecar Contract per piece (so a 14 KB Sub split
-	// at one point yields two 7 KB sidecars, fitting the AVM 8 KB
-	// per-program cap). Live vars across each split flow through
-	// scratch slot 100 + `gload` from the previous inner txn.
-	//
-	// Repeatable: one flag invocation per Sub to split.
+	// --pure-helper-split <SubName>:<idx>,...: slice a pure subroutine before
+	// --deploy-pure-helpers. N indices → N+1 sidecar Contracts (e.g. 14KB →
+	// two 7KB, fitting AVM 8KB cap). Live vars cross splits via scratch 100 +
+	// gload. Repeatable.
 	struct PureHelperSplitSpec
 	{
 		std::string subroutineName;

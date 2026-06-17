@@ -49,17 +49,11 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 		return awst::makeUtf8BytesConstant(memberName(), m_loc);
 	}
 
-	// Module-aliased contract reference: `import "x" as M; M.L` where the
-	// MemberAccess resolves to a ContractDefinition. When this is a CALL
-	// receiver (`M.L.f(...)`), SolInternalCall's last-resort library
-	// resolver dispatches by the outer FunctionDefinition and the value
-	// we return here is unused. When it's a VALUE (`address(M.L)`), the
-	// EVM semantic is the library's deployed address — but on AVM
-	// Solidity libraries are inlined / dispatched as subroutines, with
-	// no stable on-chain identity, so we don't have an honest answer.
-	// Emit a 32-byte zero (so `address(L) == address(0)` evaluates true),
-	// and warn loudly that contract code branching on `address(L)` will
-	// see different behaviour than on EVM.
+	// Module-aliased contract/library ref (`import "x" as M; M.L`).
+	// As a CALL receiver, SolInternalCall dispatches by FunctionDefinition
+	// (this value unused). As a VALUE (`address(M.L)`): AVM libraries are
+	// inlined as subroutines with no on-chain identity, so stub as address(0)
+	// and warn — code branching on `address(L)` diverges from EVM.
 	if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(refDecl))
 	{
 		Logger::instance().warning(
@@ -72,12 +66,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 			"behave differently than on EVM.",
 			m_loc);
 
-		// Build the base expression for its side effects (e.g. an
-		// AssignmentExpression in `((flag = true) ? M : M).D` would
-		// otherwise be silently dropped — the surrounding ternary's
-		// SolConditional already emitted the assignment as a pre-pending
-		// statement, but visiting the base here lets any nested
-		// expression-builder side effects flush too).
+		// Evaluate base for side effects (e.g. `((flag=true) ? M : M).D`).
 		(void) buildExpr(baseExpression());
 
 		std::vector<unsigned char> zeros(32, 0);

@@ -11,11 +11,8 @@
 namespace puyasol::builder::eb
 {
 
-/// Registry for Solidity type conversions (e.g., address(x), uint64(x), bytes32(x)).
-///
-/// Dispatches on the target Solidity type category. Each handler receives the
-/// target Solidity type, the already-built argument expression, and produces
-/// the converted expression.
+/// Dispatches Solidity type conversions (address(x), uint64(x), bytes32(x), etc.)
+/// by target type category.
 class TypeConversionRegistry
 {
 public:

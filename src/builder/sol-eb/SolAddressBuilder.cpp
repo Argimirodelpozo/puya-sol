@@ -8,26 +8,14 @@ namespace puyasol::builder::eb
 
 namespace {
 
-/// puya-sol uses two on-chain encodings for app addresses:
+/// Two on-chain app-address encodings:
+///   - Convention: `\x00*24 + itob(app_id)` — stored addresses; SolExternalCall recovers id.
+///   - Hash: `sha512_256("appID"+itob(id))` — what AVM emits for CurrentApplicationAddress
+///     and Txn.Sender when called by an app. Non-invertible; compare-only.
 ///
-///   * Convention form: `\x00*24 + itob(app_id)` — used for stored
-///     addresses so SolExternalCall::addressToAppId can recover the
-///     app id by reading the trailing 8 bytes for inner-call dispatch.
-///   * Hash form: `sha512_256("appID" + itob(app_id))` — what the AVM
-///     itself emits for `address(this)` (global CurrentApplicationAddress)
-///     and for `Txn.Sender` when an app-account is the caller. There is
-///     no inverse hash on AVM, so a hash-form address can't be turned
-///     back into an app id at runtime — it can only be compared.
-///
-/// A naïve `addr == address(this)` comparison fails: one side is the
-/// convention form (whatever the caller stored), the other is the hash
-/// form. Same problem with `msg.sender == addr`. The contract author
-/// thinks both sides are "address of app X" and expects equality.
-///
-/// detectAppIdIntrinsic looks for the AST shape of these hash-form
-/// intrinsics and returns an expression for the underlying app id, so
-/// the comparison can be augmented with a convention-form check (see
-/// makeConventionFormAddress + SolAddressBuilder::compare below).
+/// `addr == address(this)` fails naively (convention vs hash). detectAppIdIntrinsic
+/// recognises the hash-form AST and returns the underlying app_id so compare() can
+/// OR in a convention-form check.
 std::shared_ptr<awst::Expression> detectAppIdIntrinsic(
 	awst::Expression const* expr, awst::SourceLocation const& loc)
 {
@@ -44,11 +32,8 @@ std::shared_ptr<awst::Expression> detectAppIdIntrinsic(
 	}
 	if (ic->opCode == "txn" && *imm == "Sender")
 	{
-		// AVM v6+: caller's app id is exposed as `global CallerApplicationID`,
-		// not as a txn field. It returns 0 when the call comes from a user
-		// account, which (correctly) makes the convention-form check fall
-		// to \x00*24 + itob(0) = the zero address — equal to a stored
-		// address only when the user explicitly stored zero.
+		// AVM v6+: CallerApplicationID (not a txn field). Returns 0 for user-account callers
+		// → convention-form falls to zero address (matches only if the user stored zero).
 		auto idCall = awst::makeGlobal(std::string("CallerApplicationID"), awst::WType::uint64Type(), loc);
 		return idCall;
 	}
@@ -78,11 +63,9 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 	InstanceBuilder& _other, BuilderComparisonOp _op,
 	awst::SourceLocation const& _loc)
 {
-	// Address supports only Eq/Ne comparison (bytes-backed)
 	if (_op != BuilderComparisonOp::Eq && _op != BuilderComparisonOp::Ne)
 		return nullptr;
 
-	// Accept other address/account types, or bytes-backed types
 	auto* otherWType = _other.wtype();
 	bool otherIsAccount = otherWType == awst::WType::accountType();
 	bool otherIsBytes = otherWType && otherWType->kind() == awst::WTypeKind::Bytes;
@@ -92,7 +75,6 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
 
-	// Coerce to same type for comparison
 	auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 		if (expr->wtype != awst::WType::bytesType()
 			&& expr->wtype != awst::WType::accountType())
@@ -107,60 +89,37 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		coerceToBytes(rhs);
 	}
 
-	// Hash-form / convention-form address-equality bridge.
-	//
-	//   addr == address(this)  →  (addr == app-hash) || (addr == \x00*24+id)
+	// Hash/convention bridge:
+	//   addr == address(this)  →  (addr == hash-form) || (addr == \x00*24+id)
 	//   msg.sender == addr     →  (sender == addr)   || (\x00*24+caller_id == addr)
-	//
-	// The OR'd second arm lets the comparison succeed when the user
-	// stored an app's address in convention form (which is what every
-	// inter-app stored address in puya-sol uses). The first arm preserves
-	// the natural semantics for non-app addresses and for the rare case
-	// where an address is stored hash-form. !=  is the negation of the
-	// same equality check, so we compute the equality and negate at the
-	// end. See the detectAppIdIntrinsic comment block above for the
-	// background on why two encodings exist.
-	//
-	// detectAppIdIntrinsic walks the AST for the literal intrinsic shape;
-	// addresses derived from arithmetic / state reads / etc. fall through
-	// to the regular bytes-equality path (which is what they always got).
+	// The OR arm handles apps whose address was stored convention-form. != is negated equality.
+	// detectAppIdIntrinsic matches only literal intrinsic shapes; arithmetic/state-read
+	// addresses fall through to plain bytes comparison.
 	auto leftAppId = detectAppIdIntrinsic(lhs.get(), _loc);
 	auto rightAppId = detectAppIdIntrinsic(rhs.get(), _loc);
 	if ((leftAppId || rightAppId) && !(leftAppId && rightAppId))
 	{
-		// Pick the intrinsic side; the other side is the "stored address"
-		// we're comparing against. CAREFUL: must compute the side decision
-		// BEFORE moving the appId, because std::move nullifies the source
-		// shared_ptr, and a subsequent `leftAppId ? ...` would always go
-		// down the rightAppId branch (silently swapping the two sides).
+		// Compute the side decision BEFORE moving appId: std::move nullifies the ptr,
+		// so `leftAppId ? ...` after move always takes the rightAppId branch.
 		bool leftIsIntrinsic = static_cast<bool>(leftAppId);
 		auto appId = leftIsIntrinsic ? std::move(leftAppId) : std::move(rightAppId);
 		auto& storedSlot = leftIsIntrinsic ? rhs : lhs;
 		auto& intrinSlot = leftIsIntrinsic ? lhs : rhs;
 
-		// Build a second copy of the appId expression for the !=0 guard
-		// (we'll move one copy into the convention builder, the other is
-		// the operand of the comparison). Both copies are the same
-		// IntrinsicCall structure so puya emits identical TEAL for them.
+		// Second copy for the !=0 guard (both copies are identical IntrinsicCall → same TEAL).
 		auto appIdForCompare = detectAppIdIntrinsic(intrinSlot.get(), _loc);
 
-		// Two equality checks share the stored-side expression. AWST
-		// nodes are immutable post-construction, so re-using the same
-		// shared_ptr in two parents is safe — puya consumes the tree
-		// view, not the graph identity.
+		// storedSlot shared across two BytesComparisons: AWST nodes are immutable,
+		// re-using the same shared_ptr in two parents is safe.
 		auto convention = makeConventionFormAddress(std::move(appId), _loc);
 		auto direct = makeBytesEq(
 			std::move(intrinSlot), storedSlot, awst::EqualityComparison::Eq, _loc);
 		auto conventional = makeBytesEq(
 			std::move(convention), std::move(storedSlot), awst::EqualityComparison::Eq, _loc);
 
-		// Gate the conventional arm on `appId != 0`. CallerApplicationID
-		// is 0 for user-account callers; without the guard the conv-form
-		// expression collapses to the zero address, making any
-		// `msg.sender == address(0)` (or `addr == address(this)` where
-		// `addr` happens to be the zero address) spuriously succeed.
-		// CurrentApplicationID is always > 0 inside an app's program, so
-		// the guard is a no-op there but free to keep for symmetry.
+		// Gate convention arm on appId!=0: CallerApplicationID is 0 for user-account callers;
+		// without guard, conv-form collapses to zero address and `msg.sender==address(0)`
+		// spuriously succeeds. CurrentApplicationID is always >0 (guard is a no-op there).
 		auto zeroId = awst::makeZero(_loc);
 		auto appIdNonZero = awst::makeNumericCompare(
 			std::move(appIdForCompare), awst::NumericComparison::Ne,
@@ -190,7 +149,6 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 std::unique_ptr<InstanceBuilder> SolAddressBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	// address is truthy if != zero_address (32 zero bytes)
 	auto zero = awst::makeBytesConstant(
 		std::vector<uint8_t>(32, 0), _loc, awst::BytesEncoding::Base16,
 		awst::WType::accountType());

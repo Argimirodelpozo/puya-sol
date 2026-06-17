@@ -10,12 +10,8 @@
 namespace puyasol::builder::eb
 {
 
-// All scope-bound state accessor implementations have moved onto
-// `sol_ast::Context` itself (see Context.cpp). Bridges previously
-// defined here delegated through `currentScope`; with every visitor +
-// builder now reading via `m_scope` and every helper writing via the
-// nearest enclosing `TranslationContext` / `FunctionContext` /
-// `BlockContext`, those bridges had no callers and were deleted.
+// Scope-bound accessor bridges moved to sol_ast::Context (Context.cpp);
+// no callers remained here after visitors/builders switched to m_scope directly.
 
 ContractContext::ContractContext(
 	TypeMapper& _typeMapper,
@@ -35,8 +31,7 @@ ContractContext::ContractContext(
 	  freeFunctionById(_freeFunctionById),
 	  registry(std::make_unique<BuilderRegistry>())
 {
-	// Wire callbacks. Each captures `this` — ContractContext is non-movable
-	// and non-copyable, so the captured pointer remains stable.
+	// Capture `this` in callbacks — ContractContext is non-movable/non-copyable.
 	buildExpr = [this](solidity::frontend::Expression const& _expr) {
 		return this->build(_expr);
 	};

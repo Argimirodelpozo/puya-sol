@@ -1,20 +1,10 @@
 #pragma once
 
 /// @file StorageRefPointer.h
-/// Detection for "storage-ref pointer functions" — internal functions that
-/// return a `T storage` reference.
-///
-/// puya's `Lvalue` union (VarExpression | FieldExpression | IndexExpression
-/// | TupleExpression | StorageExpression) is closed: a storage location is
-/// always one of those structural nodes, never a call result. A `callsub`
-/// can only hand back a value copy, so a storage pointer cannot survive a
-/// real subroutine return.
-///
-/// Such a function is therefore compiled to return only the uint64 *index*
-/// of the storage location, and each call site reconstitutes the location
-/// as `IndexExpression(<stateVar>, <call>)` — a real lvalue node. The
-/// function body (including any guards / local computation) still runs as
-/// an ordinary subroutine; only the index value crosses the return.
+/// Detection for storage-ref pointer functions — internal functions returning
+/// `T storage`. puya's Lvalue union is closed (no call-result lvalue), so
+/// such functions return only the uint64 index; call sites reconstitute
+/// `IndexExpression(<stateVar>, <call>)` as the lvalue.
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -26,13 +16,12 @@
 namespace puyasol::builder
 {
 
-/// True if `_t` is a MappingType, or any array (possibly nested) whose element
-/// type eventually contains a MappingType, or a struct with such a member. Used
-/// to decide which `storage` references travel as runtime bytes key-prefixes (the
-/// box-key scheme) vs ordinary AWST-mapped values. Must agree across every call
-/// site (AWSTBuilder, SolInternalCall, FunctionBuilder, PublicGetterBuilder, and
-/// storageRefPointerReturn below) or callee writes land under the wrong key.
-/// (Defined here, the lowest storage-ref header; AWSTBuilder.h re-exports it.)
+/// True if `_t` is a MappingType, or any array/struct that (recursively)
+/// contains one. Determines whether a `storage` ref travels as a bytes
+/// box-key vs an AWST-mapped value. Must be consistent across AWSTBuilder,
+/// SolInternalCall, FunctionBuilder, PublicGetterBuilder, and
+/// storageRefPointerReturn, or callee writes land under the wrong key.
+/// Defined here (lowest storage-ref header); AWSTBuilder.h re-exports it.
 inline bool containsMappingType(solidity::frontend::Type const* _t)
 {
 	if (!_t) return false;
@@ -49,30 +38,23 @@ inline bool containsMappingType(solidity::frontend::Type const* _t)
 	return false;
 }
 
-/// Registry of struct StructDefinition ids that are used as a mapping VALUE type
-/// anywhere in the program (populated source-unit-wide at the start of
-/// AWSTBuilder::build). A struct-storage-ref of such a type denotes a mapping
-/// element — a box keyed at runtime — so it must travel as a box-key (bytes),
-/// not by value. A plain state-var/local struct (never a mapping value) travels
-/// by value (the existing copy + write-back path).
+/// StructDefinition IDs used as mapping VALUE types anywhere in the program
+/// (populated source-unit-wide at AWSTBuilder::build start). Such structs
+/// travel as box-key bytes, not by value. Plain state-var/local structs
+/// (never a mapping value) travel by value (copy + write-back path).
 ///
-/// COMPILE-TIME ONLY: this is a type classifier, not a storage-location decision.
-/// All storage lives in main; this never implies operating on another program's
-/// boxes. The scan is source-unit-wide purely because the mapping DECLARATION may
-/// appear in a different contract's source than the library that defines methods
-/// on the value struct (V4: the orchestrator's source declares mapping(=>Position.
-/// State); the Position library's source defines update) — both compile against
-/// the same single main storage. Single-threaded, one-compile-per-process, so a
-/// process-wide static is safe.
+/// Compile-time type classifier only — all storage still lives in main.
+/// Source-unit-wide scan because the mapping declaration and the library
+/// acting on its value type may be in different source files (e.g. V4).
+/// Process-wide static is safe: single-threaded, one-compile-per-process.
 inline std::set<int64_t>& boxKeyedStructRegistry()
 {
 	static std::set<int64_t> registry;
 	return registry;
 }
 
-/// Walk `_t` and record into the box-keyed-struct registry every struct type that
-/// appears as a mapping VALUE within it (recursively through arrays, nested
-/// mappings, and struct members). `_seen` guards recursive struct types.
+/// Walk `_t` and record every struct type appearing as a mapping VALUE (recursively).
+/// `_seen` prevents infinite recursion through recursive struct types.
 inline void collectMappingValueStructs(
 	solidity::frontend::Type const* _t,
 	std::set<int64_t>& _out,
@@ -96,17 +78,13 @@ inline void collectMappingValueStructs(
 			collectMappingValueStructs(member.type, _out, _seen);
 }
 
-/// A `T storage` reference is BOX-KEYED — it travels as a bytes box-key prefix and
-/// the holder writes box storage directly — when T is a mapping, an array/struct
-/// that CONTAINS a mapping, or a plain struct that is itself used as a mapping
-/// VALUE type (e.g. V4 Position.State, which has no nested mappings but is the
-/// value of mapping(bytes32 => Position.State)). A plain struct that is NOT a
-/// mapping value (a state-var/local struct passed to a library function) is NOT
-/// box-keyed — it travels by value (the copy + write-back path), so widening to
-/// "any struct" would wrongly box-key those and read empty boxes (regressing the
-/// using-for/library/struct tests). This is the gate every storage-ref PARAM/RETURN
-/// site must use instead of bare `containsMappingType`. Apply only to storage refs
-/// (referenceLocation == Storage), which the call sites already establish.
+/// True when the `T storage` ref must travel as a bytes box-key prefix:
+/// T is a mapping, contains a mapping, or is a struct used as a mapping value
+/// (e.g. V4 Position.State — no nested mappings, but is mapping(bytes32=>State)).
+/// Plain structs that are NOT mapping values travel by value (copy + write-back);
+/// widening to "any struct" would wrongly box-key them (regresses
+/// using-for/library/struct tests). Use this instead of bare containsMappingType
+/// at every storage-ref param/return site (caller ensures referenceLocation==Storage).
 inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 {
 	if (containsMappingType(_t)) return true;
@@ -116,16 +94,11 @@ inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 }
 
 /// If `_func` is a storage-ref pointer function — an implemented internal
-/// function returning a single `T storage` via either an explicit
-/// `return <holder>[<idx>];` statement OR (for the mapping-of-struct case) a
-/// named-return assignment `<namedReturn> = <holder>[<idx>];`, with no `.slot :=`
-/// inline assembly — returns that `IndexAccess` (its base holder and index
-/// sub-expression are reachable from it). The base `<holder>` may be a state
-/// variable (array/slot refs reconstitute `IndexExpression(stateVar, idx)` at the
-/// call site) or, for the mapping-of-struct case only, a `storage` param/local
-/// (e.g. `self[k]` where `self` is a `mapping(K=>Struct) storage` param — the
-/// box-key is passed through, the caller binds it as a struct-storage-ref).
-/// Returns nullptr otherwise.
+/// function returning a single `T storage` via `return <holder>[<idx>]` or
+/// (mapping-of-struct) a named-return assignment, with no `.slot :=` assembly —
+/// returns the IndexAccess. The holder may be a state variable (array/slot:
+/// call site reconstitutes IndexExpression) or a `storage` param (mapping:
+/// box-key pass-through). Returns nullptr otherwise.
 inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 	solidity::frontend::FunctionDefinition const* _func)
 {
@@ -156,16 +129,13 @@ inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 	} finder;
 	_func->body().accept(finder);
 
-	// The `.slot :=` assembly variant is handled separately (its return
-	// type maps to a biguint slot). Require exactly one return — branching
-	// returns into different containers can't reduce to one base.
+	// `.slot :=` assembly variant handled elsewhere (returns biguint slot).
+	// Require exactly one return — branching returns can't reduce to one base.
 	if (finder.sawAssembly)
 		return nullptr;
 
-	// The reference expression `<holder>[<index>]` comes from either an explicit
-	// `return <holder>[<idx>];` or a named-return assignment
-	// `<named> = <holder>[<idx>];` with no explicit return (the Uniswap V4
-	// `position = self[positionKey];` shape: `returns (T storage position)`).
+	// `<holder>[<index>]` comes from an explicit return or a named-return
+	// assignment (V4 shape: `position = self[positionKey]` with no return stmt).
 	Expression const* refExpr = nullptr;
 	bool namedReturnForm = false;
 	if (finder.returns.size() == 1 && finder.returns[0]->expression())
@@ -197,11 +167,8 @@ inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 	if (!indexAccess)
 		return nullptr;
 
-	// Is the holder a mapping? Then the element is box-keyed: the callee yields the
-	// bytes box-key directly and the caller binds it as a storage ref (no
-	// reconstitution). An array/slot holder instead returns a uint64 index that the
-	// caller reconstitutes as IndexExpression(holder, idx) — which requires an
-	// explicit `return holder[idx];` and a state-variable holder.
+	// Mapping holder → element is box-keyed (callee yields bytes key, no reconstitution).
+	// Array/slot holder → returns uint64 index; caller reconstitutes IndexExpression.
 	bool const holderIsMapping = dynamic_cast<MappingType const*>(
 		indexAccess->baseExpression().annotation().type) != nullptr;
 
@@ -219,10 +186,9 @@ inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 	if (namedReturnForm)
 		return holderIsMapping ? indexAccess : nullptr;
 
-	// Explicit return: a state-variable holder is the original case (array/slot
-	// reconstitution + direct state mappings). A non-state-var holder is accepted
-	// only when it is a mapping — e.g. a `mapping(K=>V) storage` param `self` in
-	// `return self[k]` — as box-key pass-through (no state variable required).
+	// Explicit return: state-var holder → array/slot reconstitution or direct mapping.
+	// Non-state-var holder only accepted when it's a mapping (e.g. `return self[k]`
+	// where `self` is a `mapping(K=>V) storage` param — box-key pass-through).
 	if (baseVar->isStateVariable())
 		return indexAccess;
 	if (holderIsMapping)
@@ -230,14 +196,11 @@ inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 	return nullptr;
 }
 
-/// For a storage-ref pointer function (storageRefPointerReturn != nullptr), true if
-/// the reference is BOX-KEYED (a bytes prefix) rather than a uint64 array/slot index:
-/// the holder is a mapping, or the returned struct itself carries nested mappings
-/// (the latter preserves the original mapping-of-struct behaviour). Callers use this
-/// to choose the bytes-vs-uint64 return type and the pass-through-vs-reconstitution
-/// path; it must be consulted everywhere the old `containsMappingType(returnType)`
-/// gate stood, so plain-struct mapping elements (e.g. V4 Position.State, which has no
-/// nested mappings) are still box-keyed.
+/// True if the storage-ref pointer function's return is box-keyed (bytes prefix)
+/// rather than a uint64 index: holder is a mapping, or the returned struct
+/// has nested mappings. Use everywhere the old containsMappingType(returnType)
+/// gate stood so plain-struct mapping elements (e.g. V4 Position.State) are
+/// still box-keyed.
 inline bool storageRefReturnIsBytesKeyed(
 	solidity::frontend::FunctionDefinition const* _func)
 {

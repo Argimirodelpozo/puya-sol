@@ -1,20 +1,15 @@
 #pragma once
 
 /// @file PureHelperExtractor.h
-/// Extract pure Subroutines into standalone "helper" Contracts that are
-/// deployed as separate apps and called via inner-txn ApplicationCall.
+/// Extract pure Subroutines into standalone helper Contracts called via
+/// inner-txn ApplicationCall.
 ///
-/// Why: large pure helpers (math-heavy, no state access) bloat every
-/// chunk that transitively reaches them. Lifting each pure Sub into
-/// its own one-method Contract removes its bytecode from the original
-/// program (puya DCE'd post-rewrite), at the cost of one inner-txn per
-/// call. State-coordination is trivial because the helpers are pure —
-/// args in, ARC4-encoded return value out via the standard `log` ABI
-/// convention; no rekey, no auth, no shared globals.
+/// Large pure helpers (math-heavy, no state) bloat every chunk that reaches
+/// them. Lifting each into its own one-method Contract removes its bytecode
+/// from the primary program (puya DCE drops the rewritten site). Cost: one
+/// inner-txn per call. Return via ABI `log` convention; no state sharing.
 ///
-/// Pipeline placement: AFTER --fn-split (so any pieces are already
-/// formed) and BEFORE --uros-splitter (so uros's roots already include
-/// the helper Contracts and exclude the rewritten Subs).
+/// Pipeline: AFTER --fn-split, BEFORE --uros-splitter.
 
 #include "awst/Node.h"
 
@@ -32,25 +27,18 @@ class PureHelperExtractor
 public:
 	struct ExtractedHelper
 	{
-		/// Original Subroutine ID that got lifted (no longer reachable
-		/// from non-helper roots after the rewrite).
+		/// Original Subroutine ID (no longer reachable from non-helper roots).
 		std::string subId;
 
-		/// Synthesized helper Contract ID. The Contract's only role is
-		/// to host an approval program that ABI-routes one selector to
-		/// the lifted Subroutine's body.
+		/// Synthesized helper Contract ID (hosts one ABI-routed approval).
 		std::string helperContractId;
 
-		/// Template variable name baked into the rewritten call sites.
-		/// The deploy harness substitutes the helper's app id at deploy
-		/// time, the same way --uros-splitter substitutes
-		/// TMPL_UROS_ORCH_APP_ID.
+		/// TMPL_ var baked into rewritten call sites; harness substitutes
+		/// the helper's app id at deploy time (like TMPL_UROS_ORCH_APP_ID).
 		std::string templateVarName;
 
-		/// 4-byte ARC4 selector (sha512_256(canonicalSig)[:4]) of the
-		/// helper's one ABI method. Both the rewritten call sites
-		/// (encoded as ApplicationArgs[0]) and the helper's approval
-		/// router check this value.
+		/// 4-byte selector (sha512_256(canonicalSig)[:4]) used by both
+		/// rewritten call sites (ApplicationArgs[0]) and the helper's router.
 		std::vector<uint8_t> selector;
 	};
 
@@ -61,29 +49,21 @@ public:
 		bool didExtract = false;
 	};
 
-	/// User-supplied per-helper body split. When the lifted Subroutine's
-	/// bytecode would exceed the AVM 4-page cap (8 KB), the caller can
-	/// pre-slice its body into pieces; PureHelperExtractor then emits
-	/// one sidecar Contract per piece and rewrites call sites to
-	/// inner-txn-group all pieces in sequence (state threaded between
-	/// them via FunctionSplitter's scratch-slot-100 + gload prologue).
-	///
-	///   subroutineName: matches `awst::Subroutine::name` of the pure
-	///                   Sub to split (e.g. "RelationsLib.accumulateAuxillaryRelation").
-	///   splitPoints:    statement indices in the Sub's body. With N
-	///                   points, the body slices into N+1 pieces.
+	/// Per-helper body split for subs that exceed the 8 KB AVM page cap.
+	/// PureHelperExtractor emits one sidecar per piece and rewrites call
+	/// sites to inner-txn-group all pieces (live state via scratch-slot-100 +
+	/// gload prologue from FunctionSplitter).
+	///   subroutineName: matches awst::Subroutine::name (e.g. "RelationsLib.accumulateAuxillaryRelation").
+	///   splitPoints:    statement indices; N points → N+1 pieces.
 	struct HelperSplitSpec
 	{
 		std::string subroutineName;
 		std::vector<size_t> splitPoints;
 	};
 
-	/// Lift every pure Subroutine reachable from `_roots` into its own
-	/// helper Contract; rewrite call sites in every body to inner-txn
-	/// the helper. Mutates `_roots` in place: removes the lifted
-	/// Subroutines, appends the new helper Contracts. Optional
-	/// `_splitSpecs` triggers FunctionSplitter on listed Subs, producing
-	/// multiple sidecars per Sub.
+	/// Lift every pure Subroutine into its own helper Contract; rewrite call
+	/// sites to inner-txn the helper. Mutates `_roots` in place.
+	/// `_splitSpecs` optionally triggers FunctionSplitter for multi-sidecar Subs.
 	Result extract(
 		std::vector<std::shared_ptr<awst::RootNode>>& _roots,
 		std::vector<HelperSplitSpec> const& _splitSpecs = {});

@@ -40,14 +40,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
 		{
-			// Track function pointer assignments. solc's
-			// ASTNode::referencedDeclaration handles both
-			// `function() x = f;` (Identifier) and `function() x = Lib.f;` /
-			// `function() x = super.f;` (MemberAccess). The MemberAccess
-			// case is safe even for super.f now that SolInternalCall's
-			// Identifier-form fn-ptr dispatch consults findSuperTarget
-			// before settling on a plain InstanceMethodTarget — see the
-			// matching block in SolInternalCall::processFromIdent.
+			// Track function pointer assignments via ASTNode::referencedDeclaration
+			// (handles Identifier + MemberAccess; super.f safe via findSuperTarget
+			// in SolInternalCall::processFromIdent).
 			if (dynamic_cast<FunctionType const*>(decl.type()))
 			{
 				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
@@ -82,13 +77,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 			value = builder::TypeCoercion::coerceForAssignment(std::move(value), type, m_loc);
 
-			// Signed sub-word -> wider-int IMPLICIT widening, e.g.
-			// `int128 x = someInt24;`. coerceForAssignment widens uint64 ->
-			// biguint by zero-extension, dropping the sign. If the initializer
-			// is a signed intN (N<=64) and the declared type a wider int (M>64),
-			// re-extend from the SOURCE width (signExtendToUint256 masks to N
-			// bits first, so it is correct for the 64-bit two's-complement value
-			// too). No-op for non-negative values; unsigned sources skipped.
+			// Signed sub-word → wider-int implicit widen (e.g. `int128 x = someInt24;`).
+			// coerceForAssignment zero-extends uint64→biguint, dropping the sign; re-extend
+			// from the source width when srcInt(N≤64) → tgtInt(M>64).
 			if (auto const* srcInt = dynamic_cast<IntegerType const*>(
 					initialValue->annotation().type))
 				if (auto const* tgtInt = dynamic_cast<IntegerType const*>(decl.type()))
@@ -104,10 +95,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		// Storage pointer alias
 		if (decl.referenceLocation() == VariableDeclaration::Location::Storage && initialValue)
 		{
-			// Mapping state-var Identifier resolves to BytesConstant (the
-			// holder name) — register as storage alias so SolIndexAccess
-			// resolves `m[k]` to the underlying state-var prefix at compile
-			// time. This is the `mapping storage m = m1;` pattern.
+			// `mapping storage m = m1;`: BytesConstant is the holder name;
+			// register alias so SolIndexAccess resolves `m[k]` to the state-var prefix.
 			if (dynamic_cast<awst::BytesConstant const*>(value.get())
 				&& decl.type()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
@@ -120,9 +109,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			if (dynamic_cast<awst::StateGet const*>(value.get())
 				|| awst::isRawStorageRead(value.get()))
 			{
-				// Raw box/app-state reads must be wrapped in StateGet with
-				// a default so the alias evaluates the same as a direct read.
-				// Already-wrapped StateGet passes through unchanged.
+				// Raw box/app-state reads need StateGet-with-default so the alias
+				// evaluates identically to a direct read; StateGet passes through.
 				auto aliasExpr = awst::isRawStorageRead(value.get())
 					? StorageMapper::makeStateGetWithDefault(value, value->wtype, m_loc)
 					: value;
@@ -131,12 +119,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				return result;
 			}
 
-			// Indexed / field path into a state container:
-			//   `T storage b = a[i];` or `T storage b = a.field;`
-			// Register the IndexExpression / FieldExpression as the alias so
-			// subsequent operations through `b` (push, pop, indexed write)
-			// route through the underlying state container's read-modify-write
-			// codegen.
+			// `T storage b = a[i];` / `T storage b = a.field;` — alias the
+			// IndexExpression/FieldExpression so push/pop/indexed-write route
+			// through the underlying state container's read-modify-write codegen.
 			if (dynamic_cast<awst::IndexExpression const*>(value.get()))
 			{
 				m_blk.setStorageAlias(decl.id(), StorageAlias::indexedPath(value));
@@ -150,38 +135,25 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				return result;
 			}
 
-			// Slot-based storage reference: initialized from internal function call
-			// that returns a storage reference (typically has .slot := in assembly).
-			// Register as slot ref so IndexAccess translates to sload/sstore.
+			// Storage ref from a function call (typically `.slot :=` in assembly).
+			// Two patterns: (1) bytes return → mappingKeyParam (SolIndexAccess uses
+			// it as box-key prefix, e.g. `Pool.State storage pool = _getPool(id)`);
+			// (2) biguint return → slotStorageRef for __storage_read/write.
 			if (dynamic_cast<awst::SubroutineCallExpression const*>(value.get()))
 			{
-				// Distinguish two patterns:
-				// 1. `mapping(K=>V) storage m = libOrInternal()` — value is bytes
-				//    (mapping holder name). Register as mappingKeyParam so
-				//    SolIndexAccess builds box keys with `m` as runtime prefix.
-				// 2. `T storage m = ...` with a slot-int (biguint) return —
-				//    register as slotStorageRef for __storage_read/write paths.
-				// A `mapping(K=>V) storage` ref, OR a struct-storage ref whose
-				// struct carries nested mappings (e.g. `Pool.State storage pool =
-				// _getPool(id)`). Both travel as a bytes box-key prefix; bind the
-				// local as a mappingKeyParam so `pool.field` / `pool.map[k]`
-				// resolve against that prefix (see SolIdentifier struct-ref read).
 				bool isMappingPtr = decl.type()
 					&& (decl.type()->category() == solidity::frontend::Type::Category::Mapping
 						|| builder::containsMappingType(decl.type())
-						// A struct storage-ref local bound from a getter that returns the
-						// bytes box-key (e.g. `Position.State storage p = self.positions.get(k)`
-						// where Position.State has no nested mappings): the bytes return type
-						// marks it box-keyed, so bind it as a mappingKeyParam too (not a slot
-						// ref), so `p.field`/`p.method()` resolve against that runtime prefix.
+						// Struct getter returning bytes box-key (e.g. `Position.State storage p =
+						// self.positions.get(k)`, no nested mappings): bind as mappingKeyParam
+						// so `p.field`/`p.method()` resolve against the runtime prefix.
 						|| (decl.type()->category() == solidity::frontend::Type::Category::Struct
 							&& value->wtype == awst::WType::bytesType()));
 				if (isMappingPtr && value->wtype == awst::WType::bytesType())
 				{
 					m_blk.setMappingKeyParam(decl.id(), decl.name());
-					// Emit `m = f()` as a plain bytes assignment so `m` holds the
-					// mapping holder name at runtime; subsequent reassignments
-					// (`m = otherMapping`) update which mapping `m` points to.
+					// Plain bytes assignment so `m` holds the holder name at runtime;
+					// `m = otherMapping` updates which mapping `m` points to.
 					auto var = awst::makeVarExpression(decl.name(), awst::WType::bytesType(), m_loc);
 					auto assign = awst::makeAssignmentStatement(std::move(var), std::move(value), m_loc);
 					result.push_back(std::move(assign));
@@ -191,9 +163,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				}
 
 				m_blk.setSlotStorageRef(decl.id(), value);
-				// Also emit the call as an assignment so the slot value is available.
-				// The slot var's wtype must match the function's return wtype to
-				// keep AssignmentStatement happy.
+				// Emit the call as an assignment; slot var wtype must match the return wtype.
 				auto* slotWType = value->wtype ? value->wtype : awst::WType::biguintType();
 				auto slotVar = awst::makeVarExpression(decl.name(), slotWType, m_loc);
 
@@ -205,11 +175,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 		}
 
-		// Caller of a blob-backed memory return: `T memory p = blobAggFn(...)`.
-		// The call hands back the uint64 base offset; bind p's offset var +
-		// register it as a blob aggregate (no copy/FMP bump — the callee already
-		// allocated it in the shared blob). >4KB memory values can only originate
-		// from such a call (a >4KB value copy is impossible on the AVM).
+		// `T memory p = blobAggFn(...)`: callee returns the uint64 base offset into
+		// the shared blob; register as blob aggregate (no copy/FMP bump).
+		// >4KB memory values can only originate this way (AVM can't copy them).
 		if (initialValue
 			&& decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 			&& builder::computeEncodedElementSize(type) > builder::AssemblyBuilder::SLOT_SIZE)
@@ -225,15 +193,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			return result;
 		}
 
-		// Initialized memory aggregate used as a value in inline assembly: give it
-		// an ARC4-layout blob pointer (consistent with m[i]/m.length and the
-		// existing blob model — deliberately NOT EVM-faithful, since we deploy to
-		// the AVM). A `new T[](n)` is a fresh zero array, so bind it to a fresh
-		// pre-zeroed FMP region and bump FMP — no value copy needed. Assembly
-		// pointer ops (add/sub/mstore/mload) then operate on the ARC4 bytes;
-		// assembly that hard-codes EVM offsets (e.g. add(m,32) to skip a 32-byte
-		// length word) silently diverges, since ARC4 packs differently. Non-`new`
-		// initializers fall through to the strict ensureBiguint backstop.
+		// Memory aggregate used in inline assembly: give it an ARC4-layout blob
+		// pointer (not EVM-faithful — ARC4 packs differently; add(m,32) skipping a
+		// length word will diverge). `new T[](n)` binds to a fresh FMP region and
+		// bumps FMP; non-`new` falls through to the ensureBiguint backstop.
 		if (initialValue
 			&& decl.referenceLocation() == VariableDeclaration::Location::Memory
 			&& m_blk.isAssemblyAggregate(decl.id()))
@@ -264,20 +227,17 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 		m_blk.builderCtx().appendPendingTo(result);
 
-		// EVM free-memory-pointer simulation: `T memory t;` (no initializer)
-		// allocates fresh memory and bumps mload(0x40) by sizeof(T). We mirror
-		// this so contracts that read mload(0x40) see the expected advance.
-		// Memory locals with initializers are pointer copies in EVM (no alloc).
+		// `T memory t;` (no initializer): allocate fresh memory and bump mload(0x40)
+		// so contracts reading mload(0x40) see the expected advance. Initialised
+		// memory locals are pointer copies in EVM, so no bump there.
 		if (!initialValue
 			&& decl.referenceLocation() == VariableDeclaration::Location::Memory)
 		{
 			int sz = builder::computeEncodedElementSize(type);
 
-			// Aggregates larger than one scratch slot (4096 B) can't be held as a
-			// single AVM bytes value. Back them with the multi-slot EVM memory
-			// blob: bind the local to its runtime FMP base offset, register it so
-			// `t.field[i]` lowers to blob word read/writes (SolIndexAccess), and
-			// skip the oversized bzero default — the blob is pre-zeroed.
+			// >4096 B: can't hold as a single AVM bytes value. Back with the
+			// multi-slot blob; bind local to FMP base offset so `t.field[i]`
+			// lowers to blob word ops (SolIndexAccess). Blob is pre-zeroed.
 			if (sz > builder::AssemblyBuilder::SLOT_SIZE
 				|| m_blk.isAssemblyAggregate(decl.id()))
 			{
@@ -306,17 +266,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	}
 	else if (declarations.size() > 1 && initialValue)
 	{
-		// Tuple destructuring `(a, b) = expr;` — bind each component to a
-		// separate local. The RHS must be evaluated EXACTLY ONCE, otherwise
-		// a tuple-returning function call gets re-emitted per destructured
-		// component (manifesting as duplicate `callsub`s in the generated
-		// TEAL with all the call's side-effects repeated). `SingleEvaluation`
-		// is the in-memory hint for that, but the AWST JSON serialization
-		// inlines its `source` per consumer and the puya backend then
-		// re-emits the call for each `TupleItemExpression`. We spell out
-		// the temp explicitly: assign the RHS to a synthetic variable, then
-		// extract each tuple item from that variable by name.
-		// (Port of polymarket-experiment commit `271d85851`.)
+		// Tuple destructuring `(a, b) = expr;`: RHS must evaluate once.
+		// SingleEvaluation is inlined per-consumer in AWST JSON, causing puya
+		// to re-emit the call for each TupleItemExpression. Assign RHS to a
+		// synthetic temp and extract items from it. (polymarket-experiment 271d85851)
 		auto rhsExpr = m_blk.builderCtx().build(*initialValue);
 		m_blk.builderCtx().appendPendingTo(result);
 
@@ -333,10 +286,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			auto const& decl = *declarations[i];
 			auto* type = m_blk.typeMapper().map(decl.type());
 
-			// Use the shadow-safe resolved name (like the single-decl path at
-			// the top): a destructured local that shadows an outer var must get a
-			// unique name, else `uint a=100; { (uint a,)=f(); } return a;` lets the
-			// inner `a` overwrite the outer one.
+			// Shadow-safe name: `uint a=100; { (uint a,)=f(); } return a;`
+			// without mangling, inner `a` overwrites the outer one.
 			auto target = awst::makeVarExpression(
 				m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
 

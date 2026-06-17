@@ -1,16 +1,10 @@
 #pragma once
 
 /// @file SolStatement.h
-/// Base class for Solidity statement wrappers + free-function entry points.
+/// Base class for Solidity statement wrappers + buildStatement/buildBlock entry points.
 ///
-/// Statement wrappers take a `BlockContext&` (the narrowest scope they need
-/// — parents, enclosing loop, modifier placeholder body all live there).
-/// Children are translated by calling the free `buildStatement` /
-/// `buildBlock` entry points, which construct a fresh visitor using the
-/// passed (possibly derived) context.
-///
-/// Expression children go through `m_blk.builderCtx().build(...)` — the
-/// expression layer hasn't been moved off ContractContext yet.
+/// Wrappers take a BlockContext& (enclosing loop, placeholder body, etc.).
+/// Expression children route through m_blk.builderCtx().build(...).
 
 #include "awst/Node.h"
 #include "builder/sol-ast/Context.h"

@@ -42,23 +42,13 @@ namespace puyasol::builder::eb
 class InstanceBuilder;
 class BuilderRegistry;
 
-// `ParamRemap` is now defined in `sol_ast/Context.h` since it's owned by
-// `FunctionContext`. Re-exported as `eb::ParamRemap` for legacy callers
-// (e.g. ModifierInliner) that use the qualified name.
+// Re-exported from sol_ast::Context for legacy callers (e.g. ModifierInliner).
 using ParamRemap = sol_ast::ParamRemap;
 
-/// Shared context owning all expression-builder state.
-///
-/// This is the central state object passed to all expression and statement
-/// builders. It owns the per-translation mutable state (scope tables, pending
-/// statement buffers, parameter remaps, etc.) and holds references to the
-/// long-lived compiler services (TypeMapper, StorageMapper, function tables).
-/// It also owns the type-builder registry used by sol-eb dispatch.
-///
-/// Recursive expression building, fallback binary-op construction, and
-/// type-builder dispatch are exposed via std::function callbacks wired up in
-/// the constructor; the field-and-callback layout is preserved as the public
-/// surface that sol-ast wrappers consume.
+/// Central context for expression/statement builders: owns pending-statement buffers,
+/// references compiler services (TypeMapper, StorageMapper), and holds the builder
+/// registry. Callbacks (buildExpr, buildBinaryOp, builderForInstance) are wired
+/// in the constructor and consumed by sol-ast wrappers.
 class ContractContext
 {
 public:
@@ -88,10 +78,7 @@ public:
 	/// Consume any pre-pending statements (must execute before the expression).
 	std::vector<std::shared_ptr<awst::Statement>> takePrePending();
 
-	/// Drain BOTH pre-pending and pending into `_out` in execution order
-	/// (pre-pending first). The vast majority of statement-builder sites
-	/// flush both together right before returning their result vector;
-	/// keeping them as one call removes the four-line two-loop boilerplate.
+		/// Drain pre-pending then pending into `_out` (execution order).
 	void appendPendingTo(std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	/// Owned type-builder registry — populated on construction.
@@ -100,66 +87,46 @@ public:
 	// ── Compiler services (external, by reference) ──
 	TypeMapper& typeMapper;
 	StorageMapper& storageMapper;
-	/// Transient storage manager — non-null only when the current contract
-	/// has transient state variables. Used to route reads/writes of
-	/// `transient` state vars to a per-transaction blob.
+	/// Non-null when the contract has transient state vars.
 	TransientStorage* transientStorage = nullptr;
-	/// Unified dispatch over AppGlobal / Box / Transient backends. Use
-	/// `storageBackend->emitReadForVar(decl, ...)` / `emitWriteForVar` for
-	/// any state-var access driven by a VariableDeclaration; falls back to
-	/// the right backend internally. Populated alongside transientStorage
-	/// in ContractBuilder.
+	/// Unified AppGlobal/Box/Transient dispatch; populated alongside transientStorage.
 	StorageBackend* storageBackend = nullptr;
 	std::string const& sourceFile;
 	std::string const& contractName;
-	/// The contract currently being built — used e.g. to look up the
-	/// contract's fallback function signature for self-call emulation.
-	/// May be nullptr during free-function translation.
+	/// Current contract (nullptr during free-function translation).
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
 
 	// ── Function resolution tables (external, by reference) ──
 	std::unordered_map<std::string, std::string> const& libraryFunctionIds;
 	std::unordered_set<std::string> const& overloadedNames;
 	std::unordered_map<int64_t, std::string> const& freeFunctionById;
-	/// AST IDs of library functions promoted to per-contract internal methods.
-	/// Maps funcDef.id() → the synthesized method name on the current contract.
-	/// CallResolver consults this first, returning InstanceMethodTarget instead
-	/// of SubroutineID when the funcDef is internalized.
+	/// funcDef.id() → synthesized method name; CallResolver returns InstanceMethodTarget
+	/// instead of SubroutineID when the funcDef appears here.
 	std::unordered_map<int64_t, std::string> internalizedLibFuncNames;
 
 	// ── Side-effect statement buffers (owned) ──
 	std::vector<std::shared_ptr<awst::Statement>> pendingStatements;
 	std::vector<std::shared_ptr<awst::Statement>> prePendingStatements;
 
-	/// Queue an expression as a side-effect statement that will run as part
-	/// of the enclosing statement. Wraps `expr` in an ExpressionStatement
-	/// and appends to `pendingStatements`. Use for "do this after the
-	/// current expression evaluates" semantics.
+	/// Append expr as a post-statement side effect (after current expression evaluates).
 	void queueStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
 	{
 		pendingStatements.push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
 	}
 
-	/// Queue a statement directly onto `pendingStatements` (no
-	/// ExpressionStatement wrapper). Use when the caller already has a
-	/// Statement (e.g. AssignmentStatement, ExpressionStatement).
+	/// Append a Statement directly to pendingStatements (no ExpressionStatement wrapper).
 	void queuePending(std::shared_ptr<awst::Statement> stmt)
 	{
 		pendingStatements.push_back(std::move(stmt));
 	}
 
-	/// Queue an expression to run BEFORE the enclosing statement
-	/// (prePending). Use for "do this before the LHS evaluates" semantics
-	/// — e.g. `arr.push().field = v` needs the extend before the field
-	/// write reads `length-1`.
+	/// Append expr as a pre-statement side effect (before LHS evaluates, e.g. arr.push()).
 	void queuePreStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
 	{
 		prePendingStatements.push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
 	}
 
-	/// Like `queuePending` but for prePendingStatements — append a
-	/// Statement directly to the buffer that runs BEFORE the enclosing
-	/// statement.
+	/// Append a Statement directly to prePendingStatements.
 	void queuePrePending(std::shared_ptr<awst::Statement> stmt)
 	{
 		prePendingStatements.push_back(std::move(stmt));
@@ -167,15 +134,10 @@ public:
 
 	// ── Per-translation scope state (owned) ──
 
-	/// Innermost active scope. Updated on entry to each
-	/// TranslationContext / FunctionContext / BlockContext via
-	/// `pushScope`; descendants' parent chain reaches the same nodes.
-	/// Null before the first scope is pushed (only happens during very
-	/// early ContractBuilder setup).
+	/// Innermost active scope; null before the first pushScopeRaii.
 	sol_ast::Context* currentScope = nullptr;
 
-	/// RAII helper: stash the previous scope on construct, restore on
-	/// destruct. Use via `auto guard = ctx.pushScope(&someContext);`.
+	/// RAII scope guard. Use: `auto guard = ctx.pushScopeRaii(&someContext);`.
 	class ScopePush
 	{
 	public:
@@ -197,45 +159,23 @@ public:
 		return ScopePush(*this, _scope);
 	}
 
-	// Scope-bound state accessors all moved onto `sol_ast::Context`
-	// itself (Context.h). Visitors / builders use `m_scope.findX()` etc.
-	// directly; helpers (ApprovalProgramBuilder, SuperCallResolution,
-	// ModifierInliner, AWSTBuilder freestanding-subroutine path) use
-	// `m_tr->setX()` / local fnCtx / blk. The bridge methods that
-	// previously delegated through `currentScope` have been deleted.
-	//
-	// `currentScope` itself is still alive as plumbing — `pushScopeRaii`
-	// updates it on scope entry, and `SolExpression`/`NodeBuilder`
-	// constructors capture it as their own `m_scope` reference. Once
-	// scope is threaded explicitly through `buildExpr`/`buildBinaryOp`/
-	// the InstanceBuilder factory, that field can go too.
-
-	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
-	/// stashes the RHS here before the LHS build, and SolArrayMethod's
-	/// push() handler consumes it as the pushed element instead of a
-	/// default value, returning the ArrayExtend expression directly.
+	/// RHS stash for `arr.push() = value`: SolAssignment writes here before building
+	/// the LHS; SolArrayMethod::push() consumes it as the element (not the default).
 	std::shared_ptr<awst::Expression> pendingArrayPushValue;
 
-	// ── Recursive build callback (delegates to ContractContext::build) ──
-	/// Build a child Solidity expression into an AWST Expression.
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Expression const&)> buildExpr;
 
-	// ── Binary/unary operation callbacks (delegates to ContractContext::build) ──
-	/// Build a binary operation from already-resolved operands (fallback when sol-eb builders don't handle it).
+	/// Fallback binary-op when sol-eb builders don't handle the operation.
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Token, std::shared_ptr<awst::Expression>,
 		std::shared_ptr<awst::Expression>, awst::WType const*,
 		awst::SourceLocation const&)> buildBinaryOp;
 
-	// ── Builder factory callback ──
-	/// Get a type-specific InstanceBuilder for an already-resolved expression.
 	/// Returns nullptr if no builder is registered for the Solidity type.
 	std::function<std::unique_ptr<InstanceBuilder>(
 		solidity::frontend::Type const*, std::shared_ptr<awst::Expression>)> builderForInstance;
 
-	// ── Source location helper ──
-	/// Create an AWST SourceLocation from file + offset range.
 	awst::SourceLocation makeLoc(int _start, int _end) const
 	{
 		awst::SourceLocation loc;
@@ -251,11 +191,6 @@ public:
 
 namespace puyasol::builder
 {
-// `ContractContext` is conceptually a per-contract translation context,
-// not specifically an expression-builder helper. Hoist the name into the
-// enclosing `puyasol::builder` namespace via a `using` alias so callers
-// outside `eb/` can spell it `builder::ContractContext`. The class itself
-// stays in `eb` because most of its dependencies (BuilderRegistry,
-// InstanceBuilder) genuinely belong there.
+// Alias into puyasol::builder so callers outside eb/ can use builder::ContractContext.
 using ContractContext = eb::ContractContext;
 }

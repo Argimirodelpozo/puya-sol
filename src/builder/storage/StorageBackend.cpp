@@ -41,8 +41,7 @@ std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
 		? awst::AppStorageKind::Box
 		: awst::AppStorageKind::AppGlobal;
 	auto const* type = _value ? _value->wtype : nullptr;
-	// StorageMapper::createStateWrite returns an Expression (an
-	// AssignmentExpression) — wrap as Statement for caller uniformity.
+	// createStateWrite returns an Expression; wrap as Statement.
 	auto writeExpr = m_mapper.createStateWrite(
 		_name, std::move(_value), type, kind, _loc);
 	return awst::makeExpressionStatement(std::move(writeExpr), _loc);

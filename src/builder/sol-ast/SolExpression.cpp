@@ -7,10 +7,8 @@ namespace puyasol::builder::sol_ast
 {
 
 namespace {
-// Pull the current scope out of the context. Visitors are only ever
-// created during translation, when *some* scope is on the stack — if
-// `currentScope` is null, that's a bug at the call site (an entry
-// point forgot to push a scope before recursing into expressions).
+// Null currentScope means the call site forgot to push a scope before
+// building expressions — assert to catch that at the entry point.
 Context& currentScopeOrAbort(eb::ContractContext& _ctx)
 {
 	assert(_ctx.currentScope && "expression visitor created with no current scope");

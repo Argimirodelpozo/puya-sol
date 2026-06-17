@@ -13,10 +13,7 @@
 namespace puyasol::builder::eb
 {
 
-
-
-// ── Small helpers ──
-
+// ── Helpers ──
 
 static awst::WTuple s_boolBytesType(
 	std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()});
@@ -59,8 +56,8 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	if (_receiver->wtype == awst::WType::applicationType())
 		return _receiver;
 
-	// Detect global CurrentApplicationAddress → use CurrentApplicationID directly
-	// (CurrentApplicationAddress is a hash, not our conventional \x00*24 + app_id format)
+	// CurrentApplicationAddress is a hash, not our \x00*24 ++ appId format —
+	// detect it and use CurrentApplicationID directly.
 	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
 	{
 		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
@@ -99,8 +96,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::biguintType())
 	{
-		// AVM biguint is variable-length minimal big-endian; ABI uint256 is
-		// exactly 32 bytes. Pad-then-trim via dynamic-offset extract3.
+		// biguint is minimal big-endian; ABI uint256 is exactly 32 bytes.
 		auto cast = awst::makeAsBytes(std::move(_arg), _loc);
 		return awst::makeLeftPadToN(std::move(cast), 32, _loc);
 	}
@@ -128,17 +124,10 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 namespace
 {
 
-// NESTED ARC4 type name (struct-field / array-element position): exact
-// bit width, signedness PRESERVED, recursive. This is what puya emits for
-// aggregate members, and it differs from the top-level param namer below
-// in two ways that the callee router enforces:
-//   - exact width: a nested `uint8` stays "uint8" (top-level collapses to
-//     "uint64" because a top-level scalar int is transported as a native
-//     word, while a nested one is ARC4-packed at its declared width);
-//   - signedness kept: a nested `int8` is "int8" (top-level drops sign to
-//     "uint8"/"uint128"/… for the same transport reason).
-// Verified against puya's `method "…"` output for struct/nested-struct/
-// array-of-struct/enum/int8/bytesN/fixed-array params.
+// Nested ARC4 type name (struct-field / array-element position).
+// Differs from top-level: exact bit width (not collapsed to uint64),
+// signedness preserved (e.g. nested int8 = "int8", not "uint8").
+// Verified against puya's `method "..."` output.
 std::string nestedArc4Name(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
@@ -180,12 +169,9 @@ std::string nestedArc4Name(
 	return _type->toString(true);
 }
 
-// TOP-LEVEL param name: scalar ints collapse to "uint64"/"uintN" with
-// signedness dropped (intSelectorName); enums → "uint64"; aggregates
-// (struct/array) expand via nestedArc4Name so the string matches the
-// callee router exactly (previously a struct emitted "struct P" and an
-// array-of-struct fell through toString to "struct C.P[]" — neither
-// matched puya's tuple form, silently breaking cross-contract dispatch).
+// Top-level param name: scalars collapse to "uint64"/"uintN" (signedness dropped);
+// enums → "uint64"; aggregates expand via nestedArc4Name to match puya's tuple form.
+// (A plain struct emitted "struct P" previously, silently breaking dispatch.)
 std::string solTypeToARC4Impl(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
@@ -298,7 +284,7 @@ std::string InnerCallHandlers::buildMethodSelector(
 	return sel;
 }
 
-// ── Payment helpers ──
+// ── Payment ──
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 	ContractContext& /*_ctx*/,
@@ -362,18 +348,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 }
 
-// ── .call(abi.encodeCall(fn, args)) → inner app call ──
+// ── .call(abi.encodeCall(...)) ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
-	// AVM has no DELEGATECALL. The EVM semantics — execute callee code in
-	// caller's storage / address / msg.sender context — has no equivalent on
-	// AVM: every app has its own storage, every inner txn has its own
-	// caller. We can't safely emulate this, so refuse to compile rather
-	// than silently producing a wrong-semantic stub.
+	// AVM has no DELEGATECALL: every app has isolated storage, every inner txn
+	// has its own caller. Hard-error rather than silently wrong stub.
 	Logger::instance().error(
 		"`.delegatecall(...)` is not supported on AVM. DELEGATECALL's "
 		"shared-storage / caller-preservation semantics have no equivalent "
@@ -424,11 +407,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	{
 		auto const& dataArg = *_callNode.arguments()[0];
 
-		// Self-call with abi.encodeWithSignature("fn(...)", args): resolve
-		// signature → local function by name+arity and emit a direct
-		// subroutine call (mirrors the isSelfCall path in
-		// handleCallWithEncodeCall). Avoids the fallback stub for contracts
-		// without a fallback, where the callee would otherwise never run.
+		// Self-call with abi.encodeWithSignature/WithSelector: resolve to a
+		// direct subroutine call (mirrors handleCallWithEncodeCall self-call
+		// path; avoids fallback stub for contracts without a fallback).
 		{
 			bool isSelfCallEwS = false;
 			if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
@@ -441,11 +422,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				if (auto const* encCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
 				{
 					auto const* encMA = dynamic_cast<MemberAccess const*>(&encCallExpr->expression());
-					// Two recognised self-call shapes:
+					// Both recognised shapes lower to a direct InstanceMethodTarget:
 					//   address(this).call(abi.encodeWithSignature("fn(types)", args...))
 					//   address(this).call(abi.encodeWithSelector(this.fn.selector, args...))
-					// Both lower to a direct InstanceMethodTarget call on the
-					// contract's `fn`.
 					std::string fnName;
 					size_t firstArgIdx = 1;  // index in encCallExpr args where method args start
 					if (encMA && encMA->memberName() == "encodeWithSignature"
@@ -462,17 +441,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					else if (encMA && encMA->memberName() == "encodeWithSelector"
 						&& !encCallExpr->arguments().empty())
 					{
-						// `this.fn.selector` is MemberAccess(memberName="selector",
-						// expr=MemberAccess(memberName="fn", expr=this)).
+						// `this.fn.selector` = MemberAccess("selector", MemberAccess("fn", this)).
 						if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
 						{
 							if (selMA->memberName() == "selector")
 							{
 								if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
 								{
-									// expression() is `this`; accept any base
-									// (member access on `this` is implicit on
-									// the contract's own scope).
 									fnName = fnMA->memberName();
 								}
 							}
@@ -494,13 +469,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 						}
 						if (target)
 						{
-							// AVM can't self-call (no recursive inner-txn into
-							// the same app); rewrite this `address(this).call(...)`
-							// pattern into a direct subroutine call to the
-							// resolved method. Solidity programs that depend
-							// on revert isolation across the boundary will see
-							// different behaviour — the inner revert propagates
-							// here instead of being caught as success=false.
+							// AVM rejects self inner-txn calls; rewrite to direct callsub.
+							// Revert isolation differs: reverts propagate instead of
+							// being caught as success=false.
 							Logger::instance().warning(
 								"`address(this).call(abi.encode" +
 								std::string(encMA->memberName() == "encodeWithSelector"
@@ -510,14 +481,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								"calls; revert-isolation semantics may differ.",
 								_loc);
 
-							// Helper: ABI-encode a single value (per its solidity
-							// type) into an exact 32-byte big-endian word —
-							// matches what the EVM ABI returns at the boundary
-							// and what `abi.decode(ret, (...))` expects.
-							// Uses makeLeftPadToN (not makeLeftPad) so the
-							// result is *exactly* 32 bytes even when the input
-							// is already 32 bytes (biguint minimal-rep can be
-							// shorter, but we always emit 32).
+							// Encode a return value as exactly 32 bytes (EVM ABI / abi.decode shape).
+							// makeLeftPadToN ensures exactly 32 even when biguint minimal-rep is shorter.
 							auto encodeAs32 = [&_loc](std::shared_ptr<awst::Expression> v)
 								-> std::shared_ptr<awst::Expression>
 							{
@@ -539,13 +504,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								}
 								if (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)
 								{
-									// bytesN: right-pad (EVM convention for
-									// fixed-bytes return) — extract 32 bytes
-									// from the right-padded result via
-									// makeRightPad which uses raw concat (so
-									// we'd need len-aware trimming; for the
-									// common case of len <= 32, left-side stays
-									// untouched and right gets zeros, total 32).
+									// bytesN: right-pad to 32 (EVM convention).
 									auto bw = dynamic_cast<awst::BytesWType const*>(v->wtype);
 									int len = bw && bw->length() ? *bw->length() : 32;
 									auto bytes = awst::makeAsBytes(std::move(v), _loc);
@@ -553,14 +512,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 										return awst::makeRightPad(std::move(bytes), 32 - len, _loc);
 									return bytes;
 								}
-								// Fallback — leave as-is.
 								return awst::makeAsBytes(std::move(v), _loc);
 							};
 
 							size_t nReturns = target->returnParameters().size();
 							if (nReturns == 0)
 							{
-								// Void target: just emit the call, return empty bytes.
 								auto call = awst::makeSubroutineCall(
 									awst::InstanceMethodTarget{target->name()},
 									awst::WType::voidType(), _loc);
@@ -587,10 +544,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 									makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 							}
 
-							// Multi-return: call returns a tuple. Use
-							// SingleEvaluation so the call runs once and each
-							// TupleItemExpression reads from the cached result;
-							// then ABI-encode each element to 32 bytes and concat.
+							// Multi-return: SingleEvaluation so call runs once;
+							// ABI-encode each return element to 32 bytes and concat.
 							std::vector<awst::WType const*> tupleTypes;
 							for (auto const& ret : target->returnParameters())
 							{
@@ -604,9 +559,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
 								awst::pushCallArg(call->args,
 									_ctx.buildExpr(*encCallExpr->arguments()[i]));
-							// Unique id required: with a fixed id, two identical calls in
-							// one function compare attrs-equal and would merge into a
-							// single evaluation (second call never executes).
+							// nextSingleEvalId() prevents identical calls from merging (see sol-ast-audit).
 							auto cachedCall = awst::makeSingleEvaluation(
 								std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
 
@@ -636,11 +589,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _loc);
 				if (result) return result;
 			}
-			// .call(abi.encodeWithSignature/WithSelector(...)): the encoder is
-			// visible at the call site, so re-encode as a TYPED inner call
-			// (sha512_256 selector + one ARC4 ApplicationArg per argument)
-			// instead of forwarding an EVM-shaped blob the callee router
-			// could never parse. See EVM_DIVERGENCE.md "Encoding model" #1.
+			// .call(abi.encodeWithSignature/WithSelector(...)): encoder visible at call site —
+			// re-encode as typed inner call instead of forwarding an EVM-shaped blob.
+			// See EVM_DIVERGENCE.md "Encoding model" #1.
 			if (encodeMA
 				&& (encodeMA->memberName() == "encodeWithSignature"
 					|| encodeMA->memberName() == "encodeWithSelector")
@@ -678,10 +629,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				if (result) return result;
 			}
 		}
-		// Non-encodeCall `address(this).call(data)` self-call: dispatch
-		// directly to the contract's __fallback function. Any data that
-		// isn't a selector-matching ABI call would have been routed to
-		// fallback by our approval program anyway.
+		// Non-encodeCall self-call: route to __fallback (non-selector data
+		// would reach fallback in the approval program anyway).
 		bool isSelfCall = false;
 		if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
 		{
@@ -695,7 +644,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 
 		if (isSelfCall)
 		{
-			// Build the data expression — evaluates any side effects.
 			auto dataExpr = _ctx.buildExpr(dataArg);
 			if (dataExpr->wtype == awst::WType::stringType())
 			{
@@ -703,9 +651,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				dataExpr = std::move(cast);
 			}
 
-			// Only dispatch to __fallback if the contract actually defines
-			// one. Otherwise emitting `InstanceMethodTarget{"__fallback"}`
-			// leaves an unresolvable reference in the AWST.
+			// Only route to __fallback if the contract defines one; otherwise
+			// an InstanceMethodTarget{"__fallback"} would be unresolvable.
 			solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
 			if (_ctx.currentContract)
 			{
@@ -719,7 +666,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 
 			if (!fallbackFunc)
 			{
-				// No fallback in the contract — stub as (true, empty bytes).
 				return std::make_unique<GenericResultBuilder>(_ctx,
 					makeBoolBytesTupleEmpty(_loc));
 			}
@@ -731,11 +677,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			if (fallbackTakesBytes)
 				awst::pushCallArg(call->args, dataExpr);
 
-			// When the fallback returns bytes, spill the subroutine call
-			// result into a named local so the caller's `retval` reads it.
-			// The router wrapper logs but doesn't return, so the direct
-			// InstanceMethodTarget to the bytes-returning fallback is what
-			// we invoke.
+			// Spill bytes-returning fallback result to a temp.
 			if (fallbackReturnsBytes)
 			{
 				static int s_tmpCounter = 0;
@@ -756,12 +698,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
 		}
 
-		// Non-self raw .call(data) → inner app call. Splits the blob into
-		// [selector, rest] so the callee's ARC4 router can dispatch.
-		// Compile-time empty-literal `.call("")` is stubbed as `(true, "")`
-		// — matches EVM's low-level "call to non-contract returns true" and
-		// avoids spurious inner-txn failures when the target app doesn't
-		// exist (see tests/functionCall/bare_call_no_returndatacopy.sol and
+		// Non-self raw .call(data) → inner app call; splits [selector, rest].
+		// Compile-time empty literal → stub (true, "") to match EVM "call to
+		// non-contract returns true" (bare_call_no_returndatacopy.sol,
 		// calling_nonexisting_contract_throws.sol).
 		auto dataExpr = _ctx.buildExpr(dataArg);
 		auto isEmptyConst = [](awst::Expression const* e) {
@@ -782,10 +721,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), _loc);
 	}
 
-	// .staticcall(data) → precompile routing
 	if (_memberName == "staticcall")
 	{
-		// Detect precompile address from address(N) pattern
 		std::optional<uint64_t> precompileAddr;
 		if (auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr))
 		{
@@ -810,12 +747,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			if (result) return result;
 		}
 
-		// Fallback — HARD ERROR. Only precompiles 0x01–0x08 are handled; any
-		// other target (or an unimplemented precompile, which reaches here via
-		// handleStaticCallPrecompile returning nullptr) would be stubbed as
-		// `(true, "")`, making `require(ok)` pass spuriously and decoding the
-		// returndata as all-zero. Refuse to compile rather than emit a
-		// silently-wrong call.
+		// Hard error: stubbing as (true, "") would make require(ok) pass spuriously.
 		for (auto const& arg : _callNode.arguments())
 			_ctx.buildExpr(*arg);
 		Logger::instance().error(
@@ -826,10 +758,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 	}
 
-	// .delegatecall(...) — unsupported on AVM. handleDelegatecall logs a
-	// compile-time error and emits a (true, empty) stub so the rest of the
-	// translation can still complete (caller will get the error in the
-	// compiler output before bytecode is ever produced).
 	if (_memberName == "delegatecall")
 		return handleDelegatecall(_ctx, _callNode, _loc);
 
@@ -841,7 +769,6 @@ void InnerCallHandlers::fundCreatedApp(
 	std::shared_ptr<awst::Expression> _amount,
 	awst::SourceLocation const& _loc)
 {
-	// Get the real Algorand address of the just-created app
 	auto appId = awst::makeItxn("CreatedApplicationID", awst::WType::uint64Type(), _loc);
 
 	auto* tupleType = new awst::WTuple({awst::WType::bytesType(), awst::WType::boolType()});
@@ -852,7 +779,6 @@ void InnerCallHandlers::fundCreatedApp(
 
 	auto receiver = awst::makeAsAccount(std::move(addrBytes), _loc);
 
-	// Build and submit inner payment
 	auto create = buildPaymentTransaction(_ctx, std::move(receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
 	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);

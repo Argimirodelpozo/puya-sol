@@ -16,10 +16,8 @@ SolRevert::SolRevert(
 
 std::shared_ptr<awst::Expression> SolRevert::toAwst()
 {
-	// Determine error message. For `revert Error(args)`, the callee
-	// identifies the error name. For `revert("msg")`, Solidity treats
-	// this as a FunctionCall whose callee is the identifier `revert`,
-	// and the first argument is the message literal.
+	// `revert Error(args)`: callee identifies error name.
+	// `revert("msg")`: FunctionCall with identifier `revert`; first arg is message.
 	std::string errorMessage = "revert";
 	std::shared_ptr<awst::Expression> revertBlob;
 	auto const& callee = m_call.expression();
@@ -29,10 +27,8 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 			errorMessage = id->name();
 		else if (!m_call.arguments().empty())
 		{
-			// `revert("msg")` / `revert(stringExpr)` — log the EVM-shaped
-			// Error(string) payload before failing so the revert reason is
-			// client-readable (via simulate). Bare `revert()` keeps empty
-			// revert data, matching EVM.
+			// Log Error(string) payload for client readability (simulate).
+			// Bare `revert()` → empty revert data (EVM-compatible).
 			auto msgExpr = buildExpr(*m_call.arguments()[0]);
 			if (auto const* sc = dynamic_cast<awst::StringConstant const*>(msgExpr.get()))
 			{
@@ -46,8 +42,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 	}
 	else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&callee))
 	{
-		// Custom error `revert E(args)` — name as the TEAL comment; the
-		// selector+args payload is a follow-up.
+		// Custom error: name as TEAL comment; selector+args follow-up.
 		errorMessage = ma->memberName();
 	}
 
@@ -57,8 +52,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 	{
 		m_ctx.prePendingStatements.push_back(
 			makeRevertLogStmt(std::move(revertBlob), m_loc));
-		// The log carries the user-visible revert contract; let puya's
-		// optimizer strip the fail when provably unreachable.
+		// isExplicit=false: let puya optimizer strip provably-unreachable fail.
 		failNode->isExplicit = false;
 	}
 	return failNode;

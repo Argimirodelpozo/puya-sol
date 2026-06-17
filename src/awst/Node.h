@@ -196,8 +196,7 @@ struct IntegerConstant: Expression
 	std::string value; // use string for biguint support
 };
 
-// Construct an IntegerConstant. wtype defaults to uint64Type(); pass biguintType()
-// for values > 2^64 or for biguint contexts.
+// wtype defaults to uint64Type(); pass biguintType() for values >2^64.
 inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	std::string value,
 	SourceLocation loc,
@@ -210,8 +209,7 @@ inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	return node;
 }
 
-// Numeric overload — accepts a uint64_t and converts internally.
-// Drops the std::to_string adapter at >100 call sites.
+// uint64_t overload — converts to string internally.
 inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	uint64_t value,
 	SourceLocation loc,
@@ -220,18 +218,14 @@ inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	return makeIntegerConstant(std::to_string(value), std::move(loc), wtype);
 }
 
-// Shorthand for `makeIntegerConstant(value, loc, biguintType())` — the
-// most common biguint-constant construction (~30 sites across the
-// builder layer for "0", "1", and 2^256 wraps).
+// Shorthand for makeIntegerConstant(value, loc, biguintType()).
 inline std::shared_ptr<IntegerConstant> makeBiguintConstant(
 	std::string value, SourceLocation loc)
 {
 	return makeIntegerConstant(std::move(value), std::move(loc), WType::biguintType());
 }
 
-// Common `0` / `1` shorthands. wtype defaults to uint64Type() to match
-// makeIntegerConstant; pass biguintType() for biguint zero/one (~30 sites
-// across the builder layer respectively).
+// Common 0/1 shorthands. Pass biguintType() for biguint zero/one.
 inline std::shared_ptr<IntegerConstant> makeZero(
 	SourceLocation loc, WType const* wtype = WType::uint64Type())
 {
@@ -249,9 +243,7 @@ struct BoolConstant: Expression
 	bool value = false;
 };
 
-// Construct a BoolConstant node. The wtype defaults to the canonical bool
-// singleton; callers only need to pass a custom type when they are e.g.
-// cloning another node or using an ABI-widened return-path type.
+// wtype defaults to boolType(); pass a custom type only for ABI-widened paths.
 inline std::shared_ptr<BoolConstant> makeBoolConstant(
 	bool value, SourceLocation loc, WType const* wtype = WType::boolType())
 {
@@ -262,7 +254,7 @@ inline std::shared_ptr<BoolConstant> makeBoolConstant(
 	return node;
 }
 
-// `true` / `false` shorthands. ~30 sites across the builder layer.
+// true/false shorthands.
 inline std::shared_ptr<BoolConstant> makeTrue(SourceLocation loc)
 {
 	return makeBoolConstant(true, std::move(loc));
@@ -279,10 +271,7 @@ struct BytesConstant: Expression
 	BytesEncoding encoding = BytesEncoding::Unknown;
 };
 
-// Construct a BytesConstant. wtype defaults to the canonical bytesType()
-// singleton and encoding defaults to Base16 (hex literal / raw bytes).
-// Pass the utf8 encoding + a boxKeyType()/stateKeyType() wtype when the
-// value is a human-readable name used as a box/state-global key.
+// encoding defaults to Base16; pass Utf8 + boxKeyType/stateKeyType for name-as-key.
 inline std::shared_ptr<BytesConstant> makeBytesConstant(
 	std::vector<uint8_t> value,
 	SourceLocation loc,
@@ -331,7 +320,7 @@ struct VoidConstant: Expression
 	std::string nodeType() const override { return "VoidConstant"; }
 };
 
-// `void` value — the zero of the unit type. Always typed `voidType()`.
+// void value (unit type). Always typed voidType().
 inline std::shared_ptr<VoidConstant> makeVoidConstant(SourceLocation loc)
 {
 	auto node = std::make_shared<VoidConstant>();
@@ -346,7 +335,7 @@ struct VarExpression: Expression
 	std::string name;
 };
 
-// Construct a VarExpression (variable reference by name).
+// Variable reference by name.
 inline std::shared_ptr<VarExpression> makeVarExpression(
 	std::string name,
 	WType const* wtype,
@@ -367,7 +356,7 @@ struct UInt64BinaryOperation: Expression
 	std::shared_ptr<Expression> right;
 };
 
-// Construct a UInt64BinaryOperation. wtype is uint64Type().
+// wtype is uint64Type().
 inline std::shared_ptr<UInt64BinaryOperation> makeUInt64BinOp(
 	std::shared_ptr<Expression> left,
 	UInt64BinaryOperator op,
@@ -391,7 +380,7 @@ struct BigUIntBinaryOperation: Expression
 	std::shared_ptr<Expression> right;
 };
 
-// Construct a BigUIntBinaryOperation. wtype is biguintType().
+// wtype is biguintType().
 inline std::shared_ptr<BigUIntBinaryOperation> makeBigUIntBinOp(
 	std::shared_ptr<Expression> left,
 	BigUIntBinaryOperator op,
@@ -461,7 +450,7 @@ struct NumericComparisonExpression: Expression
 	std::shared_ptr<Expression> rhs;
 };
 
-// Construct a NumericComparisonExpression. wtype is always boolType().
+// wtype is boolType().
 inline std::shared_ptr<NumericComparisonExpression> makeNumericCompare(
 	std::shared_ptr<Expression> lhs,
 	NumericComparison op,
@@ -485,7 +474,7 @@ struct BytesComparisonExpression: Expression
 	std::shared_ptr<Expression> rhs;
 };
 
-// Construct a BytesComparisonExpression. wtype is always boolType().
+// wtype is boolType().
 inline std::shared_ptr<BytesComparisonExpression> makeBytesComparison(
 	std::shared_ptr<Expression> lhs,
 	EqualityComparison op,
@@ -509,7 +498,7 @@ struct BooleanBinaryOperation: Expression
 	std::shared_ptr<Expression> right;
 };
 
-// `left {AND,OR} right` over bool operands. Result type is always bool.
+// bool AND/OR. Result type is bool.
 inline std::shared_ptr<BooleanBinaryOperation> makeBoolBinOp(
 	std::shared_ptr<Expression> left, BinaryBooleanOperator op,
 	std::shared_ptr<Expression> right, SourceLocation loc)
@@ -529,7 +518,7 @@ struct Not: Expression
 	std::shared_ptr<Expression> expr;
 };
 
-// Logical-not on a bool expression. Result type is always bool.
+// Logical-not. Result type is bool.
 inline std::shared_ptr<Not> makeNot(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
@@ -554,9 +543,7 @@ struct AssertExpression: Expression
 	bool isExplicit = true;
 };
 
-// Construct an AssertExpression node. The wtype defaults to voidType()
-// (what the vast majority of callers use); the splitter uses boolType()
-// for helper-group flags, and a few sites clone an existing node's wtype.
+// wtype defaults to voidType(); splitter uses boolType() for helper-group flags.
 inline std::shared_ptr<AssertExpression> makeAssert(
 	std::shared_ptr<Expression> condition,
 	SourceLocation loc,
@@ -578,9 +565,7 @@ struct AssignmentExpression: Expression
 	std::shared_ptr<Expression> value;
 };
 
-// Construct an AssignmentExpression. wtype defaults to target->wtype, which
-// is correct for ~all sites; pass an explicit wtype only when the assignment
-// type differs from the target type (e.g. tuple LHS, library-storage write).
+// wtype defaults to target->wtype; pass explicit wtype for tuple LHS or library writes.
 inline std::shared_ptr<AssignmentExpression> makeAssignmentExpression(
 	std::shared_ptr<Expression> target,
 	std::shared_ptr<Expression> value,
@@ -611,9 +596,7 @@ struct SubroutineCallExpression: Expression
 	std::vector<CallArg> args;
 };
 
-// Construct a SubroutineCallExpression header (sourceLocation/wtype/target).
-// Callers append CallArg entries to `args` afterwards. Reduces the canonical
-// 4-line construction (make_shared / sourceLocation / wtype / target) to one.
+// Construct a SubroutineCallExpression (no args; caller appends to `args`).
 inline std::shared_ptr<SubroutineCallExpression> makeSubroutineCall(
 	SubroutineTarget target,
 	WType const* returnType,
@@ -626,9 +609,7 @@ inline std::shared_ptr<SubroutineCallExpression> makeSubroutineCall(
 	return node;
 }
 
-// Append a named CallArg to a SubroutineCallExpression / PuyaLibCall args list.
-// Reduces the 4-line `CallArg ca; ca.name = ...; ca.value = ...; args.push_back(...);`
-// boilerplate to a single call.
+// Append a named CallArg to args.
 inline void pushCallArg(
 	std::vector<CallArg>& args,
 	std::string name,
@@ -640,7 +621,7 @@ inline void pushCallArg(
 	args.push_back(std::move(ca));
 }
 
-// Overload: append an unnamed (positional) CallArg.
+// Append an unnamed (positional) CallArg.
 inline void pushCallArg(
 	std::vector<CallArg>& args,
 	std::shared_ptr<Expression> value)
@@ -658,8 +639,7 @@ struct IntrinsicCall: Expression
 	std::vector<std::shared_ptr<Expression>> stackArgs;
 };
 
-// Construct an IntrinsicCall header (sourceLocation/wtype/opCode). Callers
-// append to `stackArgs` and `immediates` as needed afterwards.
+// Construct an IntrinsicCall (no args; caller appends stackArgs/immediates).
 inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
 	std::string opCode,
 	WType const* wtype,
@@ -672,8 +652,7 @@ inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
 	return node;
 }
 
-// `itob(uint64Expr)` → 8-byte big-endian bytes. Common enough to deserve
-// a convenience helper.
+// `itob(uint64Expr)` → 8-byte big-endian bytes.
 inline std::shared_ptr<IntrinsicCall> makeItob(
 	std::shared_ptr<Expression> uint64Expr, SourceLocation loc)
 {
@@ -682,7 +661,7 @@ inline std::shared_ptr<IntrinsicCall> makeItob(
 	return node;
 }
 
-// `btoi(bytesExpr)` → uint64. bytesExpr must be ≤ 8 bytes.
+// `btoi(bytesExpr)` → uint64 (bytesExpr must be ≤8 bytes).
 inline std::shared_ptr<IntrinsicCall> makeBtoi(
 	std::shared_ptr<Expression> bytesExpr, SourceLocation loc,
 	WType const* wtype = nullptr)
@@ -715,9 +694,7 @@ inline std::shared_ptr<IntrinsicCall> makeConcat(
 	return node;
 }
 
-// `global <field>` — read a global field (e.g. "CurrentApplicationID",
-// "LatestTimestamp", "OpcodeBudget"). 20+ sites use the pattern of
-// creating the intrinsic then setting `immediates = {field}` manually.
+// `global <field>` — read a global field (e.g. "CurrentApplicationID", "LatestTimestamp").
 inline std::shared_ptr<IntrinsicCall> makeGlobal(
 	std::string field, WType const* wtype, SourceLocation loc)
 {
@@ -726,8 +703,7 @@ inline std::shared_ptr<IntrinsicCall> makeGlobal(
 	return node;
 }
 
-// `txn <field>` — read a current-transaction field (e.g. "GroupIndex",
-// "Sender", "NumAppArgs", "ApplicationID").
+// `txn <field>` — read current-transaction field.
 inline std::shared_ptr<IntrinsicCall> makeTxn(
 	std::string field, WType const* wtype, SourceLocation loc)
 {
@@ -736,10 +712,7 @@ inline std::shared_ptr<IntrinsicCall> makeTxn(
 	return node;
 }
 
-// `txna ApplicationArgs <i>` — read the i-th application argument as
-// bytes. `wtype` defaults to `WType::bytesType()` but callers that need
-// a fixed-width view (e.g. `BytesWType(4)` for the 4-byte method
-// selector) can override.
+// `txna ApplicationArgs <i>` — read app arg as bytes; override wtype for fixed-width view.
 inline std::shared_ptr<IntrinsicCall> makeAppArg(
 	int i, SourceLocation loc, WType const* wtype = nullptr)
 {
@@ -749,11 +722,7 @@ inline std::shared_ptr<IntrinsicCall> makeAppArg(
 	return node;
 }
 
-// `itxn <field>` — read a field of the most recently submitted inner
-// transaction (e.g. "LastLog" for the inner app call's return data,
-// "CreatedApplicationID" after a Create itxn). Companion to makeTxn /
-// makeGlobal; takes wtype because field types vary (LastLog→bytes,
-// most others→uint64 or account).
+// `itxn <field>` — read a field of the most recent inner txn (e.g. "LastLog").
 inline std::shared_ptr<IntrinsicCall> makeItxn(
 	std::string field, WType const* wtype, SourceLocation loc)
 {
@@ -762,9 +731,8 @@ inline std::shared_ptr<IntrinsicCall> makeItxn(
 	return node;
 }
 
-// `block <field> <roundExpr>` — read a past-block field (BlkSeed,
-// BlkTimestamp). Unlike makeTxn/makeGlobal/makeItxn, this opcode takes
-// the round as a stack argument, not an immediate.
+// `block <field> <roundExpr>` — read a past-block field (BlkSeed, BlkTimestamp);
+// round is a stack arg, not an immediate.
 inline std::shared_ptr<IntrinsicCall> makeBlock(
 	std::string field, std::shared_ptr<Expression> roundExpr,
 	WType const* wtype, SourceLocation loc)
@@ -775,10 +743,7 @@ inline std::shared_ptr<IntrinsicCall> makeBlock(
 	return node;
 }
 
-// `app_params_get <field> <appId>` — query a deployed app's params
-// (AppAddress, AppApprovalProgram, AppGlobalNumByteSlice, etc.).
-// Always returns a (value, exists) tuple; caller passes the matching
-// `tupleType`. Stack arg is the appId.
+// `app_params_get <field> <appId>` → (value, exists) tuple.
 inline std::shared_ptr<IntrinsicCall> makeAppParamsGet(
 	std::string field, std::shared_ptr<Expression> appId,
 	WType const* tupleType, SourceLocation loc)
@@ -789,10 +754,7 @@ inline std::shared_ptr<IntrinsicCall> makeAppParamsGet(
 	return node;
 }
 
-// `asset_params_get <field> <assetId>` — query an ASA's params
-// (AssetTotal, AssetDecimals, AssetUnitName, AssetName, etc.). Always
-// returns a (value, exists) tuple; caller passes the matching
-// `tupleType` (uint64 fields → uint64+bool, byte fields → bytes+bool).
+// `asset_params_get <field> <assetId>` → (value, exists) tuple.
 inline std::shared_ptr<IntrinsicCall> makeAssetParamsGet(
 	std::string field, std::shared_ptr<Expression> assetId,
 	WType const* tupleType, SourceLocation loc)
@@ -803,9 +765,7 @@ inline std::shared_ptr<IntrinsicCall> makeAssetParamsGet(
 	return node;
 }
 
-// `gtxns <field> <groupIdx>` — read a field of another transaction in
-// the current group, indexed by `groupIdx`. Companion to makeTxn
-// (current txn) and makeGitxn (inner txn by index).
+// `gtxns <field> <groupIdx>` — read a group txn field by index.
 inline std::shared_ptr<IntrinsicCall> makeGtxns(
 	std::string field, std::shared_ptr<Expression> groupIdx,
 	WType const* wtype, SourceLocation loc)
@@ -816,10 +776,7 @@ inline std::shared_ptr<IntrinsicCall> makeGtxns(
 	return node;
 }
 
-// `load <slot>` — read a scratch slot as bytes. Used for the EVM memory
-// blob (MEMORY_SLOT_FIRST + n) and the transient-storage blob
-// (TRANSIENT_SLOT). Always returns bytes — callers that need a numeric
-// view btoi the result.
+// `load <slot>` → bytes. Used for EVM memory / transient-storage blobs.
 inline std::shared_ptr<IntrinsicCall> makeLoadSlot(
 	int slot, SourceLocation loc)
 {
@@ -828,9 +785,7 @@ inline std::shared_ptr<IntrinsicCall> makeLoadSlot(
 	return node;
 }
 
-// `store <slot> <value>` — write `value` to a scratch slot. Companion
-// to `makeLoadSlot`; `value` typically comes from a `replace3` over a
-// fresh slot read.
+// `store <slot> <value>` — write to a scratch slot.
 inline std::shared_ptr<IntrinsicCall> makeStoreSlot(
 	int slot, std::shared_ptr<Expression> value, SourceLocation loc)
 {
@@ -840,9 +795,7 @@ inline std::shared_ptr<IntrinsicCall> makeStoreSlot(
 	return node;
 }
 
-// `box_put key value` — write `value` to the box stored at `key`. The
-// box's size must equal `len(value)` (otherwise it fails); callers that
-// resize must `box_del` first.
+// `box_put key value` — box size must equal len(value); resize with box_del first.
 inline std::shared_ptr<IntrinsicCall> makeBoxPut(
 	std::shared_ptr<Expression> key,
 	std::shared_ptr<Expression> value,
@@ -854,8 +807,7 @@ inline std::shared_ptr<IntrinsicCall> makeBoxPut(
 	return node;
 }
 
-// `box_create key size` → bool (true if a new box was created, false
-// if it already existed). Callers typically discard the result.
+// `box_create key size` → bool (true if new, false if existed).
 inline std::shared_ptr<IntrinsicCall> makeBoxCreate(
 	std::shared_ptr<Expression> key,
 	std::shared_ptr<Expression> size,
@@ -867,8 +819,7 @@ inline std::shared_ptr<IntrinsicCall> makeBoxCreate(
 	return node;
 }
 
-// `box_len key` → (length: uint64, exists: bool) tuple. Caller passes
-// the matching `tupleType` (uint64 + bool); only differs by ownership.
+// `box_len key` → (length: uint64, exists: bool) tuple.
 inline std::shared_ptr<IntrinsicCall> makeBoxLen(
 	std::shared_ptr<Expression> key,
 	WType const* tupleType,
@@ -879,8 +830,7 @@ inline std::shared_ptr<IntrinsicCall> makeBoxLen(
 	return node;
 }
 
-// `box_extract key offset length` → bytes slice from the box. Faults
-// if the box doesn't exist or the range overflows.
+// `box_extract key offset length` → bytes slice (faults if absent or overflow).
 inline std::shared_ptr<IntrinsicCall> makeBoxExtract(
 	std::shared_ptr<Expression> key,
 	std::shared_ptr<Expression> offset,
@@ -894,9 +844,7 @@ inline std::shared_ptr<IntrinsicCall> makeBoxExtract(
 	return node;
 }
 
-// `box_del key` — delete the box at `key`. Returns a bool indicating
-// whether the box existed; most callsites ignore that and discard via a
-// statement.
+// `box_del key` → bool (existed). Most callers discard the result.
 inline std::shared_ptr<IntrinsicCall> makeBoxDel(
 	std::shared_ptr<Expression> key, SourceLocation loc)
 {
@@ -905,8 +853,7 @@ inline std::shared_ptr<IntrinsicCall> makeBoxDel(
 	return node;
 }
 
-// `app_global_put key value` — write `value` to the global state slot at
-// `key`. No size restriction beyond the global-state schema.
+// `app_global_put key value` — write to a global state slot.
 inline std::shared_ptr<IntrinsicCall> makeAppGlobalPut(
 	std::shared_ptr<Expression> key,
 	std::shared_ptr<Expression> value,
@@ -921,12 +868,9 @@ inline std::shared_ptr<IntrinsicCall> makeAppGlobalPut(
 // `extract <offset> <length>; <bytesExpr>` — 2-immediate form for constant
 // offset/length; stack arg is the source bytes expression.
 //
-// AVM SEMANTICS, easy to misread: when `length == 0` the `extract` opcode
-// returns bytes from `offset` to the END of the source — NOT zero bytes.
-// So `makeExtract(x, N, 0)` is the idiom for "strip the first N bytes,
-// keep the rest" (used to drop ARC4 length/return prefixes). Two separate
-// code audits flagged this as an "extracts zero bytes" bug; it is not.
-// Use makeExtract3 when the length is a non-constant runtime value.
+// AVM gotcha: length==0 means "to end of source", NOT zero bytes.
+// makeExtract(x, N, 0) strips the first N bytes. Use makeExtract3 for
+// non-constant length.
 inline std::shared_ptr<IntrinsicCall> makeExtract(
 	std::shared_ptr<Expression> bytesExpr,
 	int offset, int length,
@@ -938,27 +882,14 @@ inline std::shared_ptr<IntrinsicCall> makeExtract(
 	return node;
 }
 
-// Wrap `expr` in a SingleEvaluation with a globally unique id so the backend
-// evaluates it exactly once however many times the node is referenced. Pure
-// leaves (vars/constants) and already-wrapped nodes pass through untouched —
-// re-evaluating them is free and keeps their codegen byte-identical. Defined
-// after the SingleEvaluation node below; declared here so the byte-shuffling
-// helpers in this section can use it.
+// Wrap expr in a SingleEvaluation (unique id). Pure leaves pass through.
+// Declared here (defined below) so byte-shuffling helpers can use it.
 inline std::shared_ptr<Expression> makeEvalOnce(
 	std::shared_ptr<Expression> expr, SourceLocation loc);
 
-// Take the LAST n bytes of `bytesExpr`: lowers to
-//   extract3(bytesExpr, len(bytesExpr) - n, n)
-// 3-arg `extract3` form because the offset is `len - n` at runtime
-// (constant only if `len` is known statically — which it usually isn't
-// for box reads and padded biguints, so the dynamic form is correct).
-// ~8 sites across the builder use this exact pattern to right-align
-// a bytes value to a fixed width after a left-pad. `bytesExpr` is
-// referenced TWICE (once by len, once by extract3) — serialization turns a
-// shared node into two identical subtrees that each lower separately (puya
-// has NO general AST-identity dedup; SingleEvaluation is the only dedup
-// mechanism), so wrap the input in makeEvalOnce or a side-effecting input
-// (a call, an inner txn) would execute twice.
+// Last n bytes of bytesExpr: extract3(bytesExpr, len-n, n).
+// bytesExpr is referenced twice — wrap in makeEvalOnce if side-effecting
+// (puya has no general AST-identity dedup; SingleEvaluation is the only mechanism).
 inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	std::shared_ptr<Expression> bytesExpr,
 	int n,
@@ -982,8 +913,7 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	return extract;
 }
 
-// `setbit(bytes, bitIdx, value)` → bytes with the specified bit set
-// or cleared. Used heavily to build ARC4-encoded bools (0x80/0x00 byte).
+// `setbit(bytes, bitIdx, value)` → bytes with bit set/cleared.
 inline std::shared_ptr<IntrinsicCall> makeSetbit(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> bitIdx,
@@ -997,8 +927,7 @@ inline std::shared_ptr<IntrinsicCall> makeSetbit(
 	return node;
 }
 
-// `getbit(bytes, bitIdx)` → uint64 (0 or 1). Companion to makeSetbit;
-// dominant use is ARC4-bool decode (read bit 0 of a single-byte arg).
+// `getbit(bytes, bitIdx)` → uint64 (0 or 1).
 inline std::shared_ptr<IntrinsicCall> makeGetbit(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> bitIdx,
@@ -1010,8 +939,7 @@ inline std::shared_ptr<IntrinsicCall> makeGetbit(
 	return node;
 }
 
-// `extract_uint64(bytes, offset)` → 8-byte big-endian uint64 read.
-// Result type is `WType::uint64Type()` by default.
+// `extract_uint64(bytes, offset)` → uint64.
 inline std::shared_ptr<IntrinsicCall> makeExtractUInt64(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> offset,
@@ -1024,9 +952,7 @@ inline std::shared_ptr<IntrinsicCall> makeExtractUInt64(
 	return node;
 }
 
-// `extract_uint16(bytes, offset)` → 2-byte big-endian uint16 read,
-// widened to a stack uint64. Used heavily to read ARC4 dynamic-array
-// length prefixes.
+// `extract_uint16(bytes, offset)` → uint64 (ARC4 length prefix reads).
 inline std::shared_ptr<IntrinsicCall> makeExtractUInt16(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> offset,
@@ -1039,10 +965,7 @@ inline std::shared_ptr<IntrinsicCall> makeExtractUInt16(
 	return node;
 }
 
-// `extract3(bytes, offset, length)` → bytes slice. ~70 sites across the
-// builder layer use this exact 3-stack-arg shape. `wtype` defaults to
-// `WType::bytesType()` but callers that need a fixed-width view
-// (e.g. `BytesWType(1)` for a single-byte slice) can override.
+// `extract3(bytes, offset, length)` → bytes slice.
 inline std::shared_ptr<IntrinsicCall> makeExtract3(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> offset,
@@ -1058,9 +981,7 @@ inline std::shared_ptr<IntrinsicCall> makeExtract3(
 	return node;
 }
 
-// The inverse of makeExtractUInt16: 2-byte big-endian (ARC4 uint16)
-// encoding of a uint64 value — extract3(itob(value), 6, 2). The standard
-// ARC4 dynamic-array length-prefix write.
+// 2-byte big-endian (ARC4 uint16) encoding: extract3(itob(value), 6, 2).
 inline std::shared_ptr<Expression> makeUInt16Bytes(
 	std::shared_ptr<Expression> value, SourceLocation loc)
 {
@@ -1073,8 +994,7 @@ inline std::shared_ptr<Expression> makeUInt16Bytes(
 }
 
 
-// `replace3(bytes, offset, replacement)` → bytes with `replacement` overlaid
-// starting at `offset`. ~16 sites use this exact 3-stack-arg shape.
+// `replace3(bytes, offset, replacement)` → bytes with replacement overlaid at offset.
 inline std::shared_ptr<IntrinsicCall> makeReplace3(
 	std::shared_ptr<Expression> bytes,
 	std::shared_ptr<Expression> offset,
@@ -1109,11 +1029,7 @@ inline std::shared_ptr<IntrinsicCall> makeBzero(int count, SourceLocation loc)
 // the canonical bridge for ARC4→EVM tail framing (the read-side partners
 // are uint64FromAbiWord in builder/abi and makeExtractUInt16 below).
 //
-// CONTRACT: references `bytes` TWICE (len + concat). Callers passing a
-// side-effecting expression must makeEvalOnce it first, or it evaluates
-// twice. Current callers are safe — encodeDynamicTail pre-caches via
-// makeEvalOnce; the synthetic-calldata caller passes a pure var-derived
-// value — but a new caller could reintroduce a double-eval.
+// Caution: references `bytes` twice (len + concat) — makeEvalOnce if side-effecting.
 inline std::shared_ptr<Expression> makeRightPadTo32Multiple(
 	std::shared_ptr<Expression> bytes, SourceLocation loc)
 {
@@ -1160,12 +1076,9 @@ inline std::shared_ptr<IntrinsicCall> makeRightPad(
 	return makeConcat(std::move(value), std::move(pad), std::move(loc));
 }
 
-// `b|(bzero(n), value)` — zero-extend `value` to *at least* `n` bytes.
-// Unlike makeLeftPad (which always grows by `n`) and makeLeftPadToN
-// (which trims to exactly `n`), this leaves an already-≥n-byte value
-// untouched: `b|` with `n` zero bytes is value-preserving and widens a
-// shorter operand to `n`. Used to normalise a value to a minimum width
-// before a fixed-width extract / store.
+// `b|(bzero(n), value)` — zero-extend to at least n bytes.
+// Unlike makeLeftPad (+n always) and makeLeftPadToN (trim to exactly n),
+// this is a no-op for values already ≥n bytes.
 inline std::shared_ptr<IntrinsicCall> makeZeroExtendToN(
 	std::shared_ptr<Expression> value, int n, SourceLocation loc)
 {
@@ -1173,18 +1086,12 @@ inline std::shared_ptr<IntrinsicCall> makeZeroExtendToN(
 	return makeBytesOr(std::move(pad), std::move(value), std::move(loc));
 }
 
-// Left-pad `value` to *exactly* `n` bytes — `extract3(bzero(n) ++ value,
-// len - n, n)`. Required for ABI-encoding values whose minimal AVM
-// representation is shorter than the target ABI width (biguint, etc.):
-// makeLeftPad alone produces `n + len(value)` bytes; this helper trims
-// to `n` via dynamic-offset extract3.
+// Left-pad to exactly n bytes: extract3(bzero(n)++value, len-n, n).
+// makeLeftPad alone produces n+len bytes; this trims via dynamic-offset extract3.
 inline std::shared_ptr<IntrinsicCall> makeLeftPadToN(
 	std::shared_ptr<Expression> value, int n, SourceLocation loc)
 {
-	// `padded` feeds both the len() in the offset and the extract3 source —
-	// wrap in makeEvalOnce so a side-effecting `value` (e.g. a call being
-	// ABI-encoded) evaluates once, not once per reference (this helper sits
-	// under abi.encode/encodePacked, where the double-eval was user-visible).
+	// Wrap in makeEvalOnce: value is referenced twice (len + extract3 source).
 	auto padded = makeEvalOnce(makeLeftPad(std::move(value), n, loc), loc);
 	auto offset = makeUInt64BinOp(makeLen(padded, loc),
 		UInt64BinaryOperator::Sub,
@@ -1220,8 +1127,7 @@ inline std::shared_ptr<Expression> makeEnumRangeAssert(
 	return makeAssert(std::move(cmp), loc, std::move(message));
 }
 
-// `condition ? trueExpr : falseExpr` — assemble in one call instead of
-// the std::make_shared + 5 field assignments boilerplate.
+// `condition ? trueExpr : falseExpr`.
 inline std::shared_ptr<ConditionalExpression> makeConditional(
 	std::shared_ptr<Expression> condition,
 	std::shared_ptr<Expression> trueExpr,
@@ -1326,13 +1232,8 @@ struct ARC4Decode: Expression
 	std::shared_ptr<Expression> value;
 };
 
-// Wrap an expression in an ARC4Encode (native → ARC4-encoded bytes).
-// makeARC4Encode is defined further down, after the reinterpret-cast helpers
-// (makeAsBiguint / makeItob) it uses to convert a native uint64 source into a
-// biguint when the target is a signed sub-word ARC4 int (arc4.intN). puya's
-// uint64→arc4.intN encode path is rejected ("cannot encode uint64 to uintN"),
-// whereas its biguint codec handles it — same path the working int-arithmetic
-// case takes.
+// Wrap an expression in an ARC4Encode. Defined after the reinterpret-cast helpers
+// it needs for the signed sub-word int24 path (see makeARC4Encode below).
 
 // Wrap an expression in an ARC4Decode (ARC4-encoded bytes → native).
 inline std::shared_ptr<ARC4Decode> makeARC4Decode(
@@ -1395,8 +1296,7 @@ inline std::shared_ptr<ReinterpretCast> makeReinterpretCast(
 	return node;
 }
 
-// Shorthands for the common reinterpret-cast targets in the builder
-// layer. Pure aliases for `makeReinterpretCast(value, <type>, loc)`.
+// Reinterpret-cast shorthands (aliases for makeReinterpretCast(value, <type>, loc)).
 inline std::shared_ptr<ReinterpretCast> makeAsBytes(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
@@ -1423,15 +1323,8 @@ inline std::shared_ptr<ReinterpretCast> makeAsUInt64(
 	return makeReinterpretCast(std::move(expr), WType::uint64Type(), std::move(loc));
 }
 
-// Wrap an expression in an ARC4Encode (native value → ARC4-encoded bytes).
-//
-// Special case: when the target is a SIGNED sub-word ARC4 int (arc4.intN, e.g.
-// `int24`) and the source is a native `uint64`, puya rejects the encode
-// ("cannot encode uint64 to uintN"). Its biguint codec handles the same
-// encoding, so convert the uint64 to biguint first (itob → reinterpret). The
-// uint64 holds the value in its low N bits (two's-complement), and biguint
-// encoding takes the low N bytes, preserving the int24 representation. This is
-// the path the working int-arithmetic case already produces.
+// ARC4Encode wrapper. Signed sub-word int (arc4.intN) from uint64: puya rejects
+// uint64→arc4.intN directly; convert to biguint first (itob→reinterpret).
 inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc)
 {
@@ -1445,17 +1338,9 @@ inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 				int const n = uintN->n();
 				if (n < 64 && n % 8 == 0)
 				{
-					// A signed sub-word value may arrive sign-extended within the
-					// uint64 (high bits set for negatives). arc4.intN takes exactly
-					// N bits (two's complement) = the LOW n/8 bytes of the itob'd
-					// value. Extract those bytes directly: this yields a minimal
-					// n/8-byte biguint so the downstream biguint->arc4.intN
-					// `len <= n/8` overflow check passes for BOTH signs.
-					//
-					// (Masking the high BITS via biguint `b&` — the obvious
-					// approach — does NOT shrink the byte width: AVM `b&` keeps the
-					// LONGER operand's length, i.e. itob's 8 bytes, so the len
-					// check would still wrongly revert, even for positive values.)
+					// Signed sub-word: extract low n/8 bytes of itob(value).
+					// `b&` mask does NOT shrink byte width (AVM keeps the wider
+					// operand's length), so the len<=n/8 check would wrongly revert.
 					auto itob = makeItob(std::move(value), loc);
 					auto low = makeExtract(std::move(itob), 8 - n / 8, n / 8, loc);
 					value = makeAsBiguint(std::move(low), loc);
@@ -1467,13 +1352,8 @@ inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 			}
 		}
 
-	// biguint -> arc4.uintN / arc4.intN (N<256): a biguint may carry leading zero
-	// bytes (notably from a bitwise `b&` mask, which keeps the WIDER operand's byte
-	// width — AVM `b&` does not strip), so puya's biguint->arc4.uintN `len <= n/8`
-	// overflow check would wrongly revert (e.g. a 32-byte uint160 from `slot0 &
-	// MASK_160`). Trim to the LOW n/8 bytes = value mod 2^n, the encoded low n bits
-	// (correct for unsigned AND for signed two's-complement). No-op for values
-	// already representable in n/8 bytes.
+	// biguint → arc4.uintN (N<256): `b&` masks leave leading zero bytes (AVM keeps
+	// wider operand width), breaking puya's `len<=n/8` check. Trim to low n/8 bytes.
 	if (value && value->wtype == WType::biguintType())
 		if (auto const* uintN = dynamic_cast<ARC4UIntN const*>(wtype))
 		{
@@ -1493,11 +1373,8 @@ inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 	return node;
 }
 
-// Encode a typed key value to its canonical byte form for storage-key
-// derivation: uint64 → itob (8 B); biguint → left-padded then trimmed
-// to exactly 32 B (matching Solidity uint256 ABI width); anything else
-// → reinterpret-cast to bytes (already in canonical form for string /
-// bytesN / address).
+// Canonical byte encoding for storage-key derivation:
+// uint64 → itob (8B); biguint → padded+trimmed to 32B; else → reinterpret as bytes.
 inline std::shared_ptr<Expression> makeKeyBytes(
 	std::shared_ptr<Expression> value, WType const* encType, SourceLocation loc)
 {
@@ -1512,10 +1389,8 @@ inline std::shared_ptr<Expression> makeKeyBytes(
 	return makeReinterpretCast(std::move(value), WType::bytesType(), std::move(loc));
 }
 
-// Narrow a biguint-shaped value to uint64 by taking its low 8 bytes:
-// `extract_uint64(bzero(8) ++ value, len - 8)`. The bzero(8) prefix keeps
-// the slice in range when `value` is shorter than 8 bytes; a value wider
-// than 8 bytes is truncated to its low 64 bits.
+// Narrow biguint to uint64 (low 8 bytes): extract_uint64(bzero(8)++value, len-8).
+// bzero(8) prefix keeps slice in-range for values shorter than 8 bytes.
 inline std::shared_ptr<IntrinsicCall> makeBiguintToUInt64(
 	std::shared_ptr<Expression> value, SourceLocation loc)
 {
@@ -1527,9 +1402,8 @@ inline std::shared_ptr<IntrinsicCall> makeBiguintToUInt64(
 	return makeExtractUInt64(cat, std::move(start), std::move(loc));
 }
 
-// Narrow a *fixed* 32-byte ABI word to uint64: `btoi(extract(word, 24, 8))`
-// — the trailing 8 bytes hold the value. Use makeBiguintToUInt64 instead
-// when the input width is not known to be exactly 32 bytes.
+// Fixed 32-byte ABI word → uint64: btoi(extract(word, 24, 8)).
+// Use makeBiguintToUInt64 for variable-width inputs.
 inline std::shared_ptr<IntrinsicCall> makeWord32ToUInt64(
 	std::shared_ptr<Expression> word32, SourceLocation loc)
 {
@@ -1537,9 +1411,7 @@ inline std::shared_ptr<IntrinsicCall> makeWord32ToUInt64(
 	return makeBtoi(std::move(last8), std::move(loc));
 }
 
-// One layer of Solidity-style storage-key derivation:
-// `sha256(keyBytes(value, encType) ++ prefix)`. Chain repeatedly for
-// nested mappings / arrays of compound types.
+// One Solidity storage-key layer: sha256(keyBytes(value, encType) ++ prefix).
 inline std::shared_ptr<IntrinsicCall> makeMappingKeyLayer(
 	std::shared_ptr<Expression> value,
 	WType const* encType,
@@ -1595,22 +1467,16 @@ inline std::shared_ptr<SingleEvaluation> makeSingleEvaluation(
 	return node;
 }
 
-// Globally unique SingleEvaluation id. puya's single-eval cache is keyed by
-// attrs equality over (source, _id) PER FUNCTION — two INDEPENDENT
-// SingleEvaluation nodes that happen to wrap structurally equal sources with
-// equal ids would wrongly merge into one evaluation (e.g. two identical inner
-// calls collapsing to a single submit). Every independently created node must
-// therefore get a fresh id; sharing an evaluation is expressed by referencing
-// the SAME node (it serializes with one id), never by reusing an id. Starts
-// high above the legacy per-site static counters (which count from 0) so old
-// ids can't collide with these.
+// Globally unique id for SingleEvaluation. puya's cache is keyed by (source, _id)
+// per function — two independent nodes wrapping equal sources with equal ids would
+// wrongly merge. Share an evaluation by referencing the same node, not reusing an id.
 inline int nextSingleEvalId()
 {
 	static int s_nextSingleEvalId = 1 << 20;
 	return ++s_nextSingleEvalId;
 }
 
-// See declaration above makeExtractLastN.
+
 inline std::shared_ptr<Expression> makeEvalOnce(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
@@ -1724,10 +1590,7 @@ inline std::shared_ptr<ArrayExtend> makeArrayExtend(
 	return node;
 }
 
-// `base.push(elem)` lowered as a single-element NewArray wrapped in
-// ArrayExtend. `arrWType` is the type of the dynamic array (the type of
-// `base`); the helper wraps `elem` in a single-element NewArray of that
-// type and emits the extend.
+// `base.push(elem)` → wrap elem in a single-element NewArray, then ArrayExtend.
 inline std::shared_ptr<ArrayExtend> makeArrayPushOne(
 	std::shared_ptr<Expression> base, std::shared_ptr<Expression> elem,
 	WType const* arrWType, SourceLocation loc)
@@ -1737,8 +1600,7 @@ inline std::shared_ptr<ArrayExtend> makeArrayPushOne(
 	return makeArrayExtend(std::move(base), std::move(singleArr), std::move(loc));
 }
 
-// `base.pop()` returning a value: ArrayPop produces the (still ARC4-encoded)
-// element, ARC4Decode unwraps it to its native representation.
+// `base.pop()` → ARC4Decode(ArrayPop(base)) to native type.
 inline std::shared_ptr<ARC4Decode> makeArrayPopDecode(
 	std::shared_ptr<Expression> base, WType const* arc4ElemType,
 	WType const* nativeElemType, SourceLocation loc)
@@ -1779,10 +1641,7 @@ inline std::shared_ptr<NewStruct> makeNewStruct(
 	return node;
 }
 
-// Copy-on-write struct update: every field of `structType` is re-read from
-// `readBase` except `fieldName`, which takes `newValue`. The standard shape
-// for ARC4Struct field writes/deletes/write-backs (an ARC4 struct value is
-// immutable bytes — replacing a field means rebuilding the whole struct).
+// Rebuild an ARC4Struct with one field replaced (copy-on-write; struct is immutable bytes).
 inline std::shared_ptr<NewStruct> makeStructWithReplacedField(
 	ARC4Struct const* structType,
 	std::shared_ptr<Expression> const& readBase,
@@ -1825,7 +1684,7 @@ struct StateGet: Expression
 	std::shared_ptr<Expression> defaultValue;
 };
 
-// Read of a state field with a default value when uninitialized.
+// State field read with a default for uninitialized slots.
 inline std::shared_ptr<StateGet> makeStateGet(
 	std::shared_ptr<Expression> field,
 	std::shared_ptr<Expression> defaultValue,
@@ -1839,10 +1698,8 @@ inline std::shared_ptr<StateGet> makeStateGet(
 	return node;
 }
 
-// Peel a single StateGet read wrapper: StateGet(x) → x (the writable
-// storage field). No-op for anything else. The ubiquitous "write target
-// from a read expression" idiom; use makeWritableTarget to peel whole
-// chains instead of one layer.
+// Strip one StateGet layer: StateGet(x) → x. No-op for non-StateGet.
+// Use makeWritableTarget to peel full IndexExpression/FieldExpression chains.
 inline std::shared_ptr<Expression> unwrapStateGet(std::shared_ptr<Expression> e)
 {
 	if (auto const* sg = dynamic_cast<StateGet const*>(e.get()))
@@ -1872,19 +1729,9 @@ inline std::shared_ptr<StateDelete> makeStateDelete(
 	return node;
 }
 
-// Walk a `IndexExpression` / `FieldExpression` chain and rebuild it as a
-// writable form: any inner `StateGet` (read-with-default wrapper) becomes
-// its `field`, and any inner `ARC4Decode` becomes its `value`. Used to
-// turn a read-shaped expression like
-// `IndexExpression(FieldExpression(StateGet(BoxValueExpression), "f"), i)`
-// into the writable target
-// `IndexExpression(FieldExpression(BoxValueExpression, "f"), i)`. Puya
-// rejects StateGet / ARC4Decode as lvalues, so any assignment or
-// array-mutation codegen that derived its target from a read expression
-// must funnel through this normalizer first.
-//
-// Returns a freshly-rebuilt chain (the input shared_ptrs are not mutated)
-// so it is safe to call on expressions that may be aliased elsewhere.
+// Rebuild an IndexExpression/FieldExpression chain as a writable target:
+// strip StateGet and ARC4Decode wrappers (puya rejects them as lvalues).
+// Returns a fresh chain; input shared_ptrs are not mutated.
 inline std::shared_ptr<Expression> makeWritableTarget(
 	std::shared_ptr<Expression> e)
 {
@@ -1986,11 +1833,7 @@ inline std::shared_ptr<BoxValueExpression> makeBoxValueExpression(
 	return node;
 }
 
-/// True if `_e` is a raw storage-read expression — a BoxValueExpression
-/// (box-backed slot) or an AppStateExpression (app-global slot) — i.e.,
-/// a slot reference that has not yet been wrapped in a `StateGet` to
-/// supply a default value. Used at sites that need to decide whether
-/// to wrap a value in `StateGet` before consuming it as an rvalue.
+/// True if _e is a raw (unwrapped) storage-read (BoxValueExpression or AppStateExpression).
 inline bool isRawStorageRead(Expression const* _e)
 {
 	return dynamic_cast<BoxValueExpression const*>(_e) != nullptr
@@ -2076,8 +1919,7 @@ struct AddressConstant: Expression
 	std::string value;
 };
 
-// `address(<value>)` AVM account literal — defaults to the zero address
-// (32 zero bytes, base32-encoded with 4-byte SHA-512/256 checksum).
+// AVM account address literal.
 inline std::shared_ptr<AddressConstant> makeAddressConstant(
 	std::string value, SourceLocation loc)
 {
@@ -2137,7 +1979,7 @@ struct ExpressionStatement: Statement
 	std::shared_ptr<Expression> expr;
 };
 
-// Construct an ExpressionStatement wrapping `expr` (side-effectful call, etc).
+// Construct an ExpressionStatement.
 inline std::shared_ptr<ExpressionStatement> makeExpressionStatement(
 	std::shared_ptr<Expression> expr,
 	SourceLocation loc)
@@ -2154,7 +1996,7 @@ struct ReturnStatement: Statement
 	std::shared_ptr<Expression> value;
 };
 
-// Construct a ReturnStatement. `value` is nullable (bare `return;`).
+// Construct a ReturnStatement (value is nullable).
 inline std::shared_ptr<ReturnStatement> makeReturnStatement(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
@@ -2173,8 +2015,7 @@ struct IfElse: Statement
 	std::shared_ptr<Block> elseBranch; // nullable
 };
 
-// `if (condition) ifBranch else elseBranch` — IfElse is a Statement,
-// elseBranch may be null.
+// IfElse statement; elseBranch may be null.
 inline std::shared_ptr<IfElse> makeIfElse(
 	std::shared_ptr<Expression> condition,
 	std::shared_ptr<Block> ifBranch,
@@ -2196,7 +2037,7 @@ struct WhileLoop: Statement
 	std::shared_ptr<Block> loopBody;
 };
 
-// `while (condition) loopBody` — 14 callers across builder/.
+// `while (condition) loopBody`.
 inline std::shared_ptr<WhileLoop> makeWhileLoop(
 	std::shared_ptr<Expression> condition,
 	std::shared_ptr<Block> loopBody,
@@ -2214,7 +2055,7 @@ struct LoopExit: Statement
 	std::string nodeType() const override { return "LoopExit"; }
 };
 
-// `break;` statement — 6 callers across builder/.
+// `break;` statement.
 inline std::shared_ptr<LoopExit> makeLoopExit(SourceLocation loc)
 {
 	auto node = std::make_shared<LoopExit>();
@@ -2227,7 +2068,7 @@ struct LoopContinue: Statement
 	std::string nodeType() const override { return "LoopContinue"; }
 };
 
-// `continue;` statement — 4 callers across builder/.
+// `continue;` statement.
 inline std::shared_ptr<LoopContinue> makeLoopContinue(SourceLocation loc)
 {
 	auto node = std::make_shared<LoopContinue>();
@@ -2242,7 +2083,7 @@ struct AssignmentStatement: Statement
 	std::shared_ptr<Expression> value;
 };
 
-// Construct an AssignmentStatement. Standard 3-field shape.
+// Construct an AssignmentStatement.
 inline std::shared_ptr<AssignmentStatement> makeAssignmentStatement(
 	std::shared_ptr<Expression> target,
 	std::shared_ptr<Expression> value,
@@ -2392,11 +2233,8 @@ inline std::shared_ptr<Subroutine> makeSubroutine(
 	return node;
 }
 
-// Stateless logic-signature program (mirrors puya's awst.nodes.LogicSignature).
-// Emitted instead of a Contract when a Solidity contract is marked with the
-// `LogicSig` stdlib base (see AVM.sol). The single entry function's body becomes
-// `program` (must return bool/uint64). Has a SEPARATE pooled opcode budget from
-// app calls on the AVM. No app state / no inner-txns — backend hard-fails on those.
+// Stateless lsig (mirrors puya's LogicSignature). Emitted for contracts `is LogicSig`
+// (AVM.sol). Entry function body becomes `program`; no app state/inner-txns.
 struct LogicSignature: RootNode
 {
 	std::string nodeType() const override { return "LogicSignature"; }

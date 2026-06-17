@@ -3,24 +3,13 @@
 /// @file Context.h
 /// Typed nested contexts for Solidity AST traversal.
 ///
-/// Two layers of state:
+/// Two state layers:
+///  1. Lexical (unchecked, loop, placeholder, inConstructor) — on typed
+///     per-scope contexts; resolved by parent-chain walk.
+///  2. Decl-id-keyed (storage aliases, fn-ptrs, MRO targets, etc.) — flat
+///     ScopeState owned by TranslationContext; O(1) lookup, no virtual dispatch.
 ///
-///  1. **Lexical scope state** — `unchecked` blocks, var-name shadowing,
-///     enclosing loop, modifier placeholder body, inConstructor flag.
-///     These stay on the typed per-scope contexts (BlockContext,
-///     FunctionContext) and resolve via parent-chain walks when looked
-///     up. They genuinely depend on lexical nesting.
-///
-///  2. **Decl-id-keyed bindings** — storage aliases, fn-ptr targets,
-///     constant-folded locals, slot-storage refs, mapping-key params,
-///     modifier param remaps, super-call MRO targets. All keyed by
-///     globally-unique AST decl IDs. These live in a single flat
-///     `ScopeState` owned by the TranslationContext at the top of the
-///     chain. Looked up in O(1) without virtual dispatch.
-///
-/// The `Context` base caches a `ScopeState*` so every level (Translation,
-/// Function, Block) reaches the same flat state. `setX`/`findX`/`eraseX`
-/// are non-virtual hashmap ops on it.
+/// Context caches a ScopeState* so every level reaches the same flat state.
 
 #include "awst/Node.h"
 
@@ -51,31 +40,18 @@ struct ParamRemap
 	awst::WType const* type;
 };
 
-/// Typed local storage-pointer alias.
+/// Typed local storage-pointer alias (`T storage p = …`).
 ///
-/// Solidity lets you bind a local pointer to part of a state container:
-///   `mapping(K=>V) storage m = stateMap;`    // MappingHolder
-///   `T[] storage p = stateArr;`              // StateRead
-///   `T storage e = container[i];`            // IndexedPath
-///   `T storage f = s.field;`                 // FieldPath
-///   `(_, T storage e, _) = (...);`           // TupleSlice (destructuring)
+/// Shapes:
+///   `mapping(K=>V) storage m = stateMap;` // MappingHolder (BytesConstant)
+///   `T[] storage p = stateArr;`           // StateRead (StateGet)
+///   `T storage e = container[i];`         // IndexedPath (IndexExpression)
+///   `T storage f = s.field;`              // FieldPath (FieldExpression)
+///   `(_, T storage e, _) = (...);`        // TupleSlice (TupleItemExpression)
 ///
-/// Each shape has a distinct expression form: a BytesConstant for the
-/// mapping holder, a StateGet wrapping the state-var, an IndexExpression
-/// for the indexed path, etc. Consumers that resolve a pointer use the
-/// expression — but historically they had to `dynamic_cast` the
-/// `shared_ptr<Expression>` to figure out *which* shape they got, with
-/// the casts spread across SolIdentifier, SolIndexAccessHandlers,
-/// SolArrayMethod, etc., and no compile-time signal of which shapes a
-/// producer was allowed to register.
-///
-/// The `Kind` tag makes the producer's intent explicit at the call site
-/// (via the small named factory methods below), keeps the existing
-/// expression payload available for consumers that still need it, and
-/// gives consumers a single enum to switch on instead of an
-/// if/`dynamic_cast` ladder. The actual write-vs-read shape of `expr`
-/// must match the tag — factories are the only sanctioned way to build
-/// one to keep that invariant local.
+/// The Kind tag makes the producer's intent explicit and gives consumers
+/// a switch instead of a dynamic_cast ladder. expr must match the tag;
+/// use the named factory methods to uphold that invariant.
 struct StorageAlias
 {
 	enum class Kind
@@ -104,25 +80,16 @@ struct StorageAlias
 		{ return {Kind::TupleSlice, std::move(_e)}; }
 };
 
-/// Flat translation-time scope state. All decl-id-keyed bindings live
-/// here in a single struct owned by TranslationContext at the chain
-/// root. Decl IDs are globally unique, so the maps grow monotonically
-/// over a single contract's translation and never collide across
-/// functions; they're dropped when TranslationContext goes out of
-/// scope. Per-block reset is unnecessary — when the next function
-/// starts, it references its own (fresh) decl IDs and the prior
-/// bindings are inert.
+/// Flat translation-time scope state owned by TranslationContext. All
+/// decl-id-keyed bindings live here. Decl IDs are globally unique so maps
+/// grow monotonically and are inert between functions; no per-block reset needed.
 struct ScopeState
 {
-	/// Local storage-pointer alias: `T storage p = …`. The map value
-	/// carries both the bound expression and a tag for the shape (see
-	/// `StorageAlias`). Consumers resolve a pointer by reading the tag
-	/// (cheap switch) and/or inspecting the expression.
+	/// Local `T storage p = …` aliases. Tag + expression; see StorageAlias.
 	std::unordered_map<int64_t, StorageAlias> storageAliases;
 
-	/// Local `function (…) returns (…)` variable → its bound
-	/// FunctionDefinition. Used by SolInternalCall to lower an indirect
-	/// `f()` call through a fn-ptr local as a direct callsub.
+	/// Local fn-ptr variable → its FunctionDefinition. SolInternalCall
+	/// uses this to lower `f()` through a fn-ptr local as a direct callsub.
 	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> funcPtrTargets;
 
 	/// Slot-based storage refs for local pointers (`T storage p = base[i]`).
@@ -132,35 +99,26 @@ struct ScopeState
 	/// (used as the box-key prefix for a `mapping(K=>V) storage` param).
 	std::unordered_map<int64_t, std::string> mappingKeyParams;
 
-	/// Local memory aggregate (`T memory t;`) whose encoded size exceeds one
-	/// scratch slot (>4096 B): decl ID → the uint64 local holding its runtime
-	/// EVM-memory base offset (FMP at allocation). Such aggregates live in the
-	/// multi-slot blob (not as a >4096 B value); `t.field[i]` lowers to a blob
-	/// word read/write at base + accumulated offset. See SolIndexAccess.
+	/// >4096 B memory aggregate: decl ID → uint64 local for EVM-memory base
+	/// offset (FMP at allocation). Lives in multi-slot blob; `t.field[i]`
+	/// lowers to blob read/write at base + offset. See SolIndexAccess.
 	std::unordered_map<int64_t, std::string> blobAggregates;
 
-	/// Decl IDs of memory aggregate locals used as VALUES in inline assembly —
-	/// their Yul memory pointer. Promoted to blob-backed so the assembly sees a
-	/// real offset (pre-scan in ContractBuilder::buildBlock).
+	/// Memory aggregate locals used as Yul pointer values in inline assembly.
+	/// Promoted to blob-backed (pre-scan in ContractBuilder::buildBlock).
 	std::unordered_set<int64_t> assemblyAggregates;
 
-	/// Modifier-inliner param remap: when the same modifier is applied
-	/// multiple times in a function, each instance's locals get a unique
-	/// mangled name. Set/erased explicitly by the inliner around each
-	/// expansion.
+	/// Modifier-inliner param remap: unique mangled names per expansion
+	/// when the same modifier is applied multiple times. Set/erased by the inliner.
 	std::unordered_map<int64_t, ParamRemap> paramRemaps;
 
-	/// `super.X()` MRO resolution map: AST decl ID → mangled super name.
-	/// Set up per-function before its body is translated; cleared between
-	/// function bodies.
+	/// `super.X()` MRO: decl ID → mangled name. Set per-function, cleared between bodies.
 	std::unordered_map<int64_t, std::string> superTargetNames;
 };
 
-/// Common base for every scope level. Holds an upward parent pointer for
-/// the lexical-scope walks and a cached `ScopeState*` to the chain root's
-/// flat decl-id-keyed state. Non-virtual where possible; virtual
-/// destructor so `delete` of a base pointer works once we start storing
-/// them through Context*.
+/// Common base for every scope level. Upward parent pointer for lexical
+/// walks; cached ScopeState* to the flat decl-id-keyed state at the root.
+/// Virtual destructor for delete-through-base-ptr.
 class Context
 {
 public:
@@ -169,9 +127,7 @@ public:
 	/// Walk one level up. Returns nullptr at the root (TranslationContext).
 	Context* parent() const { return m_parent; }
 
-	/// The flat decl-id-keyed scope state shared across every level of
-	/// the chain. Always points to the TranslationContext's owned
-	/// ScopeState.
+	/// Flat scope state shared across the whole chain (owned by TranslationContext).
 	ScopeState& scopeState() const { return *m_state; }
 
 	// ── Lexical-scope state (parent-chain walks) ────────────────────
@@ -182,9 +138,7 @@ public:
 		return m_parent && m_parent->isUnchecked();
 	}
 
-	/// True iff the enclosing function is a constructor body. Constructor-only
-	/// behaviour (e.g. immutable writes via direct app-global init) gates on
-	/// this flag.
+	/// True iff the enclosing function is a constructor (gates immutable writes, etc.).
 	virtual bool isInConstructor() const
 	{
 		return m_parent && m_parent->isInConstructor();
@@ -280,8 +234,7 @@ public:
 		m_state->assemblyAggregates.insert(_declId);
 	}
 
-	/// Toggle the enclosing function's constructor flag. Walks the chain
-	/// to find the FunctionContext that owns `inConstructor`.
+	/// Toggle the enclosing FunctionContext's inConstructor flag.
 	void setInConstructor(bool _flag);
 
 	void setParamRemap(int64_t _declId, ParamRemap _remap)
@@ -309,11 +262,8 @@ public:
 		return m_state->superTargetNames;
 	}
 
-	/// AWST local name for a Solidity VariableDeclaration. Function input/return
-	/// parameters keep their bare name (unique within the function, ABI-facing);
-	/// locals and catch-clause params are mangled `name__<declId>` so name
-	/// shadowing across blocks can't collide in the flat AWST frame. Pure function
-	/// of the decl (+ the modifier-inliner remap) — no per-block shadow map.
+	/// AWST local name: params keep bare name (ABI-facing); locals/catch params
+	/// mangle to `name__<declId>` to prevent shadow collisions in the flat AWST frame.
 	std::string awstVarName(solidity::frontend::VariableDeclaration const& _vd) const;
 
 protected:
@@ -328,9 +278,8 @@ protected:
 	ScopeState* m_state;
 };
 
-/// Top-level translation context: per-contract state we share across
-/// every function and statement. Owns the flat ScopeState that all
-/// nested contexts reach via the cached `m_state` pointer.
+/// Top-level per-contract context. Owns the flat ScopeState all nested
+/// contexts reach via the cached m_state pointer.
 struct TranslationContext: Context
 {
 	eb::ContractContext& contractCtx;
@@ -351,16 +300,12 @@ struct TranslationContext: Context
 		  typeMapper(_typeMapper),
 		  sourceFile(std::move(_sourceFile))
 	{
-		// Wire the base's ScopeState pointer to our owned state.
-		// (Can't be done in the initializer list because scopeState_ is
-		// declared after the base.)
+		// Wire m_state after construction (scopeState_ declared after base).
 		m_state = &scopeState_;
 	}
 
-	// Non-copyable / non-movable: m_state caches a pointer into our own
-	// scopeState_ member, which would dangle after a move/copy. Force
-	// in-place construction (e.g. `optional::emplace(args...)` instead of
-	// `optional::emplace(TranslationContext{args...})`).
+	// Non-copyable/non-movable: m_state points into scopeState_ (dangling after move).
+	// Use optional::emplace(args...) not optional::emplace(TranslationContext{args...}).
 	TranslationContext(TranslationContext const&) = delete;
 	TranslationContext(TranslationContext&&) = delete;
 	TranslationContext& operator=(TranslationContext const&) = delete;
@@ -397,10 +342,8 @@ struct FunctionContext: Context
 	/// into one). Set by ApprovalProgramBuilder around constructor inlining.
 	bool inConstructor = false;
 
-	/// True iff this function is internal/private — its call frame is the
-	/// whole program, so an assembly `return(o,s)` halt exits the program.
-	/// Public/external functions are their own frame (see AssemblyBuilder::
-	/// setFrameIsProgram).
+	/// Internal/private function: assembly `return(o,s)` exits the whole program.
+	/// Public/external functions are their own frame (AssemblyBuilder::setFrameIsProgram).
 	bool frameIsProgram = false;
 
 	FunctionContext(
@@ -419,14 +362,11 @@ struct FunctionContext: Context
 	bool isInConstructor() const override { return inConstructor; }
 };
 
-/// Loop-level context: control-flow targets for continue inside this loop.
-/// `forLoopPost` is the post-step (e.g., `i++`) to splice in before
-/// `LoopContinue`. `doWhileCondBreak` is the bottom-of-body condition check
-/// for do/while. At most one of the two is set.
-///
-/// Currently *not* in the parent chain — referenced laterally through
-/// `BlockContext::enclosingLoop`. We can weave it in later if loop-local
-/// state ever needs scope lookup.
+/// Control-flow targets for continue inside a loop.
+/// `forLoopPost` is spliced before LoopContinue (the `i++` step).
+/// `doWhileCondBreak` is the bottom-of-body condition for do/while.
+/// At most one is set. Referenced laterally via BlockContext::enclosingLoop
+/// (not in the parent chain).
 struct LoopContext
 {
 	std::shared_ptr<awst::Statement> forLoopPost;
@@ -438,10 +378,9 @@ struct LoopContext
 /// var-name shadowing.
 struct BlockContext: Context
 {
-	/// Set when a statement in THIS block unconditionally halts the program
-	/// (assembly `return`/`revert` top-level halt). The remaining statements
-	/// of the block are statically dead — SolBlock skips lowering them so
-	/// puya doesn't reject the function with "unreachable code".
+	/// Set when a statement in this block unconditionally halts (assembly
+	/// return/revert). SolBlock skips remaining statements to avoid puya's
+	/// "unreachable code" error.
 	bool terminated = false;
 
 	FunctionContext& fn;

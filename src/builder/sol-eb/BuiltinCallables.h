@@ -9,11 +9,7 @@
 namespace puyasol::builder::eb
 {
 
-/// Registry of Solidity builtin function callables.
-///
-/// Maps function names (require, keccak256, sha256, etc.) to callable builder
-/// factories. Used by visit(FunctionCall) to dispatch builtins through the
-/// builder pattern instead of if-else chains.
+/// Dispatch table for Solidity builtin functions (keccak256, sha256, mulmod, etc.).
 class BuiltinCallableRegistry
 {
 public:

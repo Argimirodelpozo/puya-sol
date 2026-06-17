@@ -33,17 +33,12 @@ public:
 		std::vector<std::shared_ptr<awst::RootNode>> roots;
 	};
 
-	/// Move subroutines named in `_moveNames` to a helper contract. Returns
-	/// two ContractAWSTs: helper first, then orchestrator. If no matching
-	/// subroutines are found in `_roots`, returns empty.
+	/// Move subroutines in `_moveNames` to a helper contract. Returns
+	/// [helper, orchestrator]; empty if no matching subroutines are found.
 	///
-	/// `_ensureBudget` (optional): per-method ensure_budget targets. When a
-	/// helper method's name (the moved subroutine's name) matches a key,
-	/// the splitter prepends a `puya_lib::ensure_budget(N)` call to the
-	/// method's body so that callers don't need to pump opcode budget
-	/// externally. Mirrors the same flag handled in `ContractBuilder.cpp`,
-	/// but applies to splitter-emitted helper methods (which bypass the
-	/// builder's per-method injection).
+	/// `_ensureBudget`: per-method opcode-budget targets. When a helper
+	/// method's name matches a key, prepends `puya_lib::ensure_budget(N)`
+	/// to its body (bypasses ContractBuilder.cpp's per-method injection).
 	std::vector<ContractAWST> split(
 		std::vector<std::shared_ptr<awst::RootNode>> const& _roots,
 		std::vector<std::string> const& _moveNames,

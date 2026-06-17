@@ -32,10 +32,8 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 
 namespace {
-// Peel index/field/tuple-item layers to the underlying referable variable name,
-// mirroring puya's `_is_referable_expression`. Returns the variable name an
-// expression ultimately aliases, or "" if it is not a referable lvalue
-// (literal, fresh allocation, call result, …).
+// Mirrors puya's `_is_referable_expression`: peel index/field/tuple-item
+// layers to the root variable name, or "" for non-referable lvalues.
 std::string referableVarName(awst::Expression const* e)
 {
 	while (e)
@@ -89,13 +87,11 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			&& std::any_of(_funcDef->body().statements().begin(), _funcDef->body().statements().end(),
 				[](auto const& s) { return dynamic_cast<InlineAssembly const*>(s.get()); }))
 			return awst::WType::biguintType();
-		// Storage-ref pointer function: the subroutine returns the uint64
-		// index of the location; buildSubroutineCall wraps the call in an
-		// IndexExpression to reconstitute the storage reference.
+		// Storage-ref pointer: subroutine returns uint64 index;
+		// buildSubroutineCall wraps in IndexExpression to reconstitute the ref.
 		if (builder::storageRefPointerReturn(_funcDef))
-			// Box-keyed mapping-of-struct storage ref (e.g. `return _pools[id]`
-			// returning `Pool.State storage`) returns the bytes box-key prefix;
-			// array/slot refs return the uint64 index.
+			// Box-keyed (e.g. `return _pools[id]` → `Pool.State storage`):
+			// returns bytes box-key prefix; array/slot refs return uint64 index.
 			return builder::storageRefReturnIsBytesKeyed(_funcDef)
 				? awst::WType::bytesType()
 				: awst::WType::uint64Type();
@@ -147,12 +143,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			std::move(base), std::move(_result), elemType, m_loc);
 	};
 
-	// External function-type params are passed as bytes (12-byte packed
-	// appId + selector). No guard needed — the dispatch handles them.
+	// External fn-ptr params: bytes[12] (appId+selector); dispatch handles them.
 
 	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
 
-	// Collect parameter types for coercion + detect mapping storage-ref params
+	// Collect param types for coercion; detect mapping storage-ref params.
 	std::vector<awst::WType const*> paramTypes;
 	std::set<size_t> mappingStorageParamIndices;
 	if (_funcDef)
@@ -178,20 +173,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 	}
 
-	// Helper: for a mapping storage-ref param, extract the state variable
-	// name from the argument expression and return it as a BytesConstant
-	// key prefix. The callee uses this prefix for box key derivation.
+	// For a mapping storage-ref param: extract the box-key prefix;
+	// callee uses it for box key derivation.
 	auto extractMappingKeyPrefix = [&](Expression const& argExpr)
 		-> std::shared_ptr<awst::Expression>
 	{
-		// Mapping-of-struct element passed as a storage-ref receiver, e.g.
-		// `_pools[id].initialize(...)` where `_pools` is
-		// `mapping(PoolId => Pool.State)`. The prefix must be the ACTUAL runtime
-		// box key for that element (`_pools ++ hash(id)`), NOT a static name —
-		// otherwise every key aliases to the same box. Build the element access
-		// and lift its box key; the callee reinterprets it straight back to a
-		// box_key (see SolIdentifier struct-storage-ref handling), so the same
-		// box is read/written as a direct `_pools[id]` access would.
+		// IndexAccess storage-ref: prefix must be the RUNTIME box key
+		// (`_pools ++ hash(id)`), not a static name (all keys would alias).
+		// Build the element access, lift its box key; callee reinterprets it.
 		if (dynamic_cast<IndexAccess const*>(&argExpr))
 		{
 			auto built = awst::unwrapStateGet(buildExpr(argExpr));
@@ -204,28 +193,19 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		if (auto const* ident = dynamic_cast<Identifier const*>(&argExpr))
 		{
 			name = ident->name();
-			// If the identifier refers to a storage-ref LOCAL or PARAM (registered
-			// as a mapping-key ref), the runtime box-key prefix lives in that
-			// variable's VALUE, not its name — e.g. the Uniswap V4 pattern
-			//   `Pool.State storage pool = _getPool(id); pool.checkPoolInitialized();`
-			// where the local `pool` holds `sha256(id ++ "_pools")` (the actual
-			// element key). Reading the variable makes the callee key off that real
-			// element rather than a constant "pool" box. A bare state mapping passed
-			// by name is NOT registered, so it correctly falls through to the
-			// constant-name prefix below.
+			// If registered as a mapping-key ref, runtime box-key lives in the
+			// variable's VALUE — e.g. V4 `pool` holds sha256(id++"_pools").
+			// Reading the var keys on the real element. Unregistered bare state
+			// mappings fall through to the constant-name prefix.
 			if (auto const* d = ident->annotation().referencedDeclaration;
 				d && !m_scope.findMappingKeyParam(d->id()).empty())
 				return awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
 		}
 		else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
 		{
-			// `self.field` where `self` is a struct-storage-ref (a registered
-			// mappingKeyParam): the nested mapping's prefix is the base's RUNTIME
-			// box-key ++ utf8(field), NOT a static field name. Mirrors the
-			// self.field[k] index handling (resolveCursorContext) so a nested
-			// mapping passed to a getter — the Uniswap V4 `self.positions.get(k)`
-			// shape — keys under the SAME box a direct `self.field[k]` access uses.
-			// (Falls through to the bare field-name constant for a non-ref base.)
+			// `self.field` (registered mappingKeyParam): prefix = base runtime
+			// box-key ++ utf8(field) — mirrors self.field[k] (resolveCursorContext)
+			// so V4 `self.positions.get(k)` keys under the same box as direct access.
 			if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
 				if (auto const* d = baseId->annotation().referencedDeclaration;
 					d && !m_scope.findMappingKeyParam(d->id()).empty())
@@ -281,33 +261,21 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		call->args.push_back(std::move(ca));
 	}
 
-	// Aliasing guard: if the SAME referable variable is passed to more than one
-	// argument position and the parameter type is mutable (non-immutable WType),
-	// puya threads it as an implicit-return ("pass-by-reference") arg and rejects
-	// the duplicate ("mutable values cannot be passed more than once to a
-	// subroutine"). This bites e.g. `s.concat(s)` where a `slice memory` is both
-	// `self` and `other`.
-	//
-	// We may break the alias by wrapping the duplicate in `Copy` (a fresh value)
-	// ONLY when it preserves Solidity semantics: in EVM, two memory-reference
-	// args bound to the same variable ARE the same memory, so a write through one
-	// is observable through the other. Copying is therefore safe iff NONE of the
-	// callee parameters that share the aliased variable are mutated by the callee
-	// — then the aliasing is unobservable (pure reads, e.g. stringutils' concat).
-	// If any sharing param IS mutated, the EVM aliasing is semantically live and
-	// has no faithful AVM lowering, so we deliberately do NOT copy and let puya's
-	// loud error stand rather than silently change behaviour.
+	// Aliasing guard: same variable in >1 arg position → puya rejects
+	// ("mutable values cannot be passed more than once", e.g. `s.concat(s)`).
+	// Break alias with Copy only when safe: valid iff NONE of the aliased params
+	// are mutated by the callee (e.g. stringutils' concat). If mutated, EVM
+	// aliasing is live → leave the puya error rather than silently wrong-lower.
 	if (_funcDef)
 	{
-		// Which tracked params does the callee write to?
+		// Which params does the callee mutate?
 		ParamMutationDetector mutDet;
 		for (auto const& p : _funcDef->parameters())
 			mutDet.paramIds.insert(p->id());
 		if (_funcDef->isImplemented())
 			_funcDef->body().accept(mutDet);
 
-		// Map each arg position → callee parameter index (receiver is param 0
-		// for using-for calls), then → "is this param mutated?".
+		// Map arg position → param index (using-for receiver → param 0) → mutated?
 		auto paramMutatedForArg = [&](size_t argIdx) -> bool {
 			size_t pIdx = argIdx; // using-for receiver already occupies arg 0 == param 0
 			if (pIdx >= _funcDef->parameters().size())
@@ -315,8 +283,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			return mutDet.mutated.count(_funcDef->parameters()[pIdx]->id()) != 0;
 		};
 
-		// First pass: group arg positions by the variable they alias, and note
-		// whether ANY position in the group hits a mutated param.
+		// Group arg positions by aliased variable; note if any hits a mutated param.
 		std::map<std::string, std::vector<size_t>> positionsByVar;
 		std::set<std::string> varTouchesMutatedParam;
 		for (size_t ai = 0; ai < call->args.size(); ++ai)
@@ -332,8 +299,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				varTouchesMutatedParam.insert(vn);
 		}
 
-		// Second pass: for each variable aliased across >1 position AND not
-		// touching any mutated param, Copy every occurrence after the first.
+		// Copy occurrences after the first for vars aliased across >1 position
+		// and not touching a mutated param.
 		for (auto const& [vn, positions] : positionsByVar)
 		{
 			if (positions.size() < 2 || varTouchesMutatedParam.count(vn))
@@ -350,20 +317,12 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 	}
 
-	// Storage write-back for calls whose first parameter is a storage
-	// reference. AWSTBuilder augments non-private, non-pure/view library
-	// functions AND free functions to thread the modified storage arg
-	// back through the return value as `WTuple(R, T)` (or just `T` when
-	// R is void).
-	//
-	// Contract methods are NOT augmented — they access storage directly.
-	// So the call-site unpack is scoped to library/free callees.
-	//
-	// Two receiver shapes are supported:
-	//  1. Box-backed state (StateGet → BoxValueExpression), optionally with
-	//     a single-level FieldExpression (`x.field.method(...)`).
-	//  2. Direct AppStateExpression (`x.method(...)` where x is a non-box
-	//     state variable — the common case for small struct state vars).
+	// Storage write-back: AWSTBuilder augments non-private, non-pure/view
+	// library/free functions to thread the modified storage arg back as
+	// `WTuple(R, T)` (or bare `T` when R is void). Contract methods are
+	// NOT augmented (direct storage access). Shapes:
+	//   1. Box-backed (StateGet→BoxValueExpression), optional FieldExpression.
+	//   2. Direct AppStateExpression (small struct state vars).
 	bool calleeIsLibrary = false;
 	bool calleeIsPrivate = false;
 	bool calleeIsFree = false;
@@ -374,11 +333,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		if (auto const* contractDef = _funcDef->annotation().contract)
 			calleeIsLibrary = contractDef->isLibrary();
 	}
-	// Collect ALL storage param indices (mapping-type storage refs are
-	// handled elsewhere — they get a different threading scheme). Order
-	// must match AWSTBuilder.cpp:388-403, which iterates parameters() in
-	// source order and appends each storage param's type to the
-	// augmented return tuple.
+	// Collect storage param indices (mapping-type refs handled separately;
+	// order must match AWSTBuilder.cpp:388-403 — source-order parameters()).
 	std::vector<size_t> storageParamIndices;
 	if (_funcDef
 		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree)
@@ -390,28 +346,21 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto const& p = _funcDef->parameters()[pi];
 			if (p->referenceLocation() != VariableDeclaration::Location::Storage)
 				continue;
-			// Exclude box-keyed storage refs: mappings, arrays/structs that
-			// carry mappings, AND plain structs (e.g. Uniswap V4
-			// `Pool.State storage self`). Those travel as a bytes key-prefix
-			// (mappingStorageParamIndices above) and write directly to box
-			// storage, so they get NO return write-back slot. Must use the same
-			// predicate as the callee (AWSTBuilder.cpp `isBoxKeyedStorageRef`)
-			// or the caller's return-tuple arity diverges from the callee's.
+			// Exclude box-keyed refs (mappings, mapping-carrying structs/arrays,
+			// plain structs like `Pool.State`): travel as bytes key-prefix,
+			// write directly to box, no write-back slot. Must match callee
+			// predicate (AWSTBuilder.cpp `isBoxKeyedStorageRef`) or arity diverges.
 			if (builder::isBoxKeyedStorageRef(p->type())) // widened: plain structs too
 				continue;
 			storageParamIndices.push_back(pi);
 		}
 	}
 
-	// Memory-ref params: same library/free scope as storage, but `pure`
-	// is NOT excluded (Solidity pure can mutate memory params). The
-	// callee returns the post-call memory value as an extra tuple slot;
-	// here we capture it and write back to the caller's local. Order
-	// must match AWSTBuilder.cpp's `memoryRefParamIndices` (storage
-	// params first, then memory params), AND the same use-def filter:
-	// only AUGMENT params actually mutated by the callee body. Walks
-	// the same root-of-LHS analysis as MemoryParamMutationDetector in
-	// AWSTBuilder.cpp.
+	// Memory-ref params: same library/free scope; `pure` NOT excluded
+	// (Solidity pure can mutate memory). Callee returns post-call value
+	// as extra tuple slot; write back to caller local. Order must match
+	// AWSTBuilder.cpp memoryRefParamIndices (storage first, then memory),
+	// same use-def filter (only mutated params augmented).
 	std::vector<size_t> memoryRefParamIndices;
 	if (_funcDef && _funcDef->isImplemented()
 		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree))
@@ -421,9 +370,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<StructType const*>(t) != nullptr;
 		};
-		// Use-def: collect params written in the callee body. Shared
-		// implementation in ParamMutationDetector.h is identical to the
-		// detector AWSTBuilder.cpp uses for the same purpose.
+		// Use-def: collect mutated params (ParamMutationDetector, same as AWSTBuilder).
 		ParamMutationDetector detector;
 		for (auto const& p : _funcDef->parameters())
 			detector.paramIds.insert(p->id());
@@ -482,16 +429,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			roots.push_back(std::move(sr));
 		}
 
-		// AWSTBuilder always augments the function's return type when it
-		// has any storage / memory-ref params:
-		//   - non-void return:  (r0, r1, ..., rK-1, sp0, ..., spN-1, mp0, ..., mpM-1)
-		//     where (r0..rK-1) is the FLATTENED original return (matching how
-		//     AWSTBuilder builds it from each return param's mapped type).
-		//     A multi-value return like `returns (Fr, Fr, Fr)` is K=3 here, NOT
-		//     a single nested WTuple.
-		//   - void return:      single bare type if N+M==1; tuple otherwise.
-		// We MUST unpack every time, even if some args don't resolve to a
-		// state root — otherwise the assignment-target wtype mismatches.
+		// AWSTBuilder augments return type when storage/memory-ref params exist:
+		//   non-void: (r0..rK-1, sp0..spN-1, mp0..mpM-1) — original return
+		//     FLATTENED (K values, not nested WTuple).
+		//   void: bare type if N+M==1; tuple otherwise.
+		// Always unpack (even unresolved args) — wtype mismatch otherwise.
 		auto* origRetType = call->wtype;
 		bool voidReturn = (origRetType == awst::WType::voidType());
 		auto const* origRetTuple = voidReturn
@@ -513,9 +455,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			? 0
 			: (origRetTuple ? origRetTuple->types().size() : 1);
 
-		// callTupleType: the wtype the augmented call returns.
-		// 1 element → bare type (puya doesn't wrap a single-element return in
-		//             a tuple). 2+ elements → WTuple wrapper.
+		// 1 element → bare type (puya doesn't wrap single-elem returns);
+		// 2+ → WTuple.
 		awst::WType const* callTupleType =
 			tupleTypes.size() == 1 ? tupleTypes[0]
 				: m_ctx.typeMapper.createType<awst::WTuple>(std::move(tupleTypes));
@@ -530,9 +471,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assignTemp));
 
-		// pickFromTuple: read element `idx` of typed `ty` from tempVar.
-		// In the single-element bare-type case (callTupleType == ty), tempVar
-		// IS the value — no TupleItemExpression needed.
+		// Single bare-type: tempVar IS the value; no TupleItemExpression.
 		size_t totalAugmented = roots.size() + memoryRefParamIndices.size();
 		bool isBareSingle = (
 			(voidReturn && totalAugmented == 1) ||
@@ -556,8 +495,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 		else if (origRetTuple)
 		{
-			// Multi-value return: rebuild the original tuple from the
-			// flattened head of the augmented call (elements 0..K-1).
+			// Multi-value return: rebuild from flattened head (elements 0..K-1).
 			auto reTuple = awst::makeTupleExpression(origRetType, m_loc);
 			for (size_t i = 0; i < origRetCount; ++i)
 				reTuple->items.push_back(pickFromTuple(i, origRetTuple->types()[i]));
@@ -568,10 +506,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			origRet = pickFromTuple(0, origRetType);
 		}
 
-		// Emit one writeback per storage arg that resolved to a state root.
-		// Args that didn't resolve (plain locals from the caller) get no
-		// writeback — they're forwarded copies, the call modified them but
-		// there's no source-of-truth to update.
+		// Write back each storage arg that resolved to a state root.
+		// Unresolved args (caller locals) have no source-of-truth to update.
 		size_t baseIdx = origRetCount;
 		for (size_t i = 0; i < roots.size(); ++i)
 		{
@@ -631,14 +567,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			}
 		}
 
-		// Memory-ref writeback: each memory-ref arg in the call corresponds
-		// to a tuple slot after the storage slots. The arg in the caller is
-		// (almost always) a simple VarExpression — the local variable that
-		// holds the memory ref. Assign the picked tuple slot back to that
-		// variable so subsequent reads see the post-call mutation. Skip if
-		// the arg isn't a plain VarExpression — those forms (struct field,
-		// array elem, expression result) don't have a stable lvalue we can
-		// write back to without re-evaluating side-effecting bases.
+		// Memory-ref writeback: assign post-call tuple slot back to caller
+		// local (VarExpression). Skip non-VarExpression args (no stable
+		// lvalue without re-evaluating side-effecting bases).
 		size_t memBaseIdx = baseIdx + roots.size();
 		for (size_t mi = 0; mi < memoryRefParamIndices.size(); ++mi)
 		{
@@ -700,9 +631,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 				}
 				else
 				{
-					// Read the fn-ptr LOCAL's value by its mangled AWST name (locals are
-					// name__<declId>; the bare name is the state-var key above). Bare here
-					// would read an unassigned var (puya "used before assignment").
+					// Read local by mangled AWST name (name__<declId>; bare reads
+					// unassigned var → puya "used before assignment").
 					auto var = awst::makeVarExpression(
 						m_scope.awstVarName(*varDecl), ptrWType, m_loc);
 					ptrExpr = std::move(var);
@@ -735,13 +665,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 		auto* retType = returnTypeFrom(funcDef);
 		awst::SubroutineTarget target;
 
-		// MRO super dispatch: when the resolved target is registered as a
-		// super-target (e.g. `function() x = super.f;` rebound to `f` and
-		// then called via `x()` — solc's referencedDeclaration on super.f
-		// gives the right MRO target, but a direct InstanceMethodTarget
-		// would bypass the f__super_<callerId> stub the SuperCallResolution
-		// machinery built). Mirror the MemberAccess path (line ~670) so
-		// the Identifier form picks up super stubs for fn-ptr-bound calls.
+		// MRO super dispatch: if the target is registered as a super stub,
+		// use InstanceMethodTarget(stub) so fn-ptr-bound `x()` where
+		// `x = super.f` doesn't bypass the f__super_<callerId> stub.
 		if (auto superName = m_scope.findSuperTarget(funcDef->id()); !superName.empty())
 		{
 			target = awst::InstanceMethodTarget{std::move(superName)};
@@ -775,10 +701,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 {
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
 
-	// `this.x()` where x is a public state variable for a signed integer
-	// ≤64 bits: ContractBuilder's auto-generated getter sets its return
-	// type to biguint so it can sign-extend the stored bytes. Mirror that
-	// here so the InstanceMethodTarget call's wtype matches.
+	// `this.x()` for signed int ≤64-bit state var: auto-getter returns
+	// biguint (sign-extension). Match that wtype here.
 	if (auto const* refDecl = _memberAccess.annotation().referencedDeclaration)
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
@@ -887,8 +811,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		resolvedFuncDef = funcDef;
 		retType = returnTypeFrom(funcDef);
 
-		// Classify the receiver expression to decide if this is a using-for
-		// call (prepend receiver) or a direct `L.f(x, ...)` call.
+		// using-for (prepend receiver) vs direct `L.f(x, ...)` call?
 		auto classifyUsingFor = [&]() -> bool {
 			auto const* bt = _memberAccess.expression().annotation().type;
 			if (!bt) return true;
@@ -930,12 +853,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		}
 	}
 
-	// Struct field holding a function pointer: `s.fn(...)` where `fn` is
-	// declared as `function(...) returns (...)` in the struct. The
-	// InstanceMethodTarget{"fn"} lookup would try to call `fn` on the
-	// current contract, which fails. Instead: read the struct field
-	// (FieldExpression → ARC4Decode if needed) to get the pointer id and
-	// dispatch via FunctionPointerBuilder.
+	// Struct field fn-ptr `s.fn(...)`: InstanceMethodTarget{fn} would call
+	// fn on current contract (wrong). Read the field → ARC4Decode if needed
+	// → FunctionPointerBuilder dispatch.
 	if (auto const* refDecl = _memberAccess.annotation().referencedDeclaration)
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
@@ -1029,11 +949,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
 		return resolveMemberAccessCall(*memberAccess);
 
-	// Generic function pointer call: evaluate the expression to get a pointer ID,
-	// then dispatch through the function pointer table. Try this before the
-	// function-pointer-cast resolver so `x()()` (nested fn-ptr returning
-	// another fn-ptr that is immediately called) dispatches correctly rather
-	// than being mis-classified as a cast with no identifier args.
+	// Generic fn-ptr call: evaluate expression to get pointer ID, dispatch.
+	// Before the cast resolver so `x()()` (nested fn-ptr) dispatches correctly.
 	{
 		auto const* exprType = funcExpr.annotation().type;
 		auto const* funcType = dynamic_cast<FunctionType const*>(exprType);
@@ -1043,9 +960,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 		{
 			auto ptrExpr = m_ctx.buildExpr(funcExpr);
 			auto* wantedType = eb::FunctionPointerBuilder::mapFunctionType(funcType);
-			// Structural match: uint64 vs uint64, or bytes[12] vs bytes[12]
-			// (TypeMapper and FunctionPointerBuilder may create distinct
-			// BytesWType instances — compare by shape, not pointer).
+			// Shape-compare (not pointer): TypeMapper/FunctionPointerBuilder
+			// may create distinct BytesWType instances for the same shape.
 			auto shapeMatches = [](awst::WType const* _a, awst::WType const* _b) {
 				if (_a == _b) return true;
 				if (!_a || !_b) return false;
@@ -1060,8 +976,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 			};
 			if (ptrExpr && !shapeMatches(ptrExpr->wtype, wantedType))
 			{
-				// Coerce ARC4-encoded fn-ptr (read from an ARC4 array/struct)
-				// to the builder's native ptr type (uint64 or bytes[12]).
+				// Coerce ARC4-encoded fn-ptr to native ptr type (uint64 or bytes[12]).
 				auto const* srcKind = ptrExpr->wtype;
 				bool srcIsArc4 = srcKind
 					&& (srcKind->kind() == awst::WTypeKind::ARC4UIntN

@@ -14,16 +14,10 @@ namespace puyasol::builder::eb
 {
 
 /// Result of `rebuildArc4StructChainCOW`.
-///   - assignTarget: outermost write target (the root of the access chain
-///     where the synthesized NewStruct gets stored). May be a
-///     BoxValueExpression / IndexExpression / FieldExpression whose own
-///     base wasn't an ARC4Struct, so the walk stopped here.
-///   - assignValue: outermost rebuilt struct, with the inner change
-///     propagated through all enclosing NewStructs.
-///   - fieldChain: list of (fieldName, fieldType) walked outward from the
-///     innermost write. Reversing this and calling FieldExpression on the
-///     emitted AssignmentExpression yields the originally-targeted field
-///     for assignment-as-expression semantics.
+///   - assignTarget: outermost write target; may be Box/Index/Field where the walk stopped.
+///   - assignValue: outermost rebuilt NewStruct with the inner change propagated.
+///   - fieldChain: (name, type) pairs walked outward; reverse + FieldExpression on the
+///     emitted assignment to recover the originally-targeted field.
 struct ArcStructCowResult
 {
 	std::shared_ptr<awst::Expression> assignTarget;
@@ -31,20 +25,11 @@ struct ArcStructCowResult
 	std::vector<std::pair<std::string, awst::WType const*>> fieldChain;
 };
 
-/// Handles compound assignment operations (+=, -=, *=, etc.) via the builder pattern.
-///
-/// For compound assignment `target op= value`:
-///   1. Read current target value
-///   2. Compute `current_value op value` via the builder's binary_op()
-///   3. Return the computed result (caller handles the actual assignment)
-///
-/// This replaces the direct call to `buildBinaryOp()` in the old AssignmentBuilder,
-/// routing through the type-driven builder for the arithmetic operation.
+/// Utilities for compound assignment and ARC4 struct COW chain rebuild.
 class AssignmentHelper
 {
 public:
-	/// Compute the compound assignment value: `currentValue {op} rhs`.
-	/// Returns nullptr if the builder can't handle this type (fall through to old code).
+	/// Compute `currentValue {op} rhs`. Returns nullptr if no builder handles the type.
 	static std::shared_ptr<awst::Expression> tryComputeCompoundValue(
 		ContractContext& _ctx,
 		solidity::frontend::Token _assignOp,
@@ -53,21 +38,9 @@ public:
 		std::shared_ptr<awst::Expression> _rhs,
 		awst::SourceLocation const& _loc);
 
-	/// Walk the outer FieldExpression chain from `_initialTarget`, rebuilding
-	/// NewStructs at each ARC4Struct level (copy-on-write). The inner-most
-	/// new value is `_initialValue`. Stops when the base is no longer a
-	/// FieldExpression whose base resolves to an ARC4Struct.
-	///
-	/// Used for write-through assignments to nested ARC4Struct fields:
-	///   `outer.middle.inner.f = v`
-	/// decomposes into rebuilding `outer.middle.inner` (with `f` replaced),
-	/// then `outer.middle` (with `inner` replaced by the new struct), then
-	/// `outer` (with `middle` replaced) — each level a NewStruct that
-	/// copies the unchanged fields and substitutes the inner result.
-	///
-	/// StateGet wrappers around `outerField->base` get unwrapped for the
-	/// write target and rewrapped for the read base (so the surviving
-	/// fields inherit a read-shape that StateGet can serve).
+	/// Walk the outer FieldExpression chain, rebuilding a NewStruct at each ARC4Struct level
+	/// (copy-on-write). Stops when the base is not an ARC4Struct. StateGet wrappers are
+	/// stripped for the write target and preserved for read bases.
 	static ArcStructCowResult rebuildArc4StructChainCOW(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _initialTarget,

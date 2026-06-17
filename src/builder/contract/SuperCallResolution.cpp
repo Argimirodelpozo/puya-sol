@@ -23,14 +23,8 @@ namespace puyasol::builder
 namespace
 {
 
-/// AST visitor: collect AST IDs of base functions reached via `super.f()`
-/// (MRO-dependent) or `Base.f()` (fixed target).
-///
-/// Classification leans on Solidity's MemberAccessAnnotation::requiredLookup
-/// (set during semantic analysis):
-///   Super  → super.f() — MRO-dependent; resolve at codegen via the MRO chain.
-///   Static → Base.f() qualified — fixed target; emit directly.
-///   Virtual → ordinary virtual call — handled by ARC4 router dispatch.
+/// Collect base-function AST IDs from super.f() (MRO) and Base.f() (fixed).
+/// Uses requiredLookup: Super=MRO-dependent, Static=explicit-base, Virtual=router.
 class SuperCallCollector: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -53,9 +47,8 @@ public:
 			break;
 		case VirtualLookup::Static:
 		{
-			// Static-resolved member access. Only count as explicit-base when
-			// the base expression is a contract-typed TypeType (`Base.f()`),
-			// not other static cases like `Lib.f()`.
+			// Only count explicit-base when the base is a contract TypeType;
+			// excludes Lib.f() and other static cases.
 			auto const* baseType = _node.expression().annotation().type;
 			if (!baseType
 				|| baseType->category() != solidity::frontend::Type::Category::TypeType)
@@ -79,27 +72,20 @@ public:
 void ContractBuilder::collectSuperCallMetadata(
 	solidity::frontend::ContractDefinition const& _contract)
 {
-	// Scan all functions (own + inherited) for super.method() calls.
-	// Collect AST IDs of base functions that need separate subroutines.
-	// MRO-aware super resolution: super.f() in contract X calls the NEXT
-	// implementation of f in the most-derived contract's MRO, not X's own base.
-	// E.g., for D is B,C: MRO = D→C→B→A. C.super.f() should call B.f(), not A.f().
-
-	// Build per-function-name MRO chains
+	// MRO-aware: super.f() in X calls the NEXT f in the most-derived MRO.
+	// D is B,C: MRO=D→C→B→A; C.super.f() → B.f(), not A.f().
 	auto const& mro = _contract.annotation().linearizedBaseContracts;
 	struct MroChainEntry {
 		solidity::frontend::ContractDefinition const* contract;
 		solidity::frontend::FunctionDefinition const* func;
 	};
-	// funcName → ordered chain of implementations in MRO order
-	std::map<std::string, std::vector<MroChainEntry>> mroChains;
+	std::map<std::string, std::vector<MroChainEntry>> mroChains; // funcName → MRO order
 	for (auto const* base: mro)
 		for (auto const* func: base->definedFunctions())
 			if (!func->isConstructor() && func->isImplemented())
 				mroChains[func->name()].push_back({base, func});
 
-	// For each function in the MRO chain, build (callerFuncId → superSubroutineName, targetFunc).
-	// This allows per-calling-context super resolution.
+	// Build callerFuncId → (superName, targetFunc) for per-context super resolution.
 	m_superTargetFuncs.clear();
 	m_perFuncSuperOverrides.clear();
 
@@ -107,13 +93,11 @@ void ContractBuilder::collectSuperCallMetadata(
 	{
 		for (size_t i = 0; i < chain.size(); ++i)
 		{
-			// Check if this function has super.f() calls
 			SuperCallCollector funcCollector;
 			chain[i].func->body().accept(funcCollector);
 			if (funcCollector.superTargetIds.empty())
 				continue;
-
-			// This function calls super → target is chain[i+1]
+			// super.f() → chain[i+1]
 			if (i + 1 >= chain.size())
 				continue;
 
@@ -132,12 +116,8 @@ void ContractBuilder::collectSuperCallMetadata(
 			}
 		}
 
-		// Constructor super.f(): the most-derived contract's constructor
-		// sits conceptually one position above chain[0] in the MRO. Its
-		// super target is whichever `f` appears first in the constructor
-		// body's super.f() reference. Emit a caller-keyed subroutine whose
-		// body is that target — the constructor call site will look up
-		// `f__super_<ctor.id>` via m_perFuncSuperOverrides.
+		// Constructor super.f(): ctor sits above chain[0] in MRO.
+		// Target = first f in the super.f() ref; looked up via m_perFuncSuperOverrides.
 		if (auto const* ctor = _contract.constructor())
 		{
 			if (ctor->isImplemented())
@@ -166,9 +146,6 @@ void ContractBuilder::collectSuperCallMetadata(
 		}
 	}
 
-	// Collect every super/explicit-base call across all implemented functions in the
-	// MRO (used by both the fallback super.f and the explicit-base Base.f passes below).
-	// (SuperCallCollector is a non-movable AST visitor, so fill one by reference.)
 	auto collectAllSuperCalls = [&](SuperCallCollector& c) {
 		for (auto const* base: mro)
 			for (auto const* func: base->definedFunctions())
@@ -176,14 +153,13 @@ void ContractBuilder::collectSuperCallMetadata(
 					func->body().accept(c);
 	};
 
-	// Fallback: super calls not handled by MRO chains (e.g., g() calling super.f()
-	// where g and f are different function names). Use original AST-ID-based resolution.
+	// Fallback: super.f() from a different-named function (g → super.f());
+	// MRO chain doesn't cover it — fall back to AST-ID-based resolution.
 	m_fallbackSuperFuncs.clear();
 	{
 		SuperCallCollector globalCollector;
 		collectAllSuperCalls(globalCollector);
 
-		// Collect all super target IDs already handled by MRO chain
 		std::set<int64_t> handledSuperIds;
 		for (auto const& [callerId, overrides]: m_perFuncSuperOverrides)
 			for (auto const& [targetId, name]: overrides)
@@ -212,8 +188,7 @@ void ContractBuilder::collectSuperCallMetadata(
 		}
 	}
 
-	// Handle explicit base class calls (Base.f() — NOT super.f()).
-	// These always resolve to the specific base function, regardless of MRO.
+	// Explicit Base.f() calls: fixed target regardless of MRO.
 	m_explicitBaseTargetFuncs.clear();
 	{
 		SuperCallCollector globalCollector;
@@ -232,7 +207,6 @@ void ContractBuilder::collectSuperCallMetadata(
 						if (m_overloadedNames.count(name))
 							name += paramCountSuffix(*func);
 						std::string superName = name + "__super_" + std::to_string(id);
-						// Register globally — explicit base calls don't need per-function context
 						m_tr->setSuperTarget(id, superName);
 					}
 				}
@@ -243,12 +217,10 @@ void ContractBuilder::collectSuperCallMetadata(
 
 void ContractBuilder::applySuperOverridesFor(int64_t _callerFuncId)
 {
-	// MRO-dependent overrides for this specific function
 	auto it = m_perFuncSuperOverrides.find(_callerFuncId);
 	if (it != m_perFuncSuperOverrides.end())
 		for (auto const& [targetId, superName]: it->second)
 			m_tr->setSuperTarget(targetId, superName);
-	// Re-register fallback super targets (cross-function super calls)
 	for (auto const& [id, func]: m_fallbackSuperFuncs)
 	{
 		std::string name = func->name();
@@ -256,7 +228,6 @@ void ContractBuilder::applySuperOverridesFor(int64_t _callerFuncId)
 			name += "_" + std::to_string(func->parameters().size());
 		m_tr->setSuperTarget(id, name + "__super_" + std::to_string(id));
 	}
-	// Re-register explicit base targets (they're fixed, not MRO-dependent)
 	for (auto const& [id, func]: m_explicitBaseTargetFuncs)
 	{
 		std::string name = func->name();
@@ -275,7 +246,6 @@ void ContractBuilder::emitSuperSubroutines(
 	awst::Contract& _contractNode,
 	std::string const& _contractName)
 {
-	// MRO-dependent super subroutines (keyed by caller func AST ID)
 	for (auto const& [callerFuncId, targetFunc]: m_superTargetFuncs)
 	{
 		std::string name = targetFunc->name();
@@ -289,7 +259,7 @@ void ContractBuilder::emitSuperSubroutines(
 		_contractNode.methods.push_back(std::move(method));
 	}
 
-	// Fallback super subroutines (cross-function super calls)
+	// Fallback super subroutines.
 	for (auto const& [targetId, func]: m_fallbackSuperFuncs)
 	{
 		std::string name = func->name();
@@ -302,7 +272,7 @@ void ContractBuilder::emitSuperSubroutines(
 		_contractNode.methods.push_back(std::move(method));
 	}
 
-	// Explicit base class call subroutines (keyed by target func AST ID)
+	// Explicit Base.f() subroutines.
 	for (auto const& [targetId, func]: m_explicitBaseTargetFuncs)
 	{
 		std::string name = func->name();

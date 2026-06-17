@@ -1,6 +1,4 @@
-/// @file SolAssignmentBytesElem.cpp
-/// Bytes-element assignment translation extracted from SolAssignmentHandlers.cpp:
-///   - handleBytesElementAssignment: `bytesVar[i] = byteValue`
+/// @file SolAssignmentBytesElem.cpp — handleBytesElementAssignment: `bytesVar[i] = byteValue`
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
@@ -24,11 +22,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 
 	if (op != Token::Assign)
 	{
-		// Reuse the already-built index access for the current-value read.
-		// Rebuilding the LHS re-runs a side-effecting index — `b[i++] |= v` would
-		// bump `i` twice, reading one element and writing another (verified:
-		// b[0]=0x01 -> 0x12 from b[1], i==2). The index node is already the
-		// hoisted temp, so reusing base+index evaluates the index exactly once.
+		// Reuse built index for current-value read; rebuilding re-evaluates a
+		// side-effecting index (e.g. `b[i++] |= v` gave b[1] into b[0], i==2).
 		auto currentValue = awst::makeIndexExpression(
 			_indexExpr->base, _indexExpr->index, _indexExpr->wtype, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
@@ -60,20 +55,15 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	replace->stackArgs.push_back(_indexExpr->index);
 	replace->stackArgs.push_back(std::move(_value));
 
-	// AssignmentExpression.target must be an Lvalue (VarExpression,
-	// FieldExpression, IndexExpression, TupleExpression, or a storage
-	// expression). For `bytes(x)[i] = …` the IndexExpression base is a
-	// ReinterpretCast wrapping the actual storage expression; unwrap it
-	// so puya sees a plain lvalue, and adapt the target/value wtype to
-	// match the underlying storage type (string ↔ bytes).
+	// For `bytes(x)[i] = …` the IndexExpression base is a ReinterpretCast;
+	// unwrap to give puya a plain lvalue, and align target/value wtypes (string↔bytes).
 	auto target = _indexExpr->base;
 	std::shared_ptr<awst::Expression> replaceValue = replace;
 	while (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(target.get()))
 		target = cast->expr;
 
-	// Nested bytes field: `s.b[i] = v` where `s.b` is `bytes` but the struct
-	// holds it as an ARC4 byte[]. The target here is ARC4Decode(FieldExpr)
-	// which puya rejects as an lvalue — route through a NewStruct write-back.
+	// `s.b[i] = v` where s.b is bytes (struct holds it as ARC4 byte[]):
+	// ARC4Decode(FieldExpr) isn't an lvalue in puya — route through NewStruct write-back.
 	if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(target.get()))
 	{
 		if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(decode->value.get()))

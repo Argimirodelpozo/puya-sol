@@ -14,11 +14,9 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::compare(
 	InstanceBuilder& _other, BuilderComparisonOp _op,
 	awst::SourceLocation const& _loc)
 {
-	// String only supports Eq/Ne
 	if (_op != BuilderComparisonOp::Eq && _op != BuilderComparisonOp::Ne)
 		return nullptr;
 
-	// Accept other string or bytes-backed types
 	auto* otherWType = _other.wtype();
 	if (otherWType != awst::WType::stringType()
 		&& otherWType != awst::WType::bytesType())
@@ -27,7 +25,6 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::compare(
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
 
-	// Coerce both to bytes if types differ
 	auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 		if (expr->wtype != awst::WType::bytesType())
 		{
@@ -50,7 +47,6 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::compare(
 std::unique_ptr<InstanceBuilder> SolStringBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	// string is truthy if len(s) != 0
 	auto len = awst::makeLen(resolve(), _loc);
 
 	auto zero = awst::makeZero(_loc);

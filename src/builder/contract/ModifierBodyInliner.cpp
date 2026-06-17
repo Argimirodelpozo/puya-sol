@@ -1,11 +1,6 @@
 /// @file ModifierBodyInliner.cpp
-/// Inlines a function's modifier chain into its body. The orchestration that
-/// builds the modifier *call* chain (i.e. wraps the function in
-/// `__modifierN` subroutines) lives in `ModifierInliner.cpp`
-/// (`ContractBuilder::buildModifierChain`). This TU is the body-inliner the
-/// free-function / library translation paths use directly, and that the
-/// `ContractBuilder::inlineModifiers` wrapper in `ModifierInliner.cpp`
-/// delegates to.
+/// Textual _ expansion for modifier bodies. The subroutine-chain path
+/// (via-IR mode) lives in ModifierInliner.cpp::buildModifierChain.
 
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StateVarWalker.h"
@@ -19,10 +14,8 @@ namespace puyasol::builder
 
 namespace {
 
-/// Collects local variable declarations inside a statement subtree (e.g. a
-/// modifier body) so the inliner can rename them uniquely per application.
-/// Without this, `modifier mod(uint x) { uint b = x; _; assert(b == x); }`
-/// applied twice shares a single `b` slot across both instances.
+/// Collect local vars in a modifier body so the inliner can rename them
+/// uniquely per application (prevents slot collision across stacked modifiers).
 class LocalVarDeclCollector: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -36,10 +29,7 @@ public:
 	}
 };
 
-/// Detects whether a statement subtree contains any `assembly { ... }` block.
-/// Used to skip modifier local-var renaming when the body has inline assembly:
-/// Yul identifiers reference their original Solidity names, and renaming would
-/// produce a mismatch between the declaration slot and the assembly slot.
+/// Detect inline assembly: renaming local vars would mismatch Yul identifier refs.
 class InlineAssemblyDetector: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -51,19 +41,10 @@ public:
 	}
 };
 
-/// Conservative dead-code elimination for an inlined function body.
-///
-/// Modifier inlining rewrites a `return;` inside a modifier loop into an
-/// unconditional `{ __mod_exit = …; break; }`. That strands the loop's
-/// post-increment (`i++`) as unreachable code after the break. puya's IR
-/// validator rejects unreachable code outright, whereas an IR/Yul backend
-/// would silently DCE it — so puya-sol must drop it before handing the body
-/// to puya (`f() m m m` in stacked_return_with_modifiers.sol).
-///
-/// `stmtTerminates` reports only constructs control provably cannot fall
-/// through past — return / break / continue, or a block or if/else built
-/// solely from those. Removing statements after such a construct is always
-/// behaviour-preserving, so this is safe to run on every inlined body.
+/// Drop unreachable statements after inlining. Modifier inlining rewrites
+/// `return;` in a loop to `{ __mod_exit=…; break; }`, stranding the post-
+/// increment as unreachable. puya IR rejects unreachable code; EVM backends
+/// silently DCE it. Handles stacked_return_with_modifiers.sol (f() m m m).
 bool blockTerminates(awst::Block const* b);
 
 bool stmtTerminates(awst::Statement const* s)
@@ -111,12 +92,9 @@ void dropUnreachableStatements(awst::Block* b)
 	}
 }
 
-/// True for a compile-time zero / default scalar constant. Used to drop the
-/// redundant `retvar = 0` the deferral would split out of an implicit
-/// trailing `return 0`: the return var is already default-initialised, and
-/// any earlier `return` would have left the frame, so the var is provably
-/// still zero wherever a `return 0` is reached — re-assigning it there only
-/// risks clobbering a value a nested `return expr;` already stored.
+/// True for a compile-time zero/default constant. Used to suppress the redundant
+/// `retvar = 0` split from an implicit trailing `return 0`; the var is already
+/// default-initialised and re-assigning risks clobbering a nested `return expr`.
 bool isZeroConstantExpr(awst::Expression const* val)
 {
 	if (auto const* i = dynamic_cast<awst::IntegerConstant const*>(val))
@@ -128,18 +106,10 @@ bool isZeroConstantExpr(awst::Expression const* val)
 
 } // namespace
 
-/// Free-function entry. Used by AWSTBuilder for the library /
-/// internalized-lib / free-function translation path that doesn't have a
-/// ContractBuilder instance. Mirrors `ContractBuilder::inlineModifiers`
-/// logic but pulls all state from `_ctx` instead of `m_*` members.
-///
-/// Known regression vs prior session: `test_function_modifier_library` and
-/// `test_function_modifier_library_inheritance` fail with "deserialization
-/// failed: 'ARC4Decode'" — `s.v++` inside a modifier with storage-pointer
-/// args produces an ARC4Decode assignment target that puya rejects. Prior
-/// session had additional fixes (probably an ARC4Decode unwrap somewhere
-/// in the assignment lowering) that were lost when the working tree was
-/// reverted; full member-body parity alone isn't sufficient.
+/// Free-function/library entry point (no ContractBuilder instance).
+/// Known regression: test_function_modifier_library / _inheritance fail with
+/// "deserialization failed: 'ARC4Decode'" — `s.v++` with storage-pointer
+/// modifier args produces an ARC4Decode assignment target that puya rejects.
 void inlineModifiers(
 	FunctionTranslationCtx& _ctx,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -164,16 +134,14 @@ void inlineModifiers(
 	static int modCounter = 0;
 	static int modRetvalCounter = 0;
 
-	// Extract named return var init statements from the body and hoist them
-	// BEFORE modifier arg evaluation.
+	// Hoist named-return zero-inits before modifier arg evaluation.
 	std::set<std::string> returnParamNames;
 	for (auto const& rp : _func.returnParameters())
 		if (!rp->name().empty())
 			returnParamNames.insert(rp->name());
 
-	// Unnamed returns: synthesise return vars so `return expr;` can be
-	// rewritten into `__mod_retval_N = expr;` (in placeholder) + deferred
-	// `return __mod_retval_N;`.
+	// Unnamed returns: synthesise __mod_retval_N vars so `return expr;` can be
+	// split into `__mod_retval_N = expr;` (placeholder) + deferred `return __mod_retval_N;`.
 	std::vector<std::pair<std::string, awst::WType const*>> syntheticRets;
 	bool allUnnamed = !_func.returnParameters().empty();
 	for (auto const& rp: _func.returnParameters())
@@ -289,18 +257,11 @@ void inlineModifiers(
 				if (!argExpr)
 					continue;
 
-				// Storage-pointer params (`S storage s`, `mapping(K=>V) storage m`):
-				// don't materialise a local copy. The arg expression itself is the
-				// storage location (BoxValueExpression, FieldExpression on a
-				// state-var-backed struct, etc.) and writes inside the modifier
-				// body must mutate the underlying storage, not a local copy.
-				// Set the storage alias so SolIdentifier resolves the param to
-				// the original storage expression.
+				// Storage-pointer params: alias to the original storage location;
+				// writes must mutate storage, not a local copy.
 				if (param->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Storage)
 				{
-					// Modifier args come from the caller's expression
-					// context; pick the alias kind from the AWST shape.
 					sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
 						if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
 							return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
@@ -313,8 +274,6 @@ void inlineModifiers(
 						return sol_ast::StorageAlias::stateRead(std::move(argExpr));
 					}();
 					m_tr.setStorageAlias(param->id(), std::move(alias));
-					// Track for cleanup via the same remappedDeclIds list, so
-					// the post-body sweep removes the alias too.
 					remappedDeclIds.push_back(param->id());
 					continue;
 				}
@@ -368,14 +327,8 @@ void inlineModifiers(
 					if (auto const* varRef = dynamic_cast<awst::VarExpression const*>(retStmt->value.get()))
 						isJustRetVar = (varRef->name == retName);
 
-					// Skip a redundant `retvar = 0` split from an implicit
-					// trailing `return 0`: the synthetic return var is already
-					// 0-initialised and is only ever written by return-handling,
-					// so a value-carrying `return` nested in a loop would
-					// otherwise be clobbered here. Restricted to synthetic
-					// `__mod_retval_*` vars — a *named* return var can be
-					// assigned directly by user code, so its `return 0` must
-					// still emit the assignment.
+					// Skip `retvar = 0` for synthetic __mod_retval_* (already 0-init);
+					// named return vars can be user-assigned so their `return 0` must emit.
 					if (!isJustRetVar
 						&& !(isZeroConstantExpr(retStmt->value.get())
 							&& retName.rfind("__mod_retval_", 0) == 0))
@@ -485,11 +438,8 @@ void inlineModifiers(
 					if (auto* retSt = dynamic_cast<awst::ReturnStatement*>(s.get()))
 					{
 						auto block = awst::makeBlock(s->sourceLocation);
-						// A valued return nested in a loop/branch is the inlined
-						// inner body's `return expr;` — preserve the value by
-						// assigning it to the single return var before the
-						// modifier exit (top-level returns are handled by the
-						// deferral pass). Bare `return;` → flag+break only.
+						// Valued return in a loop/branch: assign to retvar before flag+break.
+						// Top-level returns are handled by the deferral pass.
 						if (retSt->value && returnParamNames.size() == 1)
 						{
 							auto const& retName = *returnParamNames.begin();

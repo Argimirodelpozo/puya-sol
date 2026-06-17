@@ -1,6 +1,4 @@
-/// @file SolIdentifier.cpp
-/// Variable/constant/state variable resolution.
-/// Migrated from IdentifierBuilder.cpp.
+/// @file SolIdentifier.cpp — variable/constant/state variable resolution.
 
 #include "builder/sol-ast/exprs/SolIdentifier.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
@@ -50,25 +48,18 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
-		// Blob-backed memory aggregate (>4KB): the variable travels as its
-		// uint64 base offset into the multi-slot blob. A bare reference (e.g.
-		// passing `p` as a function argument) resolves to that offset; field
-		// and index access go through SolIndexAccess / the member-read intercept
-		// via resolveBlobOffset.
+		// Blob-backed aggregate (>4KB): variable travels as uint64 base offset.
+		// Bare reference resolves to that offset; field/index access go through
+		// SolIndexAccess/resolveBlobOffset.
 		if (auto off = m_scope.findBlobAggregate(varDecl->id()); !off.empty())
 			return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
 
-		// Struct storage-ref param (e.g. Uniswap V4 `Pool.State storage self`):
-		// the param travels as the box-key PREFIX in bytes (Layer-1
-		// mapping-storage-ref handling, since the struct carries nested
-		// mappings). When used as a struct VALUE — `self.field` read or write —
-		// resolve it to a box-backed struct keyed by that runtime prefix, so the
-		// existing ARC4Struct field machinery (FieldExpression on a StateGet /
-		// write-back via NewStruct→box_put) handles member access. The other
-		// uses of `self` bypass this: passing `self` to a function goes through
-		// SolInternalCall::extractMappingKeyPrefix, and `self.nestedMap[k]` goes
-		// through SolIndexAccess::buildInitialPrefix (both consult
-		// findMappingKeyParam directly).
+		// Struct storage-ref param (e.g. V4 `Pool.State storage self`): travels
+		// as box-key PREFIX in bytes. When used as struct value (`self.field`),
+		// resolve to a box-backed struct keyed by the runtime prefix so ARC4Struct
+		// field machinery handles member access. Other uses bypass this:
+		// function-pass → SolInternalCall::extractMappingKeyPrefix;
+		// `self.nestedMap[k]` → SolIndexAccess::buildInitialPrefix.
 		if (!m_scope.findMappingKeyParam(varDecl->id()).empty()
 			&& varDecl->type()
 			&& varDecl->type()->category() == solidity::frontend::Type::Category::Struct)
@@ -82,11 +73,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				std::move(boxExpr), structType, m_loc);
 		}
 
-		// Constants: inline the value (known at compile time).
-		// Immutables: DO NOT inline — the constructor may mutate them
-		// (e.g. `int immutable x = 1; constructor() { x--; }`), so the
-		// declaration's initial value is not necessarily what will be in
-		// state after deployment.
+		// Constants: inline the value. Immutables: DO NOT inline — the constructor
+		// may mutate them (e.g. `int immutable x = 1; constructor() { x--; }`).
 		if (varDecl->isConstant() && varDecl->value())
 		{
 			auto val = buildExpr(*varDecl->value());
@@ -127,23 +115,17 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		{
 			auto* type = m_ctx.typeMapper.map(varDecl->type());
 
-			// Mapping state var used as a VALUE (e.g. `r = a;` where r is a
-			// storage-pointer alias): return the mapping NAME as a bytes
-			// constant so the alias holds the box-key prefix at runtime.
-			// (Mapping has no value-of-its-own to read; only per-key boxes
-			// exist. SolIndexAccess paths for `a[k]` still build the box
-			// access from the var name directly.)
+			// Mapping used as a VALUE (`r = a;` where r is a storage-pointer alias):
+			// return its name as bytes so the alias holds the box-key prefix.
+			// Mapping has no own value; SolIndexAccess still builds box access from the name.
 			if (varDecl->type()
 				&& varDecl->type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
 				return awst::makeUtf8BytesConstant(name, m_loc, awst::WType::bytesType());
 			}
 
-			// Transient state vars live in a packed blob in scratch slot
-			// AssemblyBuilder::TRANSIENT_SLOT (same storage that asm
-			// tload/tstore hits), so all reads share the same layout.
-			// StorageBackend dispatches to TransientStorage when the var
-			// is in the transient-namespace layout.
+			// Transient state vars: packed blob in AssemblyBuilder::TRANSIENT_SLOT
+			// (same slot asm tload/tstore uses); StorageBackend dispatches to TransientStorage.
 			if (varDecl->referenceLocation() == VariableDeclaration::Location::Transient
 				&& m_ctx.storageBackend && m_ctx.storageBackend->isTransient(*varDecl))
 			{
@@ -163,8 +145,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				return placeholder;
 			}
 
-			// Constants (redundant check for safety) — immutables must
-			// always read from state; see above.
+			// Constants (redundant guard); immutables always read from state.
 			if (varDecl->isConstant() && varDecl->value())
 				return buildExpr(*varDecl->value());
 
@@ -172,19 +153,15 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		}
 	}
 
-	// Function pointer reference: only when the expression's type annotation
-	// indicates this identifier is used as a function VALUE (not a call target).
-	// Checked via the parent expression's type: if it's FunctionType with
-	// Internal/External kind, this is a pointer reference.
+	// Function pointer reference (identifier used as a value, not a call target):
+	// type annotation is FunctionType{Internal/External}.
 	if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(decl))
 	{
 		if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(m_solType))
-		{
 			if (ft->kind() == solidity::frontend::FunctionType::Kind::Internal
 				|| ft->kind() == solidity::frontend::FunctionType::Kind::External)
 				return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc, ft);
-		}
-		// Otherwise fall through — function used as call target, not a pointer value
+		// Otherwise: function used as call target, fall through.
 	}
 
 	// Regular local variable
@@ -194,8 +171,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	{
 		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(decl))
 		{
-			// Look up potentially renamed name (variable shadowing)
-			e->name = m_scope.awstVarName(*vd);
+			e->name = m_scope.awstVarName(*vd); // renamed for shadowing
 			e->wtype = m_ctx.typeMapper.map(vd->type());
 		}
 		else

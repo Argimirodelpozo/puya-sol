@@ -33,22 +33,13 @@ struct SlotInfo
 	bool isDynamic = false;  ///< True for mappings/arrays (box storage, not packed)
 };
 
-/// Computes the EVM-compatible storage layout for a contract's state variables.
-///
-/// Uses the same packing rules as Solidity's StorageOffsets:
-/// - Variables pack left-to-right into 32-byte slots
-/// - When a variable doesn't fit in remaining space, start a new slot
-/// - Mappings and dynamic arrays always start a new slot (and use box storage)
-///
-/// The layout is used for:
-/// - Packed global state storage on AVM (multiple small vars per slot key)
-/// - Assembly sload/sstore translation (slot number → "slot_N" key)
-/// - .slot and .offset resolution in inline assembly
+/// EVM-compatible storage layout (mirrors Solidity's StorageOffsets packing rules).
+/// Used for: AVM global-state packing, sload/sstore → slot_N key translation,
+/// and .slot/.offset resolution in inline assembly.
 class StorageLayout
 {
 public:
-	/// Compute the storage layout for a contract.
-	/// Walks linearized base contracts to collect all state variables.
+	/// Compute the storage layout for a contract (walks linearized base contracts).
 	void computeLayout(
 		solidity::frontend::ContractDefinition const& _contract,
 		TypeMapper& _typeMapper

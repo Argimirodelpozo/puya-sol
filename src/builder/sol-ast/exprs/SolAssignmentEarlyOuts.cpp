@@ -1,11 +1,6 @@
-/// @file SolAssignmentEarlyOuts.cpp
-/// LHS-shape early-out handlers extracted from SolAssignment.cpp. Each
-/// returns the assignment-as-expression result if it claims ownership of
-/// the shape, or std::nullopt to fall through to the generic dispatch in
-/// SolAssignment::toAwst:
-///   - tryHandleTransientStateWrite: `tx = v` for transient state vars
-///   - tryHandleStoragePointerReassign: `storagePtr = otherStorage`
-///   - tryHandleMultiBoxArrayWrite: multi-box-paged array element assign
+/// @file SolAssignmentEarlyOuts.cpp — pre-buildExpr early-out handlers:
+///   tryHandleTransientStateWrite, tryHandleStoragePointerReassign,
+///   tryHandleMultiBoxArrayWrite
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageBackend.h"
@@ -65,8 +60,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	if (stmt)
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 
-	// Return the new value so assignment-as-expression yields the
-	// written value (Solidity semantics).
+	// Re-read to yield the written value (Solidity assignment-as-expression).
 	return sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
 }
 
@@ -83,20 +77,15 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 		|| lhsDecl->isStateVariable())
 		return std::nullopt;
 
-	// Mapping-key-param locals (`mapping(K=>V) storage r` returned from a
-	// function or declared inside one) hold the box-key prefix as a runtime
-	// bytes value. Reassigning them must do an actual bytes write; the
-	// compile-time alias path drops the side effect (returns VoidConstant)
-	// which is fine for state-var aliases but loses runtime mutations like
-	// `r = a; r[k] = v; r = b; r[k] = v;`.
+	// Mapping-key-param locals hold the box-key prefix as a runtime bytes value.
+	// Must do a real bytes write; compile-time alias path (VoidConstant) would lose
+	// mutations like `r = a; r[k] = v; r = b; r[k] = v`.
 	if (!m_scope.findMappingKeyParam(lhsDecl->id()).empty())
 	{
 		auto rhsExpr = buildExpr(m_assignment.rightHandSide());
-		// If the RHS is a storage-ref element read (`self[k]` lowers to
-		// StateGet(BoxValueExpression)), the local holds that element's box KEY, not
-		// its decoded value — lift the key (mirrors SolInternalCall::extractMappingKeyPrefix).
-		// This is the V4 `position = self.positions.get(k)` shape (a named-return
-		// `position = self[positionKey];` in Position.get, plain-struct mapping element).
+		// RHS storage-ref element read (`self[k]` → StateGet(BoxValueExpression)):
+		// lift the box KEY, not decoded value (mirrors SolInternalCall::extractMappingKeyPrefix).
+		// V4 shape: `position = self[positionKey]` in Position.get.
 		auto keyExpr = awst::unwrapStateGet(rhsExpr);
 		if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(keyExpr.get()))
 			rhsExpr = awst::makeReinterpretCast(box->key, awst::WType::bytesType(), m_loc);
@@ -138,19 +127,14 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 
 	Token op = m_assignment.assignmentOperator();
 	if (op != Token::Assign)
-	{
-		// Compound assignments (`arr[i] += v`) on multi-box arrays not
-		// yet supported. Falls through to default handler which will fail.
-		return std::nullopt;
-	}
+		return std::nullopt; // compound assigns on multi-box arrays unsupported
 
 	unsigned elemSize = StorageMapper::arc4StaticArrayElementSize(arrWtype);
 	unsigned elemsPerBox = StorageMapper::elementsPerBox(arrWtype);
 	auto const* sa = static_cast<awst::ARC4StaticArray const*>(arrWtype);
 	auto const* elemArc4Type = sa->elementType();
 
-	// Pin idx to a temp so we can reference it for both page and offset
-	// without re-evaluating any side effects.
+	// Pin idx to a temp so page and offset can reference it without re-evaluating side effects.
 	auto idxExpr = buildExpr(*lhsIdx->indexExpression());
 	if (idxExpr->wtype != awst::WType::uint64Type())
 		idxExpr = builder::TypeCoercion::implicitNumericCast(
@@ -190,8 +174,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	rhs = builder::TypeCoercion::coerceForAssignment(
 		std::move(rhs), expectedNative, m_loc);
 
-	// Pin rhs to a temp so we can both encode it for box_replace and return
-	// the raw value as the assignment-as-expression result.
+	// Pin rhs to a temp so we can encode it for box_replace and also return it as the result.
 	static int s_mbVCounter = 0;
 	std::string valVarName = "__mb_val_" + std::to_string(s_mbVCounter++);
 	auto valVar = awst::makeVarExpression(valVarName, rhs->wtype, m_loc);
@@ -223,8 +206,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	m_ctx.pendingStatements.push_back(
 		awst::makeExpressionStatement(std::move(replace), m_loc));
 
-	// Return the assigned value (assignment-as-expression).
-	return awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
+	return awst::makeVarExpression(valVarName, valVar->wtype, m_loc); // assignment-as-expression
 }
 
 } // namespace puyasol::builder::sol_ast

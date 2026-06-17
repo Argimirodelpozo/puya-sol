@@ -32,9 +32,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 	auto body = awst::makeBlock(method.sourceLocation);
 
-	// Detect if the constructor needs auto-split into __postInit. Triggered
-	// by box state-var writes (direct or transitive), `new C()` deployments,
-	// `msg.*` references, or AVM stdlib calls — see helpers above.
+	// __postInit triggers: box writes, new C(), msg.*, or AVM stdlib calls.
 	bool needsPostInit = computeNeedsPostInit(_contract);
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
@@ -47,9 +45,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		auto createBlock = awst::makeBlock(method.sourceLocation);
 
-		// Helper: emit state variable initialization statements for one contract's state vars.
-		// Initializes global state variables with explicit initializers or zero/default values.
-		// Tracks already-initialized variable names via the 'initialized' set to handle overrides.
+		// Emit state variable initialization for one contract level; 'initialized'
+		// set prevents re-init when derived contracts shadow a base name.
 		std::set<std::string> stateVarInitialized;
 		auto emitStateVarInit = [&](solidity::frontend::ContractDefinition const& base,
 			std::vector<std::shared_ptr<awst::Statement>>& targetBody)
@@ -68,11 +65,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 				auto* wtype = m_typeMapper.map(var->type());
 
-				// Box-stored ARC4 struct with explicit initializer: encode
-				// the initializer and box_put it. Box arrays/bytes/dyn
-				// arrays are handled by the dedicated m_boxArrayVarNames
-				// loop (built below but emitted earlier in the program), so
-				// skip those kinds here.
+				// Box ARC4 struct with explicit initializer: encode + box_put.
+				// Dynamic arrays/bytes handled by m_boxArrayVarNames loop; skip here.
 				if (kind == awst::AppStorageKind::Box)
 				{
 					if (!var->value())
@@ -101,28 +95,17 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					continue;
 				}
 
-				// Only zero-initialize global state (not box storage)
 				if (kind != awst::AppStorageKind::AppGlobal)
 					continue;
 
-				// Build key
 				auto key = awst::makeUtf8BytesConstant(var->name(), method.sourceLocation);
 
-				// Build initial value: use explicit initializer if present,
-				// otherwise default to zero/empty.
 				std::shared_ptr<awst::Expression> defaultVal;
 				if (var->value())
 				{
-					// Pre-write the type's default (0/empty) BEFORE the
-					// initializer runs, so an initializer that references
-					// itself (Solidity allows e.g. `uint immutable x = x + 1`
-					// — x reads as 0 before the assignment lands) finds
-					// the var via the standard `app_global_get_ex; assert
-					// exists` read path without crashing. Mirrors EVM
-					// "storage is zero-initialised before constructor"
-					// semantics. Only fires for immutables because non-
-					// immutable state vars are handled by the no-initializer
-					// fall-through below (which already emits the zero).
+					// Pre-write zero so self-referencing immutable initializers
+					// (`uint immutable x = x + 1`) read 0 via app_global_get_ex.
+					// Non-immutable vars get zero from the fall-through below.
 					if (var->immutable())
 					{
 						std::shared_ptr<awst::Expression> zeroVal;
@@ -143,15 +126,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							awst::makeExpressionStatement(std::move(prePut), method.sourceLocation));
 					}
 
-					// Translate the initializer expression (e.g. `= 'Wrapped Ether'`)
 					defaultVal = m_exprBuilder->build(*var->value());
 					if (defaultVal)
 						defaultVal = TypeCoercion::coerceForAssignment(
 							std::move(defaultVal), wtype, method.sourceLocation);
-					// Flush any prePending statements (e.g. `new C()` emits an
-					// inner-txn create + fund before referencing __new_app_id_N)
-					// into the target body so the referenced vars are bound
-					// before the state-var assignment.
+					// Flush prePending (e.g. new C() inner-txn create+fund)
+					// before the state-var assignment uses __new_app_id_N.
 					for (auto& preStmt: m_exprBuilder->takePrePending())
 						targetBody.push_back(std::move(preStmt));
 					for (auto& postStmt: m_exprBuilder->takePending())
@@ -183,14 +163,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				else if (wtype->kind() == awst::WTypeKind::ARC4Struct
 					|| wtype->kind() == awst::WTypeKind::WTuple)
 				{
-					// Struct → use StorageMapper's default
 					defaultVal = StorageMapper::makeDefaultValue(wtype, method.sourceLocation);
 				}
 				else
 				{
-					// Fixed-size bytes (bytes1..bytes32) → N zero bytes so the
-					// auto-getter ABI emits the declared width. Dynamic bytes /
-					// string keep the empty default.
+					// bytes1..bytes32: N zero bytes so the auto-getter ABI emits the
+					// declared width. Dynamic bytes/string keep the empty default.
 					int bytesLen = 0;
 					if (auto const* bw = dynamic_cast<awst::BytesWType const*>(wtype))
 						if (bw->length().has_value() && *bw->length() > 0)
@@ -212,7 +190,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			}
 		};
 
-		// Initialize length counters for dynamic array state variables stored in boxes
+		// Collect box-stored array/bytes vars for box_create in __postInit.
 		{
 			std::set<std::string> lengthInitialized;
 			forEachStateVarReverse(_contract, [&](auto const* var)
@@ -226,18 +204,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
-				// Only for box-stored arrays (dynamic arrays)
 				if (kind != awst::AppStorageKind::Box)
 					return;
 
 				auto* wtype = m_typeMapper.map(var->type());
 				if (!wtype)
 					return;
-				// Collect dynamic arrays AND dynamic bytes for box creation,
-				// PLUS fixed-size ARC4 static arrays (uint[N]) which are
-				// stored in a single box of fixed length and need box_create
-				// at deploy time so the contract can write to slots without
-				// hitting "no such box" at runtime.
+				// Dynamic arrays, dynamic bytes, and ARC4 static arrays all need
+				// box_create at deploy time ("no such box" otherwise).
 				bool isBoxType = wtype->kind() == awst::WTypeKind::ReferenceArray
 					|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 					|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
@@ -247,31 +221,22 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (!isBoxType)
 					return;
 
-				// ARC4StaticArray sizing — accept oversized declared sizes by
-				// switching to the multi-box layout. AVM caps a single box's
-				// value at 32768 bytes; arrays larger than that get split
-				// across N boxes keyed `<name>` ++ `itob(page)`. Element
-				// reads/writes route at runtime via
-				// `page = idx / elemsPerBox`. Pathological declarations
-				// (`uint[2 ether]`) still get rejected (effectively infinite
-				// pages) so we don't allocate billions of boxes.
+				// ARC4StaticArray: oversized → multi-box layout (N boxes keyed
+				// `<name>++itob(page)`). AVM single-box cap = 32768 B;
+				// page = idx / elemsPerBox at runtime.
 				if (wtype->kind() == awst::WTypeKind::ARC4StaticArray)
 				{
 					auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(wtype);
 					if (sa && sa->arraySize() > 0)
 					{
 						uint64_t totalBytes = StorageMapper::arc4StaticArrayTotalBytes(wtype);
-						// Cap pre-allocation at 4 boxes (128 KB). Beyond
-						// that, __postInit's box_create burst exceeds
-						// reasonable txn-group budget (one app call ≈ 8
-						// box_create calls before write-budget exhaustion).
-						// Skipping is safe for tests that only access
-						// `.length` (compile-time constant); element
-						// reads/writes on un-pre-allocated multi-box arrays
-						// are a known limitation tracked in
-						// multi-box-storage.md. totalBytes == 0
-						// (struct/dynamic-element) falls through to the
-						// legacy single-box path.
+						// Cap pre-allocation at 4 boxes (128 KB). Beyond that,
+						// __postInit box_create burst exceeds write-budget (~8
+						// box_create per app call). .length reads still work
+						// (compile-time constant); element writes on
+						// un-pre-allocated arrays fail — see multi-box-storage.md.
+						// totalBytes==0 (struct/dynamic-element) falls through to
+						// single-box path.
 						constexpr uint64_t MAX_PREALLOC_BYTES = 4ULL * 32768ULL;
 						if (totalBytes > MAX_PREALLOC_BYTES)
 						{
@@ -294,11 +259,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			});
 		}
 
-		// Force __postInit if we have box array vars that need box_create
 		if (!m_boxArrayVarNames.empty())
 			needsPostInit = true;
 
-		// Collect explicit base constructor calls from the constructor's modifiers
 		auto const* constructor = _contract.constructor();
 		std::map<solidity::frontend::ContractDefinition const*,
 			std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
@@ -306,9 +269,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		if (constructor)
 		{
-			// Read constructor parameters from ApplicationArgs during create.
-			// Each param is ARC4-encoded in ApplicationArgs[i].
-			// For contracts with no constructor params, this loop is skipped.
+			// Decode constructor params from ApplicationArgs (ARC4-encoded, one per slot).
 			int argIndex = 0;
 			for (auto const& param: constructor->parameters())
 			{
@@ -321,21 +282,18 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 				if (paramType == awst::WType::accountType())
 				{
-					// bytes → account via ReinterpretCast
 					auto cast = awst::makeAsAccount(std::move(readArg), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::biguintType())
 				{
-					// bytes → biguint via ReinterpretCast (big-endian, no-op on AVM)
 					auto cast = awst::makeAsBiguint(std::move(readArg), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::uint64Type()
 					|| paramType == awst::WType::boolType())
 				{
-					// Constructor args come as 32-byte big-endian (EVM ABI encoding).
-					// Extract last 8 bytes, then btoi to native uint64/bool.
+					// Args are 32-byte big-endian (EVM ABI); extract last 8 + btoi.
 					auto len = awst::makeLen(readArg, method.sourceLocation);
 
 					auto eight = awst::makeIntegerConstant("8", method.sourceLocation);
@@ -352,21 +310,17 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else if (paramType == awst::WType::stringType())
 				{
-					// bytes → string via ReinterpretCast
 					auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::stringType(), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType->kind() == awst::WTypeKind::ReferenceArray)
 				{
-					// Array params: ReinterpretCast to ARC4 type, then ARC4Decode
 					auto const* arc4Type = m_typeMapper.mapToARC4Type(paramType);
 					auto cast = awst::makeReinterpretCast(std::move(readArg), arc4Type, method.sourceLocation);
 
 					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(paramType);
 					if (refArr && !refArr->arraySize().has_value())
-					{
 						paramVal = awst::makeConvertArray(std::move(cast), paramType, method.sourceLocation);
-					}
 					else
 					{
 						auto decode = awst::makeARC4Decode(std::move(cast), paramType, method.sourceLocation);
@@ -376,7 +330,6 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				else if (paramType->kind() == awst::WTypeKind::ARC4StaticArray
 					|| paramType->kind() == awst::WTypeKind::ARC4DynamicArray)
 				{
-					// ARC4 array params: just ReinterpretCast raw bytes to ARC4 type
 					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
@@ -384,19 +337,16 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					&& dynamic_cast<awst::BytesWType const*>(paramType)
 					&& dynamic_cast<awst::BytesWType const*>(paramType)->length().has_value())
 				{
-					// bytes[N] params: ReinterpretCast from raw bytes
 					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (dynamic_cast<awst::ARC4Struct const*>(paramType))
 				{
-					// Struct params: ReinterpretCast raw bytes to ARC4 struct type
 					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else
 				{
-					// bytes, etc. → use raw bytes directly
 					paramVal = std::move(readArg);
 				}
 
@@ -410,14 +360,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		}
 
-		// solc's ContractLevelChecker has already walked the contract's
-		// `is Base(args)` specifiers + constructor modifier invocations
-		// (transitively across the inheritance chain) and populated
-		// `_contract.annotation().baseConstructorArguments` mapping each
-		// base constructor's FunctionDefinition* to the ASTNode (either
-		// InheritanceSpecifier or ModifierInvocation) that provides its
-		// args. Replaces ~70 LOC of manual InheritanceSpecifier walks +
-		// transitive lookups across linearizedBaseContracts.
+		// solc pre-populates baseConstructorArguments (InheritanceSpecifier or
+		// ModifierInvocation → args) — no manual MRO walk needed.
 		for (auto const& [baseCtor, argNode] : _contract.annotation().baseConstructorArguments)
 		{
 			auto const* baseContract = baseCtor->annotation().contract;
@@ -433,9 +377,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		if (needsPostInit)
 		{
-			// All init code deferred to __postInit (state var defaults + constructor body).
-			// Create call only sets the pending flag.
-			// Set __ctor_pending = 1 in create block.
+			// Defer all init to __postInit; create call only sets the pending flag.
 			auto pendingKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
 			auto one = awst::makeOne(method.sourceLocation);
@@ -452,9 +394,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			postInit.cref = m_sourceFile + "." + _contractName;
 			postInit.memberName = "__postInit";
 
-			// Add constructor parameters as __postInit method arguments.
-			// This allows the caller to pass the same values when calling __postInit
-			// that were originally passed to the constructor.
+			// Mirror constructor params on __postInit so the caller passes the same values.
 			if (constructor)
 			{
 				int paramIdx = 0;
@@ -479,11 +419,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			postInitConfig.readonly = false;
 			postInit.arc4MethodConfig = postInitConfig;
 
-			// Remap aggregate types (arrays, tuples) to ARC4 encoding for __postInit args,
-			// plus biguint uintN to ARC4UIntN so the ABI signature and the stored value
-			// both use Solidity's declared bit width (matches regular method-param remap).
-			// Biguint remap tracks (orig name, arc4 name) so we can emit ARC4Decode
-			// statements at the top of __postInit body below.
+			// Remap biguint→ARC4UIntN and aggregates→ARC4 for correct ABI signature,
+			// matching regular method-param remap. Track (origName, arc4Name) for
+			// the decode statements emitted at the top of __postInit body.
 			struct PostInitDecode { std::string origName; std::string arc4Name; awst::WType const* arc4Type; awst::WType const* origType; };
 			std::vector<PostInitDecode> postInitDecodes;
 			for (size_t pi = 0; pi < postInit.args.size(); ++pi)
@@ -498,7 +436,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!intType && solType)
 						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 							intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-					// Only unsigned — signed uses two's-complement in biguint which ARC4UIntN would reject.
+					// Signed stays as biguint (two's-complement); ARC4UIntN would reject it.
 					if (intType && !intType->isSigned())
 					{
 						unsigned bits = intType->numBits();
@@ -525,9 +463,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 			}
 
-			// Set function context so constructor body can reference params by name.
-			// For biguint args remapped to ARC4UIntN, use the ORIGINAL name + biguint
-			// type so the body looks them up via the decoded local (emitted below).
+			// Function context uses original names+types (remapped biguints resolved via
+			// the decoded local emitted below, not the __arc4_* shim arg).
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 				std::set<std::string> arc4Names;
@@ -564,9 +501,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			auto clearStmt = awst::makeExpressionStatement(clearPending, method.sourceLocation);
 			postInitBody->body.push_back(std::move(clearStmt));
 
-			// Emit ARC4Decode statements for biguint uintN args remapped to ARC4UIntN.
-			// `<origName> = ARC4Decode(<__arc4_origName>)` — constructor body then
-			// references the original name as biguint, matching pre-remap semantics.
+			// Decode each remapped biguint arg: `<origName> = ARC4Decode(__arc4_<origName>)`.
 			for (auto const& decode: postInitDecodes)
 			{
 				auto arc4Var = awst::makeVarExpression(decode.arc4Name, decode.arc4Type, method.sourceLocation);
@@ -581,8 +516,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			emitBoxCreateForStateVars(_contract, *postInitBody, method.sourceLocation);
 
-			// Initialize all state variable defaults in __postInit
-			// (after boxes are created, before constructor bodies run)
+			// State var defaults after box creation, before constructor bodies.
 			{
 				auto const& lin = _contract.annotation().linearizedBaseContracts;
 				for (auto it2 = lin.rbegin(); it2 != lin.rend(); ++it2)
@@ -615,14 +549,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						if (!argExpr)
 							continue;
 
-						// Storage-pointer params (`T storage p`, `mapping… storage m`,
-						// `mapping…[] storage`): register a storage alias instead of
-						// materialising a local copy, mirroring the modifier inliner
-						// pattern at ModifierInliner.cpp:200-228. Without this, writes
-						// inside the base ctor body land in the local var (a noop) and
-						// the underlying state never sees them — e.g. `A(m[1])` with
-						// A's body doing `m.push(); m[0][1] = 2` silently drops the
-						// [1] from the inheritance arg's index chain.
+						// Storage-pointer params: alias, don't copy — writes inside the
+						// base ctor must reach the underlying storage (mirrors
+						// ModifierInliner.cpp:200-228).
 						if (params[i]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Storage)
 						{
@@ -673,30 +602,18 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					postInitBody->body.push_back(std::move(stmt));
 			}
 
-			// Honor `--ensure-budget __postInit:N` for the synthesized
-			// post-init method. The regular ABI-method path in `FunctionBuilder`
-			// handles ensure_budget injection per-function (see
-			// FunctionBuilder.cpp's `if (budgetForFunc > 0)` block), but
-			// __postInit is built here as a ContractMethod and never goes
-			// through that path — so its budget config has to be wired in
-			// explicitly. The opup pump goes at the *very top* of the body
-			// so any downstream box-init / inline-asm / EIP-712 hashing
-			// has the expanded pool to draw from.
+			// `--ensure-budget __postInit:N`: __postInit is built here, not
+			// through FunctionBuilder's per-method path, so budget injection
+			// is explicit. fee_source=1 (AppAccount) — deploy_app doesn't
+			// pad extra_fee like a user-driven group, so the contract's funded
+			// balance covers the pump's ITxnCreate fees instead (GroupCredit=0
+			// would underflow). Pump inserted at the very top so box-init /
+			// inline-asm / EIP-712 hashing all draw from the expanded pool.
 			if (auto it = m_ensureBudget.find("__postInit");
 				it != m_ensureBudget.end() && it->second > 0)
 			{
 				auto budgetVal = awst::makeIntegerConstant(
 					it->second, postInit.sourceLocation);
-				// fee_source=1 (AppAccount): each itxn the pump fires pays
-				// its own min_txn_fee from the contract's escrow balance.
-				// Why not fee_source=0 (GroupCredit) like ABI methods use?
-				// ABI methods run as part of a user-driven group that
-				// usually pads extra_fee on the outer call. __postInit is
-				// invoked through plain `deploy_app`'s `client.send.call`
-				// which doesn't pad the group, so its outer fee can't
-				// cover the inner-tx pumps. The contract's fund (set by
-				// `deploy_app(fund_amount=...)`) easily covers the few
-				// ITxnCreate fees the EIP-712 setup needs.
 				auto feeSource = awst::makeIntegerConstant(
 					"1", postInit.sourceLocation);
 				auto call = awst::makePuyaLibCall("ensure_budget",
@@ -715,25 +632,17 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 		else
 		{
-		// Constructor body is inlined into the bool-returning approval program.
-		// Assembly `return(offset, size)` inside the ctor needs to emit a bool
-		// return (handled by AssemblyBuilder::handleReturn when m_returnType is
-		// bool). Set stmtCtx.returnType accordingly; restore at the end of the
-		// else branch.
+		// Inline ctor into the bool-returning approval program.
+		// Assembly return() must emit bool (AssemblyBuilder::handleReturn when
+		// m_returnType is bool) — set returnType accordingly.
 		auto const* savedReturnType = m_currentReturnType;
 		m_currentReturnType = awst::WType::boolType();
 
-		// LEGACY MODE: state var inits emitted BEFORE constructor arg eval.
-		// In Solidity legacy (compileViaYul: false) semantics, base state vars
-		// initialize before any constructor work — including before the args
-		// to base constructors are evaluated by the derived contract. Tests
-		// like inheritance/constructor_inheritance_init_order_3_legacy rely
-		// on this: A's `uint x = 2` runs first, THEN B's `A(f())` evaluates
-		// f() (which sets x=4), THEN A's body, THEN B's body — final x=4.
-		// The interleaved init+body loop further down still works in legacy
-		// mode because emitStateVarInit dedups via `stateVarInitialized` set.
-		// In viaIR mode (m_viaIR == true) we keep the interleaved behavior:
-		// derived state var inits can observe state set by base constructors.
+		// Legacy (compileViaYul:false): all state var inits before any ctor arg eval.
+		// `constructor_inheritance_init_order_3_legacy`: A's `uint x = 2` runs first,
+		// THEN B's `A(f())` evaluates f() (sets x=4) — final x=4. emitStateVarInit
+		// deduplicates via stateVarInitialized so the interleaved loop below is safe.
+		// viaIR: keep interleaved order (derived inits observe base ctor state).
 		if (!m_viaIR)
 		{
 			auto const& linEarly = _contract.annotation().linearizedBaseContracts;
@@ -741,22 +650,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				emitStateVarInit(**itEarly, createBlock->body);
 		}
 
-		// Pre-evaluate constructor arguments in dependency order.
-		// In viaIR, all ctor args are evaluated before any state var init or ctor body.
-		// For transitive args (D→C→A), C's params must be assigned first so that
-		// A's args (from C's modifier) see C's param values, not D's raw values.
-		//
-		// Phase 1: Assign direct ctor params (from D's modifiers/specifiers) into createBlock
-		// Phase 2: Build pre-evaluated expressions for ALL base args
+		// Pre-evaluate ctor args in dependency order (viaIR only).
+		// For D→C→A, C's params must be assigned first so A's args (from C's modifier)
+		// see C's param values. Phase 1: direct args. Phase 2: transitive args.
 		std::map<solidity::frontend::ContractDefinition const*,
 			std::vector<std::shared_ptr<awst::Expression>>> preEvaluatedArgs;
 		{
-			// Identify which args come directly from the main contract vs transitive.
-			// Direct base ctor invocations land in two AST shapes: as a
-			// ModifierInvocation on the derived ctor, or as an
-			// InheritanceSpecifier on the contract itself. Both have a
-			// `.name()` whose `referencedDeclaration` is the base
-			// ContractDefinition.
+			// Direct bases: ModifierInvocation on derived ctor or InheritanceSpecifier
+			// on the contract itself.
 			std::set<solidity::frontend::ContractDefinition const*> directBases;
 			auto recordBase = [&](solidity::frontend::Declaration const* _ref) {
 				if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(_ref))
@@ -797,10 +698,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 			}
 
-			// Phase 2: Pre-evaluate transitive base ctor args in reverse-MRO order
-			// (most-derived first), so intermediate params are assigned before
-			// deeper transitive args reference them.
-			// E.g., Final→Derived→Base1→Base: assign Base1.k first (from Derived.i),
+			// Phase 2: Transitive args in derived-first order so intermediates are
+			// assigned before deeper transitives reference them.
+			// E.g. Final→Derived→Base1→Base: assign Base1.k first (from Derived.i),
 			// then evaluate Base.j (from Base1.k).
 			auto const& lin = _contract.annotation().linearizedBaseContracts;
 			for (auto it = lin.begin(); it != lin.end(); ++it)
@@ -842,33 +742,25 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			}
 		}
 
-		// Interleave state variable initialization with constructor bodies.
-		// For each base class in C3 linearization order (most-base first):
-		//   1. Initialize that base's state variables (explicit initializers or zero)
-		//   2. Inline that base's constructor body (with argument assignments)
-		// This matches Solidity's viaIR semantics: a derived class's state variable
-		// initializer (e.g. `uint y = f()`) can see state set by base constructors.
+		// Interleave state var init with ctor bodies (base-first MRO order) so
+		// derived initializers (e.g. `uint y = f()`) observe base ctor state (viaIR).
 		auto const& linearized = _contract.annotation().linearizedBaseContracts;
 		for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
 		{
 			auto const* base = *it;
 
-			// 1. Initialize this base's state variables
 			emitStateVarInit(*base, createBlock->body);
 
 			if (base == &_contract)
-				continue; // Main contract ctor handled separately below
+				continue; // Main ctor handled separately below
 
-			// 2. Inline this base's constructor body
 			auto const* baseCtor = base->constructor();
 			if (!baseCtor || !baseCtor->isImplemented())
 				continue;
 			if (baseCtor->body().statements().empty())
 				continue;
 
-			// Generate parameter assignments from pre-evaluated constructor arguments.
-			// Direct base params were already assigned in Phase 1.
-			// Transitive base params use pre-evaluated expressions.
+			// Direct base params were assigned in Phase 1; transitive use pre-evaluated.
 			auto preIt = preEvaluatedArgs.find(base);
 			if (preIt != preEvaluatedArgs.end())
 			{
@@ -895,14 +787,11 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				createBlock->body.push_back(std::move(stmt));
 		}
 
-		// Include main contract constructor body if present
 		if (constructor && constructor->body().statements().size() > 0)
 		{
-			// Restore super targets for constructor body (needed for super.f() calls).
+			// Restore super targets (super.f() in ctor body) + per-ctor MRO overrides.
 			for (auto const& [id, name]: m_allSuperTargetNames)
 				m_tr->setSuperTarget(id, name);
-			// Also set up MRO overrides for the constructor specifically
-			if (constructor)
 			{
 				auto pfit = m_perFuncSuperOverrides.find(constructor->id());
 				if (pfit != m_perFuncSuperOverrides.end())
@@ -926,15 +815,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto createReturn = awst::makeReturnStatement(awst::makeTrue(method.sourceLocation), method.sourceLocation);
 		createBlock->body.push_back(createReturn);
 
-		// Initialize the transient-storage blob in scratch slot TRANSIENT_SLOT
-		// before the create/dispatch split, so the constructor body can also
-		// use tload/tstore (the create branch returns before reaching the
-		// post-dispatch preamble below). Scratch slots are per-txn on AVM, so
-		// a fresh bzero per app call matches EIP-1153 per-tx transient
-		// semantics; writes persist across callsub within an app call because
-		// scratch slots do. Size covers all declared transient vars (packed)
-		// plus at least one slot to back asm tload/tstore when no named vars
-		// are declared.
+		// Init transient-storage blob (scratch TRANSIENT_SLOT) BEFORE the create/dispatch
+		// split so the ctor body can use tload/tstore (create branch returns early).
+		// Per-txn scratch bzero matches EIP-1153; writes persist across callsub.
+		// Size = declared transient vars (packed), minimum SLOT_SIZE for asm tload/tstore.
 		{
 			unsigned blobBytes = m_transientStorage.blobSize();
 			if (blobBytes < AssemblyBuilder::SLOT_SIZE)
@@ -949,15 +833,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			body->body.push_back(std::move(exprStmt));
 		}
 
-		// Initialize EVM memory blob in scratch slot 0 BEFORE the create/dispatch
-		// split so the constructor body (which can declare `T memory t;` locals
-		// that emit FMP bumps reading slot 0) sees a properly initialized blob.
-		// Each app call gets fresh scratch space, so we must initialize on every call.
-		// Pre-allocate the EVM memory blobs: `store <slot>, bzero(4096)` for each
-		// memory slot. Slots 1+ back memory aggregates / inline-assembly accesses
-		// above SLOT_SIZE (multi-slot EVM memory). Scratch is per-txn on AVM and
-		// an uninitialised slot reads as uint64 0 (not a 4096-byte blob), so we
-		// must bzero every memory slot on every app call before any load/replace.
+		// Init EVM memory blobs BEFORE create/dispatch split so ctor body's
+		// `T memory t;` locals (FMP bumps on slot 0) see a valid blob.
+		// Uninitialised scratch reads as uint64 0 — must bzero every slot per call.
 		{
 			for (int s = AssemblyBuilder::MEMORY_SLOT_FIRST; s <= AssemblyBuilder::MEMORY_SLOT_LAST; ++s)
 			{
@@ -991,14 +869,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			isCreate, createBlock, nullptr, method.sourceLocation));
 	}
 
-	// Transient state vars live in scratch slot TRANSIENT_SLOT (packed blob,
-	// shared with asm tload/tstore). Scratch is per-txn on AVM, so the
-	// scratch bzero in the preamble above already satisfies EIP-1153 per-tx
-	// reset — no per-call app_global reset needed.
+	// Transient vars: preamble bzero satisfies EIP-1153 per-tx reset; no
+	// per-call app_global reset needed.
 
-	// Solc's `ContractDefinition::fallbackFunction()` and
-	// `receiveFunction()` walk the linearized MRO themselves and return
-	// the first match — same semantics as the hand-rolled double loop.
+	// solc's fallbackFunction()/receiveFunction() walk linearized MRO.
 	auto const* fallbackFunc = _contract.fallbackFunction();
 	auto const* receiveFunc = _contract.receiveFunction();
 	if (fallbackFunc && !fallbackFunc->isImplemented())
@@ -1023,19 +897,10 @@ void ContractBuilder::emitBoxCreateForStateVars(
 	{
 		auto boxKey = awst::makeUtf8BytesConstant(varName, _loc);
 
-		// Uninitialised dynamic `bytes` state vars: eagerly
-		// box_create with 0 bytes (empty box). The raw box content
-		// is the bytes value with no length header, so an empty box
-		// reads as empty bytes — matching Solidity's default
-		// semantics. Historical behaviour: skip the box_create and
-		// rely on the reader's `box_get → select` fallback for
-		// zero-length bytes. We lift that skip now so the reader
-		// can use a bare `BoxValueExpression` (asserts box exists,
-		// then folds `extract` into `box_extract` — single-slice,
-		// no whole-box load), which is essential for dynamic state
-		// arrays that grow > 4 KB at runtime (the old `box_get`
-		// path reverts on AVM's stack-value cap). See
-		// StorageMapper::makeStateGetWithDefault.
+		// Dynamic bytes without init: box_create(size=0). Raw content has no length
+		// header, so empty box = empty bytes. Required so BoxValueExpression (bare
+		// box_extract path) works; old box_get→select fallback reverts on >4 KB
+		// (AVM stack-value cap). See StorageMapper::makeStateGetWithDefault.
 		bool isDynamicBytesWithoutInit = false;
 		forEachStateVar(_contract, [&](auto const* var)
 		{
@@ -1047,7 +912,6 @@ void ContractBuilder::emitBoxCreateForStateVars(
 		});
 		if (isDynamicBytesWithoutInit)
 		{
-			// Empty raw bytes — no length header, so size = 0.
 			auto sizeZero = awst::makeIntegerConstant(0, _loc);
 			auto boxCreate = awst::makeBoxCreate(
 				std::move(boxKey), std::move(sizeZero),
@@ -1058,16 +922,12 @@ void ContractBuilder::emitBoxCreateForStateVars(
 			continue;
 		}
 
-		// Compute box size: 2 bytes for ARC4 length header (empty dynamic array),
-		// or string literal size for bytes/string initializers, or
-		// elementSize*N for fixed-size ARC4 static arrays (e.g. uint[20]).
+		// boxSizeVal: 2 (ARC4 dyn-array length header), or literal size,
+		// or elementSize*N for static arrays (e.g. uint[20]).
 		unsigned boxSizeVal = 2; // ARC4 dynamic array length header
 		std::shared_ptr<awst::Expression> boxInitVal;
-		// For ARC4StaticArray<dynamic T> a zero-filled buffer is not a
-		// valid ARC4 encoding (head offsets must point past the head),
-		// so we synthesise the default encoding here and emit a
-		// `box_put` instead of `box_create`. dynArc4Default holds the
-		// computed bytes when applicable.
+		// ARC4StaticArray<dynamic T>: zeroed buffer is invalid ARC4 (head offsets
+		// must exceed head). Synthesise default encoding → box_put instead.
 		std::optional<std::vector<uint8_t>> dynArc4Default;
 		forEachStateVar(_contract, [&](auto const* var)
 		{
@@ -1101,10 +961,8 @@ void ContractBuilder::emitBoxCreateForStateVars(
 								elemSize = *bw->length();
 						}
 					}
-					// AVM box max value is 32768 bytes. For arrays whose
-					// encoded size exceeds that, we'll emit N
-					// box_create calls (multi-box layout) below;
-					// the size we record here is the per-box size.
+					// AVM box cap = 32768 B; oversized → multi-box below.
+					// Record per-box size here.
 					uint64_t size = elemSize * static_cast<uint64_t>(sa->arraySize());
 					if (size > 32768)
 						size = 32768;
@@ -1128,14 +986,8 @@ void ContractBuilder::emitBoxCreateForStateVars(
 					}
 				}
 			}
-			// Non-bytes dynamic arrays with explicit initialiser:
-			// `int16[] public x = [-1, -2]`. Build the initialiser
-			// via the expression builder, run it through
-			// TypeCoercion::coerceForAssignment so any narrower→wider
-			// element widening lands, and box_put the result. The
-			// dedicated box_array loop below will see boxInitVal set
-			// and emit `box_put(key, value)` instead of the empty-
-			// header `box_create(key, 2)`.
+			// Non-bytes dynamic array with initializer (e.g. `int16[] x = [-1,-2]`):
+			// set boxInitVal so the loop below emits box_put instead of box_create(2).
 			else if (arrType && arrType->isDynamicallySized()
 				&& !arrType->isByteArrayOrString())
 			{
@@ -1179,11 +1031,9 @@ void ContractBuilder::emitBoxCreateForStateVars(
 
 		if (multiBoxN > 1 && multiBoxElemSize > 0 && !dynArc4Default && !boxInitVal)
 		{
-			// Multi-box layout: emit N box_create calls.
-
+			// Multi-box: N box_create calls, key = name++itob(page).
 			for (unsigned page = 0; page < multiBoxN; ++page)
 			{
-				// Per-page key = name_bytes ++ itob(page)
 				auto nameBytes = awst::makeUtf8BytesConstant(varName, _loc);
 				auto pageInt = awst::makeIntegerConstant(page, _loc);
 				auto pageItob = awst::makeItob(std::move(pageInt), _loc);
@@ -1204,8 +1054,7 @@ void ContractBuilder::emitBoxCreateForStateVars(
 		}
 		else if (dynArc4Default)
 		{
-			// box_put(key, default_encoding) — creates the box and
-			// initialises with a valid ARC4 head/tail layout in one op.
+			// box_put creates + initialises with valid ARC4 head/tail in one op.
 			auto put = awst::makeBoxPut(std::move(boxKey), awst::makeBytesConstant(
 				std::move(*dynArc4Default), _loc), _loc);
 			auto putStmt = awst::makeExpressionStatement(std::move(put), _loc);
@@ -1213,11 +1062,9 @@ void ContractBuilder::emitBoxCreateForStateVars(
 		}
 		else
 		{
-			// For dynamic-array initializers (non-bytes case, e.g.
-			// `int16[] x = [-1, -2]`) the encoded value's length doesn't
-			// match the empty-header `boxSizeVal=2`. box_put can't grow
-			// a pre-created box, so skip the box_create entirely and
-			// let box_put create the box at the right size in one op.
+			// Non-bytes dyn-array init: encoded length ≠ header boxSizeVal=2;
+			// box_put can't grow a pre-created box → skip box_create, let box_put
+			// create at the right size.
 			bool isNonBytesDynArrInit = false;
 			forEachStateVar(_contract, [&](auto const* var)
 			{
@@ -1242,8 +1089,6 @@ void ContractBuilder::emitBoxCreateForStateVars(
 				_postInitBody.body.push_back(std::move(boxStmt));
 			}
 
-			// Write initial value for bytes vars with initializers (and
-			// for the non-bytes dyn-array case, this is the sole op).
 			if (boxInitVal)
 			{
 				auto putKey = awst::makeUtf8BytesConstant(varName, _loc);

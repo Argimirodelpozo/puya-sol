@@ -14,7 +14,6 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	if (!_solType)
 		return awst::WType::voidType();
 
-	// Check cache first
 	std::string const typeStr = _solType->toString(true);
 	auto it = m_cache.find(typeStr);
 	if (it != m_cache.end())
@@ -66,8 +65,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 				result = awst::WType::bytesType();
 			else
 			{
-				// Map element type to ARC4, preserving exact bit widths for ABI.
-				// Use mapSolTypeToARC4 to avoid uint8→uint64→arc4.uint64 promotion.
+						// mapSolTypeToARC4 preserves exact bit widths (avoids uint8→uint64→arc4.uint64).
 				awst::WType const* arc4ElemType = mapSolTypeToARC4(arrType->baseType());
 				if (!arrType->isDynamicallySized())
 				{
@@ -94,18 +92,16 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	case Type::Category::Contract:
-		// Contract types referenced as addresses in Algorand
 		result = awst::WType::accountType();
 		break;
 
 	case Type::Category::Enum:
-		// Enums map to uint64
 		result = awst::WType::uint64Type();
 		break;
 
 	case Type::Category::UserDefinedValueType:
 	{
-		// User-defined value types (e.g. `type Fr is uint256`) map to their underlying type
+		// UDVTs (e.g. `type Fr is uint256`) map to their underlying type.
 		auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_solType);
 		if (udvt)
 			result = map(&udvt->underlyingType());
@@ -113,8 +109,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	case Type::Category::Mapping:
-		// Mappings are handled at storage level, not as a type
-		// Return bytes as placeholder; StorageMapper handles the box mapping
+		// Handled at storage level; bytes placeholder here.
 		result = awst::WType::bytesType();
 		break;
 
@@ -123,7 +118,6 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		auto const* ratType = dynamic_cast<RationalNumberType const*>(_solType);
 		if (ratType)
 		{
-			// Rational numbers become the mobile type (integer) they resolve to
 			auto const* mobileType = ratType->mobileType();
 			if (mobileType)
 				result = map(mobileType);
@@ -159,8 +153,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	case Type::Category::Function:
 	{
 		auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
-		// Function pointers: External / DelegateCall → 12-byte (appId,
-		// selector); Internal and everything else → uint64 dispatch ID.
+		// External/DelegateCall → 12-byte (appId, selector); else → uint64 dispatch ID.
 		if (isExternalFunctionPointer(funcType))
 			result = createType<awst::BytesWType>(12);
 		else
@@ -169,7 +162,6 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	default:
-		// Unsupported type — return bytes as fallback
 		Logger::instance().warning("unsupported type '" + typeStr + "', falling back to bytes");
 		result = awst::WType::bytesType();
 		break;
@@ -188,7 +180,6 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	if (!_type)
 		return nullptr;
 
-	// Already ARC4 — pass through unchanged
 	switch (_type->kind())
 	{
 	case awst::WTypeKind::ARC4UIntN:
@@ -249,8 +240,7 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 		return createType<awst::ARC4Tuple>(std::move(arc4Types));
 	}
 
-	// Fallback: return as-is (best effort)
-	return _type;
+	return _type; // best effort
 }
 
 awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _structType)
@@ -261,41 +251,29 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	auto const& structDef = _structType->structDefinition();
 	std::string name = structDef.name();
 
-	// Use AST ID for cache key to disambiguate same-named structs
-	// from different scopes (e.g. Pool.SwapParams vs IPoolManager.SwapParams)
+	// Cache by AST ID to disambiguate same-named structs from different scopes.
 	std::string cacheKey = "struct:" + std::to_string(structDef.id());
 	auto it = m_cache.find(cacheKey);
 	if (it != m_cache.end())
 		return it->second;
 
-	// Recursion guard: if we're already mapping this struct (recursive
-	// reference like `struct R { R[] children; }`), return a placeholder
-	// to break the cycle. ARC4 has no cycle support, so the recursive
-	// field becomes a bytes blob — semantics will be wrong but the
-	// compiler won't infinite-recurse into a stack overflow.
-	//
-	// (Tried solc's `structDef.annotation().recursive` as a one-shot check
-	// at function entry — it correctly identifies recursive structs, but
-	// short-circuiting the WHOLE struct to bytes loses the outer non-cycling
-	// fields. Tests like `recursive_structs.sol` that access `s.x` on the
-	// outer struct then fail with "unrecognised member 'x' on type bytes".
-	// Runtime per-cycle tracking is the right model; the annotation can't
-	// replace it.)
+	// Recursion guard for `struct R { R[] children; }` cycles. Returns bytes
+	// as placeholder to break the cycle (ARC4 has no cycle support).
+	// Note: solc's `structDef.annotation().recursive` short-circuits the whole
+	// struct to bytes, losing outer non-cycling fields (breaks recursive_structs.sol
+	// `s.x` access). Per-cycle tracking is the right model.
 	if (m_inProgressStructs.count(structDef.id()))
 		return awst::WType::bytesType();
 	m_inProgressStructs.insert(structDef.id());
 
-	// Build ARC4Struct with fields in declaration order
 	std::vector<std::pair<std::string, awst::WType const*>> fields;
 
 	for (auto const& member: structDef.members())
 	{
 		if (member->type()->category() == solidity::frontend::Type::Category::Mapping)
 		{
-			// Mapping fields cannot be ARC4-encoded, but must still appear
-			// in the struct type so that FieldExpression accesses are valid.
-			// Use bytes as placeholder — the actual mapping data is stored
-			// in separate box storage keyed by the mapping name.
+			// Mapping fields: bytes placeholder so FieldExpression accesses work;
+			// actual mapping data lives in separate box storage.
 			fields.emplace_back(member->name(), awst::WType::bytesType());
 			continue;
 		}
@@ -306,11 +284,9 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	auto* result = createType<awst::ARC4Struct>(
 		name,
 		std::move(fields),
-		/*_frozen=*/false  // Mutable so struct-field writes don't hit puya's
-		                   // "object is immutable" rejection. Solidity-level
-		                   // value-type semantics (memory copies) are preserved
-		                   // by puya-sol's copy-on-write handlers, not by the
-		                   // ARC4Struct flag.
+		/*_frozen=*/false  // Mutable: struct-field writes must not hit puya's "immutable"
+		                   // rejection. Value-type semantics enforced by puya-sol's
+		                   // copy-on-write handlers, not this flag.
 	);
 
 	m_cache[cacheKey] = result;
@@ -320,11 +296,10 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 
 awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* _solType)
 {
-	// Unwrap UserDefinedValueType to underlying type
 	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(_solType))
 		_solType = &udvt->underlyingType();
 
-	// Preserve exact bit width for integers (don't upcast uint8→uint64)
+	// Preserve exact bit width (don't upcast uint8→uint64).
 	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_solType))
 	{
 		unsigned bits = intType->numBits();
@@ -336,11 +311,10 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 		return createType<awst::ARC4UIntN>(static_cast<int>(bits));
 	}
 
-	// Enums → ARC4UIntN(8) (enums are always uint8 in Solidity ABI)
+	// Enums → ARC4UIntN(8) (always uint8 in Solidity ABI).
 	if (dynamic_cast<solidity::frontend::EnumType const*>(_solType))
 		return createType<awst::ARC4UIntN>(8);
 
-	// Default: map through raw type → ARC4
 	return mapToARC4Type(map(_solType));
 }
 

@@ -9,10 +9,7 @@ namespace puyasol::builder
 {
 
 namespace {
-/// Recursive visitor — true if any function in the linearised hierarchy
-/// contains an InlineAssembly node (anywhere, including nested in
-/// if/for/etc.). The previous hand-rolled loop only checked top-level
-/// statements, so deeply-nested asm slipped past.
+/// Recursive visitor for any InlineAssembly node (including deeply nested).
 struct InlineAsmDetector: public solidity::frontend::ASTConstVisitor
 {
 	bool found = false;
@@ -72,21 +69,12 @@ void ContractBuilder::buildStorageDispatch(
 
 		auto body = awst::makeBlock(loc);
 
-		// Build if/else chain for known slots
-		// Start from innermost (default case) and wrap outward
-		// Default: read from global state using slot key "s" + itob(slot)
-		// This supports dynamic slot-based storage references (assembly .slot)
+		// Build if/else chain for known slots (bottom-up; default = dynamic fallback).
 		auto defaultBlock = awst::makeBlock(loc);
 		{
-			// Use a single large box "__dyn_storage" for all dynamic slots.
-			// Each slot occupies 32 bytes at offset (slot % 256) * 32.
-			// This avoids per-slot box reference limits (max 8 per txn).
-			// FAIL-LOUD: reducing the 256-bit EVM slot mod 256 means two
-			// distinct computed/keccak-derived slots congruent mod 256 alias
-			// the same 32 bytes. Fine for a handful of well-separated slots but
-			// can silently corrupt hand-rolled-mapping / proxy storage. Warn so
-			// the divergence is visible (durable fix: box-per-slot keyed by the
-			// full 256-bit slot).
+			// Default: "__dyn_storage" box; slot folded mod 256 * 32 bytes.
+			// FAIL-LOUD: distinct EVM slots ≡ mod 256 alias the same bytes.
+			// (Durable fix: box-per-slot keyed by the full 256-bit slot.)
 			Logger::instance().warning(
 				"dynamic/computed storage slots (assembly .slot / sload) are "
 				"folded mod 256 into a single __dyn_storage box; distinct slots "
@@ -94,14 +82,11 @@ void ContractBuilder::buildStorageDispatch(
 				"(proxies, hand-rolled mappings) is collision-free.", loc);
 			auto boxKey = makeBytes("__dyn_storage");
 
-			// Compute offset: (__slot % 256) * 32
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
-
 			auto mod256 = awst::makeUInt64BinOp(std::move(slotVar), awst::UInt64BinaryOperator::Mod, makeUint64("256"), loc);
-
 			auto offset = awst::makeUInt64BinOp(std::move(mod256), awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 
-			// box_create("__dyn_storage", 8192) — 256 slots * 32 bytes
+			// box_create("__dyn_storage", 8192) — 256 slots × 32 bytes
 			auto boxCreate = awst::makeBoxCreate(boxKey, makeUint64("8192"), loc);
 
 			auto popStmt = awst::makeExpressionStatement(std::move(boxCreate), loc);
@@ -118,27 +103,21 @@ void ContractBuilder::buildStorageDispatch(
 		}
 
 		std::shared_ptr<awst::Statement> current;
-		// Build the chain bottom-up
 		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
 
 		for (auto const& sv: layout.variables())
 		{
 			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
 
-			// Condition: __slot == slotNumber
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
-
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq, makeUint64(std::to_string(sv.slot)), loc);
 
-			// If branch: return app_global_get(varName) as biguint
 			auto ifBlock = awst::makeBlock(loc);
 			{
 				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
 				get->stackArgs.push_back(makeBytes(sv.name));
 
-				// Left-pad then take last 32 — yields a fixed-width 32-byte
-				// value regardless of the global state slot's original size
-				// (which can be <32 for short ints).
+				// Left-pad + take last 32 bytes (global slots may be <32 for short ints).
 				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
 				auto extract = awst::makeExtractLastN(std::move(cat), 32, loc);
 				auto cast = awst::makeAsBiguint(std::move(extract), loc);
@@ -155,7 +134,6 @@ void ContractBuilder::buildStorageDispatch(
 			elseBlock = std::move(newElse);
 		}
 
-		// The outermost block is the body
 		for (auto& stmt: elseBlock->body)
 			body->body.push_back(std::move(stmt));
 
@@ -187,20 +165,15 @@ void ContractBuilder::buildStorageDispatch(
 
 		auto body = awst::makeBlock(loc);
 
-		// Build if/else chain for known slots
 		auto defaultBlock = awst::makeBlock(loc);
-		// Default: write to global state using slot key "s" + itob(slot)
 		{
-			// Build key: concat("s", itob(__slot))
 			auto prefix = makeBytes("s");
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 			auto slotItob = awst::makeItob(std::move(slotVar), loc);
 
 			auto key = awst::makeConcat(std::move(prefix), std::move(slotItob), loc);
 
-			// Use single "__dyn_storage" box, same as read.
-			// FAIL-LOUD: see __storage_read — slot is reduced mod 256, so
-			// distinct computed slots congruent mod 256 alias the same bytes.
+			// FAIL-LOUD: same mod-256 aliasing as __storage_read — see warning there.
 			Logger::instance().warning(
 				"dynamic/computed storage slots (assembly .slot / sstore) are "
 				"folded mod 256 into a single __dyn_storage box; distinct slots "
@@ -208,26 +181,17 @@ void ContractBuilder::buildStorageDispatch(
 				"(proxies, hand-rolled mappings) is collision-free.", loc);
 			auto boxKey = makeBytes("__dyn_storage");
 
-			// Compute offset: (__slot % 256) * 32
 			auto slotVar2 = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
-
 			auto mod256 = awst::makeUInt64BinOp(std::move(slotVar2), awst::UInt64BinaryOperator::Mod, makeUint64("256"), loc);
-
 			auto offset = awst::makeUInt64BinOp(std::move(mod256), awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 
-			// value as bytes (pad to 32)
 			auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
-
 			auto valBytes = awst::makeAsBytes(std::move(valueVar), loc);
-
-			// Pad to 32 bytes
 			auto cat = awst::makeLeftPad(std::move(valBytes), 32, loc);
-
 			auto lenCall = awst::makeLen(cat, loc);
-
 			auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
-
 			auto paddedVal = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
+
 			// box_create("__dyn_storage", 8192) — ensure box exists
 			auto boxCreate = awst::makeBoxCreate(boxKey, makeUint64("8192"), loc);
 
@@ -259,16 +223,11 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto ifBlock = awst::makeBlock(loc);
 			{
-				// app_global_put(varName, pad32(value_as_bytes))
-				// Pad to 32 bytes to match EVM slot semantics
+				// app_global_put: pad value to 32 bytes (EVM slot width).
 				auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
-
 				auto cast = awst::makeAsBytes(std::move(valueVar), loc);
-
-				// concat(bzero(32), bytes) → take last 32 bytes
 				auto cat = awst::makeLeftPad(std::move(cast), 32, loc);
 				auto lenCall = awst::makeLen(cat, loc);
-
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 				auto extract = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
@@ -296,13 +255,8 @@ void ContractBuilder::buildStorageDispatch(
 		_contractNode->methods.push_back(std::move(writeSub));
 	}
 
-	// Move both dispatchers out of contract methods into root-level Subroutines.
-	// Library / free-function callers can't issue InstanceMethodTarget — puya
-	// rejects "invocation of instance method outside of a contract method" —
-	// and a SubroutineID call to a root-level Subroutine works in every
-	// context, including from contract methods themselves. The body uses only
-	// `app_global_get`, `box_extract`, etc. (global ops), which operate
-	// against the currently executing app's state regardless of caller scope.
+	// Promote to root-level Subroutines: library/free-function callers can't use
+	// InstanceMethodTarget (puya rejects it outside a contract method).
 	std::vector<awst::ContractMethod> remainingMethods;
 	for (auto& m: _contractNode->methods)
 	{

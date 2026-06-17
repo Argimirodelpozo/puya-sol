@@ -4,10 +4,6 @@
 namespace puyasol::builder
 {
 
-// Core: synthesize the entry guards from resolved (type, name, loc)
-// descriptors. Shared by the FunctionDefinition entry point and the
-// public-state-var getter path. (Extracted verbatim — the only change is
-// reading desc fields instead of param->annotation()/name()/location().)
 std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 	std::vector<ABIParamDesc> const& _params,
 	bool _useABICoderV2,
@@ -21,8 +17,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 			solType = &udvt->underlyingType();
 		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
-		// Enums have uint8 ABI encoding
-		if (!intType)
+		if (!intType) // enums → uint8 ABI encoding
 			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType))
 				intType = dynamic_cast<solidity::frontend::IntegerType const*>(
 					enumType->encodingType());
@@ -34,9 +29,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 
 		if (intType->isSigned())
 		{
-			// Signed sub-64-bit types: validate range but don't mask
-			// Valid: value <= maxPos || value >= minNeg
-			// maxPos = 2^(n-1) - 1, minNeg = 2^64 - 2^(n-1)
+			// Signed sub-64: v2 assert param≤maxPos || param≥minNeg; no masking.
 			if (_useABICoderV2)
 			{
 				uint64_t maxPos = (uint64_t(1) << (bits - 1)) - 1;
@@ -52,12 +45,10 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 
 				// OR the two conditions
 				auto orExpr = awst::makeBoolBinOp(std::move(cmpPos), awst::BinaryBooleanOperator::Or, std::move(cmpNeg), loc);
-
 				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(orExpr), loc, "ABI validation"), loc);
 				maskStmts.push_back(std::move(assertStmt));
 			}
-			// No masking for signed types
-			continue;
+				continue; // no masking for signed types
 		}
 
 		uint64_t mask = (uint64_t(1) << bits) - 1;
@@ -86,8 +77,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 		maskStmts.push_back(std::move(assign));
 	}
 
-	// ABI v2 validation for bool params: assert value <= 1
-	if (_useABICoderV2)
+	if (_useABICoderV2) // bool params: assert value ≤ 1
 	{
 		for (auto const& d : _params)
 		{
@@ -108,21 +98,14 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 		}
 	}
 
-	// Enum range check fires regardless of abicoder version. Solidity
-	// semantics: any read of an enum value with `numericValue >= numberOfMembers`
-	// panics (0x21). For abicoder v2 the check is at the dispatch
-	// boundary; for v1 solc inserts it at the first use site. We emit
-	// it at the boundary for both versions — equivalent for params
-	// that are read at least once in the body, and a strict superset
-	// otherwise (the panic happens earlier, which is still correct).
+	// Enum range check: emit at boundary for both v1 and v2 (strict superset of
+	// solc's first-use-site check). Auto-getter keys are NOT checked under v1
+	// (they index the mapping directly) — _enumChecksRequireV2 gates that.
 	for (auto const& d : _params)
 	{
 		auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(d.solType);
 		if (!enumType)
 			continue;
-		// Auto-getter enum keys are NOT range-checked under abicoder v1
-		// (they index the mapping directly); user methods that read the
-		// enum panic under both versions.
 		if (_enumChecksRequireV2 && !_useABICoderV2)
 			continue;
 		unsigned memberCount = enumType->numberOfMembers();

@@ -190,7 +190,6 @@ njson AWSTSerializer::serializeContract(awst::Contract const& _contract)
 	j["avm_version"] = _contract.avmVersion.has_value()
 		? njson(_contract.avmVersion.value())
 		: njson(nullptr);
-	// uros splitter selector → puya Contract.splitter (None when unset).
 	j["splitter"] = _contract.splitter.empty()
 		? njson(nullptr)
 		: njson(_contract.splitter);
@@ -254,9 +253,7 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 
 	if (auto const* e = dynamic_cast<awst::IntegerConstant const*>(&_expr))
 	{
-		// value is stored as string for biguint support, but puya expects int.
-		// Detect hex prefix (0x / -0x) so std::stoll doesn't silently stop at
-		// 'x' and return 0 for large hex literals like 0x6465... .
+		// Stored as string for biguint; detect hex prefix so stoll handles 0x literals.
 		std::string const& s = e->value;
 		bool neg = !s.empty() && s[0] == '-';
 		size_t off = neg ? 1 : 0;
@@ -276,8 +273,7 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 		{
 			if (isHex)
 			{
-				// Hex too large for int64: convert to decimal string so puya
-				// sees the correct numeric value rather than the literal "0x…".
+				// Hex too large for int64: convert to decimal string.
 				std::string hex = s.substr(off + 2);
 				// Big-integer decimal from hex via repeated base-10 division.
 				std::vector<unsigned> digits; // big-endian hex digits
@@ -490,13 +486,8 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	else if (auto const* e = dynamic_cast<awst::SingleEvaluation const*>(&_expr))
 	{
 		j["source"] = serializeExpression(*e->source);
-		// puya's awst.SingleEvaluation field is the attrs-private `_id` (cattrs
-		// structures it under the literal key `_id`, NOT `id`). Emitting `id`
-		// left `_id` at its default `id(self)` — a fresh value per deserialized
-		// copy — so two serialized copies of the SAME SingleEvaluation never
-		// compared equal and the backend's single-eval cache never hit: the
-		// "evaluate the source once" guarantee silently never worked. Emit the
-		// matching key so multi-referenced sources actually evaluate once.
+		// cattrs keys on `_id`, not `id` — emit `_id` so the single-eval cache
+		// actually deduplicates. Emitting `id` left `_id` at id(self) each time.
 		j["_id"] = e->id;
 	}
 	else if (auto const* e = dynamic_cast<awst::CheckedMaybe const*>(&_expr))
@@ -511,10 +502,8 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::BoxPrefixedKeyExpression const*>(&_expr))
 	{
-		// puya 5.x dropped BoxPrefixedKeyExpression as a top-level node type;
-		// lower to IntrinsicCall(concat, [prefix, key]) inline. The wtype +
-		// source_location already set above are reused as-is.
-		// (Port of polymarket-experiment commit `e293832fe`.)
+		// puya 5.x dropped BoxPrefixedKeyExpression; lower to concat(prefix, key).
+		// (Port of polymarket-experiment e293832fe.)
 		j["_type"] = "IntrinsicCall";
 		j["op_code"] = "concat";
 		j["immediates"] = njson::array();
@@ -547,14 +536,12 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::StateGet const*>(&_expr))
 	{
-		// wtype is init=False in Puya (derived from field.wtype), so exclude it
 		j.erase("wtype");
 		j["field"] = serializeExpression(*e->field);
 		j["default"] = serializeExpression(*e->defaultValue);
 	}
 	else if (auto const* e = dynamic_cast<awst::StateExists const*>(&_expr))
 	{
-		// wtype is init=False in Puya (always bool_wtype), so exclude it
 		j.erase("wtype");
 		j["field"] = serializeExpression(*e->field);
 	}
@@ -652,7 +639,6 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::PuyaLibCall const*>(&_expr))
 	{
-		// wtype is init=False in puya (derived from func), so exclude it
 		j.erase("wtype");
 		j["func"] = e->func;
 		njson args = njson::array();
@@ -824,9 +810,7 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* at = static_cast<awst::ARC4Struct const*>(_type);
-		// puya 5.x expects fields as an array of WTypeField
-		// {name, wtype, description} rather than a flat name->wtype map.
-		// (Port of polymarket-experiment commit `e293832fe`.)
+		// puya 5.x expects fields as WTypeField array (port of e293832fe).
 		njson fields = njson::array();
 		for (auto const& [k, v]: at->fields())
 		{
@@ -883,7 +867,6 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 		break;
 	}
 	default:
-		// ARC4 basic types (e.g. arc4.bool) need arc4_alias + source_location
 		if (_type->jsonType() == "ARC4Type")
 		{
 			j["arc4_alias"] = nullptr;
@@ -917,7 +900,6 @@ njson AWSTSerializer::serializeARC4MethodConfig(awst::ARC4MethodConfig const& _c
 		j["default_args"] = njson(abi->defaultArgs);
 		j["resource_encoding"] = "value";
 		j["validate_encoding"] = nullptr;
-		// uros splitter chunk → puya ARC4ABIMethodConfig.chunk (None when unset).
 		j["chunk"] = abi->chunk.empty() ? njson(nullptr) : njson(abi->chunk);
 	}
 

@@ -33,19 +33,15 @@ public:
 	std::unique_ptr<NodeBuilder> member_access(
 		std::string const& _name, awst::SourceLocation const& _loc) override;
 
-	/// rvalue read: sign-extends a decoded signed sub-256 element (see index()).
+	/// rvalue: sign-extends decoded signed sub-256 elements (see index()).
 	std::shared_ptr<awst::Expression> resolve() override;
-	/// lvalue (assignment target): the *bare* decoded element. Must NOT sign-
-	/// extend — the sign-extension wraps the value in a CommaExpression, which
-	/// is not a valid assignment target.
+	/// lvalue: bare decoded element (CommaExpression from sign-extend is not an lvalue).
 	std::shared_ptr<awst::Expression> resolve_lvalue() override;
 
 private:
 	solidity::frontend::ArrayType const* m_arrayType;
 
-	/// Set by index() when this builder wraps a decoded signed sub-256 element
-	/// (e.g. int128). resolve() then sign-extends it to canonical 256-bit on
-	/// read; resolve_lvalue() leaves it bare. Null for every other case.
+	/// Set by index() for signed sub-256 elements (e.g. int128); resolve() sign-extends on read.
 	solidity::frontend::Type const* m_signExtendElem = nullptr;
 	awst::SourceLocation m_signExtendLoc{};
 
@@ -53,11 +49,7 @@ private:
 	awst::WType const* elementType() const;
 };
 
-/// Instance builder for Solidity mapping types.
-///
-/// Handles:
-///   - index: mapping[key] → BoxValueExpression with key hashing
-///   - Not wired into visitor yet — mapping index is complex (box storage, nested mappings)
+/// Instance builder for Solidity mapping types (index() not yet wired — lives in old code).
 class SolMappingBuilder: public InstanceBuilder
 {
 public:
@@ -70,9 +62,6 @@ public:
 	}
 
 	solidity::frontend::Type const* solType() const override { return m_mappingType; }
-
-	// index() not yet implemented — mapping access is deeply intertwined
-	// with box storage semantics and stays in old IndexAccessBuilder for now.
 
 private:
 	solidity::frontend::MappingType const* m_mappingType;

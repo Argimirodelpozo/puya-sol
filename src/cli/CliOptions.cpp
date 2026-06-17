@@ -104,7 +104,7 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.opupBudget = std::stoull(_argv[++i]);
 		else if (arg == "--ensure-budget" && i + 1 < _argc)
 		{
-			// Format: func_name:budget (e.g., "f:20000")
+			// Format: func_name:budget
 			std::string spec = _argv[++i];
 			auto colon = spec.find(':');
 			if (colon != std::string::npos)
@@ -155,12 +155,8 @@ Options parseArgs(int _argc, char* _argv[])
 		}
 		else if (arg == "--fn-split" && i + 1 < _argc)
 		{
-			// Format: <Name>:<idx>,<idx>,...:g<N>[:cross]
-			//
-			// Tokenize on ':'. Either 3 or 4 tokens. The optional
-			// trailing token, when present, must literally equal "cross"
-			// — sets the spec's crossChunk flag (pieces use gload-based
-			// prologue, intended to live on separate uros chunks).
+			// Format: <Name>:<idx>,...:g<N>[:cross]. 3 or 4 colon-tokens.
+			// "cross" sets crossChunk (gload-based prologue for separate uros chunks).
 			std::string spec = _argv[++i];
 			std::vector<std::string> toks;
 			{
@@ -186,7 +182,7 @@ Options parseArgs(int _argc, char* _argv[])
 			Options::FnSplitSpec fnSpec;
 			fnSpec.subroutineName = toks[0];
 
-			// Parse comma-separated indices.
+			// Parse comma-separated indices
 			std::string const& idxList = toks[1];
 			size_t start = 0;
 			while (start <= idxList.size())
@@ -201,7 +197,7 @@ Options parseArgs(int _argc, char* _argv[])
 				start = comma + 1;
 			}
 
-			// Parse group id (must start with 'g').
+			// Parse group id (must start with 'g')
 			std::string const& gTok = toks[2];
 			if (gTok.empty() || gTok[0] != 'g')
 			{
@@ -227,9 +223,7 @@ Options parseArgs(int _argc, char* _argv[])
 		}
 		else if (arg == "--pin-to-main" && i + 1 < _argc)
 		{
-			// Comma-separated method names that must stay on main.
-			// Repeatable: each invocation adds to the same list.
-			// See the field doc on Options::pinnedToMain for why.
+			// Comma-separated; repeatable.
 			std::string spec = _argv[++i];
 			size_t start = 0;
 			while (start <= spec.size())

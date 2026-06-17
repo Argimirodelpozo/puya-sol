@@ -30,14 +30,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	auto postPending = bc.takePending();
 
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
-		// Branches share the parent BlockContext, so a program halt inside
-		// the branch (assembly return() → BlockContext.terminated) must not
-		// leak out: the branch is CONDITIONAL — statements after the if are
-		// still reachable. The flag does its work within the branch's own
-		// buildBlock (skipping trailing branch statements), then the parent
-		// value is restored. (Bare nested blocks keep propagating — they
-		// execute unconditionally. Loop bodies derive their own context via
-		// withLoop and never leak.)
+		// A halt inside a branch (assembly return() → BlockContext.terminated)
+		// must not leak out — the branch is conditional, so code after the if
+		// is still reachable. Save/restore the flag around each branch.
 		bool parentTerminated = m_blk.terminated;
 		std::shared_ptr<awst::Block> branch;
 		if (auto const* block = dynamic_cast<Block const*>(&body))
@@ -127,9 +122,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	{
 		auto cond = bc.build(m_node.condition());
 
-		// while-loop body: no special LoopContext data needed (no for-post,
-		// no doWhile cond break) but we still create one so continue/break
-		// in nested code knows it's inside a loop.
+		// Empty LoopContext (no for-post / doWhile break); still needed so
+		// continue/break inside the body know they're in a loop.
 		LoopContext loopCtx;
 		auto bodyBlk = m_blk.withLoop(loopCtx);
 		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);

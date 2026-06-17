@@ -1,8 +1,5 @@
 /// @file SolBlock.cpp
-/// Block statement: { stmt1; stmt2; ... }
-/// Hosts SolStatementVisitor — the central statement dispatcher — which
-/// takes a BlockContext& and constructs visitors with derived contexts
-/// when entering nested scopes / loops / modifier-placeholder bodies.
+/// Block statement and SolStatementVisitor — central statement dispatcher.
 
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/SolASTVisitor.h"
@@ -33,9 +30,8 @@ SolBlock::SolBlock(
 namespace
 {
 
-/// Concrete SolASTVisitor that translates Solidity statements into AWST.
-/// Holds the BlockContext that scope-relevant state lives on (enclosing
-/// loop, modifier placeholder body, parent chain, function ctx).
+/// Translates Solidity statements into AWST. Holds the BlockContext
+/// (enclosing loop, modifier placeholder body, parent chain).
 class SolStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
 {
 public:
@@ -155,9 +151,7 @@ public:
 
 	ResultT visitBlock(Block const& _n) override
 	{
-		// Nested block: derive a child context to keep the parent chain
-		// honest. (Today the chain is informational; tomorrow it can carry
-		// scope/local maps.)
+		// Derive a child context to maintain the parent chain.
 		auto childBlk = m_blk.nest();
 		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
 		SolBlock handler(childBlk, _n, m_blk.makeLoc(_n.location()));
@@ -191,16 +185,13 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 
 	for (auto const& stmt: m_block.statements())
 	{
-		// A prior statement unconditionally halted the program (assembly
-		// `return`/`revert`): the rest of this block is statically dead.
-		// Skip it — puya rejects unreachable code, and EVM sources routinely
-		// have a trailing `return x;` after an assembly halt.
+		// Assembly return/revert makes the rest statically dead; puya rejects
+		// unreachable code. EVM sources often have a trailing `return` after one.
 		if (m_blk.terminated)
 			break;
 		if (auto const* innerBlock = dynamic_cast<Block const*>(stmt.get()))
 		{
-			// Flatten nested blocks — they share the same BlockContext nest
-			// so unchecked-arithmetic propagates through.
+			// Flatten nested blocks; unchecked-arithmetic flag propagates through.
 			auto childBlk = m_blk.nest();
 			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
 			SolBlock handler(childBlk, *innerBlock,
@@ -208,8 +199,7 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 			auto translated = handler.toAwstBlock();
 			for (auto& s: translated->body)
 				awstBlock->body.push_back(std::move(s));
-			// A bare nested block shares control flow with this one — its
-			// halt makes our remaining statements dead too.
+			// Propagate halt from the nested block to the parent.
 			if (childBlk.terminated)
 				m_blk.terminated = true;
 		}

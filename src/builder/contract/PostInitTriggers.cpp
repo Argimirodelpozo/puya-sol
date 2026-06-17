@@ -13,8 +13,7 @@ namespace puyasol::builder
 
 namespace {
 
-/// Checks if a Solidity AST subtree references any state variable whose AST ID
-/// is in the given set (i.e. box-stored state variables).
+/// Check whether an AST subtree references any box-stored state variable (by AST ID).
 class BoxVarRefChecker: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -39,9 +38,7 @@ private:
 	bool m_found = false;
 };
 
-/// Walks every constructor body in `_contract`'s linearised inheritance
-/// chain (current contract first, then bases), running `_checker` against
-/// each body. Stops as soon as `_done` returns true.
+/// Walk all constructor bodies in MRO order; stop when _done() returns true.
 template <class V>
 void walkAllConstructors(
 	solidity::frontend::ContractDefinition const& _contract,
@@ -69,8 +66,7 @@ void walkAllConstructors(
 	}
 }
 
-/// Walks every state-variable initializer expression in the contract's
-/// linearised chain.
+/// Walk every state-variable initializer in the linearised chain.
 template <class V>
 void walkAllStateVarInits(
 	solidity::frontend::ContractDefinition const& _contract,
@@ -83,8 +79,7 @@ void walkAllStateVarInits(
 	});
 }
 
-/// Box-write detector — true if the constructor (directly or transitively
-/// via a function call) touches any box-stored state variable.
+/// True if the constructor (directly or via a function call) touches box-stored state.
 bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _contract)
 {
 	std::set<int64_t> boxVarIds;
@@ -103,8 +98,8 @@ bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _c
 	if (direct.found())
 		return true;
 
-	// Indirect: collect AST IDs of non-constructor functions that touch
-	// box-stored vars, then re-walk constructors looking for calls to them.
+	// Indirect: collect IDs of non-ctor functions that touch box vars,
+	// then re-walk constructors for calls to any of them.
 	std::set<int64_t> boxWriteFuncIds;
 	forEachDefinedFunction(_contract, [&](auto const* func)
 	{
@@ -126,10 +121,8 @@ bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _c
 		bool visit(solidity::frontend::FunctionCall const& _node) override
 		{
 			if (found) return false;
-			// solc's ASTNode::referencedDeclaration covers both
-			// `f(...)` (Identifier) and `Lib.f(...)` (MemberAccess) —
-			// the original Identifier-only check missed library /
-			// base-qualified calls into known box-touching functions.
+			// ASTNode::referencedDeclaration covers Identifier and MemberAccess
+			// (catches Lib.f() that an Identifier-only check would miss).
 			auto const* decl = solidity::frontend::ASTNode::referencedDeclaration(_node.expression());
 			if (decl && targetIds.count(decl->id()))
 				found = true;
@@ -141,8 +134,7 @@ bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _c
 	return callChecker.found;
 }
 
-/// `new C(...)` detector — child contracts deployed via inner-create need
-/// the parent to already hold balance, which only lands after AppCreate.
+/// True if the constructor deploys child contracts via new C() (requires balance → post AppCreate).
 bool detectNewExprInConstructor(solidity::frontend::ContractDefinition const& _contract)
 {
 	struct NewExprChecker: public solidity::frontend::ASTConstVisitor
@@ -159,9 +151,7 @@ bool detectNewExprInConstructor(solidity::frontend::ContractDefinition const& _c
 	return checker.found;
 }
 
-/// `msg.value` / `msg.sender` / `msg.data` detector — these only resolve
-/// correctly inside `__postInit` when the parent groups the Payment with
-/// the post-init call (not with AppCreate).
+/// True if the constructor reads msg.value/sender/data (only valid in __postInit group).
 bool detectMsgRefInConstructor(solidity::frontend::ContractDefinition const& _contract)
 {
 	struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
@@ -169,11 +159,8 @@ bool detectMsgRefInConstructor(solidity::frontend::ContractDefinition const& _co
 		bool found = false;
 		bool visit(solidity::frontend::MemberAccess const& _ma) override
 		{
-			// Resolve via solc's MagicVariableDeclaration so a user-defined
-			// local named `msg` doesn't trigger a false positive — and a
-			// member-access path like `(somelookup).value` doesn't accidentally
-			// look like `msg.value`. The magic globals msg/block/tx are tagged
-			// as MagicVariableDeclaration on the resolved Identifier.
+			// Use MagicVariableDeclaration to avoid false-positives from user-defined
+			// `msg` locals or `(somelookup).value` member-access paths.
 			auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression());
 			if (!id) return !found;
 			auto const* magic = dynamic_cast<solidity::frontend::MagicVariableDeclaration const*>(
@@ -194,9 +181,7 @@ bool detectMsgRefInConstructor(solidity::frontend::ContractDefinition const& _co
 	return checker.found;
 }
 
-/// `AVM.<x>(...)` detector — the stdlib library issues inner txns that
-/// require the contract to already hold MBR + ASA reserves, which can
-/// only land via a pay txn AFTER AppCreate. Defers to __postInit.
+/// True if the constructor calls AVM stdlib (inner txns need MBR+ASA → post AppCreate).
 bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const& _contract)
 {
 	struct AvmLibCallChecker: public solidity::frontend::ASTConstVisitor
@@ -205,10 +190,7 @@ bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const&
 		bool visit(solidity::frontend::MemberAccess const& _ma) override
 		{
 			if (found) return false;
-			// solc's ASTNode::referencedDeclaration handles both
-			// `AVM.foo()` (Identifier base) and module-aliased forms
-			// `import "tokens/AVM.sol" as Mod; Mod.AVM.foo()`
-			// (MemberAccess base) without a per-shape dynamic_cast.
+			// referencedDeclaration handles both `AVM.foo()` and aliased `Mod.AVM.foo()`.
 			if (auto const* contractDef = dynamic_cast<solidity::frontend::ContractDefinition const*>(
 					solidity::frontend::ASTNode::referencedDeclaration(_ma.expression())))
 				if (contractDef->isLibrary() && contractDef->name() == "AVM")
@@ -224,7 +206,6 @@ bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const&
 
 } // namespace
 
-/// Combines the four post-init triggers; logs which one fired (via debug).
 bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contract)
 {
 	if (detectBoxRefsInConstructor(_contract))

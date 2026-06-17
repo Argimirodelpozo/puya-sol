@@ -1,8 +1,5 @@
-/// @file SolIndexAccessHandlers.cpp
-/// Per-shape index-access handlers extracted from SolIndexAccess.cpp:
-/// dynamic-array, mapping, regular index, and sliced index. The toAwst
-/// dispatchers (SolIndexAccess::toAwst and SolIndexRangeAccess::toAwst)
-/// remain in SolIndexAccess.cpp.
+/// @file SolIndexAccessHandlers.cpp — per-shape index-access handlers.
+/// toAwst dispatchers remain in SolIndexAccess.cpp.
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-eb/NodeBuilder.h"
@@ -26,9 +23,7 @@ namespace puyasol::builder::sol_ast
 std::shared_ptr<awst::Expression> SolIndexAccess::signExtendSignedElement(
 	std::shared_ptr<awst::Expression> _decoded)
 {
-	// The index-access result type (`m_indexAccess.annotation().type`) is the
-	// element type; delegate the signed sub-256 → canonical-256-bit extension to
-	// the shared TypeCoercion helper so this and the sol-eb array builder agree.
+	// Delegate to shared TypeCoercion helper so this and sol-eb array builder agree.
 	return builder::TypeCoercion::signExtendSignedElement(
 		std::move(_decoded), m_indexAccess.annotation().type, m_loc);
 }
@@ -54,26 +49,16 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	auto idx = buildExpr(*m_indexAccess.indexExpression());
 	idx = builder::TypeCoercion::implicitNumericCast(std::move(idx), awst::WType::uint64Type(), m_loc);
 
-	// puya lowers a dynamic-array element read as a bounds-check (index <
-	// length) PLUS the element access, evaluating the index expression twice.
-	// A side-effecting index — `arr[f()]` — would then run f() twice (verified:
-	// cnt==2). Wrap a read index in SingleEvaluation so it evaluates once. The
-	// write path returns a bare lvalue IndexExpression (handled by SolAssignment),
-	// so leave its index unwrapped to keep it assignable.
+	// puya evaluates the index twice (bounds check + access); a side-effecting
+	// index `arr[f()]` ran f() twice (verified cnt==2). makeEvalOnce prevents it.
+	// Write path returns a bare lvalue — leave unwrapped to keep it assignable.
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 		idx = awst::makeEvalOnce(std::move(idx), m_loc);
 
-	// For bytes (dynamic byte array) storage, use extract3 instead of
-	// IndexExpression — puya's IR builder rejects indexing on a bytes
-	// value and expects a ReferenceArray/ARC4DynamicArray shape.
-	// Only applied in READ context; assignment path falls through to the
-	// default IndexExpression (not yet supported — lvalue bytes indexing
-	// would need a separate replace3-based handler).
+	// bytes/string storage: puya rejects IndexExpression on bytes; use extract3.
+	// Write path unsupported (needs replace3-based lvalue handler).
 	if (arrType->isByteArrayOrString() && !m_indexAccess.annotation().willBeWrittenTo)
 	{
-		// When reading, the base expression is the raw bytes stored in the
-		// box (after stripping the ARC4 length header if any). The state
-		// var is stored as raw bytes in this path, so `extract3` directly.
 		auto one = awst::makeOne(m_loc);
 		return awst::makeExtract3(
 			baseExprForRead, std::move(idx), std::move(one), m_loc,
@@ -85,7 +70,6 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (m_indexAccess.annotation().willBeWrittenTo)
 		return indexExpr;
 
-	// Only ARC4Decode if element needs decoding to native type
 	bool needsDecode = rawElemType != elemType && rawElemType->name() != elemType->name();
 	if (needsDecode)
 		return signExtendSignedElement(
@@ -107,11 +91,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			indexExprs.push_back(idxAccess->indexExpression());
 		cursor = &idxAccess->baseExpression();
 	}
-	// Peel wrappers: `(m = m2)[k]` — the assignment's value is whatever the
-	// RHS points to. Realize the assignment so its side effect (updating
-	// storageAliases for mapping-storage pointers) is preserved, then
-	// continue resolving from the RHS. Solidity wraps parenthesised
-	// expressions in TupleExpressions, so peel those too.
+	// `(m = m2)[k]`: emit the assignment (side effect: update storageAliases),
+	// then resolve from the RHS. Also peel parenthesised TupleExpression wrappers.
 	while (true)
 	{
 		if (auto const* assign = dynamic_cast<Assignment const*>(cursor))
@@ -222,33 +203,25 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 		out.varName = ident->name();
 		out.rootMappingType = ident->annotation().type;
 
-		// Storage pointer alias: `mapping storage m = m1; m[k] = v;`
-		// The identifier resolves to a local with a registered alias;
-		// the box prefix must match the underlying state variable, not
-		// the local's name, or writes land under the wrong key.
+		// Storage alias `mapping storage m = m1`: box prefix must track the
+		// underlying state var, not the local name, or writes land wrong.
 		if (auto const* decl = ident->annotation().referencedDeclaration)
 		{
 			auto const* alias = m_scope.findStorageAlias(decl->id());
 			if (alias)
 			{
 				auto aliasExpr = alias->expr;
-				// Unwrap StateGet → underlying state expression.
 				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
 					aliasExpr = sg->field;
-				// Peel off FieldExpressions to reach the root state expression.
+				// Peel to root state expression.
 				while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
 					aliasExpr = fe->base;
-				// Under per-layer hashing the alias's box-key expression IS the
-				// slot pointer at that level — feed it directly as the chain's
-				// starting prefix. No inner-sha256 unwrapping required.
+				// Alias's box-key IS the slot pointer — use directly as starting prefix.
 				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
 					out.aliasOverridePrefix = boxVal->key;
 				else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
 					out.aliasOverridePrefix = appState->key;
-				// Simple holder-name alias (`mapping storage m = state_m;`):
-				// alias is a BytesConstant of the underlying state-var's
-				// encoded name. Use as varName so the default-prefix path picks
-				// the right starting bytes.
+				// Holder-name alias: BytesConstant of state-var's encoded name.
 				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(aliasExpr.get()))
 					out.varName = std::string(bc->value.begin(), bc->value.end());
 			}
@@ -259,14 +232,9 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 		out.varName = ma->memberName();
 		out.rootMappingType = ma->annotation().type;
 
-		// Nested mapping inside a struct-storage-ref: `self.inner[k]` where
-		// `self` is a struct-storage-ref param carrying the box-key PREFIX in
-		// bytes (e.g. Uniswap V4 `Pool.State storage self; self.positions[k]`).
-		// The inner mapping's per-layer key chain must START from
-		// `self_prefix ++ fieldName`, so entries are isolated per struct
-		// instance (i.e. per mapping-of-struct key). Without this the prefix
-		// defaults to `utf8(fieldName)` — a constant — and every instance's
-		// `self.inner[*]` aliases to one shared set of boxes.
+		// Nested mapping in struct-storage-ref `self.inner[k]` (V4 Pool.State):
+		// chain must start from `self_prefix ++ fieldName` so each struct instance
+		// has isolated boxes; plain utf8(fieldName) prefix would alias all instances.
 		if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
 			if (auto const* decl = baseId->annotation().referencedDeclaration)
 			{
@@ -283,8 +251,7 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 				}
 			}
 	}
-	// `f()[k]` — mapping-pointer-returning call indexed directly. The call
-	// result (bytes — the holder name) is the runtime key prefix.
+	// `f()[k]`: call returns bytes = holder name = runtime key prefix.
 	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(_cursor))
 	{
 		out.rootMappingType = _cursor->annotation().type;
@@ -343,12 +310,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildInitialPrefix(
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 {
-	// Multi-box state-var array: when the encoded array exceeds AVM's
-	// 32KB box capacity, the storage gets split across N boxes keyed
-	// `<name>` ++ `itob(page)`. Element accesses route at runtime via
-	// `page = idx / elemsPerBox`, `inPageOffset = (idx % elemsPerBox) * elemSize`.
-	// Bypass the standard IndexExpression(BoxValueExpression(...), idx) path
-	// since that translates to a single box_extract on a non-existent box.
+	// Multi-box array (>32KB): split across `<name>` ++ `itob(page)` boxes.
+	// Standard IndexExpression would box_extract a non-existent single box.
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
 	{
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
@@ -399,9 +362,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			{
 				auto result = baseBuilder->index(*idxBuilder, m_loc);
 				if (result)
-					// Write targets resolve as lvalues (the bare decoded element,
-					// no sign-extension — a CommaExpression can't be assigned to);
-					// reads resolve as rvalues (sign-extended where applicable).
+					// Write: bare lvalue (no sign-ext); read: rvalue (sign-extended).
 					return m_indexAccess.annotation().willBeWrittenTo
 						? result->resolve_lvalue()
 						: result->resolve();
@@ -412,11 +373,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 	// Regular array index
 	if (index && index->wtype == awst::WType::biguintType())
 	{
-		// A side-effecting index — `a[--i]`, `a[i = expr]` — must run
-		// exactly once. The biguint→uint64 cast below duplicates its
-		// operand (it slices `concat(bzero(8), idx)` and also takes that
-		// concat's length), so a side-effecting idx would execute twice.
-		// Pin it to a temp first. Mirrors the mapping-key handler above.
+		// biguint→uint64 cast duplicates its operand (slices concat(bzero(8),idx)
+		// and takes its length), so side-effecting idx like `a[--i]` runs twice.
+		// Pin to temp first.
 		if (dynamic_cast<awst::AssignmentExpression const*>(index.get()))
 		{
 			static int idxCoerceTemp = 0;
@@ -430,11 +389,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			std::move(index), awst::WType::uint64Type(), m_loc);
 	}
 
-	// bytes / bytesN indexing → extract3(base, index, 1) → bytes[1]
-	// Solidity `bytes[i]` returns a `bytes1` value. Puya doesn't support
-	// IndexExpression on raw bytes. Only applied in read contexts — the
-	// assignment path needs a separate replace3-based lvalue handler which
-	// we don't emit from here.
+	// bytes/bytesN index: puya rejects IndexExpression on bytes; use extract3.
+	// Write context unsupported (needs replace3-based handler).
 	if (base->wtype
 		&& (base->wtype == awst::WType::bytesType()
 			|| base->wtype->kind() == awst::WTypeKind::Bytes)
@@ -495,8 +451,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		{
 			std::shared_ptr<awst::Expression> decode =
 				awst::makeARC4Decode(std::move(e), expectedType, m_loc);
-			// Sign-extend a signed sub-256 element only when read (rvalue); a
-			// write target must remain the bare decode (a valid lvalue).
+			// Sign-extend only for reads; write targets need bare decode (valid lvalue).
 			if (!m_indexAccess.annotation().willBeWrittenTo)
 				decode = signExtendSignedElement(std::move(decode));
 			return decode;
@@ -556,13 +511,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 
 	if (m_indexAccess.annotation().willBeWrittenTo)
 	{
-		// LHS context: caller will write to this. We can't return a writable
-		// "box[offset]" expression in AWST; instead the assignment handler
-		// detects multi-box arrays and emits box_replace directly. Fall back
-		// to a marker expression that SolAssignment recognises — but that
-		// requires plumbing through SolAssignment.cpp too. As a first cut,
-		// just emit the read path; writes via this path will fail until
-		// SolAssignment.cpp is extended. (Tracked as follow-up.)
+		// Write context: AWST has no writable box[offset] lvalue; SolAssignment
+		// handles multi-box writes via box_replace. Emit read path as fallback.
 		auto extract = awst::makeBoxExtract(
 			std::move(boxKey), std::move(offsetExpr),
 			awst::makeIntegerConstant(elemSize, m_loc), m_loc);
@@ -570,9 +520,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 			const_cast<awst::WType*>(elemArc4Type), m_loc);
 	}
 
-	// Read path: box_extract(boxKey, inPageOffset, elemSize) returning the
-	// raw element bytes, reinterpreted as the element's ARC4 type, then
-	// optionally ARC4Decode'd to the native expected type.
+	// Read: box_extract → reinterpret as ARC4 type → optionally ARC4Decode.
 	auto extract = awst::makeBoxExtract(
 		std::move(boxKey), std::move(offsetExpr),
 		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
@@ -607,22 +555,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 {
-	// Fold `root[a:b][c:d]...[i]` into `root[effective_offset + i]` with
-	// bounds checks, preserving Solidity semantics where each slice level
-	// reverts on start > end, end > parent_length, and index >= slice_length.
-	//
-	// The root base must be an ArrayType whose element type maps to ARC4
-	// (uint256[] calldata, etc.). Slice-of-slice of-slice chains are
-	// flattened bottom-up: the cumulative offset is the sum of all starts
-	// and the cumulative length is (outermost_end - outermost_start) after
-	// per-level clamping by the enclosing slice.
+	// Fold `root[a:b][c:d]...[i]` into `root[cumOffset + i]`.
+	// Each slice level reverts on start>end / end>parent_length / i>=slice_length.
+	// Chains flatten bottom-up: cumOffset = sum of starts, cumLength = end-start.
 
 	using namespace solidity::frontend;
 
-	// Walk down the IndexRangeAccess chain to find the root base.
-	// Also peel off type-conversion FunctionCall wrappers like
-	// `uint256[](x[s:e])` — Solidity inserts these when the slice is assigned
-	// to a local with an explicit array type.
+	// Walk IndexRangeAccess chain to root, peeling type-conversion wrappers
+	// like `uint256[](x[s:e])` that Solidity inserts for typed slice locals.
 	auto peelCast = [](Expression const& e) -> Expression const& {
 		Expression const* cur = &e;
 		while (auto const* call = dynamic_cast<FunctionCall const*>(cur))
@@ -643,8 +583,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 		slices.push_back(r);
 		cur = &peelCast(r->baseExpression());
 	}
-	// slices is outermost→innermost from AST walk; reverse to innermost→outermost
-	// so we apply slices in source order (closest-to-root first).
+	// Reverse so we process innermost (closest-to-root) slice first.
 	std::reverse(slices.begin(), slices.end());
 
 	auto const* rootArrType = dynamic_cast<ArrayType const*>(cur->annotation().type);
@@ -653,8 +592,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 
 	auto rootBase = buildExpr(*cur);
 
-	// Stash the root base in a temp so we can reference it both for ArrayLength
-	// and for indexing without duplicating the (possibly expensive) evaluation.
+	// Stash root in temp to avoid duplicating possibly-expensive evaluation.
 	std::string idSuffix = std::to_string(m_indexAccess.id());
 	std::string rootVarName = "__slice_root_" + idSuffix;
 	auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
@@ -671,8 +609,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	std::shared_ptr<awst::Expression> cumLength = makeLen(
 		awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc));
 
-	// Stash length in a temp so we can use it in the end-default and the
-	// bounds check without re-emitting ArrayLength.
+	// Stash length in temp for end-default and bounds check.
 	std::string lenVarName = "__slice_rootlen_" + idSuffix;
 	auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
 	m_ctx.prePendingStatements.push_back(

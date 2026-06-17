@@ -1,7 +1,6 @@
 /// @file AwstWalker.cpp
-/// See AwstWalker.h. Recursion is hand-written per Expression /
-/// Statement subclass — there's no virtual visit() on awst::Node, so
-/// dispatching by dynamic_cast is the only option. Tedious but local.
+/// See AwstWalker.h. Recursion is hand-written per subclass via
+/// dynamic_cast — awst::Node has no virtual visit().
 
 #include "splitter/AwstWalker.h"
 
@@ -16,8 +15,7 @@ namespace
 void recurseExpr(
 	std::shared_ptr<awst::Expression>& _expr, ExprRewriteFn const& _fn);
 
-// Helper — accept a slot, apply the callback, recurse into children if
-// the callback didn't replace the node.
+// Apply callback; recurse into children if callback didn't substitute.
 void visitSlot(
 	std::shared_ptr<awst::Expression>& _slot, ExprRewriteFn const& _fn)
 {
@@ -26,7 +24,7 @@ void visitSlot(
 	if (auto rep = _fn(*_slot))
 	{
 		_slot = std::move(rep);
-		return; // callback owns recursion into the replacement subtree
+		return; // callback owns recursion into the replacement
 	}
 	recurseExpr(_slot, _fn);
 }
@@ -163,10 +161,8 @@ void recurseExpr(
 	if (auto* x = dynamic_cast<InnerTransactionField*>(e))
 	{ visitSlot(x->itxn, _fn); visitSlot(x->arrayIndex, _fn); return; }
 
-	// Any unhandled subclass: log once-ish but keep going. The patching
-	// pass that wanted this node will simply skip the unrecursed subtree;
-	// usually fine, but it's worth surfacing if a new node type appears.
-	// Cast-through-typeid to print the dynamic type name.
+	// Unhandled subclass: patching pass skips the subtree. Worth surfacing
+	// so new node types don't silently miss rewrites.
 	Logger::instance().warning(
 		std::string("AwstWalker: unhandled Expression subclass: ")
 		+ typeid(*e).name()

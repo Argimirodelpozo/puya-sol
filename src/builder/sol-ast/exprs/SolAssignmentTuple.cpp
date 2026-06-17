@@ -1,7 +1,4 @@
-/// @file SolAssignmentTuple.cpp
-/// Tuple-assignment translation extracted from SolAssignmentHandlers.cpp:
-///   - handleTupleAssignment: destructuring `(a, b) = expr`
-///   - buildTupleWithUpdatedField: copy-on-write for named-WTuple field writes
+/// @file SolAssignmentTuple.cpp — handleTupleAssignment + buildTupleWithUpdatedField
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
@@ -50,16 +47,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
 
-	// Side-effecting non-tuple RHS that returns a WTuple — typically a
-	// tuple-returning function call: `(a, b) = f(...)` where `f` returns
-	// `(uint, uint)`. Without snapshotting, each LHS element's
-	// `TupleItemExpression(f(...), i)` carries a fresh `SubroutineCallExpression`
-	// and puya re-emits the call once per element — multiplying side
-	// effects and re-reading state AFTER prior calls' writes have already
-	// committed. Cache the call result in a single temp var so each
-	// TupleItem reads from the cached tuple. The TupleExpression-RHS
-	// snapshot below handles the literal `(x, y) = (a(), b())` pattern;
-	// this is its single-call analogue.
+	// Tuple-returning call RHS (`(a,b) = f()`): without snapshotting, each
+	// TupleItemExpression carries a fresh SubroutineCallExpression and puya
+	// re-emits the call once per element. Cache in a temp so each TupleItem
+	// reads from the cached tuple. (Analogue of the literal `(a(),b())` snapshot below.)
 	if (dynamic_cast<awst::SubroutineCallExpression const*>(_value.get())
 		|| dynamic_cast<awst::SubmitInnerTransaction const*>(_value.get()))
 	{
@@ -77,14 +68,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		}
 	}
 
-	// If the RHS is a literal tuple of VarExpressions (local variables),
-	// snapshot each item into a temporary variable first so later element
-	// reads see the pre-assignment value — otherwise `(a, b) = (b, a)` would
-	// be evaluated as `a = b; b = a;` (lazy refs), breaking the swap.
-	// We limit the snapshot to pure VarExpression items so that storage
-	// variable tuples keep the (EVM-documented, intentionally broken)
-	// in-place assignment semantics that tests like swap_in_storage_overwrite
-	// rely on.
+	// Literal tuple RHS of VarExpressions: snapshot into temps so `(a,b) = (b,a)`
+	// doesn't reduce to `a=b; b=a` (lazy refs). Limited to pure VarExpression
+	// items so storage-var tuples keep the (EVM-documented) in-place semantics
+	// that swap_in_storage_overwrite relies on.
 	if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
 	{
 		bool allLocalVars = !rhsTuple->items.empty();
@@ -97,12 +84,9 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				break;
 			}
 		}
-		// Also snapshot scalar RHS items when the LHS targets any transient
-		// state variable: transient writes go through a subroutine (TSTORE
-		// on a packed scratch blob), which can clobber other transient
-		// state reads in the same tuple. Snapshotting RHS reads into temps
-		// first preserves the pre-assignment values. Aggregate types keep
-		// the in-place swap semantics Solidity documents for tuple swaps.
+		// Also snapshot scalar RHS when LHS has a transient var: transient writes
+		// go through a subroutine (packed scratch blob) that can clobber other
+		// transient reads in the same tuple. Aggregates keep in-place semantics.
 		bool hasTransientLhs = false;
 		if (_sourceLhs && m_ctx.transientStorage)
 		{
@@ -140,21 +124,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				|| t->kind() == awst::WTypeKind::Bytes);
 			if (!scalar) { allScalars = false; break; }
 		}
-		// Side-effecting RHS + index-into-state-var LHS: when the tuple
-		// has BOTH a side-effecting RHS item (e.g. `returnsArray()` that
-		// reassigns a state variable) AND an LHS slot that indexes into
-		// that same state variable (e.g. `arrayData[3]`), each LHS access
-		// re-evaluates the underlying TupleItemExpression's base. The
-		// repeated `returnsArray()` invocations clobber prior writes to
-		// `arrayData[3]`. Snapshot every RHS slot to a temp once so each
-		// LHS reads the committed value.
-		//
-		// The LHS-must-index-state guard avoids triggering on the
-		// (y, y, y) = (set(1), set(2), set(3)) tuple-swap pattern, where
-		// puya's optimizer + the snapshot interact badly: snapshot temps
-		// get inlined back, the bare RHS tuple-of-reads is emitted as a
-		// statement, and the original side-effecting calls leak stack
-		// values that the redundant assignments don't consume.
+		// Side-effecting RHS + state-var-index LHS: each LHS re-evaluates the
+		// TupleItemExpression base; repeated calls (e.g. `returnsArray()`) clobber
+		// prior writes to `arrayData[3]`. Snapshot RHS to temps.
+		// Guard: LHS must index state — avoids the (y,y,y)=(set(1),set(2),set(3))
+		// pattern where inlined temps interact badly with puya's optimizer (leaked
+		// stack values from redundant assignments).
 		bool hasSideEffectingRhs = false;
 		for (auto const& it : rhsTuple->items)
 		{
@@ -175,10 +150,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			{
 				for (auto const& it : lhsTuple->items)
 				{
-					// IndexExpression(StateGet(BoxValueExpression),...) or
-					// IndexExpression(AppStateExpression,...) — a write to
-					// a state-array element is exactly the case where
-					// re-evaluating the RHS clobbers prior writes.
+							// IndexExpression(StateGet(BoxValue)/AppState): write to a state-array
+					// element where re-evaluating RHS clobbers prior writes.
 					auto const* idx = dynamic_cast<awst::IndexExpression const*>(it.get());
 					if (!idx) continue;
 					auto const* base = idx->base.get();
@@ -208,14 +181,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					tmpTarget, rhsItem, _value->sourceLocation);
 
 				auto stmt = awst::makeExpressionStatement(std::move(tmpAssign), _value->sourceLocation);
-				// Snapshot writes must run BEFORE the bare-RHS-tuple expression
-				// (which the caller wraps in an ExpressionStatement) and
-				// before any per-LHS assignment further down. `pendingStatements`
-				// inserts AFTER the current statement, which would leave the
-				// temps unassigned at the point the bare tuple reads them —
-				// puya then DCEs the assignments and incorrectly leaves the
-				// raw call return values on the stack. `prePendingStatements`
-				// inserts BEFORE, so temps are committed before any read.
+				// Must use prePendingStatements (not pendingStatements): pending
+				// inserts AFTER the current statement, leaving temps unassigned
+				// when the bare tuple reads them — puya DCEs the assignments and
+				// leaks raw call return values on the stack.
 				m_ctx.prePendingStatements.push_back(std::move(stmt));
 
 				auto tmpRead = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
@@ -228,9 +197,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		}
 	}
 
-	// Collect assignments and insert in reverse order (right-to-left)
-	// to match Solidity's tuple assignment semantics where later positions
-	// are assigned first (important when the same target appears twice).
+	// Collect then reverse (right-to-left) to match Solidity viaYul tuple semantics.
 	std::vector<std::shared_ptr<awst::Statement>> assignStmts;
 	auto pendingBefore = m_ctx.pendingStatements.size();
 
@@ -238,17 +205,14 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	{
 		auto item = items[i];
 
-		// Skip null placeholders (empty-name VarExpression from tuple gaps like (,,a))
+		// Skip null placeholders (empty-name VarExpression for gaps like `(,,a)`)
 		if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(item.get()))
 			if (varExpr->name.empty())
 				continue;
 
-		// Storage-pointer reassignment in tuple: `(m, v) = (m2, 21);` where
-		// `m` is a `mapping storage`/`T[] storage` local. The AWST target
-		// resolves to the current alias (e.g. BoxValueExpression for m1),
-		// which is not a runtime lvalue for a pointer swap. Update the
-		// compile-time alias and skip the slot's assignment stmt — mirrors
-		// the simple `m = m2;` path above.
+		// Storage-pointer in tuple `(m, v) = (m2, 21)`: the AWST target resolves
+		// to the current alias (not a runtime lvalue). Update compile-time alias
+		// and skip the assignment; mirrors the simple `m = m2` path.
 		if (_sourceLhs && i < _sourceLhs->components().size())
 		{
 			auto const& comp = _sourceLhs->components()[i];
@@ -261,10 +225,9 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 					&& !lhsDecl->isStateVariable())
 				{
-					// Prefer the RHS tuple's i-th AWST item directly: it
-					// carries the underlying BoxValueExpression/AppStateExpression
-					// needed for downstream mapping-key resolution. A
-					// TupleItemExpression slice would lose that structure.
+					// Prefer the RHS tuple's i-th item directly: it carries the
+					// BoxValueExpression/AppStateExpression needed for downstream
+					// mapping-key resolution (TupleItemExpression slice loses that).
 					std::shared_ptr<awst::Expression> aliasExpr;
 					if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
 					{
@@ -285,9 +248,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						aliasExpr = StorageMapper::makeStateGetWithDefault(aliasExpr, aliasExpr->wtype, m_loc);
 						wrappedStateRead = true;
 					}
-					// The slice may have come straight from the RHS tuple's
-					// underlying state expression (StateGet/BoxValue/AppState),
-					// or fallen back to a TupleItemExpression (TupleSlice).
+					// Slice may be a raw state expression or a TupleItemExpression fallback.
 					auto alias = wrappedStateRead
 						|| dynamic_cast<awst::StateGet const*>(aliasExpr.get())
 						? StorageAlias::stateRead(std::move(aliasExpr))
@@ -298,7 +259,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			}
 		}
 
-		// Use the VALUE tuple's element type (not the target's type)
+		// Use value tuple's element type (not the target's)
 		auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
 		auto const* itemWtype = (valueTuple && i < valueTuple->types().size())
 			? valueTuple->types()[i] : item->wtype;
@@ -310,7 +271,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		assignTarget = awst::unwrapStateGet(std::move(assignTarget));
 
 		std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
-		// Coerce string↔bytes via ReinterpretCast
+		// Coerce string↔bytes
 		if (assignTarget->wtype != assignValue->wtype)
 		{
 			bool srcIsStringOrBytes = assignValue->wtype == awst::WType::stringType()
@@ -346,9 +307,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			{
 				assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
 				bool handled = false;
-				// Array element-wise widening: arc4.{static,dynamic}_array<arc4.intM, ...>
-				// → arc4.{static,dynamic}_array<arc4.intN, ...> (M < N). Pin source
-				// bytes to a temp; the helper reads them multiple times.
+				// ARC4 array element widening (intM → intN, M<N): pin source bytes to
+				// a temp (helper reads them multiple times).
 				bool const sourceIsArc4Array =
 					assignValue->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 					|| assignValue->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
@@ -411,7 +371,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					std::move(assignValue), assignTarget->wtype, m_loc);
 		}
 
-		// ARC4Struct field — copy-on-write (simplified: delegate to struct field handler below)
+		// ARC4Struct field: COW via struct field handler.
 		if (auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(assignTarget.get()))
 		{
 			auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
@@ -421,11 +381,9 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 
 			if (structType)
 			{
-				// _emitAsStatement=true: the helper queues the copy-on-write store
-				// itself. Previously the tuple path discarded the returned value
-				// WITHOUT emitting the store, so `(s.a, s.b) = f()` computed f() but
-				// never wrote s.a/s.b — they kept their zero value (this was
-				// mis-attributed to a puya DCE bug; the writes were never emitted).
+				// _emitAsStatement=true: helper queues the COW store. Without this,
+				// `(s.a, s.b) = f()` computed f() but never wrote the fields
+				// (previously mis-attributed to a puya DCE bug; see [[uros-multireturn-struct-destructure-dce]]).
 				auto result = handleStructFieldAssignment(
 					fieldExpr, std::move(assignValue), assignTarget, /*_emitAsStatement=*/true);
 				if (result) continue;
@@ -439,18 +397,15 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			assignValue = std::move(enc);
 		}
 
-		// Nested tuple destructuring: if the target is itself a TupleExpression,
-		// recursively destructure instead of creating a direct assignment.
+		// Nested tuple: recursively destructure instead of a direct assignment.
 		if (dynamic_cast<awst::TupleExpression const*>(assignTarget.get()))
 		{
 			handleTupleAssignment(assignTarget, std::move(assignValue));
 			continue;
 		}
 
-		// Transient state variable write: route through TransientStorage so
-		// the assignment hits the scratch-slot packed blob rather than
-		// producing an AssignmentExpression whose target is a ReinterpretCast
-		// (which isn't an Lvalue in puya's AWST).
+		// Transient var: route through TransientStorage (scratch-slot blob);
+		// an AssignmentExpression targeting a ReinterpretCast isn't an lvalue in puya.
 		if (_sourceLhs && m_ctx.transientStorage
 			&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
 		{
@@ -479,9 +434,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		m_ctx.queueStmt(e, m_loc);
 	}
 
-	// Reverse the assignments added during this call to get right-to-left order.
-	// This matches Solidity's viaYul semantics where tuple stores happen
-	// right-to-left (last element stored first, first element stored last).
+	// Reverse to right-to-left (Solidity viaYul: last element stored first).
 	auto pendingAfter = m_ctx.pendingStatements.size();
 	if (pendingAfter > pendingBefore + 1)
 		std::reverse(

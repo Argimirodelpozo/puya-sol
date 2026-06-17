@@ -17,10 +17,8 @@ namespace
 
 constexpr int TxnTypeAppl = 6;
 
-/// Map a wtype to its canonical ARC4 type name (used inside method
-/// signatures fed to MethodConstant — puya turns those into the
-/// 4-byte sha512_256 selector at compile time, so the C++ side never
-/// needs a hash impl).
+/// Canonical ARC4 type name for method signatures fed to MethodConstant
+/// (puya hashes to the 4-byte selector at compile time).
 std::string arc4TypeName(awst::WType const* _t)
 {
 	if (!_t || _t == awst::WType::voidType()) return "void";
@@ -47,18 +45,13 @@ std::string arc4TypeName(awst::WType const* _t)
 		s += ")";
 		return s;
 	}
-	// Fallback: use the wtype's internal name (covers ARC4Struct,
-	// ARC4StaticArray, ARC4DynamicArray, etc.).
+	// Fallback covers ARC4Struct, ARC4StaticArray, ARC4DynamicArray, etc.
 	if (_t) return _t->name();
 	return "?";
 }
 
-/// Estimate the static encoded size of a return wtype in ABI-encoded
-/// bytes (matches the byte-count puya emits via `log` for the return
-/// value). Returns 0 if dynamic or unknown. Used to decide whether the
-/// return value fits in a single AVM log call (≤1024 B), needs the
-/// chunked-log path (1024 B–4096 B) or has to be skipped entirely
-/// (>4096 B can't be reassembled into a single stack value).
+/// Static ABI-encoded byte size of a return wtype (0 = dynamic/unknown).
+/// Drives the single-log (≤1024 B) vs chunked-log (≤4096 B) vs skip path.
 int staticEncodedSize(awst::WType const* _t)
 {
 	if (!_t || _t == awst::WType::voidType()) return 0;
@@ -79,20 +72,17 @@ int staticEncodedSize(awst::WType const* _t)
 		}
 		return sum;
 	}
-	// ARC4 fixed-width integer: bits / 8 bytes (e.g. arc4.uint256 = 32).
+	// arc4.uintN: n/8 bytes (e.g. arc4.uint256 = 32).
 	if (auto const* ui = dynamic_cast<awst::ARC4UIntN const*>(_t))
 		return (ui->n() + 7) / 8;
-	// ARC4 static array: elementCount × elementSize. Returns 0 when the
-	// element is itself dynamic.
+	// ARC4 static array: count × elementSize; 0 if element is dynamic.
 	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_t))
 	{
 		int es = staticEncodedSize(sa->elementType());
 		if (es == 0) return 0;
 		return static_cast<int>(sa->arraySize()) * es;
 	}
-	// ARC4 struct: sum of field sizes. Returns 0 if any field is
-	// dynamic. (puya packs static-only structs head-to-head with no
-	// per-field length prefix.)
+	// ARC4 struct: sum of field sizes; 0 if any field is dynamic.
 	if (auto const* st = dynamic_cast<awst::ARC4Struct const*>(_t))
 	{
 		int sum = 0;
@@ -137,18 +127,16 @@ std::shared_ptr<awst::Expression> appArgAt(int _i, awst::SourceLocation const& _
 	return awst::makeAppArg(_i, _loc);
 }
 
-/// MethodConstant(sig) — puya resolves to sha512_256(sig)[:4] at
-/// compile time. Used both at the helper's selector check and at the
-/// caller's ApplicationArgs[0] entry, so they always agree.
+/// MethodConstant(sig) — puya resolves to sha512_256(sig)[:4]; shared
+/// by helper router and caller's ApplicationArgs[0] so they always agree.
 std::shared_ptr<awst::Expression> selectorConst(
 	std::string const& _sig, awst::SourceLocation const& _loc)
 {
 	return awst::makeMethodConstant(_sig, awst::WType::bytesType(), _loc);
 }
 
-/// Decode a single fixed-size scalar slice — helper for tuple decode.
-/// `_offset`/`_size` specify the slice within `_bytes` (a
-/// SingleEvaluation node so the underlying expression isn't re-run).
+/// Decode one fixed-size scalar from `_bytes` at `_offset`/`_size`.
+/// `_bytes` should be a SingleEvaluation so the source isn't re-evaluated.
 std::shared_ptr<awst::Expression> decodeScalarSlice(
 	std::shared_ptr<awst::Expression> _bytes,
 	int _offset, int _size,
@@ -179,11 +167,9 @@ std::shared_ptr<awst::Expression> decodeScalarSlice(
 	return awst::makeReinterpretCast(std::move(extract), _t, _loc);
 }
 
-/// Decode an ABI ApplicationArg value into the native wtype (helper-
-/// approval prologue, and call-site return decode). Handles scalars
-/// + fixed-size tuples by walking fields. Reinterpret-casts what's
-/// left to its declared wtype (works for fixed-bytes / ARC4 aggregates
-/// where bytes IS the AVM-internal shape).
+/// Decode an ABI ApplicationArg bytes value to native wtype. Handles
+/// scalars and fixed-size tuples field-by-field; reinterpret-casts the rest
+/// (works for fixed-bytes / ARC4 aggregates whose bytes IS the AVM shape).
 std::shared_ptr<awst::Expression> decodeArgFromBytes(
 	std::shared_ptr<awst::Expression> _bytes,
 	awst::WType const* _t,
@@ -205,10 +191,8 @@ std::shared_ptr<awst::Expression> decodeArgFromBytes(
 		return awst::makeReinterpretCast(std::move(_bytes), awst::WType::accountType(), _loc);
 	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_t))
 	{
-		// Walk fields, decode each at known offset. Wrap the input in
-		// SingleEvaluation so multiple field-decodes don't re-evaluate
-		// the source expression (which may have side effects, like
-		// `extract` of `itxn LastLog`).
+		// Wrap in SingleEvaluation so multi-field decode doesn't re-evaluate
+		// the source (e.g. `extract` of `itxn LastLog` must fire once).
 		static int seCounter = 0;
 		auto se = awst::makeSingleEvaluation(
 			std::move(_bytes), awst::WType::bytesType(), ++seCounter, _loc);
@@ -220,9 +204,8 @@ std::shared_ptr<awst::Expression> decodeArgFromBytes(
 			int sz = staticEncodedSize(ft);
 			if (sz == 0)
 			{
-				// Dynamic field: punt — caller should have skipped
-				// this sub during pass-1. Best-effort: pass the
-				// remaining bytes verbatim and break.
+				// Dynamic field: caller should have skipped this sub in pass-1.
+				// Best-effort: pass remaining bytes verbatim and break.
 				out->items.push_back(se);
 				break;
 			}
@@ -234,10 +217,8 @@ std::shared_ptr<awst::Expression> decodeArgFromBytes(
 	return awst::makeReinterpretCast(std::move(_bytes), _t, _loc);
 }
 
-/// Encode a value into ABI bytes (caller side: stuff into
-/// ApplicationArgs; helper return-side: build the log payload).
-/// Handles scalars + fixed-size tuples by walking fields and
-/// concat'ing per-field encoded bytes.
+/// Encode a value to ABI bytes (caller: ApplicationArgs; helper: log payload).
+/// Handles scalars and fixed-size tuples by concat'ing per-field bytes.
 std::shared_ptr<awst::Expression> encodeValueToBytes(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _t,
@@ -268,9 +249,8 @@ std::shared_ptr<awst::Expression> encodeValueToBytes(
 		return awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
 	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_t))
 	{
-		// Walk fields, concat per-field encoded bytes. SingleEvaluation
-		// the source so the per-field TupleItemExpression reads don't
-		// re-trigger any side effects.
+		// Concat per-field encoded bytes. SingleEvaluation guards
+		// per-field TupleItemExpression reads from re-triggering side effects.
 		static int seCounter = 1000;
 		auto se = awst::makeSingleEvaluation(
 			std::move(_value), _t, ++seCounter, _loc);
@@ -291,9 +271,8 @@ std::shared_ptr<awst::Expression> encodeValueToBytes(
 	return awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
 }
 
-/// Wrap an encoded return value in the `0x151f7c75 ++ ARC4(value)`
-/// ABI return-log shape so the caller's `itxn LastLog` strip-4-and-
-/// decode dance recovers it.
+/// Wrap encoded return in `0x151f7c75 ++ ARC4(value)` so the caller's
+/// `itxn LastLog` strip-4-and-decode recovers it.
 std::shared_ptr<awst::Expression> encodeReturnLogPayload(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _t,
@@ -305,29 +284,18 @@ std::shared_ptr<awst::Expression> encodeReturnLogPayload(
 	return awst::makeConcat(std::move(prefix), std::move(encoded), _loc);
 }
 
-/// Selector signature for the per-helper "fetch next chunk" entry
-/// point used by the chunked-return path. Sidecars whose method's
-/// augmented return exceeds the per-program 1024 B log cap also expose
-/// this method; the caller bundles N-1 invocations of it after the
-/// main method into one inner-txn group, and each helper-txn `gloadss`
-/// the chunk stashed by the main method.
+/// Selector for the "fetch next chunk" entry point (chunked-return path).
+/// Sidecars exceeding the 1024 B log cap also expose this; caller bundles
+/// N-1 invocations after the main call; each helper-txn `gloadss` its chunk
+/// from the main method's scratch.
 constexpr char const* kBigReturnHelperSig = "__big_return_helper()void";
 
-/// Body of `__big_return_helper`: read this txn's GroupIndex; gloadss
-/// scratch slot (99 + GroupIndex) of txn 0 (the main method's call),
-/// `log` it, return.
+/// Emit `__big_return_helper` body: gloadss(0, 99+GroupIndex) and log it.
 void appendBigReturnHelperBranch(
 	std::vector<std::shared_ptr<awst::Statement>>& _out,
 	awst::SourceLocation const& _loc)
 {
-	// gloadss takes the txn index (top-of-stack-1) and slot (top-of-
-	// stack) and pushes the chunk bytes. Build:
-	//   pushint 0           // txn 0 (main method)
-	//   txn GroupIndex      // my idx in inner group
-	//   pushint 99
-	//   +                   // slot = 99 + GroupIndex
-	//   gloadss
-	//   log
+	// gloadss(0, 99+GroupIndex): txn 0 = main method call, slot = 99 + my GroupIndex.
 	auto txnIdx = awst::makeIntegerConstant("0", _loc);
 	auto myIdx = awst::makeTxn("GroupIndex", awst::WType::uint64Type(), _loc);
 	auto base = awst::makeIntegerConstant("99", _loc);
@@ -344,11 +312,9 @@ void appendBigReturnHelperBranch(
 	_out.push_back(awst::makeExpressionStatement(std::move(logCall), _loc));
 }
 
-/// Build the helper Contract's hand-written approval body. Routes one
-/// selector to the lifted Subroutine. When the lifted method's return
-/// exceeds the per-program log cap, also routes a second selector
-/// (`__big_return_helper`) for sibling inner txns to pull the stashed
-/// chunks out of the main method's scratch.
+/// Build the helper Contract's approval body: routes one selector to the
+/// lifted Subroutine. Also routes `__big_return_helper` when the return
+/// exceeds the 1024 B log cap.
 std::shared_ptr<awst::Block> buildHelperApprovalBody(
 	awst::Subroutine const& _sub,
 	std::string const& _sig,
@@ -385,12 +351,8 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 	}
 	else
 	{
-		// Two-selector dispatch:
-		//   if selector == originalSig: fall through to original method body
-		//   else if selector == helperSig: emit chunk + return
-		//   else: assert false
-		// We emit the helper branch first as an early-return, then let
-		// the rest of the body be the original method's path.
+		// Two-selector dispatch: helperSig → emit chunk + return (early-exit);
+		// then fall through to originalSig path; else assert false.
 		auto helperBlock = awst::makeBlock(_loc);
 		appendBigReturnHelperBranch(helperBlock->body, _loc);
 		helperBlock->body.push_back(awst::makeReturnStatement(
@@ -399,8 +361,7 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 			makeSelectorEq(kBigReturnHelperSig),
 			std::move(helperBlock), nullptr, _loc));
 
-		// Past the helper-selector branch, only the original selector
-		// is valid. Assert that.
+		// Assert original selector after helper early-exit.
 		body->body.push_back(awst::makeExpressionStatement(
 			awst::makeAssert(makeSelectorEq(_sig), _loc,
 				std::string("helper: unknown selector")), _loc));
@@ -419,10 +380,8 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 		callArgs.push_back(awst::makeVarExpression(arg.name, arg.wtype, _loc));
 	}
 
-	// SubroutineCall to the lifted body. The Sub stays in roots; this
-	// approval is its sole caller post-rewrite, so per-Contract DCE
-	// keeps it for the helper and drops it from contexts that no
-	// longer reach it.
+	// Sub stays in roots; this approval is its sole caller post-rewrite,
+	// so per-Contract DCE keeps it here and drops it elsewhere.
 	auto call = awst::makeSubroutineCall(
 		awst::SubroutineID{_sub.id}, _sub.returnType, _loc);
 	for (size_t i = 0; i < _sub.args.size(); ++i)
@@ -441,13 +400,9 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 		auto payload = encodeReturnLogPayload(
 			std::move(resultRead), _sub.returnType, _loc);
 
-		// Total payload size is `4 B prefix + retSize`. If it fits in
-		// the per-program log cap (1024 B total per program — confirmed
-		// empirically in localnet), emit a single `log`. Otherwise
-		// stash chunks 1..N-1 into scratch slots 100..100+N-2 and let
-		// the caller invoke `__big_return_helper` once per chunk in
-		// the same inner-txn group; each helper txn `gloadss` its
-		// chunk from txn 0 and emits it as its own log.
+		// Payload = 4 B prefix + retSize. ≤1024 B (localnet-confirmed log cap):
+		// single `log`. Otherwise stash chunks 1..N-1 to scratch slots 100..100+N-2;
+		// caller invokes `__big_return_helper` per chunk (gloadss txn 0 + log).
 		int retSize = staticEncodedSize(_sub.returnType);
 		int totalSize = 4 + retSize;
 		constexpr int kChunkSize = 1024;
@@ -486,9 +441,8 @@ std::shared_ptr<awst::Block> buildHelperApprovalBody(
 				body->body.push_back(awst::makeExpressionStatement(
 					std::move(logCall), _loc));
 			}
-			// Stash chunks 1..N-1 to scratch slots kChunkBaseSlot+0..N-2.
-			// `__big_return_helper` (sibling inner txn) will gloadss each
-			// from this txn's scratch to emit them as its own log.
+			// Stash chunks 1..N-1 to scratch slots kChunkBaseSlot+0..N-2;
+			// each `__big_return_helper` sibling inner-txn gloadss and logs it.
 			for (int i = 1; i < chunks; ++i)
 			{
 				int off = i * kChunkSize;
@@ -532,7 +486,7 @@ std::shared_ptr<awst::Block> buildTrivialClearBody(
 	return body;
 }
 
-/// Build the helper Contract that wraps a single pure Subroutine.
+/// Build the helper Contract wrapping a single pure Subroutine.
 std::shared_ptr<awst::Contract> buildHelperContract(
 	awst::Subroutine const& _sub,
 	std::string const& _helperId,
@@ -566,9 +520,8 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 	return contract;
 }
 
-/// Build the inner-txn ApplicationCall expression that REPLACES a
-/// SubroutineCallExpression at the call site. Returns an Expression
-/// whose wtype matches the helper's return type — drop-in.
+/// Build the inner-txn ApplicationCall expression replacing a
+/// SubroutineCallExpression. Returns an Expression with matching wtype.
 std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	std::string const& _templateVar,
 	std::string const& _sig,
@@ -600,10 +553,8 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 		std::to_string(TxnTypeAppl), _loc);
 	create->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
 	create->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
-	// AWST convention (mirrors UrosSplitter): include the TMPL_
-	// prefix in the AWST name. main.cpp's intTemplateVars uses the
-	// prefix-stripped form, which puya re-prefixes via
-	// template_vars_prefix when building options.template_variables.
+	// Include TMPL_ prefix per UrosSplitter convention; main.cpp strips it
+	// for intTemplateVars, puya re-adds via template_vars_prefix.
 	create->fields["ApplicationID"] = awst::makeTemplateVar(
 		"TMPL_" + _templateVar, awst::WType::uint64Type(), _loc);
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
@@ -620,15 +571,12 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 		&s_applTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
 
-	// Chunked-return case: append N-1 `__big_return_helper()` inner
-	// txns to the same inner-txn group. Each helper-txn `gloadss`es
-	// its assigned chunk from txn 0's scratch (slot 99 + GroupIndex)
-	// and emits it as its own LastLog. The caller then concatenates
-	// `gitxn 0..N-1 LastLog` to recover the full ABI-encoded return.
+	// Chunked-return: append N-1 `__big_return_helper()` inner txns.
+	// Each gloadss its chunk from txn 0's scratch (slot 99+GroupIndex)
+	// and emits it as LastLog; caller concats gitxn 0..N-1 LastLog.
 	if (chunks > 1)
 	{
-		// Helper inner-txn args: just the helper selector. No data
-		// args — the chunk is fetched by groupIndex from txn 0.
+		// Helper args: just the selector; chunk fetched via groupIndex from txn 0.
 		auto helperArgs = awst::makeTupleExpression(nullptr, _loc);
 		helperArgs->items.push_back(selectorConst(kBigReturnHelperSig, _loc));
 		std::vector<awst::WType const*> helperArgTypes;
@@ -647,8 +595,7 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 			helperCreate->fields["OnCompletion"] = awst::makeIntegerConstant("0", _loc);
 			helperCreate->fields["ApplicationID"] = awst::makeTemplateVar(
 				"TMPL_" + _templateVar, awst::WType::uint64Type(), _loc);
-			// Re-clone the args tuple per inner txn (puya
-			// disallows shared sub-AST in itxns field map).
+			// Clone per inner txn — puya disallows shared sub-AST in itxns.
 			auto haCopy = awst::makeTupleExpression(helperArgs->wtype, _loc);
 			haCopy->items.push_back(selectorConst(kBigReturnHelperSig, _loc));
 			helperCreate->fields["ApplicationArgs"] = std::move(haCopy);
@@ -671,17 +618,11 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 	else
 	{
 		// 1024 B+ payload: stitch chunks via gitxn i LastLog concats.
-		// For totalSize ≤ 4096 B this materialises as one stack value
-		// and decodes normally. For totalSize > 4096 B (e.g. Honk's
-		// Proof at 14080 B) the concat result exceeds AVM's max
-		// bytes-per-stack-element (4096 B) and would fail at runtime —
-		// the proper fix is to write each chunk into the EVM memory
-		// blob and route field reads through mload, replacing this
-		// CommaExpression with a Block that emits prePending
-		// statements and returns a memory pointer. See
-		// `[[rust-honk-status]]` for the design. We compile the naive
-		// concat in the meantime; main now fits but loadProof runtime
-		// is unverified pending the redesign.
+		// ≤4096 B decodes as one stack value. >4096 B (e.g. Honk Proof at 14080 B)
+		// exceeds AVM max bytes-per-stack-element and fails at runtime —
+		// fix: write each chunk to EVM memory blob and route reads through mload
+		// (see [[rust-honk-status]]). Naive concat compiled for now; loadProof
+		// runtime unverified pending the redesign.
 		auto pickLog = [&](int idx) -> std::shared_ptr<awst::Expression>
 		{
 			auto c = awst::makeIntrinsicCall(
@@ -696,24 +637,18 @@ std::shared_ptr<awst::Expression> buildInnerCallReplacement(
 		decoded = decodeArgFromBytes(std::move(strip), _retType, _loc);
 	}
 
-	// (submit, decode) sequencing via CommaExpression so the whole
-	// thing is one expression slot the original SubroutineCall site
-	// can be drop-in replaced with.
+	// CommaExpression sequences (submit, decode) as a single expression slot,
+	// drop-in replacing the original SubroutineCall site.
 	auto comma = awst::makeCommaExpression(_retType, _loc);
 	comma->expressions.push_back(std::move(submit));
 	comma->expressions.push_back(std::move(decoded));
 	return comma;
 }
 
-/// Multi-piece variant of `buildInnerCallReplacement`: when a pure
-/// helper has been pre-sliced via `--pure-helper-split`, each piece is
-/// its own deployed sidecar Contract and the call becomes one inner-txn
-/// group with M piece-calls in sequence. State threads between pieces
-/// via FunctionSplitter's scratch-slot-100 + gload prologue (the
-/// pieces' bodies were emitted with `crossChunk=true,
-/// prevCallStride=1`). Chunked-return helpers (when the final piece's
-/// return exceeds 1024 B) attach to the same group, hitting the last
-/// piece's sidecar.
+/// Multi-piece variant of `buildInnerCallReplacement` for `--pure-helper-split`.
+/// Each piece is its own sidecar; call becomes an inner-txn group of M pieces.
+/// State threads via scratch-slot-100 + gload (crossChunk=true, prevCallStride=1).
+/// Chunked-return helpers attach to the same group at the last piece's sidecar.
 std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 	std::vector<std::tuple<std::string, std::string,
 		std::vector<std::shared_ptr<awst::Expression>>,
@@ -767,10 +702,8 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 
 	if (returnChunks > 1)
 	{
-		// Append (returnChunks - 1) helper inner txns hitting the LAST
-		// piece's sidecar, mirroring the single-piece chunked-return
-		// path. They `gloadss` chunk i from the last piece's scratch
-		// (slot 99 + GroupIndex within this inner group).
+		// Append returnChunks-1 helper txns at the last piece's sidecar
+		// (mirrors single-piece path); each gloadss chunk i (slot 99+GroupIndex).
 		for (int i = 1; i < returnChunks; ++i)
 		{
 			auto helperArgs = awst::makeTupleExpression(nullptr, _loc);
@@ -796,9 +729,8 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 	if (!_retType || _retType == awst::WType::voidType())
 		return submit;
 
-	// Read the LAST piece's logged return — chunk 0 sits at gitxn
-	// (basePieces - 1) LastLog; chunks 1..N-1 at gitxn (basePieces
-	// + i - 1) LastLog.
+	// Last piece's return: chunk 0 at gitxn(basePieces-1) LastLog,
+	// chunks 1..N-1 at gitxn(basePieces+i-1) LastLog.
 	auto pickLog = [&](int idx) -> std::shared_ptr<awst::Expression>
 	{
 		auto c = awst::makeIntrinsicCall("gitxn", awst::WType::bytesType(), _loc);
@@ -819,14 +751,10 @@ std::shared_ptr<awst::Expression> buildChainedInnerCallReplacement(
 	return comma;
 }
 
-/// True if a node represents a side-effect from the caller's POV: any
-/// state read/write, log, inner-txn submit, asset-holding query, etc.
-/// Sidecars don't share storage with the main contract, so a helper
-/// that reads/writes state can't safely be lifted (it'd hit the
-/// sidecar's empty state instead of the main app's). Same for logs
-/// (caller can't see logs emitted by sidecars except via LastLog),
-/// inner txns (extra side effects observable by the caller), and
-/// asset-holding/app-params queries (depend on the running app's id).
+/// True if `_e` has a side effect that makes it unsafe to lift into a sidecar:
+/// state access (sidecar has empty storage, not the main app's), logs (only
+/// LastLog visible to caller), inner txns, or asset/app-params queries
+/// (depend on running app id).
 bool isSideEffectful(awst::Expression const& _e)
 {
 	using namespace awst;
@@ -1065,35 +993,15 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 	Result out;
 	(void)_splitSpecs;  // overridden below; keep silenced for unused-warning-cleanliness
 
-	// Pass 1: identify pure subroutines that are candidates for
-	// extraction. Skip stubs / those whose return type doesn't fit
-	// through `LastLog`, then apply a call-count-aware lift gate.
+	// Pass 1: identify pure sub candidates. Skip stubs / non-LastLog-fitting
+	// returns, then apply a lift gate.
 	//
-	// Lift accounting:
-	//   BEFORE lift: body_bytes inlined into every chunk that reaches
-	//                the sub  →  body_bytes × N_chunks
-	//   AFTER lift:  body_bytes lives in the sidecar (1 copy + helper
-	//                approval skeleton), every call site pays itxn
-	//                machinery (begin / 5 field / submit / LastLog /
-	//                extract / decode) ≈ 49 B, +helper_overhead ≈ 200 B
-	//                fixed
-	// Lift wins iff:
-	//   (N_chunks − 1) × body_bytes > kHelperOverhead + total_calls × 49
-	//
-	// We don't know N_chunks (UrosSplitter runs after this pass). We
-	// approximate it as N_methods_reaching_sub: the count of distinct
-	// ABI methods whose body transitively invokes the sub. This is an
-	// upper bound on N_chunks (bin-packing only collapses methods into
-	// a chunk, never expands), so it errs on the side of lifting more
-	// — but the floor on body_bytes prevents pathological lifts.
-	// Body floor: smaller and the chunk-shrink win never beats the
-	// single-itxn-call cost (body − 100). 300 B is the rough break-even
-	// (above that, removing the body from a chunk and replacing 1
-	// callsub with 1 itxn dance still nets bytes).
+	// Lift wins iff (N_chunks−1)×body_bytes > kHelperOverhead + calls×49.
+	// N_chunks is approximated as N_methods_reaching_sub (upper bound;
+	// bin-packing only collapses, never expands) — errs toward lifting more,
+	// but kMinBodyBytes (300 B break-even) prevents pathological lifts.
+	// kItxnOverhead (~100 B) measured empirically for 2-arg uint256 helpers.
 	constexpr int kMinBodyBytes = 300;
-	// Empirically measured itxn-dance per call site: ~100 B for 2-arg
-	// uint256 helpers (selector push + 5 itxn_field + per-arg biguint
-	// encode + LastLog + extract + decode). Rises with arg count.
 	constexpr int kItxnOverhead = 100;
 	constexpr int kHelperOverhead = 200;
 	auto callGraph = buildStaticCallGraph(_roots);
@@ -1104,10 +1012,8 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r))
 			subById[sub->id] = sub;
 
-	// Transitive liftability: a sub can be lifted iff its body has no
-	// side-effect ops AND every transitively-called sub is also
-	// liftable. Memoized; cycles default to optimistic-true (the
-	// non-cycle work will catch real side-effects).
+	// Transitive liftability: no side-effect ops in body AND all callees
+	// also liftable. Memoized; cycles default optimistic-true.
 	std::map<std::string, bool> liftableMemo;
 	std::function<bool(std::string const&)> isLiftableTransitive =
 		[&](std::string const& subId) -> bool
@@ -1118,10 +1024,7 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		auto sit = subById.find(subId);
 		if (sit == subById.end())
 		{
-			// Callee isn't a known Subroutine root — could be a stub,
-			// external, or AWST node we don't track. Be conservative:
-			// treat as unsafe so we don't lift a sub that calls into
-			// unknown territory.
+			// Unknown callee (stub / external / untracked) — treat as unsafe.
 			liftableMemo[subId] = false;
 			return false;
 		}
@@ -1144,11 +1047,8 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 	{
 		auto sub = std::dynamic_pointer_cast<awst::Subroutine>(r);
 		if (!sub || !sub->body) continue;
-		// Accept Solidity-pure subs (fast path) AND any sub that's
-		// transitively side-effect-free by AWST walk. The latter
-		// covers internal/view helpers that don't actually touch
-		// storage, logs, or inner txns even though they're not marked
-		// `pure` in source.
+		// Accept Solidity-pure (fast path) or transitively side-effect-free
+		// by AWST walk (covers view/internal helpers not marked pure).
 		if (!sub->pure && !isLiftableTransitive(sub->id)) continue;
 		if (sub->returnType && sub->returnType != awst::WType::voidType())
 		{
@@ -1162,15 +1062,12 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 					"chunked-log support.");
 				continue;
 			}
-			// 4 B ABI return prefix + payload. Caller materialises the
-			// concatenated chunks as one stack value, capped at the AVM
-			// max bytes-per-stack-element (4096 B).
+			// 4 B prefix + payload; caller concats chunks as one stack value
+			// (AVM max bytes-per-element = 4096 B).
 			int totalSize = 4 + retSize;
-			// EXPERIMENT: lift the 4096 B gate to see what puya does.
-			// If the puya pipeline materialises the concat into a
-			// memory blob (matching `Proof memory` semantics), we win.
-			// If it errors with "stack element too large", we'll need
-			// the explicit chunked-decode + per-chunk mstore approach.
+			// EXPERIMENT: 4096 B gate lifted to test if puya materialises the
+			// concat into a memory blob. If "stack element too large", will need
+			// chunked-decode + per-chunk mstore.
 			(void)totalSize;
 		}
 
@@ -1178,17 +1075,10 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		int callSites = countCallSites(_roots, sub->id);
 		int reachingMethods = callGraph.countReachingMethods(sub->id);
 
-		// Lift gate — chunk-shrink criterion:
-		//   1. Body must be substantial (≥ kMinBodyBytes) so the lift
-		//      pays for the helper-Contract deploy overhead.
-		//   2. Body bytes must dominate per-call itxn overhead so that
-		//      even if all calls localize to one chunk, that chunk
-		//      doesn't grow:  body_bytes ≥ kItxnOverhead × call_sites.
-		// This is more permissive than a global-savings check (which
-		// requires N_chunks ≥ 2 to ever win): we accept some lifts that
-		// inflate the total bytecode footprint by ~helper_overhead/sub
-		// in exchange for shrinking the largest chunk. That's the
-		// tradeoff we want when chunks bump against the 8 KB cap.
+		// Lift gate: body ≥ kMinBodyBytes AND body ≥ kItxnOverhead×calls.
+		// More permissive than a global-savings check; accepts lifts that
+		// inflate total footprint by ~helper_overhead to shrink the largest
+		// chunk (the tradeoff we want near the 8 KB cap).
 		(void)kHelperOverhead;
 		(void)reachingMethods;
 		if (callSites == 0) continue;
@@ -1223,20 +1113,15 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		return out;
 	}
 
-	// Pass 1.5: apply user-supplied --pure-helper-split for the lifted
-	// Subs that won't fit in one 8 KB sidecar. FunctionSplitter slices
-	// each named Sub into N+1 pieces; we then deploy each piece as its
-	// own one-method sidecar Contract and chain them at the call site
-	// via an inner-txn group with `gload`-based live-vars threading
-	// (slot 100).
+	// Pass 1.5: apply --pure-helper-split for lifted Subs too large for one
+	// 8 KB sidecar. FunctionSplitter slices into N+1 pieces; each is its own
+	// sidecar, chained via inner-txn group with gload live-vars (slot 100).
 	std::map<std::string, std::vector<size_t>> splitByName;
 	for (auto const& s : _splitSpecs)
 		splitByName[s.subroutineName] = s.splitPoints;
 
-	// originalSubId → vector of piece sub pointers. For unsplit Subs,
-	// vector has one entry: the original sub itself. For split Subs,
-	// vector has N+1 entries: the FunctionSplitter-emitted pieces in
-	// order (piece_0..piece_{N}).
+	// originalSubId → piece sub pointers. Unsplit: one entry (original).
+	// Split: N+1 entries (FunctionSplitter-emitted pieces, in order).
 	std::map<std::string, std::vector<std::shared_ptr<awst::Subroutine>>> piecesBySubId;
 	for (auto const& sub : pureSubs)
 	{
@@ -1262,13 +1147,11 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 			piecesBySubId[sub->id] = {sub};
 			continue;
 		}
-		// FunctionSplitter pushes pieces onto _roots. Pull the ones
-		// belonging to this sub by name-prefix match.
+		// Pull pieces from _roots by name-prefix; sort by __piece_N suffix
+		// (emitted in order, but sort defensively).
 		std::vector<std::shared_ptr<awst::Subroutine>> pieces;
 		for (auto const& nr : sr.newSubroutines)
 			pieces.push_back(nr);
-		// Sort pieces by their name's __piece_N suffix (FunctionSplitter
-		// emits them in order, but be defensive).
 		std::sort(pieces.begin(), pieces.end(),
 			[](auto const& a, auto const& b) { return a->name < b->name; });
 		piecesBySubId[sub->id] = std::move(pieces);
@@ -1278,8 +1161,7 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 	}
 
 	// Pass 2: build helper Contracts and call-site replacement table.
-	// Per-piece tracking — a split Sub yields N+1 ExtractedHelper
-	// entries, one sidecar per piece.
+	// A split Sub yields N+1 ExtractedHelper entries, one sidecar per piece.
 	struct PieceInfo {
 		std::string templateVar;
 		std::string helperContractId;
@@ -1327,12 +1209,9 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 			out.helperContracts.push_back(
 				buildHelperContract(*pi.sub, pi.helperContractId, pi.sig));
 
-	// Pass 4: walk every body in every NON-helper root and rewrite
-	// SubroutineCall(SubroutineID(extracted_id), ...) sites. For
-	// unsplit Subs (pieces.size()==1) that's a single inner-app-call;
-	// for split Subs it's a chained inner-txn group of M piece-calls
-	// with the original args on piece 0 and the chunked-return helpers
-	// hung off the last piece.
+	// Pass 4: rewrite SubroutineCall(SubroutineID(extracted_id),...) in all
+	// non-helper roots. Unsplit: single inner-app-call. Split: chained
+	// inner-txn group (args on piece 0, chunked-return helpers at last piece).
 	std::set<std::string> allPieceIds;
 	for (auto const& [_, infos] : bySubId)
 		for (auto const& pi : infos)
@@ -1361,11 +1240,9 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 				pi.templateVar, pi.sig, std::move(args), argTypes,
 				sce->wtype, sce->sourceLocation);
 		}
-		// Multi-piece: build chained inner-txn group. Args go to piece 0.
-		// Pieces 1..M-1 are invoked with empty args (their bodies start
-		// with the gload prologue that pulls live vars from the previous
-		// txn's scratch slot 100). The chunked-return helpers attach to
-		// the LAST piece's sidecar (since that's where the chunks live).
+		// Multi-piece: args to piece 0; pieces 1..M-1 empty args (gload
+		// prologue reads live vars from prev txn's scratch slot 100);
+		// chunked-return helpers attach to last piece's sidecar.
 		std::vector<std::tuple<std::string, std::string,
 			std::vector<std::shared_ptr<awst::Expression>>,
 			std::vector<awst::WType const*>>> pieceCalls;
@@ -1391,8 +1268,7 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 	{
 		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(root))
 		{
-			// Don't rewrite inside an extracted Sub's own body — that
-			// body still lives on as the helper Contract's callable.
+			// Skip extracted subs — their body remains as the helper's callable.
 			if (bySubId.count(sub->id)) continue;
 			if (sub->body) walkBlock(*sub->body, rewriteFn);
 		}
@@ -1407,10 +1283,9 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		}
 	}
 
-	// Pass 5: PREPEND helper Contracts to roots. UrosSplitter picks
-	// the LAST Contract as the primary (the user's main contract); we
-	// don't want a helper to displace it. Pure Subroutines stay in
-	// roots — per-Contract DCE handles which contexts retain them.
+	// Pass 5: prepend helpers to roots. UrosSplitter picks the LAST Contract
+	// as primary; prepending keeps helpers from displacing it.
+	// Subs stay in roots — per-Contract DCE drops them from non-helper contexts.
 	_roots.insert(_roots.begin(), out.helperContracts.begin(), out.helperContracts.end());
 
 	out.didExtract = true;

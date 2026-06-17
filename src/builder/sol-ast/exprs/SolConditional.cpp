@@ -20,33 +20,22 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	auto e = std::make_shared<awst::ConditionalExpression>();
 	e->sourceLocation = m_loc;
 
-	// Build condition. If it has side effects (AssignmentExpression),
-	// emit the side effect as a statement so it executes even if the
-	// enclosing expression is discarded (e.g., (flag=true ? a : b).selector).
 	e->condition = buildExpr(m_conditional.condition());
 	if (dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
 	{
-		// A side-effecting condition (e.g. `(x = f()) ? a : b`) must run once.
-		// We emit it as a pre-pending statement so the side effect lands in the
-		// body even if the whole ternary is discarded (e.g. `(x=f()?a:b).selector`),
-		// AND keep it as the ConditionalExpression condition (it evaluates to the
-		// assigned value). Both positions reference the SAME node — without a
-		// SingleEvaluation wrapper that meant the assignment (and its `f()`) ran
-		// TWICE (verified: `(x=f())?10:20` gave 20/cnt=2 instead of 10/cnt=1).
-		// Wrap once so the backend evaluates the source a single time and reuses
-		// the cached value for the condition.
+		// Side-effecting condition `(x=f()) ? a : b`: emit as pre-statement so
+		// the side effect lands even if the ternary is discarded (e.g. `.selector`).
+		// makeEvalOnce prevents running twice — without it `(x=f())?10:20` gave
+		// 20/cnt=2 (verified).
 		e->condition = awst::makeEvalOnce(e->condition, m_loc);
 		auto stmt = awst::makeExpressionStatement(e->condition, m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(stmt));
 	}
 
-	// Snapshot prePendingStatements size before each branch so we can
-	// detect any branch-local side-effect statements (e.g. the
-	// square-and-multiply loop emitted by `**`, `new C()` inner txns,
-	// `arr.push() = x` rewrites). Side-effect statements from a branch
-	// must NOT escape into the outer scope unconditionally — they have to
-	// run only when their branch fires. We move them into `if (cond) {…}
-	// else {…}` blocks below.
+	// Snapshot prePending size before each branch to detect branch-local side
+	// effects (e.g. `**` square-and-multiply loop, `new C()` inner txns,
+	// `arr.push() = x`). Branch side effects must not escape unconditionally;
+	// we gate them in if/else blocks below.
 	auto preBeforeTrue = m_ctx.prePendingStatements.size();
 	e->trueExpr = buildExpr(m_conditional.trueExpression());
 	std::vector<std::shared_ptr<awst::Statement>> trueSideEffects;
@@ -102,10 +91,8 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	e->trueExpr = coerceBranch(std::move(e->trueExpr));
 	e->falseExpr = coerceBranch(std::move(e->falseExpr));
 
-	// If either branch had side-effect statements, materialise the result
-	// into a temp var and gate the side-effect statements behind the
-	// branch's condition. The expression we hand back is then a read of
-	// the temp var, so the surrounding scope sees no leaked statements.
+	// Either branch had side effects: materialise the result in a temp var
+	// and gate the side effects behind the branch condition.
 	if (!trueSideEffects.empty() || !falseSideEffects.empty())
 	{
 		static int s_counter = 0;

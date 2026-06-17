@@ -21,7 +21,6 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	InstanceBuilder& _other, BuilderBinaryOp _op,
 	awst::SourceLocation const& _loc, bool _reverse)
 {
-	// Only handle bitwise ops on bytes-backed types
 	bool isBitwiseOp = (_op == BuilderBinaryOp::BitOr
 		|| _op == BuilderBinaryOp::BitXor
 		|| _op == BuilderBinaryOp::BitAnd);
@@ -54,24 +53,18 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 	InstanceBuilder& _other, BuilderComparisonOp _op,
 	awst::SourceLocation const& _loc)
 {
-	// Accept other bytes-backed or account types
 	bool otherIsBytes = _other.wtype() && _other.wtype()->kind() == awst::WTypeKind::Bytes;
 	bool otherIsAccount = _other.wtype() == awst::WType::accountType();
 	if (!otherIsBytes && !otherIsAccount)
 		return nullptr;
 
-	// Equality/inequality: BytesComparisonExpression
 	if (_op == BuilderComparisonOp::Eq || _op == BuilderComparisonOp::Ne)
 	{
 		auto lhs = resolve();
 		auto rhs = _other.resolve();
 
-		// EVM stores bytesN as 32-byte words, left-aligned. Comparing
-		// bytes3("abc") to bytes4("abc") is true on EVM because both
-		// pad to "abc + zeros" in 32-byte form. On AVM our BytesConstants
-		// hold N raw bytes, so a 3-byte vs 4-byte comparison is always
-		// false. Right-pad any literal whose underlying constant is
-		// shorter than the other side so the byte-level == matches EVM.
+		// EVM bytesN: 32-byte left-aligned; bytes3("abc")==bytes4("abc") is true.
+		// AVM constants are N raw bytes, so right-pad shorter literals to match.
 		auto padConstant = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
 			auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get());
 			if (!bc) return;
@@ -97,7 +90,6 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 			padConstant(rhs, common);
 		}
 
-		// Coerce to same wtype if needed
 		auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 			if (expr->wtype != awst::WType::bytesType()
 				&& expr->wtype != awst::WType::accountType())
@@ -118,7 +110,6 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 		return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
 	}
 
-	// Ordering: use AVM b</b>/b<=/b>= intrinsics
 	std::string opCode;
 	switch (_op)
 	{
@@ -138,7 +129,6 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	// bytes != zero_bytes (or == if negated)
 	auto zero = awst::makeBytesConstant(
 		std::vector<uint8_t>(m_numBytes, 0), _loc, awst::BytesEncoding::Base16,
 		m_expr->wtype); // same bytes[N] type

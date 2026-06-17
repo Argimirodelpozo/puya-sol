@@ -1,8 +1,6 @@
 /// @file SolAssignment.cpp
-/// Top-level assignment translator. Dispatches through a named pipeline
-/// of phases (try*/apply*) — each phase's body lives further down in
-/// this file. Shape-specific handlers (tuple, struct-field, bytes-elem,
-/// storage-pointer reassign, etc.) live in sibling SolAssignment*.cpp.
+/// Top-level assignment translator (try*/apply* pipeline).
+/// Shape-specific handlers live in sibling SolAssignment*.cpp.
 
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
@@ -28,16 +26,11 @@ SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node)
 {
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// toAwst — orchestrator. The implicit pipeline:
-//   (1) LHS-shape early-outs that don't even need buildExpr (transient
-//       state, storage-pointer reassign, multi-box write, push-assign)
+// toAwst pipeline:
+//   (1) Pre-buildExpr early-outs (transient, storage-ptr, multi-box, push-assign)
 //   (2) Build target + value
-//   (3) Per-shape early-outs that consume target/value (enum check, slot
-//       writes, tuple decomp, bytes-elem, struct field, named tuple)
-//   (4) Generic finalization: compound op, type coercion, lvalue
-//       normalization, ARC4 encode, box pre-populate, emit assignment
-// ─────────────────────────────────────────────────────────────────────
+//   (3) Per-shape early-outs (enum check, slot writes, tuple, bytes-elem, struct/WTuple)
+//   (4) Generic finalization (compound op, coerce, lvalue norm, ARC4 encode, box pre-populate)
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
@@ -49,8 +42,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleBlobAggregateWrite())      return std::move(*r);
 	if (auto r = tryHandlePushAssignRewrite(op))     return std::move(*r);
 
-	// (2) Build target + value (`tryHandlePushAssignRewrite` would have
-	// done LHS build itself and returned the ArrayExtend if it claimed).
+	// (2) Build target + value (if tryHandlePushAssignRewrite claimed, it already returned).
 	auto target = buildExpr(m_assignment.leftHandSide());
 	auto value = buildExpr(m_assignment.rightHandSide());
 
@@ -71,18 +63,11 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	return awst::makeAssignmentExpression(std::move(target), std::move(value), m_loc);
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// Phase implementations
-// ─────────────────────────────────────────────────────────────────────
-
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandlePushAssignRewrite(Token _op)
 {
-	// `arr.push() = value` shape: Solidity's arg-less push returns a
-	// reference to the new slot. Since we don't model references, stash
-	// the RHS as `pendingArrayPushValue` BEFORE the LHS build, so
-	// SolArrayMethod::push folds it into the ArrayExtend instead of
-	// emitting a default-valued push + VoidConstant.
+	// `arr.push() = value`: stash RHS as pendingArrayPushValue before LHS build so
+	// SolArrayMethod::push folds it into ArrayExtend (we don't model Solidity refs).
 	if (_op != Token::Assign) return std::nullopt;
 	auto const* lhsCall = dynamic_cast<FunctionCall const*>(&m_assignment.leftHandSide());
 	if (!lhsCall || !lhsCall->arguments().empty()) return std::nullopt;
@@ -92,8 +77,7 @@ SolAssignment::tryHandlePushAssignRewrite(Token _op)
 	m_ctx.pendingArrayPushValue = buildExpr(m_assignment.rightHandSide());
 	auto target = buildExpr(m_assignment.leftHandSide());
 	m_ctx.pendingArrayPushValue.reset();
-	// `target` is now the ArrayExtend expression emitted by SolArrayMethod.
-	return target;
+	return target; // ArrayExtend emitted by SolArrayMethod
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
@@ -111,9 +95,8 @@ SolAssignment::tryHandleBlobAggregateWrite()
 	if (!off)
 		return std::nullopt;
 
-	// Struct/array copy into a blob field: write the value's bytes word-by-word
-	// (each via writeMemWordDirect). Honk's G1Point = 2 uint256 (64 B, word
-	// aligned); only 32-byte-aligned aggregates are handled here.
+	// Struct/array copy: write word-by-word via writeMemWordDirect.
+	// Only 32-byte-aligned aggregates (e.g. Honk G1Point = 2×uint256 = 64 B).
 	if (dynamic_cast<ArrayType const*>(lhsType) || dynamic_cast<StructType const*>(lhsType))
 	{
 		int sz = builder::computeEncodedElementSize(m_ctx.typeMapper.map(lhsType));
@@ -144,19 +127,16 @@ SolAssignment::tryHandleBlobAggregateWrite()
 			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc));
 	}
 
-	// Materialise the rhs once (may have side effects); the value is the
-	// assignment expression's result.
+	// Materialise rhs; coerce to biguint so asBytes gives a valid 32-byte pad
+	// (uint256/Fr stored as a full 32-byte EVM-memory word).
 	auto v = buildExpr(m_assignment.rightHandSide());
-	// Canonicalise the value to biguint (256-bit) so the 32-byte big-endian pad
-	// is valid (asBytes requires biguint/bytes, not uint64). Matches how a
-	// uint256/Fr element is stored as a full 32-byte EVM-memory word.
 	v = builder::TypeCoercion::implicitNumericCast(
 		std::move(v), awst::WType::biguintType(), m_loc);
 	std::string vN = "__blobassign_v_" + std::to_string(m_assignment.id());
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), std::move(v), m_loc));
 
-	// pad to exactly 32 big-endian bytes, then write the blob word.
+	// Pad to exactly 32 big-endian bytes and write the blob word.
 	auto vbytes = awst::makeExtractLastN(
 		awst::makeLeftPad(awst::makeAsBytes(
 			awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), m_loc), 32, m_loc), 32, m_loc);
@@ -170,8 +150,7 @@ SolAssignment::tryHandleBlobAggregateWrite()
 std::shared_ptr<awst::Expression>
 SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Token _op)
 {
-	// EVM panics (0x21) on assigning out-of-range enum values. Pre-emit
-	// an assert if LHS is an enum type.
+	// EVM panic 0x21 on out-of-range enum assign; pre-emit assert.
 	if (_op != Token::Assign) return _value;
 	auto const* lhsType = m_assignment.leftHandSide().annotation().type;
 	auto const* enumType = dynamic_cast<EnumType const*>(lhsType);
@@ -189,9 +168,8 @@ SolAssignment::trySlotBasedArrayWrite(
 	std::shared_ptr<awst::Expression> const& _target,
 	std::shared_ptr<awst::Expression> const& _value)
 {
-	// Slot-based storage write: target is biguint (slot offset), value
-	// is a static-sized array. Expand to per-element
-	// `__storage_write(slot + j, value[j])` calls.
+	// Slot-based array write: target is biguint slot offset, expand to
+	// per-element __storage_write(slot+j, value[j]).
 	if (_op != Token::Assign || _target->wtype != awst::WType::biguintType()) return std::nullopt;
 	auto const* lhsType = m_assignment.leftHandSide().annotation().type;
 	auto const* arrType = lhsType ? dynamic_cast<ArrayType const*>(lhsType) : nullptr;
@@ -245,8 +223,7 @@ SolAssignment::trySlotBasedScalarWrite(
 	std::shared_ptr<awst::Expression> const& _target,
 	std::shared_ptr<awst::Expression>& _value)
 {
-	// Scalar slot-based storage write: target is a computed biguint slot.
-	// Emit `__storage_write(btoi(slot), value)` directly.
+	// Scalar slot-based write: emit __storage_write(btoi(slot), value).
 	if (!dynamic_cast<awst::BigUIntBinaryOperation const*>(_target.get())
 		|| _target->wtype != awst::WType::biguintType())
 		return std::nullopt;
@@ -315,7 +292,7 @@ SolAssignment::tryStructOrNamedTupleFieldAssignment(
 	auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(unwrappedTarget.get());
 	if (!fieldExpr) return std::nullopt;
 
-	// ARC4Struct field: copy-on-write write-back.
+	// ARC4Struct field: copy-on-write.
 	auto const* arc4StructType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
 	if (!arc4StructType)
 		if (auto const* sg = dynamic_cast<awst::StateGet const*>(fieldExpr->base.get()))
@@ -323,8 +300,7 @@ SolAssignment::tryStructOrNamedTupleFieldAssignment(
 	if (arc4StructType)
 		return handleStructFieldAssignment(fieldExpr, std::move(_value), unwrappedTarget);
 
-	// Named-WTuple field assignment: `t.field = v` where t is a WTuple
-	// with named members (return-tuple style).
+	// Named-WTuple field assignment (`t.field = v`, return-tuple style).
 	auto const* tupleType = dynamic_cast<awst::WTuple const*>(fieldExpr->base->wtype);
 	if (!tupleType || !tupleType->names().has_value()) return std::nullopt;
 
@@ -362,16 +338,10 @@ SolAssignment::applyCompoundAssignment(
 {
 	if (_op == Token::Assign) return _value;
 
-	// Reuse the ALREADY-BUILT target for the current-value read instead of
-	// rebuilding the LHS. A rebuild re-runs the builder on a side-effecting
-	// index/key (e.g. `arr[i++] += 5`), evaluating it twice — the read would
-	// see one element and the write land on another, and the index would bump
-	// twice (verified: `arr[i++] += 5` gave i==2). The built target is the read
-	// form (a bare BoxValue for storage); wrap it in StateGet so the read picks
-	// up the stored value (or default). For a non-side-effecting LHS this is
-	// identical to the old rebuild — the location subtree simply duplicates on
-	// serialization, exactly as two separate builds would. makeWritableTarget
-	// on the same node (in toAwst) still yields the write target.
+	// Reuse the already-built target to avoid re-evaluating a side-effecting
+	// index (e.g. `arr[i++] += 5` gave i==2 when LHS was rebuilt). The built
+	// target is the read form; wrap BoxValue in StateGet to read the stored value.
+	// makeWritableTarget in toAwst still yields the write target from the same node.
 	auto currentValue = _target;
 	if (dynamic_cast<awst::BoxValueExpression const*>(currentValue.get()))
 		currentValue = builder::StorageMapper::makeStateGetWithDefault(currentValue, currentValue->wtype, m_loc);
@@ -389,7 +359,7 @@ SolAssignment::applyAssignmentTypeCoercion(
 	std::shared_ptr<awst::Expression> _value,
 	std::shared_ptr<awst::Expression> const& _target)
 {
-	// Handles int→bytes[N], string→bytes, numeric casts.
+	// int→bytes[N], string→bytes, numeric casts.
 	_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), _target->wtype, m_loc);
 	if (_value->wtype != _target->wtype && _target->wtype
 		&& _target->wtype->kind() == awst::WTypeKind::Bytes)
@@ -438,19 +408,16 @@ SolAssignment::applyArc4EncodeIfNeeded(
 	}
 	if (!targetIsArc4) return _value;
 
-	// If value is already ARC4 with structurally matching type (pointers
-	// differ only because TypeMapper didn't intern), skip the redundant
-	// encode — it would otherwise double-encode an ARC4 aggregate.
+	// Skip encode if types match structurally (TypeMapper may not intern pointers;
+	// double-encoding would corrupt an ARC4 aggregate).
 	bool sameShape = _value->wtype->kind() == _target->wtype->kind()
 		&& _value->wtype->name() == _target->wtype->name();
 	if (sameShape) return _value;
 
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);
 
-	// Array element-wise widening: arc4.{static,dynamic}_array<arc4.intM, ...>
-	// → arc4.{static,dynamic}_array<arc4.intN, ...> with M < N has no
-	// puya codec. Pin source bytes to a temp (TypeCoercion would
-	// otherwise read it multiple times) and call into the helper.
+	// Array element-wise widening: arc4 array<intM> → arc4 array<intN> (M<N) has no
+	// puya codec. Pin source bytes to a temp and call the helper.
 	bool const sourceIsArc4Array =
 		_value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 		|| _value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
@@ -483,18 +450,16 @@ SolAssignment::applyArc4EncodeIfNeeded(
 		if (widened) return widened;
 	}
 
-	// Narrowing: uint64 → arc4.uintN where N < 64.
+	// Narrowing: uint64 → arc4.uintN (N < 64).
 	if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
 			_value, _target->wtype, m_loc))
 		return narrowed;
 
-	// Assigning a bytes/string VALUE to a dynamic ARC4 byte-array
-	// (arc4.string / arc4.dynamic_bytes / uint8[] / bool[]):
-	// makeARC4Encode(bytes, arc4.string) is rejected by the puya backend
-	// ("cannot encode bytes to (len+utf8[])"). The ARC4 encoding of a byte
-	// array is simply [uint16 len][raw bytes], so build it directly and
-	// reinterpret — e.g. `string[] s; s[0] = "hi"` whose element store hit
-	// this. (Inverse of the abi.encode string-element fix in encodeFromArc4Bytes.)
+	// bytes/string → dynamic ARC4 byte-array (arc4.string / arc4.dynamic_bytes / uint8[]):
+	// puya rejects makeARC4Encode(bytes, arc4.string) ("cannot encode bytes to (len+utf8[])").
+	// Build [uint16 len][raw bytes] directly and reinterpret.
+	// e.g. `string[] s; s[0] = "hi"` hits this path.
+	// (Inverse of the abi.encode string-element fix in encodeFromArc4Bytes.)
 	if (_target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 		&& (_value->wtype == awst::WType::bytesType()
 			|| (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes)))
@@ -517,13 +482,9 @@ void SolAssignment::maybePrePopulateBox(
 	std::shared_ptr<awst::Expression> const& _target)
 {
 	// Mapping-entry partial write: `m[k][i] = v` where m is `mapping(K => T[N])`
-	// or `mapping(K => bytes[N])`. The outer IndexExpression lowers to a
-	// box_replace on the per-entry key, but the per-entry box is only created
-	// lazily. Emit a box_create(key, total_size) as a pending pre-statement
-	// so the box exists before box_replace runs. Idempotent when the box
-	// already exists with the same size.
-	// Also handles nested field writes: `n[k][i].field = v` where target is a
-	// FieldExpression whose base chain resolves to IndexExpression-on-BoxValue.
+	// or `mapping(K => bytes[N])`. The per-entry box is lazy; emit box_create
+	// as a pre-statement so box_replace finds it. Idempotent on same size.
+	// Also handles `n[k][i].field = v` (FieldExpression chain rooted at IndexExpression-on-BoxValue).
 	awst::IndexExpression const* boxIdx = nullptr;
 	{
 		awst::Expression const* cur = _target.get();
@@ -551,13 +512,10 @@ void SolAssignment::maybePrePopulateBox(
 		|| !builder::StorageMapper::isMappingDerivedKey(bv->key.get()))
 		return;
 
-	// Static array of dynamic-content elements: a zero-filled box_create
-	// yields invalid ARC4 (head offsets all zero). Pre-populate with the
-	// proper default encoding so subsequent element splices have a valid
-	// head/tail layout to work with. Gate on `!box_exists(key)` so a
-	// subsequent assignment after the box has grown (e.g. via .push() loop)
-	// doesn't try to box_put the smaller default and trip
-	// "wrong size N != M".
+	// Dynamic-element static array: zero-filled box_create gives invalid ARC4
+	// (head offsets all zero). Pre-populate with proper default encoding.
+	// Gated on !box_exists so a grown box (e.g. via .push()) isn't truncated
+	// ("wrong size N != M").
 	bool dynamicArc4 = false;
 	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
 		dynamicArc4 = arc4IsDynamic(sa);
@@ -584,7 +542,7 @@ void SolAssignment::maybePrePopulateBox(
 		return;
 	}
 
-	// Static-sized scalar/bytes box: idempotent box_create at total_size.
+	// Static scalar/bytes box: idempotent box_create at total_size.
 	uint64_t totalSize = 0;
 	if (bv->wtype)
 	{

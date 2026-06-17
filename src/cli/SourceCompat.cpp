@@ -15,43 +15,39 @@ std::string transformSource(std::string const& _source)
 {
 	std::string result = _source;
 
-	// 1. Relax pragma version: "pragma solidity =0.5.16;" → "pragma solidity >=0.5.0;"
+	// 1. Relax pragma: "=0.5.16" → ">=0.5.0"
 	{
 		static std::regex const re(R"(pragma\s+solidity\s+[=^~><]*\s*(\d+\.\d+)\.\d+\s*;)");
 		result = std::regex_replace(result, re, "pragma solidity >=$1.0;");
 	}
 
-	// 2. Remove visibility from constructors: "constructor(...) public {" → "constructor(...) {"
-	//    In 0.5.x constructors had visibility; in 0.8.x this is a parser error.
+	// 2. Drop constructor visibility (0.5.x had it; 0.8.x parser error).
 	{
 		static std::regex const re(R"(constructor\s*\(([^)]*)\)\s+(?:public|internal)\s*\{)");
 		result = std::regex_replace(result, re, "constructor($1) {");
 	}
 
-	// 3. Replace type cast to max: "uint(-1)" → "type(uint256).max", "uint112(-1)" → "type(uint112).max"
-	//    In 0.5.x, uint(-1) was the idiom for max value; 0.8.x requires type(...).max
+	// 3. uint(-1) → type(uintN).max (0.5.x max-value idiom).
 	{
 		static std::regex const re(R"((uint\d*)\s*\(\s*-\s*1\s*\))");
 		result = std::regex_replace(result, re, "type($1).max");
 	}
 
-	// 4. Fix bare Yul builtins in assembly: "chainid" (not followed by "(") → "chainid()"
-	//    In 0.5.x Yul, chainid was a variable; in 0.8.x it must be called as a function.
-	//    Must NOT match "block.chainid" (0.8.x property access), only bare "chainid" in assembly.
-	//    C++ std::regex doesn't support lookbehind, so we use a manual replacement loop.
+	// 4. Bare Yul `chainid` → `chainid()` (was a variable in 0.5.x; must be called in 0.8.x).
+	//    Must NOT match block.chainid. std::regex has no lookbehind — manual loop.
 	{
 		std::string const needle = "chainid";
 		size_t pos = 0;
 		while ((pos = result.find(needle, pos)) != std::string::npos)
 		{
 			size_t endPos = pos + needle.size();
-			// Skip if preceded by '.' (e.g. block.chainid)
+			// Skip if preceded by '.' (block.chainid)
 			if (pos > 0 && result[pos - 1] == '.')
 			{
 				pos = endPos;
 				continue;
 			}
-			// Skip if already followed by '('
+			// Already has '('
 			size_t nextNonSpace = endPos;
 			while (nextNonSpace < result.size() && result[nextNonSpace] == ' ')
 				++nextNonSpace;
@@ -60,13 +56,13 @@ std::string transformSource(std::string const& _source)
 				pos = endPos;
 				continue;
 			}
-			// Check word boundary: character before must not be alphanumeric/underscore
+			// Word-boundary check.
 			if (pos > 0 && (std::isalnum(result[pos - 1]) || result[pos - 1] == '_'))
 			{
 				pos = endPos;
 				continue;
 			}
-			// Replace bare "chainid" with "chainid()"
+			// Append "()"
 			result.insert(endPos, "()");
 			pos = endPos + 2;
 		}
@@ -94,16 +90,14 @@ std::string removeInheritedEvents(
 
 	std::string result = _source;
 
-	// Find "contract X is Y {" sections and remove event declarations for events
-	// that exist in the inherited interfaces
+	// Remove event declarations that exist in inherited interfaces.
 	static std::regex const contractRe(R"(contract\s+\w+\s+is\s+)");
 	if (!std::regex_search(result, contractRe))
-		return result; // No inheritance, nothing to dedup
+		return result; // no inheritance
 
-	// Remove matching event declarations
 	for (auto const& eventName: _interfaceEvents)
 	{
-		// Match "event EventName(...) ;" with possible whitespace/newlines
+		// Match event decl with optional whitespace/newlines.
 		std::regex eventDeclRe(
 			"\\s*event\\s+" + eventName + "\\s*\\([^)]*\\)\\s*;[\\t ]*\\n?"
 		);
@@ -118,7 +112,7 @@ std::set<std::string> collectInterfaceEventsFromImports(
 {
 	std::set<std::string> interfaceEvents;
 
-	// Find import paths in the main source
+	// Scan relative imports in main source.
 	static std::regex const importRe(R"(import\s+['"](\.\/[^'"]+)['"]\s*;)");
 	auto it = std::sregex_iterator(_mainSource.begin(), _mainSource.end(), importRe);
 	auto end = std::sregex_iterator();
@@ -134,7 +128,7 @@ std::set<std::string> collectInterfaceEventsFromImports(
 				std::ostringstream ss;
 				ss << impFile.rdbuf();
 				std::string impContent = ss.str();
-				// Only collect events from interfaces (not concrete contracts)
+				// Only collect from interface files.
 				if (impContent.find("interface ") != std::string::npos)
 				{
 					auto events = collectEventSignatures(impContent);

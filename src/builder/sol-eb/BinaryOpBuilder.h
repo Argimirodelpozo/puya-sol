@@ -11,14 +11,9 @@ namespace puyasol::builder::eb
 {
 class ContractContext;
 
-/// Build an AWST binary-operation expression from already-resolved operands.
-///
-/// This is the default path: SolBinaryOperation calls this after its
-/// own per-token routing (user-defined op overload, constant folding, sol-eb
-/// type-builder dispatch) fails to handle the operation. It chooses between
-/// uint64, biguint, and bytes operations based on operand and result types,
-/// and emits any side-effect statements (e.g. the biguint exp loop) into
-/// `ctx.prePendingStatements` / `ctx.pendingStatements`.
+/// Build an AWST binary-op from already-resolved operands (fallback when sol-eb
+/// type-builder dispatch fails). Chooses uint64/biguint/bytes based on types;
+/// emits side-effect statements (e.g. exp loop) into prePendingStatements.
 std::shared_ptr<awst::Expression> buildBinaryOp(
 	ContractContext& _ctx,
 	sol_ast::Context& _scope,

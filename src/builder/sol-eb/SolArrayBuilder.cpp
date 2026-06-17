@@ -35,7 +35,6 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	auto base = resolve();
 	auto index = _idx.resolve();
 
-	// Ensure index is uint64
 	if (index->wtype == awst::WType::biguintType())
 		index = TypeCoercion::implicitNumericCast(std::move(index), awst::WType::uint64Type(), _loc);
 
@@ -45,7 +44,6 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 
 	auto e = awst::makeIndexExpression(std::move(base), std::move(index), elemType, _loc);
 
-	// Determine if we need to decode ARC4 → native
 	auto* expectedType = m_ctx.typeMapper.map(m_arrayType->baseType());
 	bool needsDecode = elemType != expectedType
 		&& (elemType->kind() == awst::WTypeKind::ARC4StaticArray
@@ -58,16 +56,12 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	if (needsDecode)
 	{
 		result = awst::makeARC4Decode(std::move(result), expectedType, _loc);
-		// A signed sub-256 element (e.g. int128) decodes to its raw N-bit two's
-		// complement. The canonical-256-bit sign-extension is deferred to
-		// resolve() (read context) so it never poisons the lvalue path — the
-		// bare decode must stay a valid assignment target for `a[i] = x`.
+		// Signed sub-256 (e.g. int128): defer sign-extension to resolve() so the
+		// bare decode stays a valid lvalue for `a[i] = x`.
 		signExtendElem = true;
 	}
 
-	// Enum element validation: Solidity panics (0x21) when reading an out-
-	// of-range enum from an array. Spill the read to a local so the assert
-	// sees the same value and survives DCE on `arr[i];` expression statements.
+	// Enum: panic(0x21) on out-of-range. Spill to local so assert survives DCE.
 	if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(
 			m_arrayType->baseType()))
 	{
@@ -120,7 +114,6 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 	if (_name == "length")
 	{
 		auto base = resolve();
-		// Use ArrayLength node for ReferenceArray and ARC4 arrays
 		auto kind = base->wtype ? base->wtype->kind() : awst::WTypeKind::Bytes;
 		if (kind == awst::WTypeKind::ReferenceArray
 			|| kind == awst::WTypeKind::ARC4StaticArray
@@ -134,11 +127,7 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 		return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(len));
 	}
 
-	// .push / .pop / .concat are dispatched as FunctionCalls (member access
-	// of array followed by a call), so they reach SolArrayMethod.cpp's
-	// toAwst() instead of this member() resolver. Fall through to nullptr;
-	// the caller (NodeBuilder) recognizes that and lets the call site flow
-	// build the FunctionCall instead of treating the member as a value.
+	// .push/.pop/.concat arrive as FunctionCalls → SolArrayMethod.cpp, not here.
 	return nullptr;
 }
 

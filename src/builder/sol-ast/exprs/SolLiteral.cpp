@@ -1,5 +1,4 @@
-/// @file SolLiteral.cpp
-/// Migrated from LiteralBuilder.cpp.
+/// @file SolLiteral.cpp — literal expression translation.
 
 #include "builder/sol-ast/exprs/SolLiteral.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -40,23 +39,16 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 			static const solidity::u256 uint64Max("18446744073709551615");
 			if (mappedType == awst::WType::uint64Type() && val > uint64Max)
 			{
-				// Huge u256 values always promote to biguint so the full
-				// 256-bit representation is preserved. *Except* for
-				// negative signed integers whose storage slot is uint64
-				// (signed types with bits ≤ 64): there we want the 64-bit
-				// two's complement form (`val mod 2^64`) so that compiled
-				// comparisons against `type(intN).min` and other uint64
-				// stored variables line up. Without this, -128 would be
-				// biguint(2^256 - 128) while int8_min is uint64 0xff..80,
-				// and the coerced equality fails.
+				// Signed int≤64 literals: use 64-bit two's-complement (val mod 2^64) so
+				// comparisons against type(intN).min and other uint64 vars line up.
+				// Without it, -128 → biguint(2^256-128) ≠ uint64 int8_min 0xff..80.
 				bool signedSmall = false;
 				if (auto const* intType = dynamic_cast<IntegerType const*>(m_solType))
 					signedSmall = intType->isSigned() && intType->numBits() <= 64;
 				static const solidity::u256 twoPow64("18446744073709551616");
 				if (signedSmall)
 				{
-					// Wrap to 64 bits: val mod 2^64.
-					solidity::u256 wrapped = val % twoPow64;
+					solidity::u256 wrapped = val % twoPow64; // wrap to 64 bits
 					e->value = wrapped.str();
 				}
 				else

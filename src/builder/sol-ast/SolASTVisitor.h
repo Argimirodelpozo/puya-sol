@@ -3,29 +3,16 @@
 /// @file SolASTVisitor.h
 /// Generic value-returning visitor over Solidity's AST.
 ///
-/// Inspired by Solidity's own ASTConstVisitor and IRGenerator pattern, but with
-/// two adjustments suited to puya-sol:
+/// R is a template parameter — passes return different types (shared_ptr<Expression>,
+/// vector<Statement>, bool, etc.). Dispatch uses dynamic_cast instead of
+/// double-dispatch: we don't own the AST nodes and can't add accept() to them.
 ///
-///   1. The result type `R` is a template parameter — we run several different
-///      passes over the same AST (expression translation returns
-///      shared_ptr<awst::Expression>, statement translation returns a vector,
-///      analyses return void / bool / int).
+/// Subclasses override the visit* hooks they care about; anything else falls
+/// through to visitDefault(), the only pure-virtual — callers decide what
+/// "unhandled" means (warn/abort/return zero).
 ///
-///   2. Dispatch is by dynamic_cast over Solidity's AST hierarchy, not by
-///      double-dispatch through the AST. We don't own the AST, can't add
-///      `accept(Visitor&)` methods to it, and don't want to fight the Solidity
-///      hierarchy. Wrapping `dynamic_cast` in a base class hands every visitor
-///      the same uniform dispatch table for free.
-///
-/// Subclasses pick which `visit*` methods to override. Anything they don't
-/// override falls through to `visitDefault(ASTNode const&)`, which is the only
-/// pure-virtual hook — every concrete visitor has to decide what "I don't
-/// handle this kind" means (warn? abort? return zero?).
-///
-/// Both Expression and Statement live in the same class because both inherit
-/// from `ASTNode`, and analysis passes over either may want to share a
-/// uniform `visitDefault`. Two entry points (`visit(Expression const&)` and
-/// `visit(Statement const&)`) keep the API call-sites clean.
+/// Expression and Statement share one class (both are ASTNode) so analysis
+/// passes can mix them under a single visitDefault.
 
 #include <libsolidity/ast/AST.h>
 
@@ -94,12 +81,9 @@ public:
 	virtual R visitFunctionCall(solidity::frontend::FunctionCall const& _n)                    { return visitDefault(_n); }
 	virtual R visitMemberAccess(solidity::frontend::MemberAccess const& _n)                    { return visitDefault(_n); }
 	virtual R visitCallOptions(solidity::frontend::FunctionCallOptions const& _n)              { return visitDefault(_n); }
-	/// Bare `NewExpression` — in practice unreachable because Solidity's grammar
-	/// requires `new C(...)` to parse as `FunctionCall(NewExpression(C), args)`,
-	/// so we always come in via `visitFunctionCall` and route through
-	/// `SolExpressionFactory::createFunctionCall` → `SolNewExpression`. The hook
-	/// is here so a future grammar change (or analysis pass) doesn't silently
-	/// fall through to `visitDefault`.
+	/// Bare `NewExpression` — unreachable in practice: `new C(args)` parses as
+	/// FunctionCall(NewExpression(C), args), so we enter via visitFunctionCall.
+	/// Hook exists so a future grammar change doesn't silently hit visitDefault.
 	virtual R visitNewExpression(solidity::frontend::NewExpression const& _n)                  { return visitDefault(_n); }
 	virtual R visitTypeName(solidity::frontend::ElementaryTypeNameExpression const& _n)        { return visitDefault(_n); }
 

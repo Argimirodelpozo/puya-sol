@@ -21,8 +21,7 @@
 namespace puyasol::builder::eb
 {
 
-/// Registry of internal function pointer targets and their IDs.
-/// Built up during contract translation, then used to generate dispatch tables.
+/// Registry of internal function pointer targets; used to generate dispatch tables.
 struct FuncPtrEntry
 {
 	int64_t astId;            // Solidity AST ID of the FunctionDefinition
@@ -36,22 +35,16 @@ struct FuncPtrEntry
 class FunctionPointerBuilder
 {
 public:
-	/// Map a Solidity FunctionType to the appropriate WType.
-	/// Internal → uint64, External → bytes.
+	/// Internal → uint64, External → bytes[12].
 	static awst::WType const* mapFunctionType(
 		solidity::frontend::FunctionType const* _funcType);
 
-	/// Build an expression that represents taking the address of a function.
-	/// For internal: returns IntegerConstant with the function's ID.
-	/// For external: returns bytes (address + selector).
-	/// Build an expression representing a function reference (pointer).
-	/// @param _callerFuncType  Optional: the FunctionType from the calling
-	///                         context, which determines Internal vs External.
-	///                         When null, derived from _funcDef.
-	/// @param _awstName        Optional caller-context awst name (used for
-	///                         super references in diamond MRO so multiple
-	///                         super.f references for the same target astId
-	///                         get distinct dispatcher entries).
+	/// Build a function reference expression (internal: IntegerConstant id;
+	/// external: bytes[12] = itob(appId) ++ selector).
+	/// @param _callerFuncType  Determines Internal vs External when both exist
+	///                         (e.g. `this.g` is External). Derived from _funcDef if null.
+	/// @param _awstName        For super refs in diamond MRO: distinct entries
+	///                         per caller context for the same target astId.
 	static std::shared_ptr<awst::Expression> buildFunctionReference(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
@@ -60,9 +53,7 @@ public:
 		std::shared_ptr<awst::Expression> _receiverAddress = nullptr,
 		std::string const& _awstName = "");
 
-	/// Build a call through a function pointer.
-	/// For internal: calls __funcptr_dispatch(id, args...).
-	/// For external: inner app call.
+	/// Call through a function pointer (internal: dispatch table; external: inner app call).
 	static std::shared_ptr<awst::Expression> buildFunctionPointerCall(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _ptrExpr,
@@ -70,50 +61,40 @@ public:
 		std::vector<std::shared_ptr<awst::Expression>> _args,
 		awst::SourceLocation const& _loc);
 
-	/// Register a function as a potential function pointer target.
-	/// Called during contract translation for any function whose address is taken.
-	/// Register a function as a potential function pointer target.
-	/// @param _awstName  The name used in the AWST (may differ from _funcDef->name()
-	///                   for super versions, e.g., "f__super_8").
+	/// Register a function pointer target.
+	/// @param _awstName  AWST name (may differ from _funcDef->name() for super refs, e.g. "f__super_8").
 	static void registerTarget(
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		solidity::frontend::FunctionType const* _funcType,
 		std::string _awstName = "");
 
-	/// Generate the __funcptr_dispatch subroutine(s) for all registered targets.
-	/// Groups targets by signature (param types + return types) and generates
-	/// one dispatch subroutine per signature group.
-	/// Called from ContractBuilder after all methods are translated.
-	/// Also populates _outRootSubs with root-level Subroutine copies so that
-	/// library subroutines can resolve them via SubroutineID.
+	/// Generate __funcptr_dispatch subroutines (one per signature group).
+	/// Called after all methods are translated. Populates _outRootSubs so
+	/// library subroutines can resolve dispatch via SubroutineID.
 	static std::vector<awst::ContractMethod> generateDispatchMethods(
 		ContractContext& _ctx,
 		std::string const& _cref,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs = nullptr);
 
-	/// Get the dispatch subroutine name for a given function type signature.
+	/// Dispatch subroutine name for a given function type signature.
 	static std::string dispatchName(
 		solidity::frontend::FunctionType const* _funcType);
 
-	/// Set subroutine IDs for registered targets (from m_freeFunctionById map).
-	/// Called after all library/free functions are registered.
+	/// Set subroutine IDs for registered targets; call after all library/free fns are registered.
 	static void setSubroutineIds(
 		std::unordered_map<int64_t, std::string> const& _idMap);
 
-	/// Set the current contract cref — must be called before translating
-	/// function bodies so that library subroutines can construct
-	/// SubroutineIDs for dispatch calls.
+	/// Set current contract cref before translating function bodies
+	/// (library subroutines need it to construct SubroutineIDs).
 	static void setCurrentCref(std::string _cref) { s_currentCref = std::move(_cref); }
 
-	/// Clear all registered targets (between contracts).
+	/// Clear all registered targets between contracts.
 	static void reset();
 
 private:
-	/// Build the internal-dispatch SubroutineCallExpression. Used both by
-	/// the standalone internal path and the self-call branch of the external
-	/// path. Caller supplies the pointer-id expression (not stored) and the
-	/// raw args (coerced to the dispatch parameter types).
+	/// Build internal-dispatch SubroutineCallExpression (shared by internal
+	/// and external self-call paths). Args are coerced to dispatch param types.
 	static std::shared_ptr<awst::SubroutineCallExpression> buildDispatchCall(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionType const* _funcType,
@@ -121,19 +102,12 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc);
 
-	/// All registered function pointer targets, keyed by (AST ID, awst name).
-	/// awst name is empty for default references and `f__super_<callerId>` for
-	/// super references — the (id, name) tuple lets diamond MRO produce
-	/// distinct dispatcher entries when the same target astId is reached via
-	/// different super contexts.
+	// Keyed by (AST ID, awst name); empty name for default refs, "f__super_<id>"
+	// for super refs — lets diamond MRO produce distinct entries per caller context.
 	static std::map<std::pair<int64_t, std::string>, FuncPtrEntry> s_targets;
-	/// Next available function pointer ID.
-	static unsigned s_nextId;
-	/// Dispatch signatures needed (from buildFunctionPointerCall).
-	/// Maps dispatch name → FunctionType* for generating empty dispatchers.
+	static unsigned s_nextId; ///< 0 = invalid/zero-initialized.
+	// dispatch name → FunctionType* for signatures needed (from buildFunctionPointerCall).
 	static std::map<std::string, solidity::frontend::FunctionType const*> s_neededDispatches;
-	/// Current contract cref — set during contract build so that library
-	/// subroutines can construct SubroutineIDs for dispatch calls.
 	static std::string s_currentCref;
 };
 

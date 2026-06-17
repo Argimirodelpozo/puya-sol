@@ -60,28 +60,15 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			if (val > 0 && val <= 0xFFFF) // Reasonable compile-time array limit
 				n = static_cast<unsigned long long>(val);
 		}
-		// NB: previously a `findConstantLocal` lookup ran here for the
-		// Identifier case to fold `new T[](localVar)` to a literal size
-		// when `localVar` was declared with a constant initialiser. That
-		// optimisation was unsafe — `setConstantLocal` registers any
-		// `uint256 x = K;` initial value but never invalidates on
-		// reassignment, so a for-loop counter
-		//   `for (uint256 i = 1; i <= n; i++) { new T[](i); }`
-		// was being constant-folded to `new T[](1)` on every iteration,
-		// silently producing single-element arrays regardless of the
-		// runtime counter (test_memory_arrays_of_various_sizes' Pascal
-		// triangle hit this). The Identifier path now falls through to
-		// the runtime-sized loop below, which builds the right N-element
-		// array at runtime. Literal `new T[](5)` still folds via the
-		// RationalNumberType branch above.
+		// `findConstantLocal` fold for Identifiers removed: never invalidated
+		// on reassignment — silently folded loop counters to initial value
+		// (hit by test_memory_arrays_of_various_sizes Pascal triangle).
+		// Literals still fold via RationalNumberType.
 
 		if (n > 0)
 		{
-			// Special case: `new bool[](N)` — bypass puya's ARC4 encoder, which
-			// has a bug for arc4.bool elements (packs bools onto an empty bytes
-			// buffer via setbit, instead of bzero((N+7)/8); subsequent
-			// getbit/setbit then errors with "index beyond byteslice"). Emit
-			// the pre-encoded form directly: uint16(N) ++ bzero(ceil(N/8)).
+			// `new bool[](N)`: bypass puya's ARC4 encoder (bug: setbit on empty
+			// bytes → "index beyond byteslice"). Emit uint16(N)++bzero(ceil(N/8)).
 			if (elemType == awst::WType::arc4BoolType()
 				&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray)
 			{
@@ -95,12 +82,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 					std::move(data), m_loc, awst::BytesEncoding::Base16, resultType);
 			}
 
-			// Estimate the encoded size of the N-element NewArray puya will
-			// emit. Puya inlines this as a single pushbytes; if it exceeds
-			// MAX_BYTES_LENGTH (4096), puya rejects with "Invalid Bytes
-			// value". When over a safety threshold, fall through to the
-			// runtime-sized loop below (extend N times with a small
-			// per-iteration template) which keeps each pushbytes small.
+			// Estimate encoded size: puya inlines as single pushbytes;
+			// >4096 → rejects ("Invalid Bytes value"). Fall through to
+			// runtime loop if over safety threshold.
 			auto estimateEncodedSize = [](unsigned long long _n, awst::WType const* _resultType, awst::WType const* _elemType) -> uint64_t {
 				uint64_t elemSize = 0;
 				if (auto encoded = builder::arc4DefaultEncoding(_elemType))
@@ -116,16 +100,14 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			constexpr uint64_t kPushBytesSafetyLimit = 4000;
 			if (estimateEncodedSize(n, resultType, elemType) <= kPushBytesSafetyLimit)
 			{
-				// Small enough — emit the literal N defaults; puya inlines as
-				// a single pushbytes.
+				// Fits in pushbytes: emit N defaults.
 				for (unsigned long long i = 0; i < n; ++i)
 					e->values.push_back(
 						builder::StorageMapper::makeDefaultValue(elemType, m_loc));
 			}
 			else
 			{
-				// Too large for a single pushbytes — fall through to runtime
-				// loop construction using N as a literal size.
+				// Too large: fall through to runtime loop with literal size N.
 				e->values.clear();
 				auto fakeSizeExpr = awst::makeIntegerConstant(std::to_string(n), m_loc);
 				static int rtArrayCounter = 0;
@@ -175,14 +157,10 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			sizeExpr = builder::TypeCoercion::implicitNumericCast(
 				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
 
-			// Pin the size to a temp BEFORE the loop. The size feeds the while
-			// condition below (re-evaluated EVERY iteration — a side-effecting
-			// size like `new T[](f())` re-ran f() once per iteration) and the
-			// bool[] special case references it twice. An eager pre-loop temp —
-			// not SingleEvaluation — is required here: SingleEvaluation
-			// materializes at its first reference, which is inside the loop
-			// header and so still re-executes per iteration. Skip for leaves
-			// (vars/constants are stable across the generated loop).
+			// Pin size to pre-loop temp: while-condition is re-evaluated each
+			// iteration; `new T[](f())` would re-run f() otherwise. SingleEvaluation
+			// materialises inside the loop header (still re-executes). Skip for
+			// stable leaves (vars/constants).
 			if (!dynamic_cast<awst::VarExpression const*>(sizeExpr.get())
 				&& !dynamic_cast<awst::IntegerConstant const*>(sizeExpr.get()))
 			{
@@ -194,10 +172,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 					sizeName, awst::WType::uint64Type(), m_loc);
 			}
 
-			// Special case: `new bool[](n)` with runtime n — bypass puya's
-			// bool encoder (same bug as the compile-time path: it starts from
-			// empty bytes and setbit-fails). Emit the ARC4 wire form
-			// directly: uint16(n) ++ bzero((n+7)/8).
+			// `new bool[](n)` runtime: same puya bug as compile-time path.
+			// Emit uint16(n)++bzero((n+7)/8) directly.
 			if (elemType == awst::WType::arc4BoolType()
 				&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray)
 			{
@@ -290,11 +266,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	// Uses minimal stub programs since we can't embed the child's compiled bytecode
 	// at this stage. The created app won't be functional but the address is valid.
 
-	// Detect `new C{salt: s}(...)` — this is CREATE2 in Solidity. The salt option
-	// is visible on the FunctionCallOptions wrapper before funcExpression() strips it.
-	// CREATE2's deterministic address derivation (salt + initcode hash) has no AVM
-	// equivalent — app IDs are assigned sequentially by the chain. Fail loud rather
-	// than silently dropping the salt and producing a wrong-semantic program.
+	// `new C{salt:s}(...)` is CREATE2. CREATE2's address derivation (salt+initcode
+	// hash) has no AVM equivalent — fail loud rather than silently wrong-lower.
 	if (auto const* opts = dynamic_cast<FunctionCallOptions const*>(&m_call.expression()))
 	{
 		for (auto const& name : opts->names())
@@ -327,10 +300,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// Track this child contract for .tmpl file generation
 			s_childContracts.insert(childName);
 
-			// Determine whether the child needs a separate __postInit call
-			// (contracts that read msg.value/sender/data in the ctor body or
-			// base state initializers must run those at post-init time, not
-			// at AppCreate time where the itxn sender/value are the parent).
+			// __postInit needed when ctor reads msg.value/sender/data (unavailable
+			// at AppCreate time where sender/value belong to the parent).
 			auto const* childCtor = contractType->contractDefinition().constructor();
 			bool childHasPostInit = false;
 			if (childCtor && childCtor->isImplemented())
@@ -366,9 +337,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				childHasPostInit = checker.found;
 			}
 
-			// Build the ARC4-encoded ctor args once — reused either as
-			// AppCreate's ApplicationArgs (no __postInit) or as the
-			// __postInit selector+args tuple.
+			// ARC4-encode ctor args once; reused for AppCreate or __postInit.
 			auto buildEncodedCtorArgs = [&]() {
 				std::vector<std::shared_ptr<awst::Expression>> out;
 				if (!childCtor) return out;
@@ -441,10 +410,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			create->fields["ClearStateProgram"] = awst::makeTemplateVar(
 				"TMPL_CLEAR_" + childName, awst::WType::bytesType(), m_loc);
 
-			// Child has no __postInit: its ctor runs during AppCreate, reading
-			// ApplicationArgs[0..N-1] directly (same pattern as any ARC4
-			// external-call routing but without a leading selector). Attach
-			// the ARC4-encoded ctor args to the create itxn.
+			// No __postInit: ctor runs during AppCreate, reading ApplicationArgs[0..N-1].
 			if (!childHasPostInit && childCtor && !m_call.arguments().empty())
 			{
 				auto encodedArgs = buildEncodedCtorArgs();
@@ -514,17 +480,11 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				fundCreate->fields["Receiver"] = std::move(fundAddr);
 
-				// Base MBR (1M), plus `{value: N}` ONLY when the child has no
-				// __postInit. In the postInit branch the value travels in the
-				// `[pay(value), __postInit]` group below — that pay both
-				// transfers the amount and is what the child's msg.value reads
-				// (`gtxns Amount (GroupIndex-1)`). Bundling value here TOO made
-				// the child receive 2x value (verified: balance was
-				// MBR + 2*500000 for `new Child{value: 500000}()`). A pay txn
-				// always transfers its Amount — there is no "only sets
-				// msg.value" pay. (The group can't be [pay, create, postInit]:
-				// the child's address/app-id don't exist until the create
-				// executes, so the fund/postInit submits must come after.)
+				// MBR (1M) + value ONLY when no __postInit: with postInit, value
+				// travels in the [pay(value),__postInit] group (gtxns Amount GI-1).
+				// Bundling here too → 2x value (MBR+2*500000 verified). A pay txn
+				// always transfers Amount — no "only-sets-msg.value" mode.
+				// [pay,create,postInit] impossible: child's addr/app-id unknown until create.
 				auto baseMbr = awst::makeIntegerConstant("1000000", m_loc);
 				std::shared_ptr<awst::Expression> ctorValueForFund =
 					childHasPostInit ? nullptr : extractCallValue();
@@ -582,9 +542,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				for (auto& e: encodedArgs)
 					argsTuple->items.push_back(std::move(e));
 
-				// Set the TupleExpression's wtype to a WTuple over the item
-				// types; without this, puya rejects the AWST (WInnerTxn
-				// fields expect a WTuple, not the default void wtype).
+				// wtype required: puya rejects WInnerTxn ApplicationArgs with void wtype.
 				{
 					std::vector<awst::WType const*> argTypes;
 					for (auto const& item: argsTuple->items)
@@ -593,7 +551,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 						std::move(argTypes), std::nullopt);
 				}
 
-				// Payment group companion: sets msg.value inside __postInit.
+				// Payment txn: sets msg.value for __postInit.
 				std::shared_ptr<awst::Expression> callValue = extractCallValue();
 				if (!callValue)
 					callValue = awst::makeZero(m_loc);
@@ -634,7 +592,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				postCall->fields["ApplicationID"] = std::move(postAppId);
 				postCall->fields["ApplicationArgs"] = std::move(argsTuple);
 
-				// Submit as a group so the PaymentTxn is visible to __postInit's msg.value.
+				// Group: PaymentTxn must be visible to __postInit's msg.value.
 				static awst::WInnerTransaction s_payApplGroupType(1);
 				auto postSubmit = awst::makeSubmitInnerTransaction(&s_payApplGroupType, m_loc);
 				postSubmit->itxns.push_back(std::move(payTxn));
@@ -644,9 +602,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				m_ctx.prePendingStatements.push_back(std::move(postStmt));
 			}
 
-			// Return CreatedApplicationID as applicationType directly.
-			// This allows subsequent method calls to use the app ID
-			// instead of converting through the hashed address.
+			// Return as applicationType (avoids address-hash conversion for calls).
 			auto appIdCast = awst::makeAsApplication(std::move(createdAppId), m_loc);
 
 			return appIdCast;

@@ -10,19 +10,15 @@ std::unique_ptr<InstanceBuilder> SolStructBuilder::compare(
 	InstanceBuilder& _other, BuilderComparisonOp _op,
 	awst::SourceLocation const& _loc)
 {
-	// Structs only support Eq/Ne (compare encoded bytes)
 	if (_op != BuilderComparisonOp::Eq && _op != BuilderComparisonOp::Ne)
 		return nullptr;
 
-	// Only compare structs of the same kind
 	auto const* otherStruct = dynamic_cast<solidity::frontend::StructType const*>(_other.solType());
 	if (!otherStruct)
 		return nullptr;
 
-	// For ARC4Struct: compare the encoded bytes representation
 	if (wtype() && wtype()->kind() == awst::WTypeKind::ARC4Struct)
 	{
-		// Encode both to bytes for comparison
 		auto lhs = resolve();
 		auto rhs = _other.resolve();
 
@@ -36,8 +32,7 @@ std::unique_ptr<InstanceBuilder> SolStructBuilder::compare(
 		return std::make_unique<SolStructBuilder>(m_ctx, m_structType, std::move(e));
 	}
 
-	// For WTuple: not directly comparable — return nullptr to fall through
-	return nullptr;
+	return nullptr; // WTuple: not directly comparable
 }
 
 } // namespace puyasol::builder::eb

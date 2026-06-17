@@ -20,9 +20,7 @@ void TransientStorage::collectVars(
 	m_varById.clear();
 	m_totalSlots = 0;
 
-	// Collect transient vars across the linearization, most-base first,
-	// de-duplicating by name (inherited-not-overridden handled like in
-	// StorageLayout).
+	// Collect transient vars base-first, de-duplicating by name (same as StorageLayout).
 	std::vector<VariableDeclaration const*> allVars;
 	forEachStateVarReverse(_contract, [&](auto const* var)
 	{
@@ -55,17 +53,14 @@ void TransientStorage::collectVars(
 			byteSize = 32;
 		}
 
-		// AVM addresses are 32-byte account public keys, not EVM's 20-byte
-		// hashes. Store addresses at their native 32-byte width so that
-		// acct_params_get / asset_holding_get / balance lookups round-trip.
-		// This diverges from Solidity's 20-byte .slot/.offset packing for
-		// address-typed transient vars — the AVM address semantics wins.
+		// AVM addresses are 32-byte public keys (not EVM's 20-byte hashes).
+		// Store at 32B so acct_params_get/balance lookups round-trip;
+		// diverges from Solidity's 20-byte .slot/.offset packing.
 		auto* mappedType = _typeMapper.map(solType);
 		if (dynamic_cast<AddressType const*>(solType))
 			byteSize = 32;
-		// Function pointers: Solidity says 24 bytes (address+selector) but
-		// puya's AWST representation is bytes[12] (external) or uint64
-		// (internal). Use the AWST width so read/write sizes match.
+		// Function pointers: Solidity says 24B but AWST is bytes[12] (external)
+		// or uint64 (internal); use AWST width so read/write sizes match.
 		if (dynamic_cast<FunctionType const*>(solType))
 		{
 			if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(mappedType))
@@ -77,7 +72,7 @@ void TransientStorage::collectVars(
 				byteSize = 8;
 		}
 
-		// New slot if dynamic, >32 bytes, or overflow
+		// Start a new slot for dynamic, oversized, or spilling vars.
 		if (isDynamic || byteSize > 32 || currentOffset + byteSize > 32)
 		{
 			if (currentOffset > 0)
@@ -87,11 +82,9 @@ void TransientStorage::collectVars(
 
 		if (currentSlot >= MAX_SLOTS)
 		{
-			// The whole contract's transient state is packed EVM-style into a
-			// single MAX_SLOTS-word scratch blob. Overflowing it must FAIL the
-			// compile, not silently drop the variable — a dropped var's reads /
-			// writes resolve to nullptr downstream (wrong code or a crash).
-			// Report once: slots only grow, so every later var would re-trip this.
+			// Transient state overflows the MAX_SLOTS scratch blob; must fail
+			// rather than silently drop vars (nullptr reads/writes = wrong code).
+			// Report once — slots only grow.
 			if (!overflowReported)
 			{
 				Logger::instance().error(
@@ -153,8 +146,7 @@ namespace
 		return awst::makeLoadSlot(AssemblyBuilder::TRANSIENT_SLOT, _loc);
 	}
 
-	/// Extract `byteSize` bytes from the transient blob at absolute byte
-	/// offset `absByte`, returned as raw bytes.
+	/// Extract byteSize bytes from the transient blob at absByte.
 	std::shared_ptr<awst::Expression> extractBytes(
 		unsigned absByte, unsigned byteSize, awst::SourceLocation const& _loc)
 	{
@@ -173,24 +165,18 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	if (!info)
 		return nullptr;
 
-	// Solidity's `byteOffset` is from the LEAST significant byte of the slot
-	// (i.e., low end of the big-endian word). Our packed scratch blob stores
-	// slot S as the big-endian bytes [S*32 .. S*32+32), so the absolute byte
-	// offset of the variable is S*32 + (32 - byteOffset - byteSize).
+	// byteOffset is from the low (LSB) end; blob stores slot S at big-endian
+	// bytes [S*32..S*32+32), so absByte = S*32 + (32 - byteOffset - byteSize).
 	unsigned absByte = info->slot * SLOT_SIZE + (SLOT_SIZE - info->byteOffset - info->byteSize);
 	unsigned sz = info->byteSize;
 
-	// uint64 / bool-ish path: extract up to 8 bytes and btoi
+	// uint64/bool: extract ≤8 bytes and btoi.
 	if (_type == awst::WType::uint64Type() || _type == awst::WType::boolType())
 	{
-		// Clamp extract width to ≤ 8 bytes (EVM clean value semantics for
-		// packed small types).
 		unsigned readSize = sz <= 8 ? sz : 8;
-		// For uint64 stored as 8 bytes, just extract those bytes.
 		auto raw = extractBytes(absByte, readSize, _loc);
 		auto btoi = awst::makeBtoi(std::move(raw), _loc);
-		// Bool: compare to 0 to produce a proper bool-typed expression
-		// (btoi returns uint64; callers like `!lock` require bool).
+		// bool: btoi gives uint64; compare != 0 for callers expecting bool (e.g. `!lock`).
 		if (_type == awst::WType::boolType())
 		{
 			auto zero = awst::makeZero(_loc);
@@ -200,23 +186,17 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		return btoi;
 	}
 
-	// biguint path: extract `sz` bytes, reinterpret as biguint (big-endian).
-	// AVM biguint values may be shorter than 32 bytes — they're value-equal
-	// regardless of leading zeros.
+	// biguint: extract sz bytes and reinterpret (leading-zero-invariant).
 	if (_type == awst::WType::biguintType())
 	{
 		auto raw = extractBytes(absByte, sz, _loc);
 		std::shared_ptr<awst::Expression> bg = awst::makeAsBiguint(std::move(raw), _loc);
-		// A signed sub-256 transient (e.g. int128) is stored as its raw N-bit
-		// two's complement; sign-extend to canonical 256-bit on read so it
-		// compares/arithmetics like a scalar of the same value. No-op for
-		// unsigned / int256 / non-integer (see TypeCoercion).
+		// Sign-extend signed sub-256 (e.g. int128) to canonical 256-bit on read.
+		// No-op for unsigned/int256/non-integer (see TypeCoercion).
 		return TypeCoercion::signExtendSignedElement(std::move(bg), info->solType, _loc);
 	}
 
-	// Account: stored as 20 bytes (EVM-compatible offset layout), but AVM
-	// accounts are 32 bytes. Left-pad with 12 zero bytes and reinterpret
-	// so comparisons with address(0)/account literals work.
+	// Account: stored as 20B (EVM layout), AVM needs 32B; left-pad 12 zeros.
 	if (_type == awst::WType::accountType() && sz < 32)
 	{
 		auto raw = extractBytes(absByte, sz, _loc);
@@ -224,8 +204,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		return awst::makeAsAccount(std::move(cat), _loc);
 	}
 
-	// Default: raw bytes of the stored width (e.g., bytesN). Reinterpret to
-	// the requested type so downstream type checks pass.
+	// Default (e.g. bytesN): raw bytes; reinterpret to requested type.
 	auto raw = extractBytes(absByte, sz, _loc);
 	if (_type && _type != awst::WType::bytesType())
 		return awst::makeReinterpretCast(std::move(raw), _type, _loc);
@@ -234,9 +213,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 
 namespace
 {
-	/// Truncate value to `byteSize` bytes suitable for writing into a
-	/// packed transient slot. Produces a raw-bytes expression of exactly
-	/// `byteSize` bytes.
+	/// Truncate value to byteSize bytes for writing into a packed transient slot.
 	std::shared_ptr<awst::Expression> truncateToBytes(
 		std::shared_ptr<awst::Expression> _value,
 		unsigned byteSize,
@@ -249,26 +226,17 @@ namespace
 
 		if (isUint64 || isBool)
 		{
-			// itob produces 8 big-endian bytes.
+			// itob → 8 big-endian bytes; pad or truncate to byteSize.
 			auto itob = awst::makeItob(std::move(_value), _loc);
 			if (byteSize >= 8)
-			{
-				// Left-pad with bzero(byteSize - 8) to reach full width.
 				raw = awst::makeLeftPad(std::move(itob), byteSize - 8, _loc);
-			}
 			else
-			{
-				// Truncate: take the last `byteSize` bytes of the 8-byte itob result.
 				raw = awst::makeExtract(std::move(itob),
 					static_cast<int>(8 - byteSize), static_cast<int>(byteSize), _loc);
-			}
 		}
 		else if (_value->wtype == awst::WType::biguintType())
 		{
-			// biguint values are big-endian bytes possibly shorter than 32.
-			// Pad to exactly 32 bytes via makeZeroExtendToN (= `b|(bzero(32), v)`,
-			// which yields max(len, 32); biguint ≤ 32 bytes so the result is 32).
-			// Then extract the trailing `byteSize` bytes at compile-time offset.
+			// Pad to 32B (biguint may be shorter), then extract trailing byteSize bytes.
 			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
 			auto padded = awst::makeZeroExtendToN(std::move(bytesView), 32, _loc);
 			raw = awst::makeExtract(std::move(padded),
@@ -276,9 +244,7 @@ namespace
 		}
 		else if (_value->wtype == awst::WType::accountType() && byteSize < 32)
 		{
-			// AVM account is 32 bytes; Solidity address layout is 20.
-			// Reinterpret as bytes and truncate to the low `byteSize` bytes
-			// (drop the leading 32 - byteSize bytes) to match EVM layout.
+			// AVM account is 32B; drop leading (32-byteSize) bytes to match EVM layout.
 			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
 			raw = awst::makeExtract(
 				std::move(bytesView),
@@ -286,8 +252,7 @@ namespace
 		}
 		else
 		{
-			// Already raw bytes (e.g., bytesN). Reinterpret to bytes for
-			// uniform downstream handling; assume width matches.
+			// Already raw bytes (e.g. bytesN); reinterpret to bytes, assume width matches.
 			if (_value->wtype != awst::WType::bytesType())
 				_value = awst::makeAsBytes(std::move(_value), _loc);
 			raw = std::move(_value);
@@ -305,14 +270,14 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	if (!info)
 		return nullptr;
 
-	// See buildRead: byteOffset is low-end, so we write to the tail of the slot.
+	// byteOffset is low-end; write to the tail of the slot (same offset formula as buildRead).
 	unsigned absByte = info->slot * SLOT_SIZE + (SLOT_SIZE - info->byteOffset - info->byteSize);
 
 	auto raw = truncateToBytes(std::move(_value), info->byteSize, _loc);
 
 	auto blobRead = loadTransientBlob(_loc);
 
-	// replace2(blob, raw) at compile-time absByte immediate
+	// replace2(blob, raw) with compile-time absByte immediate.
 	auto replace = awst::makeIntrinsicCall("replace2", awst::WType::bytesType(), _loc);
 	replace->immediates = {static_cast<int>(absByte)};
 	replace->stackArgs.push_back(std::move(blobRead));

@@ -18,11 +18,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 	if (member == "code")
 	{
-		// Compile-time literal bridge: address(N).code for integer N
-		// returns empty bytes. Precompile addresses (1..10) and EOAs
-		// have no code on EVM. Skip the app_params_get path for these
-		// since it panics with "unavailable App N" on non-existent
-		// app ids.
+		// address(N).code for literal N → empty bytes. Precompile/EOA
+		// addresses have no code; app_params_get panics on non-existent app ids.
 		{
 			auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
 			if (fc && *fc->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
@@ -38,12 +35,9 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		auto addrExpr = buildExpr(baseExpression());
 
-		// Fast path: if the receiver is `address(this)` — which AWSTBuilder
-		// lowers to `global CurrentApplicationAddress` — swap in
-		// `global CurrentApplicationID` so `app_params_get` gets the right
-		// app id. Deriving the id from the last 8 bytes of the address only
-		// works for some app-derived addresses and breaks under different
-		// network configurations.
+		// address(this) lowers to `global CurrentApplicationAddress`; swap in
+		// CurrentApplicationID for app_params_get. Deriving app id from the
+		// last 8 bytes of the address is unreliable across network configs.
 		std::shared_ptr<awst::Expression> appId;
 		if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(addrExpr.get()))
 		{
@@ -60,20 +54,14 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		if (!appId)
 		{
-			// Arbitrary (non-`this`) address → HARD ERROR. Deriving the app id
-			// from the last 8 bytes of the address only works for some
-			// app-derived addresses and breaks under different network
-			// configurations, so `address(other).code` would silently read the
-			// wrong app's program (or panic on a non-existent app). The
-			// `address(this).code` self case above is computed correctly and is
-			// unaffected; compile-time `address(N).code` literals are handled
-			// earlier. Refuse the arbitrary-address case rather than guess.
+			// Arbitrary address → HARD ERROR: can't reliably map address→app id
+			// across network configs. `address(this).code` and `address(N).code`
+			// literals are handled above; stub appId so AWST building completes
+			// (error aborts before TEAL is emitted).
 			Logger::instance().error(
 				"`address(addr).code` for a non-`this` address is not supported "
 				"on AVM — an arbitrary address can't be reliably dereferenced to "
 				"its application program. `address(this).code` is supported.", m_loc);
-			// Stub appId so AWST building completes; the error aborts the build
-			// before any TEAL is emitted.
 			auto idCall = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
 			appId = awst::makeAsApplication(std::move(idCall), m_loc);
 		}
@@ -84,14 +72,12 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		auto appParamsGet = awst::makeAppParamsGet(
 			"AppApprovalProgram", std::move(appId), tupleType, m_loc);
 
-		// Stash the (bytes, bool) tuple into a fresh temp before pulling
-		// out the bytes element. Puya's TupleItemExpression lowering for a
-		// raw IntrinsicCall miscompiles the pop ordering of app_params_get;
-		// going through a VarExpression matches the pattern that
-		// SolNewExpression already uses successfully.
-		// Unique per call: the assign is prePending but the read is returned in
-		// the RESULT expression, so two `.code` reads in one expression would
-		// otherwise both read the second call's temp (all prepends run first).
+		// Stash (bytes, bool) into a fresh temp before extracting the bytes elem.
+		// puya's TupleItemExpression miscompiles pop ordering for a raw
+		// IntrinsicCall; VarExpression works (same pattern as SolNewExpression).
+		// Counter makes the name unique: two `.code` reads in one expression
+		// would both read the second call's temp if they shared a name
+		// (all prepends run before the returned expression is consumed).
 		static int s_appProgramTmpCounter = 0;
 		std::string tmpName =
 			"__app_program_result_" + std::to_string(++s_appProgramTmpCounter);
@@ -113,11 +99,9 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			"not wei. 1 microAlgo = 1e-6 ALGO. This is NOT equivalent to EVM wei "
 			"(1 wei = 1e-18 ETH). Ensure your contract logic accounts for this difference.", m_loc);
 
-		// Detect `address(contractExpr).balance` — the inner expression is a
-		// contract / applicationType, and our SolTypeConversion builds a fake
-		// `(24-zero-pad ++ itob(app_id))` address from it. `acct_params_get`
-		// on that fake address returns 0. Instead, dereference app_id to the
-		// real child-app address via `app_params_get AppAddress` first.
+		// `address(contractExpr).balance`: SolTypeConversion builds a fake
+		// (24-zero-pad ++ itob(app_id)) address; acct_params_get on it returns 0.
+		// Resolve to the real address via app_params_get AppAddress instead.
 		{
 			auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
 			if (fc && *fc->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
@@ -126,11 +110,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				auto const* innerType = fc->arguments()[0]->annotation().type;
 				bool isContractType = dynamic_cast<
 					solidity::frontend::ContractType const*>(innerType) != nullptr;
-				// Skip for `address(this)` — the existing fallback path
-				// below emits `global CurrentApplicationAddress` directly,
-				// which is the real self-account. Going through
-				// app_params_get would need CurrentApplicationID and is
-				// redundant.
+				// Skip for `address(this)` — fallback below emits
+				// `global CurrentApplicationAddress` directly.
 				bool isThis = false;
 				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(
 					fc->arguments()[0].get()))
@@ -141,10 +122,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				if (isContractType && !isThis)
 				{
 					auto appExpr = buildExpr(*fc->arguments()[0]);
-					// Contract-typed identifiers lower to accountType (our
-					// 24-zero-pad + itob(app_id) fake address). Reverse to get
-					// the app id. If the expression is already applicationType,
-					// reinterpret directly.
+					// Contract-typed identifiers lower to accountType (fake address);
+					// reverse to app id. If already applicationType, reinterpret directly.
 					std::shared_ptr<awst::Expression> appIdUint;
 					if (appExpr->wtype == awst::WType::accountType())
 					{
@@ -190,7 +169,6 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		auto addrExpr = buildExpr(baseExpression());
 
-		// acct_params_get AcctBalance returns (uint64, bool)
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::uint64Type(), awst::WType::boolType()});
@@ -198,29 +176,17 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		acctParams->immediates = {std::string("AcctBalance")};
 		acctParams->stackArgs.push_back(std::move(addrExpr));
 
-		// Extract the balance (index 0)
+		// Solidity balance is uint256 — promote uint64 → biguint
 		auto balanceVal = awst::makeTupleItem(std::move(acctParams), 0, awst::WType::uint64Type(), m_loc);
-
-		// Solidity returns uint256 for balance — promote uint64 → biguint
 		auto itob = awst::makeItob(std::move(balanceVal), m_loc);
 		return awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
 	if (member == "codehash")
 	{
-		// Solidity: address.codehash == keccak256 of the account's code,
-		// or bytes32(0) for EOAs / non-existent addresses.
-		//
-		// On AVM we can fetch the current app's approval program via
-		// `app_params_get AppApprovalProgram (global CurrentApplicationID)`
-		// and hash it with keccak256. For non-current addresses there is
-		// no cheap way to dereference the address → app id.
-		//
-		// Compile-time literal bridge: if the base expression is a
-		// FunctionCall that wraps an integer literal in `address(...)`,
-		// resolve it at compile time. address(0) → 0, small non-zero
-		// addresses → keccak256("") (matches EVM precompile convention
-		// where addresses 1..10 have no code), larger literals → 0.
+		// address(this).codehash → keccak256(AppApprovalProgram).
+		// Non-current addresses can't be cheaply resolved to an app id on AVM.
+		// Literal bridge: address(0) → bytes32(0); address(1..10) → keccak256("") (no code, EVM convention).
 		{
 			auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
 			if (fc && *fc->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
@@ -273,11 +239,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				return hash;
 			}
 		}
-		// Arbitrary (non-`this`, non-literal) address → HARD ERROR. The old
-		// stub returned bytes32(0), a wrong-but-deterministic value that would
-		// corrupt any codehash-based identity/commitment check. The
-		// `address(this).codehash` self case above and compile-time
-		// `address(N).codehash` literals are computed correctly and unaffected.
+		// Arbitrary address → HARD ERROR. Old stub returned bytes32(0), which
+		// silently corrupts codehash-based identity checks.
 		Logger::instance().error(
 			"`address(addr).codehash` for a non-`this` address is not supported "
 			"on AVM — an arbitrary address can't be dereferenced to its code, so "

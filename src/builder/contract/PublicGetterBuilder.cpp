@@ -26,9 +26,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			if (translatedFunctions.count(var->name()))
 				return; // explicit getter already exists
 
-			// Get the Solidity-computed getter function type.
-			// This gives us parameter types (mapping keys, array indices)
-			// and return types (struct field filtering).
+			// Getter type: param types (mapping keys, array indices) + return types (struct filtering).
 			auto getterFuncType = var->functionType(/*_internal=*/false);
 			if (!getterFuncType)
 				return;
@@ -51,7 +49,6 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			config.readonly = true;
 			getter.arc4MethodConfig = config;
 
-			// Build getter parameters from the Solidity getter function type.
 			auto const& solParamTypes = getterFuncType->parameterTypes();
 			auto const solParamNames = getterFuncType->parameterNames();
 			for (size_t i = 0; i < solParamTypes.size(); ++i)
@@ -66,15 +63,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				getter.args.push_back(std::move(arg));
 			}
 
-			// Determine return type from Solidity getter return types.
 			auto const& solReturnTypes = getterFuncType->returnParameterTypes();
 			auto const& solReturnNames = getterFuncType->returnParameterNames();
-			// Track signed return for sign-extension
-			unsigned signedGetterBits = 0;
+			unsigned signedGetterBits = 0; // >0 for signed ≤64-bit returns
 			if (solReturnTypes.size() == 1)
 			{
 				getter.returnType = m_typeMapper.map(solReturnTypes[0]);
-				// Detect signed integer return ≤64 bits for sign-extension
 				auto const* solType = solReturnTypes[0];
 				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 					solType = &udvt->underlyingType();
@@ -89,7 +83,6 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 			else if (solReturnTypes.size() > 1)
 			{
-				// Multiple return values (struct fields) — use WTuple.
 				std::vector<awst::WType const*> tupleTypes;
 				std::vector<std::string> tupleNames;
 				for (size_t i = 0; i < solReturnTypes.size(); ++i)
@@ -103,17 +96,15 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 			else
 			{
-				// No return types — shouldn't happen for getters, skip.
-				return;
+				return; // no return types — shouldn't happen for getters
 			}
 
-			// Build body: return value
 			auto body = awst::makeBlock(loc);
 
 			std::shared_ptr<awst::Expression> readExpr;
 			if (var->isConstant())
 			{
-				// Compile-time constant — return the value directly.
+				// Compile-time constant: return directly.
 				if (var->value())
 					readExpr = m_exprBuilder->build(*var->value());
 				if (!readExpr)
@@ -122,7 +113,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					readExpr = TypeCoercion::implicitNumericCast(
 						std::move(readExpr), getter.returnType, loc
 					);
-				// String literal → bytes[N]: right-pad to N bytes
+				// String literal → bytes[N]: right-pad.
 				if (readExpr && readExpr->wtype != getter.returnType)
 				{
 					auto const* bytesType = dynamic_cast<awst::BytesWType const*>(getter.returnType);
@@ -134,7 +125,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					}
 					else
 					{
-						// Generic ReinterpretCast for other bytes-compatible coercions
+						// Generic ReinterpretCast for bytes-compatible coercions.
 						bool compat = readExpr->wtype == awst::WType::stringType()
 							|| (readExpr->wtype && readExpr->wtype->kind() == awst::WTypeKind::Bytes);
 						if (compat)
@@ -147,13 +138,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 			else if (getter.args.empty())
 			{
-				// Simple state variable (no mapping/array params) — read from storage.
+				// Simple state variable (no keys/indices): read from storage.
 				auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
-				// For struct types with multiple return values, read the full
-				// ARC4Struct and extract/decode each returned field.
+				// Struct with multiple return values: read full ARC4Struct, project each field.
 				auto const* solStructType = dynamic_cast<solidity::frontend::StructType const*>(var->type());
 				if (solStructType && solReturnTypes.size() > 1)
 				{
@@ -197,13 +187,11 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				}
 				else
 				{
-					// Read with original storage type (not promoted return type)
+					// Use original storage type (not promoted return type).
 					auto* readType = signedGetterBits > 0
 						? m_typeMapper.map(var->type()) : getter.returnType;
 
-					// Transient state vars: route through TransientStorage
-					// (scratch slot TRANSIENT_SLOT packed blob) so the getter
-					// sees the same storage as direct named-var reads/writes.
+					// Transient vars: route through TRANSIENT_SLOT blob (same as named-var reads).
 					if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
 						&& m_transientStorage.isTransient(*var))
 					{
@@ -219,11 +207,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				&& !dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isByteArrayOrString()
 				&& getter.args.size() == 1)
 			{
-				// Array state var `T[]` / `T[N] public array` → getter(uint256 i).
-				// The backing store is a single state slot (box for dynamic /
-				// oversized static, AppGlobal otherwise) containing the packed
-				// ARC4 array; reading element i uses IndexExpression on that
-				// slot, NOT a sha256-based mapping key.
+				// Array getter(i): IndexExpression into the packed ARC4 array slot (not sha256 key).
 				auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
 				auto* arrWType = m_typeMapper.map(arrType);
 				auto* elemARC4 = m_typeMapper.mapSolTypeToARC4(arrType->baseType());
@@ -242,15 +226,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 				auto indexExpr = awst::makeIndexExpression(std::move(arrayRead), std::move(idx), elemARC4, loc);
 
-				// Decode ARC4 element back to native type (e.g. arc4.uint256 → biguint)
+				// Decode ARC4 element to native type (e.g. arc4.uint256 → biguint).
 				auto* nativeElem = m_typeMapper.map(arrType->baseType());
 				std::shared_ptr<awst::Expression> result = std::move(indexExpr);
 
-				// Struct element with multi-field getter signature: decompose
-				// the ARC4 struct into a tuple of non-mapping, non-dynamic-array
-				// fields. Matches Solidity's public-accessor behavior for
-				// `Struct[N] public p` where the getter returns the primitive
-				// fields flat rather than the struct itself.
+				// Struct element: decompose ARC4Struct into primitive-fields tuple
+				// (Solidity public-accessor skips mappings and non-bytes arrays).
 				auto const* solStructElem = dynamic_cast<solidity::frontend::StructType const*>(arrType->baseType());
 				if (solStructElem && solReturnTypes.size() > 1)
 				{
@@ -300,31 +281,18 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 			else
 			{
-				// Classify each level of the var's type outer-to-inner:
-				//   Mapping → contributes to box key
-				//   Array containing a Mapping in its subtree → contributes
-				//     to box key (mirrors SolIndexAccess::handleMappingAccess,
-				//     which folds outer arrays-of-mappings into the composite
-				//     key when the chain's top resolves to a mapping)
-				//   Array of flat elements (no Mapping below) → IndexExpression
-				//     on the box value
-				// Once we leave key mode the remaining levels stay value-indexing,
-				// so the getter's arg order is K…K I…I.
+				// Walk type outer-to-inner: Mapping/array-of-mapping → box key (K…K);
+				// array-of-flat-elements → IndexExpression on the value (I…I).
+				// Mirrors SolIndexAccess::handleMappingAccess key derivation.
+				// arg order: K…K I…I.
 				solidity::frontend::Type const* walkType = var->type();
 				size_t keyArgCount = 0;
 				size_t indexArgCount = 0;
 				bool inIndexMode = false;
 				solidity::frontend::Type const* storedValueType = walkType;
-				// Per-key-arg encoding wtype: matches what SolIndexAccess uses
-				// at the writer. Array-of-mapping levels: uint64 (itob, 8 B).
-				// Mapping levels: declared keyType (typically biguint → 32-B pad).
+				// Per-key encoding: array-of-mapping levels use uint64 (itob 8B);
+				// mapping levels use declared keyType (biguint → 32B pad).
 				std::vector<awst::WType const*> keyArgEncodingType;
-				// Parallel: per-key-arg array-level info.
-				//   absent (= encType-only check is enough): mapping level
-				//   present, value = 0: dynamic array level (bounds-check
-				//     against length in box header)
-				//   present, value > 0: static array level of fixed size N
-				//     (bounds-check against compile-time constant N)
 				std::vector<uint64_t> keyArgStaticLen; // 0 = dynamic, >0 = static N
 				std::vector<bool> keyArgIsArrayLevel;
 
@@ -347,9 +315,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						{
 							keyArgEncodingType.push_back(awst::WType::uint64Type());
 							keyArgIsArrayLevel.push_back(true);
-							// Static array: arraySize() is the constant N.
-							// Dynamic: leave as 0 — fall back to box-header
-							// length lookup at bounds-check site.
+							// Static: arraySize() = N; dynamic: 0 = look up length at bounds-check.
 							keyArgStaticLen.push_back(
 								at->isDynamicallySized() ? 0 : static_cast<uint64_t>(at->length()));
 							keyArgCount++;
@@ -370,17 +336,13 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				if (!inIndexMode)
 					storedValueType = walkType;
 
-				// Map the box-stored type.
 				awst::WType const* storedWType = m_typeMapper.map(storedValueType);
-				// The deepest type after all key + index levels — used for
-				// struct-field decomposition.
-				solidity::frontend::Type const* valueType = walkType;
+				solidity::frontend::Type const* valueType = walkType; // deepest type, for struct decomposition
 
 				std::shared_ptr<awst::Expression> storageRead;
 				if (keyArgCount == 0)
 				{
-					// No mapping keys — the state var is a plain multi-dim array.
-					// Use a regular state read (box/app-global) of the whole value.
+					// No mapping keys: plain multi-dim array; read the whole value.
 					auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
 						? awst::AppStorageKind::Box
 						: awst::AppStorageKind::AppGlobal;
@@ -389,7 +351,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				}
 				else
 				{
-				// Per-layer hash derivation (matches handleMappingAccess writer).
+				// Per-layer hash (mirrors handleMappingAccess writer).
 				std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
 					var->name(), loc, awst::WType::boxKeyType());
 
@@ -401,14 +363,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					if (encType != argRef->wtype)
 						encoded = TypeCoercion::implicitNumericCast(std::move(encoded), encType, loc);
 
-					// Bounds check at array-of-non-flat levels: matches
-					// Solidity's Panic(0x32) on OOB. The array's length lives
-					// in the first 2 bytes of the box at the current slot
-					// pointer (the ARC4-dyn-array header pre-created by the
-					// push path); default empty box → length 0 → any index
-					// fails. Skip mapping levels even when they share the
-					// uint64 encoding type (enum / uint8 keys) — mappings
-					// return defaults for unset keys, not revert.
+					// Bounds-check array-of-non-flat levels (Panic(0x32) on OOB).
+					// Skip mapping levels — they return defaults, not revert.
 					bool isArrayLevel = i < keyArgIsArrayLevel.size() && keyArgIsArrayLevel[i];
 					if (isArrayLevel)
 					{
@@ -419,16 +375,13 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						std::shared_ptr<awst::Expression> lengthExpr;
 						if (staticN > 0)
 						{
-							// Static array of size N: compile-time length.
+							// Static: compile-time length N.
 							lengthExpr = awst::makeIntegerConstant(std::to_string(staticN), loc, awst::WType::uint64Type());
 						}
 						else
 						{
-							// Dynamic array: length lives in the first 2 bytes
-							// of the box at currentPrefix (ARC4-dyn-array
-							// header). Materialise currentPrefix so the
-							// bounds-check read + the next layer's hash don't
-							// both re-emit the chain.
+							// Dynamic: length in first 2 bytes of box (ARC4 header).
+							// Materialise prefix so bounds-check + next-layer hash don't re-emit.
 							static int s_boundsCounter = 0;
 							std::string tempName = "__bounds_prefix_" + std::to_string(s_boundsCounter++);
 							auto tempVar = awst::makeVarExpression(tempName, awst::WType::boxKeyType(), loc);
@@ -453,15 +406,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						std::move(encoded), encType, std::move(currentPrefix), loc);
 				}
 
-				// makeStateGetWithDefault drops the StateGet wrapper for box
-				// reads whose payload + default can exceed AVM's 4 KB stack
-				// value cap (large/dynamic types) — see StorageMapper.cpp.
+				// makeStateGetWithDefault: avoids StateGet for large/dynamic types (>4KB stack cap).
 				auto boxExpr = awst::makeBoxValueExpression(std::move(currentPrefix), storedWType, loc);
 				storageRead = StorageMapper::makeStateGetWithDefault(std::move(boxExpr), storedWType, loc);
 				} // end keyArgCount > 0 branch
 
-				// Apply index accesses for any array dimensions nested inside the box value
-				// (e.g. `mapping(K => T[N])` keys by K, then indexes into T[N]).
+				// Index into any array dims inside the box value (e.g. mapping(K=>T[N]) → index T[N]).
 				std::shared_ptr<awst::Expression> indexed = std::move(storageRead);
 				{
 					solidity::frontend::Type const* walkType = storedValueType;
@@ -485,11 +435,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					}
 				}
 
-				// If the stored type is a struct, Solidity's public-accessor
-				// returns only the "value-type" fields flat — skipping mapping
-				// members and non-bytes dynamic arrays. Build the
-				// tuple/single-field projection from `indexed` (the full
-				// ARC4Struct read).
+				// Struct: project primitive fields flat (skip mappings/non-bytes arrays).
 				if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(valueType))
 				{
 					if (solReturnTypes.size() >= 1)
@@ -551,8 +497,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				{
 					readExpr = std::move(indexed);
 
-					// Decode ARC4 element to native getter return type if needed
-					// (e.g. indexing into ARC4StaticArray<uint8,N> gives arc4.uint8 → uint64).
+					// Decode ARC4 element to native type (e.g. arc4.uint8 → uint64).
 					if (readExpr && readExpr->wtype && readExpr->wtype != getter.returnType)
 					{
 						auto const* arc4Elem = dynamic_cast<awst::ARC4UIntN const*>(readExpr->wtype);
@@ -566,28 +511,21 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				}
 			}
 
-			// Sign-extend getter return for signed integer types
-			if (signedGetterBits > 0 && readExpr)
+			if (signedGetterBits > 0 && readExpr) // sign-extend signed integer return
 			{
 				readExpr = TypeCoercion::signExtendToUint256(std::move(readExpr), signedGetterBits, loc);
 			}
 
-			// ABI v2 validation for getter params (enum keys in mappings)
+			// ABI param validation for getter key params (sub-64-bit mapping keys).
 			bool getterV2 = true;
 			{
 				auto const& ann = _contract.sourceUnit().annotation();
 				if (ann.useABICoderV2.set())
 					getterV2 = *ann.useABICoderV2;
 			}
-			// ABI entry validation for the getter's KEY params. Getters
-			// previously validated only enum keys (and only under v2), so a
-			// raw caller could pass an out-of-range sub-64-bit mapping key
-			// (e.g. 256 to a `mapping(uint8 => V)` getter, whose ABI arg is a
-			// full uint64) and silently hit the WRONG storage slot. Reuse the
-			// exact buildABIEntryChecks the router runs for real methods, and
-			// insert at the FRONT so any mask applies before the key
-			// derivation reads the param. (Array-index getter params are
-			// uint256 — unaffected; only sub-64-bit mapping keys need this.)
+			// Reuse buildABIEntryChecks (same as the router) inserted BEFORE key derivation.
+			// Sub-64-bit mapping keys (e.g. mapping(uint8=>V)) otherwise alias wrong slots.
+			// (Array-index params are uint256 and are unaffected.)
 			{
 				std::vector<ABIParamDesc> descs;
 				descs.reserve(solParamTypes.size());
@@ -611,9 +549,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 			getter.body = body;
 
-			// Remap biguint (uint256) getter parameters to ARC4UIntN(256) so the
-			// ABI selector encodes as "uint256" (not "uint512"). Rename the arg to
-			// __arc4_<name> and insert a decode statement at the top of the body.
+			// Remap biguint getter params to ARC4UIntN(256): ABI selector "uint256" not "uint512".
 			{
 				std::vector<std::shared_ptr<awst::Statement>> decodeStmts;
 				for (auto& garg: getter.args)
@@ -643,17 +579,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					);
 			}
 
-			// Remap biguint return type to ARC4UIntN(N) so the ABI selector
-			// uses Solidity's declared "uintN" signature, not the internal
-			// "uint512" marker. Matches the wrap applied to regular method
-			// returns; without this, external callers of `c.x()` compute
-			// selector sha512_256("x()uint256") but the contract's dispatch
-			// emitted sha512_256("x()uint512"), producing a `match` miss.
-			//
-			// Only applied to UNSIGNED integer returns: signed returns
-			// (including signedGetterBits sign-extension) encode as two's
-			// complement in biguint and need a different ARC4 path. Wrapping
-			// a two's-complement biguint as ARC4UIntN would report overflow.
+			// Remap biguint return to ARC4UIntN(N): ABI selector "uintN" not "uint512".
+			// Unsigned only: signed two's-complement biguint must NOT be wrapped (overflow).
 			bool isUnsignedIntReturn = false;
 			unsigned retBits = 256;
 			if (getter.returnType == awst::WType::biguintType()
@@ -694,9 +621,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				getter.returnType = arc4RetType;
 			}
 
-			// Non-payable check for public state-variable getters
-			// (auto-generated getters are always view, never payable).
-			prependNonPayableCheck(getter);
+			prependNonPayableCheck(getter); // getters are always view/non-payable
 
 			contract->methods.push_back(std::move(getter));
 		}

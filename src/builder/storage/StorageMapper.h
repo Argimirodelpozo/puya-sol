@@ -48,20 +48,15 @@ public:
 	static int computeEncodedElementSize(awst::WType const* _type);
 
 	// ── Multi-box storage for oversized fixed arrays ──
-	// AVM caps a single box's value at 32768 bytes. Fixed-size ARC4 static
-	// arrays whose total encoded size exceeds that get split across N boxes
-	// keyed `<name>` ++ `itob(page)` (page = 0..N-1). Element accesses
-	// route at runtime via `page = idx / elemsPerBox`,
-	// `inPageOffset = (idx % elemsPerBox) * elemSize`.
+	// ARC4StaticArrays exceeding AVM's 32768-byte box cap split across N boxes
+	// keyed `<name>++itob(page)`. Element access: page=idx/elemsPerBox,
+	// offset=(idx%elemsPerBox)*elemSize.
 
 	/// AVM single-box value capacity.
 	static constexpr unsigned BOX_VALUE_CAPACITY = 32768;
 
-	/// AVM stack-value maximum (`max_byte_array_size`). Any byte string pushed
-	/// to or computed on the stack must fit. `bzero(N)` with N above this cap
-	/// reverts at runtime — so puya's `StateGet` default branch can't safely
-	/// materialise an all-zero value for box types beyond this size, even
-	/// though the box itself can hold up to BOX_VALUE_CAPACITY bytes.
+	/// AVM stack-value cap (`max_byte_array_size`). bzero(N>4096) reverts at
+	/// runtime, so StateGet's zero-default can't be materialised for large box types.
 	static constexpr int kAvmStackValueMax = 4096;
 
 	/// Element size for an ARC4StaticArray's fixed element type, or 0 if
@@ -89,17 +84,11 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// `makeStateGet(field, makeDefaultValue(type, loc), type, loc)` for most
-	/// types. Returns `Expression` (not `StateGet`) because for box-backed
-	/// reads of types that overflow AVM's 4 KB stack-value cap (statically
-	/// or at runtime — dyn arrays/bytes/oversized fixed arrays) we skip the
-	/// StateGet wrapper and return the bare `BoxValueExpression`. See
-	/// `createStateRead` / puyabug.md §4c/4d for the rationale.
-	/// Wraps the
-	/// common "read storage slot, fall back to type default" pattern. Pass the
-	/// stored wtype explicitly because some callers read with a wtype that
-	/// differs from the field's own wtype (multi-page arrays, struct slot
-	/// promotion, etc).
+	/// StateGet(field, default) for most types. For box-backed types that exceed
+	/// AVM's 4 KB stack-value cap (oversized fixed arrays, dyn arrays/bytes),
+	/// returns the bare BoxValueExpression instead — see puyabug.md §4c/4d.
+	/// Pass wtype explicitly; some callers read with a wtype different from the
+	/// field's own (multi-page arrays, struct slot promotion).
 	static std::shared_ptr<awst::Expression> makeStateGetWithDefault(
 		std::shared_ptr<awst::Expression> _field,
 		awst::WType const* _type,
@@ -112,42 +101,27 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Build `BoxValueExpression(makeUtf8BytesConstant(_varName,
-	/// loc, boxKeyType()), _type, loc)` — the canonical "top-level
-	/// state var box" shape. Replaces the 2-line idiom at half a
-	/// dozen call sites and pairs with `isTopLevelDynamicBox` so
-	/// readers can recognise the shape.
+	/// Canonical top-level state-var box: BoxValueExpression keyed by _varName.
+	/// Pairs with isTopLevelDynamicBox to recognise the shape.
 	static std::shared_ptr<awst::BoxValueExpression> makeTopLevelBoxExpr(
 		std::string const& _varName,
 		awst::WType const* _type,
 		awst::SourceLocation const& _loc
 	);
 
-	/// True iff `_box` is a top-level state-var box of a dynamic-sized
-	/// type (ARC4DynamicArray / ReferenceArray / dynamic bytes). These
-	/// are the boxes that are eagerly `box_create`d in `__postInit`
-	/// (see `m_boxArrayVarNames` in ApprovalProgramBuilder), so a bare
-	/// `BoxValueExpression` read is safe (the implicit assert-on-missing
-	/// inside puya's BoxRead never fires). "Top-level" = key is a literal
-	/// `BytesConstant` — mapping values (key = runtime `concat(name,
-	/// hash(args))`) are lazy boxes and don't qualify.
-	///
-	/// Used by both the read path (StateGet→BoxValue skip in
-	/// `makeStateGetWithDefault`) and the delete path
-	/// (SolUnaryOperation::handleDelete — emit `a = default` via
-	/// box_put instead of `box_del` so the eagerly-created box stays
-	/// alive). Both sites must agree, hence the shared helper.
+	/// True iff _box is a top-level dynamic-typed state-var box
+	/// (ARC4DynamicArray / ReferenceArray / dynamic bytes) eagerly created in
+	/// __postInit (m_boxArrayVarNames), so bare BoxValueExpression reads are safe.
+	/// "Top-level" = key is a BytesConstant; mapping values (runtime concat/hash)
+	/// are lazy and don't qualify. Shared by makeStateGetWithDefault (read skip)
+	/// and handleDelete (box_put-empty instead of box_del).
 	static bool isTopLevelDynamicBox(awst::BoxValueExpression const* _box);
 
-	/// Detect mapping-derived box keys: either the legacy
-	/// `BoxPrefixedKey(prefix, sha256(...))` shape, or the per-layer
-	/// `sha256(keyBytes ++ parent)` shape. Used to gate the
-	/// pre-create-the-per-entry-box logic for `mapping(K => sized_type) m;
-	/// m[k] ... = v`.
+	/// True for mapping-derived keys: BoxPrefixedKey or sha256 IntrinsicCall.
+	/// Gates pre-create-per-entry-box logic for `mapping(K => sized_type)`.
 	static bool isMappingDerivedKey(awst::Expression const* _key);
 
-	/// `box_len(<key>)` typed as WTuple(uint64, bool) — the (length, exists)
-	/// pair. Callers pick TupleItem 0 (length) or 1 (exists).
+	/// box_len(<key>) as WTuple(uint64, bool); callers pick item 0 (len) or 1 (exists).
 	static std::shared_ptr<awst::Expression> makeBoxLenTuple(
 		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _key,
@@ -167,10 +141,8 @@ private:
 		awst::AppStorageKind _kind = awst::AppStorageKind::AppGlobal
 	);
 
-	/// Build the raw storage *target* expression for a kind: a
-	/// BoxValueExpression (Box) or an AppStateExpression (AppGlobal / fallback).
-	/// Shared by createStateRead (which adds the exists-assert / StateGet
-	/// wrapping) and createStateWrite (which uses it directly as the lvalue).
+	/// Raw storage target: BoxValueExpression (Box) or AppStateExpression (AppGlobal).
+	/// Shared by createStateRead (adds exists-assert/StateGet) and createStateWrite.
 	std::shared_ptr<awst::Expression> makeStorageTarget(
 		std::shared_ptr<awst::BytesConstant> const& _key,
 		awst::WType const* _type,

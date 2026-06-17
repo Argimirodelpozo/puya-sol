@@ -25,8 +25,7 @@ NodeBuilder::NodeBuilder(ContractContext& _ctx)
 
 std::shared_ptr<awst::Expression> InstanceBuilder::resolve_lvalue()
 {
-	// Most expressions are not lvalues — override in builders that support assignment.
-	return resolve();
+	return resolve(); // default: not an lvalue; override in builders that support assignment
 }
 
 std::unique_ptr<InstanceBuilder> InstanceBuilder::unary_op(
@@ -111,10 +110,8 @@ std::unique_ptr<NodeBuilder> TypeBuilder::member_access(
 std::unique_ptr<InstanceBuilder> TypeBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool /*_negate*/)
 {
-	// Type expressions are always truthy.
+	// Type expressions are always truthy. TODO: return SolBoolBuilder when wired up.
 	auto bc = awst::makeTrue(_loc);
-	// We can't construct an InstanceBuilder here yet (no concrete bool builder).
-	// This will be wired up in Phase 1 when BoolBuilder exists.
 	return nullptr;
 }
 
@@ -132,8 +129,7 @@ std::unique_ptr<NodeBuilder> CallableBuilder::member_access(
 std::unique_ptr<InstanceBuilder> CallableBuilder::bool_eval(
 	awst::SourceLocation const& /*_loc*/, bool /*_negate*/)
 {
-	// Callables are always truthy (they exist).
-	return nullptr;
+	return nullptr; // callables are always truthy
 }
 
 } // namespace puyasol::builder::eb

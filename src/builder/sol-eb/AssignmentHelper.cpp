@@ -21,19 +21,15 @@ std::shared_ptr<awst::Expression> AssignmentHelper::tryComputeCompoundValue(
 {
 	using Token = solidity::frontend::Token;
 
-	// Map assign operator to binary op
 	auto mapOp = [](Token t) -> std::optional<BuilderBinaryOp> {
 		switch (t)
 		{
 		case Token::AssignAdd: return BuilderBinaryOp::Add;
 		case Token::AssignSub: return BuilderBinaryOp::Sub;
 		case Token::AssignMul: return BuilderBinaryOp::Mult;
-		// FloorDiv, NOT Div: SolIntegerBuilder's signed-division routing gates
-		// on FloorDiv (matching SolBinaryOperation's Token::Div mapping). With
-		// Div, signed `x /= y` skipped buildSignedModDiv and computed an
-		// UNSIGNED floor-div of the two's-complement bits (verified: -7 /= 2
-		// returned 2^255 - 4 instead of -3). Unsigned was unaffected — both
-		// enum values lower to the same FloorDiv op.
+		// FloorDiv not Div: signed-division routing gates on FloorDiv (matching
+		// SolBinaryOperation). Div would skip buildSignedModDiv for signed types
+		// (-7/=2 gave 2^255-4 instead of -3). Unsigned: both lower identically.
 		case Token::AssignDiv: return BuilderBinaryOp::FloorDiv;
 		case Token::AssignMod: return BuilderBinaryOp::Mod;
 		case Token::AssignShl: return BuilderBinaryOp::LShift;
@@ -52,12 +48,10 @@ std::shared_ptr<awst::Expression> AssignmentHelper::tryComputeCompoundValue(
 	if (!_targetSolType)
 		return nullptr;
 
-	// Create builders for both sides
 	auto leftBuilder = _ctx.builderForInstance(_targetSolType, _currentValue);
 	if (!leftBuilder)
 		return nullptr;
 
-	// For the RHS, use the same Solidity type — compound assignment operates on same type
 	auto rightBuilder = _ctx.builderForInstance(_targetSolType, _rhs);
 	if (!rightBuilder)
 		return nullptr;
@@ -82,7 +76,7 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 	while (auto const* outerField =
 		dynamic_cast<awst::FieldExpression const*>(result.assignTarget.get()))
 	{
-		// Outer base's struct type — direct, or peek through StateGet.
+		// Outer struct type — direct or through StateGet.
 		auto const* outerStructType =
 			dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
 		if (!outerStructType)
@@ -91,10 +85,9 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 		if (!outerStructType) break;
 
 		auto outerBase = outerField->base;
-		// Write target: bare base, no StateGet wrapper (puya rejects).
+		// Write target: no StateGet wrapper (puya rejects it).
 		auto outerWriteBase = awst::unwrapStateGet(outerBase);
-		// Read base: surviving fields need a read-shape (BoxValue needs to
-		// be wrapped in StateGet so field reads return the box content).
+		// Read base: BoxValue must be wrapped in StateGet for field reads.
 		auto outerReadBase = outerBase;
 		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
 			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))

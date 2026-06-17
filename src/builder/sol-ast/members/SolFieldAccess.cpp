@@ -33,17 +33,11 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		{
 			std::shared_ptr<awst::Expression> decode =
 				awst::makeARC4Decode(std::move(field), nativeType, m_loc);
-			// A packed signed sub-word field (arc4.intN, N<64) decodes
-			// (extract + btoi) to the RAW N-bit value, dropping the sign
-			// (-60 int24 -> +16777156). Sign-extend to the 64-bit two's-
-			// complement so widening / int64 casts / signed arithmetic on the
-			// field read see the correct negative value. (No-op for
-			// non-negative values; unsigned fields are skipped.)
-			//
-			// ONLY for rvalue reads: when this member access is an assignment
-			// TARGET (willBeWrittenTo), the write-back path
-			// (SolAssignment::tryStructOrNamedTupleFieldAssignment) must see the
-			// bare ARC4Decode/FieldExpression, so leave it unwrapped.
+			// Signed sub-word field (arc4.intN, N<64): decode yields raw N-bit
+			// value (-60 int24 → +16777156). Sign-extend to 64-bit two's-complement.
+			// ONLY for rvalue reads: assignment target (willBeWrittenTo) must see
+			// the bare ARC4Decode/FieldExpression for the write-back path
+			// (SolAssignment::tryStructOrNamedTupleFieldAssignment).
 			if (!m_memberAccess.annotation().willBeWrittenTo)
 			{
 				if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
@@ -52,10 +46,9 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 						&& nativeType == awst::WType::uint64Type())
 						decode = TypeCoercion::signExtendToUint64(
 							std::move(decode), fieldInt->numBits(), m_loc);
-				// 64<N<256 biguint-backed signed fields (e.g. int128): sign-extend to
-				// canonical 256-bit so `s.x == scalar` / arithmetic match. Same class as
-				// the int128[] array-element and transient read fixes. No-op for
-				// unsigned / int256 / <=64-bit.
+				// 64<N<256 signed fields (e.g. int128): sign-extend to canonical 256-bit
+				// two's-complement. Same class as int128[] array-element + transient fixes.
+				// No-op for unsigned / int256 / <=64-bit.
 				decode = TypeCoercion::signExtendSignedElement(
 					std::move(decode), m_memberAccess.annotation().type, m_loc);
 			}

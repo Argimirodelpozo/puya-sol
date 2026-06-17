@@ -21,10 +21,8 @@ static constexpr int TxnTypeAppl = 6;
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
 	auto solTypeToARC4Name = [this](Type const* _type) -> std::string {
-		// Integers: match the callee router's exact naming — <=64-bit → "uint64",
-		// >64-bit → "uintN" (exact width), signedness dropped. The map()→biguint
-		// path below collapses EVERY >64-bit width to "uint256", which mismatches
-		// the callee selector (e.g. uint128 is "uint128" on-chain, not "uint256").
+		// Integers: <=64-bit → "uint64", >64-bit → "uintN" (exact width), signedness
+		// dropped. map()→biguint would collapse all >64-bit to "uint256" (wrong).
 		if (auto name = builder::TypeCoercion::intSelectorName(_type))
 			return *name;
 		auto* rawType = m_ctx.typeMapper.map(_type);
@@ -42,9 +40,8 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 		auto* arc4Type = m_ctx.typeMapper.mapToARC4Type(rawType);
 		return builder::TypeCoercion::wtypeToABIName(arc4Type);
 	};
-	// Return-position names differ from params for SIGNED ints (a signed return
-	// is the full 256-bit two's complement → "uint256"); non-int types are named
-	// identically, so fall through to the param namer.
+	// Signed int returns → "uint256" (full 256-bit two's complement);
+	// non-int types identical to params.
 	auto solTypeToARC4Ret = [&](Type const* _type) -> std::string {
 		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
 			return *name;
@@ -110,9 +107,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	{
 		if (isDynamicBytes)
 		{
-			// ARC4 byte[] encoding: uint16(length) ++ raw_bytes. The arg feeds
-			// both the length and the concat — wrap in makeEvalOnce so a
-			// side-effecting bytes arg (`other.f(mkBytes())`) evaluates once.
+			// ARC4 byte[]: uint16(len)++raw. makeEvalOnce for side-effecting args.
 			_argExpr = awst::makeEvalOnce(std::move(_argExpr), m_loc);
 			auto lenExpr = awst::makeLen(_argExpr, m_loc);
 			auto itobLen = awst::makeItob(std::move(lenExpr), m_loc);
@@ -124,9 +119,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	}
 	else if (_argExpr->wtype == awst::WType::uint64Type())
 	{
-		// itob produces 8 bytes. If the target ABI param is wider (e.g.
-		// uint256 = 32 bytes), left-pad with zeros so the callee's arc4
-		// length check (len == N) holds.
+		// itob → 8 bytes; left-pad if param is wider (callee's arc4 len check).
 		unsigned widthBytes = 8;
 		if (_paramSolType)
 		{
@@ -143,11 +136,9 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	}
 	else if (_argExpr->wtype == awst::WType::biguintType())
 	{
-		// Encode to the param's EXACT ARC4 width, not always 32 bytes. A >64-bit
-		// int param is arc4.uintN (N/8 bytes) — e.g. uint128 is 16 bytes — and
-		// the callee's arc4 decode asserts len == N/8, so a 32-byte arg reverts.
-		// makeARC4Encode trims the biguint to its low N/8 bytes (correct for
-		// signed two's complement too). int256/uint256 stays 32 bytes.
+		// Encode to the param's exact ARC4 width (N/8 bytes); callee arc4 decode
+		// asserts len==N/8, so a 32-byte arg reverts. makeARC4Encode trims to low
+		// N/8 bytes. int256/uint256 stays 32 bytes.
 		auto const* solT = _paramSolType;
 		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solT))
 			solT = &udvt->underlyingType();
@@ -212,8 +203,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 	if (_addrExpr->wtype == awst::WType::applicationType())
 		return _addrExpr;
 
-	// Special case: `this` (CurrentApplicationAddress) is a hash, not our
-	// conventional \x00*24 + app_id format. Use CurrentApplicationID directly.
+	// `this` (CurrentApplicationAddress) is a hash, not \x00*24+app_id;
+	// use CurrentApplicationID directly.
 	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_addrExpr.get()))
 	{
 		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
@@ -288,9 +279,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	// Tuple/struct returns
 	if (auto const* tupleType = dynamic_cast<awst::WTuple const*>(_returnType))
 	{
-		// Unique id required: with a fixed id, the wrapped return-bytes of two
-		// identical external calls in one function would compare attrs-equal
-		// and merge — the second call's itxn would never submit.
+		// Unique id: without it, two identical calls compare attrs-equal
+		// and merge — second call's itxn never submits.
 		auto singleBytes = awst::makeSingleEvaluation(
 			std::move(stripPrefix), awst::WType::bytesType(),
 			awst::nextSingleEvalId(), m_loc);
@@ -389,18 +379,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		return vc;
 	}
 
-	// Optimise `(new C()).stateVar()` (or .immutable()) to the compile-time
-	// initial value of the state variable. Our `new C()` stub only deploys
-	// a tiny approval program that doesn't actually include the contract's
-	// state initialisers, so any call on the resulting app returns zero
-	// bytes (no log) and trips the itxn LastLog extraction. If we can see
-	// the member is a public state/immutable var with a literal initialiser,
-	// fold the call to that literal directly.
+	// Fold `(new C()).stateVar()` to the literal initialiser. `new C()` stub
+	// emits a minimal program; any call returns no log and trips itxn
+	// LastLog extraction. Fold avoids the inner txn.
 	{
-		// Parentheses in the source become 1-element TupleExpressions in
-		// the AST (e.g. `(new C())` is Tuple(FunctionCall(NewExpression))),
-		// so peel them before looking for `new C()`. Without this the
-		// fold never fires for the common parenthesised form.
+		// `(new C())` → Tuple(FunctionCall(NewExpression)) in AST;
+		// peel outer tuples or the fold never fires.
 		Expression const* base = solidity::frontend::resolveOuterUnaryTuples(
 			&memberAccess->expression());
 		if (auto const* outerFuncCall = dynamic_cast<FunctionCall const*>(base))

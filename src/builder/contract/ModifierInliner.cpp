@@ -22,14 +22,7 @@ void ContractBuilder::inlineModifiers(
 	std::shared_ptr<awst::Block>& _body
 )
 {
-	// Contract methods and constructors share the free-function modifier
-	// inliner in ModifierBodyInliner.cpp. `makeFunctionCtx()` packages
-	// this builder's per-function state into the FunctionTranslationCtx
-	// the free `inlineModifiers` expects — the same wrapper
-	// `ContractBuilder::buildBlock` already routes through. (This routine
-	// was previously a ~490-line copy that had drifted out of sync with
-	// the free version, most notably lacking its storage-pointer
-	// modifier-param handling.)
+	// Delegate to the free inlineModifiers in ModifierBodyInliner.cpp via makeFunctionCtx().
 	auto ctx = makeFunctionCtx();
 	::puyasol::builder::inlineModifiers(ctx, _func, _body);
 }
@@ -50,7 +43,7 @@ void ContractBuilder::buildModifierChain(
 	std::string baseName = _func.name();
 	std::string cref = m_sourceFile + "." + _contractName;
 
-	// Step 1: Create the innermost subroutine (function body without modifiers)
+	// Innermost subroutine = original function body.
 	std::string bodySubName = baseName + "__body_" + std::to_string(chainId);
 	{
 		awst::ContractMethod bodySub;
@@ -65,8 +58,7 @@ void ContractBuilder::buildModifierChain(
 		m_modifierSubroutines.push_back(std::move(bodySub));
 	}
 
-	// Step 2: Build modifier subroutines from innermost to outermost.
-	// Each calls the next (or the body sub for the innermost modifier).
+	// Modifier subroutines innermost→outermost, each calling the next.
 	std::string nextSubName = bodySubName;
 
 	for (int i = static_cast<int>(modifiers.size()) - 1; i >= 0; --i)
@@ -76,18 +68,11 @@ void ContractBuilder::buildModifierChain(
 			modInvocation->name().annotation().referencedDeclaration
 		);
 		if (!modDef)
-		{
-			// Constructor base call — skip, handled elsewhere
-			continue;
-		}
+			continue; // constructor base call — handled elsewhere
 
-		// Resolve virtual overrides — but NOT for explicit base modifier calls (A.m).
-		// Detect explicit base: the IdentifierPath has >1 component for A.m.
-		// For inherited functions, the referencedDeclaration points to the base
-		// modifier, but we still want the most-derived override.
+		// Resolve virtual override unless this is an explicit A.m base call.
 		bool isExplicitBaseModifier = false;
 		{
-			// Check the IdentifierPath: "A.m" has path ["A", "m"], "m" has path ["m"]
 			auto const& path = modInvocation->name().path();
 			if (path.size() > 1)
 				isExplicitBaseModifier = true;
@@ -107,7 +92,6 @@ void ContractBuilder::buildModifierChain(
 
 		std::string modSubName = baseName + "__mod" + std::to_string(i) + "_" + std::to_string(chainId);
 
-		// Create the modifier subroutine
 		awst::ContractMethod modSub;
 		modSub.sourceLocation = makeLoc(modDef->location());
 		modSub.cref = cref;
@@ -117,10 +101,8 @@ void ContractBuilder::buildModifierChain(
 		modSub.arc4MethodConfig = std::nullopt; // internal
 		modSub.pure = _method.pure;
 
-		// Build modifier body block
 		auto modBody = awst::makeBlock(modSub.sourceLocation);
 
-		// Evaluate modifier arguments → bind to local vars via paramRemaps
 		auto const* args = modInvocation->arguments();
 		auto const& params = modDef->parameters();
 		std::vector<int64_t> remappedDeclIds;
@@ -149,11 +131,8 @@ void ContractBuilder::buildModifierChain(
 			}
 		}
 
-		// Set placeholder body: at `_;`, call the next subroutine
-		// Build a block that calls nextSubName and assigns return value
+		// At `_`: call nextSubName and capture return value.
 		auto placeholderBlock = awst::makeBlock(modSub.sourceLocation);
-
-		// Determine return variable name for this modifier sub
 		std::string retVarName;
 		auto const& retParams = _func.returnParameters();
 		if (_method.returnType != awst::WType::voidType())
@@ -165,7 +144,6 @@ void ContractBuilder::buildModifierChain(
 		}
 
 		{
-			// Build: returnVar = nextSub(args...)
 			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{nextSubName}, _method.returnType, modSub.sourceLocation);
 			for (auto const& arg: _method.args)
 				awst::pushCallArg(call->args, arg.name,
@@ -173,7 +151,6 @@ void ContractBuilder::buildModifierChain(
 
 			if (!retVarName.empty())
 			{
-				// Assign call result to return variable
 				auto retTarget = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 
 				auto assign = awst::makeAssignmentStatement(std::move(retTarget), std::move(call), modSub.sourceLocation);
@@ -186,8 +163,7 @@ void ContractBuilder::buildModifierChain(
 			}
 		}
 
-		// Initialize return variable at the start of the modifier sub
-		if (!retVarName.empty())
+		if (!retVarName.empty()) // zero-init return variable
 		{
 			auto target = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 			auto zeroVal = StorageMapper::makeDefaultValue(_method.returnType, modSub.sourceLocation);
@@ -195,17 +171,15 @@ void ContractBuilder::buildModifierChain(
 			modBody->body.push_back(std::move(assign));
 		}
 
-		// Translate modifier body with _;→placeholderBlock
 		setPlaceholderBody(placeholderBlock);
 		auto translatedBody = buildBlock(modDef->body());
 		setPlaceholderBody(nullptr);
 
 		if (translatedBody)
 		{
-			// Fix bare return statements in modifier body: `return;` → `return __retval;`
-			// A modifier's bare `return` means "exit early", returning the current retval.
 			if (!retVarName.empty())
 			{
+				// Rewrite bare `return;` in modifier body to `return __retval;`.
 				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> fixReturns;
 				fixReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 				{
@@ -237,7 +211,6 @@ void ContractBuilder::buildModifierChain(
 				modBody->body.push_back(std::move(stmt));
 		}
 
-		// Add return statement using the return variable
 		{
 			auto retStmt = awst::makeReturnStatement(nullptr, modSub.sourceLocation);
 			if (!retVarName.empty())
@@ -248,7 +221,6 @@ void ContractBuilder::buildModifierChain(
 			modBody->body.push_back(std::move(retStmt));
 		}
 
-		// Unregister remaps
 		for (auto declId: remappedDeclIds)
 			m_tr->eraseParamRemap(declId);
 
@@ -257,11 +229,10 @@ void ContractBuilder::buildModifierChain(
 		nextSubName = modSubName;
 	}
 
-	// Step 3: Replace _method.body with a call to the outermost modifier subroutine
+	// Rewrite _method.body to call the outermost modifier subroutine.
 	auto entryBody = awst::makeBlock(_method.sourceLocation);
 
-	// Initialize named return vars to zero
-	for (auto const& rp: _func.returnParameters())
+	for (auto const& rp: _func.returnParameters()) // zero-init named return vars
 	{
 		if (rp->name().empty()) continue;
 		auto* rpType = m_typeMapper.map(rp->type());
@@ -272,7 +243,6 @@ void ContractBuilder::buildModifierChain(
 		entryBody->body.push_back(std::move(assign));
 	}
 
-	// Call outermost modifier sub
 	auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{nextSubName}, _method.returnType, _method.sourceLocation);
 	for (auto const& arg: _method.args)
 		awst::pushCallArg(call->args, arg.name,

@@ -1,5 +1,4 @@
-/// @file SolUnaryOperation.cpp
-/// Migrated from UnaryOperationBuilder.cpp.
+/// @file SolUnaryOperation.cpp — unary operation translation.
 
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
@@ -40,16 +39,14 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNot(
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 	std::shared_ptr<awst::Expression> _operand)
 {
-	// Check if the operand or result type is a signed integer.
-	// For constant expressions like (-2), the operand type is RationalNumberType
-	// but the result type is signed IntegerType.
+	// For constant expressions like `-2`, operand type is RationalNumberType;
+	// fall through to check result type for signed intN.
 	auto const* solType = m_unaryOp.subExpression().annotation().type;
 	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
 		solType = &udvt->underlyingType();
 	auto const* intType = dynamic_cast<IntegerType const*>(solType);
 	if (!intType || !intType->isSigned())
 	{
-		// Try the result type (for constant expressions)
 		auto const* resultType = m_unaryOp.annotation().type;
 		if (auto const* udvt2 = dynamic_cast<UserDefinedValueType const*>(resultType))
 			resultType = &udvt2->underlyingType();
@@ -61,8 +58,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 	if (intType && intType->isSigned())
 	{
 		unsigned bits = intType->numBits();
-		// Signed negation: -x = (2^N - x) mod 2^N
-		// Overflow check: -INT_MIN overflows (x == 2^(N-1))
+		// -x = (2^N - x) mod 2^N; overflow: x == 2^(N-1) i.e. INT_MIN
 		std::string pow2NStr, halfNStr;
 		if (bits == 256)
 		{
@@ -83,7 +79,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			return c;
 		};
 
-		// Ensure operand is biguint
 		auto operand = std::move(_operand);
 		if (operand->wtype == awst::WType::uint64Type())
 		{
@@ -91,14 +86,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			operand = awst::makeAsBiguint(std::move(itob), m_loc);
 		}
 
-		// Mask to N bits first (uint64 two's complement may be wider)
 		if (bits < 256)
 		{
 			auto mask = awst::makeBigUIntBinOp(std::move(operand), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
 			operand = std::move(mask);
 		}
 
-		// Checked: assert(x != INT_MIN) i.e. x != 2^(N-1)
 		if (!m_scope.isUnchecked())
 		{
 			auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(halfNStr), m_loc);
@@ -107,21 +100,16 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		}
 
 		// -x = (2^N - x) mod 2^N
-		// For 256-bit: 2^256 - 0 would overflow, so use if/else via temp variable
 		std::shared_ptr<awst::Expression> negated;
 		if (bits == 256)
 		{
-			// Emit: __neg_tmp = 0; if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
-			// Then use __neg_tmp as the result.
 			std::string tmpName = "__neg_tmp_" + std::to_string(m_unaryOp.id());
 
-			// __neg_tmp = 0
 			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), m_loc);
 
 			auto initStmt = awst::makeAssignmentStatement(tmpVar, makeBiguintConst("0"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(initStmt));
 
-			// if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
 			auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
 
 			auto sub = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, operand, m_loc);
@@ -147,7 +135,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			negated = std::move(mod);
 		}
 
-		// Convert back to uint64 for ≤64-bit types
 		if (bits <= 64)
 		{
 			return awst::makeBiguintToUInt64(std::move(negated), m_loc);
@@ -155,21 +142,15 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		return negated;
 	}
 
-	// For biguint constant negation (e.g., (-2) where type is RationalNumberType),
-	// produce two's complement directly: 2^256 - value
+	// biguint constant negation: two's complement 2^256 - value
 	if (isBigUInt(_operand->wtype))
 	{
 		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
 		{
 			solidity::u256 val(intConst->value);
-			// Allow val == 2^255 (the largest positive value whose negation
-			// is a valid signed int256: -2^255 = type(int256).min). The strict
-			// less-than missed this, so `-2**255` fell through to runtime
-			// `0 - 2^255`, which crashes with "byte math would have negative
-			// result" since AVM `b-` rejects negative results.
+			// Allow val == 2^255 (int256.min valid); strict < missed it, AVM b- crashes on 0-2^255.
 			if (val > 0 && val <= (solidity::u256(1) << 255))
 			{
-				// 2^256 - val (two's complement negation)
 				static const std::string pow256Str =
 					kPow2_256;
 				solidity::u256 pow256(pow256Str);
@@ -186,13 +167,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		auto e = awst::makeBigUIntBinOp(std::move(zero), awst::BigUIntBinaryOperator::Sub, std::move(_operand), m_loc);
 		return e;
 	}
-	// For uint64 constant negation, produce two's complement biguint.
-	// We can't safely narrow to uint64 here — the surrounding context
-	// might be int256 (biguint storage) and a uint64 result would
-	// sign-extend wrong (uint64(2^64-1) → biguint(2^64-1) instead of
-	// biguint(2^256-1)). The wide-form constant survives narrowing
-	// to uint64 slots correctly via `extract3 + btoi`, while uint64
-	// constants don't survive widening to biguint slots.
+	// uint64 constant negation: produce biguint two's-comp. Can't narrow: if the
+	// context is int256 storage, uint64(2^64-1) would sign-extend wrong.
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
 		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
@@ -227,7 +203,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	auto* resultType = _operand->wtype;
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
-		// Use the correct bit-width mask from the Solidity type
 		unsigned maskBits = 64;
 		auto const* solType = m_unaryOp.subExpression().annotation().type;
 		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
@@ -246,13 +221,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 		return xorOp;
 	}
 	auto expr = std::move(_operand);
-	// Width-aware bitwise NOT for a biguint-backed intN (64<N<256, or a sub-word
-	// uintN that landed in a biguint-typed context): ~x = x XOR (2^N - 1), masked
-	// to the Solidity type's bit width. A raw byte-level BitInvert inverts the
-	// wrong number of bits (e.g. ~uint128(5) must be 2^128-6, not ~0x05 = 0xFA),
-	// so `x & ~FLAG` (V4 LPFee removeOverrideFlagAndValidate / isOverride, uint24)
-	// silently became a no-op. Mirrors the uint64 path above; N==256 keeps the
-	// full-width BitInvert below (unchanged).
+	// biguint-backed intN (64<N<256): ~x = x XOR (2^N-1) masked to bit width.
+	// Raw BitInvert inverts wrong count: ~uint128(5) must be 2^128-6, not ~0x05=0xFA
+	// (V4 LPFee removeOverrideFlagAndValidate was silently a no-op).
 	if (expr->wtype == awst::WType::biguintType())
 	{
 		unsigned maskBits = 0;
@@ -290,9 +261,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	bool isPrefix = m_unaryOp.isPrefixOperation();
 	bool isInc = (m_unaryOp.getOperator() == Token::Inc);
 
-	// Transient state variable inc/dec: read/compute/write via TransientStorage.
-	// The normal path builds an AssignmentStatement with the read expr as
-	// target, which isn't an lvalue for packed transient slots.
+	// Transient state var: read/compute/write via TransientStorage
+	// (AssignmentStatement with read expr as target isn't an lvalue).
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
@@ -341,7 +311,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			m_unaryOp.subExpression().annotation().type))
 		isSigned = intType->isSigned();
 
-	// Unwrap BoxValueExpression for reads
 	if (dynamic_cast<awst::BoxValueExpression const*>(_operand.get()))
 		_operand = builder::StorageMapper::makeStateGetWithDefault(_operand, _operand->wtype, m_loc);
 
@@ -350,7 +319,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	static const std::string pow256Minus1 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-	// Get signed bit width for overflow checks
 	unsigned signedBits = 0;
 	if (isSigned)
 	{
@@ -364,7 +332,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	{
 		if (isSigned && signedBits > 0)
 		{
-			// Signed inc/dec with two's complement wrapping + overflow check
 			std::string pow2NStr2, halfNStr2;
 			if (signedBits == 256)
 			{
@@ -385,7 +352,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				return c;
 			};
 
-			// Ensure biguint
 			auto val = std::move(base);
 			if (val->wtype == awst::WType::uint64Type())
 			{
@@ -393,20 +359,18 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				val = awst::makeAsBiguint(std::move(itob), m_loc);
 			}
 
-			// Mask to N bits
 			if (signedBits < 256)
 			{
 				auto mask = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), m_loc);
 				val = std::move(mask);
 			}
 
-			// Checked overflow: inc overflows at MAX (half-1), dec underflows at MIN (half)
+			// Overflow check: inc at MAX (half-1), dec at MIN (half)
 			if (!m_scope.isUnchecked())
 			{
 				std::string limitStr;
 				if (isInc)
 				{
-					// MAX = half - 1
 					solidity::u256 maxVal = (solidity::u256(1) << (signedBits - 1)) - 1;
 					std::ostringstream oss; oss << maxVal; limitStr = oss.str();
 				}
@@ -418,7 +382,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
 			}
 
-			// Compute: inc → (val + 1) mod 2^N, dec → (val + 2^N - 1) mod 2^N
 			std::shared_ptr<awst::Expression> added;
 			if (isInc)
 			{
@@ -427,7 +390,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			}
 			else
 			{
-				// val + (2^N - 1) to avoid negative
 				solidity::u256 decOffset = (signedBits == 256)
 					? solidity::u256(0) // special: use string directly
 					: (solidity::u256(1) << signedBits) - 1;
@@ -444,7 +406,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 			auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), m_loc);
 
-			// Convert back to uint64 for ≤64-bit types
 			if (signedBits <= 64)
 			{
 				return awst::makeBiguintToUInt64(std::move(mod), m_loc);
@@ -465,24 +426,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 	};
 
-	// Re-read the subexpression for the assignment target. State vars come
-	// back wrapped in StateGet, which is a read — unwrap so the assignment
-	// lands on the writable BoxValueExpression / AppStateExpression. Also
-	// peel ARC4Decode (native-typed read of an ARC4-encoded field) so the
-	// write hits the encoded slot — paired with ARC4Encode on the new
-	// value below.
-	// Derive the assignment target from the ALREADY-BUILT operand — do NOT
-	// rebuild the subexpression. A rebuild re-runs the builder on any
-	// side-effecting index (e.g. `arr[i++]`), evaluating it twice: the index
-	// would increment once for the read and again for the write, landing the
-	// write on the wrong element (verified: `arr[i++]++` gave i==2). Reusing
-	// the built operand keeps the side effect (already hoisted to a prePending
-	// temp) running once and shares the index temp between read and write.
-	// State vars come back wrapped in StateGet (a read) — unwrap so the write
-	// lands on the writable BoxValue/AppState. Also peel ARC4Decode (native
-	// read of an ARC4 field) so the write hits the encoded slot — paired with
-	// ARC4Encode on the new value below. Unwrapping shares the (non-side-
-	// effecting) location subtree with the read, identical to the old rebuild.
+	// Derive write target from the ALREADY-BUILT operand — rebuilding re-runs
+	// side-effecting indexes (verified: `arr[i++]++` gave i==2 on rebuild).
+	// Unwrap StateGet (read wrapper) so assignment lands on BoxValue/AppState;
+	// peel ARC4Decode so write hits encoded slot (paired with ARC4Encode below).
 	auto makeWriteTarget = [&](std::shared_ptr<awst::Expression> target)
 		-> std::shared_ptr<awst::Expression>
 	{
@@ -492,9 +439,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		return target;
 	};
 
-	// If the unwrapped write target is ARC4-typed but the new value is
-	// native (biguint/uint64), wrap with ARC4Encode. Pairs with the
-	// ARC4Decode unwrap in makeWriteTarget.
+	// ARC4-typed write target + native new value: wrap with ARC4Encode (pairs makeWriteTarget).
 	auto maybeEncode = [&](std::shared_ptr<awst::Expression> writeTarget,
 		std::shared_ptr<awst::Expression> newValue) -> std::shared_ptr<awst::Expression>
 	{
@@ -514,31 +459,19 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	}
 	else
 	{
-		// Post-increment/decrement: capture the old value in a temp var,
-		// emit the variable update as a *pre-pending* statement so it
-		// happens before any sibling reads of the same variable, then
-		// return the saved old value.
-		//
-		// Without this, `return a++ + a` evaluates `a` (2nd operand)
-		// against the *old* value of `a` because the post-inc assignment
-		// sat in pendingStatements — which only fires at the end of the
-		// enclosing statement.
+		// Post-inc: save old value, emit write as prePending (not pending) so
+		// `a++ + a` reads updated `a`; pending only fires at statement end.
 		static int postIncCounter = 0;
 		std::string tempName = "__postinc_" + std::to_string(postIncCounter++);
 
 		auto tempVar = awst::makeVarExpression(tempName, _operand->wtype, m_loc);
 
-		// Save old value: temp = a
 		auto saveStmt = awst::makeAssignmentStatement(tempVar, _operand, m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 
-		// Compute new value from the saved temp (not re-reading a). The write
-		// target reuses the built operand (saveStmt copies it, not moves) so a
-		// side-effecting index shares the same prePending temp as the read.
 		auto writeTarget = makeWriteTarget(_operand);
 		auto newValue = maybeEncode(writeTarget, makeNewValue(tempVar));
 
-		// a = temp + 1 (for inc) or temp - 1 (for dec)
 		auto incrStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newValue), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(incrStmt));
 
@@ -549,8 +482,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	std::shared_ptr<awst::Expression> _operand)
 {
-	// Transient state variable delete: write zero via TransientStorage.
-	// Intercept before building the expression so we skip the non-lvalue read.
+	// Transient state var delete: write zero via TransientStorage (read expr not an lvalue).
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
@@ -573,13 +505,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		}
 	}
 
-	// Reuse the ALREADY-BUILT operand — rebuilding the subexpression re-runs
-	// side-effecting parts, e.g. `delete m[f()]` evaluated the mapping key's
-	// f() twice (verified). The caller built the identical node, so the
-	// unwraps below behave exactly as before.
+	// Use already-built operand: rebuilding re-runs side effects (verified: `delete m[f()]` ran f() twice).
 	auto target = _operand;
 
-	// Clear function pointer tracking on delete (e.g., delete y where y is a func ptr)
+	// Clear function pointer tracking on delete.
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
@@ -589,13 +518,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 	if (auto const* boxExpr = dynamic_cast<awst::BoxValueExpression const*>(target.get()))
 	{
-		// For top-level dynamic state vars (eagerly box_create'd in
-		// __postInit), emit `a = default` (box_put with empty encoding)
-		// instead of `box_del` so the box stays alive — subsequent
-		// `BoxValueExpression` reads (via the same helper) assert "box
-		// exists" and would fail. Mapping values keep the box_del path
-		// — their boxes are lazy and re-created on next write. See
-		// `StorageMapper::isTopLevelDynamicBox`.
+		// Top-level dynamic box (eager box_create in __postInit): emit `a = default`
+		// not box_del — subsequent reads assert box exists. Mappings use box_del (lazy).
 		if (builder::StorageMapper::isTopLevelDynamicBox(boxExpr))
 		{
 			auto def = builder::StorageMapper::makeDefaultValue(boxExpr->wtype, m_loc);
@@ -608,11 +532,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		return _operand;
 	}
 
-	// Unwrap ARC4Decode
 	if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(target.get()))
 		target = decodeExpr->value;
 
-	// ARC4Struct field deletion — copy-on-write with zeroed field
+	// ARC4Struct field: COW with zeroed field.
 	if (auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(target.get()))
 	{
 		auto const* arc4StructType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
@@ -644,15 +567,13 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		}
 	}
 
-	// Default: assign zero value
 	auto defaultVal = builder::StorageMapper::makeDefaultValue(target->wtype, m_loc);
 	target = awst::unwrapStateGet(std::move(target));
 
-	// Slot-based storage delete: target is a computed biguint slot (e.g. delete _x[0] on multidim storage array)
+	// Slot-based storage delete: clear biguint-slot range.
 	if (dynamic_cast<awst::BigUIntBinaryOperation const*>(target.get())
 		&& target->wtype == awst::WType::biguintType())
 	{
-		// Determine number of slots to clear from the Solidity type
 		auto const* subExprType = m_unaryOp.subExpression().annotation().type;
 		auto const* arrType = subExprType ? dynamic_cast<ArrayType const*>(subExprType) : nullptr;
 		unsigned slotCount = 1;

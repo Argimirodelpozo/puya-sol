@@ -34,11 +34,10 @@
 namespace puyasol::builder::sol_ast
 {
 
-/// Inline helper: MemberAccess that resolves to a function pointer ID (C.f)
-/// Inline helper: `.address` on an external function pointer value.
+/// `.address` on an external function pointer value.
 /// Extracts the 8-byte appId from the 12-byte fn-ptr layout and left-pads
-/// to 32 bytes so it reads as an AVM address. For `this.f.address` the
-/// appId is 0 (self-sentinel), so this path folds to CurrentApplicationAddress.
+/// to 32 bytes. For `this.f.address` the appId is 0 (self-sentinel) →
+/// folds to CurrentApplicationAddress.
 class SolFunctionAddressAccess : public SolMemberAccess
 {
 public:
@@ -48,9 +47,7 @@ public:
 
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
-		// Self-reference fold: `this.f.address` → CurrentApplicationAddress.
-		// Also matches `this.f{gas: G, value: V}.address` by unwrapping any
-		// FunctionCallOptions before checking for MemberAccess on `this`.
+		// `this.f.address` (or `this.f{…}.address`) → CurrentApplicationAddress.
 		{
 			solidity::frontend::Expression const* base = &m_memberAccess.expression();
 			while (auto const* opts = dynamic_cast<
@@ -96,10 +93,8 @@ public:
 	{
 		std::string awstName = m_scope.findSuperTarget(m_funcDef->id());
 
-		// Prefer the caller's function type when available — for
-		// `external`-only functions, functionType(true) may return a
-		// placeholder with empty params that yields a useless dispatch
-		// name. The caller's type captures the actual signature.
+		// Prefer caller's function type: functionType(true) on external-only fns
+		// may return a placeholder with empty params → useless dispatch name.
 		auto const* regType = m_callerFuncType
 			? m_callerFuncType
 			: m_funcDef->functionType(true);
@@ -110,10 +105,8 @@ public:
 			regType,
 			awstName);
 
-		// Detect cross-contract reference: `C(addr).fn` where the base is
-		// not `this`. The receiver address must flow into the fn pointer
-		// so `.address` returns the caller-supplied addr rather than the
-		// self sentinel (0).
+		// `C(addr).fn`: receiver address must flow into the fn pointer so
+		// `.address` returns the caller-supplied addr, not the self-sentinel (0).
 		std::shared_ptr<awst::Expression> receiverAddr;
 		if (m_callerFuncType
 			&& m_callerFuncType->kind() == solidity::frontend::FunctionType::Kind::External)
@@ -125,9 +118,7 @@ public:
 					isSelf = true;
 			if (!isSelf)
 			{
-				// base is e.g. `C(address(0x1234))` — a type conversion whose
-				// argument is the address. Evaluate the base expression to
-				// get the address bytes.
+				// `C(address(0x1234))` — evaluate the inner arg for the address bytes.
 				if (auto const* baseCall = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpr))
 				{
 					if (baseCall->annotation().kind.set()
@@ -268,24 +259,12 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 	case Kind::External:
 	case Kind::DelegateCall:
 	{
-		// Route External/DelegateCall calls as INTERNAL (regular subroutine
-		// dispatch) in two cases:
-		//
-		// 1. Public library functions — EVM uses delegatecall; AVM has no
-		//    delegatecall and libraries live in the same compilation unit.
-		//
-		// 2. Self-calls via `this.f(...)`, `this.f{value: X}(...)`, or
-		//    `A(this).f(...)` — EVM does an external call (so storage mods
-		//    by the callee revert the caller on failure), but AVM v10
-		//    rejects self-calls with "attempt to self-call". Inline as an
-		//    internal call. Loses cross-function revert isolation and
-		//    staticcall-forcing semantics, but correct for the vast majority
-		//    of tests that use `this.f()` just to work around Solidity
-		//    visibility.
+		// Route External/DelegateCall as INTERNAL in two cases:
+		// 1. Public library functions — AVM has no delegatecall; libraries share the TU.
+		// 2. Self-calls (`this.f(...)`, `A(this).f(...)`) — AVM v10 rejects self-calls
+		//    with "attempt to self-call"; inline as internal. Loses revert isolation.
 
-		// Unwrap FunctionCallOptions (e.g. `this.f{value: X}(args)`):
-		// the outer FunctionCall's expression is a FunctionCallOptions
-		// wrapping the actual MemberAccess we care about.
+		// Unwrap FunctionCallOptions (e.g. `this.f{value: X}(args)`).
 		auto const* callExpr = &_node.expression();
 		if (auto const* callOpts = dynamic_cast<
 				solidity::frontend::FunctionCallOptions const*>(callExpr))
@@ -293,8 +272,7 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			callExpr = &callOpts->expression();
 		}
 
-		// Unwrap single-element TupleExpression (parenthesized expression)
-		// so `(x.mul)({x: a})` is recognized as a library call on `x.mul`.
+		// Unwrap parenthesized expression so `(x.mul)({x: a})` is a library call.
 		if (auto const* tuple = dynamic_cast<
 				solidity::frontend::TupleExpression const*>(callExpr))
 		{
@@ -317,8 +295,7 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 				}
 			}
 
-			// Case 2: base expression is (directly or after a type cast)
-			// `this` — `this.f()`, `A(this).f()`, etc.
+			// Case 2: `this.f()` or `A(this).f()` — self-call.
 			auto const* baseExpr = &memberAccess->expression();
 
 			// Unwrap `A(this)` type conversion.
@@ -342,9 +319,7 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			}
 		}
 
-		// Case 3: function pointer variable call — `x(a)` where x is a local
-		// or param with external function type. Route to SolInternalCall which
-		// has the fn-ptr dispatch logic (inner app txn).
+		// Case 3: fn-ptr variable call `x(a)` → SolInternalCall (inner app txn).
 		if (auto const* ident = dynamic_cast<
 				solidity::frontend::Identifier const*>(callExpr))
 		{
@@ -365,20 +340,14 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			{
 				if (dynamic_cast<solidity::frontend::IndexAccess const*>(callExpr))
 					return std::make_unique<SolInternalCall>(m_ctx, _node);
-				// Nested call returning a fn-ptr: `k1()()`. The inner call
-				// evaluates to a function type; route to SolInternalCall so
-				// its generic fn-ptr dispatch path (line ~730) takes over
-				// instead of the SolExternalCall fallback (which mis-classifies
-				// it as a contract method invocation).
+				// `k1()()`: inner call yields function type; SolInternalCall's
+				// fn-ptr dispatch handles it (SolExternalCall mis-classifies it).
 				if (dynamic_cast<solidity::frontend::FunctionCall const*>(callExpr))
 					return std::make_unique<SolInternalCall>(m_ctx, _node);
 				if (auto const* ma = dynamic_cast<
 						solidity::frontend::MemberAccess const*>(callExpr))
 				{
-					// Only treat struct-field fn-ptrs here (not method calls on
-					// contracts). Check the base's referenced decl: if it's a
-					// VariableDeclaration whose type is (nested) struct, route
-					// to SolInternalCall.
+					// Struct-field fn-ptrs only (not contract method calls).
 					auto const* baseType = ma->expression().annotation().type;
 					while (baseType)
 					{
@@ -406,13 +375,10 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		return std::make_unique<SolNewExpression>(m_ctx, _node);
 
 	case Kind::BlobHash:
-		// blobhash(n) — EIP-4844. AVM has no blob-carrying transactions,
-		// so route to SolBuiltinCall, which returns bzero(32) as a stub.
+		// blobhash(n) — EIP-4844; AVM has no blobs → stub returns bzero(32).
 		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "blobhash");
 	case Kind::RIPEMD160:
-		// AVM lacks a RIPEMD-160 opcode, so SolBuiltinCall lowers ripemd160()
-		// to a real synthesized RIPEMD-160 subroutine (Ripemd160Builder),
-		// returning the correct 20-byte digest.
+		// No AVM RIPEMD-160 opcode; SolBuiltinCall synthesizes via Ripemd160Builder.
 		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "ripemd160");
 
 	// ── Misc ──
@@ -436,10 +402,7 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	auto const& baseExpr = _node.expression();
 	auto const* baseType = baseExpr.annotation().type;
 
-	// 1. Intrinsics: msg.sender, block.timestamp, block.difficulty, block.prevrandao
-	// SolIntrinsicAccess builds the AWST — directly for some members, via
-	// IntrinsicMapper::tryMapMemberAccess for others. Recognise the union
-	// here so the factory dispatches without an exploratory call.
+	// 1. Intrinsics: msg.*/block.*/tx.* — dispatched directly without an exploratory call.
 	if (auto const* baseId = dynamic_cast<Identifier const*>(&baseExpr))
 	{
 		std::string const& baseName = baseId->name();
@@ -476,14 +439,9 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 			if (varDecl->isStateVariable())
 				return std::make_unique<SolConstantAccess>(m_ctx, _node);
 		}
-		// `import "x" as M; M.L` — module-aliased contract reference.
-		// The MemberAccess's referencedDeclaration is the contract itself;
-		// when used as a VALUE (e.g. `address(M.L)`) Solidity returns the
-		// library's deployed address, which on AVM is meaningless — we
-		// emit a 32-byte zero so address(M.L) == address(0) holds. When
-		// `M.L.f(...)` is the receiver of a CALL, SolInternalCall's
-		// last-resort library/free resolver dispatches via FunctionDefinition
-		// directly without consulting the result we return here.
+		// `import "x" as M; M.L` — module-aliased contract ref. As a VALUE
+		// (`address(M.L)`) emit 32-byte zero (AVM has no deployed address). For
+		// `M.L.f(...)` calls, SolInternalCall's resolver dispatches directly.
 		if (dynamic_cast<ContractDefinition const*>(refDecl))
 			return std::make_unique<SolConstantAccess>(m_ctx, _node);
 	}
@@ -537,9 +495,7 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	if (baseType && baseType->category() == Type::Category::Address)
 		return std::make_unique<SolAddressProperty>(m_ctx, _node);
 
-	// 10. Struct/tuple field access — try after building base
-	// (Must check if result is ARC4Struct/WTuple, which requires building the base first.
-	//  Use SolFieldAccess which handles this check internally.)
+	// 10. Struct/tuple field access (SolFieldAccess builds base first to check ARC4Struct/WTuple).
 	return std::make_unique<SolFieldAccess>(m_ctx, _node);
 }
 

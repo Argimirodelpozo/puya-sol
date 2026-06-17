@@ -103,9 +103,8 @@ public:
 
 	std::shared_ptr<awst::Expression> visitMemberAccess(MemberAccess const& _n) override
 	{
-		// Blob-backed aggregate scalar-leaf member read (`p.w1.x`): route through
-		// the multi-slot blob when the chain roots at a >4KB memory aggregate.
-		// resolveBlobOffset short-circuits (no index build) for non-blob-agg roots.
+		// Scalar-leaf read on a >4KB blob aggregate (`p.w1.x`): route through
+		// the multi-slot blob. resolveBlobOffset no-ops for non-blob-agg roots.
 		if (m_ctx.currentScope)
 		{
 			auto const* nt = _n.annotation().type;
@@ -141,11 +140,8 @@ public:
 			}
 		}
 
-		// Ultimate fallback — emit a typed zero of the expected result type.
-		// Stays as a warning (not an error) because Solidity has type-level
-		// expressions like `MyType.wrap;` (TypeType member access, no
-		// invocation) where emitting a typed zero is harmless and the
-		// value is never used at runtime.
+		// Warning (not error): TypeType member access like `MyType.wrap;` (no
+		// invocation) emits a typed zero — value never used at runtime.
 		Logger::instance().warning(
 			"unsupported member access '." + _n.memberName() + "'", loc);
 		auto* wtype = m_ctx.typeMapper.map(_n.annotation().type);
@@ -158,10 +154,9 @@ public:
 
 	std::shared_ptr<awst::Expression> visitCallOptions(FunctionCallOptions const& _n) override
 	{
-		// {value:, gas:} options are consumed by the enclosing FunctionCall
-		// (value via SolFunctionCall::extractCallValue; gas has no AVM analog and
-		// is dropped). Reaching this visitor means the options wrap a non-call
-		// value expression, where they have no effect — translate the base.
+		// Options are consumed by the enclosing FunctionCall (value via
+		// extractCallValue; gas has no AVM analog). Here they wrap a non-call
+		// expression — no effect, just translate the base.
 		return visit(_n.expression());
 	}
 

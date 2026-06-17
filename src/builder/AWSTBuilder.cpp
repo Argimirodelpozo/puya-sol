@@ -45,15 +45,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_libraryFunctionIds.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
-	// Populate the box-keyed-struct registry (source-unit-wide): a struct type
-	// used as a mapping VALUE anywhere denotes a box (mapping element), so its
-	// storage-refs travel as box-keys (bytes); plain state-var/local structs stay
-	// by-value. This is a COMPILE-TIME calling-convention classifier ONLY — never
-	// a storage-placement decision and never cross-program storage access (all
-	// storage lives in main). The scan spans all source contracts only because a
-	// mapping(=>Struct) may be DECLARED in a different contract's source than the
-	// library defining methods on Struct (V4: orchestrator declares it, Position
-	// library uses it) — they compile against the same single main storage.
+	// Populate the box-keyed-struct registry: a struct used as a mapping VALUE
+	// anywhere is box-keyed; plain state-var/local structs stay by-value. This
+	// is a compile-time calling-convention classifier only. Scans all contracts
+	// because the mapping(=>Struct) and the library methods on Struct may be in
+	// different source units (V4: orchestrator declares, Position library uses).
 	{
 		auto& reg = boxKeyedStructRegistry();
 		reg.clear();
@@ -93,8 +89,6 @@ void AWSTBuilder::translateLibraryFunctions(
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
 
-		// Use solc's filteredNodes<T>() template instead of dynamic_cast'ing
-		// each node — same effect, less boilerplate.
 		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
 			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
 		{
@@ -109,8 +103,7 @@ void AWSTBuilder::translateLibraryFunctions(
 				if (!func->isImplemented())
 					continue;
 
-				// Resolve the qualified name + subroutine ID via AST-id-first lookup
-				// (precise overload resolution) with name-based fallback.
+				// AST-id-first lookup (precise overload resolution), name-based fallback.
 				std::string qualifiedName = libraryName + "." + func->name();
 				std::string subroutineId;
 				auto byId = m_freeFunctionById.find(func->id());
@@ -139,21 +132,11 @@ void AWSTBuilder::translateLibraryFunctions(
 					}
 				}
 
-				// Library functions with function-pointer parameters (internal
-				// or external fn-ptr type) become "internalizable": emit
-				// per-contract as an internal method of each using-contract
-				// instead of as a root subroutine. The fn-ptr dispatcher's
-				// case branches may invoke contract instance methods, which
-				// puya rejects from a root subroutine scope — hosting the
-				// function inside the contract resolves that.
-				//
-				// This mirrors Solidity's behavior: INTERNAL library functions
-				// are inlined into the calling contract's bytecode (no separate
-				// deployment). For EXTERNAL library functions, Solidity deploys
-				// the library as its own contract and uses DELEGATECALL — we
-				// warn here since the AVM equivalent (separate child app +
-				// inner-txn delegate) isn't wired up, and we still internalize
-				// best-effort so the test compiles.
+				// Library functions with fn-ptr params are internalized per-contract
+				// instead of emitted as root subroutines: the fn-ptr dispatcher
+				// may invoke contract instance methods, rejected from root scope.
+				// EXTERNAL library fn-ptrs warn (Solidity would DELEGATECALL;
+				// AVM has no equivalent) and are still internalized best-effort.
 				bool hasFnParam = false;
 				for (auto const& p: func->parameters())
 				{
@@ -248,7 +231,6 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		sub->documentation.description = *_func.documentation()->text();
 
 	// Parameters — mapping storage refs become bytes (runtime key prefix).
-	// Free functions don't have storage refs, so the library-only branch is a no-op there.
 	std::set<size_t> mappingStorageParams;
 	std::set<size_t> blobAggParams;
 	for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
@@ -262,16 +244,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		arg.sourceLocation.line = param->location().start >= 0 ? param->location().start : 0;
 		arg.sourceLocation.endLine = param->location().end >= 0 ? param->location().end : 0;
 
-		// Mapping storage refs: callee receives the box key PREFIX as bytes
-		// so `m[k]` → box_get(prefix+sha256(k)) uses the caller's storage var
-		// name, not the param name.
-		// Recognise mapping holders AND any storage-ref shape containing a
-		// mapping (e.g. `mapping(K=>V)[N] storage m`). Both pass the
-		// caller-side state-var name as a bytes prefix so the callee's
-		// `m[i][k]` chain hashes against the caller's holder, not the
-		// param's local name. Without widening, array-of-mapping params
-		// silently get encoded as their own "state var" and box keys
-		// diverge from the auto-getter's reads.
+		// Mapping storage refs (including array-of-mapping): callee receives
+		// the caller's box key prefix as bytes so `m[k]` hashes against the
+		// caller's storage var, not the param name. Without widening,
+		// array-of-mapping params encode as their own "state var" and box
+		// keys diverge from the auto-getter's reads.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& isBoxKeyedStorageRef(param->type())) // widened: plain structs too
 		{
@@ -281,8 +258,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 			&& computeEncodedElementSize(m_typeMapper.map(param->type())) > AssemblyBuilder::SLOT_SIZE)
 		{
-			// Memory aggregate >4KB → passed as its uint64 base offset into the
-			// multi-slot blob (pointer model); registered as a blob aggregate below.
+			// Memory aggregate >4KB → passed as uint64 base offset (pointer model).
 			arg.wtype = awst::WType::uint64Type();
 			blobAggParams.insert(pi);
 		}
@@ -291,11 +267,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		sub->args.push_back(std::move(arg));
 	}
 
-	// Detect storage-ref params for return-type augmentation. Callers receive
-	// the modified value as an extra return slot for box write-back. Mapping
-	// storage refs are excluded — they share box keys, no write-back needed.
-	// Skip private library functions: puya threads their mutable args
-	// internally so no augmentation is needed (and would be incorrect).
+	// Storage-ref params: augment return so callers can write the modified
+	// value back. Mapping refs excluded (shared box key, no write-back).
+	// Private functions excluded: puya threads their mutable args internally.
 	std::vector<size_t> storageParamIndices;
 	bool isMutating = _func.stateMutability() != solidity::frontend::StateMutability::View
 		&& _func.stateMutability() != solidity::frontend::StateMutability::Pure;
@@ -311,27 +285,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
-	// Detect `memory` reference params for return-type augmentation. Solidity
-	// passes memory refs by reference, but our value-typed translation copies
-	// at the boundary — mutations inside the callee don't propagate. To
-	// recover the by-ref semantics for the common pattern (callee mutates
-	// `Fr[N] memory evals` then returns void), we tag each memory-ref param
-	// as an extra return; SolInternalCall captures the tuple and writes the
-	// post-call value back to the caller's local. Applies regardless of
-	// `pure` — Solidity allows pure functions to mutate memory params.
-	// Skipped on private functions for the same reason as storage refs
-	// (puya may thread these internally) and on bytes/string/mapping (those
-	// keep their existing translations).
-	//
-	// Augment ONLY params that are actually mutated. Use-def analysis
-	// catches assignments whose LHS root is a param after peeling
-	// member/index access; tuple destructuring counts each component
-	// as an LHS. Read-only memory-ref params (e.g. honk transcripts'
-	// `Honk.Proof memory proof`, used to extract challenges but never
-	// written) skip augmentation — otherwise the augmented return tuple
-	// grows by their full ARC4 size, which for the 14 KB Proof struct
-	// blows past the AVM 4096 B per-stack-element cap and the pure-
-	// helper extractor refuses to lift them.
+	// Memory-ref params: augment return so callers get write-back (Solidity
+	// passes by ref; our translation copies at the boundary). Skipped on
+	// private functions, bytes/string/mapping, and read-only params. The
+	// read-only skip matters: Honk.Proof (14KB) would blow the AVM 4096B
+	// per-stack-element cap if included unconditionally.
 	std::vector<size_t> memoryRefParamIndices;
 	if (!isPrivate && _func.isImplemented())
 	{
@@ -351,8 +309,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
 			if (blobAggParams.count(pi))
-				continue;  // blob-backed: shared via the multi-slot blob; mutations
-						   // are visible to the caller without return write-back
+				continue;  // blob-backed via multi-slot blob; caller sees mutations directly
 			if (!p->type() || !isMemRefType(p->type()))
 				continue;
 			if (!detector.mutated.count(p->id()))
@@ -361,15 +318,13 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
-	// Return type — augment with storage + memory param types so callers can
-	// capture the mutated value.
+	// Return type — augmented with storage/memory param types for write-back.
 	auto const& returnParams = _func.returnParameters();
 	{
 		std::vector<awst::WType const*> types;
 		for (auto const& rp: returnParams)
 		{
-			// A >4KB memory return is blob-backed: it returns its uint64 base
-			// offset (pointer model); call sites reconstitute it (SolVariableDeclaration).
+			// >4KB memory return → blob-backed, returns uint64 base offset (pointer model).
 			auto const* rpW = m_typeMapper.map(rp->type());
 			if (!rp->name().empty()
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
@@ -393,10 +348,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
 
-	// Build body via a fresh ContractContext.
-	// NOTE: ContractContext stores `overloadedNames` as `unordered_set const&`,
-	// so we must pass a long-lived object (not a temporary `{}` — that would
-	// dangle after the constructor returns and SIGSEGV on first access).
+	// Build body. ContractContext stores overloadedNames as const& — must
+	// pass a long-lived object (a temporary `{}` would dangle → SIGSEGV).
 	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
 	eb::ContractContext exprBuilder(
 		m_typeMapper, *m_storageMapper, _sourceFile, _libraryName, m_libraryFunctionIds,
@@ -408,17 +361,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
 	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
 
-	// Register mapping-storage-ref params so SolIndexAccess can build dynamic
-	// box-key prefixes at runtime. Must happen *after* the FunctionContext
-	// is pushed — `setMappingKeyParam` writes into the innermost enclosing
-	// FunctionContext via `nearestFunction(currentScope)`.
+	// Register mapping-storage-ref params (must be after FunctionContext push;
+	// setMappingKeyParam writes into nearestFunction(currentScope)).
 	for (size_t idx: mappingStorageParams)
 	{
 		auto const& param = _func.parameters()[idx];
 		fnCtx.setMappingKeyParam(param->id(), param->name());
 	}
 
-	// Param + return-param context for inline assembly + sub-word integer truncation.
+	// Param/return context for inline assembly and sub-word integer truncation.
 	{
 		std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 		std::map<std::string, unsigned> bitWidths;
@@ -461,9 +412,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	auto blk = sol_ast::BlockContext::top(fnCtx);
 	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
 
-	// Register mapping-storage-ref return params: `function f() returns (mapping(K=>V) storage r)`
-	// — `r` is a local pointer to a mapping; r[k] resolves to box access prefixed
-	// by `r`'s runtime bytes value (the holder name).
+	// Register mapping storage-ref return params (e.g. `returns (mapping(K=>V) storage r)`):
+	// r[k] box-accesses using r's runtime bytes value as the holder prefix.
 	for (auto const& rp: returnParams)
 	{
 		if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
@@ -475,8 +425,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
-	// Register memory return params >4KB as blob-backed aggregates (pointer
-	// model) so `p.field[i]` in the body lowers to multi-slot blob word access.
+	// Register named memory return params >4KB as blob-backed (pointer model).
 	for (auto const& rp: returnParams)
 	{
 		if (rp->name().empty()
@@ -487,9 +436,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			fnCtx.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
 
-	// Register memory aggregate PARAMS >4KB as blob aggregates: the param's own
-	// local already holds the uint64 base offset (the caller passed it), so the
-	// offset var IS the param name — no FMP bump or binding needed.
+	// Memory aggregate params >4KB: offset var = param name (caller passed it); no FMP bump.
 	for (size_t idx: blobAggParams)
 	{
 		auto const& param = _func.parameters()[idx];
@@ -499,11 +446,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	sub->body = sol_ast::buildBlock(blk, _func.body());
 
-	// Inline any modifier bodies into this library/free function. Same
-	// implementation the contract-method path uses; sharing it keeps
-	// modifier semantics identical across both translation paths.
-	// `currentContract` is null — libraries and free functions have no
-	// enclosing contract for virtual-override resolution.
+	// Inline modifier bodies. currentContract=null (no virtual-override resolution).
 	if (!_func.modifiers().empty())
 	{
 		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnList;
@@ -538,26 +481,21 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		inlineModifiers(ftCtx, _func, sub->body);
 	}
 
-	// Insert zero-initialization for named return variables — Solidity
-	// implicitly initializes named returns to their zero values. Skip
-	// `bytes`/`bytesN` defaults that are produced via specialized constants
-	// to avoid emitting StorageMapper-style heavy default values.
+	// Zero-initialize named return variables (Solidity implicit init).
 	{
 		std::vector<std::shared_ptr<awst::Statement>> inits;
 		for (auto const& rp: returnParams)
 		{
 			if (rp->name().empty())
 				continue;
-			// Box-keyed storage-ref named returns hold a bytes box-key (registered as a
-			// mappingKeyParam), not a struct value — skip the struct zero-init, which
-			// would conflict with their bytes type (e.g. V4 Position.get's `position`).
+			// Box-keyed storage-ref named returns hold a bytes key — skip struct zero-init
+			// (V4 Position.get's `position` is a bytes key, not a struct value).
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& storageRefReturnIsBytesKeyed(&_func))
 				continue;
 			auto* rpType = m_typeMapper.map(rp->type());
 
-			// Blob-backed (>4KB) memory returns are pre-zeroed in the preamble;
-			// skip the (oversized) bzero zero-init — they use the pointer model.
+			// Blob-backed (>4KB) returns: pre-zeroed via FMP bump; skip bzero init.
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 				&& computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
 				continue;
@@ -586,10 +524,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			}
 			else
 			{
-				// Complex types (structs, arrays, etc.) — use makeDefaultValue.
-				// Solidity may assign individual fields (e.g. `vk.alfa1 = ...`)
-				// which read other fields from the uninitialized variable via
-				// the copy-on-write NewStruct pattern.
+				// Complex types: makeDefaultValue (fields may be partially assigned
+				// via NewStruct copy-on-write before being fully initialized).
 				zeroVal = StorageMapper::makeDefaultValue(rpType, loc);
 			}
 
@@ -597,9 +533,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			inits.push_back(std::move(assign));
 		}
 
-		// Blob-backed (>4KB) memory returns: bind the runtime base offset
-		// (current FMP, before the bump) + advance the FMP, prepended alongside
-		// the zero-inits. Matches the registration above + SolIndexAccess access.
+		// Blob-backed (>4KB) memory returns: bind FMP base offset + bump FMP.
 		for (auto const& rp: returnParams)
 		{
 			if (rp->referenceLocation()
@@ -630,20 +564,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 	}
 
-	// Augment return statements: append storage param values so callers can
-	// write the modified struct back to their storage.
+	// Augment return statements to include storage/memory-ref param values.
 	if (!storageParamIndices.empty() || !memoryRefParamIndices.empty())
 	{
-		// sub->returnType is either:
-		//   - a WTuple (multi-element augmented return), OR
-		//   - a bare type (void function + exactly 1 augmented arg → that
-		//     arg's type; one return param + zero augmented args isn't
-		//     reachable here because we only enter this branch when at
-		//     least one augmented index is present; one return + zero
-		//     augmented args is the void+1 case).
-		// Wrapping a single value in a TupleExpression with the bare
-		// element type as wtype produces invalid AWST (puya rejects
-		// `TupleExpression.wtype` non-WTuple). Branch on shape.
+		// sub->returnType is WTuple (multi-augmented) or a bare type (void+1 aug arg).
+		// TupleExpression with a non-WTuple wtype is invalid AWST — branch on shape.
 		bool returnIsTuple =
 			(dynamic_cast<awst::WTuple const*>(sub->returnType) != nullptr);
 		size_t totalAugmented = storageParamIndices.size() + memoryRefParamIndices.size();
@@ -656,12 +581,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				{
 					if (!returnIsTuple)
 					{
-						// sub->returnType is a bare type. There must be exactly
-						// one source: either ret->value (if author wrote
-						// `return val;`) OR the single augmented arg (if author
-						// wrote bare `return;`). User-written `return val;` in
-						// a void+1-arg-augmented function isn't valid Solidity,
-						// so we only handle the bare-return case.
+						// Bare return type: one augmented arg. Only handle bare
+						// `return;` — `return val;` in void+1-aug isn't valid Solidity.
 						if (!ret->value && totalAugmented == 1)
 						{
 							size_t idx = !storageParamIndices.empty()
@@ -671,18 +592,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 								sub->args[idx].name, sub->args[idx].wtype,
 								ret->sourceLocation);
 						}
-						// else: leave ret->value as-is; the type-check at the
-						// puya boundary will report the actual mismatch.
+						// else: leave as-is; puya boundary will report the mismatch.
 					}
 					else
 					{
 						auto tuple = awst::makeTupleExpression(sub->returnType, ret->sourceLocation);
 						if (ret->value)
 						{
-							// If author wrote `return (a, b, c);`, flatten the
-							// tuple's items into the new augmented tuple — the
-							// augmented return-type WTuple is flat, so nesting
-							// here would produce a shape mismatch.
+							// Flatten existing tuple items (WTuple is flat;
+							// nesting would produce a shape mismatch).
 							if (auto* origTup = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
 							{
 								for (auto& it: origTup->items)
@@ -720,7 +638,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		augmentReturns(*sub->body);
 	}
 
-	// Special case: assembly-only library functions with known semantics.
+	// Synthesize body for assembly-only library functions with known semantics.
 	if (sub->body->body.empty() && _func.name() == "efficientKeccak256"
 		&& _func.parameters().size() == 2)
 	{
@@ -733,10 +651,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		sub->body->body.push_back(std::move(ret));
 	}
 
-	// Synthesize an implicit return when the body falls through. Three cases:
-	//  1. Void return + storage/memory augmentation → return augmented args.
-	//  2. Named returns                              → return named values.
-	//  3. Otherwise                                  → return makeDefaultValue(returnType).
+	// Synthesize implicit return on fall-through:
+	//  1. Void + augmentation → return augmented args.
+	//  2. Named returns → return named values.
+	//  3. Otherwise → makeDefaultValue(returnType).
 	if (!awst::blockAlwaysTerminates(*sub->body)
 		&& (!returnParams.empty() || !storageParamIndices.empty()
 			|| !memoryRefParamIndices.empty()))
@@ -749,9 +667,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		size_t totalAugmented2 = storageParamIndices.size() + memoryRefParamIndices.size();
 		if (!hasNamedReturns && returnParams.empty() && totalAugmented2 > 0)
 		{
-			// Void return with storage/memory augmentation — append return
-			// of the augmented args (in storage-then-memory order, matching
-			// the return-type tuple layout above).
+			// Void + augmentation: return augmented args in storage-then-memory order.
 			auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 			if (totalAugmented2 == 1)
 			{
@@ -775,13 +691,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		{
 			auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 
-			// When the return type was augmented with storage / memory-ref
-			// args, we must include those after the named-return values so
-			// the synthesized return tuple matches `sub->returnType`.
+			// Include augmented args after named-return values to match sub->returnType.
 			if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
 				auto const* rp0W = m_typeMapper.map(returnParams[0]->type());
-				// Blob-backed >4KB memory return → return its uint64 base offset.
+				// Blob-backed >4KB → return uint64 base offset.
 				if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 					&& computeEncodedElementSize(rp0W) > AssemblyBuilder::SLOT_SIZE)
 					implicitReturn->value = awst::makeVarExpression(
@@ -813,7 +727,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 		else
 		{
-			// No named returns — append default return with zero value.
+			// No named returns: return zero default value.
 			auto defReturn = awst::makeReturnStatement(StorageMapper::makeDefaultValue(sub->returnType, loc), loc);
 			sub->body->body.push_back(std::move(defReturn));
 		}
@@ -867,12 +781,9 @@ void AWSTBuilder::translateContracts(
 			for (auto& sub : translator.takeDispatchSubroutines())
 				roots.push_back(std::move(sub));
 
-			// ── LogicSig: emit a stateless logic-signature program ──
-			// A contract `is LogicSig` (AVM.sol marker) compiles to an AVM lsig
-			// instead of a stateful app: the entry function (marked `logicsig`, or
-			// the sole public method) becomes the program. We repackage its
-			// already-translated body, discarding the app approval/clear/router.
-			// Lsig-illegal constructs (app state, inner-txns) hard-fail downstream.
+			// LogicSig: contract `is LogicSig` (AVM.sol) → AVM lsig instead of stateful app.
+			// Entry function (logicsig modifier, or sole public method) becomes the program.
+			// App state / inner-txns hard-fail downstream.
 			{
 				bool isLsig = false;
 				for (auto const* base: contract->annotation().linearizedBaseContracts)
@@ -904,7 +815,7 @@ void AWSTBuilder::translateContracts(
 					}
 					else
 					{
-						// Fallback: the sole public/external (ARC4) method.
+						// Fallback: sole public/external ARC4 method.
 						int pubCount = 0;
 						for (auto const& m: awstContract->methods)
 							if (m.arc4MethodConfig.has_value()) { entry = &m; ++pubCount; }
@@ -943,10 +854,9 @@ void AWSTBuilder::translateContracts(
 				}
 			}
 
-			// Only emit deployable contracts (those with public/external methods
-			// or a constructor). Non-deployable contracts (e.g., ErrorReporter
-			// with only internal functions) are translated for MRO/inheritance
-			// resolution but not emitted to AWST.
+			// Only emit contracts with public methods or a constructor.
+			// Non-deployable contracts (internal-only, e.g. ErrorReporter) are
+			// translated for MRO resolution but not emitted to AWST.
 			bool hasPublicMethod = false;
 			for (auto const& method: awstContract->methods)
 			{
@@ -956,9 +866,8 @@ void AWSTBuilder::translateContracts(
 					break;
 				}
 			}
-			// Constructor-only contracts have no routable methods, but puya's
-			// ARC4 router requires at least one. Add a dummy no-op method so
-			// the contract is deployable and the constructor can run at create time.
+			// Constructor-only contracts need a dummy ARC4 method so puya's
+			// router has something to route (constructor runs at create time).
 			if (!hasPublicMethod && !contract->abstract())
 			{
 				awst::ContractMethod dummy;

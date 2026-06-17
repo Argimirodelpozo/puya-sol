@@ -455,8 +455,7 @@ void FunctionSplitter::collectStmtDefs(
 
 void FunctionSplitter::collectVarType(awst::Expression const& _expr)
 {
-	// Walk and capture name → wtype as a side effect of collectExprUses.
-	// (collectExprUses already populates m_varTypes for VarExpression.)
+	// collectExprUses already populates m_varTypes for VarExpression.
 	std::set<std::string> dummy;
 	collectExprUses(_expr, dummy);
 }
@@ -480,9 +479,8 @@ std::vector<FunctionSplitter::VarInfo> FunctionSplitter::computeLiveVars(
 		if (_stmts[i])
 			collectStmtUses(*_stmts[i], usedAfter);
 
-	// Live = defined-before ∩ used-after. Includes redefined params:
-	// if a param is reassigned in the prefix, the suffix sees the new
-	// value, which must travel through scratch like any other live var.
+	// Live = defined-before ∩ used-after. Reassigned params included:
+	// the suffix sees the new value and it must travel through scratch.
 	std::vector<VarInfo> live;
 	for (auto const& var : definedBefore)
 	{
@@ -505,21 +503,11 @@ std::vector<FunctionSplitter::VarInfo> FunctionSplitter::computeLiveVars(
 
 // ─── Piece emission ──────────────────────────────────────────────────
 //
-// Each piece is a free-standing Subroutine that:
-//   * Takes the same arg list as the original (so callers / orch can
-//     pass through verbatim). Piece 0 actually consumes them; subsequent
-//     pieces ignore most and read live-vars from scratch slot 100.
-//   * Body:
-//       - prologue: gload(prev_call_txn_index, kLiveVarsScratchSlot)
-//                   then ARC4-decode the tuple into the live vars
-//                   (skipped on piece 0 — it gets values from args)
-//       - sliced statements from the original body
-//       - epilogue: ARC4-encode current live-vars into a tuple, store
-//                   to scratch slot 100
-//                   (skipped on the last piece — it returns the original
-//                    return value as normal)
-//   * Returns: original sub's return type for the LAST piece; void
-//     for intermediate pieces.
+// Each piece is a free-standing Subroutine with the original arg list.
+// Piece 0 consumes args; subsequent pieces read live-vars from scratch.
+// Body: prologue (gload live-vars, skipped on piece 0) + sliced stmts +
+// epilogue (store live-vars to slot 100, skipped on last piece).
+// Return type: original type on last piece; void on intermediates.
 
 namespace {
 
@@ -529,16 +517,9 @@ std::string pieceName(std::string const& _orig, size_t _index, int _groupId)
 		+ "_g" + std::to_string(_groupId);
 }
 
-// Convention: every live var is normalised to a fixed-width 32-byte
-// chunk, all chunks concatenated, stored at scratch slot 100.
-// Decoding is the inverse: extract each chunk, reinterpret to wtype.
-//
-// Why not ARC4: ARC4 tuple encoding requires plumbing ARC4Tuple wtypes
-// (mapping each WTuple element to its ARC4 form) and that plumbing
-// lives in puya-sol's TypeMapper, not in the splitter. Fixed-width
-// bytes round-trip cleanly through ReinterpretCast for biguint /
-// account / bool / uint64 — covers everything FunctionSplitter sees
-// in practice.
+// Each live var normalised to a 32-byte fixed-width chunk (not ARC4:
+// ARC4Tuple plumbing lives in TypeMapper, not splitter; fixed-width
+// bytes round-trip cleanly via ReinterpretCast for all types seen here).
 constexpr int kLiveVarBytes = 32;
 
 std::shared_ptr<awst::Expression> coerceToFixedBytes(
@@ -618,11 +599,9 @@ std::shared_ptr<awst::Expression> coerceFromFixedBytes(
 	return awst::makeReinterpretCast(std::move(_bytes), _wtype, _loc);
 }
 
-// Pack one (possibly WTuple) live value into consecutive scratch slots, advancing
-// *_slot per leaf. WTuple vars are EXPLODED element-by-element (a WTuple is not a
-// single bytes-able value — reinterpret(tuple→bytes) is rejected by puya), so a
-// split boundary may fall anywhere, including across a tuple temp left live by a
-// mid-expansion tuple-assignment.
+// Pack a (possibly WTuple) live value into consecutive scratch slots.
+// WTuple vars are exploded element-by-element (reinterpret(tuple→bytes) is
+// rejected by puya); a split boundary may land across a tuple temp.
 void packLiveValue(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _wtype,
@@ -647,8 +626,7 @@ void packLiveValue(
 	_out.push_back(awst::makeExpressionStatement(std::move(store), _loc));
 }
 
-// Inverse of packLiveValue: rebuild the (possibly WTuple) value from consecutive
-// slots, advancing *_slot per leaf in the same order packLiveValue used.
+// Inverse of packLiveValue: rebuild value from consecutive slots in the same order.
 std::shared_ptr<awst::Expression> unpackLiveValue(
 	awst::WType const* _wtype,
 	int& _slot,
@@ -681,9 +659,8 @@ std::shared_ptr<awst::Expression> unpackLiveValue(
 	return coerceFromFixedBytes(std::move(loadExpr), _wtype, _loc);
 }
 
-// One scratch slot per leaf live value (base kLiveVarsScratchSlot, running). Each
-// AVM scratch slot holds a full-width value, so aggregate (struct/array/bytes)
-// live vars round-trip intact; WTuple vars are exploded across slots.
+// One slot per leaf live value starting at kLiveVarsScratchSlot.
+// Aggregates round-trip intact; WTuple vars are exploded across slots.
 std::vector<std::shared_ptr<awst::Statement>> makeScratchStoreStmts(
 	std::vector<FunctionSplitter::VarInfo> const& _liveOut,
 	awst::SourceLocation const& _loc)
@@ -704,9 +681,8 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 	bool _crossChunk,
 	awst::SourceLocation const& _loc)
 {
-	// Inverse of makeScratchStoreStmts. crossChunk=false → `load <slot>` (same txn
-	// frame); crossChunk=true → `gload <prev_idx> <slot>` reads the previous piece's
-	// scratch (sibling call-txn prev_idx).
+	// Inverse of makeScratchStoreStmts.
+	// crossChunk=false → `load <slot>`; crossChunk=true → `gload <prev_idx> <slot>`.
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	int slot = FunctionSplitter::kLiveVarsScratchSlot;
 	for (auto const& lv : _liveIn)
@@ -719,18 +695,16 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 	return out;
 }
 
-// Carry the multi-slot EVM-memory blob (scratch slots MEMORY_SLOT_FIRST..LAST)
-// across a cross-chunk piece boundary via `gload`, so memory a prior piece wrote
-// (e.g. loadProof's decoded proof) is visible to later pieces. State threads
-// through SCRATCHSPACE (not boxes); all slots restore straight to scratch.
+// Restore EVM-memory blob (scratch slots MEMORY_SLOT_FIRST..LAST) from
+// the prior piece's scratch via gload, so memory a prior piece wrote
+// (e.g. loadProof) is visible to later pieces. State threads SCRATCHSPACE.
+// No slot-0 local cache (see AssemblyBuilder::memoryVar/assignMemoryVar):
+// all slots, including 0, restore straight to scratch.
 std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
 	int _prevCallTxnIndex, awst::SourceLocation const& _loc)
 {
 	using AB = builder::AssemblyBuilder;
 	std::vector<std::shared_ptr<awst::Statement>> out;
-	// No slot-0 local cache anymore (see AssemblyBuilder::memoryVar/assignMemoryVar):
-	// every slot, including 0, is restored straight to scratch via gload so the next
-	// piece's loads() observes the prior piece's writes. State threads SCRATCHSPACE.
 	for (int slot = AB::MEMORY_SLOT_FIRST; slot <= AB::MEMORY_SLOT_LAST; ++slot)
 	{
 		auto gload = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
@@ -741,16 +715,13 @@ std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
 	return out;
 }
 
-// Flush the cached `__evm_memory` local back to scratch slot MEMORY_SLOT_FIRST so
-// the following piece's `gload` observes the latest slot-0 contents (slots
-// 1..LAST are already written through `stores`). Emitted in cross-chunk epilogues.
+// Emitted in cross-chunk epilogues to sync slot 0 for the next piece's gload.
+// No slot-0 local cache (see AssemblyBuilder::memoryVar/assignMemoryVar):
+// writes go straight to scratch, so this is a no-op store-from-itself.
+// Without it, the old `__evm_memory` local (uint64 0) would poison the gload.
 std::shared_ptr<awst::Statement> makeBlobFlushStmt(awst::SourceLocation const& _loc)
 {
 	using AB = builder::AssemblyBuilder;
-	// Slot-0 has no local cache anymore (see AssemblyBuilder::memoryVar/assignMemoryVar):
-	// writes go straight to scratch, so slot 0 is already current. The flush would
-	// otherwise store the now-undefined `__evm_memory` local (uint64 0) into slot 0 and
-	// poison the next piece's gload. Re-store slot-0-from-itself => harmless no-op.
 	auto val = awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, _loc);
 	return awst::makeExpressionStatement(
 		awst::makeStoreSlot(AB::MEMORY_SLOT_FIRST, std::move(val), _loc), _loc);
@@ -760,19 +731,11 @@ std::shared_ptr<awst::Statement> makeBlobFlushStmt(awst::SourceLocation const& _
 
 // ─── Public API: splitAt ─────────────────────────────────────────────
 
-// A SplitTarget abstracts over Subroutine / ContractMethod so the
-// slicing code below can treat them uniformly. We mutate body / args /
-// returnType / name / id through pointer-to-member-like accessors so
-// rewriting the original works for both shapes.
-//
-// `parentContract` is non-null only when method != nullptr; it lets the
-// piece emitter add ContractMethod pieces back to the contract's
-// `methods` list so puya can resolve them.
+// SplitTarget abstracts over Subroutine / ContractMethod for uniform
+// slicing. Exactly one of {sub, method} is set; parentContract is non-null
+// only for ContractMethod targets (needed to push pieces onto contract->methods).
 struct SplitTarget
 {
-	// Body, args, return type, name, id are all referenced via accessors
-	// on the underlying node (Subroutine* or ContractMethod*). One of
-	// the two pointers is set; the other is null.
 	std::shared_ptr<awst::Subroutine> sub;
 	awst::ContractMethod* method = nullptr;
 	awst::Contract* parentContract = nullptr;
@@ -791,9 +754,7 @@ struct SplitTarget
 		return sub ? sub->name : method->memberName;
 	}
 	std::string id() const {
-		// Subroutine has explicit id; ContractMethod uses cref + ".method"
-		// for callsub identification (puya's resolveContractMethod walks
-		// MRO + cref to find).
+		// ContractMethod id = cref + ".method" (puya resolves via MRO + cref).
 		return sub ? sub->id : (method->cref + "." + method->memberName);
 	}
 	bool pure() const {
@@ -809,9 +770,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 	auto& logger = Logger::instance();
 	SplitResult result;
 
-	// Build name → SplitTarget map. Both Subroutines (free / library
-	// functions) and ContractMethods (members of a Contract root) are
-	// targetable.
+	// Build name → SplitTarget for both Subroutines and ContractMethods.
 	std::map<std::string, SplitTarget> byName;
 	for (auto const& root : _roots)
 	{
@@ -848,11 +807,9 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			continue;
 		}
 		SplitTarget& tgt = it->second;
-		// A prior spec's `parentContract->methods.push_back(pieces)` can
-		// REALLOCATE the methods vector, dangling the `&m` pointer cached in
-		// byName at map-build time. Re-resolve the ContractMethod by name from
-		// the (possibly moved) vector before every use — without this, the 2nd+
-		// ContractMethod target reads a dangling pointer and reports "no body".
+		// methods.push_back() from a prior spec can reallocate the vector,
+		// dangling the &m pointer cached in byName. Re-resolve by name before use;
+		// without this, the 2nd+ ContractMethod target reads a dangling pointer.
 		if (tgt.parentContract)
 		{
 			tgt.method = nullptr;
@@ -912,9 +869,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			m_varTypes[arg.name] = arg.wtype;
 		}
 
-		// Pre-walk the body once to populate m_varTypes for every
-		// VarExpression — we need wtypes for live-vars before we know
-		// which split point a var crosses.
+		// Pre-walk to populate m_varTypes for all VarExpressions
+		// (needed for live-var analysis before knowing which split point a var crosses).
 		{
 			std::set<std::string> dummy;
 			for (auto const& s : stmts)
@@ -938,19 +894,14 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		}
 		ranges.push_back({prev, stmts.size()});
 
-		// Emit one piece per range. Piece SHAPE depends on target:
-		//   - Target is a Subroutine: pieces are Subroutines, called via
-		//     SubroutineID (callsub).
-		//   - Target is a ContractMethod: pieces are ContractMethods on
-		//     the SAME contract, called via InstanceMethodTarget. This
-		//     matters because piece bodies may contain instance-method
-		//     invocations (e.g. `this.helper()` → InstanceMethodTarget),
-		//     which puya only accepts inside a ContractMethod context.
+		// Subroutine target → pieces are Subroutines (callsub via SubroutineID).
+		// ContractMethod target → pieces are ContractMethods on the same contract
+		// (InstanceMethodTarget); required because piece bodies may contain
+		// `this.helper()` calls, which puya only accepts inside a ContractMethod.
 		std::string baseId = tgt.id();
 		size_t numPieces = ranges.size();
 
-		// Cache: needed for rewriting the original body without holding a
-		// (possibly invalidated) tgt.method pointer once we push pieces.
+		// Cache fields before pushing pieces (which may invalidate tgt.method).
 		auto origLoc = tgt.loc;
 		auto origArgs = tgt.args();
 		auto* origReturnType = tgt.returnType();
@@ -958,8 +909,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		auto* parentContract = tgt.parentContract;
 		std::string cref = isContractMethod ? tgt.method->cref : "";
 
-		// Build all piece bodies first (heap allocations; no vector
-		// invalidation concerns yet).
+		// Build all piece bodies before touching roots (avoids vector reallocation).
 		struct BuiltPiece
 		{
 			std::shared_ptr<awst::Block> body;
@@ -976,10 +926,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 
 			auto pieceBody = awst::makeBlock(origLoc);
 
-			// Prologue: read live-vars from previous piece's scratch
-			// (skip on piece 0). spec.crossChunk picks `gload`
-			// (orch.dispatch_chain inner-txn group siblings) vs `load`
-			// (same txn frame).
+			// Prologue: read live-vars from prev piece's scratch (skip on piece 0).
+			// crossChunk → `gload` (orch sibling txns); else `load` (same txn).
 			if (!isFirst)
 			{
 				int prevCallTxnIdx = static_cast<int>(
@@ -990,9 +938,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				{
 					pieceBody->body.push_back(std::move(s));
 				}
-				// Cross-chunk pieces run as separate programs (fresh scratch), so
-				// also restore the EVM-memory blob (slots 0..MEMORY_SLOT_LAST) the prior piece
-				// flushed — threads memory state through scratchspace via gload.
+				// Also restore EVM-memory blob for cross-chunk pieces
+				// (fresh scratch per program; gload from prior piece's scratch).
 				if (spec.crossChunk)
 					for (auto& s : makeBlobCarryLoadStmts(prevCallTxnIdx, origLoc))
 						pieceBody->body.push_back(std::move(s));
@@ -1002,13 +949,11 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			for (size_t i = ranges[pi].first; i < ranges[pi].second; ++i)
 				pieceBody->body.push_back(stmts[i]);
 
-			// Epilogue: store live-vars to scratch slot 100 (skip on
-			// last — ends with the original return statement instead).
+			// Epilogue: store live-vars to scratch slot 100 (last piece omits;
+			// it ends with the original return). Slot-0 flush is a no-op
+			// (no local cache; see makeBlobFlushStmt).
 			if (!isLast)
 			{
-				// Slot-0 sync point. With no local cache, slot 0 is already
-				// current in scratch (writes go straight there), so this is a
-				// no-op store-back guarding against any stray local-var flush.
 				if (spec.crossChunk)
 					pieceBody->body.push_back(makeBlobFlushStmt(origLoc));
 				for (auto& s : makeScratchStoreStmts(liveAt[pi], origLoc))
@@ -1028,25 +973,16 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			built.push_back(std::move(bp));
 		}
 
-		// Rewrite the ORIGINAL function's body to dispatch to the
-		// pieces sequentially. Pieces share the txn's scratch frame
-		// (slot 100) so live vars cross piece boundaries transparently.
-		// Without this rewrite the original still carries its full body,
-		// which puya tries to compile and trips the 'h' format / 32 KB
-		// branch limit that motivated splitting in the first place.
+		// Rewrite the original body to dispatch pieces sequentially (in-program)
+		// or stub it out (cross-chunk). Without rewrite the full body stays and
+		// trips the 'h' format / 32 KB branch limit that motivated splitting.
 		auto newBody = awst::makeBlock(origLoc);
 		if (spec.crossChunk)
 		{
-			// CROSS-CHUNK: the pieces are standalone, client-driven chunks — the
-			// deploy harness submits them as a staged sequence threading scratch
-			// (slot 100 + EVM-blob slots 0..MEMORY_SLOT_LAST) via gload across the group. The
-			// original function must therefore NOT callsub the pieces: a callsub
-			// makes per-Contract DCE keep every piece REAL in this chunk (the
-			// dispatcher absorbs its whole pipeline — the 33KB/19KB/11KB chunks),
-			// defeating the split. Leave a stub body so the pieces are STUBBED
-			// here and live only in their own ≤8KB chunks. Runtime dispatch is the
-			// piece chain registered from chain_groups.json. The stub returns the
-			// type's zero (false for a bool verifier = "not verified" = safe).
+			// Cross-chunk: pieces are standalone, deployed via chain_groups.json.
+			// Do NOT callsub: that forces DCE to keep every piece real in this
+			// chunk (absorbs the 33KB/19KB/11KB pipelines), defeating the split.
+			// Leave a stub (returns type's zero; false for bool verifier = safe).
 			if (origReturnType != awst::WType::voidType())
 				newBody->body.push_back(awst::makeReturnStatement(
 					builder::StorageMapper::makeDefaultValue(origReturnType, origLoc),
@@ -1095,11 +1031,9 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		tgt.body() = newBody; // safe: tgt.method pointer still valid
 		}
 
-		// Now register the pieces — for ContractMethod target, push them
-		// onto the parent contract's `methods` (this MAY invalidate
-		// `tgt.method`, but we've already done all mutation we need on
-		// it). For Subroutine target, return them via SplitResult so the
-		// caller appends to roots.
+		// Register pieces: ContractMethod → push onto contract->methods
+		// (may invalidate tgt.method, but mutation is done). Subroutine →
+		// return via SplitResult for caller to append to roots.
 		bool tgtPure = tgt.pure();
 		for (auto const& bp : built)
 		{
@@ -1115,30 +1049,22 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				m.pure = tgtPure;
 				if (spec.crossChunk)
 				{
-					// Cross-chunk pieces need to be reachable BY
-					// SELECTOR from orch.dispatch_chain — orch's
-					// staged inner-txn calls the chunk with
-					// `app_args=(piece_sel, ...)` and expects the
-					// chunk's ABI router to dispatch. Without an
-					// arc4MethodConfig the piece is internal-only and
-					// has no router slot.
+					// Cross-chunk pieces must be selector-reachable for
+					// orch.dispatch_chain (app_args=(piece_sel,...));
+					// without arc4MethodConfig the piece is internal-only.
 					awst::ARC4ABIMethodConfig abi;
 					abi.sourceLocation = origLoc;
 					abi.allowedCompletionTypes = {0}; // NoOp only
 					abi.create = 3;                   // Disallow
 					abi.name = bp.name;
-					// Each cross-chunk piece gets its OWN uros chunk so the
-					// downstream uros bin-pack places it in a separate ≤8KB
-					// program (else all pieces inherit the primary method's
-					// default chunk and stay in one oversized program). The
-					// deploy harness (chain_groups.json + deploy.uros.json)
-					// finds each piece by name in its chunk and wires the chain.
+					// Each piece gets its own uros chunk so bin-packing
+					// puts it in a separate ≤8KB program; deploy harness
+					// (chain_groups.json + deploy.uros.json) wires the chain.
 					abi.chunk = bp.name;
 					m.arc4MethodConfig = abi;
 				}
-				// else: in-program callsub mode — pieces are
-				// internal-only, invoked via InstanceMethodTarget
-				// from the rewritten original method.
+				// else: in-program callsub mode — pieces are internal-only,
+				// invoked via InstanceMethodTarget from the rewritten original.
 				parentContract->methods.push_back(std::move(m));
 				++result.newContractMethodPieces;
 			}
@@ -1150,13 +1076,10 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				piece->name = bp.name;
 				piece->args = origArgs;
 				piece->returnType = bp.returnType;
-				// Cross-chunk pieces have a scratch-store-100 epilogue
-				// that puya's DCE doesn't recognize as a side effect
-				// (scratch is per-app-call from puya's perspective; it
-				// doesn't know a sibling inner txn will `gload` it).
-				// Marking non-pure keeps puya from dropping the body.
-				// Last piece is naturally non-pure since it has a
-				// concrete return type the caller reads.
+				// Cross-chunk intermediate pieces marked non-pure: puya's DCE
+				// doesn't know a sibling inner-txn will gload the scratch-100
+				// epilogue (scratch is per-app-call from puya's POV).
+				// Last piece naturally non-pure (concrete return type).
 				bool isLastPiece = (&bp == &built.back());
 				piece->pure = (spec.crossChunk && !isLastPiece)
 					? false : tgtPure;

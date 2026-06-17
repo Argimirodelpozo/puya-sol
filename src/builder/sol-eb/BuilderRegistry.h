@@ -12,22 +12,13 @@
 namespace puyasol::builder::eb
 {
 
-/// Registry that maps Solidity types to builder factories.
-///
-/// Dispatches on `solidity::frontend::Type::Category`. The factory receives
-/// the full Solidity type so it can inspect type parameters (bits, signedness,
-/// element types, struct fields, etc.) to construct the appropriate builder.
-///
-/// During migration, tryBuildInstance() returns nullptr for unregistered
-/// categories, allowing the default path to handle them.
+/// Maps Solidity type categories to InstanceBuilder factories.
+/// tryBuildInstance() returns nullptr for unregistered categories (falls through).
 class BuilderRegistry
 {
 public:
-	/// Initialize with all type builder factories registered.
 	BuilderRegistry();
 
-	/// Factory: (context, Solidity type, AWST expression) → instance builder.
-	/// The factory receives the full Solidity type to inspect parameters.
 	using InstanceFactory = std::function<std::unique_ptr<InstanceBuilder>(
 		ContractContext& _ctx,
 		solidity::frontend::Type const* _solType,

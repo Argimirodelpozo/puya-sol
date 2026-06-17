@@ -20,8 +20,7 @@ void rewriteARC4Returns(
 {
 	auto const& returnParams = _func.returnParameters();
 
-	// For ARC4 methods returning dynamic arrays, convert the return type
-	// to ARC4 encoding and wrap return values in ARC4Encode.
+	// Pass 1: dynamic-array returns → ARC4 type + ARC4Encode wrap.
 	if (method.arc4MethodConfig.has_value()
 		&& method.returnType->kind() == awst::WTypeKind::ReferenceArray)
 	{
@@ -64,15 +63,9 @@ void rewriteARC4Returns(
 		}
 	}
 
-	// EVM inline assembly is UNCHECKED: every Yul opcode (add/mul/exp/...)
-	// wraps mod 2^256, so an assembly-produced value can never exceed its
-	// declared width in EVM. AVM biguint does NOT wrap, so an assembly
-	// computation can grow past 2^N here. To match EVM semantics we wrap
-	// (val % 2^N) before ARC4Encode for assembly-bodied functions — this is
-	// the deferred equivalent of EVM's per-opcode wrapping, NOT an overflow
-	// being swallowed. For non-assembly (checked) functions we leave the bare
-	// ARC4Encode, whose `len <= N/8` assert correctly REVERTS on a genuine
-	// overflow (e.g. checked add/mul/exp that a test expects to trap).
+	// Assembly bodies are UNCHECKED (EVM Yul wraps mod 2^256); AVM biguint
+	// does NOT wrap. Wrap (val % 2^N) before ARC4Encode for asm functions
+	// to match EVM semantics. Non-asm leaves bare ARC4Encode so overflow REVERTS.
 	auto pow2Str = [](unsigned bits) -> std::string {
 		boost::multiprecision::cpp_int v = 1;
 		v <<= bits;
@@ -91,11 +84,7 @@ void rewriteARC4Returns(
 		return awst::makeARC4Encode(std::move(val), arc4Ty, loc);
 	};
 
-	// For ARC4 methods returning biguint, wrap return values in ARC4Encode
-	// with the correct bit width (e.g., uint256 not uint512).
-	// Skip signed returns and functions with modifiers. Inline-assembly bodies
-	// are handled too (their returns are wrapped mod 2^N via encodeRet so the
-	// ABI exposes arc4.uintN, matching cross-contract callers' uint256 selectors).
+	// Pass 2: biguint returns → ARC4Encode(ARC4UIntN(N)); skipped for signed + modifier fns.
 	if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
 		&& signedReturns.empty() && _func.modifiers().empty())
 	{
@@ -143,16 +132,13 @@ void rewriteARC4Returns(
 		method.returnType = arc4RetType;
 	}
 
-	// For ARC4 methods returning tuples with biguint elements,
-	// wrap each biguint element in ARC4Encode with correct bit width.
-	// Inline-assembly bodies handled too (encodeRet wraps mod 2^N per element).
+	// Pass 3: tuple returns with biguint elements → per-element ARC4Encode.
 	if (method.arc4MethodConfig.has_value() && method.returnType
 		&& method.returnType->kind() == awst::WTypeKind::WTuple
 		&& signedReturns.empty() && _func.modifiers().empty())
 	{
 		auto const* tupleType = static_cast<awst::WTuple const*>(method.returnType);
-		// Only wrap when ALL elements are biguint or uint64/bool (simple scalars).
-		// Mixed tuples with arrays/structs/strings need different handling.
+		// Only wrap all-scalar tuples; mixed (arrays/structs/strings) need different handling.
 		bool allScalar = true;
 		bool hasBiguintElement = false;
 		for (auto const* t : tupleType->types())
@@ -165,7 +151,6 @@ void rewriteARC4Returns(
 
 		if (hasBiguintElement && allScalar)
 		{
-			// Build ARC4 type for each element
 			std::vector<awst::WType const*> arc4Types;
 			for (size_t ri = 0; ri < returnParams.size() && ri < tupleType->types().size(); ++ri)
 			{
@@ -184,8 +169,6 @@ void rewriteARC4Returns(
 					arc4Types.push_back(elemType);
 			}
 
-			// Helper: wrap biguint items inside a single TupleExpression with
-			// ARC4Encode, and update the tuple's wtype to the ARC4 tuple type.
 			auto wrapTupleItems = [&](awst::TupleExpression* tuple)
 			{
 				if (!tuple) return;
@@ -204,9 +187,6 @@ void rewriteARC4Returns(
 					std::vector<awst::WType const*>(arc4Types));
 			};
 
-			// Walk the body and wrap biguint tuple elements in ARC4Encode.
-			// Handles direct tuple returns and conditional expressions whose
-			// branches are tuple literals.
 			static int retTmpCounter = 0;
 			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapTupleReturns;
 			wrapTupleReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
@@ -229,10 +209,8 @@ void rewriteARC4Returns(
 						else if (ret->value->wtype
 							&& ret->value->wtype->kind() == awst::WTypeKind::WTuple)
 						{
-							// Non-literal tuple expression (e.g. `return fu()`):
-							// spill into a local, then build a TupleExpression of
-							// ARC4-encoded TupleItemExpressions so each biguint
-							// element is properly widened to its ARC4UIntN width.
+							// Non-literal tuple (e.g. `return fu()`): spill to local,
+							// then rebuild as TupleExpression of ARC4-encoded items.
 							auto const* subTupleType = static_cast<awst::WTuple const*>(ret->value->wtype);
 							bool needsWrap = false;
 							for (auto const* t : subTupleType->types())
@@ -283,10 +261,8 @@ void rewriteARC4Returns(
 		}
 	}
 
-	// Sign-extend return values for signed integer types ≤64 bits, and
-	// for ≤256-bit signed returns wrap the result in an ARC4Encode of
-	// ARC4UIntN(256) so the ABI output is uint256 (32 bytes) rather
-	// than puya's default biguint→uint512 (64 bytes).
+	// Pass 4: signed returns → signExtendToUint256; wrap in ARC4UIntN(256)
+	// so ABI output is uint256 (32 bytes) not puya's default biguint→uint512.
 	if (!signedReturns.empty() && method.arc4MethodConfig.has_value())
 	{
 		// All signed returns are wrapped to 256 bits by signExtendToUint256,
@@ -322,7 +298,6 @@ void rewriteARC4Returns(
 					if (signedReturns.size() == 1 && signedReturns[0].index == 0
 						&& returnParams.size() == 1)
 					{
-						// Single return — sign-extend directly
 						ret->value = TypeCoercion::signExtendToUint256(
 							std::move(ret->value), signedReturns[0].bits, srcLoc);
 						if (wrapSingleReturn)
@@ -330,7 +305,6 @@ void rewriteARC4Returns(
 					}
 					else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
 					{
-						// Tuple return — sign-extend individual elements
 						for (auto const& sr: signedReturns)
 						{
 							if (sr.index < tuple->items.size())
@@ -359,8 +333,7 @@ void rewriteARC4Returns(
 			method.returnType = arc4SignedType;
 	}
 
-	// Mask unsigned sub-word return values to their declared bit width.
-	// EVM implicitly cleans values on ABI encoding; AVM preserves full uint64.
+	// Pass 5: unsigned sub-word returns → mask to declared width (AVM preserves full uint64).
 	if (!unsignedMasks.empty() && method.arc4MethodConfig.has_value())
 	{
 		auto maskValue = [&](std::shared_ptr<awst::Expression> val,
@@ -412,16 +385,10 @@ void rewriteARC4Returns(
 		walkMask(method.body->body);
 	}
 
-	// Final safety pass: when method.returnType is a NATIVE int (uint64 or
-	// biguint), every return value must be that exact native int. Some paths
-	// leave a uint64<->biguint mismatch that puya rejects ("invalid return
-	// type"): a stored sub-word value read as biguint, a uint64 value returned
-	// from a biguint-typed method, or a signed sub-word return that the block
-	// above sign-extended to biguint while a modifier later moves it into the
-	// uint64 named-return var (the latter produced V4 PoolManager.initialize's
-	// `int24 tick` phi mismatch). Coerce native-int return values to match.
-	// ARC-4 return types are left exactly as the dedicated handling produced
-	// them (the router still encodes the native value to arc4.intN).
+	// Pass 6 (safety): coerce native-int return values to match method.returnType.
+	// Some paths leave uint64↔biguint mismatches that puya rejects; e.g. a
+	// signed sub-word sign-extended to biguint while a modifier moves it into a
+	// uint64 named-return var (V4 PoolManager.initialize int24 tick phi).
 	if (method.returnType
 		&& (method.returnType == awst::WType::uint64Type()
 			|| method.returnType == awst::WType::biguintType()))
@@ -432,6 +399,7 @@ void rewriteARC4Returns(
 		// Name of the single named-return var, if any. A modifier moves the
 		// return value into this var (so the body ends with `<name> = <value>`
 		// instead of `return <value>`); we must coerce that assignment too.
+		// Also coerce assignments into the single named-return var (modifier path).
 		std::string const namedRet =
 			returnParams.size() == 1 ? returnParams[0]->name() : std::string{};
 		std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walkCoerce;
@@ -451,9 +419,7 @@ void rewriteARC4Returns(
 				}
 				else if (auto* as = dynamic_cast<awst::AssignmentStatement*>(stmt.get()))
 				{
-					// Assignment into the named-return var (modifier-inlined
-					// return): coerce the value AND retype the target so every
-					// def of the var shares method.returnType's avm_type.
+					// Coerce assignment into named-return var; retype target for avm_type consistency.
 					if (auto* tv = dynamic_cast<awst::VarExpression*>(as->target.get()))
 						if (!namedRet.empty() && tv->name == namedRet && as->value
 							&& as->value->wtype && isNativeInt(as->value->wtype)

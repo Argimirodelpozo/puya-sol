@@ -26,13 +26,8 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 {
 	using Token = solidity::frontend::Token;
 
-	// Helper to coerce bytes[N] operands to a numeric type when used in numeric context.
-	// For bytes[N] where N > 8 — or bytes of unknown length (e.g. keccak256
-	// output, which is a 32-byte digest but comes back typed as `bytes`) —
-	// promotes to biguint via ReinterpretCast. btoi only handles ≤8 bytes
-	// and fails at runtime for anything longer, so unknown-length bytes
-	// must take the biguint path.
-	// For fixed bytes[N≤8], uses btoi → uint64.
+	// Coerce bytes[N] to numeric. >8-byte or unknown-length (e.g. keccak256 32-byte
+	// digest typed `bytes`) → biguint via ReinterpretCast; btoi only handles ≤8 bytes.
 	auto coerceBytesToUint = [&](std::shared_ptr<awst::Expression>& operand) {
 		if (operand->wtype && operand->wtype->kind() == awst::WTypeKind::Bytes)
 		{
@@ -55,7 +50,6 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		}
 	};
 
-	// Auto-coerce bytes[N] operands to uint64 when the other operand is numeric
 	bool leftIsBytes = _left->wtype && _left->wtype->kind() == awst::WTypeKind::Bytes;
 	bool rightIsBytes = _right->wtype && _right->wtype->kind() == awst::WTypeKind::Bytes;
 	bool leftIsNumeric = _left->wtype == awst::WType::uint64Type()
@@ -67,12 +61,10 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 	if (rightIsBytes && leftIsNumeric)
 		coerceBytesToUint(_right);
 
-	// Helper to promote uint64 to biguint
 	auto promoteToBigUInt = [&](std::shared_ptr<awst::Expression>& operand) {
 		if (operand->wtype == awst::WType::uint64Type())
 		{
-			// For integer constants, use IntegerConstant(biguint) directly
-			// to avoid itob(0) producing 8 zero bytes vs biguint(0) = empty bytes.
+			// Integer constants: use biguint constant directly (avoids itob(0)=8 zero bytes).
 			if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(operand.get()))
 			{
 				auto bigConst = awst::makeIntegerConstant(intConst->value, _loc, awst::WType::biguintType());
@@ -95,14 +87,12 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 	case Token::GreaterThan:
 	case Token::GreaterThanOrEqual:
 	{
-		// For bytes-backed types (account, bytes, bytes[N], string), use BytesComparisonExpression
 		bool isBytesBacked = _left->wtype == awst::WType::accountType()
 			|| (_left->wtype && _left->wtype->kind() == awst::WTypeKind::Bytes)
 			|| _left->wtype == awst::WType::stringType();
 
 		if (isBytesBacked && (_op == Token::Equal || _op == Token::NotEqual))
 		{
-			// Coerce both sides to bytes if they differ
 			if (_left->wtype != _right->wtype)
 			{
 				auto castToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
@@ -120,7 +110,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				std::move(_right), _loc);
 		}
 
-		// Bytes ordering comparisons use AVM intrinsics (b<, b>, b<=, b>=)
+		// Bytes ordering: AVM b</b>/b<=/b>= intrinsics.
 		if (isBytesBacked)
 		{
 			std::string opCode;
@@ -141,7 +131,6 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			}
 		}
 
-		// Promote if mixed uint64/biguint
 		if (isBigUInt(_left->wtype) != isBigUInt(_right->wtype))
 		{
 			promoteToBigUInt(_left);
@@ -178,7 +167,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		break;
 	}
 
-	// Bytes bitwise operations (b|, b&, b^) — for bytes[N] types like bytes32/bytes4
+	// Bytes bitwise (b|, b&, b^) for bytes[N] types.
 	{
 		bool leftIsBytesKind = _left->wtype && _left->wtype->kind() == awst::WTypeKind::Bytes;
 		bool rightIsBytesKind = _right->wtype && _right->wtype->kind() == awst::WTypeKind::Bytes;
@@ -200,33 +189,23 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		}
 	}
 
-	// Arithmetic/bitwise operations — choose uint64 vs biguint
 	if (isBigUInt(_resultType) || isBigUInt(_left->wtype) || isBigUInt(_right->wtype))
 	{
 		promoteToBigUInt(_left);
 
-		// BigUInt doesn't have native shift ops — convert x<<n to x*(2^n), x>>n to x/(2^n)
-		// Construct 2^n using setbit(bzero(32), 255-n, 1) since AVM has no bexp opcode
-		// Note: _right (shift amount) must stay uint64 — do NOT promote it before this block
+		// biguint has no shift opcode: x<<n = x*(2^n), x>>n = x/(2^n).
+		// 2^n via setbit(bzero(32),255-n,1). Shift amount stays uint64.
 		if (_op == Token::SHL || _op == Token::AssignShl
 			|| _op == Token::SHR || _op == Token::AssignShr
 			|| _op == Token::SAR || _op == Token::AssignSar)
 		{
 			auto shiftAmt = TypeCoercion::implicitNumericCast(std::move(_right), awst::WType::uint64Type(), _loc);
 
-			// bzero(32) — 256-bit zero buffer
 			auto bzero = awst::makeBzero(32, _loc);
-
-			// 255 - n: setbit uses MSB-first ordering, so bit (255-n) = 2^n
 			auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
-
 			auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(shiftAmt), _loc);
-
-			// setbit(bzero(32), 255-n, 1) → bytes with only bit n set
 			auto setbit = awst::makeSetbit(
 				std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
-
-			// Cast bytes → biguint
 			auto castToBigUInt = awst::makeAsBiguint(std::move(setbit), _loc);
 
 			auto shiftBigOp = (_op == Token::SHL || _op == Token::AssignShl)
@@ -235,22 +214,18 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 			return awst::makeBigUIntBinOp(std::move(_left), shiftBigOp, std::move(castToBigUInt), _loc);
 		}
 
-		// For non-shift ops, promote right operand to biguint now
 		promoteToBigUInt(_right);
 
 		if (_op == Token::Sub || _op == Token::AssignSub)
 		{
-			// Checked subtraction: assert a >= b before wrapping
 			if (!_scope.isUnchecked())
 			{
 				auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
-
 				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
 				_ctx.prePendingStatements.push_back(std::move(assertStmt));
 			}
 
-			// Biguint subtraction needs wrapping mod 2^256 to avoid AVM underflow.
-			// Pattern: (a + 2^256 - b) % 2^256
+			// Biguint sub needs wrapping: (a + 2^256 - b) % 2^256
 			auto pow256 = makePow256(_loc);
 
 			auto addPow = awst::makeBigUIntBinOp(std::move(_left), awst::BigUIntBinaryOperator::Add, pow256, _loc);
@@ -264,8 +239,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		}
 
 
-		// BigUInt exponentiation: AVM has no biguint exp opcode, so build a
-		// square-and-multiply loop emitted via prePendingStatements.
+		// biguint ** : no AVM opcode; emit square-and-multiply loop.
 		if (_op == Token::Exp)
 		{
 			static int expCounter = 0;
@@ -302,24 +276,17 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				return bin;
 			};
 
-			// Ensure both operands are biguint (they may be uint64)
 			auto baseExpr = TypeCoercion::implicitNumericCast(std::move(_left), awst::WType::biguintType(), _loc);
 			auto expExpr = TypeCoercion::implicitNumericCast(std::move(_right), awst::WType::biguintType(), _loc);
 
-			// __biguint_exp_result = 1
 			_ctx.prePendingStatements.push_back(makeAssign(resultVar, makeConst("1")));
-			// __biguint_exp_base = base
 			_ctx.prePendingStatements.push_back(makeAssign(baseVar, std::move(baseExpr)));
-			// __biguint_exp_exp = exp
 			_ctx.prePendingStatements.push_back(makeAssign(expVar, std::move(expExpr)));
 
-			// while __biguint_exp_exp > 0:
 			auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 			auto body = awst::makeBlock(_loc);
 
-			// In unchecked mode, Solidity wraps exponentiation modulo 2^256
-			// so that huge exponents (e.g. 2**1113) don't overflow biguint.
-			// Take each intermediate result mod 2^256 inside the loop.
+			// Unchecked: wrap products mod 2^256 inside the loop.
 			bool const wrapMod = _scope.isUnchecked();
 			auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
 				-> std::shared_ptr<awst::Expression>
@@ -329,7 +296,6 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 				return mod;
 			};
 
-			// if exp & 1 != 0: result = result * base
 			{
 				auto expAnd1 = makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::BitAnd, makeConst("1"));
 				auto isOdd = awst::makeNumericCompare(std::move(expAnd1), awst::NumericComparison::Ne, makeConst("0"), _loc);
@@ -345,11 +311,9 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 					std::move(isOdd), std::move(ifBlock), nullptr, _loc));
 			}
 
-			// exp = exp / 2
 			body->body.push_back(makeAssign(expVar,
 				makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::FloorDiv, makeConst("2"))));
 
-			// base = base * base (wrapped mod 2^256 in unchecked mode)
 			{
 				std::shared_ptr<awst::Expression> baseSq =
 					makeBinOp(makeVar(baseVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
@@ -377,9 +341,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		}
 		auto e = awst::makeBigUIntBinOp(std::move(_left), bigOp, std::move(_right), _loc);
 
-		// In unchecked blocks, arithmetic must wrap mod 2^256 (EVM semantics).
-		// AVM biguint is arbitrary-precision; without truncation, results can
-		// exceed 256 bits and break subsequent operations.
+		// Unchecked: wrap mod 2^256 (AVM biguint is arbitrary-precision; >256-bit breaks EVM semantics).
 		if (_scope.isUnchecked()
 			&& (_op == Token::Add || _op == Token::AssignAdd
 				|| _op == Token::Sub || _op == Token::AssignSub
@@ -410,8 +372,7 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		case Token::Mod: case Token::AssignMod: e->op = awst::UInt64BinaryOperator::Mod; break;
 		case Token::Exp:
 		{
-			// AVM `exp` opcode asserts on 0^0. Solidity defines 0**0 = 1.
-			// Wrap: y == 0 ? 1 : x ** y
+			// AVM `exp` asserts on 0^0; Solidity defines 0**0=1. Guard: y==0 ? 1 : x**y.
 			e->op = awst::UInt64BinaryOperator::Pow;
 
 			auto zero = awst::makeZero(_loc);

@@ -26,9 +26,7 @@ void StorageLayout::computeLayout(
 	m_slotByNumber.clear();
 	m_totalSlots = 0;
 
-	// `contract C layout at N` shifts the base storage slot to N. When the
-	// annotation is present, Solidity stores the evaluated base in
-	// storageLayoutSpecifier()->annotation().baseSlot (a SetOnce).
+	// `contract C layout at N`: shift base slot via storageLayoutSpecifier().baseSlot.
 	unsigned baseSlot = 0;
 	if (auto const* spec = _contract.storageLayoutSpecifier())
 	{
@@ -42,29 +40,24 @@ void StorageLayout::computeLayout(
 	unsigned currentSlot = baseSlot;
 	unsigned currentOffset = 0; // bytes used in current slot
 
-	// Walk linearized base contracts (most-base first = reverse of linearization)
+	// Collect state vars base-first (reverse of linearization).
 	std::vector<VariableDeclaration const*> allVars;
-
-	// Collect in correct order: base-first
 	forEachStateVarReverse(_contract, [&](auto const* var)
 	{
 		if (var->isConstant() || var->immutable())
 			return;
-		// Transient vars have their own independent slot namespace (EIP-1153);
-		// TransientStorage computes that layout separately.
+		// Transient vars (EIP-1153) have an independent namespace; TransientStorage handles them.
 		if (var->referenceLocation() == VariableDeclaration::Location::Transient)
 			return;
-		// Skip if already seen (inherited and not overridden)
-		bool alreadySeen = false;
+		bool alreadySeen = false; // de-dup inherited vars
 		for (auto const* existing: allVars)
 			if (existing->name() == var->name()) { alreadySeen = true; break; }
 		if (alreadySeen) return;
 		allVars.push_back(var);
 	});
 
-	// Reserve up front: the m_slots[].variables back-pointers taken below
-	// (&m_variables[i]) must stay valid, but the loop keeps push_back-ing into
-	// m_variables — a reallocation mid-loop would dangle every earlier pointer.
+	// Reserve upfront: m_slots[].variables hold &m_variables[i]; a mid-loop
+	// reallocation would dangle those pointers.
 	m_variables.reserve(allVars.size());
 
 	for (auto const* var: allVars)
@@ -73,8 +66,7 @@ void StorageLayout::computeLayout(
 		unsigned byteSize = 32; // default for unknown types
 		unsigned slotsSpanned = 1;
 
-		// Use Solidity's storageBytes() (byte width within a slot) and
-		// storageSize() (number of slots) for accurate EVM-style packing.
+		// storageBytes() = byte width within a slot; storageSize() = slot count.
 		if (solType)
 		{
 			byteSize = solType->storageBytes();
@@ -96,9 +88,8 @@ void StorageLayout::computeLayout(
 
 		bool isMultiSlot = (slotsSpanned > 1) || isDynamic;
 
-		// Multi-slot types (structs, static arrays, dynamic arrays, mappings)
-		// always start at a fresh slot boundary. Single-slot types pack into
-		// the current slot if their bytes fit, else advance to a new slot.
+		// Multi-slot types always align to a fresh slot; single-slot types pack
+		// into the current slot if they fit.
 		if (isMultiSlot || currentOffset + byteSize > 32)
 		{
 			if (currentOffset > 0)
@@ -106,7 +97,7 @@ void StorageLayout::computeLayout(
 			currentOffset = 0;
 		}
 
-		// Record the variable
+		// Record.
 		SlotVariable sv;
 		sv.name = var->name();
 		sv.slot = currentSlot;
@@ -121,7 +112,7 @@ void StorageLayout::computeLayout(
 		m_varByName[sv.name] = varIdx;
 		m_varById[sv.declId] = varIdx;
 
-		// Ensure slot exists
+		// Ensure slot record exists.
 		if (m_slotByNumber.find(currentSlot) == m_slotByNumber.end())
 		{
 			SlotInfo si;
@@ -132,13 +123,12 @@ void StorageLayout::computeLayout(
 			m_slotByNumber[currentSlot] = slotIdx;
 		}
 
-		// Add variable to slot
+		// Add variable to slot record.
 		auto slotIdx = m_slotByNumber[currentSlot];
 		m_slots[slotIdx].variables.push_back(&m_variables[varIdx]);
 		m_slots[slotIdx].bytesUsed = currentOffset + byteSize;
 
-		// Advance: multi-slot types consume `slotsSpanned` slots starting
-		// fresh; single-slot types advance the byte offset within the slot.
+		// Advance position.
 		if (isMultiSlot)
 		{
 			currentSlot += slotsSpanned;

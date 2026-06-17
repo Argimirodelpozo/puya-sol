@@ -10,17 +10,12 @@
 namespace puyasol::splitter
 {
 
-/// Drives the SimpleSplitter pipeline end-to-end so main.cpp doesn't have
-/// to know any of its internals. Reads a `--split-config <json>` file,
-/// applies `--force-delegate` extras, calls `SimpleSplitter::split` per
-/// helper, and (when the pipeline produced any split contracts) writes
-/// each helper / orchestrator to its own subdirectory under
-/// `outputDir` with the per-contract `awst.json`, `options.json`, and
-/// (if `puyaPath` is set) per-contract puya invocation.
+/// Drives the SimpleSplitter pipeline end-to-end. Reads `--split-config`,
+/// applies `--force-delegate`, calls SimpleSplitter::split per helper, and
+/// writes each helper/orchestrator to its own subdirectory under outputDir
+/// with awst.json, options.json, and (if puyaPath set) puya invocation.
 ///
-/// SimpleSplitter is a separate pipeline from UrosSplitter — caller is
-/// responsible for ensuring the two aren't both configured for the same
-/// invocation.
+/// Separate pipeline from UrosSplitter — don't configure both for the same invocation.
 class SimpleSplitterRunner
 {
 public:
@@ -54,20 +49,14 @@ public:
 
 	struct Result
 	{
-		/// True if any helper was extracted (i.e. the runner took over
-		/// output and main.cpp should skip its single-contract output
-		/// path). False if no split happened — main.cpp continues normally.
+		/// True if any helper was extracted; main.cpp should skip its
+		/// single-contract output path when true.
 		bool didSplit = false;
-		/// Aggregate puya exit code across all per-helper invocations.
-		/// 0 if every helper succeeded, otherwise the first non-zero
-		/// exit code.
+		/// First non-zero puya exit code across all per-helper invocations.
 		int puyaExitCode = 0;
 	};
 
-	/// Run the pipeline. `roots` is in/out — when the splitter runs,
-	/// `roots` is left unchanged (the runner reads it to construct
-	/// per-helper subdirs but doesn't need to feed the remainder back
-	/// since it owns the output).
+	/// Run the pipeline. `roots` is read but not modified.
 	Result run(
 		Config const& _cfg,
 		std::vector<std::shared_ptr<awst::RootNode>> const& _roots);

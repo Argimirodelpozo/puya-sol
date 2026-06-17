@@ -22,10 +22,8 @@ using awst::blockAlwaysTerminates;
 
 namespace {
 
-/// Recursively visit each `SubroutineCallExpression` reachable from
-/// `_expr`/`_stmt`. Used to retarget self-recursive callsubs after the
-/// public method's biguint params have been remapped to ARC4 — see
-/// `wrapRecursiveCallsubArgs` below for the rewrite.
+/// Walk all SubroutineCallExpression nodes in a body tree; used to
+/// retarget self-recursive callsubs after biguint→ARC4 param remapping.
 class SubroutineCallVisitor
 {
 public:
@@ -174,14 +172,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	std::string const& _nameOverride
 )
 {
-	// Per-method scope state (funcPtrTargets, storageAliases, constantLocals)
-	// lives on the flat ScopeState reached via the BlockContext that buildBlock
-	// pushes for the function body — no manual snapshot/restore needed here.
-
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());
 	method.cref = m_sourceFile + "." + _contractName;
-	// Use name override if provided, otherwise disambiguate overloaded names
 	if (!_nameOverride.empty())
 	{
 		method.memberName = _nameOverride;
@@ -207,13 +200,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		else
 			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
-		// Function-pointer mapping (uint64 for Internal, bytes[12] for
-		// External/DelegateCall) is handled inside `TypeMapper::map`'s
-		// `Type::Category::Function` case — no override needed here.
 		arg.wtype = m_typeMapper.map(param->type());
-		// Memory aggregate param >4KB → passed as its uint64 base offset (blob
-		// pointer model). The callee re-registers it as a blob aggregate
-		// (setBlobAggParams below) so `p.field[i]` lowers to blob word access.
+		// Memory aggregate >4KB: pass as uint64 base offset (blob pointer model).
+		// Callee re-registers via setBlobAggParams so p.field[i] hits blob word access.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 			&& computeEncodedElementSize(arg.wtype) > AssemblyBuilder::SLOT_SIZE)
 			arg.wtype = awst::WType::uint64Type();
@@ -231,41 +220,30 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	else if (returnParams.size() == 1)
 	{
 		method.returnType = m_typeMapper.map(returnParams[0]->type());
-		// Storage reference returns (from functions with .slot assembly):
-		// return type is biguint (slot number), not the array type.
+		// .slot assembly storage ref: return biguint (slot number).
 		if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& _func.isImplemented()
 			&& std::any_of(_func.body().statements().begin(), _func.body().statements().end(),
 				[](auto const& s) { return dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()); }))
 			method.returnType = awst::WType::biguintType();
-		// Storage-ref pointer function (`return <stateVar>[<idx>];`): the
-		// function returns only the uint64 index; call sites reconstitute
-		// the storage location as IndexExpression(<stateVar>, <call>).
+		// Storage-ref pointer (`return _pools[id]`): return uint64 index or bytes box-key.
+		// Box-keyed when the holder is a mapping (storageRefReturnIsBytesKeyed),
+		// even for plain-struct elements with no nested mappings (V4 Position.State).
 		else if (storageRefPointerReturn(&_func))
-			// Box-keyed mapping-of-struct storage ref (e.g. `return _pools[id]`
-			// returning `Pool.State storage`): the function returns the bytes
-			// box-key prefix. Array/slot refs still return the uint64 index.
-			// Keyed off the HOLDER being a mapping (storageRefReturnIsBytesKeyed),
-			// not the struct contents — so plain-struct mapping elements (e.g. V4
-			// Position.State, no nested mappings) are still box-keyed.
 			method.returnType = storageRefReturnIsBytesKeyed(&_func)
 				? awst::WType::bytesType()
 				: awst::WType::uint64Type();
-		// For signed integer returns ≤64 bits, promote to biguint for proper
-		// 256-bit two's complement ARC4 encoding.
-		// Unwrap UserDefinedValueType/EnumType to find the underlying IntegerType.
+		// Signed ≤64-bit returns → biguint for proper 256-bit two's complement ARC4 encoding.
 		auto const* retSolType = returnParams[0]->type();
 		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
 			retSolType = &udvt->underlyingType();
 		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
-		// Enums are uint8 in ABI — treat as unsigned 8-bit
-		if (!intType)
+		if (!intType) // enums = uint8 in ABI
 			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
 				intType = dynamic_cast<solidity::frontend::IntegerType const*>(
 					enumType->encodingType());
-		// Biguint promotion is only for ABI sign-extension (public/external).
-		// Private/internal functions keep the native uint64 return so their
-		// body's `return IntegerConstant(uint64, …)` matches the declared type.
+		// Biguint promotion only at ABI boundary; private/internal keep uint64
+		// so `return IntegerConstant(uint64,…)` matches declared type.
 		bool isAbiBoundary = _func.isPartOfExternalInterface();
 		if (intType && intType->isSigned())
 		{
@@ -282,7 +260,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	}
 	else
 	{
-		// Multiple return values → tuple
+		// Multiple returns → tuple
 		std::vector<awst::WType const*> types;
 		std::vector<std::string> names;
 		bool hasNames = false;
@@ -290,16 +268,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			auto const& rp = returnParams[ri];
 			auto* mappedType = m_typeMapper.map(rp->type());
-			// Detect signed/narrow integer elements for sign-extension/masking
 			auto const* retSolType = rp->type();
 			if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
 				retSolType = &udvt->underlyingType();
 			auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
-			if (!intType)
+			if (!intType) // enums = uint8 in ABI
 				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
 					intType = dynamic_cast<solidity::frontend::IntegerType const*>(
 						enumType->encodingType());
-			// Biguint promotion only at ABI boundary (public/external).
 			bool isAbiBoundary = _func.isPartOfExternalInterface();
 			if (intType)
 			{
@@ -323,8 +299,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		}
 		if (hasNames)
 		{
-			// Use function name + "Return" as the struct name to avoid
-			// ARC56 collision when multiple methods return different named tuples.
+			// Suffix "Return" to avoid ARC56 collision across methods.
 			std::string tupleName = _func.name() + "Return";
 			method.returnType = new awst::WTuple(std::move(types), std::move(names), std::move(tupleName));
 		}
@@ -338,19 +313,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// ARC4 method config for public/external functions
 	method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
 
-	// uros chunked methods must NEVER be inlined: an inlined copy at an
-	// internal call site (e.g. verifySumcheck → relChunkMem) would bake the
-	// body into the CALLER's chunk, defeating the split (the body is duplicated
-	// instead of stubbed + reached via the staged inner-txn). Forcing a real
-	// SubroutineCall lets the uros backend stub it in non-owning chunks. No
-	// effect outside @custom:splitter contracts (chunk is empty there).
+	// uros: chunk-assigned methods must not be inlined (an inlined copy defeats
+	// the split; the uros backend needs to stub it in non-owning chunks).
 	if (method.arc4MethodConfig.has_value())
 		if (auto* abiCfg = std::get_if<awst::ARC4ABIMethodConfig>(&*method.arc4MethodConfig))
 			if (!abiCfg->chunk.empty())
 				method.inlineOpt = false;
 
-	// For ARC4 methods, convert array/tuple parameter types to ARC4 encoding
-	// and prepare decode operations for the function body
+	// ARC4 methods: remap param types to ARC4; stash decode ops for deferred insertion.
 	struct ParamDecode
 	{
 		std::string name;
@@ -361,8 +331,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		unsigned signedBits = 0; // >0 for signed 64<N<256 int params: sign-extend to 256-bit after decode
 	};
 	std::vector<ParamDecode> paramDecodes;
-	// Detect inline assembly early — needed to skip ARC4 param wrapping
-	// which would break assembly variable references.
+	// Detect inline assembly: skip ARC4 param wrapping (would break asm var refs).
 	bool funcHasInlineAssembly = false;
 	if (_func.isImplemented())
 	{
@@ -371,34 +340,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{ funcHasInlineAssembly = true; break; }
 	}
 
-	// (Self-recursion no longer gates the remap — recursive callsubs are
-	// rewritten post-translation to wrap their biguint args in ARC4Encode
-	// so they match the now-arc4-typed param. See the wrap pass below.)
-
+	// Self-recursive callsubs are rewritten post-translation to wrap biguint args
+	// in ARC4Encode (see wrap pass below) — self-recursion no longer gates the remap.
 	if (method.arc4MethodConfig.has_value())
 	{
-		// Remap types to ARC4 encoding for ABI-exposed methods.
-		// This ensures correct ABI signatures (e.g., uint256 not uint512 for biguint).
 		auto const& solParams = _func.parameters();
 		for (size_t pi = 0; pi < method.args.size(); ++pi)
 		{
 			auto& arg = method.args[pi];
 
-			// Remap biguint args to ARC4UIntN with the original Solidity bit width.
-			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256,
-			// breaking ABI selectors for callers that use the natural f(uint256)
-			// signature. Signed integers use the same 256-bit two's complement
-			// encoding — we keep ARC4UIntN(256) and let the test runner's
-			// _abi_safe_type helper map int<N>→uint<N> so encode/decode line up.
-			//
-			// One skip condition:
-			//   - inline assembly: body references the param by its original
-			//     name; renaming would break Yul references.
-			//
-			// Self-recursive functions are also remapped: a post-translation
-			// walk over `method.body` (further down in this method) wraps
-			// each recursive callsub's biguint arg in ARC4Encode so it
-			// matches the now-arc4-typed param.
+			// Remap biguint → ARC4UIntN(N): without this puya uses uint512 (AVM max),
+			// breaking ABI selectors. Skipped for asm bodies (would break Yul refs).
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
 				&& !funcHasInlineAssembly)
 			{
@@ -409,11 +361,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
 				unsigned bits = intType ? intType->numBits() : 256;
 				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-				// A signed sub-256 (64<N<256) param decodes to N-bit two's complement
-				// (2^N - X for negatives, bit 255 clear); sign-extend to canonical
-				// 256-bit after the decode so downstream 256-bit ops (signed compare,
-				// negate, casts) read its sign correctly. int256 is already canonical;
-				// <=64-bit signed is uint64-backed and handled by buildABIEntryChecks.
+				// Signed sub-256 (64<N<256) decodes to N-bit two's complement; sign-extend
+				// to 256-bit so downstream ops (compare, negate) see the correct sign.
+				// int256 is already canonical; ≤64-bit is uint64-backed (buildABIEntryChecks).
 				unsigned signedBits =
 					(intType && intType->isSigned() && bits > 64 && bits < 256) ? bits : 0;
 				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation, 0, signedBits});
@@ -421,26 +371,21 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				continue;
 			}
 
-			// Remap aggregate types (arrays, tuples) and external fn-ptr
-			// bytes[12] to ARC4 encoding. General bytes/bytes[N] params
-			// are NOT remapped — only fn-ptr-specific bytes[12].
+			// Remap aggregate types and external fn-ptr bytes[12] to ARC4.
+			// General bytes/bytes[N] params are NOT remapped.
 			bool isAggregate = arg.wtype
 				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
-			// External fn-ptr: bytes[12] needs ARC4 remapping to byte[12]
-			if (!isAggregate && pi < solParams.size())
+			if (!isAggregate && pi < solParams.size()) // external fn-ptr bytes[12]
 			{
 				if (dynamic_cast<solidity::frontend::FunctionType const*>(solParams[pi]->type())
 					&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
 					isAggregate = true;
 			}
-			// Skip the aggregate->ARC4 remap for inline-assembly bodies, matching
-			// the biguint remap guard above: the decode is suppressed for asm
-			// functions (see the `!hasInlineAssembly` guard at the decode-insert
-			// site), so remapping the signature without a decode would leave the
-			// body reading ARC4 bytes where it expects the native aggregate.
+			// Skip remap for asm bodies: decode is also suppressed there, so remapping
+			// without a decode would leave the body reading ARC4 where it expects native.
 			if (!isAggregate || funcHasInlineAssembly)
 				continue;
 
@@ -453,11 +398,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		}
 	}
 
-	// Function body
 	if (_func.isImplemented())
 	{
-		// Set function context for inline assembly translation
-		// Use the (possibly ARC4-remapped) types from the method args
+		// Use ARC4-remapped types from method.args for the assembly translation context.
 		{
 			std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 			std::map<std::string, unsigned> bitWidths;
@@ -487,32 +430,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
-		// Stash the named-return decls in m_currentNamedReturns for buildBlock,
-		// which uses them to register large (>4KB) memory returns as blob-backed
-		// aggregates. (No shadow-rename registration any more: local names are
-		// mangled by decl id — see sol_ast::Context::awstVarName.)
+		// Stash named-return decls for buildBlock (registers >4KB memory returns as blob-backed).
 		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnDecls;
 		for (auto const& rp: returnParams)
 			if (!rp->name().empty())
 				namedReturnDecls.push_back(rp.get());
 		setNamedReturns(namedReturnDecls);
 
-		// Register mapping-storage-ref params as mapping-key-params so that
-		// `m[k]` inside the body resolves the dynamic box-key prefix from
-		// the runtime bytes value of `m` (the holder name passed by the
-		// caller). Both input params and return params need this binding:
-		//
-		//   function f(mapping(K=>V) storage m, ...) → m is bound to the
-		//     bytes value passed by callers (state-var name).
-		//   function f() returns (mapping(K=>V) storage r) → r is a local
-		//     pointer assigned via `r = m1;` — same dynamic-prefix shape.
-		//
-		// AWSTBuilder's freestanding-subroutine path handles input-param
-		// registration for library/free functions, but contract methods
-		// reach here, so we must register them too. The actual setMappingKeyParam
-		// calls happen inside `buildBlock` after the FunctionContext is
-		// pushed — stash the decls in `m_currentMappingKeyParams` for it
-		// to pick up.
+		// Mapping-storage-ref params: stash for buildBlock to register as mapping-key-params
+		// so `m[k]` resolves the dynamic box-key prefix from the runtime bytes value of m.
+		// Covers both input params (storage m) and named returns (storage r assigned r=m1).
 		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
 		auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
 			return p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
@@ -523,12 +450,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			if (isMappingStorageRef(p.get()))
 				mappingKeyParamDecls.push_back(p.get());
 		for (auto const& rp: returnParams)
-			// Also register a box-keyed storage-ref NAMED return (e.g. V4
-			// `returns (Position.State storage position)` with `position = self[k];`)
-			// even when the struct has no nested mappings — so `position` resolves to
-			// the element's runtime box-key and the synthesised `return position;`
-			// hands back that key (storageRefReturnIsBytesKeyed gates the mapping-
-			// holder case that isMappingStorageRef/containsMappingType misses).
+			// Also register box-keyed storage-ref named returns (e.g. V4 Position.State
+			// storage): storageRefReturnIsBytesKeyed catches the mapping-holder case
+			// that containsMappingType misses for plain-struct elements.
 			if (isMappingStorageRef(rp.get())
 				|| (rp->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage
@@ -536,9 +460,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				mappingKeyParamDecls.push_back(rp.get());
 		setMappingKeyParams(mappingKeyParamDecls);
 
-		// Blob-backed (>4KB) memory aggregate params: register so the body's
-		// `p.field[i]` reads/writes route through the multi-slot blob at the
-		// passed-in base offset (the param's value). Mirrors mappingKeyParamDecls.
+		// Blob-backed (>4KB) memory params: stash so body's p.field[i] routes to the blob.
 		std::vector<solidity::frontend::VariableDeclaration const*> blobAggParamDecls;
 		for (auto const& p: _func.parameters())
 			if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
@@ -555,15 +477,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		m_currentInConstructor = false;
 		m_currentFrameIsProgram = false;
 
-		// Insert zero-initialization for named return variables
-		// Solidity implicitly initializes named returns to their zero values.
-		// This is critical for struct types where field-by-field assignment
-		// reads other fields from the variable via copy-on-write pattern.
-		//
-		// Also: every memory-typed return parameter (named or unnamed) gets a
-		// fresh allocation in EVM, advancing mload(0x40) at function entry.
-		// We mirror this so tests that probe free-memory-pointer movement
-		// across calls see the expected bumps.
+		// Zero-init named return vars (Solidity implicit init); bump free-memory pointer
+		// for every memory-typed return (EVM allocates at entry; tests probe FMP movement).
 		{
 			auto const& retParams = _func.returnParameters();
 			std::vector<std::shared_ptr<awst::Statement>> inits;
@@ -571,15 +486,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				if (rp->name().empty())
 					continue;
-				// Box-keyed storage-ref named returns hold a bytes box-key (a
-				// mappingKeyParam), not a struct value — skip the struct zero-init.
+				// Box-keyed storage-ref named returns hold a bytes box-key, not a struct — skip zero-init.
 				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 					&& storageRefReturnIsBytesKeyed(&_func))
 					continue;
 				auto* rpType = m_typeMapper.map(rp->type());
 
-				// Blob-backed (>4KB) memory returns are pre-zeroed in the preamble;
-				// skip the (oversized) bzero zero-init — they use the pointer model.
+				// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
 				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 					&& computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
 					continue;
@@ -600,9 +513,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				int sz = computeEncodedElementSize(rpType);
 				if (sz <= 0)
 					continue;
-				// Blob-backed (>4KB) memory return: bind its runtime base offset
-				// (current FMP, before the bump) to __blobagg_off_<id>, matching the
-				// blob-aggregate registration in ContractBuilder::buildBlock.
+				// >4KB memory return: bind FMP (before bump) to __blobagg_off_<id>
+				// to match blob-aggregate registration in ContractBuilder::buildBlock.
 				if (sz > AssemblyBuilder::SLOT_SIZE)
 				{
 					std::string offN = "__blobagg_off_" + std::to_string(rp->id());
@@ -628,11 +540,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Storage-ref pointer function: rewrite `return <stateVar>[<idx>];`
-		// (translated to `return IndexExpression(base, index)`) to return
-		// just the uint64 `index`. The location is reconstituted at call
-		// sites — see storageRefPointerReturn / SolInternalCall. returnType
-		// was already set to uint64 above.
+		// Storage-ref pointer: rewrite `return stateVar[idx]` to return just the
+		// uint64 index; call sites reconstitute the location (SolInternalCall).
 		if (storageRefPointerReturn(&_func))
 		{
 			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> rewriteRet;
@@ -659,9 +568,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			rewriteRet(method.body->body);
 		}
 
-		// Ensure all non-void functions end with a return statement.
-		// For named return parameters, synthesize a return referencing the variables.
-		// Otherwise append a default zero-value return.
+		// Synthesize implicit return: named-return vars or default zero.
 		if (method.returnType != awst::WType::voidType()
 			&& !blockAlwaysTerminates(*method.body))
 		{
@@ -697,7 +604,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				retStmt->value = StorageMapper::makeDefaultValue(method.returnType, method.sourceLocation);
 			}
 
-			// Enum range validation for implicit return of named return variables
+			// Enum range check on implicit named-return.
 			if (hasNamedReturns && retParams.size() == 1)
 			{
 				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
@@ -717,9 +624,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks, funcHasInlineAssembly);
 
-		// Skip ARC4 decode for functions with inline assembly blocks.
-		// The assembly translator handles parameter data directly via
-		// calldataload mapping using ARC4-encoded types.
+		// Asm bodies handle param data directly via calldataload; skip ARC4 decode.
 		bool hasInlineAssembly = false;
 		for (auto const& stmt: _func.body().statements())
 		{
@@ -730,15 +635,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Build ARC4 decode operations for aggregate / biguint parameters.
-		// The method args were remapped to ARC4 types but the body refs the
-		// native names. We rename each arg to `__arc4_<name>` and stash the
-		// decode statements; insertion is DEFERRED until after modifier
-		// inlining (below) so the decode lands at the top of the eventually
-		// modifier-wrapped body. Otherwise modifier-inlined pre-code that
-		// reads the param sees an uninitialised local — `inlineModifiers`
-		// replaces `method.body` wholesale, burying anything we prepend
-		// before the rewrap.
+		// Decode ARC4-remapped params: rename arg to __arc4_<name> and stash decodes.
+		// Deferred until after modifier inlining: inlineModifiers replaces method.body
+		// wholesale, so prepending earlier would bury the decode inside the wrap.
 		std::vector<std::shared_ptr<awst::Statement>> deferredDecodes;
 		if (!paramDecodes.empty() && !hasInlineAssembly)
 		{
@@ -755,34 +654,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					}
 				}
 
-				// Create: <name> = arc4_decode(__arc4_<name>)
-				// For dynamic arrays (ReferenceArray with null array_size), use
-				// IntrinsicCall("extract", [2, 0]) to strip the ARC4 length header
-				// instead of ARC4Decode — works around a puya backend issue where
-				// extract3(value, 2, 0) returns empty bytes instead of extracting
-				// to end (see puya-possible-bug.md).
 				auto arc4Var = awst::makeVarExpression(arc4Name, pd.arc4Type, pd.loc);
 
 				std::shared_ptr<awst::Expression> decodeExpr;
 				auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(pd.nativeType);
 				if (refArr && !refArr->arraySize().has_value())
 				{
-					// Dynamic array: use ConvertArray instead of ARC4Decode.
-					// This works around a puya backend bug where ARC4Decode
-					// uses extract3(value, 2, 0) to strip the length header,
-					// but extract3 with length=0 returns empty bytes instead
-					// of extracting to end (see puya-possible-bug.md).
-					// ConvertArray uses len+substring3 which works correctly.
+					// Dynamic array: ConvertArray (len+substring3) not ARC4Decode,
+					// because extract3(v,2,0) returns empty bytes in the puya backend.
 					auto convert = awst::makeConvertArray(std::move(arc4Var), pd.nativeType, pd.loc);
 					decodeExpr = std::move(convert);
 				}
 				else
 				{
 					auto decode = awst::makeARC4Decode(std::move(arc4Var), pd.nativeType, pd.loc);
-					// Canonicalise a signed sub-256 param to 256-bit two's complement —
-					// the ARC4 decode yields the N-bit form (2^N - X for negatives), and
-					// downstream 256-bit ops (the getAmount*Delta(int128) `liquidity<0`
-					// branch + its `-x`) would otherwise misread the sign.
+					// Signed sub-256: ARC4 decode yields N-bit form; sign-extend to 256-bit
+					// so ops like getAmount*Delta(int128) liquidity<0 branch read sign correctly.
 					if (pd.signedBits > 0)
 						decodeExpr = TypeCoercion::signExtendToUint256(
 							std::move(decode), pd.signedBits, pd.loc);
@@ -795,13 +682,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decodeExpr), pd.loc);
 				deferredDecodes.push_back(std::move(assign));
 			}
-			// For modifier-less functions we could insert here, but to keep
-			// a single insertion point we always defer to post-inline below.
 		}
 
-		// Mask / range-validate sub-64-bit and bool/enum parameters at
-		// function entry — EVM cleans ABI-decoded values automatically;
-		// AVM uint64 preserves the full value, so the guard is explicit.
+		// Sub-64-bit / bool / enum params: AVM uint64 doesn't auto-clean like EVM; guard explicitly.
 		{
 			bool useV2 = true; // default in 0.8+
 			if (m_currentContract)
@@ -821,15 +704,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Transient-storage blob init lives in the approval-program preamble
-		// (scratch slot TRANSIENT_SLOT, bzero(SLOT_SIZE)). Per-method init
-		// would reset the blob mid-dispatch, clobbering writes made by
-		// earlier callsub frames in the same app call.
+		// Transient blob init is in the approval-program preamble (TRANSIENT_SLOT);
+		// per-method init would reset it mid-dispatch, clobbering earlier writes.
 
-
-		// Modifier inlining strategy depends on codegen mode:
-		// - Legacy (default): textual _ expansion, shared local variables
-		// - Via IR: separate subroutines per modifier, fresh vars per _ invocation
+		// Legacy: textual _ expansion; via IR: separate subroutines per modifier.
 		if (!_func.modifiers().empty())
 		{
 			if (m_viaIR)
@@ -838,10 +716,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				inlineModifiers(_func, method.body);
 		}
 
-		// Insert ARC4 param-decode statements (built earlier, deferred so
-		// that they land at the very top of the now-modifier-wrapped body).
-		// `inlineModifiers` replaces `method.body` with a fresh wrapper, so
-		// inserting earlier would have buried the decode inside the wrap.
+		// Insert deferred ARC4 decodes at top of the now-modifier-wrapped body.
 		if (!deferredDecodes.empty())
 		{
 			method.body->body.insert(
@@ -850,13 +725,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				std::make_move_iterator(deferredDecodes.end())
 			);
 
-			// Recursive-callsub fix-up: any `f(...)` inside `f`'s body
-			// will have been translated to a SubroutineCallExpression
-			// targeting `InstanceMethodTarget{thisName}` with biguint
-			// args. After the param remap above, the method now expects
-			// ARC4-typed args, so the internal callsub needs to encode
-			// each remapped arg before passing. Walk the post-modifier-
-			// inline body and wrap matching arg positions in ARC4Encode.
+			// Self-recursive callsub fix-up: after param remap, internal f(...) calls
+			// still pass biguint args; wrap each remapped position in ARC4Encode.
 			std::string thisName = eb::CallResolver::resolveMethodName(m_tr->contractCtx, _func);
 			std::map<std::string, awst::WType const*> arc4ByOrig;
 			for (auto const& pd: paramDecodes)
@@ -866,10 +736,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto const* tgt = std::get_if<awst::InstanceMethodTarget>(&_call.target);
 				if (!tgt || tgt->memberName != thisName)
 					return;
-				// Position arg → method.args[i].name → original name
-				// before rename was `__arc4_<orig>`. We use the order in
-				// `paramDecodes` (which mirrors method.args order) to
-				// know which positions need encoding.
 				size_t argI = 0;
 				for (auto const& pd: paramDecodes)
 				{
@@ -886,8 +752,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			wrapper.visitStmt(*method.body);
 		}
 
-		// Inject ensure_budget for opup budget padding
-		// Check per-function map first, then global opup budget
+		// ensure_budget: per-function map first, then global opup budget.
 		uint64_t budgetForFunc = 0;
 		if (auto it = m_ensureBudget.find(_func.name()); it != m_ensureBudget.end())
 			budgetForFunc = it->second;
@@ -912,19 +777,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.body->body.insert(method.body->body.begin(), std::move(stmt));
 		}
 
-		// Non-payable check: for public/external functions not marked `payable`,
-		// assert that no preceding PaymentTxn in the group carries a non-zero
-		// amount to this contract. Mirrors Solidity's `callvalue` check that
-		// reverts non-payable calls receiving ether.
-		//
-		// Skipped for internal/private (not externally callable) and for the
-		// receive() function (implicitly payable).
+		// Non-payable check: assert no preceding PaymentTxn has non-zero amount.
+		// Skipped for internal/private and receive() (implicitly payable).
 		if (!_func.isPayable() && !_func.isReceive())
 			prependNonPayableCheck(method);
 	}
 	else
 	{
-		// Abstract function — empty body
+		// Abstract — empty body.
 		Logger::instance().debug("function '" + method.memberName + "' has no implementation", method.sourceLocation);
 		method.body = awst::makeBlock(method.sourceLocation);
 	}
@@ -945,11 +805,9 @@ std::optional<awst::ARC4MethodConfig> ContractBuilder::buildARC4Config(
 	if (vis == Visibility::Private || vis == Visibility::Internal)
 		return std::nullopt;
 
-	// Public/external functions get ARC4 ABI method configs
 	awst::ARC4ABIMethodConfig config;
 	config.sourceLocation = _loc;
-	// Distinguish fallback from receive: both have empty Solidity names,
-	// but need different ARC4 method names for routing.
+	// Both fallback and receive have empty Solidity names; distinguish for routing.
 	if (_func.isFallback())
 		config.name = "__fallback";
 	else if (_func.isReceive())
@@ -959,14 +817,13 @@ std::optional<awst::ARC4MethodConfig> ContractBuilder::buildARC4Config(
 	config.allowedCompletionTypes = {0}; // NoOp
 	config.create = 3; // Disallow
 
-	// View functions are readonly
 	if (_func.stateMutability() == StateMutability::View ||
 		_func.stateMutability() == StateMutability::Pure)
 	{
 		config.readonly = true;
 	}
 
-	// uros splitter chunk assignment: `@custom:uros-chunk <name>` on the method.
+	// uros chunk: @custom:uros-chunk <name>
 	if (_func.documentation())
 		config.chunk = natSpecTagValue(*_func.documentation()->text(), "custom:uros-chunk");
 

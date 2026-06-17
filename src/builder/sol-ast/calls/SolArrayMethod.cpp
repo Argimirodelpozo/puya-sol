@@ -26,11 +26,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 	std::string memberName = memberAccess->memberName();
 	auto const& baseExpr = memberAccess->expression();
 
-	// Mapping entry (or similar indexed access) with dynamic array value:
-	// `m[k].push()`, `m[k].push(v)`, `m[k].pop()`. The base IndexAccess lowers
-	// to a BoxValueExpression (wrapped in StateGet when read). Unwrap and emit
-	// ArrayExtend/ArrayPop on the raw BoxValueExpression so puya's ARC4 dynamic
-	// array codegen handles the length header + element append in box storage.
+	// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression (wrapped
+	// in StateGet when read). Unwrap and emit ArrayExtend/ArrayPop on the raw
+	// BoxValueExpression so puya's ARC4 dyn-array codegen handles box storage.
 	if (auto const* innerIA = dynamic_cast<IndexAccess const*>(&baseExpr))
 	{
 		auto const* innerArrType = dynamic_cast<ArrayType const*>(
@@ -40,10 +38,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			&& (memberName == "push" || memberName == "pop"))
 		{
 			auto baseAwst = buildExpr(baseExpr);
-			// Unwrap any StateGet wrapper through the access chain
-			// (IndexExpression / FieldExpression of any depth). The
-			// rewritten chain bottoms out at the BoxValueExpression so
-			// puya's IR accepts it as a writable target.
+			// Unwrap StateGet through the chain to the writable BoxValueExpression.
 			baseAwst = awst::makeWritableTarget(baseAwst);
 
 			if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
@@ -56,21 +51,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				auto* arrWType = baseAwst->wtype
 					? baseAwst->wtype : m_ctx.typeMapper.map(innerArrType);
 
-				// Ensure the per-entry box exists with an empty ARC4
-				// dynamic-array header (`0x0000`) before ArrayExtend/ArrayPop
-				// reads it. Guarded by `box_len.exists` so subsequent pushes
-				// (which grew the box past 2 bytes) skip the create.
+				// Ensure the per-entry box has the empty ARC4 dyn-array header
+				// (0x0000) before ArrayExtend/ArrayPop. Guarded by box_len.exists
+				// so subsequent pushes (box already >2 bytes) skip the create.
 				auto emitEnsureBox = [&]() {
-					// Nested case (IndexExpression base): the outer box
-					// already holds the whole multi-dim array; no per-entry
-					// box to create.
-					// Storage-pointer alias path: the SolIdentifier resolution
-					// returns the alias's `expr` which is typically
-					// `StateGet(BoxValueExpression(...))`. Unwrap StateGet so
-					// the underlying box-creation runs against the aliased
-					// slot pointer — without this, `A(m[1])` followed by
-					// `m.push()` in A's body silently skips the pre-create and
-					// trips the puya ArrayExtend's box-exists assertion.
+					// Nested case (IndexExpression base): outer box holds the
+					// whole multi-dim array; no per-entry box to create.
+					// Storage-pointer alias: SolIdentifier resolution returns
+					// StateGet(BoxValueExpression). Unwrap so box_create runs
+					// against the aliased slot — without this `A(m[1])` + push
+					// skips the create and trips ArrayExtend's box-exists assert.
 					auto unwrapped = baseAwst;
 					if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(unwrapped))
 						unwrapped = sg->field;
@@ -126,15 +116,12 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (fromAssign)
 						return e;
 
-					// Use queuePreStmt so the extend runs BEFORE the
-					// enclosing statement. For `arr.push().field = v` the
-					// field write reads ArrayLength - 1 post-extend.
+					// queuePreStmt: extend runs before the enclosing statement.
+					// `arr.push().field = v` reads ArrayLength-1 post-extend.
 					m_ctx.queuePreStmt(std::move(e), m_loc);
 
-					// Solidity `arr.push()` returns a reference to the new
-					// element (so `arr.push().field = v` works). Lower it as
-					// IndexExpression(arr, ArrayLength(arr) - 1) evaluated
-					// after the extend statement above.
+					// `arr.push()` returns a ref to the new element as
+					// IndexExpression(arr, ArrayLength(arr)-1).
 					auto lenNode = awst::makeArrayLength(baseAwst, awst::WType::uint64Type(), m_loc);
 
 					auto lastIndex = awst::makeUInt64BinOp(
@@ -152,11 +139,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		}
 	}
 
-	// Storage-pointer alias: `uint[] storage ptr = stateArr; ptr.push(x);`
-	// The Identifier `ptr` refers to a local whose AWST alias is
-	// StateGet(BoxValueExpression). ArrayExtend/ArrayPop require a writable
-	// target — StateGet is read-only, so emit the op against the unwrapped
-	// BoxValueExpression directly (same pattern used by SolIndexAccess).
+	// Storage-pointer alias: .
+	// StateGet is read-only; unwrap to the BoxValueExpression for ArrayExtend/ArrayPop.
 	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))
 	{
 		if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
@@ -172,17 +156,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (solArrType && !solArrType->isByteArrayOrString())
 					{
 						std::shared_ptr<awst::Expression> aliasExpr = alias->expr;
-						// Unwrap StateGet (top-level, and any nested in the
-						// access chain) to underlying writable target. Same
-						// transform used by the `m[k].push()` path above.
+						// Unwrap StateGet (same transform as m[k].push() path above).
+						// Writable targets: BoxValueExpression / IndexExpression / FieldExpression.
 						aliasExpr = awst::unwrapStateGet(std::move(aliasExpr));
 						aliasExpr = awst::makeWritableTarget(aliasExpr);
-						// Underlying targets we can write through:
-						//   - BoxValueExpression  (simple `T[] storage p = state;`)
-						//   - IndexExpression  (e.g. `T[] storage p = a[i];` — nested
-						//     element of a state container, write-back via outer
-						//     read-modify-write)
-						//   - FieldExpression  (e.g. `T[] storage p = s.field;`)
 						if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
 							|| dynamic_cast<awst::IndexExpression const*>(aliasExpr.get())
 							|| dynamic_cast<awst::FieldExpression const*>(aliasExpr.get()))
@@ -193,14 +170,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								? aliasExpr->wtype
 								: m_ctx.typeMapper.map(solArrType);
 
-							// Ensure the aliased per-entry box exists with the
-							// empty ARC4 dyn-array header (0x0000) before
-							// ArrayExtend/ArrayPop reads it. Mirrors the
-							// emitEnsureBox helper used in the `m[k].push()`
-							// path above — without this, `A(state[k])`
-							// followed by `m.push()` in A's body trips puya's
-							// box-exists assertion because the aliased box was
-							// never created on first access.
+							// Same as emitEnsureBox above: ensure the aliased box has
+							// the 0x0000 header before ArrayExtend/ArrayPop. Without
+							// this, `A(state[k])` + push trips the box-exists assert.
 							auto emitEnsureAliasBox = [&]() {
 								auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get());
 								if (!bv || !bv->key)
@@ -261,15 +233,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		}
 	}
 
-	// Check if this is a state variable array
-	// `bytes(stringStateVar).push(...)` / `.pop()` — Solidity allows calling
-	// array methods on the bytes view of a string state variable, and the
-	// result modifies the underlying state. The base AST shape here is
-	// `FunctionCall(TypeConversion, [Identifier])`, not a bare Identifier,
-	// so the standard state-var paths below don't fire and the call falls
-	// through to a default route that produces broken codegen (treats it
-	// as `x = x + 1`). Detect this shape and unwrap to the underlying
-	// Identifier so the bytes/string state-var .push/.pop branches handle it.
+	// `bytes(stringStateVar).push(...)/.pop()`: the base AST is
+	// FunctionCall(TypeConversion,[Identifier]), not a bare Identifier,
+	// so the state-var paths below don't fire. Unwrap to the Identifier.
 	Expression const* effectiveBase = &baseExpr;
 	if (auto const* castCall = dynamic_cast<FunctionCall const*>(&baseExpr))
 	{
@@ -325,7 +291,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto extract = awst::makeExtract3(readVal, std::move(zero), std::move(newLen), loc);
 					if (kind == awst::AppStorageKind::Box)
 					{
-						// Box: store shrunk in temp, box_del, box_put
+						// Box: shrunk→temp, box_del, box_put.
 						static int popTmpCounter = 0;
 						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(popTmpCounter++);
 
@@ -350,9 +316,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				}
 			}
 
-			// bytes/string state variable: push = read + concat + write
-			// Must come BEFORE generic box array handler since bytes in box
-			// needs concat-based push, not element-by-element box array ops.
+			// bytes/string state var push: concat-based, not element-by-element.
+			// Must come BEFORE the generic box array handler.
 			if (varDecl->isStateVariable()
 				&& varDecl->type()->category() == Type::Category::Array)
 			{
@@ -369,13 +334,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					auto readVal = m_ctx.storageMapper.createStateRead(
 						varName, awst::WType::bytesType(), kind, loc);
 
-					// Build the push value. `bytes.push(b)` takes a `bytes1`
-					// arg; Solidity implicitly converts uint8 / int literals
-					// to bytes1. Our buildExpr returns a uint64 for those, so
-					// itob+extract the last byte. For string types we use the
-					// existing stringToBytes path. For bytes-typed args (rare
-					// — would only arise from `bytes(x).push(b)` where b is
-					// already bytes), pass through.
+					// `bytes.push(b)`: takes bytes1. uint8/int literals arrive
+					// as uint64 — itob+extract last byte. String→stringToBytes.
 					std::shared_ptr<awst::Expression> pushVal;
 					if (!m_call.arguments().empty())
 					{
@@ -383,7 +343,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						auto* pvT = pushVal ? pushVal->wtype : nullptr;
 						if (pvT == awst::WType::uint64Type())
 						{
-							// uint64 → 1-byte bytes via itob (8 bytes BE) + extract last.
+							// uint64 → 1-byte bytes: itob (8 bytes BE) + extract last.
 							auto itob = awst::makeIntrinsicCall(
 								"itob", awst::WType::bytesType(), loc);
 							itob->stackArgs.push_back(std::move(pushVal));
@@ -409,8 +369,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 
 					if (kind == awst::AppStorageKind::Box)
 					{
-						// Box: store concat in temp, box_del, box_put(key, temp)
-						// box_put requires exact size match, so we delete+recreate
+						// Box: concat→temp, box_del, box_put (exact-size match required).
 						static int tmpCounter = 0;
 						std::string tmpName = "__bytes_push_tmp_" + std::to_string(tmpCounter++);
 
@@ -466,14 +425,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			}
 		}
 
-		// Chained storage path with field access: `m[k].field.push()`,
-		// `arr[i].field.push()`, `s.inner.field.push()` etc. — the base
-		// MemberAccess wraps over IndexAccess / nested MemberAccess.
-		// Same approach as the IndexAccess branch above: build the read,
-		// unwrap any StateGet inside the chain, hand off to ArrayExtend /
-		// ArrayPop on the resulting writable target. handleStructFieldArrayMethod
-		// already covers the simple Identifier inner case, so this only
-		// fires when that didn't match.
+		// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.):
+		// unwrap StateGet and emit ArrayExtend/ArrayPop. Only fires when
+		// handleStructFieldArrayMethod (simple Identifier case) didn't match.
 		auto const* maType = dynamic_cast<ArrayType const*>(
 			innerMA->annotation().type);
 		if (maType && maType->isDynamicallySized()

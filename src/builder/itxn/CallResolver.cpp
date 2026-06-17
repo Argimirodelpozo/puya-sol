@@ -25,17 +25,13 @@ bool CallResolver::tryResolveLibraryOrFree(
 	if (!_funcDef)
 		return false;
 
-	// Check if in a library scope. solc's Scoper populates
-	// `annotation().contract` directly with the enclosing
-	// ContractDefinition (or nullptr for free functions in a SourceUnit
-	// scope) — saves the scope() + dynamic_cast dance.
+	// solc Scoper populates annotation().contract with the enclosing
+	// ContractDefinition (nullptr for free functions in SourceUnit scope).
 	if (auto const* contractDef = _funcDef->annotation().contract)
 	{
 		if (contractDef->isLibrary())
 		{
-				// Internalized library function? Route to the per-contract
-				// internal method copy via InstanceMethodTarget rather than
-				// a root SubroutineID.
+				// Internalized library fn → per-contract copy via InstanceMethodTarget.
 				auto internalIt = _ctx.internalizedLibFuncNames.find(_funcDef->id());
 				if (internalIt != _ctx.internalizedLibFuncNames.end())
 				{
@@ -44,7 +40,7 @@ bool CallResolver::tryResolveLibraryOrFree(
 					return true;
 				}
 
-				// Prefer AST ID lookup for precise overload resolution
+				// Prefer AST ID for precise overload resolution.
 				auto byId = _ctx.freeFunctionById.find(_funcDef->id());
 				if (byId != _ctx.freeFunctionById.end())
 				{
@@ -53,7 +49,7 @@ bool CallResolver::tryResolveLibraryOrFree(
 					return true;
 				}
 
-				// Fallback: name-based lookup
+				// Fallback: name-based lookup.
 				std::string key = contractDef->name() + "." + _funcDef->name();
 				auto it = _ctx.libraryFunctionIds.find(key);
 				if (it == _ctx.libraryFunctionIds.end())
@@ -70,7 +66,7 @@ bool CallResolver::tryResolveLibraryOrFree(
 			}
 	}
 
-	// Check if it's a free function
+	// Free function?
 	if (_funcDef->isFree())
 	{
 		auto it = _ctx.freeFunctionById.find(_funcDef->id());
@@ -100,12 +96,10 @@ std::optional<ResolvedCall> CallResolver::resolveFromIdentifier(
 	ResolvedCall result;
 	result.funcDef = funcDef;
 
-	// Try library/free function resolution
 	if (tryResolveLibraryOrFree(_ctx, funcDef, result))
 		return result;
 
-	// Regular instance methods fall through to old code for now —
-	// too many special cases (argument coercion, return type inference, etc.)
+	// Regular instance methods: fall through to caller (too many special cases).
 	return std::nullopt;
 }
 
@@ -123,7 +117,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 	auto const& baseExpr = _memberAccess.expression();
 	auto const* baseType = baseExpr.annotation().type;
 
-	// Check if base is a library identifier: Library.method()
+	// Library.method() pattern.
 	if (auto const* baseId = dynamic_cast<Identifier const*>(&baseExpr))
 	{
 		auto const* decl = baseId->annotation().referencedDeclaration;
@@ -142,7 +136,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 		}
 	}
 
-	// Check using-for pattern: value.method() where method is library/free function
+	// using-for pattern: value.method() where method is a library/free function.
 	auto const* refDecl = _memberAccess.annotation().referencedDeclaration;
 	if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
 	{
@@ -152,11 +146,8 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 		if (tryResolveLibraryOrFree(_ctx, funcDef, tempResult))
 		{
 			result.target = tempResult.target;
-			// Determine if receiver should be prepended as first arg.
-			// `M.L.f(x)` (module-aliased library) and `L.f(x)` (raw library
-			// reference) should both NOT prepend a receiver: the base is a
-			// type-level reference, not a value. Only true `value.method(...)`
-			// using-for calls prepend.
+			// Don't prepend receiver for `M.L.f(x)` / `L.f(x)` (type-level base);
+			// only real using-for value calls prepend.
 			auto const* bt = _memberAccess.expression().annotation().type;
 			bool isTypeLevelBase = bt
 				&& (bt->category() == Type::Category::Module
@@ -166,7 +157,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 		}
 	}
 
-	// Super call: super.method()
+	// super.method()
 	if (baseType)
 	{
 		auto const* unwrappedBase = baseType;
@@ -195,7 +186,7 @@ std::optional<ResolvedCall> CallResolver::resolveFromMemberAccess(
 		}
 	}
 
-	// Regular instance methods / external calls fall through to old code
+	// Regular instance / external calls: fall through to caller.
 	return std::nullopt;
 }
 

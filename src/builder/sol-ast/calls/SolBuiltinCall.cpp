@@ -28,13 +28,8 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 	if (m_builtinName == "blockhash")
 		return handleBlockhash();
 
-	// blobhash(n) — EIP-4844 transaction blob hash. AVM has no blob
-	// transactions; pretend a handful of blob slots exist. The EVM test
-	// harness injects two mock blobs (indices 0..1), so we return a
-	// non-zero BlkSeed(Round - 2) for n < 2 and zero for higher indices.
-	// Combined with the run_tests.py mock-hash bridge, both the
-	// "valid blob" and "out-of-range blob" cases in the Solidity semantic
-	// suite now compile and compare cleanly.
+	// blobhash(n): AVM has no blob transactions. EVM test harness injects
+	// 2 mock blobs (indices 0..1); return BlkSeed(Round-2) for n<2, else 0.
 	if (m_builtinName == "blobhash")
 	{
 		Logger::instance().warning(
@@ -68,16 +63,12 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		return cast;
 	}
 
-	// ripemd160(bytes memory) — AVM has no RIPEMD-160 opcode, so we lower to a
-	// real synthesized RIPEMD-160 subroutine (Ripemd160Builder) that returns
-	// the correct 20-byte digest. The canonical empty-input digest is folded
-	// at compile time below as a fast path.
+	// ripemd160: no AVM opcode; lower to synthesized __builtin_ripemd160
+	// (Ripemd160Builder). Compile-time fold for empty input.
 	if (m_builtinName == "ripemd160")
 	{
-		// Compile-time fold the canonical empty-input digest
-		// (0x9c1185a5c5e9fc54612808977ee8f548b2258d31). Solidity libraries
-		// routinely branch on `ripemd160("") == expected` as a sanity check,
-		// and the test suite pins this exact value.
+		// Fold empty-input ripemd160 (0x9c1185a5c5e9fc54612808977ee8f548b2258d31);
+		// test suite pins this value.
 		if (m_call.arguments().size() == 1)
 		{
 			auto const* arg = m_call.arguments()[0].get();
@@ -101,32 +92,20 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 					m_ctx.typeMapper.createType<awst::BytesWType>(20));
 			}
 		}
-		// Real implementation: call the synthesized __builtin_ripemd160
-		// subroutine. AWSTBuilder always emits the body; reachability DCE
-		// drops it when no contract uses it.
+		// Call __builtin_ripemd160; AWSTBuilder emits body, DCE drops if unused.
 		auto arg = buildExpr(*m_call.arguments()[0]);
 		auto* bytes20Type = m_ctx.typeMapper.createType<awst::BytesWType>(20);
 		auto call = awst::makeSubroutineCall(awst::SubroutineID{builtin::ripemd160SubroutineId()}, awst::WType::bytesType(), m_loc);
-		// Solidity's `ripemd160(bytes memory)` accepts string/bytes/etc.
-		// Coerce non-bytes to bytes via ReinterpretCast — non-bytes shapes
-		// shouldn't reach here per Solidity type rules.
+		// Coerce non-bytes arg to bytes (non-bytes shapes unexpected per type rules).
 		if (arg && arg->wtype != awst::WType::bytesType())
 			arg = awst::makeAsBytes(std::move(arg), m_loc);
 		awst::pushCallArg(call->args, "data", std::move(arg));
-		// Bytes20 result type: reinterpret the 20-byte return from the
-		// subroutine to bytes20 so callers' type expectations match.
+		// Reinterpret to bytes20.
 		return awst::makeReinterpretCast(std::move(call), bytes20Type, m_loc);
 	}
 
-	// erc7201 — ERC-7201 namespace slot.
-	//
-	//     slot = uint256(
-	//         keccak256(abi.encode(uint256(keccak256(bytes(id))) - 1))
-	//     ) & ~bytes32(uint256(0xff))
-	//
-	// When the argument is a compile-time string literal, use the Solidity
-	// frontend's erc7201CompileTimeValue to fold to an IntegerConstant.
-	// Otherwise build the runtime expression.
+	// erc7201: slot = keccak256(encode(keccak256(bytes(id))-1)) & ~0xff.
+	// Compile-time literal → fold via erc7201CompileTimeValue.
 	if (m_builtinName == "erc7201")
 	{
 		if (auto slotOpt = solidity::frontend::erc7201CompileTimeValue(m_call))
@@ -139,7 +118,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		// Runtime implementation.
 		auto idExpr = buildExpr(*m_call.arguments()[0]);
-		// Cast string → bytes if needed (same underlying storage).
+		// Cast string → bytes if needed.
 		if (idExpr && idExpr->wtype != awst::WType::bytesType())
 		{
 			auto cast = awst::makeAsBytes(std::move(idExpr), m_loc);
@@ -157,7 +136,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto sub = awst::makeBigUIntBinOp(std::move(h1Int), awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
 
-		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
+		// minus1_bytes = 32-byte BE via b|(sub, bzero(32))
 		auto minusBytesCast = awst::makeAsBytes(std::move(sub), m_loc);
 
 		auto minus1Bytes = awst::makeBytesBinOp(
@@ -209,13 +188,9 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 		"argument is ignored and the value is wrong, with no faithful equivalent.",
 		m_loc);
 
-	// Evaluate the argument for side effects, but ignore the value: `block`
-	// rejects rounds outside a narrow recent window, so user-supplied round
-	// numbers from Solidity tests (typically 1) panic. We substitute
-	// `global.Round - 2`, matching the prevrandao handler — in localnet
-	// simulate mode the only readable round is usually Round - 2 (Round - 1
-	// is not yet available because the current round is the one being
-	// constructed).
+	// Evaluate arg for side effects; ignore value. `block` rejects rounds
+	// outside a narrow window; substitute Round-2 (same as prevrandao;
+	// in localnet simulate, Round-1 is not yet readable).
 	(void) buildExpr(*m_call.arguments()[0]);
 
 	auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);

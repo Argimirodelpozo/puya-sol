@@ -41,10 +41,9 @@ void applyRemappings(
 	solidity::frontend::FileReader& _fileReader,
 	std::vector<std::string> const& _remappings);
 
-/// Walk the compiler's errors after a failed parseAndAnalyze, suppressing the
-/// 0.5.x→0.8.x compat classes (duplicate interface events, implicit diamond
-/// override) and logging the rest. Returns true when only suppressed/warning
-/// diagnostics remain — i.e. compilation may proceed to the AST.
+/// Walk compiler errors after parseAndAnalyze, suppressing 0.5.x→0.8.x compat
+/// classes (duplicate events, implicit diamond override). Returns true when
+/// only suppressed/warning diagnostics remain (compilation may proceed).
 bool reportCompilationErrors(solidity::frontend::CompilerStack const& _compiler);
 
 } // namespace puyasol::cli

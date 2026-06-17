@@ -36,11 +36,9 @@ solidity::frontend::FileReader setupFileReader(
 		fileReader.allowDirectory(nodeModules);
 	}
 
-	// puya-sol stdlib, located relative to the executable (build/puya-sol →
-	// repo root) and resolved via /proc/self/exe; a no-op on platforms without
-	// procfs. Two bases:
-	//   <root>/src/  — bundled Solidity libraries: `import "libs/AVM.sol"`.
-	//   <root>/WIP/  — example contracts: `import "tokens/AERC20.sol"`.
+	// Resolve stdlib roots via /proc/self/exe (no-op on non-procfs platforms):
+	//   <root>/src/  — bundled libraries (`import "libs/AVM.sol"`)
+	//   <root>/WIP/  — example contracts (`import "tokens/AERC20.sol"`)
 	try
 	{
 		char execPathBuf[4096];
@@ -49,14 +47,14 @@ solidity::frontend::FileReader setupFileReader(
 		{
 			execPathBuf[len] = '\0';
 			fs::path root = fs::path(execPathBuf).parent_path().parent_path();
-			// Bundled libraries (libs/AVM.sol etc.).
+			// Bundled libraries (libs/AVM.sol etc.)
 			fs::path libsBase = root / "src";
 			if (fs::exists(libsBase / "libs"))
 			{
 				fileReader.addIncludePath(libsBase);
 				fileReader.allowDirectory(libsBase);
 			}
-			// Example contracts (tokens/, examples/).
+			// Example contracts (tokens/, examples/)
 			fs::path stdlibBase = root / "WIP";
 			if (fs::exists(stdlibBase / "tokens"))
 			{
@@ -67,7 +65,7 @@ solidity::frontend::FileReader setupFileReader(
 	}
 	catch (...) { /* best-effort, never fatal */ }
 
-	// Allow user-specified import paths
+	// User-specified import paths.
 	for (auto const& ip: _opts.importPaths)
 	{
 		fs::path absIp = fs::absolute(ip);
@@ -89,10 +87,8 @@ std::optional<std::string> readSourceFile(std::string const& _path)
 
 solidity::langutil::EVMVersion resolveEvmVersion(std::string const& _name)
 {
-	// Default is cancun; `--evm-version <name>` overrides — accepts any
-	// solc-supported name (homestead..osaka). The test runner translates
-	// fixture-side directives (`// EVMVersion: ...`) to a concrete name and
-	// passes the flag.
+	// Default: cancun. Test runner translates `// EVMVersion: ...` directives
+	// to --evm-version. Accepts any solc-supported name (homestead..osaka).
 	auto evmVer = solidity::langutil::EVMVersion::cancun();
 	if (_name.empty())
 		return evmVer;
@@ -140,7 +136,7 @@ void applyRemappings(
 		{
 			parsedRemappings.push_back(parsed.value());
 			logger.debug("Remapping: '" + parsed->prefix + "' => '" + parsed->target + "'");
-			// Allow the remapping target directory so FileReader can read from it
+			// Allow remapping target dir on FileReader.
 			fs::path targetPath(parsed->target);
 			if (targetPath.is_absolute() && fs::exists(targetPath))
 			{
@@ -158,9 +154,7 @@ bool reportCompilationErrors(solidity::frontend::CompilerStack const& _compiler)
 {
 	auto& logger = puyasol::Logger::instance();
 
-	// Check if we only have warnings (no errors)
-	// Some errors from 0.5.x→0.8.x compat are treated as warnings
-	bool hasError = false;
+	bool hasError = false; // some 0.5.x→0.8.x compat errors are suppressed below
 	for (auto const& error: _compiler.errors())
 	{
 		if (error->type() == solidity::langutil::Error::Type::Warning)
@@ -168,25 +162,21 @@ bool reportCompilationErrors(solidity::frontend::CompilerStack const& _compiler)
 
 		std::string msg = error->what();
 
-		// Suppress "Event with same name and parameter types defined twice"
-		// — this is a 0.5.x→0.8.x compat issue: in 0.5.x contracts could
-		// re-declare events inherited from interfaces; in 0.8.x it's an error.
+		// 0.5.x compat: re-declared interface events are errors in 0.8.x.
 		if (msg.find("Event with same name and parameter types defined twice") != std::string::npos)
 		{
 			logger.debug("[suppressed] " + msg);
 			continue;
 		}
 
-		// Suppress "Derived contract must override function"
-		// — this is a 0.5.x→0.8.x compat issue: in 0.5.x, implicit override
-		// was allowed for diamond inheritance; in 0.8.x, explicit `override` is required.
+		// 0.5.x compat: implicit diamond override allowed in 0.5.x; explicit required in 0.8.x.
 		if (msg.find("Derived contract must override function") != std::string::npos)
 		{
 			logger.debug("[suppressed] " + msg);
 			continue;
 		}
 
-		// Use formattedMessage for detailed error with source location
+		// Include source location in the error message.
 		std::string detail = msg;
 		if (auto const* srcLoc = error->sourceLocation())
 		{

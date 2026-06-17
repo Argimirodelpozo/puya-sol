@@ -20,24 +20,19 @@
 namespace puyasol::builder
 {
 
-/// Narrow a `uint64` stack value to `arc4.uintN` where N < 64. Puya has
-/// no codec for this direction; we emit `extract3(itob(v), 8-N/8, N/8)`
-/// → ReinterpretCast<arc4.uintN>. Two's complement makes this correct
-/// for signed targets too: uint64(-3) = 0xFF…FFFD; low byte 0xFD = int8(-3).
-/// `value` is evaluated exactly once (the bytes flow through `itob` only).
-/// Returns nullptr if the shapes don't match (caller falls back to ARC4Encode).
+/// Narrow a `uint64` to `arc4.uintN` (N < 64) via `extract3(itob(v), 8-N/8, N/8)`.
+/// Two's complement makes this correct for signed targets too (e.g. uint64(-3)
+/// low byte 0xFD = int8(-3)). Returns nullptr if shapes don't match.
 std::shared_ptr<awst::Expression> tryNarrowUInt64ToArc4UIntN(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc);
 
 /// Widen each element of `arc4.static_array<arc4.intM, K>` to
-/// `arc4.static_array<arc4.intN, K>` (M < N), sign- or zero-extending
-/// based on the alias prefix (`intM` vs `uintM`). `_mkSourceBytes` is
-/// called K times to obtain fresh `bytes`-typed expressions for the
-/// source; pass a closure that returns a VarExpression to a pre-pinned
-/// temp if the original `value` has side effects.
-/// Returns nullptr if the shapes don't match (caller falls back).
+/// `arc4.static_array<arc4.intN, K>` (M < N), sign/zero-extending per alias
+/// prefix (`intM` vs `uintM`). `_mkSourceBytes` is called K times; pass a
+/// closure returning a VarExpression to a pre-pinned temp for side-effect safety.
+/// Returns nullptr if shapes don't match.
 std::shared_ptr<awst::Expression> tryWidenArc4StaticArrayInt(
 	awst::WType const* _sourceType,
 	awst::WType const* _targetType,
@@ -45,14 +40,11 @@ std::shared_ptr<awst::Expression> tryWidenArc4StaticArrayInt(
 	awst::SourceLocation const& _loc);
 
 /// Widen each element of `arc4.dynamic_array<arc4.intM>` to
-/// `arc4.dynamic_array<arc4.intN>` (M < N) at runtime via a WhileLoop.
-/// The length prefix (2-byte uint16) is carried through; each element
-/// gets sign- or zero-extended per the alias. `_mkSourceBytes` must
-/// return a fresh, side-effect-free expression for the source bytes
-/// each call (the helper reads it multiple times — once for the length
-/// header and once per iteration). `_emit` is called to attach the
-/// setup assignments and loop statement to the caller's pre-pending
-/// statement list. Returns nullptr if the shapes don't match.
+/// `arc4.dynamic_array<arc4.intN>` (M < N) via a WhileLoop. Length prefix
+/// carried through; elements sign/zero-extended per alias. `_mkSourceBytes`
+/// must return a fresh side-effect-free expression each call (read for
+/// length header + once per iteration). `_emit` attaches setup stmts and
+/// the loop to the caller's pre-pending list. Returns nullptr if no match.
 std::shared_ptr<awst::Expression> tryWidenArc4DynamicArrayInt(
 	awst::WType const* _sourceType,
 	awst::WType const* _targetType,

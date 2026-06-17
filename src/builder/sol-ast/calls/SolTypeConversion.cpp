@@ -42,26 +42,14 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 		if (converted)
 		{
 			auto result = converted->resolve();
-			// Apply narrowing mask whenever the registry returned the value
-			// in a wider container than the target type. Solidity narrowing
-			// (uintN → uintM, intN → intM, int→uint, etc.) always truncates
-			// to the target width — the source bits outside that width must
-			// be dropped regardless of sign. Sign-extension on subsequent
-			// widening reads inspects the source-width MSB of the masked
-			// value, so masking does not strip that information.
+			// Narrowing mask: Solidity truncates to target width regardless of sign.
+			// Sign-extension on subsequent widening reads from the source-width MSB.
 			result = applyNarrowingMask(std::move(result), targetType);
 
-			// Signed sub-word WIDENING into biguint, e.g. `int128(someInt24)`.
-			// The registry widens uint64->biguint by zero-extension (itob +
-			// reinterpret), which DROPS the sign for negative source values
-			// (-60 int24 -> +16777156 instead of -60). When the SOURCE is a
-			// signed intN (N<=64) and the TARGET is a wider int (M>64, biguint),
-			// re-extend from the SOURCE width: signExtendToUint256 masks to N
-			// bits first, so it recovers the low N bits whether the uint64 held
-			// the raw sub-word value (struct-field read) or a 64-bit
-			// sign-extended form (ABI arg), and yields the correct 256-bit
-			// two's-complement. No-op for non-negative values (< 2^(N-1)) and
-			// skipped for unsigned sources, so it only corrects negatives.
+			// Signed sub-word widen (e.g. int128(someInt24)): registry uses
+			// zero-extension (drops sign: -60 int24 → +16777156). Re-extend from
+			// SOURCE width via signExtendToUint256 (masks to N bits first; safe
+			// whether uint64 is raw sub-word or already sign-extended).
 			if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(
 					m_call.arguments()[0]->annotation().type))
 			{
@@ -78,14 +66,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 					else if (tgtInt->isSigned() && srcInt->numBits() > 64
 						&& tgtInt->numBits() > 64 && tgtInt->numBits() < 256)
 					{
-						// biguint -> SIGNED biguint conversion to intN (e.g.
-						// `int128(int256)`, the SafeCast.toIntN downcast). The
-						// registry/applyNarrowingMask masked to N bits, giving the
-						// low-N-bit value (2^N-|v| for negatives); sign-extend from
-						// N to the canonical 256-bit two's-complement so a negative
-						// that fits intN round-trips (`downcasted != value` holds)
-						// instead of wrongly reverting. Also re-canonicalises a
-						// biguint->biguint WIDEN whose high sign bits were masked.
+						// biguint→signed intN (e.g. `int128(int256)`, SafeCast.toIntN):
+						// mask already gave low N bits; sign-extend to 256-bit two's-complement
+						// so negatives round-trip and biguint widen is re-canonicalised.
 						result = TypeCoercion::signExtendToUint256(
 							std::move(result), tgtInt->numBits(), m_loc);
 					}
@@ -312,16 +295,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 			if (auto const* tw = dynamic_cast<awst::BytesWType const*>(_targetType))
 				targetWidth = tw->length() ? *tw->length() : 0;
 
-		// Dynamic bytes → fixed bytes[N]: Solidity right-pads if the source
-		// has fewer than N bytes and truncates otherwise. Build:
-		//   let m = min(len(src), N)
-		//   extract3(concat(src, bzero(N)), 0, N)
-		// `concat(src, bzero(N))` guarantees there is always at least N
-		// bytes available so the extract3 doesn't go out of bounds when
-		// the input is shorter than the target width. The leading N bytes
-		// of the result are exactly the source's first N bytes (zero-padded
-		// on the right if the source was shorter), matching Solidity's
-		// `bytesN(bytes_dynamic)` semantics.
+		// Dynamic bytes → bytes[N]: right-pad shorter, truncate longer.
+		// concat(src, bzero(N)) ensures extract3(0,N) never goes out of bounds.
 		if (targetWidth > 0 && sourceWidth == 0)
 		{
 			auto srcBytes = std::move(converted);
@@ -381,9 +356,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 
 	unsigned targetBits = targetIntType->numBits();
 
-	// uint64 narrowing — also triggered when casting signed→unsigned at the
-	// same width (e.g. int8→uint8): the uint64 representation of -2 is
-	// 2^64-2, which must be masked to 8 bits to produce 254.
+	// uint64 narrowing: also covers signed→unsigned at same width
+	// (e.g. int8→uint8: uint64(-2)=2^64-2, must mask to 8 bits → 254).
 	if (_targetType == awst::WType::uint64Type() && _expr->wtype == awst::WType::uint64Type())
 	{
 		unsigned sourceBits = 64;
@@ -409,19 +383,10 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 			sourceBits = srcInt->numBits();
 		if (targetBits < sourceBits && targetBits < 256)
 		{
-			// Use `b%` (mod 2^targetBits) instead of `b&` (mask). Both
-			// give the lower `targetBits` bits, but they differ in result
-			// length: AVM `b&` returns `max(len(a), len(b))` bytes (no
-			// leading-zero strip), while `b%` returns the minimum-length
-			// representation. For a 32-byte ARC4-decoded value, `b&` with
-			// a 16-byte mask leaves a 32-byte result that fails downstream
-			// `to_fixed_size`'s `len <= num_bytes` check; `b%` produces a
-			// ≤16-byte result that passes.
-			//
-			// Puya's intrinsic_simplification folds `b+ x 0` → `x` (line
-			// ~1538), so we can't strip leading zeros via `b+ 0`. `b%`
-			// with a non-zero constant divisor is not similarly folded
-			// for non-constant inputs.
+			// Use `b%` not `b&`: AVM `b&` returns max(len(a),len(b)) bytes
+			// (no leading-zero strip) — 32-byte ARC4 value & 16-byte mask
+			// leaves 32 bytes → fails `to_fixed_size` len check. `b%` gives
+			// minimum-length result. `b+ x 0` is folded by puya; `b%` is not.
 			solidity::u256 modulusVal = solidity::u256(1) << targetBits;
 			auto modulus = awst::makeIntegerConstant(modulusVal.str(), m_loc, awst::WType::biguintType());
 			auto bMod = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, std::move(modulus), m_loc);

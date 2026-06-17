@@ -17,12 +17,8 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
 
-	// Enum range validation: EVM panics (0x21) when reading an out-of-range enum
-	// value. Validate each operand on read, but spill it to a temp first so the
-	// assert and the comparison share ONE evaluation — otherwise a side-effecting
-	// operand (`bump() == E.B`) runs its side effects twice (it would appear in
-	// both the prepended assert and the returned comparison). Mirrors the
-	// spill-to-temp pattern in SolArrayBuilder::index's enum check.
+	// Enum range check: panic(0x21) on out-of-range. Spill to temp so assert and
+	// comparison share ONE evaluation (side-effecting `bump()==E.B` otherwise runs twice).
 	if (m_enumType)
 	{
 		unsigned numMembers = m_enumType->numberOfMembers();

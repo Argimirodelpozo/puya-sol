@@ -7,22 +7,11 @@
 namespace puyasol::builder::eb
 {
 
-/// Instance builder for Solidity integer types (uint8..uint256, int8..int256).
-///
-/// This is the most important builder — it handles ALL integer operations
-/// with full Solidity semantics:
-///
-///   - binary_op: arithmetic (uint64 or biguint), shifts (setbit trick for biguint),
-///     exponentiation (square-and-multiply for biguint, 0^0 guard for uint64),
-///     wrapping subtraction for biguint, unchecked block wrapping
-///   - compare: unsigned NumericComparison, signed comparison via XOR with sign bit
-///   - Overflow checking for narrow types (uint8 + uint8 → assert ≤ 255)
-///   - Mixed-width promotion (uint64 operand promoted to biguint when needed)
-///
-/// The builder stores the Solidity IntegerType and derives:
-///   - m_bits (8..256), m_signed (int vs uint)
-///   - m_isBigUInt (bits > 64 → biguint on AVM)
-///   - Target WType (uint64Type or biguintType)
+/// Builder for Solidity integer types (uint8..uint256, int8..int256).
+/// binary_op: uint64/biguint arithmetic; setbit-based shifts; square-and-multiply exp;
+///   wrapping sub; unchecked wrapping. compare: XOR-sign-bit for signed ordering.
+///   Overflow check for narrow types; mixed-width promotion.
+/// Fields: m_bits (8..256), m_signed, m_isBigUInt (bits>64).
 class SolIntegerBuilder: public InstanceBuilder
 {
 public:

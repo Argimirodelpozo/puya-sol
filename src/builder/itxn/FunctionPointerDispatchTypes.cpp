@@ -34,10 +34,7 @@ awst::WType const* dispatchPublicArgArc4Type(
 		&& dynamic_cast<FunctionType const*>(_paramSolType))
 	{
 		// External fn-ptr bytes[12] → arc4.static_array<arc4.uint8, 12>.
-		// ContractBuilder only ARC4-remaps bytes[N] params when the Solidity
-		// type is FunctionType (see ContractBuilder.cpp isAggregate check);
-		// matching that rule here so the dispatch call-site wraps iff the
-		// target's signature expects an ARC4 arg.
+		// Mirrors ContractBuilder's rule: ARC4-remap bytes[N] only for FunctionType params.
 		auto const* bytesType = static_cast<awst::BytesWType const*>(_nativeType);
 		if (bytesType->length().has_value())
 		{
@@ -106,7 +103,7 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 	}
 	if (_argExpr->wtype == awst::WType::boolType())
 	{
-		// ARC4 bool: 1 byte, 0x80 = true, 0x00 = false.
+		// ARC4 bool: 1 byte, 0x80=true / 0x00=false.
 		return awst::makeSetbit(
 			awst::makeBytesConstant(std::vector<uint8_t>{0}, _loc),
 			awst::makeZero(_loc),
@@ -115,7 +112,7 @@ std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
 	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(_paramSolType);
 		arrType && arrType->isByteArrayOrString())
 	{
-		// ARC4 byte[] encoding: uint16(length) ++ raw_bytes.
+		// bytes/string: uint16(length) ++ raw bytes.
 		if (_argExpr->wtype != awst::WType::bytesType())
 			_argExpr = awst::makeAsBytes(std::move(_argExpr), _loc);
 		auto header = awst::makeExtract(awst::makeItob(awst::makeLen(_argExpr, _loc), _loc), 6, 2, _loc);

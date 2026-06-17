@@ -20,10 +20,7 @@ std::shared_ptr<awst::Expression> prependArc4LengthHeader(
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc)
 {
-	// Delegate to puya's ConvertArray lowering — it already knows how to add
-	// the uint16 length header when going from ARC4StaticArray to
-	// ARC4DynamicArray (and how to strip it in the reverse direction),
-	// so we don't need to synthesise concat+reinterpret by hand.
+	// puya's ConvertArray adds/strips the uint16 length header.
 	return awst::makeConvertArray(std::move(_expr), _targetType, _loc);
 }
 
@@ -100,11 +97,9 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		{
 			int64_t headSize = N * 2;
 			int64_t tailSize = static_cast<int64_t>(elemDefault->size());
-			// ARC4 dynamic-element offsets are uint16 (2 bytes). If the final
-			// element's offset (headSize + (N-1)*tailSize) would exceed 0xFFFF it
-			// can't be encoded — bail out so the caller falls back, rather than
-			// emit a silently wrapped/corrupt offset header. Checking headSize
-			// first bounds N, keeping the product below overflow-safe.
+			// ARC4 dynamic-element offsets are uint16; bail out if the final
+			// element's offset (headSize+(N-1)*tailSize) would exceed 0xFFFF
+			// rather than emit a silently wrapped/corrupt offset header.
 			if (headSize > 0xFFFF
 				|| (tailSize > 0 && N > 0 && (N - 1) > (0xFFFF - headSize) / tailSize))
 				return std::nullopt;
@@ -129,8 +124,7 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
-		// Pre-compute each field's default and total head size so dynamic
-		// field offsets can be embedded.
+		// Pre-compute field defaults and head size for dynamic offset embedding.
 		struct FieldEnc { bool dynamic; std::vector<uint8_t> bytes; };
 		std::vector<FieldEnc> encs;
 		encs.reserve(st->fields().size());
@@ -205,12 +199,8 @@ int computeEncodedElementSize(awst::WType const* _type)
 		return static_cast<awst::ARC4UFixedNxM const*>(_type)->n() / 8;
 	case awst::WTypeKind::ARC4Struct:
 	{
-		// ARC4 packs consecutive `arc4.bool` fields into shared bytes
-		// (8 bools per byte). All other fields are byte-aligned. Walk
-		// the field list, accumulating bool runs and flushing them as
-		// `ceil(run_length / 8)` bytes whenever a non-bool field
-		// interrupts the run (or at the end). If any non-bool field
-		// is dynamic (size 0), the whole struct is dynamic.
+		// arc4.bool fields are packed 8/byte; flush runs on non-bool or end.
+		// Any dynamic non-bool field → whole struct is dynamic (returns 0).
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
 		int total = 0;
 		int boolRun = 0;

@@ -1,14 +1,7 @@
 /// @file main.cpp
-/// puya-sol driver: a linear pipeline from CLI options to TEAL.
-///
-///   parse args → read + 0.5.x-compat-transform sources → CompilerStack
-///   → AWST build → option-driven post passes (inline overrides, fn-split,
-///   pure helpers, SimpleSplitter) → awst.json + options.json → puya backend.
-///
-/// Everything option-specific lives in src/cli/: the Options struct and argv
-/// parsing (CliOptions), source-text compat shims (SourceCompat), compiler
-/// environment plumbing (CompilerSetup), and the splitter-pass orchestration
-/// (AwstPostPasses). This file owns only the pipeline order.
+/// puya-sol pipeline: parse args → transform sources → CompilerStack
+/// → AWST build → post-passes → awst.json + options.json → puya backend.
+/// CLI details live in src/cli/ (CliOptions, SourceCompat, CompilerSetup, AwstPostPasses).
 
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
@@ -136,9 +129,8 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Parsing and type-checking...");
 
-	// Parse and analyze. On failure, 0.5.x-compat error classes are
-	// suppressed; if only suppressed/warning diagnostics remain we push past
-	// the failed analyze — the AST should still be usable.
+	// Parse and analyze. On failure, 0.5.x-compat errors are suppressed;
+	// if only those remain, push past the failure (AST still usable).
 	bool success = compiler.parseAndAnalyze();
 	if (!success && !reportCompilationErrors(compiler))
 	{
@@ -204,10 +196,8 @@ int main(int _argc, char* _argv[])
 	auto const& childContracts = puyasol::builder::sol_ast::SolNewExpression::childContracts();
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
 	std::map<std::string, int64_t> intTemplateVars;
-	// Each --deploy-pure-helpers extraction injects a TemplateVar at
-	// every rewritten call site. Declare each as an int placeholder
-	// so puya doesn't reject the AWST; the deploy harness substitutes
-	// real app ids per helper.
+	// --deploy-pure-helpers injects TemplateVars at rewritten call sites;
+	// declare as int placeholders (deploy harness substitutes real app ids).
 	for (auto const& h : pureHelperResult.extracted)
 		intTemplateVars[h.templateVarName] = 0;
 	if (contractNames.size() <= 1)
@@ -238,7 +228,6 @@ int main(int _argc, char* _argv[])
 		runner.setPuyaPath(opts.puyaPath);
 		int exitCode = runner.run(awstPath, optionsPath, opts.logLevel);
 
-		// Generate .tmpl file if any child contracts were referenced via new C()
 		writeChildDeployTemplates(opts.outputDir);
 
 		return exitCode;

@@ -11,10 +11,8 @@ std::shared_ptr<awst::Expression> SolEnumValueAccess::toAwst()
 		m_memberAccess.annotation().referencedDeclaration);
 	if (!enumVal) return nullptr;
 
-	// Iterate the enclosing EnumDefinition's members to find this value's
-	// ordinal. (Solc's EnumType::memberValue(name) does the same lookup
-	// but requires constructing an EnumType from an EnumDefinition, which
-	// we don't have a direct accessor for here.)
+	// Find this value's ordinal. (EnumType::memberValue(name) would work
+	// but requires constructing an EnumType we don't have a handle to here.)
 	auto const* enumDef = dynamic_cast<solidity::frontend::EnumDefinition const*>(
 		enumVal->scope());
 	if (!enumDef) return nullptr;

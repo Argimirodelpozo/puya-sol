@@ -66,8 +66,7 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 			auto it = fieldValues.find(fname);
 			if (it != fieldValues.end() && it->second->wtype != ftype)
 			{
-				// String literal → bytes field: coerce to raw bytes first so
-				// puya's encoder sees a byte[] value instead of string.
+				// String literal → bytes field: coerce to raw bytes first.
 				bool targetIsByteArray = ftype->kind() == awst::WTypeKind::ARC4DynamicArray
 					&& static_cast<awst::ARC4DynamicArray const*>(ftype)->arc4Alias() == "byte[]";
 				if (targetIsByteArray && it->second->wtype == awst::WType::stringType())

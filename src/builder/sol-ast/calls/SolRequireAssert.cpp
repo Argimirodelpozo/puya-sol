@@ -47,10 +47,9 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				message = id->name();
 				isCustomError = true;
 			}
-			// Solidity evaluates require's error args eagerly, even on the success
-			// path (errors/require_error_evaluation_order_1.sol). Build the payload
-			// (selector ++ abi.encode(args)) and hoist to a temp NOW so each arg
-			// evaluates once; the log only fires on failure (conditional below).
+			// Eager eval: require's error args evaluate even on success
+			// (errors/require_error_evaluation_order_1.sol). Hoist to temp now;
+			// log fires on failure only.
 			if (isCustomError)
 			{
 				auto const* errorDef =
@@ -65,11 +64,8 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 					std::shared_ptr<awst::Expression> blob =
 						awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
 					if (!errorCall->arguments().empty())
-						// AVM-first: selector ++ ARC4(args), args coerced to the error's
-						// DECLARED param types (literal rides at the declared width, e.g.
-						// uint256 = 32B, matching the signature). abi.* is ARC4 everywhere
-						// ([[abi-arc4-migration]]); only Error(string)/Panic magics stay
-						// EVM-literal (separate errorString path).
+						// selector ++ ARC4(args) at declared param types ([[abi-arc4-migration]]);
+						// Error(string)/Panic stay EVM-literal (errorString path).
 						blob = awst::makeConcat(
 							std::move(blob),
 							eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
@@ -86,8 +82,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 						tmpName, awst::WType::bytesType(), m_loc);
 				}
 				else
-					// No resolvable ErrorDefinition: keep the legacy eager
-					// arg-evaluation so side effects still land.
+					// No ErrorDefinition: evaluate args for side effects only.
 					for (auto const& a : errorCall->arguments())
 					{
 						auto argExpr = buildExpr(*a);
@@ -111,11 +106,8 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 			else
 			{
 				message = "assertion failed";
-				// Runtime message (e.g. `require(ok, someStringVar)`): build the
-				// Error(string) payload at runtime. Evaluated only on failure —
-				// EVM technically evaluates the message eagerly, but the prior
-				// lowering DISCARDED a non-constant message entirely, so this
-				// strictly improves fidelity.
+				// Runtime message: build Error(string) payload at runtime.
+				// (Prior lowering discarded non-constant messages; this improves fidelity.)
 				revertBlob = makeErrorStringRevertBlob(std::move(msgExpr), m_loc);
 			}
 		}
@@ -125,30 +117,22 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 	if (isAssertBuiltin && !revertBlob)
 		revertBlob = awst::makeBytesConstant(panicRevertBlobBytes(0x01), m_loc);
 
-	// With a structured payload, log it just before the failure:
+	// With a structured payload:
 	//   if (!cond) { log(blob) }   // prePending
-	//   assert(cond, msg)          // the statement itself
-	// The failure mechanism stays on the native Assert node — putting the
-	// assert INSIDE the if-branch broke puya's explicit-assert accounting
-	// ("explicit condition check(s) removed during TEAL optimization") when
-	// the condition folded to a constant (require(true, E(...))). The
-	// condition feeds both the log-gate and the assert; SE-wrap so a
-	// side-effecting condition still evaluates once (the gate lowers first,
-	// unconditionally — dominance-safe).
+	//   assert(cond, msg)
+	// Assert stays on the native node — assert inside if-branch broke puya's
+	// explicit-assert accounting on constant-folded conditions. SE-wrap the
+	// condition so a side-effecting cond evaluates once (gate lowers first).
 	if (revertBlob && condition)
 	{
-		// Constant conditions lower DIRECTLY — leaving a constant-gated
-		// if/assert for the optimizer to fold trips puya's explicit-assert
-		// accounting ("explicit condition check(s) removed") when several
-		// such shapes coexist in one program.
+		// Constant conditions: lower directly — constant-gated if/assert
+		// trips puya's explicit-assert accounting.
 		if (auto const* bc = dynamic_cast<awst::BoolConstant const*>(condition.get()))
 		{
 			if (bc->value)
-				// require(true, E(args)): the eager payload temp already
-				// evaluated the args (Solidity semantics); nothing to check.
+				// require(true, E(args)): args already evaluated; nothing to check.
 				return awst::makeVoidConstant(m_loc);
-			// require(false, E(args)): unconditional log + fail; our
-			// removeDeadCode strips any trailing statements.
+			// require(false, E(args)): unconditional log + fail.
 			m_ctx.prePendingStatements.push_back(
 				makeRevertLogStmt(std::move(revertBlob), m_loc));
 			auto failNode = awst::makeAssert(

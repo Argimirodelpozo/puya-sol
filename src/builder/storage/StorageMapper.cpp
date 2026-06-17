@@ -51,33 +51,16 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	awst::SourceLocation const& _loc
 )
 {
-	// puya's StateGet lowering for a BoxValueExpression has two failure
-	// modes against AVM's 4 KB stack-value cap:
-	//   1. The typed zero default materialises as `bzero(N)` with N > 4096
-	//      for fixed-size types whose encoded size exceeds the cap (e.g.
-	//      `Data[1024]` = 65 536 B — see puyabug.md §4c).
-	//   2. The `box_get` half of the `select` returns the FULL box content
-	//      as a single stack value — reverts when the box has grown past
-	//      4 KB at runtime (e.g. `uint[256]` = 8194 B — see puyabug.md §4d).
-	//
-	// Both failure modes go away if we skip the StateGet wrapper entirely
-	// and emit a bare `BoxValueExpression`: puya lowers it as `BoxRead`,
-	// then `add_box_extract_replace` folds a subsequent `extract` into a
-	// direct `box_extract` opcode (single-slice read, no whole-box load,
-	// no large default materialisation). The trade-off is that a bare
-	// `BoxRead` asserts the box exists — so this is safe ONLY for boxes
-	// that ApprovalProgramBuilder eagerly `box_create`s in `__postInit`.
-	//
-	// Eligibility:
-	//   (a) Statically oversized fixed types: always safe (always eagerly
-	//       box_created — `m_boxArrayVarNames`).
-	//   (b) Dynamic-sized types (ARC4DynamicArray, ReferenceArray,
-	//       dynamic bytes): safe ONLY when the box key is a direct
-	//       `BytesConstant` (top-level state var, listed in
-	//       `m_boxArrayVarNames`). Mapping values (key = concat(name,
-	//       hash(args)) — IntrinsicCall `concat`) are lazy: their boxes
-	//       only exist after the first write to that key, so we keep the
-	//       StateGet+empty-default pattern for them.
+	// Skip StateGet wrapper for box reads that would breach AVM's 4 KB stack-value cap:
+	//   (a) puyabug.md §4c: fixed-type bzero(N>4096) default reverts.
+	//   (b) puyabug.md §4d: box_get returns the full box — reverts at runtime for
+	//       boxes grown past 4 KB.
+	// Bare BoxValueExpression is safe: puya lowers to BoxRead; add_box_extract_replace
+	// folds into box_extract (no full-box load, no large default). BoxRead asserts
+	// the box exists, so only eagerly-created boxes qualify:
+	//   (a) Statically oversized fixed types — always eagerly box_created.
+	//   (b) Top-level dynamic vars — eagerly created in __postInit.
+	//       Mapping values (key = runtime concat/hash) are lazy; they stay on StateGet.
 	if (auto bv = std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
 	{
 		// (a) Statically oversized fixed types — always eagerly created.
@@ -115,10 +98,7 @@ bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
 		|| (kind == awst::WTypeKind::Bytes
 			&& !dynamic_cast<awst::BytesWType const*>(_box->wtype)->length().has_value());
 	if (!dynamicSized) return false;
-	// Top-level state var iff the box key is a literal name
-	// (BytesConstant). Mapping values derive the key via runtime
-	// concat with a hash of the keys — those go through the
-	// StateGet path.
+	// Top-level = key is a BytesConstant; mapping values use runtime concat/hash.
 	return _box->key
 		&& std::dynamic_pointer_cast<awst::BytesConstant>(_box->key) != nullptr;
 }
@@ -145,11 +125,9 @@ std::shared_ptr<awst::Expression> StorageMapper::makeBoxLenTuple(
 
 // ── Multi-box helpers ──
 
-// Multi-box arrays currently support only scalar elements (ARC4UIntN /
-// fixed-length bytes) and nested ARC4StaticArray of scalars. Struct
-// elements would require copy-on-write through box_extract → modify →
-// box_replace logic that's not yet implemented; they fall back to the
-// default >32KB-box warning path.
+// Multi-box: supports scalar elements (ARC4UIntN / fixed bytes) and nested
+// ARC4StaticArray of scalars only. Struct elements need copy-on-write
+// (box_extract → modify → box_replace); not implemented — fall back to warning.
 unsigned StorageMapper::arc4StaticArrayElementSize(awst::WType const* _type)
 {
 	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_type);
@@ -166,7 +144,7 @@ unsigned StorageMapper::arc4StaticArrayElementSize(awst::WType const* _type)
 	}
 	if (auto const* nestedSa = dynamic_cast<awst::ARC4StaticArray const*>(elem))
 	{
-		// Nested ARC4StaticArray of scalar elements: recurse.
+		// Nested static array: recurse.
 		unsigned innerElem = arc4StaticArrayElementSize(nestedSa);
 		if (innerElem > 0)
 			return innerElem * static_cast<unsigned>(nestedSa->arraySize());
@@ -216,18 +194,17 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	if (!type)
 		return false;
 
-	// Mappings always use box storage
+	// Mappings → box.
 	if (type->category() == solidity::frontend::Type::Category::Mapping)
 		return true;
 
-	// Dynamic arrays and dynamic bytes use box storage.
-	// String state vars stay in global state (typically short: names, symbols, URIs).
+	// Dynamic arrays/bytes → box. Strings stay in global state (typically short).
 	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(type))
 	{
 		if (arrType->isDynamicallySized() && !arrType->isString())
 			return true;
-		// Static outer array whose element is dynamically encoded (e.g. `uint[][2]`):
-		// the 2-slot upper bound is misleading — the encoded payload can be arbitrary.
+		// Static outer array with dynamic element (e.g. uint[][2]): 2-slot
+		// upper bound misleads — encoded payload can be arbitrary.
 		if (!arrType->isDynamicallySized())
 		{
 			auto const* baseType = arrType->baseType();
@@ -240,9 +217,7 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 		}
 	}
 
-	// Large values don't fit in AVM global state — promote to box storage.
-	// AVM limit: 128 bytes total for key + value (key = variable name, UTF-8).
-	// Use storageSizeUpperBound() (slot count) × 32 for accurate multi-slot sizing.
+	// AVM global-state limit is 128B (key+value). storageSizeUpperBound()*32 estimates value size.
 	try
 	{
 		auto slotsUpperBound = type->storageSizeUpperBound();
@@ -265,7 +240,6 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 	std::vector<awst::AppStorageDefinition> defs;
 	std::set<std::string> seen; // avoid duplicates from inheritance
 
-	// Iterate all contracts in linearization order (includes base contracts)
 	forEachStateVar(_contract, [&](auto const* var)
 	{
 		if (var->isConstant())
@@ -284,9 +258,7 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 		{
 			def.storageKind = awst::AppStorageKind::Box;
 
-			// For mappings, the value type is the storage type.
-			// For nested mappings (e.g. mapping(address => mapping(address => bool))),
-			// unwrap recursively to find the final non-mapping value type.
+			// Unwrap nested mappings to find the final non-mapping value type.
 			if (auto const* mappingType = dynamic_cast<solidity::frontend::MappingType const*>(var->type()))
 			{
 				solidity::frontend::Type const* valueType = mappingType->valueType();
@@ -297,7 +269,6 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			}
 			else if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type()))
 			{
-				// Dynamic state array → box-backed ARC4 dynamic array.
 				def.storageWType = m_typeMapper.map(arrType);
 				def.isMap = false;
 			}
@@ -334,8 +305,7 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStorageTarget(
 {
 	if (_kind == awst::AppStorageKind::Box)
 		return awst::makeBoxValueExpression(_key, _type, _loc);
-	// AppGlobal — and any other kind reaching here (Transient is dispatched
-	// upstream by StorageBackend) — reads/writes global app state.
+	// AppGlobal (Transient is dispatched by StorageBackend before reaching here).
 	return awst::makeAppStateExpression(_key, _type, _loc);
 }
 
@@ -349,15 +319,12 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	auto key = makeKeyExpr(_varName, _loc, _kind);
 	auto target = makeStorageTarget(key, _type, _kind, _loc);
 
-	// Box: makeStateGetWithDefault gates on AVM's 4 KB stack-value cap and
-	// returns the bare BoxValueExpression for oversized / dynamic types —
-	// see the comment inside that helper.
+	// Box: gates on 4 KB stack-value cap; see makeStateGetWithDefault.
 	if (_kind == awst::AppStorageKind::Box)
 		return makeStateGetWithDefault(std::move(target), _type, _loc);
 
-	// AppGlobal / fallback: assert the var exists. Safe because every
-	// non-constant global is pre-written with its type default at deploy
-	// (ApprovalProgramBuilder::emitStateVarInit), so the assert never fires.
+	// AppGlobal: assert the var exists. Safe — every global is pre-written in
+	// emitStateVarInit, so the assert never fires.
 	if (auto app = std::dynamic_pointer_cast<awst::AppStateExpression>(target))
 		app->existsAssertionMessage = "check " + _varName + " exists";
 	return target;
@@ -382,11 +349,9 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 )
 {
 	auto castToBytes = awst::makeAsBytes(_slotExpr, _loc);
-	// A biguint strips leading zeros, so a small computed slot number (e.g.
-	// `base + 2`) can encode to <8 bytes — extractLastN(8) would then compute
-	// `len - 8`, an AVM uint64 subtraction that PANICS on underflow. Pad to
-	// >=8 bytes first (`b|(bzero(8), v)` = max(len, 8), value-preserving) so the
-	// low-8-byte truncation to uint64 is well-defined for every slot value.
+	// biguint strips leading zeros, so a small slot (e.g. base+2) may encode to
+	// <8 bytes — extractLastN(8) would underflow (AVM uint64 sub panics). Pad to
+	// >=8 bytes first (b|(bzero(8),v) = max(len,8)) before the low-8 truncation.
 	auto atLeast8 = awst::makeZeroExtendToN(std::move(castToBytes), 8, _loc);
 	auto last8 = awst::makeExtractLastN(std::move(atLeast8), 8, _loc);
 	return awst::makeBtoi(std::move(last8), _loc);

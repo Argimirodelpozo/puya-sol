@@ -29,19 +29,15 @@ private:
 		awst::IndexExpression const* _indexExpr,
 		std::shared_ptr<awst::Expression> _value);
 
-	/// Copy-on-write write-back when the bytes-element target is a struct
-	/// field: `s.b[i] = v` where `s.b` is `bytes` (ARC4-encoded as byte[]).
-	/// _newBytes is the already-computed raw bytes for the field (replace3
-	/// result). Builds a NewStruct chain and emits the struct assignment.
+	/// `s.b[i] = v` where `s.b` is bytes (ARC4 byte[]): copy-on-write struct write-back.
+	/// _newBytes is the replace3 result; builds NewStruct chain and emits the assignment.
 	std::shared_ptr<awst::Expression> buildStructFieldBytesWrite(
 		awst::FieldExpression const* _fieldExpr,
 		awst::ARC4Struct const* _structType,
 		std::shared_ptr<awst::Expression> _newBytes);
 
-	// _emitAsStatement: when true (tuple-destructure context), the copy-on-write
-	// store is queued directly as a statement and a truthy sentinel is returned;
-	// the field-value decode (which needs the single assignment's result type) is
-	// skipped, since the tuple path only needs the store's side effect.
+	// _emitAsStatement: in tuple-destructure context, queue the COW store as a
+	// statement and return a truthy sentinel (tuple path only needs the side effect).
 	std::shared_ptr<awst::Expression> handleStructFieldAssignment(
 		awst::FieldExpression const* _fieldExpr,
 		std::shared_ptr<awst::Expression> _value,
@@ -54,112 +50,84 @@ private:
 		std::string const& _fieldName,
 		std::shared_ptr<awst::Expression> _newValue);
 
-	/// LHS-shape early-out handlers: each returns the assignment-as-expression
-	/// result if it owns the shape, or std::nullopt to fall through to the
-	/// generic dispatch in `toAwst`.
+	/// Pre-buildExpr early-out handlers (each claims the shape or returns nullopt).
 
-	/// `tx = v` / `tx += v` where `tx` is a `transient` state variable —
-	/// routes through TransientStorage's scratch-blob layout.
+	/// `tx = v` / `tx += v` for a transient state var; routes through TransientStorage.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleTransientStateWrite();
 
-	/// `m = m2` where `m` is a local storage-pointer (`mapping(K=>V) storage m`).
-	/// Updates the compile-time alias for state-var aliases; for runtime-bound
-	/// mapping-key params, emits an actual bytes assignment.
+	/// `m = m2` for a local storage-pointer: updates compile-time alias (state-var)
+	/// or emits a runtime bytes assignment (mapping-key param).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleStoragePointerReassign();
 
-	/// `arr[i] = v` where `arr` is a multi-box state-var array (encoded size
-	/// exceeds AVM's 32KB box cap). Computes runtime `page = i / elemsPerBox`
-	/// and `offset = (i % elemsPerBox) * elemSize`, encodes the rhs as ARC4
-	/// element bytes, and emits `box_replace(<name> ++ itob(page), offset, bytes)`.
+	/// `arr[i] = v` for a multi-box array (>32KB). Emits
+	/// box_replace(<name>++itob(page), (i%elemsPerBox)*elemSize, ARC4-encoded-rhs).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleMultiBoxArrayWrite();
 
-	/// `a[i] = v` where `a` is a >4KB memory aggregate living in the multi-slot
-	/// blob (registered in SolVariableDeclaration). Computes `base + i*elemSize`,
-	/// materialises the rhs once, pads to 32 bytes, and emits writeMemWordDirect
-	/// via prePendingStatements; returns the rhs value. nullopt if not blob-backed.
+	/// `a[i] = v` for a >4KB blob-backed aggregate. Computes base+i*elemSize,
+	/// pads rhs to 32 B, emits writeMemWordDirect via prePendingStatements.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();
 
-	// ── toAwst pipeline phases (post-buildExpr) ─────────────────────────
-	//
-	// Each named phase represents a distinct step in the
-	// shape-handler-then-generic-finalization pipeline. The orchestrator
-	// `toAwst` calls them in order; each `try*` may claim the assignment
-	// (return non-nullopt) or fall through; each `apply*` mutates `value`
-	// (or `target`) in place and returns the next value to thread.
-
-	/// `arr.push() = v` is a shape Solidity allows but we can't model with
-	/// references. Detect it before buildExpr(LHS) and stash the RHS as
-	/// `pendingArrayPushValue` so SolArrayMethod folds it into the
-	/// ArrayExtend. Returns the resulting ArrayExtend if the pattern
-	/// applies, else std::nullopt.
+	/// `arr.push() = v`: stash RHS as pendingArrayPushValue before LHS build;
+	/// SolArrayMethod folds it into ArrayExtend. Returns ArrayExtend or nullopt.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandlePushAssignRewrite(
 		solidity::frontend::Token _op);
 
-	/// EVM panics (0x21) on assigning out-of-range enum values. Pre-emit
-	/// an assert if LHS is an enum type. Returns the (possibly coerced) value.
+	/// EVM panic 0x21 on out-of-range enum assign; pre-emit assert.
 	std::shared_ptr<awst::Expression> applyEnumRangeCheck(
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::Token _op);
 
-	/// `slot = arr` where slot is a biguint (256-bit slot offset) and
-	/// `arr` is a static-sized array literal — expand to per-element
-	/// `__storage_write(slot+j, arr[j])`.
+	/// `slot = arr` (slot is biguint, arr is static-sized): expand to
+	/// per-element __storage_write(slot+j, arr[j]).
 	std::optional<std::shared_ptr<awst::Expression>> trySlotBasedArrayWrite(
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> const& _target,
 		std::shared_ptr<awst::Expression> const& _value);
 
-	/// `slot = v` where slot is a computed biguint slot — emit
-	/// `__storage_write(btoi(slot), v)` (with read-modify-write for
-	/// compound assigns). Returns the void-equivalent result.
+	/// `slot = v` (computed biguint slot): emit __storage_write(btoi(slot), v),
+	/// with read-modify-write for compound assigns.
 	std::optional<std::shared_ptr<awst::Expression>> trySlotBasedScalarWrite(
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> const& _target,
 		std::shared_ptr<awst::Expression>& _value);
 
-	/// `(a, b) = expr` tuple destructuring — delegates to
-	/// `handleTupleAssignment`. Returns nullopt if target isn't a tuple.
+	/// `(a, b) = expr`: delegates to handleTupleAssignment; nullopt if not a tuple target.
 	std::optional<std::shared_ptr<awst::Expression>> tryTupleAssignment(
 		std::shared_ptr<awst::Expression>& _target,
 		std::shared_ptr<awst::Expression>& _value);
 
-	/// `b[i] = v` where `b` is bytes — delegates to
-	/// `handleBytesElementAssignment`. Returns nullopt if target isn't an
-	/// IndexExpression on bytes.
+	/// `b[i] = v` where b is bytes: delegates to handleBytesElementAssignment;
+	/// nullopt if target isn't IndexExpression on bytes.
 	std::optional<std::shared_ptr<awst::Expression>> tryBytesElemAssignment(
 		std::shared_ptr<awst::Expression> const& _target,
 		std::shared_ptr<awst::Expression>& _value);
 
-	/// `s.f = v` for ARC4 struct field, or named-WTuple field — delegates
-	/// to `handleStructFieldAssignment` / inline WTuple-named-field path.
+	/// `s.f = v` for ARC4 struct field or named-WTuple field.
 	std::optional<std::shared_ptr<awst::Expression>> tryStructOrNamedTupleFieldAssignment(
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> const& _target,
 		std::shared_ptr<awst::Expression>& _value);
 
-	/// Compound assignment (`+=`, `-=`, …): read current value of target,
-	/// apply binary op, return the computed new value. For simple Assign
-	/// just passes value through.
+	/// Compound assigns: read current target value, apply op, return new value.
+	/// Simple Assign passes through unchanged.
 	std::shared_ptr<awst::Expression> applyCompoundAssignment(
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> const& _target,
 		std::shared_ptr<awst::Expression> _value);
 
-	/// Type coercion at the assignment boundary: int→bytes[N], string→bytes,
-	/// reinterpret-cast string↔bytes, numeric narrowing.
+	/// Assignment-boundary coercion: int→bytes[N], string→bytes, string↔bytes reinterpret.
 	std::shared_ptr<awst::Expression> applyAssignmentTypeCoercion(
 		std::shared_ptr<awst::Expression> _value,
 		std::shared_ptr<awst::Expression> const& _target);
 
-	/// If value's wtype differs from target and target is ARC4-typed, emit
-	/// the appropriate ARC4 encode (with widening / narrowing handling).
+	/// If target is ARC4-typed and value wtype differs, emit ARC4 encode
+	/// (with widening/narrowing handling).
 	std::shared_ptr<awst::Expression> applyArc4EncodeIfNeeded(
 		std::shared_ptr<awst::Expression> _value,
 		std::shared_ptr<awst::Expression> const& _target);
 
-	/// For static-array-of-dynamic-elem and per-entry-mapping boxes, emit
-	/// a guarded box_put or box_create as a pending pre-statement so the
-	/// per-entry box exists before the subsequent box_replace.
+	/// For dynamic-elem static arrays and per-entry mapping boxes, emit a
+	/// guarded box_put or box_create so the box exists before box_replace.
 	void maybePrePopulateBox(
 		std::shared_ptr<awst::Expression> const& _target);
 };

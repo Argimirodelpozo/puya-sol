@@ -12,7 +12,7 @@
 namespace puyasol::builder::eb
 {
 
-/// Simple wrapper for conversion results
+/// Minimal InstanceBuilder for conversion results.
 class GenericConvertBuilder: public InstanceBuilder
 {
 public:
@@ -71,30 +71,24 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 	bool targetIsBigUInt = targetBits > 64;
 	auto* srcWType = _arg->wtype;
 
-	// Same type → no-op
 	if (srcWType == _targetWType)
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(_arg));
 
-	// uint64 → biguint promotion
 	if (!targetIsBigUInt && srcWType == awst::WType::biguintType())
 	{
-		// biguint → uint64: use safe extraction (btoi fails on >8 bytes)
+		// biguint→uint64: safe extraction (btoi fails on >8 bytes).
 		auto result = TypeCoercion::implicitNumericCast(std::move(_arg), awst::WType::uint64Type(), _loc);
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}
 
 	if (targetIsBigUInt && srcWType == awst::WType::uint64Type())
 	{
-		// uint64 → biguint: itob + ReinterpretCast
 		auto result = TypeCoercion::implicitNumericCast(std::move(_arg), _targetWType, _loc);
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}
 
-	// Narrowing cast within biguint: uint160(uint256_val)
-	// Need to mask: x & ((1 << targetBits) - 1)
 	if (targetIsBigUInt && srcWType == awst::WType::biguintType())
 	{
-		// Narrowing: mask to targetBits
 		if (targetBits < 256)
 		{
 			solidity::u256 mask = (solidity::u256(1) << targetBits) - 1;
@@ -107,23 +101,15 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(_arg));
 	}
 
-	// bool → integer
 	if (srcWType == awst::WType::boolType())
 	{
-		// bool is already 0/1 on AVM
+		// bool is 0/1 on AVM; just cast width.
 		auto result = TypeCoercion::implicitNumericCast(std::move(_arg), _targetWType, _loc);
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}
 
-	// account → integer
-	// Solidity's `uint160(address(x))` and `uint256(...)` treat addresses as
-	// 160-bit integers. AVM addresses are 32-byte public keys, so we
-	// reinterpret-cast the account's byte representation as biguint (or
-	// further narrow to uint64). The biguint then represents the full
-	// 32-byte address as a 256-bit integer; subsequent narrowing casts go
-	// through the targetIsBigUInt+biguint path above (already handles
-	// masking to targetBits). For uint64 targets, fall through to the
-	// biguint→uint64 extraction path.
+	// account→integer: AVM addresses are 32-byte keys; reinterpret as biguint,
+	// then narrow or extract to uint64 as needed.
 	if (srcWType == awst::WType::accountType())
 	{
 		auto asBiguint = awst::makeAsBiguint(std::move(_arg), _loc);
@@ -140,7 +126,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		}
 		if (!targetIsBigUInt)
 		{
-			// Coerce to uint64 via the biguint→uint64 extraction path.
 			auto narrowed = TypeCoercion::implicitNumericCast(
 				std::move(asBiguint), awst::WType::uint64Type(), _loc);
 			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(narrowed));
@@ -148,13 +133,10 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(asBiguint));
 	}
 
-	// bytes[N] → integer
 	if (srcWType && srcWType->kind() == awst::WTypeKind::Bytes)
 	{
 		auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(srcWType);
-		// Dynamic-length bytes (unsized) or fixed-size > 8 bytes → biguint path.
-		// btoi only handles ≤8 bytes; an unsized `bytes` from e.g. `keccak256`
-		// is a 32-byte digest at runtime and must NOT go through btoi.
+		// Unsized or >8-byte (e.g. keccak256 32-byte digest) → biguint; btoi only handles ≤8.
 		bool knownSmall =
 			bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
 		if (!knownSmall)
@@ -163,14 +145,12 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 			auto result = TypeCoercion::implicitNumericCast(std::move(cast), _targetWType, _loc);
 			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 		}
-		// bytes[N≤8] → btoi → uint64/biguint
 		auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
 		auto btoi = awst::makeBtoi(std::move(toBytes), _loc);
 		auto result = TypeCoercion::implicitNumericCast(std::move(btoi), _targetWType, _loc);
 		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}
 
-	// General: try implicit numeric cast
 	auto result = TypeCoercion::implicitNumericCast(std::move(_arg), _targetWType, _loc);
 	return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 }
@@ -186,7 +166,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 	std::shared_ptr<awst::Expression> _arg,
 	awst::SourceLocation const& _loc)
 {
-	// integer → bool: x != 0
 	if (_arg->wtype == awst::WType::uint64Type() || _arg->wtype == awst::WType::biguintType())
 	{
 		auto zero = awst::makeZero(_loc, _arg->wtype);
@@ -196,11 +175,10 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 		return std::make_unique<SolBoolBuilder>(_ctx, std::move(cmp));
 	}
 
-	// Already bool → pass through
 	if (_arg->wtype == awst::WType::boolType())
 		return std::make_unique<SolBoolBuilder>(_ctx, std::move(_arg));
 
-	return nullptr; // unhandled conversion
+	return nullptr;
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -216,11 +194,10 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 {
 	auto* srcWType = _arg->wtype;
 
-	// Already account → no-op
 	if (srcWType == awst::WType::accountType())
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(_arg));
 
-	// Integer → left-pad to 32 bytes → account
+	// Integer → left-pad to 32 bytes → account.
 	if (srcWType == awst::WType::uint64Type() || srcWType == awst::WType::biguintType())
 	{
 		auto promoted = TypeCoercion::implicitNumericCast(
@@ -233,7 +210,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
 	}
 
-	// Bytes → reinterpret as account
 	if (srcWType == awst::WType::bytesType()
 		|| (srcWType && srcWType->kind() == awst::WTypeKind::Bytes))
 	{
@@ -264,7 +240,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 	if (srcWType == _targetWType)
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(_arg));
 
-	// Integer → itob (+ padding/truncation for byte width)
 	if (srcWType == awst::WType::uint64Type())
 	{
 		unsigned byteWidth = fbType->numBytes();
@@ -273,7 +248,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		std::shared_ptr<awst::Expression> result;
 		if (byteWidth < 8)
 		{
-			// Truncate: extract last byteWidth bytes from 8-byte itob result
 			auto off = awst::makeIntegerConstant(8 - byteWidth, _loc);
 			auto len = awst::makeIntegerConstant(byteWidth, _loc);
 
@@ -282,7 +256,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		}
 		else if (byteWidth > 8)
 		{
-			// Pad: concat(bzero(byteWidth), itob) → extract last byteWidth
 			result = awst::makeLeftPadToN(std::move(itob), byteWidth, _loc);
 		}
 		else
@@ -292,7 +265,6 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
 
-	// Biguint → bytes → pad/truncate
 	if (srcWType == awst::WType::biguintType())
 	{
 		unsigned byteWidth = fbType->numBytes();
@@ -304,7 +276,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
 
-	// FixedBytes[M] → FixedBytes[N]: pad or truncate
+	// FixedBytes[M]→FixedBytes[N]: right-pad or left-truncate.
 	if (srcWType && srcWType->kind() == awst::WTypeKind::Bytes)
 	{
 		auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(srcWType);
@@ -313,25 +285,16 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 
 		if (srcLen > 0 && tgtLen > 0 && srcLen != tgtLen)
 		{
-			// Convert to raw bytes first
 			auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
-
 			std::shared_ptr<awst::Expression> result;
 			if (tgtLen > srcLen)
-			{
-				// Right-pad: concat(input, bzero(N-M))
 				result = awst::makeRightPad(std::move(toBytes), tgtLen - srcLen, _loc);
-			}
 			else
-			{
-				// Left-truncate: extract(0, N)
 				result = awst::makeExtract(std::move(toBytes), 0, tgtLen, _loc);
-			}
 			auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
 			return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 		}
 
-		// Same size or unsized → reinterpret
 		auto cast = awst::makeReinterpretCast(std::move(_arg), _targetWType, _loc);
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
@@ -353,11 +316,10 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 	auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(_targetSolType);
 	if (!enumType) return nullptr;
 
-	// Coerce to uint64
 	auto result = TypeCoercion::implicitNumericCast(
 		std::move(_arg), awst::WType::uint64Type(), _loc);
 
-	// EVM reverts with Panic(0x21) if value >= numMembers
+	// EVM Panic(0x21) if value >= numMembers.
 	unsigned numMembers = enumType->numberOfMembers();
 	auto stmt = awst::makeExpressionStatement(
 		awst::makeEnumRangeAssert(result, numMembers, _loc), _loc);

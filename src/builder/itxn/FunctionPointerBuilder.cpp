@@ -18,18 +18,13 @@ using namespace solidity::frontend;
 namespace
 {
 
-
-/// True iff translation is happening from a library subroutine context,
-/// where InstanceMethodTarget fails ("invocation outside of a contract method").
+/// True when translating a library subroutine (InstanceMethodTarget would fail).
 bool inLibraryContext(ContractContext const& _ctx, std::string const& _currentCref)
 {
 	return !_ctx.contractName.empty()
 		&& !_currentCref.empty()
 		&& _currentCref.find("." + _ctx.contractName) == std::string::npos;
 }
-
-
-
 
 } // namespace
 
@@ -70,7 +65,7 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 
 // Static members
 std::map<std::pair<int64_t, std::string>, FuncPtrEntry> FunctionPointerBuilder::s_targets;
-unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = zero-initialized/invalid
+unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = invalid
 std::map<std::string, solidity::frontend::FunctionType const*> FunctionPointerBuilder::s_neededDispatches;
 std::string FunctionPointerBuilder::s_currentCref;
 
@@ -92,7 +87,7 @@ awst::WType const* FunctionPointerBuilder::mapFunctionType(
 
 	if (isExternalFunctionPointer(_funcType))
 	{
-		// 12 bytes: itob(appId) 8 + selector 4
+			// 12 bytes: itob(appId)[8] ++ selector[4]
 		static awst::BytesWType s_extFnPtrType(12);
 		return &s_extFnPtrType;
 	}
@@ -152,9 +147,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		return zero;
 	}
 
-	// Use caller-provided FunctionType if available (determines
-	// Internal vs External when both exist, e.g., `this.g` is External
-	// even though g also has an Internal overload).
+	// Use caller FunctionType if given (e.g. `this.g` is External even if g has an Internal overload).
 	auto const* funcType = _callerFuncType;
 	if (!funcType)
 	{
@@ -170,31 +163,19 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 	if (isExternal)
 	{
-		// External function pointer = concat(appIdBytes[8], selectorBytes[4]) = 12 bytes.
-		// `this.f` → (itob(CurrentApplicationID), f.ARC4-selector) — the dispatch
-		//   site recognises the self appId and takes an internal-dispatch shortcut.
-		// `C(addr).f` → (8-byte appId derived from addr, f.ARC4-selector) — inner
-		//   app txn at call time.
-		// Calling code compares the captured appId against CurrentApplicationID
-		// (self) for the internal-dispatch shortcut; a different appId uses an
-		// inner txn. (Earlier this used an itob(0) sentinel + internal-id slot;
-		// that's no longer the encoding.)
+		// External fn-ptr = itob(appId)[8] ++ selector[4] = 12 bytes.
+		// `this.f` → (itob(CurrentApplicationID), f.ARC4-selector): dispatch site
+		//   compares appId == CurrentApplicationID and takes internal-dispatch shortcut.
+		// `C(addr).f` → (8-byte appId from addr, selector): issues inner app txn.
 		static awst::BytesWType s_bytes12(12);
-
-		// Helper: itob(constInt) → 8 bytes.
-		auto makeItobConst = [&](std::string _val) -> std::shared_ptr<awst::Expression> {
-			return awst::makeItob(awst::makeIntegerConstant(std::move(_val), _loc), _loc);
-		};
 
 		std::shared_ptr<awst::Expression> appIdBytes;
 		std::shared_ptr<awst::Expression> selectorBytes;
 
 		if (_receiverAddress)
 		{
-			// Cross-contract: appId from receiver (application → itob(u64);
-			// address → last 8 bytes of 32-byte address). The 32→8 truncation
-			// round-trips with our .address accessor, which pads appId to 32
-			// bytes for Solidity-test address literals.
+			// Cross-contract: application → itob(u64); address → last 8 bytes
+			// (round-trips with .address, which pads appId to 32 bytes).
 			auto addr = _receiverAddress;
 			if (addr->wtype == awst::WType::applicationType())
 			{
@@ -208,9 +189,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				appIdBytes = awst::makeExtract(std::move(addr), 24, 8, _loc);
 			}
 
-			// Store the target's ARC4 method selector in the selector slot.
-			// At call-time with appId != 0 we emit an inner app txn with
-			// ApplicationArgs[0] = this selector.
+			// selector slot: used as ApplicationArgs[0] for cross-contract calls.
 			auto selectorConst = awst::makeMethodConstant(
 				AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef),
 				awst::WType::bytesType(), _loc);
@@ -223,12 +202,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				+ "': reentrancy is not possible on AVM; self-calls will use "
 				"internal dispatch instead of inner transactions", _loc);
 
-			// Self-reference: encode appId as the CURRENT application id (not
-			// a 0 sentinel) so the pointer survives crossing contract
-			// boundaries — when another contract receives the pointer it can
-			// route to a normal inner txn back to us. Within our own contract
-			// the dispatch site compares the captured appId against
-			// `CurrentApplicationID` to take an internal-dispatch shortcut.
+			// Self-ref: store CurrentApplicationID (not 0) so the pointer survives
+			// crossing contract boundaries. Dispatch site shortcuts to internal dispatch
+			// when appId == CurrentApplicationID.
 			if (auto const* internalFuncType = _funcDef->functionType(true))
 				registerTarget(_funcDef, internalFuncType, _awstName);
 
@@ -271,10 +247,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 	if (isExternal)
 	{
-		// External function pointer call: check if self-call (appId == 0
-		// sentinel) and route to internal dispatch, otherwise inner txn.
-
-		// Local helpers: extract N bytes at offset; btoi(8-byte-slice).
+		// Self-call (appId == CurrentApplicationID) → internal dispatch; else inner txn.
 		auto extractSlice = [&](int _offset, int _length) {
 			return awst::makeExtract(_ptrExpr, _offset, _length, _loc);
 		};
@@ -282,9 +255,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			return awst::makeBtoi(extractSlice(_offset, 8), _loc);
 		};
 
-		// Check if self-call: appId == CurrentApplicationID. (Captures of
-		// `this.x` encode the appId as the current app's id; a pointer
-		// passed in from outside has the originating contract's id.)
 		auto isSelf = awst::makeNumericCompare(
 			extractU64(0), awst::NumericComparison::Eq,
 			awst::makeGlobal(
@@ -292,11 +262,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 				awst::WType::uint64Type(), _loc),
 			_loc);
 
-		// Self-call path: selector slot now holds ARC4 selector (was internal
-		// id; changed for `.selector` accessor consistency with cross-call).
-		// Map selector → internal id via the per-signature `__sel_to_id_<sig>`
-		// helper, then dispatch through the existing id-based dispatcher.
-		// The helper is generated in `generateDispatchMethods`.
+		// Selector slot holds the ARC4 selector (for .selector accessor consistency).
+		// Map selector → internal id via __sel_to_id_<sig> (generated in generateDispatchMethods).
 		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
 		s_neededDispatches[dispatchName(_funcType)] = _funcType;
 
@@ -307,17 +274,12 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			std::move(selToIdTarget), awst::WType::uint64Type(), _loc);
 		awst::pushCallArg(selToIdCall->args, "__sel", extractSlice(8, 4));
 
-		// Build internal dispatch call with the same args (shared with
-		// the inner-txn branch below — hence we pass _args by value)
 		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(selToIdCall), _args, _loc);
 		awst::WType const* retType = selfCall->wtype;
 
-		// ── Inner-txn (cross-contract) branch ──
-		// Selector slot (bytes 8..12) = ARC4 method selector for the callee's
-		// router; used as ApplicationArgs[0].
+		// Cross-contract: selector (bytes[8:12]) → ApplicationArgs[0].
 		auto sel4 = extractSlice(8, 4);
 
-		// Build ApplicationArgs tuple: [selector, arg0_encoded, arg1_encoded, ...]
 		auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 		argsTuple->items.push_back(std::move(sel4));
 		for (size_t i = 0; i < _args.size(); ++i)
@@ -326,7 +288,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 				i < _funcType->parameterTypes().size() ? _funcType->parameterTypes()[i] : nullptr;
 			argsTuple->items.push_back(encodeArgForInnerTxn(_args[i], paramSolType, _loc));
 		}
-		// Build WTuple type
 		{
 			std::vector<awst::WType const*> argTypes;
 			for (auto const& item : argsTuple->items)
@@ -334,7 +295,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
 		}
 
-		// Build CreateInnerTransaction for application call
 		static awst::WInnerTransactionFields s_applFieldsType(6); // TxnTypeAppl
 		auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
@@ -344,17 +304,14 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		create->fields["OnCompletion"] = awst::makeZero(_loc);
 		create->fields["ApplicationArgs"] = std::move(argsTuple);
 
-		// Submit + read LastLog (strip 4-byte ARC4 return prefix)
 		static awst::WInnerTransaction s_applTxnType(6);
 		auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 		submit->itxns.push_back(std::move(create));
 
-		// Read itxn LastLog and coerce the ARC4-prefixed bytes to retType.
+		// Decode LastLog: strip 4-byte ARC4 return prefix, coerce to retType.
 		auto buildInnerTxnResult = [&]() -> std::shared_ptr<awst::Expression> {
 			auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
-			// extract(readLog, 4, 0) — strip the 4-byte ARC4 return prefix.
-			// len=0 → extract to END: strip the 4-byte ARC4 return prefix.
-			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc);
+			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc); // len=0 = extract to end
 			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
 				return strip;
 			if (retType == awst::WType::uint64Type())
@@ -371,9 +328,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			return awst::makeReinterpretCast(std::move(strip), retType, _loc);
 		};
 
-		// Emit `if (isSelf) selfCall else submit (and read result)`. Puts the
-		// if-else into prePendingStatements; the expression this function
-		// returns is the result expression the caller reads.
 		auto ifStmt = awst::makeIfElse(isSelf, awst::makeBlock(_loc), awst::makeBlock(_loc), _loc);
 
 		if (retType == awst::WType::voidType())
@@ -385,8 +339,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			return vc;
 		}
 
-		// Non-void: spill both branches' result into a shared temp that the
-		// containing expression reads.
+		// Non-void: spill both branches' result into a shared temp.
 		static int s_tmpCounter = 0;
 		std::string tmpName = "__fnptr_res_" + std::to_string(++s_tmpCounter);
 		auto writeTmp = [&](std::shared_ptr<awst::Expression> _val) {
@@ -401,7 +354,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		return awst::makeVarExpression(tmpName, retType, _loc);
 	}
 
-	// Internal: call __funcptr_dispatch_<signature>(id, args...)
+	// Internal: dispatch by id.
 	return buildDispatchCall(_ctx, _funcType, std::move(_ptrExpr), _args, _loc);
 }
 
@@ -410,7 +363,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 std::string FunctionPointerBuilder::dispatchName(
 	FunctionType const* _funcType)
 {
-	// Build a name based on param and return types
 	std::string name = "__funcptr_dispatch";
 	if (_funcType)
 	{
@@ -450,28 +402,21 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	if (s_targets.empty() && s_neededDispatches.empty())
 		return methods;
 
-	// Helper: figure out which contract a function is defined in.
-	// solc's Scoper populates `annotation().contract` directly.
 	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
 		return fd ? fd->annotation().contract : nullptr;
 	};
-	// Find our current contract from _cref: last "."-separated segment.
+	// Extract contract name from _cref (last "."-separated segment).
 	std::string contractName;
 	auto dotPos = _cref.find_last_of('.');
 	if (dotPos != std::string::npos)
 		contractName = _cref.substr(dotPos + 1);
 
-	// Group targets by dispatch name (= signature)
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
 	for (auto const& [key, entry] : s_targets)
 	{
-		// Skip targets that are genuinely foreign (different non-library,
-		// non-base contract). Library functions are shared subroutines;
-		// base-contract functions reachable via linearized inheritance (or
-		// super-rewrite to \`__super_N\`) are resolvable on the caller.
-		// Heuristic: keep entry if the registered awstName starts with
-		// \`__super_\`, or the funcDef has a non-empty subroutineId, or
-		// the contract is the current one, or it's a library.
+		// Skip foreign targets (different non-library, non-base contract).
+		// Keep if: awstName starts with __super_, subroutineId is set,
+		// or the function is in the current contract or a library.
 		auto const* fdContract = funcScopeContract(entry.funcDef);
 		bool foreignNonResolvable = fdContract
 			&& !contractName.empty()
@@ -481,10 +426,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			&& entry.name.find("__super_") == std::string::npos;
 		if (foreignNonResolvable)
 		{
-			// Double-check: if the function's visibility is not external/public
-			// (e.g. internal/private from a base contract reachable via
-			// inheritance), keep it — an InstanceMethodTarget on the
-			// derived contract would still resolve via MRO flattening.
+			// Internal/private base-contract fn: keep — InstanceMethodTarget resolves via MRO.
 			if (!entry.funcDef->isPartOfExternalInterface())
 				foreignNonResolvable = false;
 		}
@@ -493,7 +435,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		std::string dname = dispatchName(entry.funcType);
 		groups[dname].push_back(&entry);
 	}
-	// Ensure all needed dispatch signatures have entries (even if empty)
+	// Ensure needed signatures have entries, even if empty.
 	for (auto const& [dname, funcType] : s_neededDispatches)
 	{
 		if (groups.find(dname) == groups.end())
@@ -502,7 +444,6 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 	for (auto const& [dname, entries] : groups)
 	{
-		// Get the function type from entries or from s_neededDispatches
 		FunctionType const* funcType = nullptr;
 		if (!entries.empty())
 			funcType = entries[0]->funcType;
@@ -517,11 +458,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		dispatch.arc4MethodConfig = std::nullopt;
 		dispatch.pure = false;
 
-		// Return type — must match what buildFunction produces for the target.
-		// Signed ≤64-bit returns are only promoted to biguint when at least one
-		// entry is public/external (ARC4 boundary). With all-private entries,
-		// the callees return native uint64 and the dispatcher must too —
-		// otherwise the declared type won't match the returned value.
+		// Return type: signed ≤64-bit promoted to biguint only when any entry is
+		// public/external (ARC4 boundary). All-private = native uint64.
 		bool anyPublic = false;
 		for (auto const* entry : entries)
 		{
@@ -539,7 +477,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		else
 			dispatch.returnType = awst::WType::voidType(); // TODO: tuple returns
 
-		// Args: __funcptr_id, then the function params
+		// Args: __funcptr_id first, then function params.
 		{
 			awst::SubroutineArgument idArg;
 			idArg.name = "__funcptr_id";
@@ -557,13 +495,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			dispatch.args.push_back(arg);
 		}
 
-		// Body: switch(__funcptr_id) { case ID1: return func1(args); ... }
 		auto body = awst::makeBlock(_loc);
 
-		// Build if/else chain (innermost = default: assert false)
+		// Build if/else chain; innermost = assert(false) for invalid id.
 		auto defaultBlock = awst::makeBlock(_loc);
 		{
-			// assert(false) — invalid function pointer ID
 			auto stmt = awst::makeExpressionStatement(awst::makeAssert(
 				awst::makeFalse(_loc), _loc, "invalid function pointer"), _loc);
 			defaultBlock->body.push_back(std::move(stmt));
@@ -573,14 +509,10 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		for (auto const* entry : entries)
 		{
-			// Condition: __funcptr_id == entry->id
 			auto idVar = awst::makeVarExpression("__funcptr_id", awst::WType::uint64Type(), _loc);
-
 			auto idConst = awst::makeIntegerConstant(entry->id, _loc);
-
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
-			// If branch: call the actual function and return result
 			auto ifBlock = awst::makeBlock(_loc);
 			{
 				awst::SubroutineTarget target = !entry->subroutineId.empty()
@@ -589,7 +521,6 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				auto call = awst::makeSubroutineCall(
 					std::move(target), dispatch.returnType, _loc);
 
-				// Check if target is public (has ARC4 wrapping)
 				bool isPublic = entry->funcDef
 					&& entry->funcDef->isPartOfExternalInterface();
 
@@ -598,10 +529,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					awst::CallArg arg;
 					auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 1].wtype, _loc);
 
-					// Get the actual parameter name from the target function.
-					// If the target parameter is unnamed (e.g. `g(string) external`),
-					// fall back to `_paramN` — matching how AWSTBuilder synthesises
-					// names for unnamed parameters.
+					// Use the target's param name; fall back to _paramN for unnamed
+					// params (matches AWSTBuilder's synthesised naming).
 					std::string paramName = "__arg" + std::to_string(i);
 					if (entry->funcDef && i < entry->funcDef->parameters().size())
 					{
@@ -616,7 +545,6 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 					if (arc4Type && arc4Type != var->wtype)
 					{
-						// Public target: wrap native → ARC4 type
 						auto encode = awst::makeARC4Encode(std::move(var), arc4Type, _loc);
 
 						arg.name = "__arc4_" + paramName;
@@ -630,7 +558,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					call->args.push_back(std::move(arg));
 				}
 
-				// For public targets with ARC4 return, decode the result
+				// Public target with ARC4 return: decode back to biguint.
 				if (isPublic && dispatch.returnType == awst::WType::biguintType())
 				{
 					call->wtype = new awst::ARC4UIntN(256); // arc4.uint256
@@ -639,7 +567,6 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				if (dispatch.returnType != awst::WType::voidType())
 				{
 					std::shared_ptr<awst::Expression> retValue = std::move(call);
-					// If target is public and returns ARC4, decode back to biguint
 					if (isPublic && retValue->wtype != dispatch.returnType)
 					{
 						auto decode = awst::makeARC4Decode(std::move(retValue), dispatch.returnType, _loc);
@@ -670,9 +597,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		dispatch.body = body;
 
-		// Also emit as a root-level Subroutine so library subroutines can
-		// resolve the dispatch via SubroutineID (puya can't resolve
-		// InstanceMethodTarget from outside the contract scope).
+		// Also emit as root-level Subroutine: library subroutines can't use
+		// InstanceMethodTarget outside the contract scope.
 		if (_outRootSubs)
 		{
 			auto sub = awst::makeSubroutine(
@@ -684,17 +610,9 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		methods.push_back(std::move(dispatch));
 
-		// ── Companion: `__sel_to_id_<sig>(__sel: bytes) -> uint64` ──
-		// External self-call sites pass the 4-byte ARC4 selector from the
-		// fn-ptr's selector slot through this helper to recover the
-		// internal dispatch id. (Self-call encoding now stores the ARC4
-		// selector for `.selector` accessor consistency; see the encoding
-		// comment in `buildFunctionReference`.) Body is a chain of
-		// `if __sel == method("sig") then return id` over the entries
-		// registered for this signature group; default branch errs.
-		// Always generated (even when entries is empty) so the call-site
-		// reference resolves; an empty body just errs at runtime, which
-		// matches "no self-call possible for this signature".
+		// __sel_to_id_<sig>(__sel: bytes) -> uint64
+		// Maps a 4-byte ARC4 selector to an internal dispatch id (self-call path).
+		// Always generated even for empty groups so call-site references resolve.
 		{
 			awst::ContractMethod selToId;
 			selToId.sourceLocation = _loc;
@@ -725,10 +643,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			for (auto const* entry : entries)
 			{
 				if (!entry->funcDef) continue;
-				// MethodConstant resolves to sha512_256(sig)[:4] at puya
-				// lowering time — same value puya's router matches in the
-				// approval program, and the same value we store in the
-				// fn-ptr's selector slot (cross-call path). Byte equality.
+				// MethodConstant = sha512_256(sig)[:4] — same as puya's router and fn-ptr slot.
 				auto methodConst = awst::makeMethodConstant(
 					AbiEncoderBuilder::buildARC4MethodSelector(_ctx, entry->funcDef),
 					awst::WType::bytesType(), _loc);

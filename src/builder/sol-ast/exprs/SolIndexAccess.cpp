@@ -27,10 +27,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 {
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
 
-	// Calldata/memory slice indexing: `root[a:b]...[i]`. We fold the slice
-	// chain into a direct index on the root array; the bytes-substring3 path
-	// would drop the element type and produce bytes[1] instead of the
-	// declared element (uint256 etc).
+	// Slice indexing `root[a:b]...[i]`: fold the slice chain into a direct index;
+	// bytes-substring3 would produce bytes[1] instead of the declared element type.
 	{
 		auto const* peeled = &m_indexAccess.baseExpression();
 		while (auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(peeled))
@@ -49,8 +47,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		}
 	}
 
-	// Slot-based storage reference: _x[i] → __storage_read(slot + i)
-	// For multi-dim: _x[i][j] → __storage_read(slot + i * stride + j)
+	// Slot-based storage: _x[i] → __storage_read(slot+i);
+	// multi-dim: _x[i][j] → __storage_read(slot + i*stride + j)
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
@@ -59,36 +57,21 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 			auto slotRef = m_scope.findSlotStorageRef(varDecl->id());
 			if (slotRef)
 			{
-				// Compute slot offset from index
 				auto indexExpr = m_indexAccess.indexExpression()
 					? buildExpr(*m_indexAccess.indexExpression()) : nullptr;
 
-				// Ensure index is biguint for slot arithmetic
 				if (indexExpr && indexExpr->wtype == awst::WType::uint64Type())
 				{
 					auto itob = awst::makeItob(std::move(indexExpr), m_loc);
 					indexExpr = awst::makeAsBiguint(std::move(itob), m_loc);
 				}
 
-				// slot_var holds the base slot (biguint)
 				auto slotVar = awst::makeVarExpression(varDecl->name(), awst::WType::biguintType(), m_loc);
-
-				// For now, handle simple single-index: slot + index
-				// The outer array is T[N][1], so _x[0] accesses the inner T[N]
-				// at base slot. Each element is 1 slot (uint256).
-				// For _x[0], the inner array starts at slot. We need to return
-				// a "slot reference" that subsequent indexing can use.
-				// For nested _x[0][j], compute slot + j.
-
-				// If this is the outer index of a storage array (e.g., _x[0] in _x[0] = y),
-				// the result should be another slot ref pointing to (slot + index * inner_size).
-				// For now, just pass through the slot expression — the inner index will add j.
 
 				auto const* arrType = dynamic_cast<ArrayType const*>(baseType);
 				if (arrType && arrType->baseType()->category() == Type::Category::Array)
 				{
-					// Outer dimension: _x[i] → returns a "slot ref" for the inner array
-					// Inner stride = inner array length
+					// Outer dim: slot ref for the inner array (stride = inner array length).
 					auto const* innerArr = dynamic_cast<ArrayType const*>(arrType->baseType());
 					if (innerArr && indexExpr)
 					{
@@ -109,15 +92,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					return slotVar;
 				}
 
-				// Inner dimension: _x[j] where _x is already a slot offset (biguint)
-				// → __storage_read(slot + j)
+				// Inner dim: _x is already a biguint slot offset → __storage_read(slot+j)
 				if (indexExpr)
 				{
-					// computedSlot = base + j
 					auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
 
-					// __storage_read expects uint64 slot, but we have biguint.
-					// Truncate: btoi(add)
+					// Truncate biguint slot to uint64 for __storage_read.
 					auto castToBytes = awst::makeAsBytes(std::move(add), m_loc);
 
 					auto last8 = awst::makeExtractLastN(std::move(castToBytes), 8, m_loc);
@@ -131,9 +111,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		}
 	}
 
-	// Slot-based storage index: if the base resolves to biguint AND the
-	// Solidity type is a storage-located array, treat as slot arithmetic.
-	// This handles any expression chain: _x[i][j], getArray()[j], etc.
+	// Slot arithmetic for any biguint base on a storage-located array
+	// (_x[i][j], getArray()[j], etc.).
 	{
 		auto const* baseSolType = m_indexAccess.baseExpression().annotation().type;
 		auto const* baseArrayType = dynamic_cast<ArrayType const*>(baseSolType);
@@ -146,8 +125,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				auto indexExpr = buildExpr(*m_indexAccess.indexExpression());
 				if (indexExpr)
 				{
-					// Ensure index is biguint
-					if (indexExpr->wtype == awst::WType::uint64Type())
+					if (indexExpr->wtype == awst::WType::uint64Type()) // ensure biguint
 					{
 						auto itob = awst::makeItob(std::move(indexExpr), m_loc);
 						indexExpr = awst::makeAsBiguint(std::move(itob), m_loc);
@@ -155,12 +133,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 
 					auto add = awst::makeBigUIntBinOp(std::move(baseExpr), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
 
-					// Read: __storage_read(truncated_slot)
-					if (!m_indexAccess.annotation().willBeWrittenTo)
+					if (!m_indexAccess.annotation().willBeWrittenTo) // read: __storage_read(truncated_slot)
 					{
 						auto castToBytes = awst::makeAsBytes(std::move(add), m_loc);
-
-						// Safe truncate biguint to uint64
+						// truncate biguint slot to uint64
 						auto last8 = awst::makeExtract(std::move(castToBytes), 24, 8, m_loc);
 
 						auto btoi = awst::makeBtoi(std::move(last8), m_loc);

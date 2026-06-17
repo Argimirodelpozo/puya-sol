@@ -17,17 +17,11 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	std::string baseName = baseId->name();
 	std::string member = memberName();
 
-	// block.chainid → 1 (Ethereum mainnet id)
-	// AVM has no per-chain identifier; we stub as 1 so Solidity semantic
-	// tests that check Ethereum-style chain ids pass. Real cross-chain
-	// code should read global GenesisHash in assembly instead.
+	// block.chainid → 1 (no per-chain id on AVM). Warn: the constant 1 is
+	// folded into EIP-712/permit domain separators on every Algorand network,
+	// enabling cross-network replay. Use `global GenesisHash` in assembly instead.
 	if (baseName == "block" && member == "chainid")
 	{
-		// Fail-loud (its block.* siblings warn; this one used to be silent):
-		// the constant 1 is folded into EIP-712 / permit domain separators
-		// identically on EVERY Algorand network, so a signature or permit
-		// minted for one network can be replayed on another. Value kept at 1
-		// for compatibility; warn so the cross-network replay risk is visible.
 		Logger::instance().warning(
 			"block.chainid returns the constant 1 on AVM (no per-chain id). "
 			"EIP-712/permit domain separators will be identical across Algorand "
@@ -47,10 +41,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	}
 
 	// block.basefee / block.blobbasefee → 0.
-	// AVM has a flat per-transaction fee (typically 1000 microAlgos); no
-	// EIP-1559 base fee concept and no blob pricing. Callers that gate
-	// behaviour on `basefee > 0` will see the no-fee path, which is the
-	// safer default on AVM.
+	// AVM has a flat per-txn fee (~1000 microAlgos); no EIP-1559 or blob pricing.
 	if (baseName == "block" && (member == "basefee" || member == "blobbasefee"))
 	{
 		Logger::instance().warning(
@@ -59,11 +50,9 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return zero;
 	}
 
-	// block.gaslimit → a large sentinel (70000). AVM has no gas, only a
-	// fixed opcode budget (700 per app call, poolable across a 16-txn
-	// group). Returning 70000 is enough that gaslimit-based bounds in
-	// Solidity libraries (common pattern: `for (uint i = 0; gasleft() > X;
-	// ++i)`) don't prematurely abort.
+	// block.gaslimit → 70000 sentinel. AVM has no gas (fixed opcode budget:
+	// 700/call, poolable across a 16-txn group). 70000 prevents premature
+	// abort in gaslimit-based Solidity loops.
 	if (baseName == "block" && member == "gaslimit")
 	{
 		Logger::instance().warning(
@@ -91,8 +80,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return cast;
 	}
 
-	// msg.value → conditional: GroupIndex > 0 ? gtxns Amount (GroupIndex-1) : 0
-	// Handles the case where there's no preceding payment transaction.
+	// msg.value → GroupIndex > 0 ? gtxns Amount[GroupIndex-1] : 0
 	if (baseName == "msg" && member == "value")
 	{
 		auto groupIdx = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), m_loc);
@@ -113,32 +101,23 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			std::move(hasPayment), std::move(amount), std::move(zeroVal),
 			awst::WType::uint64Type(), m_loc);
 
-		// Promote to biguint
+			// Promote uint64 → biguint (Solidity msg.value is uint256)
 		auto itob = awst::makeItob(std::move(cond), m_loc);
 		return awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
-	// msg.sig → first 4 bytes of msg.data. In ARC4 routing the selector is
-	// always ApplicationArgs[0], which is already 4 bytes, so we emit the
-	// same txna read and type it as bytes4.
+	// msg.sig → ApplicationArgs[0] (ARC4 selector, already 4 bytes), typed bytes4.
 	if (baseName == "msg" && member == "sig")
 		return awst::makeAppArg(
 			0, m_loc, m_ctx.typeMapper.createType<awst::BytesWType>(4));
 
-	// msg.data → reconstruct EVM-style calldata: selector (4 bytes from
-	// ApplicationArgs[0]) followed by each subsequent ApplicationArgs slot
-	// concatenated. Each ARC4 arg is already left-padded to its declared
-	// width, so the concatenation lands close to the EVM head encoding for
-	// simple scalar args. Bare calls with no ApplicationArgs return bzero(0).
-	//
-	// We only inspect up to 16 slots — Algorand's hard cap is 16
-	// ApplicationArgs (slot 0 is the selector, so 15 actual params).
+	// msg.data → concatenate ApplicationArgs[0..15] (selector + ARC4 args).
+	// ARC4 args are already left-padded; result approximates EVM head encoding
+	// for scalar args. Bare calls return bzero(0). Cap at 16 slots (AVM hard limit).
 	if (baseName == "msg" && member == "data")
 	{
-		// EVM: calldata is EMPTY during construction — ctor args travel
-		// appended to the initcode, not in calldata. On AVM the ctor body
-		// runs as __postInit, whose ApplicationArgs carry selector+args;
-		// reconstructing calldata from them here would wrongly expose those
+		// EVM calldata is empty during construction (ctor args in initcode, not calldata).
+		// AVM runs ctor as __postInit with ApplicationArgs; return empty to match
 		// (various/create_calldata asserts msg.data.length == 0 in the ctor).
 		if (m_scope.isInConstructor())
 			return awst::makeBytesConstant({}, m_loc);
@@ -149,7 +128,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 		auto hasData = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Gt, std::move(zero), m_loc);
 
-		// Build concatenated calldata from slot 0 (selector) onwards.
+		// Concatenate slots 0..15; absent slots contribute bzero(0).
 		std::shared_ptr<awst::Expression> calldataConcat;
 		for (int slot = 0; slot < 16; ++slot)
 		{
@@ -182,7 +161,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			awst::WType::bytesType(), m_loc);
 	}
 
-	// Standard intrinsics via IntrinsicMapper
+	// Fall through to IntrinsicMapper for standard intrinsics (block.timestamp, etc.)
 	auto intrinsic = builder::IntrinsicMapper::tryMapMemberAccess(baseName, member, m_loc);
 	if (intrinsic)
 	{

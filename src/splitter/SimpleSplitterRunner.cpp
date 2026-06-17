@@ -23,10 +23,8 @@ using njson = nlohmann::ordered_json;
 
 namespace {
 
-/// Read a `--split-config <json>` file. Accepted shapes:
-///   { "extract": ["A", "B", ...] }                                       (single helper)
-///   { "helpers": [ {"extract": [...]}, {"extract": [...]} ] }            (multiple helpers)
-/// Returns one helper-spec per entry; empty on error.
+/// Parse --split-config JSON into per-helper name lists.
+/// Accepts `{"extract":[...]}` (single) or `{"helpers":[{"extract":[...]},...]}`.
 std::vector<std::vector<std::string>> parseSplitConfig(
 	std::string const& _path)
 {
@@ -88,10 +86,8 @@ std::vector<std::vector<std::string>> parseSplitConfig(
 	return result;
 }
 
-/// Collect every Subroutine.name and every ContractMethod.memberName
-/// across the given roots. Used to (a) validate --force-delegate names
-/// and (b) filter helper-spec entries to those actually present at
-/// each pass.
+/// All Subroutine.name + ContractMethod.memberName in the roots.
+/// Used to validate --force-delegate names and filter each pass's spec.
 std::set<std::string> collectAllNames(
 	std::vector<std::shared_ptr<awst::RootNode>> const& _roots)
 {
@@ -127,12 +123,9 @@ SimpleSplitterRunner::Result SimpleSplitterRunner::run(
 
 	if (!_cfg.forceDelegate.empty())
 	{
-		// Each delegate name becomes its own one-method helper extraction.
-		// We DON'T compile the resulting helper through puya — its body
-		// has unresolved InstanceMethodTarget refs to orchestrator-internal
-		// methods; the artifact will be replaced with a hand-crafted lonely
-		// chunk in a later pass. Mark these helper names so the output
-		// stage can skip them.
+		// Each delegate name gets its own one-method helper (not compiled
+		// through puya — body has unresolved InstanceMethodTarget refs;
+		// artifact is replaced by a hand-crafted lonely chunk later).
 		auto presentAll = collectAllNames(_roots);
 		int delegateCount = 0;
 		for (auto const& name: _cfg.forceDelegate)
@@ -157,8 +150,7 @@ SimpleSplitterRunner::Result SimpleSplitterRunner::run(
 	if (helperSpecs.empty())
 		return result;  // nothing to do — caller stays on its single-contract path
 
-	// 2. Run SimpleSplitter once per helper-spec, threading the orch's
-	//    remaining roots forward as the input to the next split.
+	// 2. Run SimpleSplitter per spec, threading the orch's remaining roots forward.
 	std::vector<SimpleSplitter::ContractAWST> splitContracts;
 	auto currentRoots = _roots;
 	int helperIdx = 1;
@@ -219,14 +211,12 @@ SimpleSplitterRunner::Result SimpleSplitterRunner::run(
 		splitContracts.push_back(std::move(orch));
 	}
 
-	// 4. Emit per-contract subdirs. Helpers come first in splitContracts;
-	//    the final orchestrator goes last.
+	// 4. Emit per-contract subdirs (helpers first, orchestrator last).
 	puyasol::json::AWSTSerializer serializer;
 	fs::create_directories(_cfg.outputDir);
 
-	// Helper names → declared as TemplateVar children in each non-self
-	// options.json so puya admits the orch's `TMPL_<helperName>_APP_ID`
-	// references.
+	// Each options.json declares all OTHER helpers as int template vars
+	// so puya admits `TMPL_<helperName>_APP_ID` cross-references.
 	std::set<std::string> helperNames;
 	for (auto const& cawst: splitContracts)
 	{
@@ -239,8 +229,7 @@ SimpleSplitterRunner::Result SimpleSplitterRunner::run(
 		if (!isOrch) helperNames.insert(cawst.contractName);
 	}
 
-	// Delegate helpers: skipped through puya — their real artifact (the
-	// lonely-chunk TEAL) is hand-crafted later.
+	// Delegate helpers are skipped by puya — replaced by hand-crafted lonely-chunk TEAL.
 	std::set<std::string> delegateFunctionNames(
 		_cfg.forceDelegate.begin(), _cfg.forceDelegate.end());
 	std::set<std::string> delegateHelperContractNames;
@@ -269,12 +258,8 @@ SimpleSplitterRunner::Result SimpleSplitterRunner::run(
 			out << subJson.dump(2) << std::endl;
 			logger.info("Wrote: " + subAwstPath);
 		}
-		// Declare every OTHER helper's app id as an int template var, so a
-		// later helper that inherits a stub targeting an earlier helper
-		// can compile too. Puya's `template_vars_prefix` is "TMPL_", so it
-		// looks for `<helperName>_APP_ID` (without the prefix) in
-		// `cli_template_definitions`. Placeholder 0; deploy-time
-		// substitution writes the real value.
+		// template_vars_prefix="TMPL_" → var key is `<helperName>_APP_ID`
+		// (without the prefix); placeholder 0, deploy-time substitution applies.
 		std::map<std::string, int64_t> intVars;
 		for (auto const& h: helperNames)
 			if (h != cawst.contractName)

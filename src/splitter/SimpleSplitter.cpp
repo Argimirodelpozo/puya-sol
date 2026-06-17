@@ -18,15 +18,8 @@ namespace
 
 constexpr int TxnTypeAppl = 6;
 
-// puya's ABI type-name conventions for the wtypes ctf-exchange uses.
-// (uint512 == biguint, byte[N] == fixed bytes, byte[] == dynamic bytes.)
-//
-// CRITICAL: this name has to match what puya generates for the helper's
-// method signature, since the selector (sha512_256("name(args)return")[:4])
-// has to dispatch correctly across contracts. WTuple/ARC4Tuple need to be
-// expanded as "(t0,t1,...)", strings as "string", and ARC4 composite types
-// as the original Solidity-level type so we don't generate a selector that
-// targets a different overload.
+// ABI type-name string for a WType — must match what puya emits for the
+// helper's method signature so sha512_256("name(args)return")[:4] aligns.
 std::string abiTypeName(awst::WType const* t)
 {
 	if (!t) return "void";
@@ -65,6 +58,7 @@ std::string abiTypeName(awst::WType const* t)
 			// canonical ABI typename. Match that exactly so the selector
 			// hashes line up with the helper's emitted method signature.
 			auto const& alias = a->arc4Alias();
+			// puya's canonical aliases must match exactly so selector hashes align.
 			if (alias == "string" || alias == "byte[]" || alias == "address") return alias;
 			return abiTypeName(a->elementType()) + "[]";
 		}
@@ -138,19 +132,14 @@ std::string buildMethodSig(std::string const& name, awst::Subroutine const& sub)
 	return sig;
 }
 
-/// Encode a single argument expression for inclusion in ApplicationArgs.
-/// puya expects ABI-encoded bytes per arg.
+/// Encode one argument for ApplicationArgs (ABI-encoded bytes).
 std::shared_ptr<awst::Expression> encodeArg(
 	std::shared_ptr<awst::Expression> argExpr,
 	awst::SourceLocation const& loc)
 {
 	auto const* wt = argExpr->wtype;
-	// Dynamic `bytes` (no fixed length) is `arc4.dynamic_array<arc4.uint8>`
-	// at the ABI boundary — uint16 length-prefix followed by the data.
-	// Without this prefix the helper's ARC4 router fails its
-	// `len; ==; assert` decode check (see AVM-PORT-ADAPTATION on
-	// `_verifyECDSASignature` — the signature `bytes` arg crosses the
-	// stub→helper boundary and needs the length prefix to be readable).
+	// Dynamic bytes needs a uint16 length prefix (arc4.dynamic_array<arc4.uint8>)
+	// or the helper's ARC4 router `len; ==; assert` decode check fails.
 	if (wt && wt->kind() == awst::WTypeKind::Bytes)
 	{
 		auto const* bw = dynamic_cast<awst::BytesWType const*>(wt);
@@ -181,12 +170,8 @@ std::shared_ptr<awst::Expression> encodeArg(
 	}
 	if (wt == awst::WType::biguintType())
 	{
-		// Pad biguint to 64 bytes (uint512) before sending across the
-		// inner-call. Helpers expect uint512-sized args (puya auto-asserts
-		// `len == 64` at the helper's router); biguint at runtime can be
-		// shorter than 64 bytes (e.g. 32 after a uint256 ARC4Decode), so
-		// we OR with bzero(64) to left-pad with zeros without changing
-		// the numeric value.
+		// Pad biguint to 64 bytes (uint512) — puya auto-asserts `len == 64` at
+		// the router; runtime biguint can be <64 bytes so OR-pad to extend.
 		auto bytesArg = awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
 		auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
 		bzero->stackArgs.push_back(awst::makeIntegerConstant("64", loc));
@@ -212,8 +197,7 @@ std::shared_ptr<awst::Expression> encodeArg(
 		setbit->stackArgs.push_back(std::move(val));
 		return setbit;
 	}
-	// ARC4 composite types (Struct/Array/Tuple/UIntN): the in-memory
-	// representation IS the ARC4-encoded byte string. Reinterpret to bytes.
+	// ARC4 composite types: in-memory rep IS the ARC4 bytes — reinterpret.
 	if (wt && (wt->kind() == awst::WTypeKind::ARC4Struct
 		|| wt->kind() == awst::WTypeKind::ARC4StaticArray
 		|| wt->kind() == awst::WTypeKind::ARC4DynamicArray
@@ -223,13 +207,12 @@ std::shared_ptr<awst::Expression> encodeArg(
 	{
 		return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
 	}
-	// Native WTuple: needs ARC4 encoding to flatten into the ABI byte form.
+	// WTuple: flatten to ABI bytes via ARC4Encode.
 	if (wt && wt->kind() == awst::WTypeKind::WTuple)
 	{
 		auto enc = std::make_shared<awst::ARC4Encode>();
 		enc->sourceLocation = loc;
-		// Use a default ARC4 tuple wtype; puya derives the encoding from the
-		// inner expression's wtype. The result is bytes.
+		// puya derives the encoding from the inner expression's wtype.
 		enc->wtype = awst::WType::bytesType();
 		enc->value = std::move(argExpr);
 		return awst::makeReinterpretCast(std::move(enc), awst::WType::bytesType(), loc);
@@ -237,22 +220,14 @@ std::shared_ptr<awst::Expression> encodeArg(
 	return awst::makeReinterpretCast(std::move(argExpr), awst::WType::bytesType(), loc);
 }
 
-/// Map a WType to its ARC4 equivalent, used to build the bytes-shape that
-/// ARC4Decode consumes. Returns nullptr if the WType has no known ARC4
-/// counterpart we support. WTuple recursion mints fresh ARC4Tuples, so we
-/// stash them in a static owned arena that frees at process exit.
+/// Map WType to its ARC4 equivalent for building the bytes-shape ARC4Decode
+/// consumes. Returns nullptr if unsupported. WTuple recursion mints fresh
+/// ARC4Tuples owned by a static arena (freed at process exit).
 awst::WType const* mapToArc4(awst::WType const* w)
 {
 	if (!w) return nullptr;
-	// `ARC4UIntN(N)` takes the bit-width N, not the byte count. Solidity
-	// `uint256` (32 bytes) is `ARC4UIntN(256)`; we send biguints as uint512
-	// across helpers (matching `abiTypeName`'s "uint512" — see line ~36),
-	// so the corresponding ARC4 form for the bytes-shape that ARC4Decode
-	// consumes on the *return* side has to be uint512 too. Earlier this
-	// passed `32` (which puya then interprets as a 32-bit / 4-byte
-	// uint32!) — `extract 4 4` instead of `extract 4 64` in the helper-
-	// stub return decoder, which silently truncated every multi-return
-	// biguint helper call.
+	// biguint maps to uint512 (not 256) — must match abiTypeName + the wire width
+	// so ARC4Decode emits `extract 4 64` not `extract 4 4` on the return side.
 	if (w == awst::WType::biguintType())
 	{
 		static awst::ARC4UIntN s_uint512(512);
@@ -269,19 +244,14 @@ awst::WType const* mapToArc4(awst::WType const* w)
 	}
 	if (w == awst::WType::accountType())
 	{
-		// AVM addresses are 32 raw bytes — ARC4 representation is uint256
-		// (256-bit, 32 bytes). The cross-helper wire shape can stay uint256
-		// because we never need to span 33 bytes for an account.
+		// AVM address = 32 bytes; ARC4 wire shape = uint256.
 		static awst::ARC4UIntN s_uint256(256);
 		return &s_uint256;
 	}
 	if (w == awst::WType::stringType())
 	{
-		// arc4.string == dynamic_array<arc4.byte>, immutable=true.
-		// Match puya's `arc4_string_alias` exactly so its decode router
-		// accepts the bytes shape as a Solidity `string`.
+		// Match puya's arc4_string_alias ("string") so the decode router accepts it.
 		static awst::ARC4UIntN s_arc4Byte(8, "byte");
-		// NB: main's ARC4DynamicArray doesn't have the immutable arg PE had.
 		static awst::ARC4DynamicArray s_arc4String(&s_arc4Byte, "string");
 		return &s_arc4String;
 	}
@@ -346,11 +316,8 @@ std::shared_ptr<awst::Expression> decodeReturn(
 	}
 	if (retType == awst::WType::biguintType())
 	{
-		// Narrow the 64-byte uint512 LastLog payload to 32 bytes (uint256).
-		// Solidity caps at uint256, so the actual numeric value fits in 32
-		// bytes (the leading 32 are zeros). Without this narrowing, the
-		// caller's downstream `len <= 32 assert overflow` checks fire on the
-		// wider biguint value.
+		// Wire is 64-byte uint512; narrow to 32-byte uint256 (Solidity max).
+		// Without narrowing, downstream `len <= 32 assert overflow` fires.
 		auto extracted = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), loc);
 		extracted->immediates = {32, 32};  // extract bytes [32, 64)
 		extracted->stackArgs.push_back(std::move(bytesExpr));
@@ -358,19 +325,11 @@ std::shared_ptr<awst::Expression> decodeReturn(
 	}
 	if (retType && retType->kind() == awst::WTypeKind::WTuple)
 	{
-		// Build a `TupleExpression` directly from per-slot byte extracts so
-		// each biguint slot can be narrowed from the wire's uint512 width
-		// (64 bytes) to native uint256 (32 bytes) — the same narrowing the
-		// single-biguint case above does. Going through `ARC4Decode` instead
-		// would yield a tuple of 64-byte-wide biguints; downstream code
-		// that does `len <= 32 assert overflow` (puya's standard ARC4
-		// uint256 width validation, e.g. in `_prepareMakerOrder`'s
-		// `extract3 ... <= 32 assert`) then asserts.
-		//
-		// This path requires every element to be a fixed-byte-width type
-		// recognised by `mapToArc4` — all biguint/uint64/account/bool here.
-		// Mixed tuples with dynamic elements (e.g. `bytes`/`string`) fall
-		// back to ARC4Decode below, which keeps existing behavior intact.
+		// Extract per-slot from the flat wire bytes so biguint slots can be
+		// narrowed 64→32 bytes (uint512→uint256). ARC4Decode would leave them
+		// 64-wide, triggering downstream `len <= 32 assert overflow`.
+		// Only taken when every element is a fixed scalar (biguint/uint64/
+		// account/bool); dynamic-element tuples fall back to ARC4Decode.
 		auto const* tup = dynamic_cast<awst::WTuple const*>(retType);
 		if (tup)
 		{
@@ -441,9 +400,7 @@ std::shared_ptr<awst::Expression> decodeReturn(
 			}
 		}
 
-		// Fallback: reinterpret bytes as an ARC4 tuple, then ARC4Decode to
-		// the native WTuple. Without ARC4Decode, puya would see a bytes
-		// value where it expects a WTuple at the call site.
+		// Fallback for dynamic-element tuples: reinterpret+ARC4Decode to WTuple.
 		auto const* arc4Form = mapToArc4(retType);
 		if (!arc4Form) return awst::makeReinterpretCast(std::move(bytesExpr), retType, loc);
 		auto cast = awst::makeReinterpretCast(std::move(bytesExpr), arc4Form, loc);
@@ -536,9 +493,7 @@ std::shared_ptr<awst::Block> buildStubBody(
 	return block;
 }
 
-/// Walk an expression/statement tree and collect SubroutineID target IDs
-/// that are referenced. Used to discover transitive deps of moved subs
-/// so they can be co-located in the helper.
+/// Collect SubroutineID target IDs referenced in an expression/statement tree.
 void collectSubroutineIds(awst::Expression const& e, std::set<std::string>& out);
 void collectSubroutineIds(awst::Statement const& s, std::set<std::string>& out);
 
@@ -548,11 +503,8 @@ void collectSubroutineIds(awst::Expression const& e, std::set<std::string>& out)
 	{
 		if (auto const* id = std::get_if<awst::SubroutineID>(&sce->target))
 			out.insert(id->target);
-		// Also collect InstanceMethodTarget targets — these resolve via
-		// the contract's MRO at puya-emit time but in a delegate-extracted
-		// helper we need to make sure the target method's body is present.
-		// We tag the entry with a "memberName:" prefix so callers can route
-		// it to the method-lookup path instead of the subroutine table.
+		// InstanceMethodTarget refs need the "memberName:" prefix so callers
+		// route them to the method-lookup path (not the subroutine table).
 		if (auto const* m = std::get_if<awst::InstanceMethodTarget>(&sce->target))
 			out.insert(std::string("memberName:") + m->memberName);
 		if (auto const* sm = std::get_if<awst::InstanceSuperMethodTarget>(&sce->target))
@@ -722,9 +674,7 @@ void collectSubroutineIds(awst::Statement const& s, std::set<std::string>& out)
 	}
 }
 
-/// Compute the closure of subroutines transitively called by any of `seeds`,
-/// limited to functions present in `subById`. Used to bring deps along when
-/// extracting a sub to a helper.
+/// Transitive closure of subroutines called from `seeds`, limited to `subById`.
 std::vector<std::shared_ptr<awst::Subroutine>> collectTransitiveDeps(
 	std::vector<std::shared_ptr<awst::Subroutine>> const& seeds,
 	std::map<std::string, std::shared_ptr<awst::Subroutine>> const& subById)
@@ -754,8 +704,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> collectTransitiveDeps(
 	return out;
 }
 
-/// Build a helper contract that exposes the given subs as ABI methods.
-/// The helper's ABI methods just call the helper-local subroutine.
+/// Build a helper Contract that exposes each sub as an ABI method.
 std::shared_ptr<awst::Contract> buildHelperContract(
 	awst::Contract const& original,
 	std::vector<std::shared_ptr<awst::Subroutine>> const& subs,
@@ -780,12 +729,8 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = sub->sourceLocation;
 
-		// If --ensure-budget targeted this method by name, prepend a
-		// puya_lib::ensure_budget(N) call so the helper auto-pumps opcode
-		// budget when called. Mirrors `ContractBuilder.cpp`'s injection
-		// for non-splitter methods. Match by full subroutine name (e.g.
-		// "CTHelpers.getCollectionId"), with a fallback to the bare name
-		// (the part after the last '.', e.g. "getCollectionId").
+		// Prepend ensure_budget if --ensure-budget targets this method.
+		// Match full name ("CTHelpers.getCollectionId") then bare name fallback.
 		uint64_t budgetForFunc = 0;
 		if (auto it = ensureBudget.find(sub->name); it != ensureBudget.end())
 			budgetForFunc = it->second;
@@ -917,21 +862,14 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	std::vector<std::shared_ptr<awst::Subroutine>> moved;
 	std::set<std::string> moveSet(_moveNames.begin(), _moveNames.end());
 
-	// Args/returns of these kinds round-trip cleanly through the inner-call
-	// stub: their puya-side runtime representation IS the ARC4-encoded byte
-	// string, so encode/decode is a reinterpret-cast. WTuple needs an extra
-	// ARC4Encode on the way out, which encodeArg handles.
+	// ARC4 composite types round-trip as reinterpret-casts; WTuple needs
+	// ARC4Encode on the way out (handled by encodeArg).
 	auto isUnsupported = [](awst::WType const* t) {
-		if (!t) return false;
-		// Currently no kinds are unsupported as args. Returns of WTuple/
-		// ARC4Struct still need work in decodeReturn — rejected separately
-		// below.
+		// No arg kinds are unsupported yet; rejected separately for returns.
 		(void)t;
 		return false;
 	};
-	// Return types we can decode cleanly. ARC4 composite types reinterpret
-	// directly; WTuple decodes via mapToArc4 + ARC4Decode if every element
-	// has a known ARC4 counterpart (string/bytes still bail).
+	// WTuple returns unsupported if mapToArc4 can't express the element types.
 	auto unsupportedReturn = [](awst::WType const* t) {
 		if (!t) return false;
 		if (t->kind() != awst::WTypeKind::WTuple) return false;
@@ -947,9 +885,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		else if (auto s = std::dynamic_pointer_cast<awst::Subroutine>(r))
 		{
 			if (!moveSet.count(s->name)) continue;
-			// Skip subs with composite return types (tuple/struct/array) —
-			// the inner-call decode path doesn't handle them yet, and they're
-			// rarely worth extracting anyway. Same for arg types.
+			// Skip subs with undecodable return types.
 			if (unsupportedReturn(s->returnType))
 			{
 				Logger::instance().warning(
@@ -1013,9 +949,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			subById[sub->id] = sub;
 
 	auto helperRoots = collectTransitiveDeps(moved, subById);
-	// Methods can reference subroutines too (e.g. _verifyECDSASignature →
-	// ECDSA.recover); walk their bodies and pull in any subs the helper
-	// will need.
+	// Also pull subs referenced by moved ContractMethods.
 	{
 		std::set<std::string> seenIds;
 		for (auto const& s : helperRoots) seenIds.insert(s->id);
@@ -1039,19 +973,12 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			}
 	}
 
-	// Method-deps walker: matchOrders calls `this._matchOrders(...)`
-	// (InstanceMethodTarget). For the helper to compile standalone, the
-	// transitive method-call closure has to be co-located with it. We add
-	// these methods to the helper-side movedMethods (so they're emitted in
-	// the helper) but DO NOT touch movedMethodNames (which is what
-	// triggers stubbing in the orchestrator). Stubbing tuple-returning
-	// internal methods in the orch is what tripped the WTuple decode chain
-	// last time; here the orch keeps its bodies unchanged for the
-	// transitively-pulled methods, while the helper gets full copies.
-	//
-	// Internal methods routed by the helper's ARC4 router would conflict
-	// with the original orch-side dispatch; mark them inline so puya
-	// inlines them at call sites and skips the ABI shell.
+	// Walk InstanceMethodTarget deps (e.g. `this._matchOrders(...)`) and
+	// co-locate the transitive method closure in the helper. Added to
+	// movedMethods but NOT movedMethodNames — orch keeps its original bodies
+	// for these (stubbing tuple-returning internal methods tripped WTuple
+	// decode before). Transitively-pulled methods have no arc4MethodConfig
+	// so puya emits them as internal subroutines, not ABI routes.
 	if (primary)
 	{
 		std::map<std::string, awst::ContractMethod const*> methodByMember;
@@ -1084,10 +1011,8 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 					auto it2 = methodByMember.find(member);
 					if (it2 != methodByMember.end())
 					{
-						// Inlining 50+ methods at every callsite explodes program
-						// size past 8192. Leave them as plain helper-internal
-						// methods; arc4MethodConfig is also left empty below so
-						// they don't get an ABI router slot.
+						// Not inlined: 50+ methods would exceed 8192 bytes.
+						// arc4MethodConfig left empty → internal subroutine only.
 						auto copy = *it2->second;
 						copy.inlineOpt = false;
 						movedMethods.push_back(std::move(copy));
@@ -1113,11 +1038,9 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	// reads its app id from a template var).
 	auto helper = buildHelperContract(*primary, moved, _helperIndex, _ensureBudget);
 
-	// Inject __delegate_update on the helper too. When this helper is the F
-	// for a delegate-update dance, its bytes get loaded onto the orchestrator
-	// mid-dance — the revert step (UpdateApplication back to orch's original)
-	// hits the helper's router (since orch is running helper bytes), and that
-	// router needs to admit OnCompletion=UpdateApplication with this selector.
+	// Inject __delegate_update on the helper: if helper bytes run on the orch
+	// mid-dance, the revert UpdateApplication hits the helper's router, which
+	// must admit OC=UpdateApplication via this selector.
 	{
 		auto loc = helper->sourceLocation;
 		awst::ContractMethod hatch;
@@ -1137,11 +1060,8 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		helper->methods.push_back(std::move(hatch));
 	}
 
-	// Add moved ContractMethods to the helper. Re-cref to helper. The
-	// user-explicitly-named methods (movedMethodNames) become ABI methods
-	// on the helper's router; the transitively-pulled closure methods are
-	// internal-only (no ARC4 shell) so the helper has the same internal
-	// dispatch graph as the original contract.
+	// Add moved ContractMethods to the helper. Named methods get ABI shells;
+	// transitively-pulled methods are internal-only (no arc4MethodConfig).
 	for (auto m : movedMethods)
 	{
 		m.cref = helper->id;
@@ -1158,10 +1078,8 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		// else: transitively-pulled — leave arc4MethodConfig empty so
 		// puya emits an internal subroutine instead of an ABI route.
 
-		// Mirror buildHelperContract's ensure_budget injection: ABI
-		// methods like matchOrders (force-delegated into a lonely chunk)
-		// need their budget pumped when called, since the inner-call
-		// pool is the only opcode budget the helper has access to.
+		// Inject ensure_budget for force-delegated ABI methods (inner-call
+		// pool is the helper's only opcode budget source).
 		uint64_t budgetForMethod = 0;
 		if (auto it = _ensureBudget.find(m.memberName); it != _ensureBudget.end())
 			budgetForMethod = it->second;
@@ -1207,8 +1125,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	orchOut.contractId = primary->id;
 	orchOut.contractName = primary->name;
 
-	// Deep-copy the primary Contract (vector of ContractMethods is a value
-	// member, so this gives us a free copy of the methods table).
+	// Deep-copy the Contract to rewrite moved method bodies in place.
 	std::shared_ptr<awst::Contract> orchContract;
 	if (!movedMethodNames.empty())
 	{
@@ -1226,21 +1143,11 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		}
 	}
 
-	// Inject a `__delegate_update` ABI method that admits a self-replacing
-	// UpdateApplication call from the lonely-chunk delegate sidecar. Without
-	// this, the orchestrator's auto-generated router rejects every
-	// non-NoOp completion via `txn OnCompletion; !; assert`, so the lonely
-	// chunk's `itxn ApplicationCall(orch, OC=UpdateApplication, …)` step
-	// can't land. The body here is intentionally unguarded for now —
-	// validating that the caller is the registered lonely-chunk app id is
-	// the next step.
+	// Inject __delegate_update: without it, the orch router rejects OC=UpdateApplication
+	// (`txn OnCompletion; !; assert`), blocking the lonely-chunk's install step.
+	// Body is intentionally unguarded (caller-verification is a TODO).
 	if (!orchContract && !movedSubNames.empty())
-	{
-		// Even with no method moves we may still want the update branch
-		// (e.g. delegate of a free Subroutine). Deep-copy the contract so
-		// we can append a method.
 		orchContract = std::make_shared<awst::Contract>(*primary);
-	}
 	if (orchContract)
 	{
 		auto loc = orchContract->sourceLocation;

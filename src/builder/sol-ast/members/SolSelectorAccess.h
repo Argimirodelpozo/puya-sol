@@ -14,10 +14,10 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
-	/// Build keccak256(sig)[:4] as bytes4.
+	/// ARC-4 sha512_256 selector (TEAL `method "sig"`) as bytes4.
 	std::shared_ptr<awst::Expression> makeSelectorExpr(std::string const& _sig);
 
-	/// Try to resolve a signature from a sub-expression (for ternary distribution).
+	/// Resolve canonical sig from a sub-expression (for ternary distribution).
 	std::string resolveSignature(solidity::frontend::Expression const& _expr);
 	std::string canonicalSelectorSig(solidity::frontend::FunctionType const& _ft);
 };

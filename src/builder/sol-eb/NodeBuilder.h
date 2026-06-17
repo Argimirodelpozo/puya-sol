@@ -41,21 +41,14 @@ public:
 
 protected:
 	ContractContext& m_ctx;
-	/// The innermost scope active when this builder was created — same
-	/// pattern as `SolExpression::m_scope`. Captured from
-	/// `_ctx.currentScope` at construction (asserted non-null) so
-	/// builders can call `m_scope.isUnchecked()` etc. without going
-	/// through the bridge methods on ContractContext.
+	/// Innermost scope at construction; captured so builders can call
+	/// m_scope.isUnchecked() etc. without going through ContractContext.
 	sol_ast::Context& m_scope;
 	explicit NodeBuilder(ContractContext& _ctx);
 };
 
 // ─────────────────────────────────────────────────────────────────────
 // InstanceBuilder — wraps a resolved Expression + its Solidity type
-//
-// Each concrete builder stores the Solidity type it was created from
-// and uses it to determine semantics (signedness, bit width, etc.)
-// while producing the correct AWST nodes.
 // ─────────────────────────────────────────────────────────────────────
 
 class InstanceBuilder: public NodeBuilder

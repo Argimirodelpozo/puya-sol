@@ -73,15 +73,13 @@ std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
 		return awst::makeAsBiguint(std::move(setbit), _loc);
 	};
 
-	// Pin value (read for the sign test + the floordiv) and the shift amount
-	// (read for the clamp compare + branch) so each evaluates once.
+	// Pin both operands (each referenced 2-3x) so side effects run once.
 	auto bindV = awst::makeAssignmentExpression(
 		awst::makeVarExpression(vName, biguint, _loc), std::move(_value), _loc, biguint);
 	auto bindNraw = awst::makeAssignmentExpression(
 		awst::makeVarExpression(nrName, u64, _loc), std::move(_shiftAmt), _loc, u64);
 
-	// nTmp = min(shift, 255): shifts >= 255 saturate (0 / all-ones), and the
-	// setbit power trick is only valid for [0,255].
+	// Clamp shift to 255: setbit trick invalid above 255, and >=255 saturates.
 	auto nLt256 = awst::makeNumericCompare(
 		nrRead(), awst::NumericComparison::Lt, awst::makeIntegerConstant("256", _loc), _loc);
 	auto clampedN = awst::makeConditional(
@@ -89,12 +87,12 @@ std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
 	auto bindN = awst::makeAssignmentExpression(
 		awst::makeVarExpression(nName, u64, _loc), std::move(clampedN), _loc, u64);
 
-	// sTmp = floordiv(v, 2^n) — the logical shift.
+	// Logical shift (unsigned floordiv).
 	auto shifted = awst::makeBigUIntBinOp(vRead(), awst::BigUIntBinaryOperator::FloorDiv, pow2n(), _loc);
 	auto bindS = awst::makeAssignmentExpression(
 		awst::makeVarExpression(sName, biguint, _loc), std::move(shifted), _loc, biguint);
 
-	// fill = 2^256 - (2^256 / 2^n) = the top-n sign bits.
+	// fill = top-n sign bits.
 	auto fill = awst::makeBigUIntBinOp(
 		makePow256(_loc), awst::BigUIntBinaryOperator::Sub,
 		awst::makeBigUIntBinOp(makePow256(_loc), awst::BigUIntBinaryOperator::FloorDiv, pow2n(), _loc), _loc);
@@ -162,8 +160,7 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 	auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 	auto body = awst::makeBlock(_loc);
 
-	// In unchecked mode, Solidity wraps intermediate products mod 2^256 so
-	// that huge exponents (e.g. 2**1113) don't blow past biguint capacity.
+	// Unchecked: wrap products mod 2^256 (huge exponents e.g. 2**1113 overflow biguint).
 	bool const wrapMod = _isUnchecked;
 		auto wrapMod256Inner = [&](std::shared_ptr<awst::Expression> v)
 		-> std::shared_ptr<awst::Expression>
@@ -211,9 +208,8 @@ std::shared_ptr<awst::Expression> buildWrappingSubtract(
 	std::shared_ptr<awst::Expression> _right,
 	awst::SourceLocation const& _loc)
 {
-	// Both operands feed the underflow-assert AND the wrapped difference —
-	// wrap so a side-effecting operand (`x -= f()`, the compound path that
-	// bypasses SolBinaryOperation's wrap) evaluates once.
+	// Both operands referenced twice (assert + diff); wrap to avoid double-eval
+	// on compound path (`x -= f()` bypasses SolBinaryOperation's eval-once).
 	_left = awst::makeEvalOnce(std::move(_left), _loc);
 	_right = awst::makeEvalOnce(std::move(_right), _loc);
 
@@ -242,15 +238,10 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	BuilderBinaryOp _op,
 	awst::SourceLocation const& _loc)
 {
-	// Each operand feeds the sign test, the negation, and the conditional's
-	// else-branch (3 references each) — a side-effecting operand on the
-	// compound path (`x %= f()`) ran once per reference. Pin both via the
-	// same comma let-binding buildBigUIntArithmeticShiftRight uses, NOT
-	// SingleEvaluation: for DIV the first _right reference sits inside the
-	// short-circuit RHS of `Or(isLeftNeg, isRightNeg)`, so an SE temp would
-	// be defined in a branch that doesn't dominate later uses (puya rejects
-	// with "used but never defined"). The comma prologue evaluates both
-	// bindings unconditionally before anything references them.
+	// Each operand is referenced 3x (sign test, negation, else-branch). Pin via
+	// comma let-binding (not SingleEvaluation): for DIV the first _right ref sits
+	// inside the short-circuit RHS of Or(isLeftNeg, isRightNeg) — an SE temp
+	// defined there doesn't dominate later uses (puya: "used but never defined").
 	auto* biguintW = awst::WType::biguintType();
 	static int s_smdTemp = 0;
 	int smdId = s_smdTemp++;
@@ -296,19 +287,12 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 		? awst::BigUIntBinaryOperator::Mod
 		: awst::BigUIntBinaryOperator::FloorDiv;
 
-	// absResult is referenced three times below (negation, zero test, else
-	// branch) — all PURE re-lowerings over the SE-pinned operands, so the
-	// repeats are wasteful but correct. Do NOT makeEvalOnce-wrap it: its
-	// first reference is `notZero` inside the short-circuit RHS of the final
-	// condition's `And`, so the materialized temp would be defined in a
-	// branch that doesn't dominate the conditional's else-arm — puya rejects
-	// with "used but never defined: awst_tmp%N". SingleEvaluation is only
-	// safe when the FIRST reference lowers unconditionally.
+	// absResult is referenced 3x; repeats are wasteful but correct. Cannot
+	// makeEvalOnce: its first ref is `notZero` inside the And's short-circuit RHS
+	// — a SE temp there doesn't dominate the else-arm (puya: "used but never defined").
 	auto absResult = awst::makeBigUIntBinOp(std::move(absLeft), unsignedOp, std::move(absRight), _loc);
 
-	// Apply sign:
-	// mod: sign follows dividend (left)
-	// div: sign is negative if signs differ
+	// Sign: mod follows dividend; div negates if signs differ.
 	auto negResult = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, absResult, _loc);
 
 	std::shared_ptr<awst::Expression> shouldNegate;

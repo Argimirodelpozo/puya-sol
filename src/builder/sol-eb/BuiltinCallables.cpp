@@ -8,8 +8,7 @@
 namespace puyasol::builder::eb
 {
 
-/// Simple InstanceBuilder that just wraps an expression — used for builtin results
-/// where we don't need a full Solidity-type-aware builder.
+/// Minimal InstanceBuilder for builtin return values (no Solidity-type semantics needed).
 class GenericInstanceBuilder: public InstanceBuilder
 {
 public:
@@ -106,11 +105,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 
 	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
 	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
-	// The modulus feeds both the zero-assert and the mod op — wrap so a
-	// side-effecting third arg (`mulmod(a, b, f())`) evaluates once.
+	// Modulus referenced twice (assert + mod); eval-once for side-effecting args.
 	auto z = awst::makeEvalOnce(promoteToBigUInt(std::move(_args[2]), _loc), _loc);
-
-	// EVM reverts on mod by zero
 	emitModByZeroCheck(_ctx, z, _loc);
 
 	auto mul = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Mult, std::move(y), _loc);
@@ -129,10 +125,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 
 	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
 	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
-	// Same as handleMulmod: the modulus is referenced twice (assert + mod).
 	auto z = awst::makeEvalOnce(promoteToBigUInt(std::move(_args[2]), _loc), _loc);
-
-	// EVM reverts on mod by zero
 	emitModByZeroCheck(_ctx, z, _loc);
 
 	auto add = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Add, std::move(y), _loc);
@@ -147,10 +140,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	// selfdestruct(addr) on AVM:
-	// Send remaining balance to addr via inner payment (CloseRemainderTo).
-	// Post-Cancun EVM selfdestruct only sends funds without deleting the contract,
-	// so we don't require DeleteApplication OnCompletion.
+	// AVM: send remaining balance via inner pay (CloseRemainderTo).
+	// Post-Cancun EVM selfdestruct only sends funds — no DeleteApplication needed.
 	if (!_args.empty())
 	{
 		auto beneficiary = std::move(_args[0]);
@@ -165,7 +156,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 
 		auto feeVal = awst::makeZero(_loc);
 
-		auto amountVal = awst::makeZero(_loc); // amount=0, CloseRemainderTo sends everything
+		auto amountVal = awst::makeZero(_loc); // CloseRemainderTo sends everything
 
 		create->fields["TypeEnum"] = std::move(typeVal);
 		create->fields["Fee"] = std::move(feeVal);
@@ -181,9 +172,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		_ctx.prePendingStatements.push_back(std::move(submitStmt));
 	}
 
-	// Terminate execution after selfdestruct — on EVM, selfdestruct halts
-	// execution so any code after it (e.g. assert(false)) is dead code.
-	// Emit return to prevent subsequent statements from executing.
+	// EVM selfdestruct halts — emit return so subsequent statements don't execute.
 	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
 	_ctx.prePendingStatements.push_back(std::move(retStmt));
 
@@ -205,7 +194,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	// ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) → address
+	// ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) → address.
 	if (_args.size() != 4) return nullptr;
 
 	auto msgHash = std::move(_args[0]);
@@ -213,8 +202,6 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto r = std::move(_args[2]);
 	auto s = std::move(_args[3]);
 
-	// Ensure args are bytes for ecdsa_pk_recover
-	// hash, r, s should be bytes32 → bytes
 	auto toBytes = [&](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
 		if (expr->wtype != awst::WType::bytesType())
 		{
@@ -227,10 +214,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	r = toBytes(std::move(r));
 	s = toBytes(std::move(s));
 
-	// v is uint8 (27 or 28). Normalise to uint64 so we can reference it
-	// multiple times and clamp into the valid recovery range. We persist
-	// v in a temp var because ConditionalExpression duplicates operands
-	// in the serialised AWST.
+	// Normalise v to uint64; persist in a temp (ConditionalExpression duplicates operands in AWST).
 	std::shared_ptr<awst::Expression> vUint;
 	if (v->wtype == awst::WType::uint64Type() || v->wtype == awst::WType::boolType())
 	{
@@ -243,11 +227,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		vUint = awst::makeBtoi(std::move(vBytes), _loc);
 	}
 
-	// Stash v in a temp so we can read it multiple times. The names MUST be
-	// unique per call: both assignments are prePending statements, so for two
-	// ecrecovers in ONE expression (`ecrecover(a..) == ecrecover(b..)`) all
-	// the assignments run before either side's reads lower — with a shared
-	// name both sides would read the SECOND call's v/result.
+	// Names must be unique per call: all prePending statements flush before any
+	// reads lower, so `ecrecover(a)==ecrecover(b)` with a shared name would have
+	// both sides read the SECOND call's v/result.
 	static int s_ecrecoverTmpCounter = 0;
 	int ecTmpId = ++s_ecrecoverTmpCounter;
 	std::string vTmpName = "__ecrecover_v_" + std::to_string(ecTmpId);
@@ -265,8 +247,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		return c;
 	};
 
-	// Recovery id: if v ∈ {27,28} then v-27 else 0. The conditional is
-	// important because unguarded `v-27` underflows for v < 27 and crashes.
+	// recovery_id = v>=27 ? v-27 : 0 (unguarded v-27 underflows for v<27).
 	auto vGte27 = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
 
 	auto vMinus27 = awst::makeUInt64BinOp(readV(), awst::UInt64BinaryOperator::Sub, mkU64("27"), _loc);
@@ -274,9 +255,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto recIdCond = awst::makeConditional(
 		std::move(vGte27), std::move(vMinus27), mkU64("0"),
 		awst::WType::uint64Type(), _loc);
-	// Clamp further: `recovery_id & 1` so the ecdsa opcode doesn't see an
-	// out-of-range value when v is e.g. 29. Combined with the outer result
-	// masking this keeps the TEAL valid for any v.
+	// Clamp: &1 so ecdsa opcode sees 0 or 1 for any v (e.g. 29).
 	auto recIdClamp = awst::makeUInt64BinOp(std::move(recIdCond), awst::UInt64BinaryOperator::BitAnd, mkU64("1"), _loc);
 	std::shared_ptr<awst::Expression> recoveryId = std::move(recIdClamp);
 
@@ -292,14 +271,13 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	ecdsaRecover->stackArgs.push_back(std::move(r));
 	ecdsaRecover->stackArgs.push_back(std::move(s));
 
-	// Store result in temp var (unique per call — see vTmpName comment).
+	// Unique per call — see vTmpName comment.
 	std::string tmpName = "__ecrecover_result_" + std::to_string(ecTmpId);
 	auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, _loc);
 
 	auto assignTuple = awst::makeAssignmentStatement(tmpTarget, std::move(ecdsaRecover), _loc);
 	_ctx.prePendingStatements.push_back(std::move(assignTuple));
 
-	// Extract pubkey_x and pubkey_y
 	auto tupleRead0 = awst::makeVarExpression(tmpName, tupleType, _loc);
 	auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
 
@@ -318,11 +296,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// Left-pad to 32 bytes: concat(bzero(12), addr20) → bytes32 form
 	auto paddedAddr = awst::makeLeftPad(std::move(addr20), 12, _loc);
 
-	// Solidity's ecrecover returns address(0) when v is not 27 or 28
-	// (EVM precompile returns empty data for malformed input; Solidity
-	// converts that to the zero address). We can't short-circuit the
-	// ecdsa_pk_recover opcode itself, so always compute it and mask the
-	// result to bzero(32) when v was out of range.
+	// EVM ecrecover returns address(0) for invalid v; we always run ecdsa_pk_recover
+	// and mask to bzero(32) when v ∉ {27,28}.
 	auto isValidV = [&]() -> std::shared_ptr<awst::Expression> {
 		auto gte = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
 
@@ -336,7 +311,6 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		isValidV(), std::move(paddedAddr), awst::makeBzero(32, _loc),
 		awst::WType::bytesType(), _loc);
 
-	// Cast to account type (address return type)
 	auto addrCast = awst::makeAsAccount(std::move(maskedAddr), _loc);
 
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(addrCast));

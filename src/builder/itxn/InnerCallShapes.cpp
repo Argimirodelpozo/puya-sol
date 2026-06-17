@@ -1,12 +1,8 @@
 /// @file InnerCallShapes.cpp
-/// Per-shape handlers for `address.call(...)` patterns extracted from
-/// InnerCallHandlers.cpp. The shape dispatcher (tryHandleAddressCall)
-/// and helpers stay in InnerCallHandlers.cpp; this file holds the three
-/// large handlers it dispatches to:
-///
-///   - handleCallWithEncodeCall   (typed `abi.encodeCall(...)` self/cross calls)
-///   - handleCallWithRawData       (low-level `address.call(rawBytes)`)
-///   - handleStaticCallPrecompile  (static-call routing for 0x01..0x09 precompiles)
+/// Per-shape handlers for address.call(...):
+///   - handleCallWithEncodeCall   (typed abi.encodeCall self/cross calls)
+///   - handleCallWithRawData      (low-level rawBytes)
+///   - handleStaticCallPrecompile (0x01..0x09 precompiles)
 
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/itxn/InnerCallInternal.h"
@@ -42,10 +38,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	if (!targetFuncDef)
 		return nullptr;
 
-	// Self-call shortcut: if the receiver resolves to
-	// `global CurrentApplicationAddress` (i.e. the call is on `this`), emit
-	// a direct internal subroutine call rather than an inner txn that AVM
-	// would reject with "attempt to self-call".
+	// If receiver is CurrentApplicationAddress (i.e. `this`), emit a direct
+	// subroutine call — AVM rejects inner txns to self.
 	bool isSelfCall = false;
 	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
 	{
@@ -59,8 +53,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 
 	if (isSelfCall)
 	{
-		// Build args from the encodeCall tuple argument (in native types —
-		// we call the function directly, skipping ARC4 encode/decode).
+		// Call directly in native types, skipping ARC4 encode/decode.
 		std::vector<ASTPointer<Expression const>> callArgs;
 		auto const& argsExpr = *_encodeCallExpr.arguments()[1];
 		if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(&argsExpr))
@@ -81,23 +74,17 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		for (auto const& arg : callArgs)
 			awst::pushCallArg(call->args, _ctx.buildExpr(*arg));
 
-		// Return (true, returnBytes) — the caller expects a (bool, bytes) tuple.
-		// For a direct internal call we don't have the raw log, so encode the
-		// native return back to bytes if it's a simple scalar, otherwise
-		// return empty bytes. Most callers either ignore the data portion or
-		// abi.decode it — leaving it empty is a known limitation.
+		// Encode the native return to bytes for the (bool, bytes) result.
+		// Leaving data empty for unknown types is a known limitation.
 		std::shared_ptr<awst::Expression> dataBytes;
 		if (retType == awst::WType::voidType())
 		{
-			// Still need to emit the call as a statement for its side effects
 			auto stmt = awst::makeExpressionStatement(call, _loc);
 			_ctx.prePendingStatements.push_back(std::move(stmt));
 			dataBytes = awst::makeBytesConstant({}, _loc);
 		}
 		else
 		{
-			// Stash the return value so we can encode it to bytes
-			// post-call if needed. For now, encode simple scalars.
 			if (retType == awst::WType::biguintType())
 			{
 				auto cast = awst::makeAsBytes(std::move(call), _loc);
@@ -115,7 +102,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			}
 			else
 			{
-				// Unknown return type — emit as statement, return empty
+				// Unknown return type — emit as statement, empty data.
 				auto stmt = awst::makeExpressionStatement(call, _loc);
 				_ctx.prePendingStatements.push_back(std::move(stmt));
 				dataBytes = awst::makeBytesConstant({}, _loc);
@@ -126,15 +113,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 	}
 
-	// Build ARC4 method selector
 	auto methodConst = awst::makeMethodConstant(
 		buildMethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
 
-	// Build ApplicationArgs tuple
 	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 	argsTuple->items.push_back(std::move(methodConst));
 
-	// Extract call arguments
 	auto const& argsExpr = *_encodeCallExpr.arguments()[1];
 	std::vector<ASTPointer<Expression const>> callArgs;
 	if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(&argsExpr))
@@ -145,7 +129,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	else
 		callArgs.push_back(_encodeCallExpr.arguments()[1]);
 
-	// Encode each argument
 	for (auto const& arg : callArgs)
 	{
 		auto argExpr = _ctx.buildExpr(*arg);
@@ -155,13 +138,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
 }
 
-// ── shared tail: typed inner app call + AVM-framed returndata ──
-//
-// ApplicationArgs[0] = 4-byte sha512_256 selector, [1..n] = ARC4-encoded
-// args. Returndata is AVM-framed: the callee's ARC4 return log minus the
-// 0x151f7c75 prefix (per maintainer ruling — static 32-byte values look
-// identical to EVM ABI; dynamic returns are ARC4-shaped, so abi.decode
-// of a dynamic low-level return diverges from EVM; see EVM_DIVERGENCE).
+// ── Shared tail: typed inner app call ──
+// ApplicationArgs[0] = 4-byte selector, [1..n] = ARC4-encoded args.
+// Returndata = LastLog[4:] (strip 0x151f7c75 prefix; see EVM_DIVERGENCE).
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
@@ -190,26 +169,17 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	// Read LastLog and strip the 4-byte ARC4 return prefix
 	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
-	// len=0 → extract to END: strip the 4-byte ARC4 return prefix, keep the rest.
-	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
+	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc); // len=0 = to end
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
 }
 
 // ── .call(abi.encodeWithSignature/WithSelector(...)) → typed inner call ──
-//
-// The encoder is visible at the call site, so the EVM-shaped blob never
-// needs to exist: selector from the signature/selector argument, each
-// further argument ARC4-encoded per its own type into its own
-// ApplicationArg (the EVM analog encodes per static arg type too —
-// Solidity does not type-check WithSignature args against the string).
-// A self-receiver is not special-cased here: the literal-sig self-call
-// pattern is rewritten to a direct subroutine call earlier in the
-// dispatcher; anything else reaching this path with a self receiver
-// fails loud at runtime (AVM rejects self inner-txn calls).
+// Encoder is visible: each arg goes into its own ApplicationArg (ARC4).
+// Self-receiver literal-sig is already rewritten by the dispatcher;
+// anything else reaching here with self receiver fails at runtime (AVM rejects self txns).
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
@@ -230,8 +200,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 				lit->value(), awst::WType::bytesType(), _loc);
 		else
 		{
-			// Runtime signature string: sha512_256(sig)[0:4], the same
-			// rule MethodConstant applies at compile time.
+			// Runtime sig: sha512_256(sig)[0:4] (same rule as MethodConstant at compile time).
 			auto sigExpr = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
 			auto hash = awst::makeIntrinsicCall(
 				"sha512_256", awst::WType::bytesType(), _loc);
@@ -251,7 +220,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
 }
 
-// ── .call(rawBytes) → inner app call with raw ApplicationArgs[0] ──
+// ── .call(rawBytes) → inner app call ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	ContractContext& _ctx,
@@ -259,22 +228,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	std::shared_ptr<awst::Expression> _dataBytes,
 	awst::SourceLocation const& _loc)
 {
-	// Coerce string-typed data → bytes for ApplicationArgs encoding.
 	if (_dataBytes->wtype == awst::WType::stringType())
 	{
 		auto cast = awst::makeAsBytes(std::move(_dataBytes), _loc);
 		_dataBytes = std::move(cast);
 	}
 
-	// OPAQUE payload: runtime bytes whose structure the compiler cannot
-	// see (forwarder/proxy patterns, storage-loaded blobs). Split into
-	// [selector, rest]: the 4-byte selector can match the callee router,
-	// and the remainder flows into ApplicationArgs[1] as ONE packed arg —
-	// so the call genuinely works only for targets taking a single static
-	// 32-byte argument (where the EVM word equals the ARC4 encoding) or a
-	// single raw-bytes argument. Warn so the limitation is visible; the
-	// recognizable abi.encode* shapes never reach here (typed re-encode
-	// in handleCallWithEncodeCall / handleCallWithSignatureArgs).
+	// Opaque payload: split [selector, rest]. Works only for single static
+	// 32-byte arg targets (EVM word == ARC4 encoding) or single raw-bytes.
+	// Recognisable abi.encode* shapes are handled before reaching here.
 	Logger::instance().warning(
 		"low-level .call(data) with an opaque payload: forwarding "
 		"[selector, rest] as-is. This matches a puya-sol callee only when "
@@ -299,13 +261,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 			awst::makeIntegerConstant("4", _loc), _loc);
 	};
 
-	// selector = len >= 4 ? extract3(data, 0, 4) : data
+	// selector = len >= 4 ? data[0:4] : data
 	auto extractSel = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant("0", _loc), awst::makeIntegerConstant("4", _loc), _loc);
 	auto selector = awst::makeConditional(
 		makeGe4(), std::move(extractSel), tmpRead(),
 		awst::WType::bytesType(), _loc);
 
-	// rest = len >= 4 ? extract3(data, 4, len - 4) : empty
+	// rest = len >= 4 ? data[4:] : ""
 	auto restLen = awst::makeUInt64BinOp(
 		makeLen(), awst::UInt64BinaryOperator::Sub,
 		awst::makeIntegerConstant("4", _loc), _loc);
@@ -341,14 +303,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	// Read itxn LastLog as return data. Raw calls don't strip any prefix.
 	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(readLog), _loc));
 }
 
-// ── .staticcall precompile routing ──
+// ── .staticcall(data) precompile routing ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	ContractContext& _ctx,
@@ -363,12 +324,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	case 1: // ecRecover
 	{
 		Logger::instance().debug("staticcall precompile 0x01: ecRecover → ecdsa_pk_recover Secp256k1", _loc);
-		// Input (128 bytes): hash(0..32), v(32..64), r(64..96), s(96..128)
+		// Input: hash[0:32], v[32:64], r[64:96], s[96:128].
+		// recovery_id = v - 27, guarded: AVM panics on underflow (EVM returns empty).
 		auto msgHash = makeExtract(_inputData, 0, 32, _loc);
-		// recovery_id = v - 27 from the last byte of the v-word, but guard
-		// against v < 27: AVM `-` panics on underflow where EVM's 0x01
-		// precompile returns empty. Mirror the ecrecover() builtin's clamp:
-		// (v >= 27) ? v - 27 : 0. Pin v to a temp (read twice).
 		auto vByte = makeExtract(_inputData, 63, 1, _loc);
 		auto vInt = awst::makeBtoi(std::move(vByte), _loc);
 		auto* u64v = awst::WType::uint64Type();
@@ -414,10 +372,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		auto pubkeyConcat = makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
 		auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
 
-		// extract last 20 bytes (offset 12)
-		auto addr20 = makeExtract(std::move(hash), 12, 20, _loc);
-		// Left-pad to 32 bytes: concat(bzero(12), addr20)
-		resultBytes = awst::makeLeftPad(std::move(addr20), 12, _loc);
+		auto addr20 = makeExtract(std::move(hash), 12, 20, _loc); // keccak256[12:32]
+		resultBytes = awst::makeLeftPad(std::move(addr20), 12, _loc); // left-pad to 32
 		break;
 	}
 	case 6: // ecAdd
@@ -447,12 +403,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	case 8: // ecPairing
 	{
 		Logger::instance().debug("staticcall precompile 0x08: ecPairing → ec_pairing_check BN254g1", _loc);
-		// G1s: pair0[0:64] || pair1[192:256]
+		// G1s: pair0[0:64] || pair1[192:256]. G2: swap EVM (im,re) → AVM (re,im).
 		auto g1_0 = makeExtract(_inputData, 0, 64, _loc);
 		auto g1_1 = makeExtract(_inputData, 192, 64, _loc);
 		auto g1s = makeConcat(std::move(g1_0), std::move(g1_1), _loc);
 
-		// G2 pair 0: swap EVM (x_im,x_re,y_im,y_re) → AVM (x_re,x_im,y_re,y_im)
+		// G2 pair 0: EVM (x_im,x_re,y_im,y_re) → AVM (x_re,x_im,y_re,y_im)
 		auto g2_0 = makeConcat(
 			makeConcat(makeExtract(_inputData, 96, 32, _loc), makeExtract(_inputData, 64, 32, _loc), _loc),
 			makeConcat(makeExtract(_inputData, 160, 32, _loc), makeExtract(_inputData, 128, 32, _loc), _loc),
@@ -471,7 +427,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		ecCall->stackArgs.push_back(std::move(g1s));
 		ecCall->stackArgs.push_back(std::move(g2s));
 
-		// Bool → ABI-encoded 32-byte result
+		// bool → ABI-encoded 32-byte result
 		auto boolToInt = awst::makeIntrinsicCall("select", awst::WType::uint64Type(), _loc);
 		boolToInt->stackArgs.push_back(awst::makeZero(_loc));
 		boolToInt->stackArgs.push_back(awst::makeOne(_loc));
@@ -491,8 +447,5 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(resultBytes), _loc));
 }
-
-// ── .delegatecall stub ──
-
 
 } // namespace puyasol::builder::eb

@@ -1,11 +1,9 @@
 /// @file RevertBlob.h
-/// EVM-compatible revert payloads, logged before the failing `err` so
-/// clients (and the test harness, via simulate) can read structured revert
-/// reasons — mirrors EVM revert data:
+/// EVM-compatible revert payloads logged before `err`.
+/// AVM discards logs of failed txns on-chain, but simulate exposes them
+/// (ARC-65-style); harness reads the last log entry.
 ///   Error(string):  0x08c379a0 ++ abi.encode(0x20, len, data…)
 ///   Panic(uint256): 0x4e487b71 ++ abi.encode(code)
-/// The AVM discards logs of failed txns on-chain, but simulate exposes them
-/// (ARC-65-style); the harness reads the failing txn's last log entry.
 #pragma once
 
 #include "awst/Node.h"
@@ -43,16 +41,14 @@ inline std::vector<uint8_t> panicRevertBlobBytes(uint64_t _code)
 	return b;
 }
 
-/// Runtime Error(string) blob for a non-constant message expression:
-///   concat(selector ++ offsetWord, leftPad32(itob(len)), data padded to 32)
-/// An empty runtime string yields the 68-byte selector+offset+zero-length
-/// form with no data chunk, matching EVM.
+/// Runtime Error(string) blob: selector ++ offsetWord ++ leftPad32(len) ++ padded-data.
+/// Empty string → 68-byte selector+offset+zero-length, no data chunk (matches EVM).
 inline std::shared_ptr<awst::Expression> makeErrorStringRevertBlob(
 	std::shared_ptr<awst::Expression> _msg, awst::SourceLocation const& _loc)
 {
 	if (_msg->wtype != awst::WType::bytesType())
 		_msg = awst::makeAsBytes(std::move(_msg), _loc);
-	// Referenced for both length words and the data chunk.
+	// Used for both length word and data chunk — eval once.
 	_msg = awst::makeEvalOnce(std::move(_msg), _loc);
 
 	std::vector<uint8_t> head = {0x08, 0xc3, 0x79, 0xa0};
@@ -62,7 +58,7 @@ inline std::shared_ptr<awst::Expression> makeErrorStringRevertBlob(
 	auto lenWord = awst::makeLeftPadToN(
 		awst::makeItob(awst::makeLen(_msg, _loc), _loc), 32, _loc);
 
-	// paddedLen = ((len + 31) / 32) * 32; data = extract3(msg ++ bzero(31), 0, paddedLen)
+	// paddedLen = ((len+31)/32)*32; data = extract3(msg ++ bzero(31), 0, paddedLen)
 	auto paddedLen = awst::makeUInt64BinOp(
 		awst::makeUInt64BinOp(
 			awst::makeUInt64BinOp(

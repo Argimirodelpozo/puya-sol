@@ -11,8 +11,7 @@ void emitSelectorDispatch(
 {
 	if (!_fallbackFunc && !_receiveFunc)
 	{
-		// No fallback/receive: use the normal pattern `return ARC4Router()`
-		// which triggers puya's can_exit_early=True (rejects on no selector match).
+		// No fallback/receive: `return ARC4Router()` → puya can_exit_early=True.
 		auto routerExpr = awst::makeARC4Router(awst::WType::boolType(), _loc);
 
 		auto routerReturn = awst::makeReturnStatement(routerExpr, _loc);
@@ -20,34 +19,20 @@ void emitSelectorDispatch(
 		return;
 	}
 
-	// Custom dispatch for fallback/receive.
-	// Pattern:
-	//   if (NumAppArgs == 0) {
-	//     if (receive) call receive; else call fallback;
-	//     return true;
-	//   }
-	//   __did_match = ARC4Router();
-	//   if (!__did_match) {
-	//     call fallback;  // or reject if no fallback
-	//     __did_match = true;
-	//   }
-	//   return __did_match;
-	//
-	// Using ARC4Router as an assignment value forces puya's
-	// can_exit_early=False mode, so the router returns false on no-match
-	// instead of calling err.
+	// Custom dispatch (fallback/receive present):
+	//   NumAppArgs==0 → bare call → receive/fallback + return true
+	//   else → __did_match = ARC4Router() (assignment → can_exit_early=False)
+	//          if !__did_match → fallback; __did_match = true
+	//          return __did_match
 
-	// isBareCall=true → pass empty bytes as the fallback argument
-	// isBareCall=false → pass ApplicationArgs[0] (the unmatched data)
+	// isBareCall: pass empty bytes; else pass ApplicationArgs[0].
 	auto makeCall = [&](std::string const& _name,
 		solidity::frontend::FunctionDefinition const* _func,
 		bool _isBareCall)
 		-> std::shared_ptr<awst::Statement>
 	{
 		auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{_name}, awst::WType::voidType(), _loc);
-		// If the function takes a bytes parameter, pass the calldata.
-		// Fallback may take `bytes calldata _input`.
-		if (_func && _func->parameters().size() == 1)
+		if (_func && _func->parameters().size() == 1) // fallback takes `bytes calldata _input`
 		{
 			std::shared_ptr<awst::Expression> argExpr;
 			if (_isBareCall)
@@ -76,8 +61,7 @@ void emitSelectorDispatch(
 		return r;
 	};
 
-	// Step 1: Bare call check (NumAppArgs == 0).
-	// Call receive/fallback and return true — no selector to match.
+	// Step 1: bare call (NumAppArgs==0).
 	{
 		auto numAppArgs = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), _loc);
 
@@ -96,8 +80,7 @@ void emitSelectorDispatch(
 			std::move(isBareCall), std::move(bareBlock), nullptr, _loc));
 	}
 
-	// Step 2: Non-bare call — run the ARC4 router.
-	// Assign result to var (triggers can_exit_early=False in puya).
+	// Step 2: run ARC4 router; assignment → can_exit_early=False.
 	std::string matchVarName = "__did_match_routing";
 	{
 		auto matchVar = awst::makeVarExpression(matchVarName, awst::WType::boolType(), _loc);
@@ -108,7 +91,7 @@ void emitSelectorDispatch(
 		_body.body.push_back(std::move(assignMatch));
 	}
 
-	// Step 3: If no match AND fallback exists, call fallback.
+	// Step 3: no-match + fallback exists → call fallback.
 	if (_fallbackFunc)
 	{
 		auto matchVarRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), _loc);
@@ -118,7 +101,6 @@ void emitSelectorDispatch(
 		auto dispatchBlock = awst::makeBlock(_loc);
 		dispatchBlock->body.push_back(makeCall("__fallback", _fallbackFunc, false));
 
-		// Set __did_match = true so the approval returns true.
 		auto matchVarWrite = awst::makeVarExpression(matchVarName, awst::WType::boolType(), _loc);
 
 		auto assignTrue = awst::makeAssignmentStatement(std::move(matchVarWrite), makeTrueLit(), _loc);
@@ -128,7 +110,6 @@ void emitSelectorDispatch(
 			std::move(notMatch), std::move(dispatchBlock), nullptr, _loc));
 	}
 
-	// Step 4: return __did_match_routing
 	auto finalRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), _loc);
 
 	auto retStmt = awst::makeReturnStatement(std::move(finalRead), _loc);

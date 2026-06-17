@@ -53,10 +53,8 @@ ContractBuilder::ContractBuilder(
 {
 }
 
-// ── Shared free-function API ────────────────────────────────────────────
-// `makeLoc` / `buildBlock` are exposed as free functions so the
-// library/free-function path (in AWSTBuilder) and the contract-method path
-// (in ContractBuilder) can share the same translation primitives.
+// Free functions shared by AWSTBuilder (library/free-function path) and
+// ContractBuilder (contract-method path).
 
 awst::SourceLocation makeLoc(
 	std::string const& _sourceFile,
@@ -115,8 +113,6 @@ std::shared_ptr<awst::Block> buildBlock(
 	solidity::frontend::Block const& _block,
 	std::shared_ptr<awst::Block> _placeholder)
 {
-	// Build a fresh per-function context, then a top BlockContext (optionally
-	// with the placeholder body for modifier inlining), then dispatch.
 	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
 	fn.inConstructor = _ctx.inConstructor;
 	fn.frameIsProgram = _ctx.frameIsProgram;
@@ -126,17 +122,14 @@ std::shared_ptr<awst::Block> buildBlock(
 		: sol_ast::BlockContext::top(fn);
 	auto blkGuard = _ctx.exprBuilder.pushScopeRaii(&blk);
 
-	// Register mapping-storage-ref params on the FunctionContext so that
-	// `m[k]` inside the body resolves the dynamic box-key prefix at
-	// runtime. Same scope-push ordering constraint as the named returns.
+	// Mapping storage-ref params: `m[k]` resolves the dynamic box-key prefix at runtime.
 	for (auto const* mp: _ctx.mappingKeyParams)
 		if (mp && !mp->name().empty())
 			fn.setMappingKeyParam(mp->id(), mp->name());
 
-	// Register memory return parameters larger than one scratch slot (4096 B) as
-	// blob-backed aggregates (pointer model), so `p.field[i]` in the body lowers
-	// to multi-slot blob word read/writes. The runtime base-offset local
-	// `__blobagg_off_<id>` is assigned + the FMP bumped in FunctionBuilder.
+	// Named returns >4 KB: blob-backed aggregates (pointer model) so `p.field[i]`
+	// lowers to multi-slot blob word access. Base offset assigned + FMP bumped in
+	// FunctionBuilder.
 	for (auto const* rp: _ctx.namedReturns)
 	{
 		if (!rp || rp->name().empty()
@@ -147,21 +140,16 @@ std::shared_ptr<awst::Block> buildBlock(
 			fn.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
 
-	// Register memory aggregate PARAMS >4KB as blob aggregates. Unlike returns,
-	// the param's own local already holds the uint64 base offset (the caller
-	// passed it — see SolInternalCall / SolIdentifier), so the offset var IS the
-	// param name; no FMP bump or binding is needed.
+	// Blob-agg params >4 KB: param's local IS the uint64 base offset (caller passed
+	// it — see SolInternalCall/SolIdentifier); no FMP bump needed.
 	for (auto const* p: _ctx.blobAggParams)
 		if (p && !p->name().empty())
 			fn.setBlobAggregate(p->id(), p->name());
 
 	// Promote memory aggregates used as values in inline assembly to blob-backed
-	// (their Yul memory pointer). Mark them BEFORE the body translates so
-	// SolVariableDeclaration blob-backs them at their declaration. Scan the whole
-	// body — assembly may be nested (if/for) and appear after the declaration.
-	// Only for the real function-body pass: `_placeholder` is set during modifier
-	// inlining, where this runs re-entrantly over modifier bodies (and the
-	// pre-built placeholder shares contexts that are unsafe to re-walk here).
+	// (Yul memory pointer). Must mark before body translation so SolVariableDeclaration
+	// blob-backs them at their declaration. Not run during modifier re-entrancy
+	// (_placeholder set) — pre-built placeholder contexts are unsafe to re-walk.
 	if (!_placeholder)
 	{
 		std::set<int64_t> asmAggIds;
@@ -174,7 +162,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	return sol_ast::buildBlock(blk, _block);
 }
 
-// ── ContractBuilder thin wrappers (route through free-function API) ─────
+// ContractBuilder wrappers — route through free-function API.
 
 awst::SourceLocation ContractBuilder::makeLoc(
 	solidity::langutil::SourceLocation const& _solLoc
@@ -227,8 +215,7 @@ void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
 
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 {
-	// Only externally-callable methods get the check; others aren't reached
-	// via ARC4 dispatch so a preceding Payment is irrelevant.
+	// Only ARC4-dispatched methods are externally callable.
 	if (!_method.arc4MethodConfig.has_value())
 		return;
 	if (!_method.body)
@@ -250,8 +237,7 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 	auto amount = awst::makeGtxns(
 		"Amount", std::move(payIdx), awst::WType::uint64Type(), loc);
 
-	// Match msg.value's ConditionalExpression shape — avoids evaluating
-	// GroupIndex - 1 when GroupIndex == 0 (underflow-safe).
+	// Mirrors msg.value shape — avoids GroupIndex-1 when GroupIndex==0 (underflow-safe).
 	auto msgValue = awst::makeConditional(
 		std::move(hasPayment), std::move(amount),
 		awst::makeIntegerConstant("0", loc),
@@ -274,23 +260,19 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
 
-	// Reset the recursive-Yul subroutine sink so assembly blocks within this
-	// contract can register their emitted Subroutines and we drain them below.
+	// Reset Yul subroutine sink (drained below).
 	AssemblyBuilder::resetPendingSubroutines();
 
 	// Collect transient state variables
 	m_transientStorage.collectVars(_contract, m_typeMapper);
 	// Note: setTransientStorage called after m_exprBuilder is created (below)
 
-	// Detect overloaded function names across all linearized base contracts
-	// Must happen BEFORE creating translators so constructor body uses correct names.
-	// Virtual overrides should NOT count as separate overloads — they occupy the same
-	// "slot" as the base function. Only true overloads (same name, different params) count.
+	// Overloaded names: true overloads (same name, different params) only;
+	// virtual overrides occupy the same slot and don't count.
+	// Must be computed before translator creation so ctor uses correct names.
 	m_overloadedNames.clear();
 	{
-		// Collect unique function signatures (name + param types) after override resolution.
-		// The most-derived version wins — skip base functions that are overridden.
-		std::set<int64_t> overriddenIds; // AST IDs of base functions that have been overridden
+		std::set<int64_t> overriddenIds;
 		forEachDefinedFunction(_contract, [&](auto const* func)
 		{
 			if (func->isConstructor() || !func->isImplemented())
@@ -320,15 +302,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		}
 	}
 
-	// Create translators for this contract (with overload info)
 	m_exprBuilder = std::make_unique<eb::ContractContext>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
 	m_exprBuilder->currentContract = &_contract;
 
-	// Pre-populate the internalized library function map BEFORE translating any
-	// methods, so call resolver routes calls to these funcs as InstanceMethodTargets.
+	// Pre-populate internalized library func map before translation so the call
+	// resolver routes them as InstanceMethodTargets.
 	for (auto const* libFunc : m_internalizableLibFuncs)
 	{
 		if (!libFunc) continue;
@@ -339,11 +320,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_exprBuilder->internalizedLibFuncNames[libFunc->id()] = methodName;
 	}
 
-	// Build the per-contract TranslationContext. FunctionContext + BlockContext
-	// are constructed locally (in buildBlock and similar) on top of this.
-	// In-place emplace (forwarded args, no temporary) — TranslationContext
-	// caches a pointer to its own scopeState_ member, which would dangle if
-	// the object were copy/move-constructed from a temporary.
+	// In-place emplace — TranslationContext caches a pointer to its own scopeState_;
+	// copy/move construction would dangle that pointer.
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
 	m_exprBuilder->currentScope = &*m_tr;
 	m_currentParams.clear();
@@ -356,15 +334,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
-	// Recreate the unified backend facade each contract: TransientStorage
-	// is per-contract (collected in `mapStateVariables` above), so the
-	// nullable pointer threaded into StorageBackend follows the same
-	// contract-level lifecycle.
+	// StorageBackend is per-contract (TransientStorage is per-contract).
 	m_storageBackend.emplace(m_storageMapper, m_exprBuilder->transientStorage);
 	m_exprBuilder->storageBackend = &*m_storageBackend;
 
-	// Set the contract cref for function pointer dispatch resolution.
-	// Library subroutines need this to construct SubroutineIDs.
 	eb::FunctionPointerBuilder::setCurrentCref(contractId);
 
 	auto contract = std::make_shared<awst::Contract>();
@@ -372,7 +345,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	contract->id = contractId;
 	contract->name = contractName;
 
-	// Description from NatSpec
 	if (_contract.documentation())
 	{
 		std::string const& doc = *_contract.documentation()->text();
@@ -381,7 +353,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		contract->splitter = natSpecTagValue(doc, "custom:splitter");
 	}
 
-	// Method resolution order (linearized base contracts)
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
 		if (base != &_contract)
@@ -390,21 +361,16 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			);
 	}
 
-	// State variables → AppStorageDefinitions
 	contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
-	// Reserve EVM-memory scratch slots (0..MEMORY_SLOT_LAST, default 0-4; raisable
-	// via --evm-memory-slots) plus the transient + flash-accounting slots.
+	// EVM-memory scratch slots 0..MEMORY_SLOT_LAST (default 0-4; raisable via
+	// --evm-memory-slots) plus transient + flash-accounting slots.
 	contract->reservedScratchSpace = AssemblyBuilder::reservedScratchSlots();
 
-	// Collect super.f() and Base.f() target metadata across the MRO and the
-	// contract's constructor (see contract/SuperCallResolution.cpp).
 	collectSuperCallMetadata(_contract);
 
-	// Snapshot super target registrations so the constructor body —
-	// translated inside buildApprovalProgram below — can resolve `super.f()`
-	// to the eventually-emitted `f__super_N` subroutine instead of falling
-	// back to the current contract's own `f`.
+	// Snapshot super targets so the ctor body (translated in buildApprovalProgram)
+	// can resolve super.f() to f__super_N rather than the contract's own f.
 	m_allSuperTargetNames = m_tr->allSuperTargets();
 
 	// Approval and clear programs
@@ -412,11 +378,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	contract->approvalProgram = buildApprovalProgram(_contract, contractName);
 	contract->clearProgram = buildClearProgram(_contract, contractName);
 
-	// If constructor auto-split was triggered, add the __postInit method
-	// and the __ctor_pending state variable
 	if (m_postInitMethod)
 	{
-		// Add __ctor_pending global state variable
 		awst::AppStorageDefinition ctorPendingState;
 		ctorPendingState.memberName = "__ctor_pending";
 		ctorPendingState.sourceLocation = contract->approvalProgram.sourceLocation;
@@ -431,11 +394,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 
-	// m_allSuperTargetNames was pre-populated before buildApprovalProgram
-	// so constructor bodies could resolve `super.f()`. Nothing to do here.
-
-	// Translate all defined functions in this contract
-	// Use "name(paramCount)" for overloaded functions to disambiguate
 	std::set<std::string> translatedFunctions;
 	for (auto const* func: _contract.definedFunctions())
 	{
@@ -444,17 +402,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 		std::string key = func->name();
 		if (m_overloadedNames.count(key))
-		{
-			// Use AST ID to uniquely identify each overload
 			key += "#" + std::to_string(func->id());
-		}
 		translatedFunctions.insert(key);
-		// Set up MRO-correct super targets for this function
 		clearSuperOverrides();
 		applySuperOverridesFor(func->id());
-		// Fallback/receive functions have empty names in Solidity. Give them
-		// explicit memberName so we can reference them from the approval
-		// program's custom dispatch (InstanceMethodTarget).
+		// fallback/receive have empty Solidity names; give explicit memberName.
 		std::string nameOverride;
 		if (func->isFallback())
 			nameOverride = "__fallback";
@@ -462,21 +414,16 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			nameOverride = "__receive";
 		auto method = buildFunction(*func, contractName, nameOverride);
 		contract->methods.push_back(std::move(method));
-		// Flush modifier subroutines generated by buildModifierChain
 		for (auto& sub: m_modifierSubroutines)
 			contract->methods.push_back(std::move(sub));
 		m_modifierSubroutines.clear();
 	}
 
-	// Auto-generate getter methods for public state variables BEFORE inheriting
-	// functions. This ensures that `uint256 public override test;` takes precedence
-	// over an inherited `function test()` from a base contract.
+	// Getters before inherited functions so `uint256 public override test` beats
+	// an inherited `function test()`.
 	buildPublicStateVariableGetters(_contract, *contract, contractName, translatedFunctions);
 
-	// Include inherited functions that may be needed
-	// (e.g. _checkOwner from Ownable, owner() from Ownable).
-	// This runs AFTER public state variable getters so that `uint256 public override x`
-	// takes precedence over an inherited `function x()` from a base contract.
+	// Inherited functions (after getters — same precedence rule).
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
 		if (base == &_contract)

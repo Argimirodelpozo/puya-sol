@@ -6,9 +6,8 @@ namespace puyasol::builder::sol_ast
 {
 
 /// Block statement: { stmt1; stmt2; ... }
-/// Holds the per-block scope: child statements run with a derived
-/// BlockContext (nested), and unchecked-block flag mutates ContractContext
-/// for the duration (RAII via a guard inside toAwstBlock).
+/// Runs child statements under a nested BlockContext; unchecked-block flag
+/// is mutated for the duration and restored by toAwstBlock.
 class SolBlock: public SolStatement
 {
 public:

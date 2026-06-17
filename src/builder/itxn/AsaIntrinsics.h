@@ -11,22 +11,16 @@
 namespace puyasol::builder::eb
 {
 
-/// Recognises calls to the `AVM` library (puya-sol bundled stdlib at
-/// tokens/AVM.sol) and replaces them with the corresponding AVM-native
-/// AWST nodes — `asset_holding_get` / `asset_params_get` intrinsics for
-/// reads, `acfg` / `axfer` inner transactions for asset creation and
-/// clawback transfers.
-///
-/// Designed to short-circuit *before* the regular library-call resolver
-/// in `CallResolver::resolveFromMemberAccess`, so the AVM library's
-/// stub bodies never get translated as regular subroutines.
+/// Intercepts AVM stdlib calls (tokens/AVM.sol) and maps them to AVM-native
+/// AWST: `asset_holding_get`/`asset_params_get` for reads, `acfg`/`axfer`
+/// inner txns for mutations. Short-circuits before CallResolver so the
+/// library stubs are never translated as regular subroutines.
 class AsaIntrinsics
 {
 public:
-	/// Try to handle `<base>.<member>(...)`; returns a built AWST
-	/// expression iff `<base>` is the AVM library and `<member>` is a
-	/// recognised intrinsic. Otherwise nullopt — caller falls through
-	/// to the generic resolver.
+	/// Try to handle `<base>.<member>(...)`; returns built expression iff
+	/// base is an AVM stdlib library and member is a known intrinsic.
+	/// Returns nullopt to fall through to the generic resolver.
 	static std::optional<std::shared_ptr<awst::Expression>> tryHandleCall(
 		ContractContext& _ctx,
 		solidity::frontend::MemberAccess const& _memberAccess,
@@ -85,8 +79,7 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
-	// Crypto / Group / Txn / Global library dispatchers — each switches
-	// on _method name and returns an AWST expression for the matched op.
+	// Crypto / Group / Txn / Global / Scratch library dispatchers.
 	static std::optional<std::shared_ptr<awst::Expression>> dispatchCrypto(
 		ContractContext& _ctx,
 		std::string const& _method,
@@ -111,8 +104,7 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
-	// AVM scratch space (AVM.sol library Scratch): store/loadSelf/load ->
-	// stores/loads/gloadss. Group-scoped ephemeral storage for flash deltas.
+	// AVM scratch space (AVM.sol Scratch): store/loadSelf/load → stores/loads/gloadss.
 	static std::optional<std::shared_ptr<awst::Expression>> dispatchScratch(
 		ContractContext& _ctx,
 		std::string const& _method,
