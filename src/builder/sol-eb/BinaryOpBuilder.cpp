@@ -1,5 +1,6 @@
 #include "builder/sol-eb/BinaryOpBuilder.h"
 
+#include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeCoercion.h"
 
@@ -239,92 +240,11 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		}
 
 
-		// biguint ** : no AVM opcode; emit square-and-multiply loop.
+		// biguint ** : no AVM opcode; emit square-and-multiply loop (shared helper).
 		if (_op == Token::Exp)
 		{
-			static int expCounter = 0;
-			int id = expCounter++;
-			std::string resultVar = "__biguint_exp_result_" + std::to_string(id);
-			std::string baseVar = "__biguint_exp_base_" + std::to_string(id);
-			std::string expVar = "__biguint_exp_exp_" + std::to_string(id);
-
-			auto makeVar = [&](std::string const& name) -> std::shared_ptr<awst::VarExpression>
-			{
-				auto v = awst::makeVarExpression(name, awst::WType::biguintType(), _loc);
-				return v;
-			};
-			auto makeConst = [&](std::string const& value) -> std::shared_ptr<awst::IntegerConstant>
-			{
-				auto c = awst::makeIntegerConstant(value, _loc, awst::WType::biguintType());
-				return c;
-			};
-			auto makeAssign = [&](
-				std::string const& target,
-				std::shared_ptr<awst::Expression> value
-			) -> std::shared_ptr<awst::AssignmentStatement>
-			{
-				auto assign = awst::makeAssignmentStatement(makeVar(target), std::move(value), _loc);
-				return assign;
-			};
-			auto makeBinOp = [&](
-				std::shared_ptr<awst::Expression> lhs,
-				awst::BigUIntBinaryOperator op,
-				std::shared_ptr<awst::Expression> rhs
-			) -> std::shared_ptr<awst::BigUIntBinaryOperation>
-			{
-				auto bin = awst::makeBigUIntBinOp(std::move(lhs), op, std::move(rhs), _loc);
-				return bin;
-			};
-
-			auto baseExpr = TypeCoercion::implicitNumericCast(std::move(_left), awst::WType::biguintType(), _loc);
-			auto expExpr = TypeCoercion::implicitNumericCast(std::move(_right), awst::WType::biguintType(), _loc);
-
-			_ctx.prePendingStatements.push_back(makeAssign(resultVar, makeConst("1")));
-			_ctx.prePendingStatements.push_back(makeAssign(baseVar, std::move(baseExpr)));
-			_ctx.prePendingStatements.push_back(makeAssign(expVar, std::move(expExpr)));
-
-			auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
-			auto body = awst::makeBlock(_loc);
-
-			// Unchecked: wrap products mod 2^256 inside the loop.
-			bool const wrapMod = _scope.isUnchecked();
-			auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
-				-> std::shared_ptr<awst::Expression>
-			{
-				if (!wrapMod) return v;
-				auto mod = awst::makeBigUIntBinOp(std::move(v), awst::BigUIntBinaryOperator::Mod, makeConst(kPow2_256), _loc);
-				return mod;
-			};
-
-			{
-				auto expAnd1 = makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::BitAnd, makeConst("1"));
-				auto isOdd = awst::makeNumericCompare(std::move(expAnd1), awst::NumericComparison::Ne, makeConst("0"), _loc);
-
-				std::shared_ptr<awst::Expression> product =
-					makeBinOp(makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
-				product = wrapMod256(std::move(product));
-
-				auto ifBlock = awst::makeBlock(_loc);
-				ifBlock->body.push_back(makeAssign(resultVar, std::move(product)));
-
-				body->body.push_back(awst::makeIfElse(
-					std::move(isOdd), std::move(ifBlock), nullptr, _loc));
-			}
-
-			body->body.push_back(makeAssign(expVar,
-				makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::FloorDiv, makeConst("2"))));
-
-			{
-				std::shared_ptr<awst::Expression> baseSq =
-					makeBinOp(makeVar(baseVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
-				baseSq = wrapMod256(std::move(baseSq));
-				body->body.push_back(makeAssign(baseVar, std::move(baseSq)));
-			}
-
-			_ctx.prePendingStatements.push_back(
-				awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
-
-			return makeVar(resultVar);
+			return buildBigUIntExp(
+				_ctx, _scope.isUnchecked(), std::move(_left), std::move(_right), _loc);
 		}
 
 		awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;

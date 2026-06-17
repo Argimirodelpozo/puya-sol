@@ -15,6 +15,29 @@ namespace puyasol::builder::eb
 
 // ── Helpers ──
 
+std::optional<uint64_t> detectPrecompileAddress(
+	solidity::frontend::Expression const& _baseExpr)
+{
+	using namespace solidity::frontend;
+	std::optional<uint64_t> precompileAddr;
+	if (auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr))
+	{
+		if (baseCall->annotation().kind.set()
+			&& *baseCall->annotation().kind == FunctionCallKind::TypeConversion
+			&& !baseCall->arguments().empty())
+		{
+			auto const* argType = baseCall->arguments()[0]->annotation().type;
+			if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
+			{
+				auto val = ratType->literalValue(nullptr);
+				if (val >= 1 && val <= 10)
+					precompileAddr = static_cast<uint64_t>(val);
+			}
+		}
+	}
+	return precompileAddr;
+}
+
 static awst::WTuple s_boolBytesType(
 	std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()});
 
@@ -605,29 +628,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		}
 
 		// .call(data) to known precompile address → route like .staticcall
+		if (auto precompileAddr = detectPrecompileAddress(_baseExpr))
 		{
-			std::optional<uint64_t> precompileAddr;
-			if (auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr))
-			{
-				if (baseCall->annotation().kind.set()
-					&& *baseCall->annotation().kind == FunctionCallKind::TypeConversion
-					&& !baseCall->arguments().empty())
-				{
-					auto const* argType = baseCall->arguments()[0]->annotation().type;
-					if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
-					{
-						auto val = ratType->literalValue(nullptr);
-						if (val >= 1 && val <= 10)
-							precompileAddr = static_cast<uint64_t>(val);
-					}
-				}
-			}
-			if (precompileAddr)
-			{
-				auto inputData = _ctx.buildExpr(dataArg);
-				auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
-				if (result) return result;
-			}
+			auto inputData = _ctx.buildExpr(dataArg);
+			auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
+			if (result) return result;
 		}
 		// Non-encodeCall self-call: route to __fallback (non-selector data
 		// would reach fallback in the approval program anyway).
@@ -723,23 +728,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 
 	if (_memberName == "staticcall")
 	{
-		std::optional<uint64_t> precompileAddr;
-		if (auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr))
-		{
-			if (baseCall->annotation().kind.set()
-				&& *baseCall->annotation().kind == FunctionCallKind::TypeConversion
-				&& !baseCall->arguments().empty())
-			{
-				auto const* argType = baseCall->arguments()[0]->annotation().type;
-				if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
-				{
-					auto val = ratType->literalValue(nullptr);
-					if (val >= 1 && val <= 10)
-						precompileAddr = static_cast<uint64_t>(val);
-				}
-			}
-		}
-
+		auto precompileAddr = detectPrecompileAddress(_baseExpr);
 		if (precompileAddr && !_callNode.arguments().empty())
 		{
 			auto inputData = _ctx.buildExpr(*_callNode.arguments()[0]);

@@ -32,6 +32,20 @@ static void eliminateDeadCode(awst::Contract& _contract)
 		dce(m);
 }
 
+/// Collect the indices of `_func`'s parameters for which `_keep(pi)` is true,
+/// in parameter order. Shared skeleton for the storage-ref and memory-ref
+/// write-back param scans (the predicate is what differs between them).
+template <typename Pred>
+static std::vector<size_t> collectParamIndices(
+	solidity::frontend::FunctionDefinition const& _func, Pred _keep)
+{
+	std::vector<size_t> indices;
+	for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
+		if (_keep(pi))
+			indices.push_back(pi);
+	return indices;
+}
+
 
 std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	solidity::frontend::CompilerStack& _compiler,
@@ -276,13 +290,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	bool isPrivate = _func.visibility() == solidity::frontend::Visibility::Private;
 	if (isMutating && !isPrivate)
 	{
-		for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-		{
-			auto refLoc = _func.parameters()[pi]->referenceLocation();
-			if (refLoc == solidity::frontend::VariableDeclaration::Location::Storage
-				&& !mappingStorageParams.count(pi))
-				storageParamIndices.push_back(pi);
-		}
+		storageParamIndices = collectParamIndices(_func, [&](size_t pi) {
+			return _func.parameters()[pi]->referenceLocation()
+					== solidity::frontend::VariableDeclaration::Location::Storage
+				&& !mappingStorageParams.count(pi);
+		});
 	}
 
 	// Memory-ref params: augment return so callers get write-back (Solidity
@@ -302,20 +314,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		for (auto const& p : _func.parameters())
 			detector.paramIds.insert(p->id());
 		_func.body().accept(detector);
-		for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-		{
+		memoryRefParamIndices = collectParamIndices(_func, [&](size_t pi) {
 			auto const& p = _func.parameters()[pi];
-			if (p->referenceLocation()
-				!= solidity::frontend::VariableDeclaration::Location::Memory)
-				continue;
-			if (blobAggParams.count(pi))
-				continue;  // blob-backed via multi-slot blob; caller sees mutations directly
-			if (!p->type() || !isMemRefType(p->type()))
-				continue;
-			if (!detector.mutated.count(p->id()))
-				continue;  // read-only — no need to thread the post-call value back
-			memoryRefParamIndices.push_back(pi);
-		}
+			return p->referenceLocation()
+					== solidity::frontend::VariableDeclaration::Location::Memory
+				&& !blobAggParams.count(pi) // blob-backed via multi-slot blob; caller sees mutations directly
+				&& p->type() && isMemRefType(p->type())
+				&& detector.mutated.count(p->id()); // skip read-only — no need to thread post-call value back
+		});
 	}
 
 	// Return type — augmented with storage/memory param types for write-back.

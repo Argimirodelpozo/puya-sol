@@ -108,10 +108,9 @@ std::unique_ptr<NodeBuilder> TypeBuilder::member_access(
 }
 
 std::unique_ptr<InstanceBuilder> TypeBuilder::bool_eval(
-	awst::SourceLocation const& _loc, bool /*_negate*/)
+	awst::SourceLocation const& /*_loc*/, bool /*_negate*/)
 {
 	// Type expressions are always truthy. TODO: return SolBoolBuilder when wired up.
-	auto bc = awst::makeTrue(_loc);
 	return nullptr;
 }
 

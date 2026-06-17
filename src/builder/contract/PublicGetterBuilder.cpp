@@ -9,6 +9,72 @@
 namespace puyasol::builder
 {
 
+namespace
+{
+
+// Project a Solidity struct value into its public-accessor field list:
+// skip mapping members and non-bytes array members (matches solc's getter),
+// reading each remaining field off `base` and ARC4-decoding it to its native
+// type when the stored ARC4 field type differs. Returns the projected items.
+// Shared by the simple-var, array-element, and mapping-value getter paths;
+// callers either move the items into a tuple or use them directly.
+std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
+	TypeMapper& typeMapper,
+	solidity::frontend::StructType const* solStruct,
+	awst::ARC4Struct const* arc4Struct,
+	std::shared_ptr<awst::Expression> const& base,
+	awst::SourceLocation const& loc)
+{
+	std::vector<std::shared_ptr<awst::Expression>> items;
+	for (auto const& member: solStruct->members(nullptr))
+	{
+		if (member.type->category() == solidity::frontend::Type::Category::Mapping)
+			continue;
+		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
+			if (!at->isByteArrayOrString())
+				continue;
+
+		awst::WType const* arc4FieldType = nullptr;
+		if (arc4Struct)
+			for (auto const& [fname, ftype]: arc4Struct->fields())
+				if (fname == member.name)
+				{
+					arc4FieldType = ftype;
+					break;
+				}
+
+		auto fieldExpr = awst::makeFieldExpression(
+			base, member.name,
+			arc4FieldType ? arc4FieldType : typeMapper.map(member.type), loc);
+
+		auto* nativeType = typeMapper.map(member.type);
+		if (arc4FieldType && arc4FieldType != nativeType)
+		{
+			auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
+			items.push_back(std::move(decode));
+		}
+		else
+			items.push_back(std::move(fieldExpr));
+	}
+	return items;
+}
+
+// biguint <-> ARC4UIntN(N) codec for getter ABI remapping. Shared by the
+// param-decode (isEncode=false: ARC4UIntN -> biguint) and return-encode
+// (isEncode=true: biguint -> ARC4UIntN) blocks.
+std::shared_ptr<awst::Expression> arc4UintCodec(
+	std::shared_ptr<awst::Expression> value,
+	awst::WType const* arc4Type,
+	bool isEncode,
+	awst::SourceLocation loc)
+{
+	if (isEncode)
+		return awst::makeARC4Encode(std::move(value), arc4Type, std::move(loc));
+	return awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), std::move(loc));
+}
+
+} // namespace
+
 void ContractBuilder::buildPublicStateVariableGetters(
 	solidity::frontend::ContractDefinition const& _contract,
 	awst::Contract& _contractNode,
@@ -155,34 +221,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
 					auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 
-					for (auto const& member: solStructType->members(nullptr))
-					{
-						if (member.type->category() == solidity::frontend::Type::Category::Mapping)
-							continue;
-						if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
-							if (!at->isByteArrayOrString())
-								continue;
-
-						awst::WType const* arc4FieldType = nullptr;
-						if (arc4Struct)
-							for (auto const& [fname, ftype]: arc4Struct->fields())
-								if (fname == member.name)
-								{
-									arc4FieldType = ftype;
-									break;
-								}
-
-						auto fieldExpr = awst::makeFieldExpression(fullStruct, member.name, arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type), loc);
-
-						auto* nativeType = m_typeMapper.map(member.type);
-						if (arc4FieldType && arc4FieldType != nativeType)
-						{
-							auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
-							tuple->items.push_back(std::move(decode));
-						}
-						else
-							tuple->items.push_back(std::move(fieldExpr));
-					}
+					for (auto& item: projectStructFields(m_typeMapper, solStructType, arc4Struct, fullStruct, loc))
+						tuple->items.push_back(std::move(item));
 					readExpr = std::move(tuple);
 				}
 				else
@@ -238,34 +278,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
 					auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 
-					for (auto const& member: solStructElem->members(nullptr))
-					{
-						if (member.type->category() == solidity::frontend::Type::Category::Mapping)
-							continue;
-						if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
-							if (!at->isByteArrayOrString())
-								continue;
-
-						awst::WType const* arc4FieldType = nullptr;
-						if (arc4Struct)
-							for (auto const& [fname, ftype]: arc4Struct->fields())
-								if (fname == member.name)
-								{
-									arc4FieldType = ftype;
-									break;
-								}
-
-						auto fieldExpr = awst::makeFieldExpression(result, member.name, arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type), loc);
-
-						auto* nativeFieldType = m_typeMapper.map(member.type);
-						if (arc4FieldType && arc4FieldType != nativeFieldType)
-						{
-							auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeFieldType, loc);
-							tuple->items.push_back(std::move(decode));
-						}
-						else
-							tuple->items.push_back(std::move(fieldExpr));
-					}
+					for (auto& item: projectStructFields(m_typeMapper, solStructElem, arc4Struct, result, loc))
+						tuple->items.push_back(std::move(item));
 					readExpr = std::move(tuple);
 				}
 				else
@@ -443,38 +457,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						std::shared_ptr<awst::Expression> fullStruct = std::move(indexed);
 						auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);
 
-						std::vector<std::shared_ptr<awst::Expression>> items;
-						for (auto const& member: structType->members(nullptr))
-						{
-							if (member.type->category() == solidity::frontend::Type::Category::Mapping)
-								continue;
-							if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
-								if (!at->isByteArrayOrString())
-									continue;
-
-							awst::WType const* arc4FieldType = nullptr;
-							if (arc4Struct)
-								for (auto const& [fname, ftype]: arc4Struct->fields())
-									if (fname == member.name)
-									{
-										arc4FieldType = ftype;
-										break;
-									}
-
-							auto fieldExpr = awst::makeFieldExpression(
-								fullStruct, member.name,
-								arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type),
-								loc);
-
-							auto* nativeType = m_typeMapper.map(member.type);
-							if (arc4FieldType && arc4FieldType != nativeType)
-							{
-								auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
-								items.push_back(std::move(decode));
-							}
-							else
-								items.push_back(std::move(fieldExpr));
-						}
+						auto items = projectStructFields(
+							m_typeMapper, structType, arc4Struct, fullStruct, loc);
 
 						if (items.size() == 1)
 						{
@@ -564,7 +548,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 					auto arc4Var = awst::makeVarExpression(arc4Name, arc4Type, loc);
 
-					auto decode = awst::makeARC4Decode(std::move(arc4Var), awst::WType::biguintType(), loc);
+					auto decode = arc4UintCodec(std::move(arc4Var), arc4Type, /*isEncode=*/false, loc);
 
 					auto target = awst::makeVarExpression(origName, awst::WType::biguintType(), loc);
 
@@ -606,7 +590,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					for (auto& stmt : stmts) {
 						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get())) {
 							if (ret->value && ret->value->wtype == awst::WType::biguintType()) {
-								auto encode = awst::makeARC4Encode(std::move(ret->value), arc4RetType, ret->value->sourceLocation);
+								auto retLoc = ret->value->sourceLocation;
+								auto encode = arc4UintCodec(std::move(ret->value), arc4RetType, /*isEncode=*/true, retLoc);
 								ret->value = std::move(encode);
 							}
 						} else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get())) {

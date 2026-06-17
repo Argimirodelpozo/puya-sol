@@ -251,6 +251,15 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	j["source_location"] = serializeSourceLocation(_expr.sourceLocation);
 	j["wtype"] = serializeWType(_expr.wtype);
 
+	// Shared serialization for StateGet / StateExists / StateGetEx: their wtype is
+	// init=False in Puya (derived from field.wtype), so drop it and emit the field.
+	// StateGet additionally carries a "default"; the others are identical to this.
+	auto emitStateField = [&](awst::Expression const& field)
+	{
+		j.erase("wtype");
+		j["field"] = serializeExpression(field);
+	};
+
 	if (auto const* e = dynamic_cast<awst::IntegerConstant const*>(&_expr))
 	{
 		// Stored as string for biguint; detect hex prefix so stoll handles 0x literals.
@@ -536,14 +545,12 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::StateGet const*>(&_expr))
 	{
-		j.erase("wtype");
-		j["field"] = serializeExpression(*e->field);
+		emitStateField(*e->field);
 		j["default"] = serializeExpression(*e->defaultValue);
 	}
 	else if (auto const* e = dynamic_cast<awst::StateExists const*>(&_expr))
 	{
-		j.erase("wtype");
-		j["field"] = serializeExpression(*e->field);
+		emitStateField(*e->field);
 	}
 	else if (auto const* e = dynamic_cast<awst::StateDelete const*>(&_expr))
 	{
@@ -551,9 +558,7 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::StateGetEx const*>(&_expr))
 	{
-		// wtype is init=False in Puya (derived from field.wtype), so exclude it
-		j.erase("wtype");
-		j["field"] = serializeExpression(*e->field);
+		emitStateField(*e->field);
 	}
 	else if (auto const* e = dynamic_cast<awst::NewArray const*>(&_expr))
 	{

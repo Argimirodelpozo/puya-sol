@@ -10,8 +10,7 @@ namespace puyasol::builder::sol_ast
 std::shared_ptr<awst::Expression> SolMetaType::toAwst()
 {
 	// Always followed by member access; void placeholder for MemberAccessBuilder.
-	auto vc = awst::makeVoidConstant(m_loc);
-	return vc;
+	return awst::makeVoidConstant(m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

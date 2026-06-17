@@ -18,6 +18,23 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
+namespace
+{
+// Promote a value to a signed 256-bit biguint: a uint64 value is widened via
+// itob then reinterpreted as biguint; any other type is passed through. Shared
+// by handleNegate and makeNewValue's signed branch (identical two-step).
+std::shared_ptr<awst::Expression> promoteToSignedBiguint(
+	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
+{
+	if (value->wtype == awst::WType::uint64Type())
+	{
+		auto itob = awst::makeItob(std::move(value), loc);
+		value = awst::makeAsBiguint(std::move(itob), loc);
+	}
+	return value;
+}
+} // namespace
+
 SolUnaryOperation::SolUnaryOperation(
 	eb::ContractContext& _ctx, UnaryOperation const& _node)
 	: SolExpression(_ctx, _node), m_unaryOp(_node)
@@ -79,12 +96,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			return c;
 		};
 
-		auto operand = std::move(_operand);
-		if (operand->wtype == awst::WType::uint64Type())
-		{
-			auto itob = awst::makeItob(std::move(operand), m_loc);
-			operand = awst::makeAsBiguint(std::move(itob), m_loc);
-		}
+		auto operand = promoteToSignedBiguint(std::move(_operand), m_loc);
 
 		if (bits < 256)
 		{
@@ -352,12 +364,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				return c;
 			};
 
-			auto val = std::move(base);
-			if (val->wtype == awst::WType::uint64Type())
-			{
-				auto itob = awst::makeItob(std::move(val), m_loc);
-				val = awst::makeAsBiguint(std::move(itob), m_loc);
-			}
+			auto val = promoteToSignedBiguint(std::move(base), m_loc);
 
 			if (signedBits < 256)
 			{

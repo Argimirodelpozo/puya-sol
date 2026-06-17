@@ -166,8 +166,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	else if (_memberName == "pop")
 		return awst::makeArrayPopDecode(writeExpr, elemType, rawElemType, m_loc);
 
-	auto vc = awst::makeVoidConstant(m_loc);
-	return vc;
+	return awst::makeVoidConstant(m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
@@ -244,8 +243,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 		return awst::makeArrayPop(std::move(base), awst::WType::voidType(), m_loc);
 	}
 
-	auto vc = awst::makeVoidConstant(m_loc);
-	return vc;
+	return awst::makeVoidConstant(m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengthOp(
