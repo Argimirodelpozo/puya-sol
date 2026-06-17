@@ -45,8 +45,24 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		return nullptr;
 
 	auto* structWType = m_ctx.typeMapper.map(_structVar.type());
-	auto* rawFieldType = m_ctx.typeMapper.map(fieldArrayType);
-	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(fieldArrayType->baseType());
+	// Use the field's ACTUAL type from the mapped struct, not a fresh map() of the
+	// array type. For a recursive array field (`S[] x` inside S), the struct holds
+	// ARC4DynamicArray<projection>, while a fresh map(S[]) re-derives the full
+	// recursive S → element-type mismatch at the push. For non-recursive fields the
+	// two are identical (no change).
+	awst::WType const* rawFieldType = nullptr;
+	if (auto const* st = dynamic_cast<awst::ARC4Struct const*>(structWType))
+		for (auto const& [fn, ft]: st->fields())
+			if (fn == fieldName) { rawFieldType = ft; break; }
+	if (!rawFieldType)
+		rawFieldType = m_ctx.typeMapper.map(fieldArrayType);
+	awst::WType const* elemType = nullptr;
+	if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(rawFieldType))
+		elemType = da->elementType();
+	else if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(rawFieldType))
+		elemType = sa->elementType();
+	if (!elemType)
+		elemType = m_ctx.typeMapper.mapSolTypeToARC4(fieldArrayType->baseType());
 	auto kind = builder::StorageMapper::shouldUseBoxStorage(_structVar)
 		? awst::AppStorageKind::Box
 		: awst::AppStorageKind::AppGlobal;

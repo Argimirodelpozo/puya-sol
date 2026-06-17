@@ -257,13 +257,40 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	if (it != m_cache.end())
 		return it->second;
 
-	// Recursion guard for `struct R { R[] children; }` cycles. Returns bytes
-	// as placeholder to break the cycle (ARC4 has no cycle support).
-	// Note: solc's `structDef.annotation().recursive` short-circuits the whole
-	// struct to bytes, losing outer non-cycling fields (breaks recursive_structs.sol
-	// `s.x` access). Per-cycle tracking is the right model.
+	// Recursion guard for `struct R { R[] children; }` cycles (ARC4 has no cycle
+	// support). On re-entry, return a FIXED PROJECTION of the struct — its fields,
+	// but recursive (in-progress) array/mapping fields stubbed to a bytes pointer.
+	// Keeps the field SHAPE (so element access like `s.x[i].v` still resolves),
+	// unlike a bare bytes blob, and stays non-recursive so puya accepts it.
+	// (solc's `structDef.annotation().recursive` would short-circuit the whole
+	// struct to bytes, losing outer non-cycling fields — per-cycle is the right model.)
 	if (m_inProgressStructs.count(structDef.id()))
-		return awst::WType::bytesType();
+	{
+		std::string projKey = "structproj:" + std::to_string(structDef.id());
+		auto pit = m_cache.find(projKey);
+		if (pit != m_cache.end())
+			return pit->second;
+		std::vector<std::pair<std::string, awst::WType const*>> projFields;
+		for (auto const& member: structDef.members())
+		{
+			bool recursiveField =
+				member->type()->category() == solidity::frontend::Type::Category::Mapping;
+			if (auto const* arr =
+					dynamic_cast<solidity::frontend::ArrayType const*>(member->type());
+				arr && !arr->isByteArrayOrString())
+				if (auto const* es =
+						dynamic_cast<solidity::frontend::StructType const*>(arr->baseType());
+					es && m_inProgressStructs.count(es->structDefinition().id()))
+					recursiveField = true;
+			projFields.emplace_back(
+				member->name(),
+				recursiveField ? awst::WType::bytesType() : mapSolTypeToARC4(member->type()));
+		}
+		auto* proj = createType<awst::ARC4Struct>(name + "__rec", std::move(projFields),
+			/*_frozen=*/false);
+		m_cache[projKey] = proj;
+		return proj;
+	}
 	m_inProgressStructs.insert(structDef.id());
 
 	std::vector<std::pair<std::string, awst::WType const*>> fields;
