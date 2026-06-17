@@ -14,6 +14,8 @@
 #include <libsolidity/ast/AST.h>
 
 #include <cstddef>
+#include <functional>
+#include <memory>
 #include <vector>
 
 namespace puyasol::builder
@@ -32,6 +34,12 @@ struct UnsignedMaskInfo
 	unsigned bits;
 	std::size_t index;
 };
+
+/// Apply `_fn` to every ReturnStatement reachable in `_stmts`, recursing into
+/// IfElse / Block / WhileLoop bodies.
+void forEachReturnStatement(
+	std::vector<std::shared_ptr<awst::Statement>>& _stmts,
+	std::function<void(awst::ReturnStatement&)> const& _fn);
 
 void rewriteARC4Returns(
 	awst::ContractMethod& _method,

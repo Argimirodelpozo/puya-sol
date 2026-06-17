@@ -10,6 +10,28 @@
 namespace puyasol::builder
 {
 
+void forEachReturnStatement(
+	std::vector<std::shared_ptr<awst::Statement>>& _stmts,
+	std::function<void(awst::ReturnStatement&)> const& _fn)
+{
+	for (auto& stmt: _stmts)
+	{
+		if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+			_fn(*ret);
+		else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+		{
+			if (ifElse->ifBranch) forEachReturnStatement(ifElse->ifBranch->body, _fn);
+			if (ifElse->elseBranch) forEachReturnStatement(ifElse->elseBranch->body, _fn);
+		}
+		else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+			forEachReturnStatement(block->body, _fn);
+		else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+		{
+			if (loop->loopBody) forEachReturnStatement(loop->loopBody->body, _fn);
+		}
+	}
+}
+
 void rewriteARC4Returns(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -28,37 +50,14 @@ void rewriteARC4Returns(
 		if (arc4RetType != method.returnType)
 		{
 			// Wrap all return values in ARC4Encode
-			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapReturns;
-			wrapReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-			{
-				for (auto& stmt: stmts)
+			forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+				if (ret.value)
 				{
-					if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-					{
-						if (ret->value)
-						{
-							auto encode = awst::makeARC4Encode(std::move(ret->value), arc4RetType, ret->value->sourceLocation);
-							ret->value = std::move(encode);
-						}
-					}
-					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-					{
-						if (ifElse->ifBranch)
-							wrapReturns(ifElse->ifBranch->body);
-						if (ifElse->elseBranch)
-							wrapReturns(ifElse->elseBranch->body);
-					}
-					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-					{
-						wrapReturns(block->body);
-					}
-					else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-					{
-						if (loop->loopBody) wrapReturns(loop->loopBody->body);
-					}
+					auto loc = ret.value->sourceLocation;
+					auto encode = awst::makeARC4Encode(std::move(ret.value), arc4RetType, loc);
+					ret.value = std::move(encode);
 				}
-			};
-			wrapReturns(method.body->body);
+			});
 			method.returnType = arc4RetType;
 		}
 	}
@@ -104,31 +103,13 @@ void rewriteARC4Returns(
 		}
 		auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
 
-		std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapBiguintReturns;
-		wrapBiguintReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-		{
-			for (auto& stmt: stmts)
+		forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+			if (ret.value && ret.value->wtype == awst::WType::biguintType())
 			{
-				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-				{
-					if (ret->value && ret->value->wtype == awst::WType::biguintType())
-					{
-						auto loc = ret->value->sourceLocation;
-						ret->value = encodeRet(std::move(ret->value), retBits, arc4RetType, loc);
-					}
-				}
-				else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-				{
-					if (ifElse->ifBranch) wrapBiguintReturns(ifElse->ifBranch->body);
-					if (ifElse->elseBranch) wrapBiguintReturns(ifElse->elseBranch->body);
-				}
-				else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-					wrapBiguintReturns(block->body);
-				else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-					if (loop->loopBody) wrapBiguintReturns(loop->loopBody->body);
+				auto loc = ret.value->sourceLocation;
+				ret.value = encodeRet(std::move(ret.value), retBits, arc4RetType, loc);
 			}
-		};
-		wrapBiguintReturns(method.body->body);
+		});
 		method.returnType = arc4RetType;
 	}
 
@@ -285,49 +266,31 @@ void rewriteARC4Returns(
 			&& _func.modifiers().empty()
 			&& !funcHasInlineAssembly);
 
-		std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walk;
-		walk = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-		{
-			for (auto& stmt: stmts)
-			{
-				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-				{
-					if (!ret->value) continue;
-					auto srcLoc = ret->value->sourceLocation;
+		forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+			if (!ret.value) return;
+			auto srcLoc = ret.value->sourceLocation;
 
-					if (signedReturns.size() == 1 && signedReturns[0].index == 0
-						&& returnParams.size() == 1)
-					{
-						ret->value = TypeCoercion::signExtendToUint256(
-							std::move(ret->value), signedReturns[0].bits, srcLoc);
-						if (wrapSingleReturn)
-							ret->value = wrapArc4(std::move(ret->value), srcLoc);
-					}
-					else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
-					{
-						for (auto const& sr: signedReturns)
-						{
-							if (sr.index < tuple->items.size())
-							{
-								tuple->items[sr.index] = TypeCoercion::signExtendToUint256(
-									std::move(tuple->items[sr.index]), sr.bits, srcLoc);
-							}
-						}
-						tuple->wtype = method.returnType;
-					}
-				}
-				else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-				{
-					if (ifElse->ifBranch) walk(ifElse->ifBranch->body);
-					if (ifElse->elseBranch) walk(ifElse->elseBranch->body);
-				}
-				else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-					walk(block->body);
-				else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-					if (loop->loopBody) walk(loop->loopBody->body);
+			if (signedReturns.size() == 1 && signedReturns[0].index == 0
+				&& returnParams.size() == 1)
+			{
+				ret.value = TypeCoercion::signExtendToUint256(
+					std::move(ret.value), signedReturns[0].bits, srcLoc);
+				if (wrapSingleReturn)
+					ret.value = wrapArc4(std::move(ret.value), srcLoc);
 			}
-		};
-		walk(method.body->body);
+			else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
+			{
+				for (auto const& sr: signedReturns)
+				{
+					if (sr.index < tuple->items.size())
+					{
+						tuple->items[sr.index] = TypeCoercion::signExtendToUint256(
+							std::move(tuple->items[sr.index]), sr.bits, srcLoc);
+					}
+				}
+				tuple->wtype = method.returnType;
+			}
+		});
 
 		if (wrapSingleReturn)
 			method.returnType = arc4SignedType;
@@ -346,43 +309,25 @@ void rewriteARC4Returns(
 			return bitAnd;
 		};
 
-		std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walkMask;
-		walkMask = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-		{
-			for (auto& stmt: stmts)
+		forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+			if (!ret.value) return;
+			auto srcLoc = ret.value->sourceLocation;
+			if (unsignedMasks.size() == 1 && unsignedMasks[0].index == 0
+				&& returnParams.size() == 1)
 			{
-				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-				{
-					if (!ret->value) continue;
-					auto srcLoc = ret->value->sourceLocation;
-					if (unsignedMasks.size() == 1 && unsignedMasks[0].index == 0
-						&& returnParams.size() == 1)
-					{
-						ret->value = maskValue(std::move(ret->value),
-							unsignedMasks[0].bits, srcLoc);
-					}
-					else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
-					{
-						for (auto const& um: unsignedMasks)
-						{
-							if (um.index < tuple->items.size())
-								tuple->items[um.index] = maskValue(
-									std::move(tuple->items[um.index]), um.bits, srcLoc);
-						}
-					}
-				}
-				else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-				{
-					if (ifElse->ifBranch) walkMask(ifElse->ifBranch->body);
-					if (ifElse->elseBranch) walkMask(ifElse->elseBranch->body);
-				}
-				else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-					walkMask(block->body);
-				else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-					if (loop->loopBody) walkMask(loop->loopBody->body);
+				ret.value = maskValue(std::move(ret.value),
+					unsignedMasks[0].bits, srcLoc);
 			}
-		};
-		walkMask(method.body->body);
+			else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
+			{
+				for (auto const& um: unsignedMasks)
+				{
+					if (um.index < tuple->items.size())
+						tuple->items[um.index] = maskValue(
+							std::move(tuple->items[um.index]), um.bits, srcLoc);
+				}
+			}
+		});
 	}
 
 	// Pass 6 (safety): coerce native-int return values to match method.returnType.

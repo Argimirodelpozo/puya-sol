@@ -2,6 +2,7 @@
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/contract/ParamABIValidator.h"
+#include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -585,24 +586,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			if (isUnsignedIntReturn)
 			{
 				auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
-				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrap;
-				wrap = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
-					for (auto& stmt : stmts) {
-						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get())) {
-							if (ret->value && ret->value->wtype == awst::WType::biguintType()) {
-								auto retLoc = ret->value->sourceLocation;
-								auto encode = arc4UintCodec(std::move(ret->value), arc4RetType, /*isEncode=*/true, retLoc);
-								ret->value = std::move(encode);
-							}
-						} else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get())) {
-							if (ifElse->ifBranch) wrap(ifElse->ifBranch->body);
-							if (ifElse->elseBranch) wrap(ifElse->elseBranch->body);
-						} else if (auto* block = dynamic_cast<awst::Block*>(stmt.get())) {
-							wrap(block->body);
-						}
+				forEachReturnStatement(getter.body->body, [&](awst::ReturnStatement& ret) {
+					if (ret.value && ret.value->wtype == awst::WType::biguintType()) {
+						auto retLoc = ret.value->sourceLocation;
+						ret.value = arc4UintCodec(std::move(ret.value), arc4RetType, /*isEncode=*/true, retLoc);
 					}
-				};
-				wrap(getter.body->body);
+				});
 				getter.returnType = arc4RetType;
 			}
 
