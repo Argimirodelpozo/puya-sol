@@ -1,3 +1,24 @@
+# Semantic Test Status — v385
+
+> **recursive structs with dynamic-array self-reference (high-level) NOW COMPILE +
+> RUN (1896e56a6b + e887dd7eeb + xfail, 2026-06-17):** **58 failed / 1243 passed /
+> 87 xf** (+1 pass: new guard; recursive_struct_2 failed→xfailed). [Final -n2 run
+> reported 59f/1242p as test_balance_with_balance2 flaked under xdist — passes in
+> isolation; not a regression.] `struct S { uint16
+> v; S[] x; }` (S contains S[]) was a hard puya rejection ("element type does not
+> match array type"). Three composed frontend fixes: (1) TypeMapper recursion guard
+> returns a fixed PROJECTION (`S__rec`: fields with recursive array/mapping fields →
+> bytes ptr) instead of bare bytes — keeps `s.x` a real array of fixed structs (memory
+> `s.x=new S[](N)` unaffected) while breaking the cycle; (2) SolArrayMethodHandlers
+> struct-field push uses the struct's ACTUAL mapped field type (not fresh map(field)),
+> so the recursive element type matches; (3) SolArrayBuilder::index no longer ARC4Decodes
+> a struct element (a struct IS the native form; decoding the projection→full struct was
+> invalid in an lvalue + semantically wrong). Verified end-to-end:
+> puyasolRegression/recursive_struct_array (s.v=21, len=2, s.x[0].v=101, s.x[1].v=102).
+> structs::test_recursive_struct_2 XFAILED (not the recursive support — it adds assembly
+> `.slot`/`sload` on storage struct-array elements + delete, needing slot-based assembly
+> storage; the box model and assembly __dyn_storage slot model are disjoint). [[struct-storage-ref-model]]
+
 # Semantic Test Status — v384
 
 > **.slot on a struct-with-mapping storage-ref local (a93107e64c + 63f84f9eca,
