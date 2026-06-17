@@ -83,6 +83,7 @@ public:
 		std::map<std::string, std::string> const& _storageSlotVars = {},
 		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {},
 		std::map<std::string, std::string> const& _blobOffsetVars = {},
+		std::map<std::string, std::string> const& _structRefSlotLocals = {},
 		std::map<solidity::yul::Identifier const*,
 			solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs = {},
 		std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName = {}
@@ -791,6 +792,11 @@ private:
 	/// Assembly name → uint64 offset-var name for blob-backed aggregates.
 	/// A reference resolves to the memory pointer (offset), not the value.
 	std::map<std::string, std::string> m_blobOffsetVars;
+
+	/// Dotted yul name (`ptr.slot`) → mangled biguint local holding a storage-ref
+	/// slot handle. Lets `.slot` on a struct-storage-ref local resolve to the
+	/// handle value instead of the (non-scalar) struct. Populated by SolInlineAssembly.
+	std::map<std::string, std::string> m_structRefSlotLocals;
 
 	/// solc's external refs for the current block (yul id ptr → {decl, suffix}).
 	/// Pointer-keyed so a Yul-local shadowing an outer var isn't mis-resolved.

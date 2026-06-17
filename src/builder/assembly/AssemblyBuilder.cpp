@@ -110,6 +110,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	std::map<std::string, std::string> const& _storageSlotVars,
 	std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots,
 	std::map<std::string, std::string> const& _blobOffsetVars,
+	std::map<std::string, std::string> const& _structRefSlotLocals,
 	std::map<solidity::yul::Identifier const*,
 		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs,
 	std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName
@@ -126,6 +127,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_storageSlotVars = _storageSlotVars;
 	m_boxKeyedStructSlots = _boxKeyedStructSlots;
 	m_blobOffsetVars = _blobOffsetVars;
+	m_structRefSlotLocals = _structRefSlotLocals;
 	m_externalRefs = _externalRefs;
 	m_declName = std::move(_declName);
 	m_arrayParamName.clear();

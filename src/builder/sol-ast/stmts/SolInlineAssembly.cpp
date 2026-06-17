@@ -14,6 +14,8 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
 
+#include <algorithm>
+
 namespace
 {
 solidity::frontend::IntegerType const* resolveIntegerType(solidity::frontend::Type const* _type)
@@ -255,6 +257,46 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			if (dynamic_cast<awst::ARC4Struct const*>(boxv->wtype))
 				boxKeyedStructSlots[yulId->name.str()] = {boxv->key, boxv->wtype};
 	}
+
+	// Struct-storage-ref local bound from a storage-ref-returning function
+	// (`Items storage ptr = Lib.get();` where get's body sets `x.slot`): puya
+	// can't hold the mapping-bearing struct value, so the frontend models ptr as
+	// a biguint slot handle (see SolInternalCall: storage-return + inline-asm →
+	// biguint). `ptr.slot` is that handle — resolve to the local, not the struct.
+	std::map<std::string, std::string> structRefSlotLocals;
+	for (auto const& [yulId, extInfo]: annotation.externalReferences)
+	{
+		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
+		auto const* ptr = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+		if (!ptr || !ptr->isLocalVariable()) continue;
+		if (storageLocalAliases.count(ptr->name())) continue; // handled as state-var alias
+		auto const* block = dynamic_cast<Block const*>(ptr->scope());
+		if (!block) continue;
+		for (auto const& stmt: block->statements())
+		{
+			auto const* vds = dynamic_cast<VariableDeclarationStatement const*>(stmt.get());
+			if (!vds || !vds->initialValue()) continue;
+			bool declaresVar = false;
+			for (auto const& vd: vds->declarations())
+				if (vd && vd->name() == ptr->name()) declaresVar = true;
+			if (!declaresVar) continue;
+			auto const* call = dynamic_cast<FunctionCall const*>(vds->initialValue());
+			if (call)
+			{
+				auto const* fd = dynamic_cast<FunctionDefinition const*>(
+					ASTNode::referencedDeclaration(call->expression()));
+				if (fd && !fd->returnParameters().empty()
+					&& fd->returnParameters()[0]->referenceLocation()
+						== VariableDeclaration::Location::Storage
+					&& fd->isImplemented()
+					&& std::any_of(fd->body().statements().begin(),
+						fd->body().statements().end(),
+						[](auto const& s){ return dynamic_cast<InlineAssembly const*>(s.get()); }))
+					structRefSlotLocals[yulId->name.str()] = ptr->name();
+			}
+			break;
+		}
+	}
 	{
 		// Prefer the currently-being-built contract — its layout reflects the
 		// derived class's `layout at N` annotation and inherited-var ordering.
@@ -397,6 +439,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		storageSlotVars,
 		boxKeyedStructSlots,
 		blobOffsetVars,
+		structRefSlotLocals,
 		annotation.externalReferences,
 		declNameFn);
 	// An unconditional top-level halt (EVM return/revert → AVM program exit) makes

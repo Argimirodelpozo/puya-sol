@@ -169,6 +169,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			if (bks != m_boxKeyedStructSlots.end())
 				return awst::makeBoxValueExpression(
 					bks->second.key, bks->second.structType, loc);
+			// Struct-storage-ref local modeled as a biguint slot handle: `ptr.slot`
+			// is the handle itself (see SolInlineAssembly::structRefSlotLocals).
+			auto srit = m_structRefSlotLocals.find(name);
+			if (srit != m_structRefSlotLocals.end())
+				return awst::makeVarExpression(
+					srit->second, awst::WType::biguintType(), loc);
 		}
 		else if (suffix == "offset")
 		{
