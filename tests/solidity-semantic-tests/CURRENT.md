@@ -1,3 +1,18 @@
+# Semantic Test Status — v381
+
+> **dedup helpers + 2 latent-bug fixes, follow-up to the comment sweep
+> (c6dfdbf3b1 + 2cf316d499, 2026-06-17):** zero-reg, **60 failed / 1238 passed /
+> 86 xf** (identical fail set). Extracted shared helpers for duplicated logic
+> (projectStructFields/arc4UintCodec in PublicGetterBuilder, promoteToSignedBiguint
+> in SolUnaryOperation, emitStateField in AWSTSerializer, collectParamIndices in
+> AWSTBuilder, detectPrecompileAddress in itxn, exp-loop → buildBigUIntExp). Agents
+> declined to force-merge sites that differ in behaviour (param-decode vs return-encode
+> control flow). Two latent silent-wrong fixes the suite doesn't cover: checked unsigned
+> `a - f()` double-evaluated f() (now routes through eval-once buildWrappingSubtract);
+> `address(c).balance` used a fixed temp name that aliased across two reads in one expr
+> (counter-guarded). The flagged multi-box write-path was a FALSE ALARM (unreachable
+> dead branch; writes go via tryHandleMultiBoxArrayWrite). [[feedback-terse-comments]]
+
 # Semantic Test Status — v380
 
 > **terse-comment + safe-reduction sweep across src/ (c507c47230, 2026-06-16):**
