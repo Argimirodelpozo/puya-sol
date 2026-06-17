@@ -6,6 +6,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "Logger.h"
 
@@ -258,6 +259,30 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				boxKeyedStructSlots[yulId->name.str()] = {boxv->key, boxv->wtype};
 	}
 
+	// `sstore(v.slot, value)` where `v` is a scalar app-global state var:
+	// route the write to `v`'s own app-global state (so a later high-level read
+	// of `v` sees it) instead of the generic __dyn_storage blob. Strictly
+	// app-global scalars (shouldUseBoxStorage == false); mappings/arrays/structs/
+	// box vars/locals are excluded and fall through to the numeric-slot path.
+	std::map<std::string, AssemblyBuilder::StateVarSlot> stateVarSlots;
+	for (auto const& [yulId, extInfo]: annotation.externalReferences)
+	{
+		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
+		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+		if (!varDecl || !varDecl->isStateVariable() || varDecl->isConstant()) continue;
+		if (builder::StorageMapper::shouldUseBoxStorage(*varDecl)) continue;
+		// Restrict to FULL-WIDTH uint256 scalars: `sstore(x.slot, word)` then equals
+		// writing x's value directly. Sub-word vars (uint8/int8/bytesN) are packed
+		// multiple-per-slot in EVM, so `sstore(packedSlot, word)` sets several vars at
+		// once and reads need masking — the route-to-one-var shortcut can't replicate
+		// that (would corrupt e.g. variable_cleanup_sstore). Structs likewise (raw word
+		// vs ARC4 layout). Those keep the numeric-slot/__dyn_storage path.
+		auto const* intType = dynamic_cast<IntegerType const*>(varDecl->type());
+		if (!intType || intType->isSigned() || intType->numBits() != 256) continue;
+		stateVarSlots[yulId->name.str()] =
+			{varDecl->name(), m_blk.typeMapper().map(varDecl->type())};
+	}
+
 	// Struct-storage-ref local bound from a storage-ref-returning function
 	// (`Items storage ptr = Lib.get();` where get's body sets `x.slot`): puya
 	// can't hold the mapping-bearing struct value, so the frontend models ptr as
@@ -440,6 +465,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		boxKeyedStructSlots,
 		blobOffsetVars,
 		structRefSlotLocals,
+		stateVarSlots,
 		annotation.externalReferences,
 		declNameFn);
 	// An unconditional top-level halt (EVM return/revert → AVM program exit) makes

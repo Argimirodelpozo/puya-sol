@@ -67,6 +67,14 @@ public:
 		awst::WType const* structType = nullptr; ///< ARC4Struct stored in the box
 	};
 
+	/// A direct `.slot` reference to a scalar state var, for routing asm sstore/sload
+	/// to that var's own storage (app-global) instead of the __dyn_storage blob.
+	struct StateVarSlot
+	{
+		std::string varName;
+		awst::WType const* wtype = nullptr;
+	};
+
 	/// True when the block emitted an unconditional halt at top level
 	/// (branch-local halts not counted — translateSwitch/If save+restore the flag).
 	bool haltEmitted() const { return m_haltEmitted; }
@@ -84,6 +92,7 @@ public:
 		std::map<std::string, BoxKeyedSlot> const& _boxKeyedStructSlots = {},
 		std::map<std::string, std::string> const& _blobOffsetVars = {},
 		std::map<std::string, std::string> const& _structRefSlotLocals = {},
+		std::map<std::string, StateVarSlot> const& _stateVarSlots = {},
 		std::map<solidity::yul::Identifier const*,
 			solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs = {},
 		std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName = {}
@@ -443,6 +452,22 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// Lower `sstore(v.slot, value)` where `v` is a scalar app-global state var by
+	/// writing `v`'s own app-global state (so a later high-level read of `v` sees it),
+	/// instead of the generic __dyn_storage blob. Returns true if handled; false
+	/// (e.g. not a tracked scalar app-global var) falls through to handleSstore.
+	bool tryHandleStateVarSstore(
+		solidity::yul::FunctionCall const& _call,
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
+	/// sload(v.slot) on a scalar app-global state var → read v's own storage
+	/// (mirrors tryHandleStateVarSstore). nullptr → fall back to __dyn_storage.
+	std::shared_ptr<awst::Expression> tryHandleStateVarSload(
+		solidity::yul::FunctionCall const& _call,
+		awst::SourceLocation const& _loc);
+
 	/// 2^shift via setbit(bzero(32), 255-shift, 1) (no bexp opcode on AVM).
 	std::shared_ptr<awst::Expression> buildPowerOf2(
 		std::shared_ptr<awst::Expression> _shift,
@@ -788,6 +813,10 @@ private:
 
 	/// Dotted Yul name ("info.slot") → BoxKeyedSlot for box-struct sstore lowering.
 	std::map<std::string, BoxKeyedSlot> m_boxKeyedStructSlots;
+
+	/// Dotted yul name (`v.slot`) → scalar app-global state var, so sstore routes to
+	/// the var's own app-global storage (not __dyn_storage). Populated by SolInlineAssembly.
+	std::map<std::string, StateVarSlot> m_stateVarSlots;
 
 	/// Assembly name → uint64 offset-var name for blob-backed aggregates.
 	/// A reference resolves to the memory pointer (offset), not the value.

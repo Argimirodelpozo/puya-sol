@@ -71,3 +71,16 @@ def test_recursive_struct_array(harness):
     assert as_int(harness.call(app, "len()").abi_return) == 2
     assert as_int(harness.call(app, "v0()").abi_return) == 101
     assert as_int(harness.call(app, "v1()").abi_return) == 102
+
+
+def test_asm_storage_routes_to_statevar(harness):
+    """puyasolRegression/contracts/asm_sstore_statevar.sol — NOT an o.g. semantic test.
+
+    Assembly sstore/sload on a scalar app-global state var (direct `.slot` ref) route
+    to the var's OWN storage, unifying the high-level box/global model with assembly —
+    not the disjoint __dyn_storage blob. f(): asm write → high-level read sees 42.
+    g(): asm write → asm read sees 99 (both routed).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_sstore_statevar.sol")
+    assert as_int(harness.call(app, "f()").abi_return) == 42
+    assert as_int(harness.call(app, "g()").abi_return) == 99

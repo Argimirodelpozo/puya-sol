@@ -517,7 +517,8 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "sstore")
 		{
-			handleSstore(args, loc, _out);
+			if (!tryHandleStateVarSstore(*call, args, loc, _out))
+				handleSstore(args, loc, _out);
 			return;
 		}
 		if (funcName == "invalid")
@@ -639,6 +640,46 @@ void AssemblyBuilder::buildExpressionStatement(
 			_out.push_back(std::move(exprStmt));
 		}
 	}
+}
+
+bool AssemblyBuilder::tryHandleStateVarSstore(
+	solidity::yul::FunctionCall const& _call,
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (_call.arguments.empty() || _args.size() < 2)
+		return false;
+	auto const* id = std::get_if<solidity::yul::Identifier>(&_call.arguments[0]);
+	if (!id)
+		return false;
+	auto it = m_stateVarSlots.find(id->name.str());
+	if (it == m_stateVarSlots.end())
+		return false;
+	auto const& sv = it->second;
+	auto key = awst::makeUtf8BytesConstant(sv.varName, _loc, awst::WType::stateKeyType());
+	auto target = awst::makeAppStateExpression(key, sv.wtype, _loc);
+	auto value = ensureBiguint(_args[1], _loc);
+	auto assign = awst::makeAssignmentExpression(std::move(target), std::move(value), _loc, sv.wtype);
+	_out.push_back(awst::makeExpressionStatement(std::move(assign), _loc));
+	return true;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleStateVarSload(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc)
+{
+	if (_call.arguments.empty())
+		return nullptr;
+	auto const* id = std::get_if<solidity::yul::Identifier>(&_call.arguments[0]);
+	if (!id)
+		return nullptr;
+	auto it = m_stateVarSlots.find(id->name.str());
+	if (it == m_stateVarSlots.end())
+		return nullptr;
+	auto const& sv = it->second;
+	auto key = awst::makeUtf8BytesConstant(sv.varName, _loc, awst::WType::stateKeyType());
+	return awst::makeAppStateExpression(std::move(key), sv.wtype, _loc);
 }
 
 

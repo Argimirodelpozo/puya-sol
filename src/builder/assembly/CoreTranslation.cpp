@@ -306,6 +306,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			return result;
 	}
 
+	// sload(v.slot) on a scalar app-global state var → read v's own storage,
+	// matching the sstore routing (tryHandleStateVarSstore), not __dyn_storage.
+	if (funcName == "sload" && _call.arguments.size() == 1)
+		if (auto routed = tryHandleStateVarSload(_call, loc))
+			return routed;
+
 	// Translate all arguments (stored in source order by the Yul parser)
 	std::vector<std::shared_ptr<awst::Expression>> args;
 	for (auto const& arg: _call.arguments)
