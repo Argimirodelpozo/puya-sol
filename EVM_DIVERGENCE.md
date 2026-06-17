@@ -36,6 +36,15 @@ delegatecall.
 > and computed-slot storage aliasing were made **warn-level** (`9443b5150`). One
 > warn-level item remains a pending decision: the unmapped-type fallback (see
 > Next steps 2b). Verdict-table rows below updated accordingly.
+>
+> **UPDATE 2026-06-17 — revisit.** The last pending decision (2b, unmapped-type
+> selective hard-error) is now ✅ DONE (`397eafc37a`): meta-types + array slices keep
+> the bytes fallback, any other unmapped value type hard-errors. Zero-reg + guard.
+> Stale rows refreshed: `signextend` non-const `b` is DONE (`795d55ea74`), and
+> `handleAppCall` now exists (the `:188` precompile-default stub is likely unreachable
+> given `detectPrecompileAddress`'s 1–10 gate — verify before touching). Encoding
+> seams #1–4 landed in the abi→ARC4 migration (see the Encoding-model note). Counts:
+> ~67 `warning()` / ~93 `error()` sites at HEAD.
 
 **Mechanism.** `Logger::error()` increments an error count; `main.cpp:1254`
 (`if (logger.hasErrors()) return 1;`) runs **before** the puya backend, so any
@@ -275,7 +284,7 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
 | `DataOps.cpp:73` | `calldataload` unknown off | 0 | calldata word | **HARD-ERROR** | High |
 | `CoreTranslation.cpp:757` | unknown Yul builtin | 0 | (unknown) | **FIX→hard-err** | Medium |
 | `PrecompileDispatch.cpp:194` | call to non-precompile const addr | success=1, no-op | external call | **FIX** (route to `handleAppCall`) | Medium |
-| `BitwiseShiftOps.cpp:257` | `signextend` non-const `b` | returns x unchanged | sign-extend at b | **FIX** | Medium (rare) |
+| `BitwiseShiftOps.cpp` | `signextend` non-const `b` | — (now sign-extends via the runtime `sar(s,shl(s,x))` path) | sign-extend at b | ✅ **DONE** (`795d55ea74`) | — |
 | `InnerCallShapes.cpp:395` | `staticcall` to 0x09 etc. | nullptr → 690 stub | runs precompile | **FIX/hard-err** | Medium |
 | `MemoryOps.cpp:452` | void fn asm `return(off,sz>0)` | emits as log | raw return bytes | **FIX** | Low/Med |
 | `SolInternalCall.cpp:547` | uninit/unsupported fn-ptr call | `assert(false)` (reverts) | reverts (uninit) | **FIX** (support dispatch) | Low (fails loud, not silent) |
@@ -291,7 +300,7 @@ pre-change (HEAD `69258d852`); each is now a `Logger::error()`.
 | `SolMetaTypeAccess.cpp:123` | `type(C).creationCode/runtimeCode` | 32 zero bytes | bytecode | **FINE** (consumers hard-errored) | Low |
 | `SolAddressProperty.cpp:265/273` | `.codehash` / other addr props | 0 / empty | real codehash | **FINE** (`this.codehash` correct) | Low |
 | `SolBuiltinCall.cpp` / `CoreTranslation.cpp` | `blockhash(n)` | — (refused; was BlkSeed(Round-2), ignored `n`) | hash of block n | ✅ **HARD-ERROR** (#12) | — |
-| `TypeMapper.cpp:173` | unmapped Solidity type | falls back to `bytes` | (n/a) | **FIX (selective, PENDING)** | Med (slices) / Low (meta-types) |
+| `TypeMapper.cpp` map() default | unmapped Solidity type | meta-types/slices → `bytes`; any other value type **hard-errors** | (n/a) | ✅ **DONE** (selective, `397eafc37a`) | — |
 
 Confirmed observability-only (correctly FINE, not tabled): the `block.*` / `tx.*`
 / `address.balance` network-semantics warning family (`SolIntrinsicAccess.cpp`,
@@ -309,15 +318,15 @@ hard error — see #12), and all `splitter/*`,
    produced (see status note up top).
 2. Tighten the 6 FIX sites where a real AVM mapping exists
    (`PrecompileDispatch.cpp:194` → `handleAppCall` is the highest-value).
-2b. **Unmapped-type selective hard-error (DECISION PENDING).** `TypeMapper.cpp:173`
-   currently warns + falls back to `bytes` for any unmapped type. A blanket
-   `warning`→`error` flip regresses ~58 tests: ~27 are harmless **meta-types**
-   that carry no runtime value (`type(library L)`, `type(struct …)`, `type(enum …)`,
-   `type(contract D)`, `module "…"`, `abi`, `inaccessible dynamic type` — real ops
-   on these go through dedicated paths), and 31 are value-carrying **slice** types
-   (`bytes slice`, `uint256[] slice` from `x[a:b]`). The safe fix errors only on
-   genuinely value-carrying unmapped categories (or special-cases the meta-types
-   above the catch-all). Needs maintainer sign-off on scope.
+2b. ✅ **DONE (2026-06-17, `397eafc37a`) — unmapped-type selective hard-error.**
+   `TypeMapper::map`'s default case now whitelists the harmless categories by
+   `Type::Category` — meta-types (`TypeType`/`Modifier`/`Magic`/`Module`/
+   `InaccessibleDynamic`: no runtime value, real ops route through dedicated paths)
+   and array slices (`ArraySlice`, `x[a:b]`, modeled as bytes) keep the `bytes`
+   fallback; any OTHER unmapped category (e.g. `FixedPoint`, or a future value type)
+   hard-errors instead of silently becoming bytes. Zero-reg — the ~58 meta-type/slice
+   tests stay green; verified the error fires on a fixed-point param. Guard:
+   `puyasolRegression/unmapped_type_fixed`.
 3. Longer arc: generative **differential testing** (compile → run on evmone +
    AVM → diff, with an allowlist for the by-design FINE divergences above) to
    catch the silent-divergence class systematically rather than one incident at

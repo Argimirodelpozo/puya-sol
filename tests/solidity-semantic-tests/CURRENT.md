@@ -1,3 +1,17 @@
+# Semantic Test Status — v387
+
+> **selective hard-error on unmapped value-carrying types — EVM_DIVERGENCE 2b
+> (397eafc37a, 2026-06-17):** **58 failed / 1244 passed / 87 xf** (+1 guard, zero-reg).
+> TypeMapper::map's default case silently warned + fell back to `bytes` for ANY unmapped
+> type (a silent-divergence risk — a value type silently becoming bytes diverges from
+> EVM). Now selective by `Type::Category`: meta-types (TypeType/Modifier/Magic/Module/
+> InaccessibleDynamic — no runtime value, real ops route elsewhere) + array slices
+> (ArraySlice, x[a:b] → bytes) keep the fallback; any OTHER unmapped category
+> (FixedPoint, future value types) hard-errors. Closes the last pending decision in the
+> EVM↔AVM divergence manifest. Zero-reg (the ~58 meta/slice tests stay green — verified);
+> error fires on a `fixed` param. Guard: puyasolRegression/unmapped_type_fixed. Also
+> refreshed stale manifest rows (signextend DONE, handleAppCall exists). [[encoding-model]]
+
 # Semantic Test Status — v386
 
 > **asm sstore/sload(uint256 stateVar.slot) → the var's own storage (4743ec614c,
