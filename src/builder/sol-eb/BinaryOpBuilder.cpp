@@ -218,26 +218,9 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		promoteToBigUInt(_right);
 
 		if (_op == Token::Sub || _op == Token::AssignSub)
-		{
-			if (!_scope.isUnchecked())
-			{
-				auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
-				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
-				_ctx.prePendingStatements.push_back(std::move(assertStmt));
-			}
-
-			// Biguint sub needs wrapping: (a + 2^256 - b) % 2^256
-			auto pow256 = makePow256(_loc);
-
-			auto addPow = awst::makeBigUIntBinOp(std::move(_left), awst::BigUIntBinaryOperator::Add, pow256, _loc);
-
-			auto diff = awst::makeBigUIntBinOp(std::move(addPow), awst::BigUIntBinaryOperator::Sub, std::move(_right), _loc);
-
-			auto pow256b = makePow256(_loc);
-
-			auto mod = awst::makeBigUIntBinOp(std::move(diff), awst::BigUIntBinaryOperator::Mod, std::move(pow256b), _loc);
-			return mod;
-		}
+			// eval-once both operands so a checked `a - f()` doesn't double-eval f().
+			return buildWrappingSubtract(
+				_ctx, _scope.isUnchecked(), std::move(_left), std::move(_right), _loc);
 
 
 		// biguint ** : no AVM opcode; emit square-and-multiply loop (shared helper).

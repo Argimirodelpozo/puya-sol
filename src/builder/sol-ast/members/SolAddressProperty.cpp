@@ -141,7 +141,11 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					auto appParamsGet = awst::makeAppParamsGet(
 						"AppAddress", std::move(appIdUint), addrTupleType, m_loc);
 
-					std::string addrTmp = "__app_balance_addr";
+					// Counter-guarded so two `address(c).balance` in one expression
+					// don't alias the same temp (second app_params_get would clobber).
+					static int s_appBalanceTmpCounter = 0;
+					std::string addrTmp =
+						"__app_balance_addr_" + std::to_string(++s_appBalanceTmpCounter);
 					auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 					auto addrAssign = awst::makeAssignmentStatement(
 						addrTmpTarget, std::move(appParamsGet), m_loc);
