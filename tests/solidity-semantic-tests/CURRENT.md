@@ -1,3 +1,17 @@
+# Semantic Test Status — v380
+
+> **terse-comment + safe-reduction sweep across src/ (c507c47230, 2026-06-16):**
+> zero-reg, **60 failed / 1238 passed / 86 xf** (identical fail set). User: comments
+> "way too wordy, pointlessly so" → fanned out ~12 parallel agents over the source
+> tree, condensing verbose comment blocks to tight notes (facts preserved: gotchas,
+> AVM/EVM divergences, test refs, TODOs) plus behaviour-preserving reductions (dead
+> lambdas, empty {} blocks, inlined single-use locals). Net -3.7k lines, 142 files.
+> assembly/ excluded (separate in-progress work). Verification that caught a real
+> agent-introduced drop: build + per-file deletion audit (removed code lines absent
+> from the added side) + full regression. The drop was SolAssignment.cpp losing
+> `auto v = buildExpr(...)` when an agent merged the two comments above it.
+> [[feedback-terse-comments]]
+
 # Semantic Test Status — v379
 
 > **asm resolves external Yul refs via solc's externalReferences, not a name map
