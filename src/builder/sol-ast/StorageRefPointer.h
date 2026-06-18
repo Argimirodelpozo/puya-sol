@@ -104,6 +104,11 @@ inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
 		return false;
 	}
+	// NOTE (handle-model Stage 1a-arrays, attempted + reverted): widening to dynamic arrays
+	// here is NOT enough — the array-element field write (`a[i].field = v`) reconstructs its
+	// index access in SolAssignmentStructField, bypassing the param-keyed box in
+	// handleDynamicArrayAccess, so the write doesn't go through the passed box key and puya
+	// DCEs the call. Arrays need that write path made param-aware first. See PLAN.md.
 	return false;
 }
 
