@@ -1,3 +1,19 @@
+# Semantic Test Status — v392
+
+> **aggregate handle model — Stage 2: memory→memory assignment aliases (20221c54fb,
+> 2026-06-18):** **58 failed / 1248 passed / 87 xf** (zero-reg, identical fail-set). Fixes the
+> memory aliasing divergence (battery memArrAlias / memStructAlias / memoryToMemoryAlias):
+> `T memory b = a` now ALIASES `a` (EVM) instead of copying. Done by copy-elision, not the full
+> region migration (which is blocked — `memoryUsesBlob` 1D flip breaks small-array `new`-init,
+> v391 refactor note): a `memoryAliases` map registers b→a's expression (SolVariableDeclaration),
+> SolIdentifier resolves it, so `b[i]=x` reuses the existing `a[i]=x` write path (no new
+> machinery). SAFETY: a global `reassignedMemoryLocalsRegistry` (pre-pass) records whole-var-
+> reassigned memory vars; the alias is skipped for them (falls back to copy) so `b=c`/`a=c` can't
+> clobber the aliased local — verified mem_reassign returns 5 not 9. Small (non-blob) aggregates;
+> >4KB already aliases via blob offset. Guard: puyasolRegression/memory_aggregate_aliasing.
+> Remaining battery divergence: arrayElemParam (struct element-as-param → dual-value (key,offset)
+> handle) — the last one. [[handle-model-rearchitecture]]
+
 # Semantic Test Status — v391
 
 > **aggregate handle model — Stage 1b: structs passed by ref to contract methods box on

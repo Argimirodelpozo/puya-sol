@@ -145,3 +145,15 @@ def test_struct_storage_ref_writes_through_param(harness):
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/struct_ref_writethrough.sol")
     assert as_int(harness.call(app, "f()").abi_return) == 5
+
+
+def test_memory_aggregate_aliasing(harness):
+    """puyasolRegression/contracts/memory_alias.sol — NOT an o.g. semantic test.
+
+    Memory->memory assignment ALIASES (EVM) via copy-elision: T memory b = a makes b refer to
+    a's local. The alias is skipped (falls back to copy) when either side is reassigned, so a
+    re-point can't clobber the aliased local.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/memory_alias.sol")
+    assert as_int(harness.call(app, "aliases()").abi_return) == 11        # mutation through b seen via a
+    assert as_int(harness.call(app, "reassignIsSafe()").abi_return) == 5  # b reassigned -> copy, a unchanged
