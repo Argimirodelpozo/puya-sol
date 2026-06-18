@@ -22,29 +22,40 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	bool _isLeftShift,
 	awst::SourceLocation const& _loc)
 {
-	// bzero(32)
-	auto bzero = awst::makeBzero(32, _loc);
+	auto* biguint = awst::WType::biguintType();
 
-	// 255 - n
-	auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
+	// EVM shl/shr saturate to 0 for shift >= 256 (EIP-145); Solidity's `<<`/`>>`
+	// inherit it (shifts truncate, never overflow-check). The setbit-based 2^shift
+	// indexes bit 255-shift, which underflows for shift >= 256 and panics on the AVM,
+	// so clamp the index with `mod 256` AND select 0 for shift >= 256. Mirrors the
+	// assembly handleShl/handleShr and the signed-SAR guard below.
+	// SE: shift feeds both the index and the <256 guard (so `x << f()` runs f() once).
+	auto shift = awst::makeSingleEvaluation(
+		std::move(_shiftAmt), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
 
-	auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(_shiftAmt), _loc);
+	// 2^(shift mod 256) via setbit(bzero(32), 255 - (shift mod 256), 1): index in [0,255].
+	auto clampedShift = awst::makeUInt64BinOp(
+		shift, awst::UInt64BinaryOperator::Mod, awst::makeIntegerConstant("256", _loc), _loc);
+	auto bitIdx = awst::makeUInt64BinOp(
+		awst::makeIntegerConstant("255", _loc), awst::UInt64BinaryOperator::Sub,
+		std::move(clampedShift), _loc);
+	auto castPow = awst::makeAsBiguint(
+		awst::makeSetbit(awst::makeBzero(32, _loc), std::move(bitIdx), awst::makeOne(_loc), _loc),
+		_loc);
 
-	// setbit(bzero(32), 255-n, 1)
-	auto setbit = awst::makeSetbit(
-		std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
+	std::shared_ptr<awst::Expression> result = awst::makeBigUIntBinOp(std::move(_value),
+		_isLeftShift ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv,
+		std::move(castPow), _loc);
 
-	auto castPow = awst::makeAsBiguint(std::move(setbit), _loc);
-
-	auto e = awst::makeBigUIntBinOp(std::move(_value), _isLeftShift ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv, std::move(castPow), _loc);
-
-	std::shared_ptr<awst::Expression> result = e;
-
-	// Left shift must wrap mod 2^256 (EVM semantics)
+	// Left shift must wrap mod 2^256 (EVM semantics).
 	if (_isLeftShift)
 		result = wrapMod256(std::move(result), _loc);
 
-	return result;
+	// shift >= 256 → 0.
+	auto lt256 = awst::makeNumericCompare(shift, awst::NumericComparison::Lt,
+		awst::makeIntegerConstant("256", _loc, awst::WType::uint64Type()), _loc);
+	return awst::makeConditional(std::move(lt256), std::move(result),
+		awst::makeIntegerConstant("0", _loc, biguint), biguint, _loc);
 }
 
 std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(

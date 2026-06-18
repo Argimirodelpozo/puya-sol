@@ -99,3 +99,25 @@ def test_unmapped_value_type_hard_errors(harness):
     """
     with pytest.raises(CompileError):
         harness.compile_and_deploy("puyasolRegression/contracts/unmapped_type_fixed.sol")
+
+
+def test_shift_ge_256_saturates_to_zero(harness):
+    """puyasolRegression/contracts/shift_saturate.sol — NOT an o.g. semantic test.
+
+    EVM/Solidity `<<`/`>>` by a shift >= 256 yield 0 (shifts truncate, never
+    overflow-check). The high-level uint256 shift path used to REVERT: it built
+    2^shift as setbit(bzero(32), 255-shift, 1), and 255-shift underflowed in uint64
+    for shift >= 256 → out-of-range setbit index → AVM panic (even `0 << 256`). Now
+    guarded like the assembly shl/shr handlers (clamp + `(shift<256)?v:0`). Surfaced
+    by the tests/WIP/tiny-fuzzing-oracle differential-fuzzing spike.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/shift_saturate.sol")
+    # Normal in-range shifts are unaffected.
+    assert as_int(harness.call(app, "shl(uint256,uint256)", 1, 8).abi_return) == 256
+    assert as_int(harness.call(app, "shr(uint256,uint256)", 256, 8).abi_return) == 1
+    # shift >= 256 saturates to 0 (was a revert) — incl. value 0, which isolates the
+    # power-of-2 underflow from any result-overflow path.
+    assert as_int(harness.call(app, "shl(uint256,uint256)", 0, 256).abi_return) == 0
+    assert as_int(harness.call(app, "shl(uint256,uint256)", 1, 256).abi_return) == 0
+    assert as_int(harness.call(app, "shl(uint256,uint256)", (1 << 256) - 1, 300).abi_return) == 0
+    assert as_int(harness.call(app, "shr(uint256,uint256)", 1 << 255, 256).abi_return) == 0
