@@ -104,11 +104,14 @@ inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
 		return false;
 	}
-	// NOTE (handle-model Stage 1a-arrays, attempted + reverted): widening to dynamic arrays
-	// here is NOT enough — the array-element field write (`a[i].field = v`) reconstructs its
-	// index access in SolAssignmentStructField, bypassing the param-keyed box in
-	// handleDynamicArrayAccess, so the write doesn't go through the passed box key and puya
-	// DCEs the call. Arrays need that write path made param-aware first. See PLAN.md.
+	// Dynamic arrays of structs travel as a box-key handle (handle-model Stage 1a-arrays):
+	// the ref carries the array's box key; a[i] reads route through the param-keyed box
+	// (handleDynamicArrayAccess), and a[i].field writes go through an offset box_replace
+	// (SolAssignment::tryHandleBoxedArrayElemWrite) so they hit the caller's box. Gated to
+	// struct elements (the field-write use case) to bound the blast radius.
+	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
+		return arr->isDynamicallySized() && !arr->isByteArrayOrString()
+			&& dynamic_cast<solidity::frontend::StructType const*>(arr->baseType()) != nullptr;
 	return false;
 }
 

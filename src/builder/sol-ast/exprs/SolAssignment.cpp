@@ -39,6 +39,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleTransientStateWrite())     return std::move(*r);
 	if (auto r = tryHandleStoragePointerReassign())  return std::move(*r);
 	if (auto r = tryHandleMultiBoxArrayWrite())      return std::move(*r);
+	if (auto r = tryHandleBoxedArrayElemWrite())     return std::move(*r);
 	if (auto r = tryHandleBlobAggregateWrite())      return std::move(*r);
 	if (auto r = tryHandlePushAssignRewrite(op))     return std::move(*r);
 

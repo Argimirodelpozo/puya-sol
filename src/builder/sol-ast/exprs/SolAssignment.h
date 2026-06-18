@@ -63,6 +63,12 @@ private:
 	/// box_replace(<name>++itob(page), (i%elemsPerBox)*elemSize, ARC4-encoded-rhs).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleMultiBoxArrayWrite();
 
+	/// `a[i].field = v` / `a[i] = v` where `a` is a box-keyed array REF PARAM (handle
+	/// model): emits box_replace(paramKey, 2 + i*elemSize + fieldOffset, ARC4-encoded-rhs)
+	/// directly, so the write hits the caller's box (a real side-effect, not DCE'd) instead
+	/// of the COW reconstruction that drops it. Single-box, fixed-size struct elements only.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleBoxedArrayElemWrite();
+
 	/// `a[i] = v` for a >4KB blob-backed aggregate. Computes base+i*elemSize,
 	/// pads rhs to 32 B, emits writeMemWordDirect via prePendingStatements.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();

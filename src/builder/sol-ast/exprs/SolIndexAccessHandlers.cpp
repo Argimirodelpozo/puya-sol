@@ -36,11 +36,27 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
 	auto* arrWType = m_ctx.typeMapper.map(arrType);
 
-	std::string arrayVarName;
+	// Box key: a box-backed array state var is keyed by its name; a box-keyed array REF
+	// param (handle model) is keyed by the runtime bytes the caller passed, so a[i] reads
+	// the CALLER's box. (Field WRITES go through tryHandleBoxedArrayElemWrite's box_replace.)
+	std::shared_ptr<awst::BoxValueExpression> boxExpr;
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
-		arrayVarName = ident->name();
-
-	auto boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
+	{
+		std::string keyParam;
+		if (auto const* decl = ident->annotation().referencedDeclaration)
+			keyParam = m_scope.findMappingKeyParam(decl->id());
+		if (!keyParam.empty())
+		{
+			auto key = awst::makeReinterpretCast(
+				awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+				awst::WType::boxKeyType(), m_loc);
+			boxExpr = awst::makeBoxValueExpression(std::move(key), arrWType, m_loc);
+		}
+		else
+			boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(ident->name(), arrWType, m_loc);
+	}
+	else
+		boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(std::string(), arrWType, m_loc);
 
 	std::shared_ptr<awst::Expression> baseExprForRead = boxExpr;
 	if (!m_indexAccess.annotation().willBeWrittenTo)

@@ -8,6 +8,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/Arc4Defaults.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -207,6 +208,100 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 		awst::makeExpressionStatement(std::move(replace), m_loc));
 
 	return awst::makeVarExpression(valVarName, valVar->wtype, m_loc); // assignment-as-expression
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleBoxedArrayElemWrite()
+{
+	using namespace solidity::frontend;
+	if (m_assignment.assignmentOperator() != Token::Assign)
+		return std::nullopt;
+
+	// Match `a[i].field = v` (struct-element field write) or `a[i] = v` (whole element).
+	Expression const* cursor = &m_assignment.leftHandSide();
+	std::string fieldName;
+	if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
+	{
+		fieldName = ma->memberName();
+		cursor = &ma->expression();
+	}
+	auto const* ia = dynamic_cast<IndexAccess const*>(cursor);
+	if (!ia || !ia->indexExpression())
+		return std::nullopt;
+	auto const* arrType = dynamic_cast<ArrayType const*>(
+		ia->baseExpression().annotation().type);
+	if (!arrType || !arrType->isDynamicallySized() || arrType->isByteArrayOrString())
+		return std::nullopt;
+
+	// Only a box-keyed array REF PARAM (handle model); state-var arrays keep the COW path.
+	auto const* baseId = dynamic_cast<Identifier const*>(&ia->baseExpression());
+	if (!baseId) return std::nullopt;
+	auto const* vd = dynamic_cast<VariableDeclaration const*>(
+		baseId->annotation().referencedDeclaration);
+	if (!vd) return std::nullopt;
+	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
+	if (keyParam.empty())
+		return std::nullopt;
+
+	// Fixed-size struct element → constant offset.
+	auto const* st = dynamic_cast<StructType const*>(arrType->baseType());
+	if (!st) return std::nullopt;
+	auto* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
+	int elemSize = builder::computeEncodedElementSize(elemArc4);
+	if (elemSize <= 0) return std::nullopt;
+
+	// Field offset within the element (Σ preceding ARC4 sizes); whole element if no field.
+	uint64_t fieldOff = 0;
+	awst::WType const* slotArc4 = elemArc4;
+	Type const* valSol = arrType->baseType();
+	if (!fieldName.empty())
+	{
+		bool found = false;
+		for (auto const& m: st->structDefinition().members())
+		{
+			if (m->name() == fieldName)
+			{
+				slotArc4 = m_ctx.typeMapper.mapSolTypeToARC4(m->type());
+				valSol = m->type();
+				found = true;
+				break;
+			}
+			fieldOff += static_cast<uint64_t>(builder::computeEncodedElementSize(
+				m_ctx.typeMapper.mapSolTypeToARC4(m->type())));
+		}
+		if (!found) return std::nullopt;
+	}
+
+	// box key = the runtime bytes the caller passed; offset = 2 (uint16 len prefix) + i*elemSize + fieldOff.
+	auto boxKey = awst::makeReinterpretCast(
+		awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+		awst::WType::boxKeyType(), m_loc);
+	auto idx = builder::TypeCoercion::implicitNumericCast(
+		buildExpr(*ia->indexExpression()), awst::WType::uint64Type(), m_loc);
+	auto offset = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
+			awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), m_loc), m_loc),
+		awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant(static_cast<uint64_t>(2 + fieldOff), m_loc), m_loc);
+
+	// rhs → ARC4 bytes of the slot type; pin to a temp so it's also the assignment result.
+	auto rhs = builder::TypeCoercion::coerceForAssignment(
+		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
+	static int s_baeCtr = 0;
+	std::string vn = "__bae_val_" + std::to_string(s_baeCtr++);
+	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
+	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
+	std::shared_ptr<awst::Expression> valBytes =
+		(valForEnc->wtype != slotArc4 && valForEnc->wtype->name() != slotArc4->name())
+			? awst::makeAsBytes(awst::makeARC4Encode(
+				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
+			: awst::makeAsBytes(std::move(valForEnc), m_loc);
+
+	m_ctx.pendingStatements.push_back(awst::makeExpressionStatement(
+		awst::makeBoxReplace(std::move(boxKey), std::move(offset), std::move(valBytes), m_loc),
+		m_loc));
+	return awst::makeVarExpression(vn, vv->wtype, m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast
