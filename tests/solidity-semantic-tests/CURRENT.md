@@ -1,3 +1,20 @@
+# Semantic Test Status — v389
+
+> **aggregate handle model — Stage 1a: always-boxed structs as box-key references
+> (621e0adb22, 2026-06-18):** **58 failed / 1246 passed / 87 xf** (zero-reg, identical
+> fail-set; +1 pass is an xdist flake). First slice of the reference re-architecture for
+> the data-location divergences (see tests/WIP/handle-model/PLAN.md). `makeBoxReplace`
+> added (Node.h — offset box write, pairs with makeBoxExtract; inert until used).
+> `isBoxKeyedStorageRef` now treats an always-boxed struct (`storageSizeUpperBound() >= 4`
+> slots / ≥128B — boxed regardless of var name, so the type-only predicate agrees with the
+> var-level shouldUseBoxStorage, no mismatch/layout change) as a box-key handle, like
+> mapping-value structs. Such a struct ref now flows as a `(boxKey)` handle through the
+> proven box-key path into ANY callee incl. **contract methods**, writing through the
+> shared box instead of a lost copy+write-back. Validated: big_struct_ref.sol
+> refWritesThrough 0→5 via the live-EVM fuzzer; small/app-global structs + arrays + memory
+> unchanged (below the gate — later slices: 1b app-global, arrays, Stage 2 memory).
+> [[handle-model-rearchitecture]] [[data-location-divergences]]
+
 # Semantic Test Status — v388
 
 > **high-level uint256 `<<`/`>>` saturate to 0 for shift >= 256 (db0ff47aff,
