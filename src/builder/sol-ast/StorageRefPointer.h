@@ -78,18 +78,32 @@ inline void collectMappingValueStructs(
 			collectMappingValueStructs(member.type, _out, _seen);
 }
 
-/// True when the `T storage` ref must travel as a bytes box-key prefix:
-/// T is a mapping, contains a mapping, or is a struct used as a mapping value
-/// (e.g. V4 Position.State — no nested mappings, but is mapping(bytes32=>State)).
-/// Plain structs that are NOT mapping values travel by value (copy + write-back);
-/// widening to "any struct" would wrongly box-key them (regresses
-/// using-for/library/struct tests). Use this instead of bare containsMappingType
-/// at every storage-ref param/return site (caller ensures referenceLocation==Storage).
+/// True when the `T storage` ref must travel as a bytes box-key prefix (the handle):
+/// T is a mapping, contains a mapping, a struct used as a mapping value (e.g. V4
+/// Position.State), OR a struct large enough to be ALWAYS box-backed (handle-model
+/// Stage 1a). The bytes key is the box this aggregate lives in, so passing it to any
+/// callee — library, free, OR contract method — writes through the shared box instead
+/// of a lost value-copy.
+///
+/// The always-boxed gate is `storageSizeUpperBound() >= 4` slots (≥128B): such a struct
+/// is boxed regardless of its name (shouldUseBoxStorage: estimatedBytes ≥ 128 > 128−nameLen
+/// for any name), so the type-only predicate here AGREES with the var-level boxing decision —
+/// no mismatch. Smaller structs are name-length-dependent (app-global) and still travel by
+/// value + write-back; widening to *those* wrongly box-keys app-global storage (the
+/// using-for/library/struct regression — hence the size gate, not "any struct").
+/// Use this instead of bare containsMappingType at every storage-ref param/return site
+/// (caller ensures referenceLocation==Storage).
 inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 {
 	if (containsMappingType(_t)) return true;
 	if (auto const* s = dynamic_cast<solidity::frontend::StructType const*>(_t))
-		return boxKeyedStructRegistry().count(s->structDefinition().id()) > 0;
+	{
+		if (boxKeyedStructRegistry().count(s->structDefinition().id()) > 0)
+			return true;
+		// Always-boxed (≥128B) structs: type-only size matches the var-level box decision.
+		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
+		return false;
+	}
 	return false;
 }
 

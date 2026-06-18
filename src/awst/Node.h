@@ -844,6 +844,22 @@ inline std::shared_ptr<IntrinsicCall> makeBoxExtract(
 	return node;
 }
 
+// `box_replace key offset value` → void. Overwrites len(value) bytes at `offset`
+// (box must exist and be large enough). The offset-addressed write counterpart of
+// box_extract — the storage-handle leaf write for the reference model.
+inline std::shared_ptr<IntrinsicCall> makeBoxReplace(
+	std::shared_ptr<Expression> key,
+	std::shared_ptr<Expression> offset,
+	std::shared_ptr<Expression> value,
+	SourceLocation loc)
+{
+	auto node = makeIntrinsicCall("box_replace", WType::voidType(), std::move(loc));
+	node->stackArgs.push_back(std::move(key));
+	node->stackArgs.push_back(std::move(offset));
+	node->stackArgs.push_back(std::move(value));
+	return node;
+}
+
 // `box_del key` → bool (existed). Most callers discard the result.
 inline std::shared_ptr<IntrinsicCall> makeBoxDel(
 	std::shared_ptr<Expression> key, SourceLocation loc)
