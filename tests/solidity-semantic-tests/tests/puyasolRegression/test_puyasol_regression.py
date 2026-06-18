@@ -133,3 +133,15 @@ def test_array_storage_ref_writes_through_param(harness):
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/array_ref_writethrough.sol")
     assert as_int(harness.call(app, "f()").abi_return) == 5
+
+
+def test_struct_storage_ref_writes_through_param(harness):
+    """puyasolRegression/contracts/struct_ref_writethrough.sol — NOT an o.g. semantic test.
+
+    A small (app-global) struct passed by reference to an internal contract method must write
+    through (handle model Stage 1b: a struct passed by ref to a contract method boxes on demand,
+    so the ref is a box-key handle). Pre-fix it hit copy+write-back that doesn't reach contract
+    methods, so the write was a dead local store puya DCE'd → 0.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/struct_ref_writethrough.sol")
+    assert as_int(harness.call(app, "f()").abi_return) == 5

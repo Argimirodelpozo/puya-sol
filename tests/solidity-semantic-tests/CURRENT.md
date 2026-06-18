@@ -1,3 +1,21 @@
+# Semantic Test Status — v391
+
+> **aggregate handle model — Stage 1b: structs passed by ref to contract methods box on
+> demand (11cb361306, 2026-06-18):** **58 failed / 1247 passed / 87 xf** (zero-reg, identical
+> fail-set). Fixes the app-global-struct-ref-to-contract-method divergence (battery
+> structVarParam). A new `refPassedStructRegistry` (populated at build start) holds struct
+> types appearing as a `T storage` param of a CONTRACT method; `shouldUseBoxStorage` boxes
+> those struct vars → they become box-backed, so `isBoxKeyedStorageRef` treats them as box-key
+> handles (the v389 struct slice) that write through. TARGETED two ways: (1) only ref-passed
+> types box (boxing EVERY struct regressed 7 small-struct delete/asm/modifier/recursive tests);
+> (2) only CONTRACT-method params count — libraries + free fns go through
+> buildFreestandingSubroutine's copy+write-back augmentation and already write through (boxing
+> their struct params regressed function_modifier_library). Guard:
+> puyasolRegression/struct_storage_ref_writes_through_param. Three handle-model slices now
+> landed (structs v389 / arrays v390 / app-global-structs-to-contract-methods v391); remaining
+> battery divergences: arrayElemParam (struct element-as-param → dual-value (key,offset)
+> handle), mem* aliasing (Stage 2). [[handle-model-rearchitecture]]
+
 # Semantic Test Status — v390
 
 > **aggregate handle model — Stage 1a-arrays: box-keyed array refs write through
