@@ -1,3 +1,21 @@
+# Semantic Test Status — v390
+
+> **aggregate handle model — Stage 1a-arrays: box-keyed array refs write through
+> (d43f316001, 2026-06-18):** **58 failed / 1246 passed / 87 xf** (zero-reg, identical
+> fail-set; +1 guard = 1247p). Dynamic struct-arrays now travel as box-key handles like
+> the struct slice (v389), fixing the storage-array-ref-to-contract-method divergence
+> (battery arrayParam / storageParamMutates). Three pieces: `isBoxKeyedStorageRef` widened
+> to dynamic struct-arrays (gated to struct elements); `handleDynamicArrayAccess` keys the
+> box off the passed param bytes (reads); and a new `tryHandleBoxedArrayElemWrite` (before
+> the COW path) emits `box_replace(paramKey, 2 + i*elemSize + fieldOff, ARC4(v))` for
+> `a[i].field=v` on a box-keyed array PARAM — a direct side-effect that writes through,
+> vs the COW reconstruction that bypassed the param box and got DCE'd. State-var arrays keep
+> the COW path (gated to params); fixed-size struct elements only. Validated:
+> arr_ref_clean.sol whole() 0→5 via the live-EVM fuzzer. Guard:
+> puyasolRegression/array_storage_ref_writes_through_param. Remaining handle-model slices:
+> arrayElemParam (struct element-as-param needs a (key,offset) struct handle), structVarParam
+> (app-global small struct, Stage 1b), mem* aliasing (Stage 2). [[handle-model-rearchitecture]]
+
 # Semantic Test Status — v389
 
 > **aggregate handle model — Stage 1a: always-boxed structs as box-key references

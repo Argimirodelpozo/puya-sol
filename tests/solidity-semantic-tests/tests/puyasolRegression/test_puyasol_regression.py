@@ -121,3 +121,15 @@ def test_shift_ge_256_saturates_to_zero(harness):
     assert as_int(harness.call(app, "shl(uint256,uint256)", 1, 256).abi_return) == 0
     assert as_int(harness.call(app, "shl(uint256,uint256)", (1 << 256) - 1, 300).abi_return) == 0
     assert as_int(harness.call(app, "shr(uint256,uint256)", 1 << 255, 256).abi_return) == 0
+
+
+def test_array_storage_ref_writes_through_param(harness):
+    """puyasolRegression/contracts/array_ref_writethrough.sol — NOT an o.g. semantic test.
+
+    A storage struct-array passed by reference to an internal (contract-method) function must
+    write through to the caller's storage (handle model: the array ref travels as a box-key
+    handle, a[i].field=v emits box_replace at the ARC4 offset). Pre-fix it hit copy+write-back
+    that doesn't reach contract methods, so the write was a dead local store puya DCE'd → 0.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/array_ref_writethrough.sol")
+    assert as_int(harness.call(app, "f()").abi_return) == 5
