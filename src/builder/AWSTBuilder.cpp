@@ -75,6 +75,37 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					collectMappingValueStructs(sv->type(), reg, seen);
 	}
 
+	// Populate the ref-passed-struct registry: any struct appearing as a `T storage`
+	// PARAMETER is boxed (shouldUseBoxStorage) so its ref travels as a box-key handle that
+	// writes through into contract methods. Targeted (only ref-passed types) so never-ref-
+	// passed structs keep their app-global layout. Scans contract methods + free/library fns.
+	{
+		using namespace solidity::frontend;
+		auto& refReg = refPassedStructRegistry();
+		refReg.clear();
+		auto scan = [&](FunctionDefinition const* fn) {
+			if (!fn) return;
+			for (auto const& p: fn->parameters())
+				if (p->referenceLocation() == VariableDeclaration::Location::Storage)
+					if (auto const* st = dynamic_cast<StructType const*>(p->type()))
+						refReg.insert(st->structDefinition().id());
+		};
+		// Only CONTRACT methods need boxing: libraries + free functions go through
+		// buildFreestandingSubroutine, which augments storage-ref params (copy+write-back), so
+		// they already write through. Boxing structs they take regresses library-modifier paths.
+		for (auto const& sourceName: _compiler.sourceNames())
+		{
+			auto const& unit = _compiler.ast(sourceName);
+			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(unit.nodes()))
+			{
+				if (contract->isLibrary())
+					continue;
+				for (auto const* fn: contract->definedFunctions())
+					scan(fn);
+			}
+		}
+	}
+
 	registerFunctionIds(_compiler, _sourceFile, m_libraryFunctionIds, m_freeFunctionById);
 	presetDispatchCref(_compiler, _sourceFile);
 	translateLibraryFunctions(_compiler, _sourceFile, roots);

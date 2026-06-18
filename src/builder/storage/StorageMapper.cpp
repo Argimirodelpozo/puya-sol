@@ -2,6 +2,7 @@
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 
 #include "Logger.h"
 
@@ -216,6 +217,13 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 			}
 		}
 	}
+
+	// Structs passed by reference somewhere → box (handle-model Stage 1b): boxing makes the
+	// ref a box-key handle that writes through into contract methods. Targeted to ref-passed
+	// types (refPassedStructRegistry) so never-ref-passed structs keep their app-global layout.
+	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(type))
+		if (puyasol::builder::refPassedStructRegistry().count(st->structDefinition().id()) > 0)
+			return true;
 
 	// AVM global-state limit is 128B (key+value). storageSizeUpperBound()*32 estimates value size.
 	try

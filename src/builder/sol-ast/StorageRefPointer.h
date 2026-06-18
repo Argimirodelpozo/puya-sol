@@ -53,6 +53,19 @@ inline std::set<int64_t>& boxKeyedStructRegistry()
 	return registry;
 }
 
+/// StructDefinition IDs passed somewhere as a `T storage` PARAMETER (a storage ref).
+/// Such structs are boxed (shouldUseBoxStorage) so the ref travels as a box-key handle that
+/// writes through into contract methods, not a lost copy. Populated source-unit-wide at
+/// AWSTBuilder::build start. TARGETED — only ref-passed types — so structs that are never
+/// passed by ref keep their app-global layout (boxing every struct regressed the struct-
+/// delete / asm-storage / library-modifier / recursive-struct paths). Process-wide static:
+/// single-threaded, one compile per process.
+inline std::set<int64_t>& refPassedStructRegistry()
+{
+	static std::set<int64_t> registry;
+	return registry;
+}
+
 /// Walk `_t` and record every struct type appearing as a mapping VALUE (recursively).
 /// `_seen` prevents infinite recursion through recursive struct types.
 inline void collectMappingValueStructs(
@@ -98,15 +111,16 @@ inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 	if (containsMappingType(_t)) return true;
 	if (auto const* s = dynamic_cast<solidity::frontend::StructType const*>(_t))
 	{
-		if (boxKeyedStructRegistry().count(s->structDefinition().id()) > 0)
+		auto id = s->structDefinition().id();
+		if (boxKeyedStructRegistry().count(id) > 0)
+			return true;
+		// Passed by ref somewhere → boxed (shouldUseBoxStorage) → travels as a box-key handle.
+		// Targeted (only ref-passed types) so never-ref-passed structs keep app-global (Stage 1b;
+		// boxing EVERY struct regressed delete/asm/modifier/recursive paths).
+		if (refPassedStructRegistry().count(id) > 0)
 			return true;
 		// Always-boxed (≥128B) structs: type-only size matches the var-level box decision.
 		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
-		// NOTE (Stage 1b, attempted + reverted): widening to ALL structs (+ boxing them in
-		// shouldUseBoxStorage) fixed structVarParam but regressed 7 small-struct tests (struct
-		// delete, asm storage-via-pointer, library modifiers, recursive structs) — the
-		// app-global→box layout change isn't free. Needs a discriminated (box|app-global)
-		// handle that keeps app-global structs app-global. See PLAN.md.
 		return false;
 	}
 	// Dynamic arrays of structs travel as a box-key handle (handle-model Stage 1a-arrays):
