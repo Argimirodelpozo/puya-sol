@@ -1,3 +1,22 @@
+# Semantic Test Status — v388
+
+> **high-level uint256 `<<`/`>>` saturate to 0 for shift >= 256 (db0ff47aff,
+> 2026-06-17):** **58 failed / 1245 passed / 87 xf** (+1 guard, zero-reg). EVM/Solidity
+> shifts truncate (never overflow-check), so `x << s` / `x >> s` with `s >= 256` yield 0.
+> The high-level biguint shift path (`buildBigUIntShift`) REVERTED instead: it built
+> `2^shift` via `setbit(bzero(32), 255-shift, 1)`, and `255-shift` underflowed in uint64
+> for `s >= 256` → out-of-range setbit index → AVM panic (even `0 << 256`, which isolates
+> the power-of-2 underflow from any result path). Now guarded like the assembly
+> `handleShl`/`handleShr` and the signed-SAR path: eval-once the shift, clamp the index
+> via `mod 256`, wrap in `(shift < 256) ? v : 0`. The assembly Yul shl/shr were already
+> correct, and signed `sar` too (it uses `buildBigUIntArithmeticShiftRight`, which
+> clamps) — this was the unsigned operator path only. **Found by a differential-fuzzing
+> spike** (`tests/WIP/tiny-fuzzing-oracle`, untracked): 1153 boundary inputs through
+> codec/arith ops diffed vs a Python EVM-semantics oracle → isolated 64 shl/shr
+> divergences, plus the modeling lesson "model Solidity, not the raw VM" (addmod/mulmod
+> `assert(k != 0)` since 0.5.0, so m==0 reverts — not the opcode's 0). Guard:
+> puyasolRegression/shift_ge_256_saturates_to_zero. [[puya-sol-shr-256-bug]]
+
 # Semantic Test Status — v387
 
 > **selective hard-error on unmapped value-carrying types — EVM_DIVERGENCE 2b
