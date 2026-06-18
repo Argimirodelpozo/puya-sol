@@ -104,6 +104,12 @@ struct ScopeState
 	/// lowers to blob read/write at base + offset. See SolIndexAccess.
 	std::unordered_map<int64_t, std::string> blobAggregates;
 
+	/// Memory-aggregate alias (handle-model copy-elision): decl ID → the source
+	/// expression it aliases. `T memory b = a` registers b→a (only when neither is
+	/// later reassigned) so b's references resolve to a's local — memory→memory
+	/// ALIASES (EVM) instead of copying. Resolved in SolIdentifier before the var read.
+	std::unordered_map<int64_t, std::shared_ptr<awst::Expression>> memoryAliases;
+
 	/// Memory aggregate locals used as Yul pointer values in inline assembly.
 	/// Promoted to blob-backed (pre-scan in ContractBuilder::buildBlock).
 	std::unordered_set<int64_t> assemblyAggregates;
@@ -150,6 +156,12 @@ public:
 	{
 		auto it = m_state->storageAliases.find(_declId);
 		return it != m_state->storageAliases.end() ? &it->second : nullptr;
+	}
+
+	std::shared_ptr<awst::Expression> findMemoryAlias(int64_t _declId) const
+	{
+		auto it = m_state->memoryAliases.find(_declId);
+		return it != m_state->memoryAliases.end() ? it->second : nullptr;
 	}
 
 	solidity::frontend::FunctionDefinition const* findFuncPtrTarget(int64_t _declId) const
@@ -201,6 +213,11 @@ public:
 	void setStorageAlias(int64_t _declId, StorageAlias _alias)
 	{
 		m_state->storageAliases[_declId] = std::move(_alias);
+	}
+
+	void setMemoryAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
+	{
+		m_state->memoryAliases[_declId] = std::move(_expr);
 	}
 
 	void setFuncPtrTarget(int64_t _declId,

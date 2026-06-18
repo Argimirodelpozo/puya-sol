@@ -66,6 +66,17 @@ inline std::set<int64_t>& refPassedStructRegistry()
 	return registry;
 }
 
+/// Decl IDs of memory-aggregate variables that are whole-var REASSIGNED (`b = …`) somewhere.
+/// The `T memory b = a` copy-elision alias (SolVariableDeclaration) is UNSAFE for these: once
+/// either side is re-pointed (`b = c` / `a = c`) the alias would clobber the wrong local, so
+/// such vars fall back to a value copy. Populated program-wide at AWSTBuilder::build start;
+/// decl IDs are globally unique so one set suffices. Process-wide static (single-threaded).
+inline std::set<int64_t>& reassignedMemoryLocalsRegistry()
+{
+	static std::set<int64_t> registry;
+	return registry;
+}
+
 /// Walk `_t` and record every struct type appearing as a mapping VALUE (recursively).
 /// `_seen` prevents infinite recursion through recursive struct types.
 inline void collectMappingValueStructs(

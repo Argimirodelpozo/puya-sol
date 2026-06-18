@@ -175,6 +175,34 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 		}
 
+		// Memory-aggregate alias (handle-model copy-elision): `T memory b = a` where `a` is
+		// another memory-aggregate variable → register b→a so b's references resolve to a's
+		// local; memory→memory ALIASES (matches EVM) instead of copying. Only a plain
+		// memory-aggregate identifier source, and only the small (non-blob) case — >4KB
+		// aggregates alias via the blob offset below. (Reassignment of a/b after the alias
+		// would make this unsafe; not yet guarded — relying on zero-reg to surface it.)
+		if (initialValue
+			&& decl.referenceLocation() == VariableDeclaration::Location::Memory
+			&& decl.type() && !builder::memoryUsesBlob(type))
+		{
+			bool aliasable = decl.type()->category() == solidity::frontend::Type::Category::Struct;
+			if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(decl.type()))
+				aliasable = !at->isByteArrayOrString();
+			auto const* srcId = dynamic_cast<solidity::frontend::Identifier const*>(initialValue);
+			auto const* srcVd = srcId
+				? dynamic_cast<VariableDeclaration const*>(srcId->annotation().referencedDeclaration)
+				: nullptr;
+			if (aliasable && srcVd
+				&& srcVd->referenceLocation() == VariableDeclaration::Location::Memory
+				&& builder::reassignedMemoryLocalsRegistry().count(decl.id()) == 0
+				&& builder::reassignedMemoryLocalsRegistry().count(srcVd->id()) == 0)
+			{
+				m_blk.setMemoryAlias(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
+				m_blk.builderCtx().appendPendingTo(result);
+				return result;
+			}
+		}
+
 		// `T memory p = blobAggFn(...)`: callee returns the uint64 base offset into
 		// the shared blob; register as blob aggregate (no copy/FMP bump).
 		// >4KB memory values can only originate this way (AVM can't copy them).

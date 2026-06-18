@@ -106,6 +106,39 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		}
 	}
 
+	// Memory-reassignment registry: memory aggregate vars whole-var REASSIGNED (`b = …`)
+	// anywhere → the b=a copy-elision alias (SolVariableDeclaration) is unsafe for them
+	// (re-pointing one side would clobber the aliased local), so they fall back to a copy.
+	{
+		using namespace solidity::frontend;
+		auto& reassigned = reassignedMemoryLocalsRegistry();
+		reassigned.clear();
+		struct ReassignWalker: ASTConstVisitor {
+			std::set<int64_t>& out;
+			explicit ReassignWalker(std::set<int64_t>& o): out(o) {}
+			bool visit(Assignment const& a) override {
+				if (auto const* id = dynamic_cast<Identifier const*>(&a.leftHandSide()))
+					if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
+							id->annotation().referencedDeclaration))
+						if (vd->referenceLocation() == VariableDeclaration::Location::Memory)
+							out.insert(vd->id());
+				return true;
+			}
+		} walker(reassigned);
+		auto scanBody = [&](FunctionDefinition const* fn) {
+			if (fn && fn->isImplemented()) fn->body().accept(walker);
+		};
+		for (auto const& sourceName: _compiler.sourceNames())
+		{
+			auto const& unit = _compiler.ast(sourceName);
+			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(unit.nodes()))
+				for (auto const* fn: contract->definedFunctions())
+					scanBody(fn);
+			for (auto const* fn: ASTNode::filteredNodes<FunctionDefinition>(unit.nodes()))
+				scanBody(fn);
+		}
+	}
+
 	registerFunctionIds(_compiler, _sourceFile, m_libraryFunctionIds, m_freeFunctionById);
 	presetDispatchCref(_compiler, _sourceFile);
 	translateLibraryFunctions(_compiler, _sourceFile, roots);

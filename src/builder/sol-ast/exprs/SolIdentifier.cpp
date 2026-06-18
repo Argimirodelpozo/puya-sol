@@ -43,6 +43,10 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		// Storage pointer aliases
 		if (auto const* alias = m_scope.findStorageAlias(decl->id()))
 			return alias->expr;
+
+		// Memory-aggregate alias (`T memory b = a` → b resolves to a's local).
+		if (auto memAlias = m_scope.findMemoryAlias(decl->id()))
+			return memAlias;
 	}
 
 	// Variable references
