@@ -180,7 +180,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		// >4KB memory values can only originate this way (AVM can't copy them).
 		if (initialValue
 			&& decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& builder::computeEncodedElementSize(type) > builder::AssemblyBuilder::SLOT_SIZE)
+			&& builder::memoryUsesBlob(type))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 			result.push_back(awst::makeAssignmentStatement(
@@ -238,7 +238,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// >4096 B: can't hold as a single AVM bytes value. Back with the
 			// multi-slot blob; bind local to FMP base offset so `t.field[i]`
 			// lowers to blob word ops (SolIndexAccess). Blob is pre-zeroed.
-			if (sz > builder::AssemblyBuilder::SLOT_SIZE
+			if (builder::memoryUsesBlob(type)
 				|| m_blk.isAssemblyAggregate(decl.id()))
 			{
 				std::string offN = "__blobagg_off_" + std::to_string(decl.id());

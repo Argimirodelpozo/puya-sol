@@ -45,4 +45,13 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 /// Returns 0 for variable-length types.
 int computeEncodedElementSize(awst::WType const* _type);
 
+/// Single control point for "this memory aggregate lives in the scratch blob/region model
+/// (a uint64 (region,offset) pointer) rather than as an ARC4 value". True when:
+///   - the encoded size exceeds one memory slot (the original >4KB rule), OR
+///   - it is a 1D array of fixed-size SCALAR elements (handle-model Stage 2): routing these
+///     through the region model makes memory→memory assignment ALIAS (matches EVM). Structs
+///     and nested/dynamic-element arrays are excluded — the blob model is incomplete for them.
+/// Every blob-vs-value threshold site funnels through here so the rule stays consistent.
+bool memoryUsesBlob(awst::WType const* _type);
+
 } // namespace puyasol::builder

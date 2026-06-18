@@ -204,7 +204,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Memory aggregate >4KB: pass as uint64 base offset (blob pointer model).
 		// Callee re-registers via setBlobAggParams so p.field[i] hits blob word access.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& computeEncodedElementSize(arg.wtype) > AssemblyBuilder::SLOT_SIZE)
+			&& memoryUsesBlob(arg.wtype))
 			arg.wtype = awst::WType::uint64Type();
 		method.args.push_back(std::move(arg));
 		paramIndex++;
@@ -465,7 +465,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		for (auto const& p: _func.parameters())
 			if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 				&& !p->name().empty()
-				&& computeEncodedElementSize(m_typeMapper.map(p->type())) > AssemblyBuilder::SLOT_SIZE)
+				&& memoryUsesBlob(m_typeMapper.map(p->type())))
 				blobAggParamDecls.push_back(p.get());
 		setBlobAggParams(blobAggParamDecls);
 
@@ -494,7 +494,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
 				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-					&& computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
+					&& memoryUsesBlob(rpType))
 					continue;
 
 				auto target = awst::makeVarExpression(rp->name(), rpType, method.sourceLocation);
@@ -513,9 +513,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				int sz = computeEncodedElementSize(rpType);
 				if (sz <= 0)
 					continue;
-				// >4KB memory return: bind FMP (before bump) to __blobagg_off_<id>
+				// Blob-backed memory return: bind FMP (before bump) to __blobagg_off_<id>
 				// to match blob-aggregate registration in ContractBuilder::buildBlock.
-				if (sz > AssemblyBuilder::SLOT_SIZE)
+				if (memoryUsesBlob(rpType))
 				{
 					std::string offN = "__blobagg_off_" + std::to_string(rp->id());
 					auto blob = awst::makeLoadSlot(

@@ -136,7 +136,7 @@ std::shared_ptr<awst::Block> buildBlock(
 			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
 			continue;
 		auto const* rpType = _ctx.typeMapper.map(rp->type());
-		if (computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
+		if (memoryUsesBlob(rpType))
 			fn.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
 

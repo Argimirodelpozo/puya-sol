@@ -301,7 +301,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			mappingStorageParams.insert(pi);
 		}
 		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& computeEncodedElementSize(m_typeMapper.map(param->type())) > AssemblyBuilder::SLOT_SIZE)
+			&& memoryUsesBlob(m_typeMapper.map(param->type())))
 		{
 			// Memory aggregate >4KB → passed as uint64 base offset (pointer model).
 			arg.wtype = awst::WType::uint64Type();
@@ -365,7 +365,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			auto const* rpW = m_typeMapper.map(rp->type());
 			if (!rp->name().empty()
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-				&& computeEncodedElementSize(rpW) > AssemblyBuilder::SLOT_SIZE)
+				&& memoryUsesBlob(rpW))
 				types.push_back(awst::WType::uint64Type());
 			else
 				types.push_back(rpW);
@@ -469,7 +469,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
 			continue;
 		auto const* rpTypeB = m_typeMapper.map(rp->type());
-		if (computeEncodedElementSize(rpTypeB) > AssemblyBuilder::SLOT_SIZE)
+		if (memoryUsesBlob(rpTypeB))
 			fnCtx.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
 
@@ -534,7 +534,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 			// Blob-backed (>4KB) returns: pre-zeroed via FMP bump; skip bzero init.
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-				&& computeEncodedElementSize(rpType) > AssemblyBuilder::SLOT_SIZE)
+				&& memoryUsesBlob(rpType))
 				continue;
 
 			auto target = awst::makeVarExpression(rp->name(), rpType, loc);
@@ -734,7 +734,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				auto const* rp0W = m_typeMapper.map(returnParams[0]->type());
 				// Blob-backed >4KB → return uint64 base offset.
 				if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-					&& computeEncodedElementSize(rp0W) > AssemblyBuilder::SLOT_SIZE)
+					&& memoryUsesBlob(rp0W))
 					implicitReturn->value = awst::makeVarExpression(
 						"__blobagg_off_" + std::to_string(returnParams[0]->id()),
 						awst::WType::uint64Type(), loc);

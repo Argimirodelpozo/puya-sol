@@ -101,7 +101,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			auto const& rp0 = _funcDef->returnParameters()[0];
 			if (!rp0->name().empty()
 				&& rp0->referenceLocation() == VariableDeclaration::Location::Memory
-				&& builder::computeEncodedElementSize(mapReturnType(rp0->type())) > builder::AssemblyBuilder::SLOT_SIZE)
+				&& builder::memoryUsesBlob(mapReturnType(rp0->type())))
 				return awst::WType::uint64Type();
 		}
 		return mapReturnType(_funcDef->returnParameters()[0]->type());
@@ -162,8 +162,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				mappingStorageParamIndices.insert(pi);
 			}
 			else if (param->referenceLocation() == VariableDeclaration::Location::Memory
-				&& builder::computeEncodedElementSize(m_ctx.typeMapper.map(param->type()))
-					> builder::AssemblyBuilder::SLOT_SIZE)
+				&& builder::memoryUsesBlob(m_ctx.typeMapper.map(param->type())))
 				// Blob-backed (>4KB) memory aggregate: the callee receives the
 				// uint64 base offset (pointer model), not the struct value. The
 				// argument `p` resolves to its offset local (SolIdentifier).
