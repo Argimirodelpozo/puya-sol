@@ -102,6 +102,11 @@ inline bool isBoxKeyedStorageRef(solidity::frontend::Type const* _t)
 			return true;
 		// Always-boxed (≥128B) structs: type-only size matches the var-level box decision.
 		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
+		// NOTE (Stage 1b, attempted + reverted): widening to ALL structs (+ boxing them in
+		// shouldUseBoxStorage) fixed structVarParam but regressed 7 small-struct tests (struct
+		// delete, asm storage-via-pointer, library modifiers, recursive structs) — the
+		// app-global→box layout change isn't free. Needs a discriminated (box|app-global)
+		// handle that keeps app-global structs app-global. See PLAN.md.
 		return false;
 	}
 	// Dynamic arrays of structs travel as a box-key handle (handle-model Stage 1a-arrays):
