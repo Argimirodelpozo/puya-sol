@@ -7,6 +7,7 @@
 #include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -165,6 +166,121 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 
 	return method;
 }
+
+namespace {
+// Handle-model copy+write-back for MEMORY-ref params of internal contract methods. Solidity passes
+// memory by reference (callee mutations propagate to the caller); our value-translation copies, so
+// a method that mutates a memory STRUCT param would lose it. (Arrays already write through via puya
+// ReferenceArray; libraries/free fns already augment in buildFreestandingSubroutine — this brings
+// contract methods in line.) Each mutated memory-ref param is appended to the method's return; the
+// internal caller (SolInternalCall) writes it back. Storage refs use the box-key/offset handle, not
+// this. Mirrors the freestanding logic + the caller's memoryRefParamIndices filter exactly.
+void augmentMethodForMutatedMemoryParams(
+	awst::ContractMethod& method,
+	solidity::frontend::FunctionDefinition const& func,
+	TypeMapper& /*tm*/)
+{
+	using namespace solidity::frontend;
+	if (!func.isImplemented() || !method.body) return;
+	// Internal only: Public/External are ABI entry points (augmenting their return breaks the
+	// selector's return ABI); Private is threaded by puya. Internal methods are pure callsub
+	// targets — the analogue of library/free fns, which buildFreestandingSubroutine augments.
+	if (func.visibility() != Visibility::Internal) return;
+
+	auto isMemRefType = [](Type const* t) {
+		if (auto const* arr = dynamic_cast<ArrayType const*>(t)) return !arr->isByteArrayOrString();
+		return dynamic_cast<StructType const*>(t) != nullptr;
+	};
+	ParamMutationDetector detector;
+	for (auto const& p : func.parameters()) detector.paramIds.insert(p->id());
+	func.body().accept(detector);
+
+	std::vector<size_t> memIdx;
+	for (size_t pi = 0; pi < func.parameters().size() && pi < method.args.size(); ++pi)
+	{
+		auto const& p = func.parameters()[pi];
+		if (p->referenceLocation() != VariableDeclaration::Location::Memory) continue;
+		if (!p->type() || !isMemRefType(p->type())) continue;
+		if (!detector.mutated.count(p->id())) continue;
+		memIdx.push_back(pi);
+	}
+	if (memIdx.empty()) return;
+
+	auto const& loc = method.sourceLocation;
+
+	// Augment the return type: original return value(s) (flattened), then each mem-param type.
+	std::vector<awst::WType const*> types;
+	bool origVoid = (method.returnType == awst::WType::voidType());
+	auto const* origTuple = origVoid ? nullptr
+		: dynamic_cast<awst::WTuple const*>(method.returnType);
+	if (!origVoid)
+	{
+		if (origTuple) for (auto const* t : origTuple->types()) types.push_back(t);
+		else types.push_back(method.returnType);
+	}
+	for (size_t idx : memIdx) types.push_back(method.args[idx].wtype);
+	awst::WType const* newRetType =
+		types.size() == 1 ? types[0] : new awst::WTuple(std::move(types));
+	method.returnType = newRetType;
+	bool newIsTuple = (dynamic_cast<awst::WTuple const*>(newRetType) != nullptr);
+
+	// Walk existing returns; append the mem-param vars to match the new shape.
+	std::function<void(awst::Block&)> walk = [&](awst::Block& block) {
+		for (auto& stmt : block.body)
+		{
+			if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+			{
+				if (!newIsTuple)
+				{
+					if (!ret->value && memIdx.size() == 1)
+						ret->value = awst::makeVarExpression(
+							method.args[memIdx[0]].name, method.args[memIdx[0]].wtype,
+							ret->sourceLocation);
+				}
+				else
+				{
+					auto tuple = awst::makeTupleExpression(newRetType, ret->sourceLocation);
+					if (ret->value)
+					{
+						if (auto* ot = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
+							for (auto& it : ot->items) tuple->items.push_back(it);
+						else tuple->items.push_back(ret->value);
+					}
+					for (size_t idx : memIdx)
+						tuple->items.push_back(awst::makeVarExpression(
+							method.args[idx].name, method.args[idx].wtype, ret->sourceLocation));
+					ret->value = std::move(tuple);
+				}
+			}
+			if (auto* ie = dynamic_cast<awst::IfElse*>(stmt.get()))
+			{
+				if (ie->ifBranch) walk(*ie->ifBranch);
+				if (ie->elseBranch) walk(*ie->elseBranch);
+			}
+		}
+	};
+	walk(*method.body);
+
+	// Fall-through: only void methods reach here un-terminated (buildFunction already synthesised
+	// a return for non-void fall-through, which the walk above augmented). Return the mem param(s).
+	if (!awst::blockAlwaysTerminates(*method.body))
+	{
+		auto implicit = awst::makeReturnStatement(nullptr, loc);
+		if (!newIsTuple && memIdx.size() == 1)
+			implicit->value = awst::makeVarExpression(
+				method.args[memIdx[0]].name, method.args[memIdx[0]].wtype, loc);
+		else
+		{
+			auto tuple = awst::makeTupleExpression(newRetType, loc);
+			for (size_t idx : memIdx)
+				tuple->items.push_back(awst::makeVarExpression(
+					method.args[idx].name, method.args[idx].wtype, loc));
+			implicit->value = std::move(tuple);
+		}
+		method.body->body.push_back(std::move(implicit));
+	}
+}
+} // namespace
 
 awst::ContractMethod ContractBuilder::buildFunction(
 	solidity::frontend::FunctionDefinition const& _func,
@@ -804,6 +920,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		Logger::instance().debug("function '" + method.memberName + "' has no implementation", method.sourceLocation);
 		method.body = awst::makeBlock(method.sourceLocation);
 	}
+
+	// Write-back augmentation for mutated MEMORY-ref params (Solidity passes memory by ref).
+	// No-op unless the method mutates a memory struct/array param; the internal caller writes back.
+	augmentMethodForMutatedMemoryParams(method, _func, m_typeMapper);
 
 	return method;
 }

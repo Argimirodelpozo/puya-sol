@@ -427,8 +427,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// AWSTBuilder.cpp memoryRefParamIndices (storage first, then memory),
 	// same use-def filter (only mutated params augmented).
 	std::vector<size_t> memoryRefParamIndices;
+	// Internal contract methods are now augmented too (FunctionBuilder), matching library/free.
+	bool calleeIsInternalMethod = _funcDef && !calleeIsLibrary && !calleeIsFree
+		&& _funcDef->visibility() == Visibility::Internal;
 	if (_funcDef && _funcDef->isImplemented()
-		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree))
+		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree || calleeIsInternalMethod))
 	{
 		auto isMemRefType = [](Type const* t) {
 			if (auto const* arr = dynamic_cast<ArrayType const*>(t))
