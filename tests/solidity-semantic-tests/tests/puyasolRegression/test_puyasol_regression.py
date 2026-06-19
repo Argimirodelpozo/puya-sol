@@ -157,3 +157,16 @@ def test_memory_aggregate_aliasing(harness):
     app = harness.compile_and_deploy("puyasolRegression/contracts/memory_alias.sol")
     assert as_int(harness.call(app, "aliases()").abi_return) == 11        # mutation through b seen via a
     assert as_int(harness.call(app, "reassignIsSafe()").abi_return) == 5  # b reassigned -> copy, a unchanged
+
+
+def test_struct_storage_ref_array_element(harness):
+    """puyasolRegression/contracts/struct_elem_ref.sol — NOT an o.g. semantic test.
+
+    Dual (key,offset) struct-ref handle: a struct-ref param that receives an array ELEMENT
+    (arr[0]) gains a companion offset param. The same param also takes a whole-box state struct
+    and a mapping value (offset 0) — all three write through.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/struct_elem_ref.sol")
+    assert as_int(harness.call(app, "arrayElem()").abi_return) == 5
+    assert as_int(harness.call(app, "structVar()").abi_return) == 5
+    assert as_int(harness.call(app, "mapVal()").abi_return) == 5

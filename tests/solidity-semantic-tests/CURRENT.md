@@ -1,3 +1,23 @@
+# Semantic Test Status — v393
+
+> **aggregate handle model — COMPLETE: dual (key,offset) struct-ref handle (68bd6637a2,
+> 2026-06-18):** **58 failed / 1249 passed / 87 xf** (zero-reg, identical fail-set). Fixes the
+> LAST battery divergence (arrayElemParam): passing an array ELEMENT by ref (`_bs(arr[i])`) now
+> writes through to the element instead of corrupting the whole array box. An array element is a
+> SLICE of the array's box (unlike a mapping value, which is its own box), so the box-key alone
+> can't address it — it needs an offset. A struct-ref param that receives an array-element ref at
+> any call site (`structRefOffsetParamsRegistry`, program-wide pre-pass) becomes
+> "offset-convention" and gains a companion uint64 offset param: caller lifts the ARRAY's box key +
+> appends `header+i*elemSize` (whole-box callers pass 0); callee declares `name__off`; consumer
+> `tryHandleOffsetStructRefFieldWrite` emits `box_replace(key, offset+fieldOff, ARC4(v))` (offset 0
+> = byte-identical to the old whole-box field write, so single/m[k] callers are unchanged). Fixed-
+> layout structs only. Guard: puyasolRegression/struct_storage_ref_array_element.
+>
+> **🎉 The differential-fuzzing battery (tests/WIP/tiny-fuzzing-oracle) is now FULLY CLEAN vs a
+> live solc+EVM** — storage struct/array refs to contract methods (v388–390), app-global structs,
+> memory→memory aliasing (v392), and now array-element-by-ref all match. The data-location
+> migration is done. [[handle-model-rearchitecture]]
+
 # Semantic Test Status — v392
 
 > **aggregate handle model — Stage 2: memory→memory assignment aliases (20221c54fb,
