@@ -216,3 +216,6 @@ def test_subword_arith_shift_signfill(harness):
     assert s(harness.call(app, "shr8(int8,uint256)", -128, 256)) == -1
     assert s(harness.call(app, "shr8(int8,uint256)", 100, 256)) == 0
     assert s(harness.call(app, "shr16(int16,uint256)", -1, 1000)) == -1
+    assert s(harness.call(app, "shr8const(int8)", -1)) == -1    # constant amount, was REVERT
+    assert s(harness.call(app, "shr8const(int8)", 100)) == 0
+    assert s(harness.call(app, "shr8const256(int8)", -1)) == -1

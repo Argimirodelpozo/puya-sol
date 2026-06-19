@@ -7,4 +7,6 @@ pragma solidity ^0.8.0;
 contract SubwordArithShift {
     function shr8(int8 x, uint256 n)   external pure returns (int8)  { return x >> n; }
     function shr16(int16 x, uint256 n) external pure returns (int16) { return x >> n; }
+    function shr8const(int8 x)  external pure returns (int8) { return x >> 100; }  // constant amount
+    function shr8const256(int8 x) external pure returns (int8) { return x >> 256; }
 }
