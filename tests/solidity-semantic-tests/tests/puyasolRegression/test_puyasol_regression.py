@@ -170,3 +170,14 @@ def test_struct_storage_ref_array_element(harness):
     assert as_int(harness.call(app, "arrayElem()").abi_return) == 5
     assert as_int(harness.call(app, "structVar()").abi_return) == 5
     assert as_int(harness.call(app, "mapVal()").abi_return) == 5
+
+
+def test_memory_struct_param_writeback(harness):
+    """puyasolRegression/contracts/mem_struct_param.sol — NOT an o.g. semantic test.
+
+    Memory is passed by reference: an internal contract method that mutates a memory struct param
+    writes through to the caller (copy+write-back augmentation). Read-only params are not augmented.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/mem_struct_param.sol")
+    assert as_int(harness.call(app, "writesThrough()").abi_return) == 11
+    assert as_int(harness.call(app, "readonlyUnchanged()").abi_return) == 14

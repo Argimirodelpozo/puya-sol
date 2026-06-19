@@ -1,3 +1,19 @@
+# Semantic Test Status — v394
+
+> **handle model — Stage 3: memory-ref param write-back for internal contract methods (8c1289afdd,
+> 2026-06-18):** **58 failed / 1250 passed / 87 xf** (zero-reg, identical fail-set). Solidity passes
+> memory by reference, so a callee's mutations propagate. Memory ARRAYS already write through (puya
+> ReferenceArray, in-place element writes) and library/free fns already augment
+> (buildFreestandingSubroutine), but internal CONTRACT methods that mutate a memory STRUCT param
+> lost it (struct field write is COW rebuild+reassign on the callee's copy, not in-place) —
+> `_mut(s){s.x=11}` returned 5 not 11. Fix brings internal contract methods in line via the same
+> copy+write-back: callee (`FunctionBuilder::augmentMethodForMutatedMemoryParams`) appends the
+> mutated mem param to its return + synthesises the void fall-through; caller (`SolInternalCall`
+> memoryRefParamIndices gate) now admits internal methods + threads the value back. INTERNAL
+> visibility only (Public/External would break the selector ABI; Private is puya-threaded). Filter
+> matches the caller exactly (mutated, non-bytes array or struct). Guard:
+> puyasolRegression/memory_struct_param_writeback. The fuzzer's mem_param battery is clean.
+
 # Semantic Test Status — v393
 
 > **aggregate handle model — COMPLETE: dual (key,offset) struct-ref handle (68bd6637a2,
