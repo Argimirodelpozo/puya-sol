@@ -36,7 +36,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	auto index = _idx.resolve();
 
 	if (index->wtype == awst::WType::biguintType())
-		index = TypeCoercion::implicitNumericCast(std::move(index), awst::WType::uint64Type(), _loc);
+		index = TypeCoercion::checkedIndexToUint64(m_ctx.prePendingStatements, std::move(index), _loc);
 
 	auto* elemType = elementType();
 	if (!elemType)

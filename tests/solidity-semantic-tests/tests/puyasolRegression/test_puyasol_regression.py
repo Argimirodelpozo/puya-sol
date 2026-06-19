@@ -219,3 +219,17 @@ def test_subword_arith_shift_signfill(harness):
     assert s(harness.call(app, "shr8const(int8)", -1)) == -1    # constant amount, was REVERT
     assert s(harness.call(app, "shr8const(int8)", 100)) == 0
     assert s(harness.call(app, "shr8const256(int8)", -1)) == -1
+
+
+def test_array_oob_huge_index(harness):
+    """puyasolRegression/contracts/array_oob_index.sol — NOT an o.g. semantic test.
+
+    An array index >= 2^64 reverts (out of bounds) instead of silently truncating to uint64 and
+    reading arr[low-64-bits]. Storage-dynamic, memory, and fixed-size arrays, read + write paths.
+    Found by the differential fuzzer.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/array_oob_index.sol")
+    BIG = 1 << 128
+    for fn in ("storageOOB(uint256)", "memOOB(uint256)", "fixedOOB(uint256)", "memWriteOOB(uint256)"):
+        assert harness.call(app, fn, BIG, expect_revert=True).reverted, fn
+    assert as_int(harness.call(app, "inBounds(uint256)", 1).abi_return) == 11  # normal index works

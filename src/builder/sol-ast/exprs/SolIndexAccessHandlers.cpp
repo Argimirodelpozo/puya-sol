@@ -62,8 +62,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 		baseExprForRead = builder::StorageMapper::makeStateGetWithDefault(boxExpr, arrWType, m_loc);
 
-	auto idx = buildExpr(*m_indexAccess.indexExpression());
-	idx = builder::TypeCoercion::implicitNumericCast(std::move(idx), awst::WType::uint64Type(), m_loc);
+	// Index → uint64 with an out-of-bounds pre-check (a wide index >= 2^64 reverts instead of
+	// silently truncating its high bits and reading arr[low-64-bits]).
+	auto idx = builder::TypeCoercion::checkedIndexToUint64(
+		m_ctx.prePendingStatements, buildExpr(*m_indexAccess.indexExpression()), m_loc);
 
 	// puya evaluates the index twice (bounds check + access); a side-effecting
 	// index `arr[f()]` ran f() twice (verified cnt==2). makeEvalOnce prevents it.
@@ -369,8 +371,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			{
 				auto idxExpr = index;
 				if (idxExpr->wtype == awst::WType::biguintType())
-					idxExpr = builder::TypeCoercion::implicitNumericCast(
-						std::move(idxExpr), awst::WType::uint64Type(), m_loc);
+					idxExpr = builder::TypeCoercion::checkedIndexToUint64(
+						m_ctx.prePendingStatements, std::move(idxExpr), m_loc);
 				idxBuilder = m_ctx.builderForInstance(
 					TypeProvider::uint256(), idxExpr);
 			}
@@ -401,8 +403,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 				awst::makeAssignmentStatement(tempVar, std::move(index), m_loc));
 			index = tempVar;
 		}
-		index = builder::TypeCoercion::implicitNumericCast(
-			std::move(index), awst::WType::uint64Type(), m_loc);
+		index = builder::TypeCoercion::checkedIndexToUint64(
+			m_ctx.prePendingStatements, std::move(index), m_loc);
 	}
 
 	// bytes/bytesN index: puya rejects IndexExpression on bytes; use extract3.

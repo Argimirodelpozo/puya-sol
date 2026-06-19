@@ -246,6 +246,34 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
 	return _value;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
+	std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
+	std::shared_ptr<awst::Expression> _idx,
+	awst::SourceLocation const& _loc
+)
+{
+	// Array index → uint64 with a bounds PRE-check: a wide (biguint) index >= 2^64 is always out of
+	// bounds (no AVM array reaches 2^64 elements), so assert it fits in uint64 BEFORE truncating —
+	// else `arr[2^128]` silently truncates the high bits and reads arr[low-64-bits] instead of
+	// reverting (the downstream `index < length` check only sees the truncated value). Pins to a
+	// temp so a side-effecting index (`a[--i]`) evaluates once.
+	if (_idx && _idx->wtype == awst::WType::biguintType())
+	{
+		static int s_ckIdxCtr = 0;
+		std::string nm = "__ckidx_" + std::to_string(s_ckIdxCtr++);
+		_preStmts.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_idx), _loc));
+		auto fits = awst::makeNumericCompare(
+			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc),
+			awst::NumericComparison::Lt,
+			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
+		_preStmts.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(fits), _loc, "array index out of bounds"), _loc));
+		_idx = awst::makeVarExpression(nm, awst::WType::biguintType(), _loc);
+	}
+	return implicitNumericCast(std::move(_idx), awst::WType::uint64Type(), _loc);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedWiden(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _srcSolType,
