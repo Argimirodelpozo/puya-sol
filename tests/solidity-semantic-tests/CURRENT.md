@@ -1,3 +1,19 @@
+# Semantic Test Status — v395
+
+> **fix(int): signed sub-word widening sign-extends at all coercion sites (163ce6ce4a,
+> 2026-06-19):** **58 failed / 1251 passed / 87 xf** (zero-reg, identical fail-set). Differential
+> fuzzer found `int16(int8(x))` zero-extended instead of sign-extending (`int8(-1)`→int16 gave 255
+> not -1). Root: int8 + int16 both map to uint64Type, so `implicitNumericCast` sees uint64→uint64
+> and no-ops — the bit-widths are erased. `int8→int256` was already correct (biguint path
+> sign-extends); only sub-word→sub-word was missed. Fixed via shared
+> `TypeCoercion::signExtendSignedWiden(value, srcSolType, tgtSolType)` (both target tiers) applied
+> at: explicit cast, var-decl, assignment (plain `=`), function arg, struct-field write. Companion
+> fix: `signExtendToUint64` now MASKS to the source width (`mod 2^bits`) first → safe whether the
+> input is minimal OR already-sign-extended-to-64 (an ABI-decoded int8 param is the latter; without
+> the mask `int16 z = int8param` double-extended, which regressed test_chop_sign_bits +
+> test_int24_field_decode — both green now). Array/mapping/state-var/memory/return/ternary widening
+> were already correct. Guard: puyasolRegression/signed_subword_widening. [[int24-subword-codec]]
+
 # Semantic Test Status — v394
 
 > **handle model — Stage 3: memory-ref param write-back for internal contract methods (8c1289afdd,
