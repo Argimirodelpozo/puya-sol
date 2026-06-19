@@ -234,3 +234,17 @@ def test_array_oob_huge_index(harness):
                "mbReadOOB(uint256)", "mbWriteOOB(uint256)"):
         assert harness.call(app, fn, BIG, expect_revert=True).reverted, fn
     assert as_int(harness.call(app, "inBounds(uint256)", 1).abi_return) == 11  # normal index works
+
+
+def test_checked_overflow_before_truncation(harness):
+    """puyasolRegression/contracts/checked_overflow_trunc.sol — NOT an o.g. semantic test.
+
+    A checked uint256 op narrowed immediately (uintN(s + 1)) reverts on the uint256 overflow
+    (checked at full width before truncating) rather than silently wrapping. Found by the fuzzer.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/checked_overflow_trunc.sol")
+    MAX = (1 << 256) - 1
+    for fn in ("truncAdd(uint256)", "truncMul(uint256)", "viaTemp(uint256)"):
+        assert harness.call(app, fn, MAX, expect_revert=True).reverted, fn
+    assert as_int(harness.call(app, "uncheckedOK(uint256)", MAX).abi_return) == 0  # unchecked wraps
+    assert as_int(harness.call(app, "normalAdd(uint256,uint256)", 5, 3).abi_return) == 8

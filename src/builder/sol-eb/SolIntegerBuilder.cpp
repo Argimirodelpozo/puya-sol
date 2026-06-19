@@ -580,30 +580,53 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 		return _result;
 
 	unsigned maxBits = m_isBigUInt ? 256 : 64;
-	if (m_bits >= maxBits)
+	// uint64 (native): the AVM +/*/exp opcodes revert on overflow themselves, so no explicit check
+	// at the max width. BigUInt (uint65..uint256): does NOT auto-revert at 2^bits — biguint is
+	// arbitrary precision (up to the AVM 512-bit cap), so the result of `s+1` at uint256 is the
+	// exact 2^256, not a wrapped 0. It MUST be checked at every width INCLUDING 256; otherwise
+	// `uint64(s + 1)` truncates that 2^256 to 0 before any downstream (return/store) check sees it,
+	// silently wrapping instead of reverting. Found by the differential fuzzer.
+	if (m_bits >= maxBits && !m_isBigUInt)
 		return _result;
 
 	static int checkedCounter = 0;
 	std::string tmpName = "__checked_" + std::to_string(checkedCounter++);
 	auto* resType = _result->wtype;
 
-	auto tmpVar = awst::makeVarExpression(tmpName, resType, _loc);
-
-	auto assign = awst::makeAssignmentStatement(tmpVar, std::move(_result), _loc);
-	m_ctx.prePendingStatements.push_back(std::move(assign));
-
 	std::string maxValStr;
 	if (m_isBigUInt)
 		maxValStr = ((solidity::u256(1) << m_bits) - 1).str();
 	else
 		maxValStr = std::to_string((uint64_t(1) << m_bits) - 1);
-	auto maxConst = awst::makeIntegerConstant(std::move(maxValStr), _loc, resType);
 
-	auto cmp = awst::makeNumericCompare(tmpVar, awst::NumericComparison::Lte, std::move(maxConst), _loc);
+	auto mkCmp = [&]() {
+		return awst::makeNumericCompare(
+			awst::makeVarExpression(tmpName, resType, _loc), awst::NumericComparison::Lte,
+			awst::makeIntegerConstant(std::string(maxValStr), _loc, resType), _loc);
+	};
 
-	auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "overflow"), _loc);
+	// uint256 (m_bits==256): emit the check INLINE as a comma expression, not as pre-statements.
+	// uint256 ops first reach emitOverflowCheck in modifier-arg / constructor / return-expression
+	// contexts that don't flush prePendingStatements at the right point, so a pre-statement check
+	// is mis-placed there (regressed g()'s `r+r` modifier args etc.). A comma `(t=res, assert, t)`
+	// is a pure value expression and composes anywhere. (Sub-256 keeps the existing pre-stmt form.)
+	if (m_isBigUInt && m_bits == 256)
+	{
+		auto bind = awst::makeAssignmentExpression(
+			awst::makeVarExpression(tmpName, resType, _loc), std::move(_result), _loc, resType);
+		auto assertExpr = awst::makeAssert(mkCmp(), _loc, "overflow");
+		auto comma = awst::makeCommaExpression(resType, _loc);
+		comma->expressions.push_back(std::move(bind));
+		comma->expressions.push_back(std::move(assertExpr));
+		comma->expressions.push_back(awst::makeVarExpression(tmpName, resType, _loc));
+		return comma;
+	}
+
+	auto tmpVar = awst::makeVarExpression(tmpName, resType, _loc);
+	auto assign = awst::makeAssignmentStatement(tmpVar, std::move(_result), _loc);
+	m_ctx.prePendingStatements.push_back(std::move(assign));
+	auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(mkCmp(), _loc, "overflow"), _loc);
 	m_ctx.prePendingStatements.push_back(std::move(assertStmt));
-
 	return tmpVar;
 }
 
