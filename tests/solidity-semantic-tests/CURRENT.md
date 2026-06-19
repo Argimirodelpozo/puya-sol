@@ -1,3 +1,16 @@
+# Semantic Test Status — v397
+
+> **fix(int): ALL signed `>>` use the sign-filling biguint path (c1ec171dc3, 2026-06-19):**
+> **58 failed / 1252 passed / 87 xf** (zero-reg, identical fail-set; test_blobhash xdist flake
+> passes in isolation). Closes the v396 residual: a signed `>>` with a ≤64-bit shift amount
+> (constant `x >> 100` or sub-word var) had needsBigUInt=false → uint64 LOGICAL `shr` (zero-fill) +
+> an overflow check that REVERTED. The dynamic case only worked because its uint256 amount forced
+> biguint. Fix: `+ (m_signed && _op == RShift)` in needsBigUInt (SolIntegerBuilder, mirrors the
+> signed-Sub clause) → every signed `>>` routes through buildBigUIntArithmeticShiftRight (+ the
+> 256-bit sign-extension from v396). `int8(-1) >> 100` = -1 now, not REVERT. Sub-word signed
+> arithmetic shift is now fully correct (dynamic + constant + sub-word-RHS). Guard extended:
+> puyasolRegression/subword_arith_shift_signfill. [[puya-sol-shr-256-bug]]
+
 # Semantic Test Status — v396
 
 > **fix(int): sub-word signed arithmetic shift right sign-fills (2022807d8c, 2026-06-19):**
