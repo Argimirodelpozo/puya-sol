@@ -1,3 +1,17 @@
+# Semantic Test Status — v399
+
+> **fix(int): uint256 add/mul/pow overflow checked even when result is narrowed (753c4b5297,
+> 2026-06-19):** **57 failed / 1256 passed / 87 xf** (zero-reg, identical fail-set). Differential
+> fuzzer (ABI struct-array probe): `uint64(s + 1)` with s=2^256-1 silently WRAPPED to 0 not REVERT.
+> `emitOverflowCheck` skipped the check at max width (`m_bits >= maxBits`) — fine for native uint64
+> (the AVM opcode self-reverts) but WRONG for biguint: a uint256 add is arbitrary-precision biguint,
+> so s+1 = exact 2^256 (not wrapped 0); `plainAdd` only reverts via the return-encoding, which the
+> truncation bypassed. Fix: (1) never skip for biguint (`&& !m_isBigUInt`); (2) emit the uint256
+> check INLINE as a comma `(t=res, assert(t<=2^256-1), t)` not pre-statements — uint256 ops first
+> hit emitOverflowCheck in modifier-arg/ctor/return contexts that don't flush prePendingStatements
+> (pre-stmt form regressed 5 tests; a comma composes anywhere; sub-256 keeps pre-stmts). Guard:
+> puyasolRegression/checked_overflow_before_truncation. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v398
 
 > **fix(array): index >= 2^64 reverts (OOB), not silent uint64 truncation (bbc8fc45ac,
