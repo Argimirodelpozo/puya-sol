@@ -489,9 +489,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 	unsigned elemsPerBox = StorageMapper::elementsPerBox(_arrWtype);
 
 	// Coerce index to uint64 for arithmetic.
-	if (_idxExpr->wtype != awst::WType::uint64Type())
-		_idxExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(_idxExpr), awst::WType::uint64Type(), m_loc);
+	_idxExpr = builder::TypeCoercion::checkedIndexToUint64(
+		m_ctx.prePendingStatements, std::move(_idxExpr), m_loc);
 
 	// Pin idx to a temp local so we can reference it twice (page + offset).
 	static int s_mbCounter = 0;
@@ -646,16 +645,16 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 			startExpr = buildExpr(*rg->startExpression());
 		else
 			startExpr = awst::makeZero(m_loc);
-		startExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(startExpr), awst::WType::uint64Type(), m_loc);
+		startExpr = builder::TypeCoercion::checkedIndexToUint64(
+			m_ctx.prePendingStatements, std::move(startExpr), m_loc);
 
 		std::shared_ptr<awst::Expression> endExpr;
 		if (rg->endExpression())
 			endExpr = buildExpr(*rg->endExpression());
 		else
 			endExpr = cumLength;
-		endExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(endExpr), awst::WType::uint64Type(), m_loc);
+		endExpr = builder::TypeCoercion::checkedIndexToUint64(
+			m_ctx.prePendingStatements, std::move(endExpr), m_loc);
 
 		// Stash start/end in temps.
 		auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc);
@@ -717,8 +716,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 
 	// Now the index access: bounds-check i < cumLength, then access root[cumOffset + i].
 	auto idx = buildExpr(*m_indexAccess.indexExpression());
-	idx = builder::TypeCoercion::implicitNumericCast(
-		std::move(idx), awst::WType::uint64Type(), m_loc);
+	idx = builder::TypeCoercion::checkedIndexToUint64(
+		m_ctx.prePendingStatements, std::move(idx), m_loc);
 
 	std::string idxName = "__slice_i_" + idSuffix;
 	auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);

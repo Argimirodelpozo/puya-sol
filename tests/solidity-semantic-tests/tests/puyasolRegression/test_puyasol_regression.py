@@ -230,6 +230,7 @@ def test_array_oob_huge_index(harness):
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/array_oob_index.sol")
     BIG = 1 << 128
-    for fn in ("storageOOB(uint256)", "memOOB(uint256)", "fixedOOB(uint256)", "memWriteOOB(uint256)"):
+    for fn in ("storageOOB(uint256)", "memOOB(uint256)", "fixedOOB(uint256)", "memWriteOOB(uint256)",
+               "mbReadOOB(uint256)", "mbWriteOOB(uint256)"):
         assert harness.call(app, fn, BIG, expect_revert=True).reverted, fn
     assert as_int(harness.call(app, "inBounds(uint256)", 1).abi_return) == 11  # normal index works

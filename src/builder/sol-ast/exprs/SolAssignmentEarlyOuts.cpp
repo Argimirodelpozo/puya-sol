@@ -137,10 +137,8 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	auto const* elemArc4Type = sa->elementType();
 
 	// Pin idx to a temp so page and offset can reference it without re-evaluating side effects.
-	auto idxExpr = buildExpr(*lhsIdx->indexExpression());
-	if (idxExpr->wtype != awst::WType::uint64Type())
-		idxExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(idxExpr), awst::WType::uint64Type(), m_loc);
+	auto idxExpr = builder::TypeCoercion::checkedIndexToUint64(
+		m_ctx.prePendingStatements, buildExpr(*lhsIdx->indexExpression()), m_loc);
 	static int s_mbWCounter = 0;
 	std::string idxVarName = "__mb_widx_" + std::to_string(s_mbWCounter++);
 	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
@@ -277,8 +275,8 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 	auto boxKey = awst::makeReinterpretCast(
 		awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
 		awst::WType::boxKeyType(), m_loc);
-	auto idx = builder::TypeCoercion::implicitNumericCast(
-		buildExpr(*ia->indexExpression()), awst::WType::uint64Type(), m_loc);
+	auto idx = builder::TypeCoercion::checkedIndexToUint64(
+		m_ctx.prePendingStatements, buildExpr(*ia->indexExpression()), m_loc);
 	auto offset = awst::makeUInt64BinOp(
 		awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
 			awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), m_loc), m_loc),
