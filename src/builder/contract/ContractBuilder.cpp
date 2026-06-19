@@ -4,6 +4,7 @@
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/Arc4Defaults.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -126,6 +127,14 @@ std::shared_ptr<awst::Block> buildBlock(
 	for (auto const* mp: _ctx.mappingKeyParams)
 		if (mp && !mp->name().empty())
 			fn.setMappingKeyParam(mp->id(), mp->name());
+
+	// Offset-convention struct-ref params (handle-model dual handle): register the companion
+	// uint64 offset var so the body's `s.field` writes hit the element slice via
+	// box_replace(key, offset+fieldOff). The offset param itself is in the subroutine signature
+	// (FunctionBuilder) and supplied by the caller (SolInternalCall).
+	for (auto const* mp: _ctx.mappingKeyParams)
+		if (mp && !mp->name().empty() && structRefOffsetParamsRegistry().count(mp->id()))
+			fn.setStructRefOffset(mp->id(), mp->name() + "__off");
 
 	// Named returns >4 KB: blob-backed aggregates (pointer model) so `p.field[i]`
 	// lowers to multi-slot blob word access. Base offset assigned + FMP bumped in

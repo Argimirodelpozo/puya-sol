@@ -77,6 +77,18 @@ inline std::set<int64_t>& reassignedMemoryLocalsRegistry()
 	return registry;
 }
 
+/// Struct storage-ref PARAM decl IDs that receive an ARRAY-ELEMENT ref (`f(arr[i])`) at some call
+/// site → "offset-convention" (handle-model dual handle): the box-key param gains a companion
+/// uint64 OFFSET param so the callee's `s.field` writes hit the element slice
+/// (box_replace(key, offset+fieldOff)) rather than corrupting the whole array box. Whole-box
+/// callers of the same param pass offset 0 — byte-identical to the old path for those. Populated
+/// program-wide at AWSTBuilder::build start. Process-wide static (single-threaded).
+inline std::set<int64_t>& structRefOffsetParamsRegistry()
+{
+	static std::set<int64_t> registry;
+	return registry;
+}
+
 /// Walk `_t` and record every struct type appearing as a mapping VALUE (recursively).
 /// `_seen` prevents infinite recursion through recursive struct types.
 inline void collectMappingValueStructs(

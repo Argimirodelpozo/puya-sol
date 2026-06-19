@@ -210,6 +210,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		paramIndex++;
 	}
 
+	// Handle-model dual handle: offset-convention struct-ref params (those that receive an
+	// array-element ref `f(arr[i])` somewhere) get a companion uint64 OFFSET param, appended
+	// after all regular params. The caller appends matching offset args in the same order; the
+	// body's `s.field` writes target the element slice via box_replace(key, offset+fieldOff).
+	for (auto const& param: _func.parameters())
+		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+			&& !param->name().empty()
+			&& structRefOffsetParamsRegistry().count(param->id()))
+		{
+			awst::SubroutineArgument offArg;
+			offArg.name = param->name() + "__off";
+			offArg.sourceLocation = makeLoc(param->location());
+			offArg.wtype = awst::WType::uint64Type();
+			method.args.push_back(std::move(offArg));
+		}
+
 	// Return type
 	auto const& returnParams = _func.returnParameters();
 	std::vector<SignedReturnInfo> signedReturns;

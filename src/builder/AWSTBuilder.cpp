@@ -4,6 +4,7 @@
 #include "builder/SubroutineReachability.h"
 #include "builder/builtin/Ripemd160Builder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
@@ -136,6 +137,65 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					scanBody(fn);
 			for (auto const* fn: ASTNode::filteredNodes<FunctionDefinition>(unit.nodes()))
 				scanBody(fn);
+		}
+	}
+
+	// Struct-ref offset-convention pre-pass (handle-model dual handle): a storage struct-ref param
+	// that receives an ARRAY-ELEMENT ref (`f(arr[i])`) at any call site → mark it so the callee
+	// gains a companion uint64 offset param and `s.field` writes the element slice (not the whole
+	// array box). Whole-box callers of the same param pass offset 0. Conservative: calls whose
+	// arg/param counts don't line up (default args, exotic using-for) are skipped → those params
+	// stay whole-box (no regression, just no fix). Precise marking avoids over-boxing.
+	{
+		using namespace solidity::frontend;
+		auto& reg = structRefOffsetParamsRegistry();
+		reg.clear();
+		struct OffsetWalker: ASTConstVisitor {
+			std::set<int64_t>& out;
+			explicit OffsetWalker(std::set<int64_t>& o): out(o) {}
+			static bool isArrayElemStructRef(Expression const* e) {
+				auto const* ia = dynamic_cast<IndexAccess const*>(e);
+				if (!ia) return false;
+				auto const* at = dynamic_cast<ArrayType const*>(ia->baseExpression().annotation().type);
+				if (!at || at->isByteArrayOrString()) return false;
+				return at->baseType() && at->baseType()->category() == Type::Category::Struct;
+			}
+			bool visit(FunctionCall const& fc) override {
+				Declaration const* refDecl = nullptr;
+				if (auto const* id = dynamic_cast<Identifier const*>(&fc.expression()))
+					refDecl = id->annotation().referencedDeclaration;
+				else if (auto const* ma = dynamic_cast<MemberAccess const*>(&fc.expression()))
+					refDecl = ma->annotation().referencedDeclaration;
+				auto const* fd = dynamic_cast<FunctionDefinition const*>(refDecl);
+				if (fd) {
+					auto const& args = fc.arguments();
+					auto const& params = fd->parameters();
+					size_t shift = 0;
+					if (params.size() == args.size()) shift = 0;
+					else if (params.size() == args.size() + 1) shift = 1; // using-for receiver = param 0
+					else return true; // can't reliably map arg→param; skip
+					for (size_t i = 0; i < args.size(); ++i) {
+						size_t pIdx = i + shift;
+						if (pIdx < params.size() && isArrayElemStructRef(args[i].get())
+							&& params[pIdx]->referenceLocation()
+								== VariableDeclaration::Location::Storage)
+							out.insert(params[pIdx]->id());
+					}
+				}
+				return true;
+			}
+		} offsetWalker(reg);
+		auto scanOffsetBody = [&](FunctionDefinition const* fn) {
+			if (fn && fn->isImplemented()) fn->body().accept(offsetWalker);
+		};
+		for (auto const& sourceName: _compiler.sourceNames())
+		{
+			auto const& unit = _compiler.ast(sourceName);
+			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(unit.nodes()))
+				for (auto const* fn: contract->definedFunctions())
+					scanOffsetBody(fn);
+			for (auto const* fn: ASTNode::filteredNodes<FunctionDefinition>(unit.nodes()))
+				scanOffsetBody(fn);
 		}
 	}
 

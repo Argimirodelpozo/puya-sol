@@ -2,6 +2,7 @@
 ///   tryHandleTransientStateWrite, tryHandleStoragePointerReassign,
 ///   tryHandleMultiBoxArrayWrite
 #include "builder/sol-ast/exprs/SolAssignment.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
@@ -289,6 +290,75 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
 	static int s_baeCtr = 0;
 	std::string vn = "__bae_val_" + std::to_string(s_baeCtr++);
+	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
+	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
+	std::shared_ptr<awst::Expression> valBytes =
+		(valForEnc->wtype != slotArc4 && valForEnc->wtype->name() != slotArc4->name())
+			? awst::makeAsBytes(awst::makeARC4Encode(
+				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
+			: awst::makeAsBytes(std::move(valForEnc), m_loc);
+
+	m_ctx.pendingStatements.push_back(awst::makeExpressionStatement(
+		awst::makeBoxReplace(std::move(boxKey), std::move(offset), std::move(valBytes), m_loc),
+		m_loc));
+	return awst::makeVarExpression(vn, vv->wtype, m_loc);
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleOffsetStructRefFieldWrite()
+{
+	// `s.field = v` where `s` is a struct storage-ref PARAM carrying a runtime OFFSET (handle-model
+	// dual handle): write the field slice directly via box_replace(key, offsetVar+fieldOff). For a
+	// whole-box caller the offset is 0 — byte-identical to a direct field write at the box head.
+	auto const* member = dynamic_cast<MemberAccess const*>(&m_assignment.leftHandSide());
+	if (!member) return std::nullopt;
+	auto const* baseId = dynamic_cast<Identifier const*>(&member->expression());
+	if (!baseId) return std::nullopt;
+	auto const* vd = dynamic_cast<VariableDeclaration const*>(
+		baseId->annotation().referencedDeclaration);
+	if (!vd) return std::nullopt;
+	std::string offVar = m_scope.findStructRefOffset(vd->id());
+	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
+	if (offVar.empty() || keyParam.empty()) return std::nullopt;
+	if (m_assignment.assignmentOperator() != Token::Assign) return std::nullopt; // compound: fall back
+
+	auto const* st = dynamic_cast<StructType const*>(vd->type());
+	if (!st) return std::nullopt;
+	// Dynamic-layout structs would have offset-dependent field positions; leave to the generic path.
+	if (builder::computeEncodedElementSize(m_ctx.typeMapper.mapSolTypeToARC4(vd->type())) <= 0)
+		return std::nullopt;
+
+	std::string fieldName = member->memberName();
+	uint64_t fieldOff = 0;
+	awst::WType const* slotArc4 = nullptr;
+	Type const* valSol = nullptr;
+	for (auto const& m: st->structDefinition().members())
+	{
+		if (m->name() == fieldName)
+		{
+			slotArc4 = m_ctx.typeMapper.mapSolTypeToARC4(m->type());
+			valSol = m->type();
+			break;
+		}
+		fieldOff += static_cast<uint64_t>(builder::computeEncodedElementSize(
+			m_ctx.typeMapper.mapSolTypeToARC4(m->type())));
+	}
+	if (!slotArc4 || !valSol) return std::nullopt;
+
+	// box key = s's runtime bytes; total offset = offsetVar + fieldOff.
+	auto boxKey = awst::makeReinterpretCast(
+		awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+		awst::WType::boxKeyType(), m_loc);
+	auto offset = awst::makeUInt64BinOp(
+		awst::makeVarExpression(offVar, awst::WType::uint64Type(), m_loc),
+		awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant(fieldOff, m_loc), m_loc);
+
+	auto rhs = builder::TypeCoercion::coerceForAssignment(
+		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
+	static int s_osCtr = 0;
+	std::string vn = "__osref_val_" + std::to_string(s_osCtr++);
 	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);

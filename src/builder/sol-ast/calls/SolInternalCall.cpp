@@ -177,6 +177,22 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	auto extractMappingKeyPrefix = [&](Expression const& argExpr)
 		-> std::shared_ptr<awst::Expression>
 	{
+		// Array element (`arr[i]`) passed as a struct ref (handle-model dual handle): the element
+		// is a SLICE of the array's box, not its own box — lift the ARRAY's box key here; the
+		// companion offset arg (offsetForArg) carries header + i*elemSize. Mapping values (`m[k]`)
+		// ARE their own box and are handled by the generic lift below.
+		if (auto const* iaArr = dynamic_cast<IndexAccess const*>(&argExpr))
+			if (auto const* at = dynamic_cast<ArrayType const*>(
+					iaArr->baseExpression().annotation().type))
+				if (!at->isByteArrayOrString())
+				{
+					auto baseBuilt = awst::unwrapStateGet(buildExpr(iaArr->baseExpression()));
+					if (auto const* box =
+							dynamic_cast<awst::BoxValueExpression const*>(baseBuilt.get()))
+						return awst::makeReinterpretCast(
+							box->key, awst::WType::bytesType(), m_loc);
+				}
+
 		// IndexAccess storage-ref: prefix must be the RUNTIME box key
 		// (`_pools ++ hash(id)`), not a static name (all keys would alias).
 		// Build the element access, lift its box key; callee reinterprets it.
@@ -258,6 +274,56 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					std::move(ca.value), paramTypes[paramIdx], m_loc);
 		}
 		call->args.push_back(std::move(ca));
+	}
+
+	// Handle-model dual handle: append a uint64 OFFSET arg for each offset-convention struct-ref
+	// param (FunctionBuilder declared the matching `name__off` param). Array-element args (`arr[i]`)
+	// pass the element byte offset (len header + i*elemSize); whole-box args pass 0. Order mirrors
+	// the param iteration so caller/callee align by position.
+	if (_funcDef)
+	{
+		auto offsetForArg = [&](Expression const* argExpr) -> std::shared_ptr<awst::Expression> {
+			if (auto const* ia = dynamic_cast<IndexAccess const*>(argExpr))
+				if (ia->indexExpression())
+					if (auto const* at = dynamic_cast<ArrayType const*>(
+							ia->baseExpression().annotation().type))
+						if (!at->isByteArrayOrString() && at->baseType()
+							&& at->baseType()->category() == Type::Category::Struct)
+						{
+							int elemSize = builder::computeEncodedElementSize(
+								m_ctx.typeMapper.mapSolTypeToARC4(at->baseType()));
+							if (elemSize > 0)
+							{
+								uint64_t header = at->isDynamicallySized() ? 2 : 0;
+								auto idx = builder::TypeCoercion::implicitNumericCast(
+									buildExpr(*ia->indexExpression()), awst::WType::uint64Type(), m_loc);
+								return awst::makeUInt64BinOp(
+									awst::makeUInt64BinOp(std::move(idx),
+										awst::UInt64BinaryOperator::Mult,
+										awst::makeIntegerConstant(
+											static_cast<uint64_t>(elemSize), m_loc), m_loc),
+									awst::UInt64BinaryOperator::Add,
+									awst::makeIntegerConstant(header, m_loc), m_loc);
+							}
+						}
+			return awst::makeIntegerConstant(0, m_loc); // whole-box → offset 0
+		};
+		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
+		{
+			if (!builder::structRefOffsetParamsRegistry().count(_funcDef->parameters()[pi]->id()))
+				continue;
+			Expression const* argExpr = nullptr;
+			if (_isUsingForCall)
+			{
+				if (pi >= 1 && (pi - 1) < sortedArgs.size())
+					argExpr = sortedArgs[pi - 1].get();
+			}
+			else if (pi < sortedArgs.size())
+				argExpr = sortedArgs[pi].get();
+			awst::CallArg offCa;
+			offCa.value = offsetForArg(argExpr);
+			call->args.push_back(std::move(offCa));
+		}
 	}
 
 	// Aliasing guard: same variable in >1 arg position → puya rejects

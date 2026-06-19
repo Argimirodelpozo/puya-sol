@@ -99,6 +99,12 @@ struct ScopeState
 	/// (used as the box-key prefix for a `mapping(K=>V) storage` param).
 	std::unordered_map<int64_t, std::string> mappingKeyParams;
 
+	/// Struct storage-ref param decl ID → the name of its companion uint64 OFFSET param
+	/// (handle-model dual handle). Present only for "offset-convention" params (those that
+	/// receive an array-element ref `f(arr[i])` somewhere): `s.field` ops then hit the element
+	/// slice via box_replace/box_extract(key, offset+fieldOff). Absent → whole-box (offset 0).
+	std::unordered_map<int64_t, std::string> structRefOffsets;
+
 	/// >4096 B memory aggregate: decl ID → uint64 local for EVM-memory base
 	/// offset (FMP at allocation). Lives in multi-slot blob; `t.field[i]`
 	/// lowers to blob read/write at base + offset. See SolIndexAccess.
@@ -176,6 +182,12 @@ public:
 		return it != m_state->slotStorageRefs.end() ? it->second : nullptr;
 	}
 
+	std::string findStructRefOffset(int64_t _declId) const
+	{
+		auto it = m_state->structRefOffsets.find(_declId);
+		return it != m_state->structRefOffsets.end() ? it->second : std::string{};
+	}
+
 	std::string findMappingKeyParam(int64_t _declId) const
 	{
 		auto it = m_state->mappingKeyParams.find(_declId);
@@ -239,6 +251,11 @@ public:
 	void setMappingKeyParam(int64_t _declId, std::string _name)
 	{
 		m_state->mappingKeyParams[_declId] = std::move(_name);
+	}
+
+	void setStructRefOffset(int64_t _declId, std::string _offsetVarName)
+	{
+		m_state->structRefOffsets[_declId] = std::move(_offsetVarName);
 	}
 
 	void setBlobAggregate(int64_t _declId, std::string _offsetVar)

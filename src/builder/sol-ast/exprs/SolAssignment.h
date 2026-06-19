@@ -69,6 +69,12 @@ private:
 	/// of the COW reconstruction that drops it. Single-box, fixed-size struct elements only.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBoxedArrayElemWrite();
 
+	/// `s.field = v` where `s` is a struct storage-ref PARAM carrying a runtime OFFSET (handle-model
+	/// dual handle): emits box_replace(paramKey, offsetVar + fieldOffset, ARC4-rhs) so the write
+	/// hits the element slice the caller passed (`f(arr[i])`), not the whole array box. Whole-box
+	/// callers pass offset 0. Fixed-layout structs only.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleOffsetStructRefFieldWrite();
+
 	/// `a[i] = v` for a >4KB blob-backed aggregate. Computes base+i*elemSize,
 	/// pads rhs to 32 B, emits writeMemWordDirect via prePendingStatements.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();
