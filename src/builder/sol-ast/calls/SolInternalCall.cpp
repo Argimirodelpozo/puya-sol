@@ -272,6 +272,12 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			if (paramIdx < paramTypes.size())
 				ca.value = builder::TypeCoercion::implicitNumericCast(
 					std::move(ca.value), paramTypes[paramIdx], m_loc);
+			// Signed sub-word → wider-signed implicit widen (e.g. `f(someInt8)` into int16 param):
+			// implicitNumericCast is a uint64→uint64 no-op that drops the sign. Re-extend.
+			if (_funcDef && paramIdx < _funcDef->parameters().size())
+				ca.value = builder::TypeCoercion::signExtendSignedWiden(
+					std::move(ca.value), sortedArgs[i]->annotation().type,
+					_funcDef->parameters()[paramIdx]->type(), m_loc);
 		}
 		call->args.push_back(std::move(ca));
 	}

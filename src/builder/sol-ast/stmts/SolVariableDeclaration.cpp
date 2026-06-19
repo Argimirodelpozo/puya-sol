@@ -88,6 +88,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						&& value->wtype == awst::WType::biguintType())
 						value = builder::TypeCoercion::signExtendToUint256(
 							std::move(value), srcInt->numBits(), m_loc);
+					else if (srcInt->isSigned() && tgtInt->isSigned()
+						&& srcInt->numBits() < tgtInt->numBits()
+						&& value->wtype == awst::WType::uint64Type())
+						// Signed sub-word -> WIDER sub-word implicit widen (e.g. `int16 b = someInt8;`):
+						// coerceForAssignment is a uint64->uint64 no-op (drops the sign). Re-extend from src.
+						value = builder::TypeCoercion::signExtendToUint64(
+							std::move(value), srcInt->numBits(), m_loc);
 		}
 		else
 			value = StorageMapper::makeDefaultValue(type, m_loc);

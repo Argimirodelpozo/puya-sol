@@ -363,6 +363,13 @@ SolAssignment::applyAssignmentTypeCoercion(
 {
 	// int→bytes[N], string→bytes, numeric casts.
 	_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), _target->wtype, m_loc);
+	// Signed sub-word → wider-signed implicit widen (`b = someInt8;` b:int16): coerceForAssignment
+	// is a uint64→uint64 no-op that drops the sign. Re-extend from the RHS width. Plain `=` only
+	// (compound `+=` coerces a same-typed computed value, not the raw RHS).
+	if (m_assignment.assignmentOperator() == Token::Assign)
+		_value = builder::TypeCoercion::signExtendSignedWiden(
+			std::move(_value), m_assignment.rightHandSide().annotation().type,
+			m_assignment.leftHandSide().annotation().type, m_loc);
 	if (_value->wtype != _target->wtype && _target->wtype
 		&& _target->wtype->kind() == awst::WTypeKind::Bytes)
 	{

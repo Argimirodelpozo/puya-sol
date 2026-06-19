@@ -84,6 +84,17 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Sign-extend a signed intN value widened to a wider signed intM (re-fills the sign the
+	/// uint64-backed / zero-extending value model drops). No-op unless both Solidity types are
+	/// signed ints with srcBits < tgtBits. Handles both target tiers (≤64 uint64, >64 biguint).
+	/// Call at implicit-widening sites that have the Solidity src+target types (assignment, arg).
+	static std::shared_ptr<awst::Expression> signExtendSignedWiden(
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::Type const* _srcSolType,
+		solidity::frontend::Type const* _tgtSolType,
+		awst::SourceLocation const& _loc
+	);
+
 	// ── Bytes ────────────────────────────────────────────────────
 
 	/// Convert a StringConstant to a right-padded BytesConstant of length _n.

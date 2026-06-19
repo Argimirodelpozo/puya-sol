@@ -100,6 +100,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		if (nativeType && _value->wtype != nativeType)
 			_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), nativeType, m_loc);
 
+		// Signed sub-word → wider-signed implicit widen (`s.f = someInt8;` f:int16): re-extend
+		// from the RHS width before encoding (plain `=` only; compound already computed a typed value).
+		if (op == Token::Assign)
+			_value = builder::TypeCoercion::signExtendSignedWiden(
+				std::move(_value), m_assignment.rightHandSide().annotation().type,
+				m_assignment.leftHandSide().annotation().type, m_loc);
+
 		auto encode = awst::makeARC4Encode(std::move(_value), arc4FieldType, m_loc);
 		_value = std::move(encode);
 	}

@@ -73,6 +73,16 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 							std::move(result), tgtInt->numBits(), m_loc);
 					}
 				}
+				else if (tgtInt && result->wtype == awst::WType::uint64Type()
+					&& srcInt->isSigned() && tgtInt->isSigned()
+					&& srcInt->numBits() < tgtInt->numBits())
+				{
+					// Signed sub-word -> WIDER sub-word (both <=64-bit, uint64-backed): the registry
+					// zero-extends (drops the sign, e.g. int16(int8(-1)) -> 255). Re-extend from the
+					// SOURCE width so the value stays signed-correct.
+					result = TypeCoercion::signExtendToUint64(
+						std::move(result), srcInt->numBits(), m_loc);
+				}
 			}
 			return result;
 		}

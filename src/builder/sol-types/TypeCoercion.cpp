@@ -189,12 +189,18 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 		return _value;
 
 	// Bind the (possibly side-effecting, e.g. box-backed) source to a temp so
-	// the two reads below evaluate it once.
+	// the two reads below evaluate it once. MASK to the low `_bits` bits first
+	// (`mod 2^bits`) so this is correct whether the source is the minimal sub-word
+	// form OR already sign-extended to 64 bits (e.g. an ABI-decoded int8 param):
+	// the add below assumes value ∈ [0, 2^bits), which only holds post-mask.
 	static int s_signExt64TempId = 0;
 	std::string tempName = "__signext64_tmp_" + std::to_string(++s_signExt64TempId);
+	auto masked = awst::makeUInt64BinOp(
+		std::move(_value), awst::UInt64BinaryOperator::Mod,
+		awst::makeIntegerConstant(std::uint64_t(1) << _bits, _loc), _loc);
 	auto bind = awst::makeAssignmentExpression(
 		awst::makeVarExpression(tempName, awst::WType::uint64Type(), _loc),
-		std::move(_value), _loc, awst::WType::uint64Type());
+		std::move(masked), _loc, awst::WType::uint64Type());
 	auto tempRead = [&]() {
 		return awst::makeVarExpression(tempName, awst::WType::uint64Type(), _loc);
 	};
@@ -237,6 +243,35 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_solElemType))
 		if (intType->isSigned() && intType->numBits() > 64 && intType->numBits() < 256)
 			return signExtendToUint256(std::move(_value), intType->numBits(), _loc);
+	return _value;
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedWiden(
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::Type const* _srcSolType,
+	solidity::frontend::Type const* _tgtSolType,
+	awst::SourceLocation const& _loc
+)
+{
+	using namespace solidity::frontend;
+	// Widening a SIGNED intN to a wider SIGNED intM drops the sign in our value model: sub-word
+	// ints are uint64-backed (so int8->int16 is a uint64->uint64 no-op) and the registry/cast
+	// zero-extends. Re-extend from the SOURCE width. Covers both target tiers (≤64 uint64-backed,
+	// >64 biguint-backed). No-op for unsigned, narrowing, same-width, or non-int operands.
+	auto asInt = [](Type const* t) -> IntegerType const* {
+		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(t))
+			t = &udvt->underlyingType();
+		return dynamic_cast<IntegerType const*>(t);
+	};
+	auto const* srcInt = _srcSolType ? asInt(_srcSolType) : nullptr;
+	auto const* tgtInt = _tgtSolType ? asInt(_tgtSolType) : nullptr;
+	if (!_value || !srcInt || !tgtInt) return _value;
+	if (!srcInt->isSigned() || !tgtInt->isSigned()) return _value;
+	if (srcInt->numBits() >= tgtInt->numBits()) return _value;
+	if (tgtInt->numBits() > 64 && _value->wtype == awst::WType::biguintType())
+		return signExtendToUint256(std::move(_value), srcInt->numBits(), _loc);
+	if (_value->wtype == awst::WType::uint64Type())
+		return signExtendToUint64(std::move(_value), srcInt->numBits(), _loc);
 	return _value;
 }
 

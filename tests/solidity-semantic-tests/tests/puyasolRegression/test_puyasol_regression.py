@@ -181,3 +181,21 @@ def test_memory_struct_param_writeback(harness):
     app = harness.compile_and_deploy("puyasolRegression/contracts/mem_struct_param.sol")
     assert as_int(harness.call(app, "writesThrough()").abi_return) == 11
     assert as_int(harness.call(app, "readonlyUnchanged()").abi_return) == 14
+
+
+def test_signed_subword_widening(harness):
+    """puyasolRegression/contracts/signed_subword_widen.sol — NOT an o.g. semantic test.
+
+    Widening a signed sub-word int (int8) to a wider signed int (int16) sign-extends at every
+    coercion site (explicit cast, var-decl, assignment, arg, struct field) — int8(-1) -> int16 is
+    -1, not 255. Also guards that an already-sign-extended int8 PARAM is not double-extended.
+    Found by the differential fuzzer.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_subword_widen.sol")
+    BIG = (1 << 256) - 1  # AVM may return the unsigned 2^256-1 form of -1
+    def sint(r): 
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    for fn in ("explicitCast(int256)", "varDecl(int256)", "assignTo(int256)", "structField(int256)"):
+        assert sint(harness.call(app, fn, BIG)) == -1, fn       # int8(2^256-1) = -1 -> int16 = -1
+    assert as_int(harness.call(app, "arg(int256)", BIG).abi_return) in (-1, (1<<256)-1)
+    assert sint(harness.call(app, "paramWiden(int8)", -10)) == -10  # already-extended param
