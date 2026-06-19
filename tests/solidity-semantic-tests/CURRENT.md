@@ -1,3 +1,14 @@
+# Semantic Test Status — v396
+
+> **fix(int): sub-word signed arithmetic shift right sign-fills (2022807d8c, 2026-06-19):**
+> **58 failed / 1252 passed / 87 xf** (zero-reg, identical fail-set). Differential fuzzer: a DYNAMIC
+> `int8(-1) >> n` with n>=width gave 0 not -1 (EVM sign-fills). Root: the value is only 8/64-bit
+> wide (local/param), so `buildBigUIntArithmeticShiftRight`'s `v>=2^255` negativity test was false →
+> zero-fill. Fix: `signExtendToUint256(v, m_bits)` before the SAR (SolIntegerBuilder), canonicalising
+> to 256-bit two's complement. Guard: puyasolRegression/subword_arith_shift_signfill. KNOWN RESIDUAL
+> (separate, pre-existing, fail-LOUD): a CONSTANT large shift `int8 x >> 100` REVERTS instead of
+> sign-filling — a different constant lowering path, not yet chased. [[puya-sol-shr-256-bug]]
+
 # Semantic Test Status — v395
 
 > **fix(int): signed sub-word widening sign-extends at all coercion sites (163ce6ce4a,
