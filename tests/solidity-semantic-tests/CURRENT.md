@@ -1,3 +1,16 @@
+# Semantic Test Status — v398
+
+> **fix(array): index >= 2^64 reverts (OOB), not silent uint64 truncation (bbc8fc45ac,
+> 2026-06-19):** **57 failed / 1254 passed / 87 xf** — DOWN one (also fixed
+> test_array_function_pointers; zero regressions). NEW 57 fail-set is the baseline. Differential
+> fuzzer: `arr[2^128]` returned arr[0] not REVERT — the uint256 index was truncated to uint64
+> (2^128→0) BEFORE the bounds check, so it passed on the wrong value (silent adversarial wrong-read
+> when i mod 2^64 < length). Fix: shared `TypeCoercion::checkedIndexToUint64` asserts a wide index
+> < 2^64 before truncating, applied at every index site (handleDynamicArrayAccess, handleRegularIndex
+> ×2, SolArrayBuilder::index = memory + fixed, read+write). Guard:
+> puyasolRegression/array_oob_huge_index. Latent same-pattern sites (multi-box write, boxed-elem
+> write, slice) not yet swept — follow-up. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v397
 
 > **fix(int): ALL signed `>>` use the sign-filling biguint path (c1ec171dc3, 2026-06-19):**
