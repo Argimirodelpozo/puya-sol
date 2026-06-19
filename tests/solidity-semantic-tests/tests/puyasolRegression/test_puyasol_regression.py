@@ -199,3 +199,20 @@ def test_signed_subword_widening(harness):
         assert sint(harness.call(app, fn, BIG)) == -1, fn       # int8(2^256-1) = -1 -> int16 = -1
     assert as_int(harness.call(app, "arg(int256)", BIG).abi_return) in (-1, (1<<256)-1)
     assert sint(harness.call(app, "paramWiden(int8)", -10)) == -10  # already-extended param
+
+
+def test_subword_arith_shift_signfill(harness):
+    """puyasolRegression/contracts/subword_arith_shift.sol — NOT an o.g. semantic test.
+
+    Arithmetic shift right of a signed sub-word int by a dynamic amount >= its width sign-fills:
+    int8(-1) >> 256 == -1 (not 0). The value is canonicalised to 256-bit two's complement before
+    the SAR. Found by the differential fuzzer.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/subword_arith_shift.sol")
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    assert s(harness.call(app, "shr8(int8,uint256)", -1, 256)) == -1
+    assert s(harness.call(app, "shr8(int8,uint256)", -1, 5)) == -1
+    assert s(harness.call(app, "shr8(int8,uint256)", -128, 256)) == -1
+    assert s(harness.call(app, "shr8(int8,uint256)", 100, 256)) == 0
+    assert s(harness.call(app, "shr16(int16,uint256)", -1, 1000)) == -1

@@ -99,7 +99,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			std::shared_ptr<awst::Expression> result;
 			// Signed >> = SAR (sign-filling); logical FloorDiv would zero-fill negatives.
 			if (m_signed && _op == BuilderBinaryOp::RShift)
+			{
+				// Sub-word signed: canonicalize to 256-bit two's complement FIRST, so a shift by
+				// >= the value's own width still sign-fills (int8(-1) >> 256 == -1, not 0). The
+				// value is only 8/64-bit-wide as a local/param, so without this the SAR's
+				// negativity test (v >= 2^255) is false and it zero-fills.
+				if (m_bits < 256)
+					lhs = TypeCoercion::signExtendToUint256(std::move(lhs), m_bits, _loc);
 				result = buildBigUIntArithmeticShiftRight(std::move(lhs), std::move(shiftAmt), _loc);
+			}
 			else
 				result = buildBigUIntShift(std::move(lhs), std::move(shiftAmt),
 					_op == BuilderBinaryOp::LShift, _loc);
