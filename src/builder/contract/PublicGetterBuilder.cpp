@@ -51,7 +51,17 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 		auto* nativeType = typeMapper.map(member.type);
 		if (arc4FieldType && arc4FieldType != nativeType)
 		{
-			auto decode = awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
+			std::shared_ptr<awst::Expression> decode =
+				awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
+			// Sign-extend signed sub-word fields (mirrors the SolFieldAccess rvalue
+			// read): a raw ARC4Decode yields the unsigned N-bit value, so the getter
+			// would return +2^127 for an int128 field at INT128_MIN. <64→uint64,
+			// 64<N<256→canonical 256-bit. No-op for unsigned / int256 / ==64.
+			if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(member.type))
+				if (fieldInt->isSigned() && fieldInt->numBits() < 64
+					&& nativeType == awst::WType::uint64Type())
+					decode = TypeCoercion::signExtendToUint64(std::move(decode), fieldInt->numBits(), loc);
+			decode = TypeCoercion::signExtendSignedElement(std::move(decode), member.type, loc);
 			items.push_back(std::move(decode));
 		}
 		else
@@ -210,9 +220,11 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
-				// Struct with multiple return values: read full ARC4Struct, project each field.
+				// Struct getter: read the full ARC4Struct, project each field (sign-extending
+				// signed sub-word fields). Covers single-field structs too — they were read
+				// as a bare scalar and skipped per-field sign-extension.
 				auto const* solStructType = dynamic_cast<solidity::frontend::StructType const*>(var->type());
-				if (solStructType && solReturnTypes.size() > 1)
+				if (solStructType && solReturnTypes.size() >= 1)
 				{
 					auto* storedWType = m_typeMapper.map(var->type());
 					auto fullStruct = m_storageMapper.createStateRead(
@@ -220,11 +232,19 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					);
 
 					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
-					auto tuple = awst::makeTupleExpression(getter.returnType, loc);
+					auto items = projectStructFields(m_typeMapper, solStructType, arc4Struct, fullStruct, loc);
 
-					for (auto& item: projectStructFields(m_typeMapper, solStructType, arc4Struct, fullStruct, loc))
-						tuple->items.push_back(std::move(item));
-					readExpr = std::move(tuple);
+					// One returnable field keeps the scalar return type; >1 packs a tuple.
+					// Either way each field is sign-extended inside projectStructFields.
+					if (items.size() == 1)
+						readExpr = std::move(items[0]);
+					else
+					{
+						auto tuple = awst::makeTupleExpression(getter.returnType, loc);
+						for (auto& item: items)
+							tuple->items.push_back(std::move(item));
+						readExpr = std::move(tuple);
+					}
 				}
 				else
 				{

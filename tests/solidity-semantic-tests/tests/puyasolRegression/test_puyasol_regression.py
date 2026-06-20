@@ -270,3 +270,28 @@ def test_signed_compound_arithmetic(harness):
     assert s(harness.call(app, "mul(int128,int128)", -1, -1)) == 1     # was REVERT
     assert harness.call(app, "mul(int128,int128)", IMAX, 2, expect_revert=True).reverted  # overflow
     assert s(harness.call(app, "uncheckedAdd(int128,int128)", IMAX, 1)) == IMIN  # unchecked wraps
+
+
+def test_signed_struct_getter_sign_extension(harness):
+    """puyasolRegression/contracts/signed_struct_getter.sol — NOT an o.g. semantic test.
+
+    A public struct auto-getter must sign-extend signed sub-word fields. Found by the
+    stateful fuzzer: a single-field struct{int128 x} getter skipped projectStructFields
+    (read as a scalar) and returned +2^127 for an INT128_MIN field; the int16 single-field
+    case did not even compile. Multi-field structs decoded each field unsigned. The explicit
+    field read was always correct, so it is the oracle here.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_struct_getter.sol")
+    IMIN = -(1 << 127)
+    def s256(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    # single-field int128 getter at the boundary (was +2^127, unsigned)
+    harness.call(app, "setOne(int128)", IMIN)
+    assert s256(harness.call(app, "one()")) == IMIN
+    assert s256(harness.call(app, "readOne()")) == IMIN          # explicit-read oracle agrees
+    harness.call(app, "setOne(int128)", -5)
+    assert s256(harness.call(app, "one()")) == -5
+    # single-field int16 getter (was a compile error; here it must compile and sign-extend)
+    harness.call(app, "setSmall(int16)", -5)
+    assert s256(harness.call(app, "small()")) == -5
+    assert s256(harness.call(app, "readSmall()")) == -5
