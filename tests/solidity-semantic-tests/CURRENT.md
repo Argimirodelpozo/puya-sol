@@ -1,3 +1,18 @@
+# Semantic Test Status — v400
+
+> **fix(int): signed sub-word compound assignment does real signed arithmetic (afd7c54369,
+> 2026-06-20):** **57 failed / 1256 passed / 87 xf** (zero-reg, identical fail-set). Found by the
+> NEW STATEFUL differential fuzzer (fuzz_state.py — persists storage across an interleaved call
+> sequence; reached a compound op on a STATE var, which the per-call fuzzer skips as a void mutator).
+> `int128 x += d` mis-lowered: `x=-1; x+=1` FALSE-reverted (−1 read as unsigned 2^256-1 → overflow),
+> real overflow → untruncated 256-bit garbage, no signed-overflow revert. `a+b` was already correct.
+> Root: `a+b` → SolBinaryOperation::buildSignedArithmetic (signed overflow + sub-256 canon), but the
+> compound path (tryComputeCompoundValue → SolIntegerBuilder::binary_op) hit the raw UNSIGNED biguint
+> add/sub/mul. Fix: extracted buildSignedArithmetic to the shared sol-eb helper BigUIntMathHelpers;
+> BOTH SolBinaryOperation (now a thin wrapper, −181 LOC dedup) and SolIntegerBuilder (signed
+> Add/Sub/Mult) route through it. Guard: puyasolRegression/signed_compound_arithmetic.
+> [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v399
 
 > **fix(int): uint256 add/mul/pow overflow checked even when result is narrowed (753c4b5297,
