@@ -1,6 +1,9 @@
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-types/TypeCoercion.h"
 
+#include <libsolutil/Numeric.h>
+
+#include <sstream>
 #include <string>
 
 namespace puyasol::builder::eb
@@ -339,6 +342,141 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	comma->expressions.push_back(std::move(bindR));
 	comma->expressions.push_back(std::move(finalCond));
 	return comma;
+}
+
+namespace
+{
+// Promote a signed-arith operand to biguint (ported from SolBinaryOperation's file-local helper).
+std::shared_ptr<awst::Expression> promoteSignedToBiguint(
+	std::shared_ptr<awst::Expression> expr, awst::SourceLocation const& loc)
+{
+	if (expr->wtype == awst::WType::biguintType())
+		return expr;
+	if (expr->wtype == awst::WType::accountType()
+		|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
+	{
+		auto bytesExpr = expr->wtype == awst::WType::accountType()
+			? awst::makeAsBytes(std::move(expr), loc)
+			: std::move(expr);
+		return awst::makeAsBiguint(std::move(bytesExpr), loc);
+	}
+	auto itob = awst::makeItob(std::move(expr), loc);
+	return awst::makeAsBiguint(std::move(itob), loc);
+}
+} // anonymous namespace
+
+std::shared_ptr<awst::Expression> buildSignedArithmetic(
+	ContractContext& _ctx,
+	bool _isUnchecked,
+	BuilderBinaryOp _op,
+	std::shared_ptr<awst::Expression> _left,
+	std::shared_ptr<awst::Expression> _right,
+	unsigned _bits,
+	awst::SourceLocation const& _loc)
+{
+	bool isBiguint = (_bits > 64);
+	bool isSub = (_op == BuilderBinaryOp::Sub);
+	bool isMul = (_op == BuilderBinaryOp::Mult);
+
+	// 2^N and 2^(N-1). u256(1)<<256 overflows, so the full-width case uses literals.
+	std::string pow2NStr, halfNStr;
+	if (_bits == 256)
+	{
+		pow2NStr = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+		halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
+	}
+	else
+	{
+		std::ostringstream pow2NOss, halfNOss;
+		pow2NOss << (solidity::u256(1) << _bits);
+		halfNOss << (solidity::u256(1) << (_bits - 1));
+		pow2NStr = pow2NOss.str();
+		halfNStr = halfNOss.str();
+	}
+
+	auto makeBiguintConst = [&](std::string const& val) {
+		return awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());
+	};
+
+	_left = promoteSignedToBiguint(std::move(_left), _loc);
+	_right = promoteSignedToBiguint(std::move(_right), _loc);
+
+	// Mask to N bits (uint64 two's-comp may exceed 2^N, e.g. int8(-2)=2^64-2).
+	if (_bits < 256)
+	{
+		auto maskOp = [&](std::shared_ptr<awst::Expression> v) {
+			return awst::makeBigUIntBinOp(std::move(v), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), _loc);
+		};
+		_left = maskOp(std::move(_left));
+		_right = maskOp(std::move(_right));
+	}
+
+	// Step 1: unsigned op in biguint. Sub uses (a + 2^N - b) to stay non-negative.
+	std::shared_ptr<awst::Expression> rawResult;
+	if (isSub)
+	{
+		auto aPlusPow = awst::makeBigUIntBinOp(_left, awst::BigUIntBinaryOperator::Add, makeBiguintConst(pow2NStr), _loc);
+		rawResult = awst::makeBigUIntBinOp(std::move(aPlusPow), awst::BigUIntBinaryOperator::Sub, _right, _loc);
+	}
+	else
+	{
+		auto bigOp = isMul ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::Add;
+		rawResult = awst::makeBigUIntBinOp(_left, bigOp, _right, _loc);
+	}
+
+	// Step 2: wrap mod 2^N (two's complement).
+	rawResult = awst::makeBigUIntBinOp(std::move(rawResult), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), _loc);
+
+	// Step 3: signed overflow check (skipped when unchecked).
+	if (!_isUnchecked)
+	{
+		auto isNeg = [&](std::shared_ptr<awst::Expression> const& val) {
+			auto cmp = awst::makeNumericCompare(promoteSignedToBiguint(val, _loc), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), _loc);
+			return awst::makeNot(std::move(cmp), _loc);
+		};
+		std::shared_ptr<awst::Expression> overflowCond;
+		if (!isSub && !isMul) // add: no overflow iff a_neg != b_neg || a_neg == result_neg
+		{
+			auto aNeg = isNeg(_left), bNeg = isNeg(_right), rNeg = isNeg(rawResult);
+			overflowCond = awst::makeBoolBinOp(
+				awst::makeNumericCompare(aNeg, awst::NumericComparison::Ne, bNeg, _loc),
+				awst::BinaryBooleanOperator::Or,
+				awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, rNeg, _loc), _loc);
+		}
+		else if (isSub) // sub: no overflow iff a_neg == b_neg || a_neg == result_neg
+		{
+			auto aNeg = isNeg(_left), bNeg = isNeg(_right), rNeg = isNeg(rawResult);
+			overflowCond = awst::makeBoolBinOp(
+				awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, bNeg, _loc),
+				awst::BinaryBooleanOperator::Or,
+				awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, rNeg, _loc), _loc);
+		}
+		else // mul: abs(a)*abs(b) in range, or b==0
+		{
+			auto absVal = [&](std::shared_ptr<awst::Expression> const& val) {
+				auto neg = isNeg(val);
+				auto negated = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, val, _loc);
+				return awst::makeConditional(std::move(neg), std::move(negated), val, awst::WType::biguintType(), _loc);
+			};
+			auto absProduct = awst::makeBigUIntBinOp(absVal(_left), awst::BigUIntBinaryOperator::Mult, absVal(_right), _loc);
+			auto sameSign = awst::makeNumericCompare(isNeg(_left), awst::NumericComparison::Eq, isNeg(_right), _loc);
+			auto ltHalf = awst::makeNumericCompare(absProduct, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), _loc);
+			auto leHalf = awst::makeNot(awst::makeNumericCompare(makeBiguintConst(halfNStr), awst::NumericComparison::Lt, absProduct, _loc), _loc);
+			auto rangeCheck = awst::makeConditional(std::move(sameSign), std::move(ltHalf), std::move(leHalf), awst::WType::boolType(), _loc);
+			auto bZero = awst::makeNumericCompare(_right, awst::NumericComparison::Eq, makeBiguintConst("0"), _loc);
+			overflowCond = awst::makeBoolBinOp(std::move(bZero), awst::BinaryBooleanOperator::Or, std::move(rangeCheck), _loc);
+		}
+		if (overflowCond)
+			_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(overflowCond), _loc, "signed arithmetic overflow"), _loc));
+	}
+
+	// Step 4: ≤64-bit → uint64; sub-256 biguint → canonical 256-bit two's complement.
+	if (!isBiguint)
+		return awst::makeBiguintToUInt64(std::move(rawResult), _loc);
+	if (_bits < 256)
+		return TypeCoercion::signExtendToUint256(std::move(rawResult), _bits, _loc);
+	return rawResult;
 }
 
 } // namespace puyasol::builder::eb

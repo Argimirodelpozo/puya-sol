@@ -248,3 +248,25 @@ def test_checked_overflow_before_truncation(harness):
         assert harness.call(app, fn, MAX, expect_revert=True).reverted, fn
     assert as_int(harness.call(app, "uncheckedOK(uint256)", MAX).abi_return) == 0  # unchecked wraps
     assert as_int(harness.call(app, "normalAdd(uint256,uint256)", 5, 3).abi_return) == 8
+
+
+def test_signed_compound_arithmetic(harness):
+    """puyasolRegression/contracts/signed_compound.sol — NOT an o.g. semantic test.
+
+    Signed sub-word compound assignment (int128 x += / -= / *= d) does real signed arithmetic:
+    correct value, signed-overflow revert, truncation. Found by the stateful fuzzer (it reached the
+    compound-on-a-state-var that the per-call fuzzer skips). Was: unsigned path → false reverts +
+    untruncated garbage.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_compound.sol")
+    IMAX = (1 << 127) - 1
+    IMIN = -(1 << 127)
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    assert s(harness.call(app, "add(int128,int128)", -1, 1)) == 0      # was REVERT
+    assert s(harness.call(app, "add(int128,int128)", 10, -3)) == 7
+    assert harness.call(app, "add(int128,int128)", IMAX, 1, expect_revert=True).reverted  # overflow
+    assert s(harness.call(app, "sub(int128,int128)", 0, 1)) == -1
+    assert s(harness.call(app, "mul(int128,int128)", -1, -1)) == 1     # was REVERT
+    assert harness.call(app, "mul(int128,int128)", IMAX, 2, expect_revert=True).reverted  # overflow
+    assert s(harness.call(app, "uncheckedAdd(int128,int128)", IMAX, 1)) == IMIN  # unchecked wraps

@@ -4,6 +4,7 @@
 #include "builder/sol-ast/exprs/SolBinaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
+#include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
@@ -283,187 +284,13 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	std::shared_ptr<awst::Expression> _right,
 	IntegerType const* _intType)
 {
-	unsigned bits = _intType->numBits();
-	bool isBiguint = (bits > 64);
-
-	// Compute 2^N and 2^(N-1) as strings; u256 overflows for N=256, so special-case.
-	std::string pow2NStr, halfNStr;
-	if (bits == 256)
-	{
-		pow2NStr = kPow2_256;
-		halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-	}
-	else
-	{
-		solidity::u256 pow2N = solidity::u256(1) << bits;
-		solidity::u256 halfN = solidity::u256(1) << (bits - 1);
-		std::ostringstream pow2NOss, halfNOss;
-		pow2NOss << pow2N;
-		halfNOss << halfN;
-		pow2NStr = pow2NOss.str();
-		halfNStr = halfNOss.str();
-	}
-
-	auto makeConst = [&](std::string const& val) -> std::shared_ptr<awst::Expression> {
-		auto c = awst::makeIntegerConstant(val, m_loc, isBiguint ? awst::WType::biguintType() : awst::WType::uint64Type());
-		return c;
-	};
-
-	auto makeBiguintConst = [&](std::string const& val) -> std::shared_ptr<awst::Expression> {
-		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
-		return c;
-	};
-
-	// Promote to biguint for mod 2^N wrapping.
-	_left = promoteSignedOperandToBiguint(std::move(_left), m_loc);
-	_right = promoteSignedOperandToBiguint(std::move(_right), m_loc);
-
-	// Mask to N bits: uint64 two's-complement may exceed 2^N (e.g. int8(-2)=uint64(2^64-2)).
-	if (bits < 256)
-	{
-		auto maskOp = [&](std::shared_ptr<awst::Expression> val)
-			-> std::shared_ptr<awst::Expression> {
-			auto mod = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-			return mod;
-		};
-		_left = maskOp(std::move(_left));
-		_right = maskOp(std::move(_right));
-	}
-
-	// Step 1: unsigned op in biguint. Sub: (a + 2^N - b) avoids negative biguint.
-	std::shared_ptr<awst::Expression> rawResult;
-	bool isSub = (_op == Token::Sub || _op == Token::AssignSub);
-
-	if (isSub)
-	{
-		// a < 2^N, b < 2^N → a + 2^N - b is always non-negative
-		auto aPlusPow = awst::makeBigUIntBinOp(_left, awst::BigUIntBinaryOperator::Add, makeBiguintConst(pow2NStr), m_loc);
-
-		auto subB = awst::makeBigUIntBinOp(std::move(aPlusPow), awst::BigUIntBinaryOperator::Sub, _right, m_loc);
-		rawResult = std::move(subB);
-	}
-	else
-	{
-		auto bigOp = (_op == Token::Mul || _op == Token::AssignMul)
-			? awst::BigUIntBinaryOperator::Mult
-			: awst::BigUIntBinaryOperator::Add;
-		auto binOp = awst::makeBigUIntBinOp(_left, bigOp, _right, m_loc);
-		rawResult = std::move(binOp);
-	}
-
-	// Step 2: wrap mod 2^N (two's complement)
-	{
-		auto wrapOp = awst::makeBigUIntBinOp(std::move(rawResult), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-		rawResult = std::move(wrapOp);
-	}
-
-	// Step 3: overflow check (skipped in unchecked blocks).
-	// add: overflow iff a_neg == b_neg && a_neg != result_neg
-	// sub: overflow iff a_neg != b_neg && a_neg != result_neg
-	// mul: range check (result in [-2^(N-1), 2^(N-1)-1])
-	if (!m_scope.isUnchecked())
-	{
-
-		// isNeg: val >= half (i.e. NOT (val < half))
-		auto isNeg = [&](std::shared_ptr<awst::Expression> const& val)
-			-> std::shared_ptr<awst::Expression> {
-			auto cmp = awst::makeNumericCompare(promoteSignedOperandToBiguint(val, m_loc), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
-			auto notExpr = awst::makeNot(std::move(cmp), m_loc);
-			return notExpr;
-		};
-
-		std::shared_ptr<awst::Expression> overflowCond;
-
-		if (_op == Token::Add || _op == Token::AssignAdd)
-		{
-			// No overflow when: a_neg != b_neg || a_neg == result_neg
-			auto aNeg = isNeg(_left);
-			auto bNeg = isNeg(_right);
-			auto rNeg = isNeg(rawResult);
-
-			auto diffSigns = awst::makeNumericCompare(aNeg, awst::NumericComparison::Ne, bNeg, m_loc);
-			auto sameSignResult = awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, rNeg, m_loc);
-			auto noOverflow = awst::makeBoolBinOp(std::move(diffSigns), awst::BinaryBooleanOperator::Or, std::move(sameSignResult), m_loc);
-			overflowCond = std::move(noOverflow);
-		}
-		else if (_op == Token::Sub || _op == Token::AssignSub)
-		{
-			// No overflow when: a_neg == b_neg || a_neg == result_neg
-			auto aNeg = isNeg(_left);
-			auto bNeg = isNeg(_right);
-			auto rNeg = isNeg(rawResult);
-
-			auto noOverflow = awst::makeBoolBinOp(
-				awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, bNeg, m_loc),
-				awst::BinaryBooleanOperator::Or,
-				awst::makeNumericCompare(aNeg, awst::NumericComparison::Eq, rNeg, m_loc),
-				m_loc);
-			overflowCond = std::move(noOverflow);
-		}
-		else // mul
-		{
-			// Exact biguint product; check abs(a)*abs(b) fits in signed range.
-			// abs(a) = a < half ? a : pow2N - a
-			auto absVal = [&](std::shared_ptr<awst::Expression> const& val)
-				-> std::shared_ptr<awst::Expression> {
-				auto neg = isNeg(val); // val >= half
-				// pow2N - val
-				auto negated = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, val, m_loc);
-				// neg ? (pow2N - val) : val
-				return awst::makeConditional(
-					std::move(neg), std::move(negated), val,
-					awst::WType::biguintType(), m_loc);
-			};
-
-			auto absA = absVal(_left);
-			auto absB = absVal(_right);
-
-			auto absProduct = awst::makeBigUIntBinOp(std::move(absA), awst::BigUIntBinaryOperator::Mult, std::move(absB), m_loc);
-
-			// Same sign → result positive → absProduct < half
-			// Diff sign → result negative → absProduct <= half (handles -1*MIN_INT)
-			auto aNeg2 = isNeg(_left);
-			auto bNeg2 = isNeg(_right);
-			auto sameSign = awst::makeNumericCompare(aNeg2, awst::NumericComparison::Eq, bNeg2, m_loc);
-
-			auto ltHalf = awst::makeNumericCompare(absProduct, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
-			// absProduct <= half = NOT (half < absProduct)
-			auto leHalf = awst::makeNot(awst::makeNumericCompare(makeBiguintConst(halfNStr), awst::NumericComparison::Lt, absProduct, m_loc), m_loc);
-
-			auto rangeCheck = awst::makeConditional(
-				std::move(sameSign), std::move(ltHalf), std::move(leHalf),
-				awst::WType::boolType(), m_loc);
-
-			// b==0 → no overflow
-			auto bZero = awst::makeNumericCompare(_right, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
-
-			auto noOverflow = awst::makeBoolBinOp(std::move(bZero), awst::BinaryBooleanOperator::Or, std::move(rangeCheck), m_loc);
-
-			overflowCond = std::move(noOverflow);
-		}
-
-		if (overflowCond)
-		{
-			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(overflowCond), m_loc, "signed arithmetic overflow"), m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
-		}
-	}
-
-	// Step 4: truncate to uint64 for ≤64-bit types.
-	if (!isBiguint)
-		return awst::makeBiguintToUInt64(std::move(rawResult), m_loc);
-
-	// Step 5: canonicalise sub-256 signed result to 256-bit two's complement.
-	// mod 2^N leaves a negative int<N> in N-bit form (sign bit at N-1, bit 255 clear).
-	// The pipeline treats canonical signed as 256-bit (XOR with 2^255 in SolIntegerBuilder),
-	// so N-bit form reads as POSITIVE. Without this, V4 getAmount0/1Delta(int128) `liquidity<0`
-	// takes the wrong branch and uint128(liquidity) becomes ~2^128 (verified garbage).
-	// Idempotent with signExtendToUint256 at assignment/return/cast sites; no-op for
-	// non-negative results and int256.
-	if (bits < 256)
-		return TypeCoercion::signExtendToUint256(std::move(rawResult), bits, m_loc);
-
-	return rawResult;
+	// Delegate to the shared sol-eb signed-arithmetic helper (also used by SolIntegerBuilder for the
+	// compound `x op= d` path, which previously mis-lowered signed assignment via the unsigned ops).
+	auto op = (_op == Token::Sub || _op == Token::AssignSub) ? eb::BuilderBinaryOp::Sub
+		: (_op == Token::Mul || _op == Token::AssignMul) ? eb::BuilderBinaryOp::Mult
+		: eb::BuilderBinaryOp::Add;
+	return eb::buildSignedArithmetic(m_ctx, m_scope.isUnchecked(), op,
+		std::move(_left), std::move(_right), _intType->numBits(), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(

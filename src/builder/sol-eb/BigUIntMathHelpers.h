@@ -62,4 +62,18 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	BuilderBinaryOp _op,
 	awst::SourceLocation const& _loc);
 
+/// Signed integer add/sub/mul (_op ∈ {Add,Sub,Mult}): mod-2^N two's-complement result +
+/// (checked) the signed-overflow assert + sub-256 canonicalisation to 256-bit two's complement
+/// (≤64-bit results truncate to uint64). The signed counterpart of the raw biguint ops — shared by
+/// SolBinaryOperation (`a+b`) and the compound path (`x+=d`, via SolIntegerBuilder::binary_op),
+/// which previously hit the UNSIGNED biguint add and mishandled signed compound assignment.
+std::shared_ptr<awst::Expression> buildSignedArithmetic(
+	ContractContext& _ctx,
+	bool _isUnchecked,
+	BuilderBinaryOp _op,
+	std::shared_ptr<awst::Expression> _left,
+	std::shared_ptr<awst::Expression> _right,
+	unsigned _bits,
+	awst::SourceLocation const& _loc);
+
 } // namespace puyasol::builder::eb

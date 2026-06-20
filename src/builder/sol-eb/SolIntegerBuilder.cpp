@@ -91,6 +91,16 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	if (_reverse)
 		std::swap(lhs, rhs);
 
+	// Signed add/sub/mul: route through the shared signed-arithmetic helper (mod 2^N two's
+	// complement + signed-overflow check + sub-256 canonicalisation). The biguint/uint64 paths
+	// below are UNSIGNED — fine for `a+b` (SolBinaryOperation uses the same helper directly) but the
+	// COMPOUND path (`x+=d`) reaches binary_op here and otherwise mis-lowered signed assignment
+	// (int128 `x+=1` false-reverted, real overflow wrapped to untruncated garbage).
+	if (m_signed && (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Sub
+			|| _op == BuilderBinaryOp::Mult))
+		return wrap(buildSignedArithmetic(m_ctx, m_scope.isUnchecked(), _op,
+			std::move(lhs), std::move(rhs), m_bits, _loc));
+
 	// ── BigUInt path ──
 	if (needsBigUInt)
 	{
