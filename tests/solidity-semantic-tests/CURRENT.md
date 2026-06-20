@@ -1,3 +1,21 @@
+# Semantic Test Status — v401
+
+> **fix(getter): public struct auto-getter sign-extends signed sub-word fields (1be2f4877d,
+> 2026-06-20):** **57 failed / 1258 passed / 87 xf** (zero-reg, identical fail-set). Found by the
+> stateful differential fuzzer sweeping struct-field storage shapes. A `struct{int128 x}` public
+> getter returned +2^127 (unsigned) for an INT128_MIN field; a single-field `struct{int16 y}` getter
+> did not even compile. Two gaps: (1) projectStructFields (the multi-field path) decoded each field
+> with a bare ARC4Decode and NEVER sign-extended, unlike the explicit field read (SolFieldAccess);
+> (2) single-field structs (solReturnTypes.size()==1) skipped projectStructFields ENTIRELY — read as
+> a scalar, but signedGetterBits only covers <=64-bit so int128 fell through unsigned, and the <=64
+> case fed an ARC4Struct into signExtendToUint256 → invalid AWST. Fix: projectStructFields mirrors
+> SolFieldAccess (signExtendToUint64 <64, signExtendSignedElement 64<N<256 per field); single-field
+> structs route through it too (size>=1, lone field keeps the scalar return + signedGetterBits still
+> re-extends a <=64 field to the signed biguint ABI return). Guard:
+> puyasolRegression/signed_struct_getter_sign_extension. NB the differential fuzzer canonicalises
+> per-field-width (%2^N), so it is BLIND to ABI-return-WIDTH bugs — the raw-decode guard caught a
+> uint64-shaped int16 return the fuzzer passed. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v400
 
 > **fix(int): signed sub-word compound assignment does real signed arithmetic (afd7c54369,
