@@ -484,3 +484,25 @@ def test_bytesn_shift(harness):
     assert b2i(harness.call(app, "shl32(bytes32,uint16)", (1).to_bytes(32, "big"), 255)) == (1 << 255)
     # composition: (a << 8) | b
     assert b2i(harness.call(app, "comp(bytes4,bytes4)", A4, (0xFF).to_bytes(4, "big"))) == 0x345678FF
+
+
+@pytest.mark.xfail(reason="puya backend: dynamic STORAGE array of a biguint-backed element narrower "
+                          "than 32 bytes (uint128/int128/uint160/...) reports .length as "
+                          "total_bytes/32 (a hardcoded 32-byte stride) instead of the element count; "
+                          "data is correct. uint256[] cancels (32/32), uint64[] uses a different path. "
+                          "Frontend AWST is faithful → puya get_length/box-array. See fuzz_gen stateful "
+                          "+ [[differential-fuzzing-spike]]. Remove xfail when puya fixes it.")
+def test_wide_dynamic_array_length(harness):
+    """puyasolRegression/contracts/wide_dynamic_array_length.sol — NOT an o.g. semantic test.
+
+    Found by the generative STATEFUL fuzzer. A wide (biguint-backed, <32-byte) dynamic STORAGE array's
+    `.length` is wrong (uses a 32-byte stride); element DATA is stored/indexed correctly. PUYA BACKEND.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/wide_dynamic_array_length.sol")
+    for v in (111, 222, 333):
+        harness.call(app, "push(uint128)", v)
+    # data is CORRECT (these pass) — only .length is wrong
+    assert as_int(harness.call(app, "get(uint256)", 0).abi_return) == 111
+    assert as_int(harness.call(app, "get(uint256)", 2).abi_return) == 333
+    # the bug: length reads 1 (= 3*16/32) instead of 3
+    assert as_int(harness.call(app, "len()").abi_return) == 3
