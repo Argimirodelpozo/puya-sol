@@ -1,3 +1,17 @@
+# Semantic Test Status — v406
+
+> **fix(shift): narrow sub-word shift result to uint64 for sub-expression composition (a14953e4ed,
+> 2026-06-21):** **57 failed / 1260 passed / 87 xf** (zero-reg, identical fail-set). Follow-up to
+> e93753da89: routing all sub-word shifts through the biguint path made the shift RESULT a biguint —
+> fine as a whole return (coerced) but a puya compile error when the shift is a SUB-expression feeding
+> another sub-word op (`(a << 7) & b` → "UInt64BinaryOperation expected uint64"). No existing test does
+> shift-as-subexpression on a sub-word type, so the v405 suite was green; the new GENERATIVE fuzzer
+> (fuzz_gen.py) surfaced it. Fix: narrow the biguint shift result back via implicitNumericCast (value
+> masked/sign-extended to <=64 bits → lossless); >64-bit stays biguint. Guard:
+> puyasolRegression/subword_shift_saturate (+composition cases). NB the generative fuzzer also found a
+> PRE-EXISTING same-class bug — signed sub-word EXP `int8 a**3` as a subexpr (SolBinaryOperation
+> signed-exp path) — and 2 others; see [[differential-fuzzing-spike]]. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v405
 
 > **fix(shift): sub-word `<<`/`>>` route through the guarded biguint path (e93753da89, 2026-06-21):**
