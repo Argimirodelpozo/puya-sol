@@ -1,3 +1,15 @@
+# Semantic Test Status — v423
+
+> **test(solc-reuse): opportunity C investigated (not viable) + memory sub-word guard (f490e7c704, 2026-06-21):**
+> **57 failed / 1275 passed / 87 xf** (+memory_subword_aggregate guard; no source change). C (reuse
+> Type::calldataEncodedSize for computeEncodedElementSize) is NOT viable: the helper is WType-based (24
+> call sites, many without a Solidity Type); sizes are context-dependent (box packed-ARC4 16B vs memory
+> blob 32B); bool/address use puya's widths (8/32) not solc's (1/20) by design; for integers the switch
+> already agrees with solc. No latent size bug — the wide-array bug was a call-site width-erasure (fixed);
+> box + memory sub-word aggregates fuzz CLEAN vs live EVM. Guards the previously-uncovered memory sub-word
+> path (struct field read/mutate + array index, uint128/int16/uint8). Same shape as the commonType finding:
+> puya's type model diverges from solc at the size seams by design. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v422
 
 > **test(solc-reuse): const-fold gap debunked + guard (no compiler change) (fdc9aa79e2, 2026-06-21):**

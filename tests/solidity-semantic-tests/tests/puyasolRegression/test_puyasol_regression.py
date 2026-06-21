@@ -714,3 +714,26 @@ def test_const_fold_arbitrary_precision(harness):
     assert as_int(harness.call(app, "maxU64sqWrap()").abi_return) == ((2 ** 64 - 1) ** 2) % (2 ** 64)  # 1
     # checked: uint64**2 overflows uint64 -> reverts on the AVM exactly as on EVM (NOT a fold gap)
     assert harness.call(app, "maxU64sqChecked()", expect_revert=True).reverted
+
+
+def test_memory_subword_aggregate(harness):
+    """puyasolRegression/contracts/memory_subword_aggregate.sol — NOT an o.g. semantic test.
+
+    solc-todo.md opportunity C (element/field sizes): reusing solc's calldataEncodedSize for
+    computeEncodedElementSize is non-viable (WType-based; bool/address use puya's widths 8/32 not solc's
+    1/20; sizes are box-packed vs blob-32 context-dependent). No latent size bug exists — box sub-word
+    aggregates were fuzzed clean this session; this guards the previously-uncovered MEMORY sub-word path
+    (struct field read/mutate + array index) against live EVM.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/memory_subword_aggregate.sol")
+    def s(r):  # signed sub-word returns are sign-extended to 256-bit TC
+        v = as_int(r.abi_return); return v - (1 << 256) if v >= (1 << 255) else v
+    A, B, C, D = 1234567890123, -100, 200, 999888777
+    assert as_int(harness.call(app, "field_a(uint128,int16,uint8,uint128)", A, B, C, D).abi_return) == A
+    assert s(harness.call(app, "field_b(uint128,int16,uint8,uint128)", A, B, C, D)) == B
+    assert as_int(harness.call(app, "field_d(uint128,int16,uint8,uint128)", A, B, C, D).abi_return) == D
+    assert s(harness.call(app, "mutate_b(uint128,int16,uint8,uint128,int16)", A, B, C, D, 77)) == 77
+    assert as_int(harness.call(app, "arr_idx(uint128,uint128,uint128,uint256)", 10, 20, 30, 1).abi_return) == 20
+    assert as_int(harness.call(app, "arr_idx(uint128,uint128,uint128,uint256)", 10, 20, 30, 2).abi_return) == 30
+    assert s(harness.call(app, "sarr_idx(int16,int16,uint256)", 5, -7, 1)) == -7
+    assert s(harness.call(app, "sarr_idx(int16,int16,uint256)", 5, -7, 2)) == -1

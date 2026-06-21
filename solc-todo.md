@@ -60,12 +60,19 @@ parallel math. Caveat: puya's high-level state uses boxes, not EVM slots — thi
 to the assembly/EVM-faithful path, not box storage.
 
 ## C. `Type::storageBytes()` / `calldataEncodedSize(false)` for element & field sizes
-The wide-array `.length` bug (fixed 2026-06-21) was `computeEncodedElementSize`
-(`Arc4Defaults.cpp`) — a hand-maintained `switch` over WTypes — returning 32 for
-`arc4.uint128`. solc's `type->calldataEncodedSize(false)` gives the unpadded ABI size
-(uint128→16, uint8→1, int16→2, bytes32→32) = the ARC4 packed size for value types.
-Replace the switch's value-type arms. Caveat: `address` (32-byte account) and `bool`
-(8/byte ARC4 packing) differ from solc, so keep those special-cased.
+**Investigated 2026-06-21: NOT viable as a swap, and no latent bug to catch.**
+`computeEncodedElementSize` (`Arc4Defaults.cpp`) is **WType-based** (24 call sites, many of which
+only have an ARC4 WType, not a Solidity `Type`), so solc's `calldataEncodedSize` (a Solidity-`Type`
+method) can't replace it uniformly. And the sizes are **context-dependent**: BOX storage is packed
+ARC4 (uint128 = 16B → `mapSolTypeToARC4`) while the MEMORY BLOB is 32-byte words (uint128 → 32B via
+`map()`), so there's no single right answer per type. `bool` (puya 8B) and `address` (puya 32B account)
+also genuinely differ from solc's ABI (1B / 20B) — by design. For integers the hand-rolled switch
+already agrees with solc (`ARC4UIntN(n) → n/8`). The wide-array bug was a call-site input error (a
+width-erased `map()` feeding the box path), already fixed; an audit of the other sites found them
+correct-for-their-context (blob sites correctly use 32). Box + memory sub-word aggregates fuzzed CLEAN
+vs live EVM; guard `memory_subword_aggregate` added for the memory path (was uncovered). Same shape as
+the commonType finding: puya's type model (WType, box-vs-blob, bool/address widths) diverges from solc
+at exactly these size seams — which is *why* puya has its own abstraction.
 
 ## D. `commonType` + `mobileType()` + the implicit-conversion lattice  ← TACKLING NEXT
 solc annotates every `BinaryOperation` with `annotation().commonType` (the type both
