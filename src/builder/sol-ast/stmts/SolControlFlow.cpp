@@ -122,6 +122,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	{
 		auto cond = bc.build(m_node.condition());
 
+		// Drain statements emitted while building the condition (e.g. a nested-array
+		// `a[i].length` bounds-check) — same orphaning as the for-loop: a WhileLoop
+		// condition is a pure expression, so they must re-run each iteration before the
+		// test, else the condition reads an undefined temp and reverts.
+		auto condPre = bc.takePrePending();
+		{ auto cp = bc.takePending(); for (auto& p: cp) condPre.push_back(std::move(p)); }
+
 		// Empty LoopContext (no for-post / doWhile break); still needed so
 		// continue/break inside the body know they're in a loop.
 		LoopContext loopCtx;
@@ -137,7 +144,19 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 			auto translated = buildStatement(bodyBlk, m_node.body());
 			if (translated) body->body.push_back(std::move(translated));
 		}
-		return {awst::makeWhileLoop(std::move(cond), std::move(body), m_loc)};
+
+		if (condPre.empty())
+			return {awst::makeWhileLoop(std::move(cond), std::move(body), m_loc)};
+
+		// while (true) { <cond-pre>; if (!cond) break; <body> }
+		auto newBody = awst::makeBlock(m_loc);
+		for (auto& p: condPre) newBody->body.push_back(std::move(p));
+		auto breakBlk = awst::makeBlock(m_loc);
+		breakBlk->body.push_back(awst::makeLoopExit(m_loc));
+		newBody->body.push_back(
+			awst::makeIfElse(awst::makeNot(std::move(cond), m_loc), breakBlk, nullptr, m_loc));
+		for (auto& s: body->body) newBody->body.push_back(std::move(s));
+		return {awst::makeWhileLoop(awst::makeTrue(m_loc), std::move(newBody), m_loc)};
 	}
 }
 

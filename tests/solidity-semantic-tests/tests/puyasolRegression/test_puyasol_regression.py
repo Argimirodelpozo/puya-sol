@@ -323,3 +323,6 @@ def test_nested_array_loop_condition(harness):
     # break / continue still route through the for-post in the restructured loop
     assert i(harness.call(app, "sumEvenIdx(uint256[])", [10, 1, 20, 1, 30])) == 60  # idx 0,2,4
     assert i(harness.call(app, "sumEvenIdx(uint256[])", [10, 1, 99, 1, 30])) == 10  # break at idx 2
+    # same nested extraction in a WHILE condition (non-do while had the identical orphaning)
+    assert i(harness.call(app, "sumNestedWhile(uint256[][])", [[1, 2], [3]])) == 6
+    assert i(harness.call(app, "sumNestedWhile(uint256[][])", [[5], [], [7, 8]])) == 20

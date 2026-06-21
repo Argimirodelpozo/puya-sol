@@ -23,4 +23,13 @@ contract NestedArrayLoop {
     function sumEvenIdx(uint256[] calldata a) external pure returns (uint256 s) {
         for (uint i; i < a.length; i++) { if (i % 2 == 1) continue; if (a[i] == 99) break; s += a[i]; }
     }
+    // same nested extraction in a WHILE condition (the non-do while had the identical orphaning)
+    function sumNestedWhile(uint256[][] calldata a) external pure returns (uint256 s) {
+        uint i = 0;
+        while (i < a.length) {
+            uint j = 0;
+            while (j < a[i].length) { s += a[i][j]; j++; }
+            i++;
+        }
+    }
 }
