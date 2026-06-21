@@ -204,8 +204,11 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				if (arrType->isByteArrayOrString())
 					return lenVal;
 
-				auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
-				auto* arc4ElemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
+				// Use the width-preserving Sol→ARC4 map (not map()+mapToARC4Type,
+				// which erases sub-256 widths to biguint→32) so the divisor
+				// matches the stride push/index store at (SolArrayMethod uses
+				// mapSolTypeToARC4 too). Otherwise uint128[] divides by 32 not 16.
+				auto* arc4ElemType = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
 				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
 
 

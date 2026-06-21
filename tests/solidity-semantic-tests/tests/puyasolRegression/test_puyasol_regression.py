@@ -486,26 +486,32 @@ def test_bytesn_shift(harness):
     assert b2i(harness.call(app, "comp(bytes4,bytes4)", A4, (0xFF).to_bytes(4, "big"))) == 0x345678FF
 
 
-@pytest.mark.xfail(reason="puya backend: dynamic STORAGE array of a biguint-backed element narrower "
-                          "than 32 bytes (uint128/int128/uint160/...) reports .length as "
-                          "total_bytes/32 (a hardcoded 32-byte stride) instead of the element count; "
-                          "data is correct. uint256[] cancels (32/32), uint64[] uses a different path. "
-                          "Frontend AWST is faithful → puya get_length/box-array. See fuzz_gen stateful "
-                          "+ [[differential-fuzzing-spike]]. Remove xfail when puya fixes it.")
 def test_wide_dynamic_array_length(harness):
     """puyasolRegression/contracts/wide_dynamic_array_length.sol — NOT an o.g. semantic test.
 
     Found by the generative STATEFUL fuzzer. A wide (biguint-backed, <32-byte) dynamic STORAGE array's
-    `.length` is wrong (uses a 32-byte stride); element DATA is stored/indexed correctly. PUYA BACKEND.
+    `.length` read `total_bytes/32` instead of the element count (uint128[] x3 -> 1). FRONTEND bug, FIXED:
+    SolLengthAccess computed the box divisor via map()+mapToARC4Type, which erases sub-256 widths to
+    biguint -> 32; push/index use the width-preserving mapSolTypeToARC4 (uint128 -> 16). Aligned the two
+    so .length divides by the real stride. Also fixed uint8/16/32[] (stored at 1/2/4 B, divided by 8).
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/wide_dynamic_array_length.sol")
     for v in (111, 222, 333):
         harness.call(app, "push(uint128)", v)
-    # data is CORRECT (these pass) — only .length is wrong
     assert as_int(harness.call(app, "get(uint256)", 0).abi_return) == 111
     assert as_int(harness.call(app, "get(uint256)", 2).abi_return) == 333
-    # the bug: length reads 1 (= 3*16/32) instead of 3
+    # was 1 (= 3*16/32) before the stride fix; now the true count
     assert as_int(harness.call(app, "len()").abi_return) == 3
+    # other sub-32-byte widths broke the same way (divided by 32 or 8); now all read the true count
+    for sig, push_sig, vals in (
+        ("lenB()", "pushB(uint160)", (5, 6, 7)),       # 20-byte stride (was /32 -> 1)
+        ("lenC()", "pushC(uint32)", (5, 6, 7)),        #  4-byte stride (was /8  -> 1)
+        ("lenD()", "pushD(uint8)", (5, 6, 7)),         #  1-byte stride (was /8  -> 0)
+        ("lenE()", "pushE(uint256)", (5, 6, 7)),       # 32-byte control (always correct)
+    ):
+        for v in vals:
+            harness.call(app, push_sig, v)
+        assert as_int(harness.call(app, sig).abi_return) == 3
 
 
 def test_asm_signed_negatives(harness):
