@@ -10,6 +10,8 @@
 
 #include "awst/Node.h"
 
+#include <libsolutil/Numeric.h>
+
 #include <functional>
 #include <memory>
 #include <optional>
@@ -67,6 +69,19 @@ public:
 	/// (2^64 − 2^N) to set the high bits; the sum stays < 2^64 for all inputs.
 	static std::shared_ptr<awst::Expression> signExtendToUint64(
 		std::shared_ptr<awst::Expression> _value,
+		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Emit a canonical AWST integer constant from a 256-bit two's-complement value
+	/// for an N-bit Solidity integer type. Centralises the "solc value -> canonical
+	/// constant" rule that SolLiteral, tryConstantFold and type(T).min/max each
+	/// hand-rolled (and had to keep mutually consistent): N<=64 -> low 64-bit TC
+	/// (uint64 wtype, e.g. int8 -1 -> 0xff..ff), N>64 -> 256-bit TC (biguint wtype).
+	/// `_tcValue` is the value already in 256-bit two's complement (as solc's
+	/// literalValue() / IntegerType::min() return it for negatives).
+	static std::shared_ptr<awst::Expression> canonicalIntConstant(
+		solidity::u256 const& _tcValue,
 		unsigned _bits,
 		awst::SourceLocation const& _loc
 	);

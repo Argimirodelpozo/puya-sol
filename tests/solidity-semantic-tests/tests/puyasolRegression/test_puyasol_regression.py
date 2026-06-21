@@ -667,3 +667,28 @@ def test_signed_subword_equality(harness):
     assert bo(harness.call(app, "eqParam(int8,int8)", -5, 5)) == 0
     assert bo(harness.call(app, "eqNegLit64()")) == 1
     assert bo(harness.call(app, "eqNegLit256()")) == 1
+
+
+def test_type_minmax_canonical(harness):
+    """puyasolRegression/contracts/type_minmax_canonical.sol — NOT an o.g. semantic test.
+
+    Locks type(intN).min/max after the solc-reuse consolidation: SolMetaTypeAccess routes solc's
+    IntegerType::min()/max() (256-bit two's-complement) through TypeCoercion::canonicalIntConstant
+    (<=64 -> low 64-bit TC/uint64; >64 -> 256-bit TC/biguint), replacing ~40 lines of hand-rolled TC
+    math that had to stay in lockstep with SolLiteral. Values + their compare/arith uses must hold.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/type_minmax_canonical.sol")
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v >= (1 << 255) else v  # 2^255 itself is int256.min
+    assert s(harness.call(app, "mn8()")) == -128
+    assert s(harness.call(app, "mn16()")) == -32768
+    assert s(harness.call(app, "mn128()")) == -(1 << 127)
+    assert s(harness.call(app, "mn256()")) == -(1 << 255)
+    assert s(harness.call(app, "mx8()")) == 127
+    assert as_int(harness.call(app, "mxu256()").abi_return) == (1 << 256) - 1
+    # canonical min compares equal to the matching literal
+    assert as_int(harness.call(app, "minIsLit8(int8)", -128).abi_return) == 1
+    assert as_int(harness.call(app, "minIsLit8(int8)", -127).abi_return) == 0
+    assert as_int(harness.call(app, "minIsLit128(int128)", -(1 << 127)).abi_return) == 1
+    # arithmetic: -1 + (-128) wraps (unchecked int8) to 127
+    assert s(harness.call(app, "addMin8(int8)", -1)) == 127

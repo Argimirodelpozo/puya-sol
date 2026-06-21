@@ -228,6 +228,23 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 	return comma;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::canonicalIntConstant(
+	solidity::u256 const& _tcValue,
+	unsigned _bits,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_bits <= 64)
+	{
+		// Low 64-bit two's complement: 0xff..ff for int8 -1, value as-is for unsigned.
+		static solidity::u256 const twoPow64 = solidity::u256(1) << 64;
+		solidity::u256 v = _tcValue % twoPow64;
+		return awst::makeIntegerConstant(v.str(), _loc, awst::WType::uint64Type());
+	}
+	// >64 bits: the value is already the canonical 256-bit two's complement.
+	return awst::makeIntegerConstant(_tcValue.str(), _loc, awst::WType::biguintType());
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _solElemType,

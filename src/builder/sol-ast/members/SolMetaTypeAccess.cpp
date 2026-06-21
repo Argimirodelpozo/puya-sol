@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "Logger.h"
 
@@ -32,50 +33,12 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 	{
 		if (auto const* intType = dynamic_cast<IntegerType const*>(typeArg))
 		{
-			unsigned bits = intType->numBits();
-			// uint64 for ≤64 bits, biguint otherwise — matches integer type mapping.
-			auto* wtype = (bits <= 64)
-				? awst::WType::uint64Type()
-				: awst::WType::biguintType();
-
-			std::string val;
-			if (member == "max")
-			{
-				// IntegerType::max() handles signed (2^(N-1)-1) and unsigned (2^N-1).
-				std::ostringstream oss;
-				oss << intType->max();
-				val = oss.str();
-			}
-			else
-			{
-				if (intType->isSigned())
-				{
-					// type(intN).min = -2^(N-1) as two's-complement in slot width,
-					// matching SolLiteral so `intN_min == -2**(N-1)` operands compare equal.
-					//   bits<=64:  2^64  - 2^(bits-1)  (uint64)
-					//   bits>64:   2^256 - 2^(bits-1)  (biguint)
-					//   bits==256: 2^255
-					solidity::u256 twoPowBitsMinus1 = solidity::u256(1) << (bits - 1);
-					solidity::u256 minVal;
-					if (bits <= 64)
-					{
-						solidity::u256 twoPow64 = solidity::u256(1) << 64;
-						minVal = twoPow64 - twoPowBitsMinus1;
-					}
-					else if (bits == 256)
-						minVal = twoPowBitsMinus1;
-					else
-						minVal = solidity::u256(0) - twoPowBitsMinus1; // wraps mod 2^256
-					std::ostringstream oss;
-					oss << minVal;
-					val = oss.str();
-				}
-				else
-					val = "0";
-			}
-
-			auto e = awst::makeIntegerConstant(val, m_loc, wtype);
-			return e;
+			// solc already computes both bounds as a 256-bit two's-complement u256
+			// (min() = s2u(minValue()), max() = the signed/unsigned max). Route through
+			// the shared canonicaliser for the right slot width + wtype — replaces the
+			// hand-rolled TC math that had to stay in lockstep with SolLiteral.
+			solidity::u256 tc = (member == "max") ? intType->max() : intType->min();
+			return builder::TypeCoercion::canonicalIntConstant(tc, intType->numBits(), m_loc);
 		}
 
 		// type(EnumType).max / .min
