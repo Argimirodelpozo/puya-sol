@@ -608,3 +608,35 @@ def test_signed_negation_overflow(harness):
     # unchecked: -(intN.min) wraps back to intN.min (no revert)
     assert s(harness.call(app, "uneg64(int64)", -(1 << 63))) == -(1 << 63)
     assert s(harness.call(app, "uneg128(int128)", -(1 << 127))) == -(1 << 127)
+
+
+def test_signed_subword_compare(harness):
+    """puyasolRegression/contracts/signed_subword_compare.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cf). A signed ordering compare on a sub-word int (int8/16/32)
+    was wrong when an operand wasn't sign-extended in its uint64 slot: a negative literal cast
+    (int8(-1) = 0xff) or an unchecked sub-word arith result (0-(-128) = 0x80). SolIntegerBuilder::
+    compare's uint64 path XOR'd with 2^63 to get unsigned ordering but never sign-extended first, so
+    0xff (-1) ordered above 0 -> `int8(-1) < int8(0)` returned false. ABI params arrive sign-extended,
+    hiding it. int64/int256 were already correct. FIX: signExtendToUint64 each operand before the XOR.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_subword_compare.sol")
+    bo = lambda r: as_int(r.abi_return)  # bool -> 1/0
+    # negative literal cast: -1 < 0 is true (was false for int8/16/32)
+    assert bo(harness.call(app, "ltNeg8()")) == 1
+    assert bo(harness.call(app, "ltNeg16()")) == 1
+    assert bo(harness.call(app, "ltNeg32()")) == 1
+    assert bo(harness.call(app, "ltNeg256()")) == 1
+    # unchecked arith result < 0
+    assert bo(harness.call(app, "modNeg8(int8,int8)", 0, -128)) == 0     # 0 % -128 = 0, not < 0
+    assert bo(harness.call(app, "modNeg8(int8,int8)", -1, -128)) == 1    # -1 % -128 = -1 < 0
+    assert bo(harness.call(app, "subWrap8(int8,int8)", 0, -128)) == 1    # 0-(-128)=128 wraps -128 < 0
+    assert bo(harness.call(app, "mulWrap8(int8,int8)", -1, -128)) == 1   # -1*-128=128 wraps -128 < 0
+    assert bo(harness.call(app, "modNeg16(int16,int16)", -1, -32768)) == 1
+    # int64 (full width) still correct
+    assert bo(harness.call(app, "modNeg64(int64,int64)", -1, -(1 << 60))) == 1
+    assert bo(harness.call(app, "modNeg64(int64,int64)", 5, 3)) == 0     # 5%3=2, not < 0
+    # sanity: ordinary param comparisons unaffected
+    assert bo(harness.call(app, "ltPos8(int8,int8)", -5, 3)) == 1
+    assert bo(harness.call(app, "ltPos8(int8,int8)", 3, -5)) == 0
+    assert bo(harness.call(app, "gte16(int16,int16)", -1, -2)) == 1

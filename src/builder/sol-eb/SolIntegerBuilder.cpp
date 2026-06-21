@@ -381,6 +381,18 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		}
 		else
 		{
+			// Sign-extend sub-word signed operands to 64 bits BEFORE the 2^63 XOR.
+			// A non-canonical int8/16/32 value — a negative literal cast (int8(-1)
+			// = 0xff, low N bits only) or an unchecked sub-word arithmetic result
+			// (0-(-128) = 0x80) — would otherwise misorder (0xff XOR 2^63 reads as
+			// > int8(0)'s 0x80…00). signExtendToUint64 masks first so it is
+			// idempotent for already-canonical operands (ABI params) and a no-op
+			// for int64. Mirrors the biguint branch's signExtendToUint256.
+			if (m_signed && lhs->wtype == awst::WType::uint64Type())
+				lhs = TypeCoercion::signExtendToUint64(std::move(lhs), m_bits, _loc);
+			if (otherInt->isSigned() && rhs->wtype == awst::WType::uint64Type())
+				rhs = TypeCoercion::signExtendToUint64(std::move(rhs), otherInt->numBits(), _loc);
+
 			auto signBit = awst::makeIntegerConstant("9223372036854775808", _loc); // 2^63
 
 			auto xorL = awst::makeUInt64BinOp(std::move(lhs), awst::UInt64BinaryOperator::BitXor, signBit, _loc);
