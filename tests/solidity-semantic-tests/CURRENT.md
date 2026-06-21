@@ -1,3 +1,17 @@
+# Semantic Test Status — v407
+
+> **fix(exp): signed sub-word `**` wraps unchecked overflow + narrows result to uint64 (7bede2a89d,
+> 2026-06-21):** **57 failed / 1261 passed / 87 xf** (zero-reg, identical fail-set). Found by the
+> GENERATIVE fuzzer (fuzz_gen.py); the prior generative finding #2. buildSignedExp (signed `**`) for a
+> SUB-WORD type had two bugs: (1) VALUE — an UNCHECKED result that overflows the type was not wrapped
+> mod 2^bits, so the negation `pow2N - absResult` underflowed the biguint subtraction and the AVM `b-`
+> panicked (int8 (-128)**3 = 2097152 > 256 → REVERT; EVM wraps to 0); (2) COMPOSITION — the biguint
+> result handed `b ^ (a**3)` a biguint where a UInt64BinaryOperation expects uint64 (puya compile
+> error). Fix: mask the magnitude mod 2^bits for UNCHECKED before the negation (checked keeps it raw →
+> the overflow assert still fires; a passing assert guarantees absResult < pow2N) + narrow the sub-word
+> result to uint64 (like the shift fix a14953e4ed). Guard: puyasolRegression/signed_subword_exp.
+> [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v406
 
 > **fix(shift): narrow sub-word shift result to uint64 for sub-expression composition (a14953e4ed,
