@@ -1,3 +1,17 @@
+# Semantic Test Status — v411
+
+> **fix(bytes): bytesN bit shift `b<<k`/`b>>k` lowered via biguint (7a5b225aad, 2026-06-21):** **57
+> failed / 1265 passed / 87 xf** (zero-reg, identical fail-set). Found by the generative fuzzer's NEW
+> BYTES mode (fuzz_gen.py --bytes — bytesN `& | ^ ~` + shifts). A bytesN bit SHIFT HARD-ERRORED in the
+> puya backend ("unsupported type cast from uint64 to bytes"): SolFixedBytesBuilder::binary_op returned
+> nullptr for shifts, so the generic integer path coerced the bytesN operand bytes->uint64->bytes — and
+> uint64->bytes is unsupported (uint64 can't even hold bytes>8). Bitwise & | ^ ~ were already handled.
+> FIX: handle LShift/RShift in binary_op — asBiguint(b) shifted by k bits via buildBigUIntShift (already
+> saturates k>=256), then makeLeftPadToN keeps the LOW N bytes (Solidity truncates to N). Correct across
+> widths (bytes1/4/16/32), variable amounts, k>=8N edges, composition — all diffed clean vs solc+EVM. A
+> FEATURE gap (hard-error on valid Solidity), not a silent divergence. Guard:
+> puyasolRegression/bytesN_shift. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v410
 
 > **fix(exp): unchecked uint64 exponentiation wraps on overflow (fd62c32d4a, 2026-06-21):** **57 failed
