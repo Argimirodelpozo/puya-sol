@@ -57,6 +57,19 @@ width/sign bugs live.
 
 Where: `SolBinaryOperation.cpp`, `TypeCoercion.cpp` (implicitNumericCast / promotion).
 
+**Investigated 2026-06-21 (comparisons):** net-additive, NOT a reduction. `compare()` has one
+caller (`SolBinaryOperation.cpp:145`) and comparisons don't use `commonType` today — but its
+per-operand promotion already handles mixed widths correctly, so coercing to `commonType` first
+*duplicates* it rather than replacing it. The canonicalization (cast/equality sign-extend) must stay
+regardless (commonType only handles cross-width; same-width non-canonical operands still need it).
+`narrowConstIfNegative` (~25 lines) can't be removed because literal operands (`x == -128`) are
+`RationalNumberType`, bypass an integer-typed coercion guard, and still reach `compare()` mismatched.
+**Residual real win:** the *arithmetic* path (`SolBinaryOperation.cpp:170-178`) uses
+`builderForInstance(commonType, _left)` which *reinterprets* the operand without converting the value
+— a latent signed-widening gap (a non-canonical operand in `int8 + int16` zero-extends the sign).
+Making it *coerce* via `signExtendSignedWiden` would be correct-by-construction. (Today's cast/equality
+fixes plug it at the source, so it's latent, not active.)
+
 ## E. `FunctionType::externalSignature()` for canonical signature strings
 Method *selectors* are ARC4 (different scheme), but the canonical-param-type-name string
 construction — used for error/event encoding and the `intSelectorName`/

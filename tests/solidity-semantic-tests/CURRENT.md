@@ -1,3 +1,17 @@
+# Semantic Test Status — v420
+
+> **refactor(solc-reuse): type(intN).min/max via solc min()/max() + one canonical helper (0bec5aed44, 2026-06-21):**
+> **57 failed / 1273 passed / 87 xf** (zero-reg; +type_minmax_canonical guard). First concrete step of
+> solc-todo.md opportunity A (reuse solc's computed constants). SolMetaTypeAccess hand-rolled the
+> type(intN).min two's-complement (~40 lines: per-width 2^64-2^(N-1) / 2^256-2^(N-1) / 2^255 + wtype
+> selection) and had to stay "in lockstep with SolLiteral" so min/literal compared equal. Replaced with
+> solc's IntegerType::min()/max() (which already return the 256-bit TC u256: min()=s2u(minValue())) routed
+> through a new shared TypeCoercion::canonicalIntConstant(tcValue, bits) — the single "solc value -> canonical
+> int constant" rule (<=64 -> low 64-bit TC/uint64, >64 -> 256-bit TC/biguint). Behavior-preserving (every
+> width's value + its compare/arith uses verified vs live EVM); removes the duplicated TC math + the fragile
+> coupling. The same helper can absorb SolLiteral's signed-small `%2^64` wrap + tryConstantFold next.
+> [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v419
 
 > **fix(intN): sub-word signed EQUALITY canonicalizes non-canonical operands (4b63508ed4, 2026-06-21):**
