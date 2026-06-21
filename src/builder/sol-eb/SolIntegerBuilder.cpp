@@ -78,13 +78,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 	bool otherIsBigUInt = otherInt->numBits() > 64;
 	// Signed sub: always biguint path (uint64 `-` panics on underflow; signed 1-2=-1 is valid).
-	// Signed >>: always biguint path too — the uint64 `shr` is LOGICAL (zero-fill), but signed >>
-	// is SAR (sign-fill). Only forced when the shift amount is ≤64-bit (a wider amount already
-	// routes here via otherIsBigUInt); a sub-word/constant amount otherwise mis-lowered to `shr`
-	// (e.g. `int8 x >> 100` zero-filled + reverted on the overflow check).
+	// ALL shifts: always biguint path. The raw uint64 `shl`/`shr` opcode FAILS for a shift amount
+	// >= 64, but Solidity `x << n` / `x >> n` saturate to 0 (or sign-fill) for n >= the width and
+	// never revert — so a sub-word shift by a <=64-bit amount >= 64 (e.g. `uint16 x << 256`, a
+	// literal typed <=64-bit so it misses otherIsBigUInt) reverted. buildBigUIntShift /
+	// buildBigUIntArithmeticShiftRight saturate correctly; emitOverflowCheck masks to the width
+	// (Solidity shifts don't overflow-check). Signed >> additionally needs SAR (sign-fill) here.
 	bool needsBigUInt = m_isBigUInt || otherIsBigUInt
 		|| (m_signed && _op == BuilderBinaryOp::Sub)
-		|| (m_signed && _op == BuilderBinaryOp::RShift);
+		|| _op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift;
 
 	auto lhs = resolve();
 	auto rhs = _other.resolve();

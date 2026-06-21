@@ -326,3 +326,25 @@ def test_nested_array_loop_condition(harness):
     # same nested extraction in a WHILE condition (non-do while had the identical orphaning)
     assert i(harness.call(app, "sumNestedWhile(uint256[][])", [[1, 2], [3]])) == 6
     assert i(harness.call(app, "sumNestedWhile(uint256[][])", [[5], [], [7, 8]])) == 20
+
+
+def test_subword_shift_saturate(harness):
+    """puyasolRegression/contracts/subword_shift_saturate.sol — NOT an o.g. semantic test.
+
+    Found by the GENERATIVE fuzzer (fuzz_gen.py). A sub-word `<<`/`>>` by a constant (or any
+    <=64-bit-typed) amount >= 64 hit the raw uint64 shl/shr opcode, which fails for shift >= 64,
+    so it REVERTED — but Solidity saturates to 0 (sign-fill for signed >>) and never reverts. Fix
+    routes all shifts through the guarded biguint path (the variable-uint256 path already was).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/subword_shift_saturate.sol")
+    def s16(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    assert as_int(harness.call(app, "shl16_64(uint16)", 7).abi_return) == 0       # was REVERT
+    assert as_int(harness.call(app, "shl16_256(uint16)", 0xFFFF).abi_return) == 0  # was REVERT
+    assert as_int(harness.call(app, "shl16_4(uint16)", 7).abi_return) == 112       # in-range unchanged
+    assert as_int(harness.call(app, "shl16_4(uint16)", 0xFFFF).abi_return) == 0xFFF0  # masks to 16 bits
+    assert as_int(harness.call(app, "shr16_256(uint16)", 0x8000).abi_return) == 0  # was REVERT
+    assert as_int(harness.call(app, "shl64_64(uint64)", 1).abi_return) == 0        # was REVERT
+    assert s16(harness.call(app, "shlI16_256(int16)", 5)) == 0                     # was REVERT
+    assert s16(harness.call(app, "shrI16_256(int16)", -1)) == -1                   # signed >>: sign-fill
+    assert s16(harness.call(app, "shrI16_256(int16)", 100)) == 0                   # non-negative → 0
