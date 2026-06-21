@@ -1,3 +1,16 @@
+# Semantic Test Status — v413
+
+> **fix(asm): Yul `byte(n,x)` for n>=32 returns 0 instead of reverting (160e36096f, 2026-06-21):** **57
+> failed / 1266 passed / 89 xf** (zero-reg, identical fail-set). Found by the generative fuzzer (inline
+> assembly Yul ops). `byte(n,x)` returns byte n (big-endian, 0=MSB) of the 32-byte x; for n>=32 EVM
+> returns 0 (out of range), but the AVM lowering `extract3(pad32(x), n, 1)` REVERTED (offset past the
+> value). FIX (handleByte, BitwiseShiftOps.cpp): guard `n < 32 ? byte : 0` — the conditional only
+> evaluates the extract on the taken branch, n single-evaluated. Same shape as the shift>=256 saturate
+> fix; in-range unchanged. Verified in the semantic harness. The same assembly sweep also confirmed
+> slt/sgt/signextend/addmod CLEAN, that Yul `exp` is a BY-DESIGN fail-loud hard-error (not a bug), and
+> xfailed sdiv/smod/sar-on-negatives (v412-era, separate). Guard:
+> puyasolRegression/yul_byte_out_of_range. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v412
 
 > **test(arrays): xfail guard for wide-element dynamic storage array .length — a PUYA BACKEND bug
