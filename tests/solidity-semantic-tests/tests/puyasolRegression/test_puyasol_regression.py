@@ -573,3 +573,38 @@ def test_yul_user_fn_var_clash(harness):
     assert as_int(harness.call(app, "uf(uint256,uint256)", 3, 2).abi_return) == 17
     assert as_int(harness.call(app, "uf(uint256,uint256)", 5, 3).abi_return) == 52
     assert as_int(harness.call(app, "uf(uint256,uint256)", 0, 4).abi_return) == 64  # 0 + 4^3
+
+
+def test_signed_negation_overflow(harness):
+    """puyasolRegression/contracts/signed_negation_overflow.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). Checked `-(type(intN).min)` overflows and must REVERT;
+    `unchecked` wraps it back to intN.min. The overflow guard in SolIntegerBuilder::unary_op missed
+    exactly int64 (its `(1<<64)-1` mask is C++ UB -> 0, so the guard never fired) and int128 (the
+    operand is 256-bit sign-extended, so int128.min reads as 2^256-2^127 but the guard compared
+    against 2^127). int8/16/32 + int256 already reverted. FIX: mask all-ones for N==64, and compare
+    biguint-backed operands against the sign-extended min (2^256 - 2^(N-1)).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_negation_overflow.sol")
+    mins = {
+        "neg8(int8)": -(1 << 7),
+        "neg16(int16)": -(1 << 15),
+        "neg32(int32)": -(1 << 31),
+        "neg64(int64)": -(1 << 63),     # was the bug (no revert)
+        "neg128(int128)": -(1 << 127),  # was the bug (no revert)
+        "neg256(int256)": -(1 << 255),
+    }
+    # checked: -(intN.min) must revert (overflow)
+    for sig, mn in mins.items():
+        assert harness.call(app, sig, mn, expect_revert=True).reverted, sig
+
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    # checked: ordinary values negate correctly
+    assert s(harness.call(app, "neg64(int64)", 5)) == -5
+    assert s(harness.call(app, "neg64(int64)", -5)) == 5
+    assert s(harness.call(app, "neg128(int128)", -7)) == 7
+    assert s(harness.call(app, "neg128(int128)", (1 << 126))) == -(1 << 126)
+    # unchecked: -(intN.min) wraps back to intN.min (no revert)
+    assert s(harness.call(app, "uneg64(int64)", -(1 << 63))) == -(1 << 63)
+    assert s(harness.call(app, "uneg128(int128)", -(1 << 127))) == -(1 << 127)

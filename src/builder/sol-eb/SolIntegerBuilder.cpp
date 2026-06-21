@@ -454,33 +454,37 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			}
 			catch (...) {} // fall through
 		}
-		// Checked signed: -INT_MIN overflows. INT_MIN = 2^(N-1) in unsigned TC.
+		// Checked signed: -INT_MIN overflows. INT_MIN's TC pattern is 2^(N-1) in the
+		// low N bits; as a 256-bit sign-extended value it reads as 2^256 - 2^(N-1).
 		if (m_signed && !m_scope.isUnchecked())
 		{
-			std::string halfNStr;
-			if (m_bits == 256)
-				halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-			else
-			{
-				solidity::u256 halfN = solidity::u256(1) << (m_bits - 1);
-				std::ostringstream oss;
-				oss << halfN;
-				halfNStr = oss.str();
-			}
+			solidity::u256 minLowBits = solidity::u256(1) << (m_bits - 1);   // 2^(N-1)
 
 			std::shared_ptr<awst::Expression> cmpOperand = operand;
+			solidity::u256 cmpAgainst;
 			if (!m_isBigUInt)
 			{
-				// Mask to N bits first (uint64 slot may hold wider TC).
-				auto maskConst = awst::makeIntegerConstant((uint64_t(1) << m_bits) - 1, _loc);
+				// uint64-backed: mask to the low N bits (the slot may hold a wider TC)
+				// and compare against 2^(N-1). (1<<64)-1 is UB, so all-ones for N==64.
+				uint64_t mask = m_bits >= 64 ? UINT64_MAX : ((uint64_t(1) << m_bits) - 1);
+				auto maskConst = awst::makeIntegerConstant(mask, _loc);
 
 				auto masked = awst::makeUInt64BinOp(operand, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), _loc);
 
 				auto itob = awst::makeItob(std::move(masked), _loc);
 				cmpOperand = awst::makeAsBiguint(std::move(itob), _loc);
+				cmpAgainst = minLowBits;
+			}
+			else
+			{
+				// biguint-backed: operand is the 256-bit sign-extended TC, so INT_MIN
+				// reads as 2^256 - 2^(N-1) (for N==256 that is 2^255).
+				cmpAgainst = (solidity::u256(1) << 256) - minLowBits;
 			}
 
-			auto halfConst = awst::makeIntegerConstant(halfNStr, _loc, awst::WType::biguintType());
+			std::ostringstream oss;
+			oss << cmpAgainst;
+			auto halfConst = awst::makeIntegerConstant(oss.str(), _loc, awst::WType::biguintType());
 
 			auto cmp = awst::makeNumericCompare(std::move(cmpOperand), awst::NumericComparison::Ne, std::move(halfConst), _loc);
 
