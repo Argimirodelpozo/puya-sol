@@ -483,8 +483,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 			// Remap biguint → ARC4UIntN(N): without this puya uses uint512 (AVM max),
 			// breaking ABI selectors. Skipped for asm bodies (would break Yul refs).
-			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
-				&& !funcHasInlineAssembly)
+			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
 			{
 				auto const* solType = solParams[pi]->annotation().type;
 				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
@@ -499,7 +498,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				unsigned signedBits =
 					(intType && intType->isSigned() && bits > 64 && bits < 256) ? bits : 0;
 				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation, 0, signedBits});
-				arg.wtype = arc4Type;
+				// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
+				// body builds against the native biguint type (set in the decode rename loop below).
+				if (!funcHasInlineAssembly)
+					arg.wtype = arc4Type;
 				continue;
 			}
 
@@ -771,7 +773,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Deferred until after modifier inlining: inlineModifiers replaces method.body
 		// wholesale, so prepending earlier would bury the decode inside the wrap.
 		std::vector<std::shared_ptr<awst::Statement>> deferredDecodes;
-		if (!paramDecodes.empty() && !hasInlineAssembly)
+		if (!paramDecodes.empty())
 		{
 			for (auto& pd: paramDecodes)
 			{
@@ -782,6 +784,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (arg.name == pd.name)
 					{
 						arg.name = arc4Name;
+						arg.wtype = pd.arc4Type; // deferred for asm fns; idempotent for the rest
 						break;
 					}
 				}

@@ -16,9 +16,11 @@ pragma solidity ^0.8.0;
 // gaps in the ABI derivation: (1) PARAM side — no param rewriter, so ALL 256-bit asm params (int256 AND
 // uint256) expose as uint512; (2) RETURN side — ReturnRewriter Pass 2 (biguint return -> uint256) is gated
 // `signedReturns.empty()`, so a SIGNED asm return stays biguint -> uint512 (uint256 asm returns are already
-// correct). This is the asm-biguint-return "param side still open" + a signed-return gap. FRONTEND fix = a
-// param rewriter (declare arc4.uint256, decode to biguint at entry) + un-gate the return pass for signed
-// 256-bit. xfail until that lands. Verified in the semantic harness.
+// correct). This was the asm-biguint-return "param side still open".
+// FIXED: apply the biguint->ARC4 param remap to asm bodies too, but DEFER the arg.wtype mutation until
+// the decode rename loop (after buildBlock) — the Yul body is built post-remap, so it must see the native
+// biguint type (else `switch a` builds with the arc4 type and dispatches wrong). The return side (signed
+// asm return still uint512) canonicalizes %2^256 so it causes no divergence; left as a minor follow-up.
 contract AsmSignedNegatives {
     function sdivF(int256 a) external pure returns (int256 r) { assembly { r := sdiv(a, 3) } }
     function smodF(int256 a) external pure returns (int256 r) { assembly { r := smod(a, 3) } }

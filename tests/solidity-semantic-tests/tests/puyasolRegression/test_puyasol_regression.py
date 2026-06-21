@@ -508,28 +508,25 @@ def test_wide_dynamic_array_length(harness):
     assert as_int(harness.call(app, "len()").abi_return) == 3
 
 
-@pytest.mark.xfail(reason="frontend: an asm-bodied fn exposes 256-bit params (and signed returns) as "
-                          "arc4.uint512 not uint256 (TEAL sig `sdivF(uint512)uint512`) — the asm body "
-                          "reinterprets the operand as biguint and puya maps biguint->ARC4UIntN(512). A "
-                          "negative int256 then arrives as a 512-bit value, so negate256()'s `maxU256-val` "
-                          "underflows (empty b- panic); the sdiv/smod/sar LOGIC is fine. = asm-biguint-return "
-                          "'param side still open' + ReturnRewriter Pass 2 gated on signedReturns.empty(). "
-                          "Fix = param rewriter + un-gate signed returns. See [[differential-fuzzing-spike]].")
 def test_asm_signed_negatives(harness):
     """puyasolRegression/contracts/asm_signed_negatives.sol — NOT an o.g. semantic test.
 
-    Found by the generative fuzzer (inline assembly Yul ops). Yul sdiv/smod/sar are broken for negative
-    operands (sdiv/smod revert, sar wrong); positive operands are correct. FRONTEND. Verified in the
-    semantic harness.
+    Found by the generative fuzzer (inline assembly Yul ops). Yul sdiv/smod/sar reverted/were wrong for
+    NEGATIVE operands. ROOT CAUSE (TEAL sig was `sdivF(uint512)uint512`): an asm-bodied fn exposed its
+    256-bit params as arc4.uint512 (64 bytes) not uint256, because the body is built AFTER the param
+    remap so the Yul body saw the remapped type and a negative int256 arrived as a 512-bit value (then
+    negate256()'s maxU256-val underflowed). FIX: apply the biguint->ARC4 param remap to asm bodies, but
+    DEFER the arg.wtype mutation until after buildBlock so the Yul body builds against the native biguint
+    type (and the switch handler dispatches correctly). The sdiv/smod/sar logic was always correct.
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/asm_signed_negatives.sol")
 
     def s(r):
         v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
-    # positive operands ALREADY correct
+    # positive operands
     assert s(harness.call(app, "sdivF(int256)", 127)) == 42
     assert s(harness.call(app, "sarF(int256)", 100)) == 25
-    # negative operands: sdiv(-128,3)=-42, smod(-128,3)=-2, sar(2,-128)=-32 (currently revert / wrong)
+    # negative operands: sdiv(-128,3)=-42, smod(-128,3)=-2, sar(2,-128)=-32 (were revert / wrong)
     assert s(harness.call(app, "sdivF(int256)", -128)) == -42
     assert s(harness.call(app, "smodF(int256)", -128)) == -2
     assert s(harness.call(app, "sarF(int256)", -128)) == -32
