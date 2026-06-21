@@ -692,3 +692,25 @@ def test_type_minmax_canonical(harness):
     assert as_int(harness.call(app, "minIsLit128(int128)", -(1 << 127)).abi_return) == 1
     # arithmetic: -1 + (-128) wraps (unchecked int8) to 127
     assert s(harness.call(app, "addMin8(int8)", -1)) == 127
+
+
+def test_const_fold_arbitrary_precision(harness):
+    """puyasolRegression/contracts/const_fold_arbitrary_precision.sol — NOT an o.g. semantic test.
+
+    solc-todo.md opportunity A: the 'const-fold gap' (type(uint64).max**2 reverting on AVM but folding on
+    EVM) turned out NOT to exist — AVM matches EVM. A constant that fits its target is folded to its exact
+    value (tryConstantFold + rationalIntConstant). One that overflows its OPERAND type in a checked context
+    reverts on BOTH (type(uint64).max**2 has type uint64; solc does not widen it). Unchecked, it wraps in
+    the operand width on both. No ConstantEvaluator integration needed. (Diagnosed: the fuzzer's
+    "no divergence" for type(uint64).max**2 was both-revert, not a value match.)
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/const_fold_arbitrary_precision.sol")
+    # constants that fit are folded to the exact value
+    assert as_int(harness.call(app, "pow1077()").abi_return) == 10 ** 77
+    assert as_int(harness.call(app, "half256p1()").abi_return) == 2 ** 255
+    assert as_int(harness.call(app, "bigShift()").abi_return) == 1 << 200
+    assert as_int(harness.call(app, "bigMul()").abi_return) == 3 * (2 ** 200)
+    # unchecked: the uint64 op wraps in its operand width
+    assert as_int(harness.call(app, "maxU64sqWrap()").abi_return) == ((2 ** 64 - 1) ** 2) % (2 ** 64)  # 1
+    # checked: uint64**2 overflows uint64 -> reverts on the AVM exactly as on EVM (NOT a fold gap)
+    assert harness.call(app, "maxU64sqChecked()", expect_revert=True).reverted

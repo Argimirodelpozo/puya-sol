@@ -1,3 +1,16 @@
+# Semantic Test Status — v422
+
+> **test(solc-reuse): const-fold gap debunked + guard (no compiler change) (fdc9aa79e2, 2026-06-21):**
+> **57 failed / 1274 passed / 87 xf** (+const_fold_arbitrary_precision guard; no source change). Closes
+> solc-todo.md opportunity A. The long-noted "const-fold gap" (`type(uint64).max**2` reverting on AVM but
+> folding on EVM) was investigated with the differential fuzzer + harness and found NOT to exist: that
+> expression's type is uint64, so `(2^64-1)^2` overflows in checked context and reverts on EVM AND AVM
+> identically — solc does not widen it. The old note was a misread (the fuzzer's "no divergence" was a
+> both-revert, not a value match). Constants that fit ARE folded to exact values (10**77, 1<<200, 2^255,
+> 3*2^200) and unchecked ops wrap in their operand width — all match EVM. So ConstantEvaluator integration
+> buys nothing; A is complete (the earlier steps were pure consolidation). Guard locks the behavior.
+> [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v421
 
 > **refactor(solc-reuse): SolLiteral dead-branch removal + shared rationalIntConstant (4c7f7032e3, 2026-06-21):**

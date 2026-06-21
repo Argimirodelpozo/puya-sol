@@ -25,10 +25,15 @@ The fuzzer is effectively a detector for "haven't deferred to solc here yet."
 > `TypeCoercion::rationalIntConstant` and routed both through it. Two constant-emission shapes now exist:
 > width-based (`canonicalIntConstant`, for type(T).min/max + intN casts) and magnitude-based
 > (`rationalIntConstant`, for rationals).
-> **Next:** `ConstantEvaluator::evaluate()` for non-literal constant subexpressions (the only remaining A
-> item — closes the `type(uint64).max**2` const-fold gap). NB: SolLiteral was already canonical; the
-> `int8(-1)` bug was the explicit-cast path only (fixed in SolTypeConversion), so A is consolidation, not
-> bug-fixing — the correctness was already there.
+> **Step 3 (the const-fold gap) DONE — but it DID NOT EXIST (v422 guard, no compiler change):** investigated
+> with the differential fuzzer + harness. `type(uint64).max**2` does NOT fold-and-widen on EVM — its type is
+> `uint64`, so `(2^64-1)^2` overflows in checked context and reverts on EVM AND AVM identically. The old
+> "gap" note was a misread: the fuzzer's "no divergence" for it was a BOTH-revert, not a value match.
+> Constants that fit ARE folded correctly (`10**77`, `1<<200`, `2^255`, `3*2^200`), unchecked ones wrap in
+> their operand width on both — all match EVM. So `ConstantEvaluator::evaluate()` integration buys nothing.
+> Locked by guard `test_const_fold_arbitrary_precision`. **Opportunity A is now COMPLETE** (steps 1-2 were
+> consolidation; step 3 was a non-issue). NB: SolLiteral was already canonical; the `int8(-1)` bug was the
+> explicit-cast path only (SolTypeConversion) — A was consolidation, not bug-fixing.
 
 Today `ConstantEvaluator` is only used in `SolInlineAssembly.cpp`. The high-level path
 hand-rolls constants:
@@ -108,7 +113,9 @@ than reimplement super/interface dispatch (likely already partly used via
 ---
 
 ### Priority
-1. **A** (ConstantEvaluator) — cheap, deletes hand-rolled code, retires a live bug class.
-2. **D** (commonType for casts) — promising for the operand-conversion width/sign bugs.
-3. **C** (size from solc) and **B** (storage layout from solc) — next tier.
-4. **E / F / G** — larger or partial-reuse refactors.
+1. ~~**A** (ConstantEvaluator / canonical constants)~~ — **DONE** (v420-v422): type(T).min/max + SolLiteral
+   dead-branch + shared canonicalIntConstant/rationalIntConstant; const-fold gap debunked (never existed).
+2. ~~**D** (commonType for comparisons)~~ — investigated, net-additive (see note above); residual = the
+   arith-path coerce-vs-reinterpret tweak, still open.
+3. **C** (size from solc) and **B** (storage layout from solc) — next tier, untouched.
+4. **E / F / G** — larger or partial-reuse refactors, untouched.
