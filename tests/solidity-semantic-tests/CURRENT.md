@@ -1,3 +1,20 @@
+# Semantic Test Status — v416
+
+> **fix(storage): wide dynamic-array `.length` divides by the element's real stride, not a fixed 32 (481f914810, 2026-06-21):**
+> **57 failed / 1269 passed / 87 xf** (zero-reg; wide_dynamic_array_length xfail→pass; the run printed 58f/1268p —
+> the extra was the test_blobhash -n2 flake, passes in isolation). Found by the generative STATEFUL fuzzer. A
+> dynamic STORAGE array `.length` read floor(total_bytes/32) — a hardcoded 32-byte stride — instead of the
+> element count, for any element whose encoded width != 32: uint128/160/192/248[] (→ ⌊N·w/32⌋) AND uint8/16/32[]
+> (divided by 8, since uint<64 maps to the uint64 Basic type). DATA was always stored/indexed correctly. The
+> prior xfail blamed "puya backend" — DISPROVEN: instrumenting puya get_length showed it reads the 2-byte ARC4
+> length header (correct count), so the wrong (box_len-2)/32 is FRONTEND-emitted (SolLengthAccess lowers a
+> storage array's `.length` itself, never reaching puya's ArrayLength). ROOT CAUSE (SolLengthAccess.cpp box-array
+> path): the divisor came from map(baseType)+mapToARC4Type, which erases sub-256 int widths to biguint→32
+> (Arc4Defaults). FIX: use the width-preserving mapSolTypeToARC4(baseType) — exactly what push/index already use
+> (SolArrayMethod) — so the length divisor matches the storage stride. computeEncodedElementSize(ARC4UIntN) was
+> always correct (n/8); the bug was feeding it the width-erased type. Guard now PASSES (xfail removed); contract
+> exercises uint128/160/32/8[] + uint256[] control. [[wide-array-length-puya-bug]] [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v415
 
 > **fix(asm): Yul user-defined functions get unique per-inline-call var names (8afaacf039, 2026-06-21):**
