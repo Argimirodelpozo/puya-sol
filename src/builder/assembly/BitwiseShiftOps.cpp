@@ -169,8 +169,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 	if (nExpr->wtype != awst::WType::uint64Type())
 		nExpr = safeBtoi(std::move(nExpr), _loc);
 
-	return awst::makeAsBiguint(
-		awst::makeExtract3(std::move(padded), std::move(nExpr), awst::makeOne(_loc), _loc), _loc);
+	// n >= 32: EVM byte() returns 0 (out of range); the AVM extract3 at offset n would revert. Guard
+	// with `n < 32 ? byte : 0` — the conditional only evaluates the extract on the taken branch. n is
+	// used by both the bound check and the extract, so single-evaluate it.
+	auto nSE = awst::makeSingleEvaluation(
+		std::move(nExpr), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
+	auto inRange = awst::makeNumericCompare(
+		nSE, awst::NumericComparison::Lt, awst::makeIntegerConstant("32", _loc), _loc);
+	auto extracted = awst::makeAsBiguint(
+		awst::makeExtract3(std::move(padded), nSE, awst::makeOne(_loc), _loc), _loc);
+	return awst::makeConditional(
+		std::move(inRange), std::move(extracted),
+		awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(

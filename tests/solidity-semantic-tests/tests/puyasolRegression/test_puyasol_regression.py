@@ -532,3 +532,22 @@ def test_asm_signed_negatives(harness):
     assert s(harness.call(app, "sdivF(int256)", -128)) == -42
     assert s(harness.call(app, "smodF(int256)", -128)) == -2
     assert s(harness.call(app, "sarF(int256)", -128)) == -32
+
+
+def test_yul_byte_out_of_range(harness):
+    """puyasolRegression/contracts/yul_byte_out_of_range.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (inline assembly Yul). `byte(n, x)` for n >= 32 REVERTED (the AVM
+    extract3 at offset n past the 32-byte value); EVM returns 0 out of range. Fix guards `n < 32 ? byte
+    : 0` (conditional only evaluates the extract on the taken branch), like the shift>=256 saturate fix.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/yul_byte_out_of_range.sol")
+    X = 0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+    # in-range bytes unchanged
+    assert as_int(harness.call(app, "byteF(uint256,uint256)", 0, X).abi_return) == 0x00
+    assert as_int(harness.call(app, "byteF(uint256,uint256)", 1, X).abi_return) == 0x11
+    assert as_int(harness.call(app, "byteF(uint256,uint256)", 31, X).abi_return) == 0xff
+    # n >= 32 → 0 (was REVERT)
+    assert as_int(harness.call(app, "byteF(uint256,uint256)", 32, X).abi_return) == 0
+    assert as_int(harness.call(app, "byteF(uint256,uint256)", 100, X).abi_return) == 0
+    assert as_int(harness.call(app, "byteF(uint256,uint256)", 255, X).abi_return) == 0
