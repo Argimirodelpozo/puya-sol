@@ -130,26 +130,47 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		return nullptr;
 	}
 
+	// Per-inline-call unique names: a fn's bare params/returns (x, y) are renamed to
+	// __yul_<uid>_<name> so sibling (sq(a)+cube(b)) and nested (cube calls sq) calls don't
+	// clobber the same runtime vars. resolveVarRef applies m_yulInlineRenames to the body;
+	// saved/restored per frame so an outer/sibling frame's renames are unaffected.
+	static int s_yulInlineUid = 0;
+	int uid = ++s_yulInlineUid;
+	auto uniqueName = [&](std::string const& n) { return "__yul_" + std::to_string(uid) + "_" + n; };
+	std::vector<std::tuple<std::string, bool, std::string>> savedRenames;
+	auto pushRename = [&](std::string const& bare, std::string const& unique) {
+		auto it = m_yulInlineRenames.find(bare);
+		savedRenames.emplace_back(bare, it != m_yulInlineRenames.end(),
+			it != m_yulInlineRenames.end() ? it->second : std::string());
+		m_yulInlineRenames[bare] = unique;
+	};
+
 	// Bind parameters; use arg's actual type (handles arrays passed to assembly fns).
 	for (size_t i = 0; i < funcDef.parameters.size(); ++i)
 	{
 		std::string paramName = funcDef.parameters[i].name.str();
+		std::string uName = uniqueName(paramName);
+		pushRename(paramName, uName);
 		awst::WType const* paramType = _args[i]->wtype;
-		m_locals[paramName] = paramType;
+		m_locals[uName] = paramType;
 		auto constVal = resolveConstantOffset(_args[i]);
 		if (constVal)
-			m_localConstants[paramName] = *constVal;
+			m_localConstants[uName] = *constVal;
 		_out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(paramName, paramType, _loc), _args[i], _loc));
+			awst::makeVarExpression(uName, paramType, _loc), _args[i], _loc));
 	}
 
-	// Initialize return variables to zero.
+	// Initialize return variables to zero (under unique names).
+	std::vector<std::string> uniqueRetNames;
 	for (auto const& retVar: funcDef.returnVariables)
 	{
 		std::string retName = retVar.name.str();
-		m_locals[retName] = awst::WType::biguintType();
+		std::string uName = uniqueName(retName);
+		pushRename(retName, uName);
+		uniqueRetNames.push_back(uName);
+		m_locals[uName] = awst::WType::biguintType();
 		_out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(retName, awst::WType::biguintType(), _loc),
+			awst::makeVarExpression(uName, awst::WType::biguintType(), _loc),
 			awst::makeBiguintConstant("0", _loc), _loc));
 	}
 
@@ -205,6 +226,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			_out.push_back(std::move(s));
 	}
 
+	// Restore the renames this frame installed (siblings/outer must not see them).
+	for (auto it = savedRenames.rbegin(); it != savedRenames.rend(); ++it)
+	{
+		auto const& [bare, had, old] = *it;
+		if (had)
+			m_yulInlineRenames[bare] = old;
+		else
+			m_yulInlineRenames.erase(bare);
+	}
+
+	// Publish this call's return temps (unique names) so the caller reads the right vars, not the
+	// shared bare return-var name. Single-return also returns it as the expression value.
+	m_yulSubReturnTemps = uniqueRetNames;
+	if (uniqueRetNames.size() == 1)
+		return awst::makeVarExpression(uniqueRetNames[0], awst::WType::biguintType(), _loc);
 	return nullptr;
 }
 

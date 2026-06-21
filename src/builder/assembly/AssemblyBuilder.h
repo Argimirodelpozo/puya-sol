@@ -862,6 +862,12 @@ private:
 	/// don't clobber the current frame. Empty when the last call was inlined.
 	std::vector<std::string> m_yulSubReturnTemps;
 
+	/// Active per-inline-call renames: a Yul user-fn's bare param/return names
+	/// (x, y) → unique `__yul_<uid>_<name>`, so two functions sharing names (or
+	/// nested/repeated inline calls) don't clobber each other's runtime vars.
+	/// resolveVarRef applies this; the inline path saves/restores it per frame.
+	std::map<std::string, std::string> m_yulInlineRenames;
+
 	/// Emit a Subroutine for a recursive Yul function; push to pending sink.
 	/// Supports 0/1 return values; rejects `leave`.
 	void buildRecursiveYulSubroutine(

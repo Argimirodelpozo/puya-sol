@@ -122,7 +122,15 @@ std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id)
 	// Yul-internal ids (let-locals, Yul-fn params — not in the map) keep their name.
 	auto it = m_externalRefs.find(&_id);
 	if (it == m_externalRefs.end())
+	{
+		// Yul-internal id (let-local or user-fn param/return). If this name is being
+		// inline-expanded under a per-call rename, use the unique name so sibling/nested
+		// calls that reuse the same bare name don't clobber each other's runtime vars.
+		auto rit = m_yulInlineRenames.find(_id.name.str());
+		if (rit != m_yulInlineRenames.end())
+			return rit->second;
 		return _id.name.str();
+	}
 	return externalRefAwstName(it->second, _id.name.str(), m_declName);
 }
 
