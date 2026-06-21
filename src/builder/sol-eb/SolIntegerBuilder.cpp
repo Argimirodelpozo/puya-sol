@@ -228,19 +228,19 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	case BuilderBinaryOp::Mod: e->op = awst::UInt64BinaryOperator::Mod; break;
 	case BuilderBinaryOp::Pow:
 	{
-		// Unchecked narrow uint exp: AVM `exp` is uint64-only and asserts on overflow;
-		// a sub-uint64 intermediate (e.g. uint8 2**256) would revert. Route through
-		// biguint square-and-multiply then mod 2**m_bits (puya 5.9 surfaced this as
-		// test_exp_cleanup_smaller_base revert, puyabug.md #4b).
-		if (m_scope.isUnchecked() && !m_signed && m_bits < 64)
+		// Unchecked uint exp: AVM `exp` is uint64-only and asserts on overflow; both a sub-uint64
+		// intermediate (uint8 2**256) AND a full uint64 base whose power overflows 2^64 (uint64
+		// MAX**2, found by the generative cast fuzzer) would revert where Solidity wraps. Route
+		// through biguint square-and-multiply then mod 2**m_bits. Add/Mult/Sub at uint64 already wrap
+		// (needsBigUInt / backend); exp is the one that fell in the m_bits<64 gap (== the uint64-sub gap).
+		if (m_scope.isUnchecked() && !m_signed && m_bits <= 64)
 		{
 			auto biguintResult = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), e->left, e->right, _loc);
 
-			std::string modValStr;
-			{
-				uint64_t modVal = uint64_t(1) << m_bits;
-				modValStr = std::to_string(modVal);
-			}
+			// 2^m_bits; uint64_t(1)<<64 is UB, so the full-uint64 modulus is spelled out.
+			std::string modValStr = (m_bits == 64)
+				? "18446744073709551616"
+				: std::to_string(uint64_t(1) << m_bits);
 			auto modConst = awst::makeIntegerConstant(modValStr, _loc, awst::WType::biguintType());
 			auto masked = awst::makeBigUIntBinOp(std::move(biguintResult),
 				awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);

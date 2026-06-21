@@ -426,3 +426,29 @@ def test_signed_subword_negate_compose(harness):
     assert s16(harness.call(app, "neg16(int16)", 5)) == -5
     # checked negation of INT_MIN reverts
     assert harness.call(app, "negc16(int16)", -32768, expect_revert=True).reverted
+
+
+def test_unchecked_uint64_exp_wraps(harness):
+    """puyasolRegression/contracts/unchecked_uint64_exp.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer's CAST mode (fuzz_gen.py --cast). An UNCHECKED uint64 `a**k` whose
+    power overflows 2^64 REVERTED: the AVM `exp` opcode is uint64-only and asserts on overflow, but
+    Solidity wraps. The unchecked-exp wrap covered sub-word (m_bits<64); uint64 (==64) fell in the gap
+    (the same gap as unchecked uint64 sub). Fix routes uint64 unchecked Pow through biguint
+    square-and-multiply + mod 2^64 + narrow. Add/Mult at uint64 already wrapped; only exp was broken.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/unchecked_uint64_exp.sol")
+    M = 1 << 64
+    MAX = M - 1
+    # MAX ≡ -1 mod 2^64 → MAX**2 ≡ 1, MAX**3 ≡ MAX
+    assert as_int(harness.call(app, "exp2(uint64)", MAX).abi_return) == 1          # was REVERT
+    assert as_int(harness.call(app, "exp3(uint64)", MAX).abi_return) == MAX        # was REVERT
+    assert as_int(harness.call(app, "exp2(uint64)", 1 << 33).abi_return) == 0      # (2^33)^2 = 2^66 wraps to 0
+    assert as_int(harness.call(app, "exp2(uint64)", 5).abi_return) == 25           # in-range unchanged
+    assert as_int(harness.call(app, "exp3(uint64)", 3).abi_return) == 27
+    assert as_int(harness.call(app, "exp2(uint64)", 0).abi_return) == 0
+    # checked: overflow reverts, in-range ok
+    assert harness.call(app, "exp2c(uint64)", MAX, expect_revert=True).reverted
+    assert as_int(harness.call(app, "exp2c(uint64)", 5).abi_return) == 25
+    # composition: (a**2) | 7 — the biguint result must narrow to uint64
+    assert as_int(harness.call(app, "comp(uint64)", MAX).abi_return) == (1 | 7)
