@@ -506,3 +506,29 @@ def test_wide_dynamic_array_length(harness):
     assert as_int(harness.call(app, "get(uint256)", 2).abi_return) == 333
     # the bug: length reads 1 (= 3*16/32) instead of 3
     assert as_int(harness.call(app, "len()").abi_return) == 3
+
+
+@pytest.mark.xfail(reason="frontend Yul signed ops broken for NEGATIVE operands (assembly/SignedOps.cpp): "
+                          "sdiv/smod of a negative REVERT (empty AVM panic), sar of a negative returns a "
+                          "64-byte oversized value. Positive operands are correct. Sub-cause: negate256() "
+                          "lacks `mod 2^256` (negate256(0)=2^256 = 33 bytes), but that alone did not fix "
+                          "the panic — a separate opcode-level revert remains (needs an AVM trace). See "
+                          "[[differential-fuzzing-spike]]. Remove xfail when pinned + fixed.")
+def test_asm_signed_negatives(harness):
+    """puyasolRegression/contracts/asm_signed_negatives.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (inline assembly Yul ops). Yul sdiv/smod/sar are broken for negative
+    operands (sdiv/smod revert, sar wrong); positive operands are correct. FRONTEND. Verified in the
+    semantic harness.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_signed_negatives.sol")
+
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    # positive operands ALREADY correct
+    assert s(harness.call(app, "sdivF(int256)", 127)) == 42
+    assert s(harness.call(app, "sarF(int256)", 100)) == 25
+    # negative operands: sdiv(-128,3)=-42, smod(-128,3)=-2, sar(2,-128)=-32 (currently revert / wrong)
+    assert s(harness.call(app, "sdivF(int256)", -128)) == -42
+    assert s(harness.call(app, "smodF(int256)", -128)) == -2
+    assert s(harness.call(app, "sarF(int256)", -128)) == -32
