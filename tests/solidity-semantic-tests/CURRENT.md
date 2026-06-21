@@ -1,3 +1,17 @@
+# Semantic Test Status — v415
+
+> **fix(asm): Yul user-defined functions get unique per-inline-call var names (8afaacf039, 2026-06-21):**
+> **57 failed / 1268 passed / 88 xf** (zero-reg, identical fail-set; yul_user_fn_var_clash xfail→pass).
+> Found by the generative fuzzer (Yul user functions + for-loops probe). A Yul user fn was INLINE-EXPANDED
+> by binding its params/returns to BARE names (x, y) in m_locals, so functions sharing names — or nested/
+> repeated calls — clobbered the same runtime vars: `add(sq(a),cube(b))` (sq/cube both x→y, cube nests sq)
+> collapsed to 2*a^3 (every call → cube(a)) instead of a^2+b^3. FIX (UserFunctionOps + CoreTranslation +
+> AssemblyBuilder.h): each inline expansion gets unique names __yul_<uid>_<name> via a scoped rename map
+> (m_yulInlineRenames) applied in resolveVarRef, saved/restored per frame; it publishes the unique return
+> temp in m_yulSubReturnTemps + returns it as the expression value so the caller reads the right var (the
+> expression caller otherwise reads the fn's bare return-var name) — mirrors the recursive subroutine
+> path's __yulret_<id> temps. Guard: puyasolRegression/yul_user_fn_var_clash (xfail→pass). [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v414
 
 > **fix(asm): assembly-bodied fn 256-bit params expose as uint256 not uint512 (bee0d80a6c, 2026-06-21):**
