@@ -1,3 +1,18 @@
+# Semantic Test Status — v412
+
+> **test(arrays): xfail guard for wide-element dynamic storage array .length — a PUYA BACKEND bug
+> (ffbfbe32fa, 2026-06-21):** **57 failed / 1265 passed / 88 xf** (binary UNCHANGED this commit — a test
+> + contract only; the +1 xf is the new guard). Found by the generative STATEFUL fuzzer (fuzz_gen.py
+> gen_stateful_contract → fuzz_state.py). A dynamic STORAGE array whose element is biguint-backed and
+> narrower than 32 bytes (uint128/int128/uint160/uint192/…, 64<bits<256) reports `a.length` as
+> ⌊total_element_bytes/32⌋ — a hardcoded 32-byte stride — instead of the element COUNT. The element DATA
+> is stored and indexed correctly; only `.length` is wrong. uint64[]/int64[] (≤64-bit, uint64-backed) use
+> a different path and are CORRECT; uint256[]/int256[] (32-byte element) CANCEL (32/32) — which is why the
+> 1265-test suite never caught it. AWST diff vs the working uint64[] shows IDENTICAL node structure (only
+> the element type differs) → puya BACKEND (get_length, ir/builder/aggregates/sequence.py / box arc4
+> length), NOT a puya-sol frontend bug. Not frontend-fixable; xfail until puya is patched. Full writeup:
+> memory [[wide-array-length-puya-bug]]. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v411
 
 > **fix(bytes): bytesN bit shift `b<<k`/`b>>k` lowered via biguint (7a5b225aad, 2026-06-21):** **57
