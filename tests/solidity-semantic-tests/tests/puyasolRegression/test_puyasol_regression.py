@@ -549,3 +549,22 @@ def test_yul_byte_out_of_range(harness):
     assert as_int(harness.call(app, "byteF(uint256,uint256)", 32, X).abi_return) == 0
     assert as_int(harness.call(app, "byteF(uint256,uint256)", 100, X).abi_return) == 0
     assert as_int(harness.call(app, "byteF(uint256,uint256)", 255, X).abi_return) == 0
+
+
+@pytest.mark.xfail(reason="frontend: Yul user-defined functions are inline-expanded by binding params/"
+                          "returns to BARE names (x, y) in m_locals (UserFunctionOps.cpp ~116-191), so "
+                          "functions sharing names — or nested/repeated calls — clobber the same runtime "
+                          "vars. `add(sq(a),cube(b))` collapses to 2*a^3 (every call -> cube(a)) not "
+                          "a^2+b^3. Fix = unique per-inline names + a scoped rename map in resolveVarRef "
+                          "(like the subroutine path's __yulret_<id> temps). See [[differential-fuzzing-spike]].")
+def test_yul_user_fn_var_clash(harness):
+    """puyasolRegression/contracts/yul_user_fn_var_clash.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (Yul user functions). Inline-expanded Yul user functions sharing
+    param/return names clobber each other's runtime vars. FRONTEND. Verified in the semantic harness.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/yul_user_fn_var_clash.sol")
+    # uf(a,b) = a^2 + b^3
+    assert as_int(harness.call(app, "uf(uint256,uint256)", 2, 0).abi_return) == 4
+    assert as_int(harness.call(app, "uf(uint256,uint256)", 3, 2).abi_return) == 17
+    assert as_int(harness.call(app, "uf(uint256,uint256)", 5, 3).abi_return) == 52
