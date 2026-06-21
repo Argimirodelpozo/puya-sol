@@ -508,12 +508,13 @@ def test_wide_dynamic_array_length(harness):
     assert as_int(harness.call(app, "len()").abi_return) == 3
 
 
-@pytest.mark.xfail(reason="frontend Yul signed ops broken for NEGATIVE operands (assembly/SignedOps.cpp): "
-                          "sdiv/smod of a negative REVERT (empty AVM panic), sar of a negative returns a "
-                          "64-byte oversized value. Positive operands are correct. Sub-cause: negate256() "
-                          "lacks `mod 2^256` (negate256(0)=2^256 = 33 bytes), but that alone did not fix "
-                          "the panic — a separate opcode-level revert remains (needs an AVM trace). See "
-                          "[[differential-fuzzing-spike]]. Remove xfail when pinned + fixed.")
+@pytest.mark.xfail(reason="frontend: an asm-bodied fn exposes 256-bit params (and signed returns) as "
+                          "arc4.uint512 not uint256 (TEAL sig `sdivF(uint512)uint512`) — the asm body "
+                          "reinterprets the operand as biguint and puya maps biguint->ARC4UIntN(512). A "
+                          "negative int256 then arrives as a 512-bit value, so negate256()'s `maxU256-val` "
+                          "underflows (empty b- panic); the sdiv/smod/sar LOGIC is fine. = asm-biguint-return "
+                          "'param side still open' + ReturnRewriter Pass 2 gated on signedReturns.empty(). "
+                          "Fix = param rewriter + un-gate signed returns. See [[differential-fuzzing-spike]].")
 def test_asm_signed_negatives(harness):
     """puyasolRegression/contracts/asm_signed_negatives.sol — NOT an o.g. semantic test.
 
