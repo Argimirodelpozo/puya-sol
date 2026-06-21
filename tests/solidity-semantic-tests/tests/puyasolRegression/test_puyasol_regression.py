@@ -351,3 +351,33 @@ def test_subword_shift_saturate(harness):
     # shift as a sub-expression (was a puya compile error: biguint where uint64 expected)
     assert as_int(harness.call(app, "comp(uint64,uint64)", 3, 0xFFFF).abi_return) == ((3 << 7) & 0xFFFF)
     assert as_int(harness.call(app, "compR(uint16,uint16)", 0x80, 0x0F).abi_return) == (0x0F | (0x80 >> 3))
+
+
+def test_signed_subword_exp(harness):
+    """puyasolRegression/contracts/signed_subword_exp.sol — NOT an o.g. semantic test.
+
+    Found by the GENERATIVE fuzzer (fuzz_gen.py). Signed sub-word `**` had two bugs: an UNCHECKED
+    overflowing result was not wrapped mod 2^bits, so the negation `pow2N - absResult` underflowed
+    the biguint subtraction and the AVM `b-` panicked (int8 (-128)**3 → REVERT; EVM wraps to 0); and
+    the biguint result broke sub-expression composition (`b ^ (a**3)` → puya compile error). Fixed by
+    masking the magnitude for unchecked + narrowing the sub-word result to uint64.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_subword_exp.sol")
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    # unchecked signed sub-word exp now WRAPS (was a `b-` underflow revert)
+    assert s(harness.call(app, "exp3u(int8)", -128)) == 0     # (-128)**3 = -2097152 → wraps to 0
+    assert s(harness.call(app, "exp3u(int8)", -127)) == -127
+    assert s(harness.call(app, "exp3u(int8)", 2)) == 8
+    assert s(harness.call(app, "exp3u(int8)", -2)) == -8
+    assert s(harness.call(app, "exp3u(int8)", -5)) == -125
+    # checked: in-range ok, overflow still reverts
+    assert s(harness.call(app, "exp3c(int8)", 5)) == 125
+    assert harness.call(app, "exp3c(int8)", -128, expect_revert=True).reverted
+    assert harness.call(app, "exp3c(int8)", 6, expect_revert=True).reverted    # 216 > int8 max
+    # composition: b ^ (a**3) — was a puya compile error (biguint where uint64 expected)
+    assert s(harness.call(app, "comp(int8,int8)", 2, 5)) == (5 ^ 8)
+    assert s(harness.call(app, "comp(int8,int8)", -2, 0)) == -8
+    # unsigned + wider sub-word still correct
+    assert as_int(harness.call(app, "expU8(uint8)", 10).abi_return) == 232     # 1000 mod 256
+    assert s(harness.call(app, "expI16(int16)", -200)) == -25536               # 40000 wraps int16

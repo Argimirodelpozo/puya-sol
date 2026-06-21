@@ -355,6 +355,15 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	auto absResult = m_ctx.buildBinaryOp(
 		Token::Exp, std::move(absBase), _exp, resultType, m_loc);
 
+	// Unchecked sub-word: wrap the (possibly overflowing) magnitude mod 2^bits BEFORE the
+	// negation below — `pow2N - absResult` underflows the biguint subtraction when the exp
+	// overflows the type (e.g. int8 (-128)**3 = 2097152 > 256) and the AVM `b-` panics. The
+	// positive branch wraps too. Checked keeps the raw value: the overflow assert below needs
+	// it to detect out-of-range (and a passing assert guarantees absResult < pow2N anyway).
+	if (m_scope.isUnchecked() && bits < 256)
+		absResult = awst::makeBigUIntBinOp(std::move(absResult),
+			awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
+
 	// Check overflow: absResult must fit in signed range
 	// absResult < half for positive result, absResult <= half for negative result
 	if (!m_scope.isUnchecked())
@@ -394,9 +403,20 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 	auto notZero = awst::makeNot(std::move(resZero), m_loc);
 	auto doNeg = awst::makeBoolBinOp(std::move(shouldNeg), awst::BinaryBooleanOperator::And, std::move(notZero), m_loc);
 
-	return awst::makeConditional(
+	auto result = awst::makeConditional(
 		std::move(doNeg), std::move(negMod), std::move(absResult),
 		awst::WType::biguintType(), m_loc);
+	// A sub-word signed value's native WType is uint64 (canonical 64-bit two's-complement); narrow
+	// the biguint exp result back so it composes as a SUB-expression with surrounding uint64 ops —
+	// `b ^ (a**3)` for int8 else hands a biguint to a UInt64BinaryOperation (puya: "expected
+	// uint64"). Whole-return coerces, a subexpr does not. >64-bit (int128/int256) stays biguint.
+	// implicitNumericCast (NOT makeBiguintToUInt64): the exp result is sign-extended to 256 bits
+	// (32 bytes), and a bare btoi reverts on >8 bytes — implicitNumericCast takes the low 8 bytes
+	// (the 64-bit two's-complement), as the signed-shift narrow does.
+	if (bits <= 64)
+		return builder::TypeCoercion::implicitNumericCast(
+			std::move(result), awst::WType::uint64Type(), m_loc);
+	return result;
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
