@@ -2,6 +2,8 @@
 /// Solidity fixed-size bytes type builder (bytes1..bytes32).
 
 #include "builder/sol-eb/SolFixedBytesBuilder.h"
+#include "builder/sol-eb/BigUIntMathHelpers.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
 namespace puyasol::builder::eb
@@ -21,6 +23,25 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	InstanceBuilder& _other, BuilderBinaryOp _op,
 	awst::SourceLocation const& _loc, bool _reverse)
 {
+	// bytesN bit shift: `b << k` / `b >> k` shift the N-byte value by k BITS (k is a uint, not bytes),
+	// truncating the result to N bytes. Lower via biguint — (asBiguint(b) shifted) then keep the LOW N
+	// bytes — instead of the generic integer path, which coerces bytes->uint64->bytes (puya rejects the
+	// uint64->bytes cast, and uint64 can't hold bytes>8 anyway). buildBigUIntShift already saturates a
+	// shift >= 256 to 0; makeLeftPadToN does the mod-2^(8N) truncation (drops the high bytes).
+	if (_op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift)
+	{
+		if (_reverse)
+			return nullptr;                                 // a uint shifted BY a bytesN is invalid Solidity
+		int n = static_cast<int>(m_bytesType->numBytes());
+		auto value = awst::makeAsBiguint(resolve(), _loc);
+		auto shiftAmt = TypeCoercion::implicitNumericCast(
+			_other.resolve(), awst::WType::uint64Type(), _loc);
+		auto shifted = buildBigUIntShift(std::move(value), std::move(shiftAmt),
+			_op == BuilderBinaryOp::LShift, _loc);
+		auto trimmed = awst::makeLeftPadToN(awst::makeAsBytes(std::move(shifted), _loc), n, _loc);
+		return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(trimmed));
+	}
+
 	bool isBitwiseOp = (_op == BuilderBinaryOp::BitOr
 		|| _op == BuilderBinaryOp::BitXor
 		|| _op == BuilderBinaryOp::BitAnd);

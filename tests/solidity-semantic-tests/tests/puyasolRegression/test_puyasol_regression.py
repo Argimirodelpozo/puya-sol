@@ -452,3 +452,35 @@ def test_unchecked_uint64_exp_wraps(harness):
     assert as_int(harness.call(app, "exp2c(uint64)", 5).abi_return) == 25
     # composition: (a**2) | 7 — the biguint result must narrow to uint64
     assert as_int(harness.call(app, "comp(uint64)", MAX).abi_return) == (1 | 7)
+
+
+def test_bytesn_shift(harness):
+    """puyasolRegression/contracts/bytesN_shift.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer's BYTES mode (fuzz_gen.py --bytes). A bytesN bit shift `b << k` /
+    `b >> k` HARD-ERRORED in the puya backend ("unsupported type cast from uint64 to bytes"): the
+    generic integer-shift path coerced the bytesN operand through uint64 (and uint64 can't hold
+    bytes>8). Bitwise & | ^ ~ were already fine. Fix lowers the shift via biguint (asBiguint(b) shifted
+    by k bits) then keeps the low N bytes (Solidity truncates to N), in SolFixedBytesBuilder::binary_op.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/bytesN_shift.sol")
+
+    def b2i(r):                                            # bytesN return -> big-endian int
+        v = r.abi_return
+        if isinstance(v, (list, tuple)):
+            v = bytes(int(x) & 0xFF for x in v)
+        elif isinstance(v, str):
+            v = bytes.fromhex(v[2:] if v.startswith("0x") else v)
+        return int.from_bytes(v, "big") if isinstance(v, (bytes, bytearray)) else int(v)
+
+    A4 = (0x12345678).to_bytes(4, "big")
+    assert b2i(harness.call(app, "shl4(bytes4,uint8)", A4, 8)) == 0x34567800   # was a hard COMPILE error
+    assert b2i(harness.call(app, "shl4(bytes4,uint8)", A4, 0)) == 0x12345678   # no shift
+    assert b2i(harness.call(app, "shl4(bytes4,uint8)", A4, 32)) == 0           # k>=8N: shifted fully out
+    assert b2i(harness.call(app, "shr4(bytes4,uint8)", A4, 8)) == 0x00123456
+    assert b2i(harness.call(app, "shr4(bytes4,uint8)", A4, 32)) == 0
+    assert b2i(harness.call(app, "shr1(bytes1,uint8)", b"\x80", 1)) == 0x40
+    assert b2i(harness.call(app, "shl32(bytes32,uint16)", (1).to_bytes(32, "big"), 8)) == 256
+    assert b2i(harness.call(app, "shl32(bytes32,uint16)", (1).to_bytes(32, "big"), 255)) == (1 << 255)
+    # composition: (a << 8) | b
+    assert b2i(harness.call(app, "comp(bytes4,bytes4)", A4, (0xFF).to_bytes(4, "big"))) == 0x345678FF
