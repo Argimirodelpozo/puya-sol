@@ -640,3 +640,30 @@ def test_signed_subword_compare(harness):
     assert bo(harness.call(app, "ltPos8(int8,int8)", -5, 3)) == 1
     assert bo(harness.call(app, "ltPos8(int8,int8)", 3, -5)) == 0
     assert bo(harness.call(app, "gte16(int16,int16)", -1, -2)) == 1
+
+
+def test_signed_subword_equality(harness):
+    """puyasolRegression/contracts/signed_subword_equality.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--arr seed 13004 f0). The ==/!= analogue of the ordering-compare
+    fix. Two non-canonical-operand bugs in sub-word signed equality: (1) a negative literal cast int8(-1)
+    was emitted as 255 (masked, not sign-extended) -> int8(-1) == int8(-1) was false; fixed at the source
+    in SolTypeConversion. (2) an unchecked sub-word arith result (127 -= -128 wraps to -1 as 0xff) compared
+    == nonzero wrongly because compare() only sign-extended operands for ordering; fixed by canonicalising
+    operands for ordering AND equality. Comparing to 0 hid both -> these compare to nonzero.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_subword_equality.sol")
+    bo = lambda r: as_int(r.abi_return)
+    assert bo(harness.call(app, "eqNegLit8()")) == 1     # was 0
+    assert bo(harness.call(app, "eqNegLit16()")) == 1
+    assert bo(harness.call(app, "eqParamLit(int8)", -1)) == 1    # a == int8(-1), was 0
+    assert bo(harness.call(app, "eqParamLit(int8)", 0)) == 0
+    # unchecked arith result == nonzero
+    assert bo(harness.call(app, "eqAfterSub(int8,int8)", 127, -128)) == 1   # 127-(-128)=-1 == -1
+    assert bo(harness.call(app, "eqAfterSub(int8,int8)", 5, 1)) == 0        # 4 != -1
+    assert bo(harness.call(app, "neAfterAdd(int16,int16)", 32767, 1)) == 1  # wraps to -32768 != -1 -> true
+    # sanity + full-width
+    assert bo(harness.call(app, "eqParam(int8,int8)", -5, -5)) == 1
+    assert bo(harness.call(app, "eqParam(int8,int8)", -5, 5)) == 0
+    assert bo(harness.call(app, "eqNegLit64()")) == 1
+    assert bo(harness.call(app, "eqNegLit256()")) == 1

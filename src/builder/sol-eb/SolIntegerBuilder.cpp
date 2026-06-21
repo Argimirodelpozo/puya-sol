@@ -350,24 +350,39 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		rhs = promoteToBigUInt(std::move(rhs), _loc);
 	}
 
-	// Signed ordering: XOR with sign bit converts signed to unsigned ordering.
 	bool isOrderingOp = (_op == BuilderComparisonOp::Lt || _op == BuilderComparisonOp::Lte
 		|| _op == BuilderComparisonOp::Gt || _op == BuilderComparisonOp::Gte);
 
-	if (isSigned && isOrderingOp)
+	// Canonicalise signed sub-word operands to their slot width for BOTH ordering AND
+	// equality. A non-canonical operand — a negative literal cast (int8(-1) = 0xff), an
+	// unchecked sub-word arithmetic result ((127 -= -128) = 0xff), or an ABI-decoded
+	// int128 in N-bit form (2^128-X, bit 255 clear) — else mis-orders (0xff sorts above
+	// 0x80…00) AND mis-equals (0xff != canonical -1). signExtend* mask first, so they are
+	// idempotent for already-canonical operands and a no-op for full-width int64/int256.
+	if (isSigned)
 	{
 		if (needsBigUInt)
 		{
-			// Canonicalise to 256-bit TC before XOR: sub-256 signed values arrive in
-			// N-bit form (e.g. ABI-decoded int128 negative = 2^128-X, bit 255 clear);
-			// the 2^255 XOR would misread them as positive (V4 getAmount*Delta(int128)
-			// `liquidity<0` branch-swap). signExtendToUint256 is idempotent for
-			// already-canonical values. Unsigned operands in a signed compare keep their magnitude.
 			if (m_signed)
 				lhs = TypeCoercion::signExtendToUint256(std::move(lhs), m_bits, _loc);
 			if (otherInt->isSigned())
 				rhs = TypeCoercion::signExtendToUint256(std::move(rhs), otherInt->numBits(), _loc);
+		}
+		else
+		{
+			if (m_signed && lhs->wtype == awst::WType::uint64Type())
+				lhs = TypeCoercion::signExtendToUint64(std::move(lhs), m_bits, _loc);
+			if (otherInt->isSigned() && rhs->wtype == awst::WType::uint64Type())
+				rhs = TypeCoercion::signExtendToUint64(std::move(rhs), otherInt->numBits(), _loc);
+		}
+	}
 
+	// Ordering additionally XORs the sign bit to convert signed → unsigned ordering
+	// (operands are already canonical above; equality compares them directly).
+	if (isSigned && isOrderingOp)
+	{
+		if (needsBigUInt)
+		{
 			solidity::u256 signBitVal = solidity::u256(1) << 255;
 			auto signBit = awst::makeIntegerConstant(signBitVal.str(), _loc, awst::WType::biguintType());
 
@@ -381,18 +396,6 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		}
 		else
 		{
-			// Sign-extend sub-word signed operands to 64 bits BEFORE the 2^63 XOR.
-			// A non-canonical int8/16/32 value — a negative literal cast (int8(-1)
-			// = 0xff, low N bits only) or an unchecked sub-word arithmetic result
-			// (0-(-128) = 0x80) — would otherwise misorder (0xff XOR 2^63 reads as
-			// > int8(0)'s 0x80…00). signExtendToUint64 masks first so it is
-			// idempotent for already-canonical operands (ABI params) and a no-op
-			// for int64. Mirrors the biguint branch's signExtendToUint256.
-			if (m_signed && lhs->wtype == awst::WType::uint64Type())
-				lhs = TypeCoercion::signExtendToUint64(std::move(lhs), m_bits, _loc);
-			if (otherInt->isSigned() && rhs->wtype == awst::WType::uint64Type())
-				rhs = TypeCoercion::signExtendToUint64(std::move(rhs), otherInt->numBits(), _loc);
-
 			auto signBit = awst::makeIntegerConstant("9223372036854775808", _loc); // 2^63
 
 			auto xorL = awst::makeUInt64BinOp(std::move(lhs), awst::UInt64BinaryOperator::BitXor, signBit, _loc);

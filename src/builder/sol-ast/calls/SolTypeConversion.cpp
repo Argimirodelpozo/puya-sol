@@ -84,6 +84,22 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 						std::move(result), srcInt->numBits(), m_loc);
 				}
 			}
+
+			// Final canonicalisation: any signed sub-word (<64-bit, uint64-backed)
+			// target must be sign-extended from its OWN width, so the low-N-bits
+			// narrowing mask becomes a canonical 64-bit two's-complement. Covers
+			// constant/Rational sources (srcInt is null above, e.g. int8(-1) -> 0xff,
+			// which then mis-compared `== int8(-1)` and broke raw-value consumers)
+			// and narrowing casts the source-width branch skips. signExtendToUint64
+			// masks first, so it is idempotent when the value is already canonical.
+			if (auto const* tgtInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+					m_call.annotation().type))
+			{
+				if (tgtInt->isSigned() && tgtInt->numBits() < 64
+					&& result->wtype == awst::WType::uint64Type())
+					result = TypeCoercion::signExtendToUint64(
+						std::move(result), tgtInt->numBits(), m_loc);
+			}
 			return result;
 		}
 	}
