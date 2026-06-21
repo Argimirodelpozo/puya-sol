@@ -1,3 +1,18 @@
+# Semantic Test Status — v405
+
+> **fix(shift): sub-word `<<`/`>>` route through the guarded biguint path (e93753da89, 2026-06-21):**
+> **57 failed / 1259 passed / 87 xf** (zero-reg, identical fail-set). Found by the NEW GENERATIVE
+> differential fuzzer (fuzz_gen.py — random sub-word expression trees, diffed vs live solc+EVM). A
+> sub-word `x << n` / `x >> n` with a <=64-bit-TYPED shift amount (a literal like 256, or a uint8/
+> uint64 var) took the raw uint64 shl/shr opcode, which FAILS for n>=64 — so `uint16 x << 64`/`<<256`,
+> `uint64 << 64`, `int16 << 256`, `uint16 >> 256` all REVERTED, but Solidity saturates to 0 (sign-fill
+> for signed >>) for n>=width and never reverts. The biguint operand path + the variable-uint256-amount
+> path were already guarded (buildBigUIntShift saturates; emitOverflowCheck masks — shifts don't
+> overflow-check); only the <=64-bit-amount sub-word path was raw. Fix: SolIntegerBuilder needsBigUInt
+> now includes ALL LShift/RShift (signed + unsigned), routing every shift through the guarded path.
+> Companion to the earlier uint256 shift-saturation fix ([[puya-sol-shr-256-bug]]). Guard:
+> puyasolRegression/subword_shift_saturate. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v404
 
 > **fix(loop): drain non-do while-loop condition pre-statements (cc05eb5411, 2026-06-20):**
