@@ -381,3 +381,22 @@ def test_signed_subword_exp(harness):
     # unsigned + wider sub-word still correct
     assert as_int(harness.call(app, "expU8(uint8)", 10).abi_return) == 232     # 1000 mod 256
     assert s(harness.call(app, "expI16(int16)", -200)) == -25536               # 40000 wraps int16
+
+
+def test_unchecked_uint64_sub_wraps(harness):
+    """puyasolRegression/contracts/unchecked_uint64_sub.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer's CONTROL-FLOW mode (fuzz_gen.py --cf). An UNCHECKED uint64
+    `a - b` with a < b reverted (raw uint64 `-` panics on underflow); Solidity wraps. The
+    wrapping-sub fix covered sub-word (<64) and biguint (>64) but uint64 (==64) fell in the gap.
+    Fix routes uint64 unchecked Sub through the biguint wrapping subtract, then narrows to uint64.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/unchecked_uint64_sub.sol")
+    M = 1 << 64
+    assert as_int(harness.call(app, "sub(uint64,uint64)", 0, 1).abi_return) == M - 1       # was REVERT
+    assert as_int(harness.call(app, "sub(uint64,uint64)", 5, 8).abi_return) == M - 3
+    assert as_int(harness.call(app, "sub(uint64,uint64)", 10, 3).abi_return) == 7          # no wrap
+    assert harness.call(app, "subc(uint64,uint64)", 0, 1, expect_revert=True).reverted     # checked underflow
+    assert as_int(harness.call(app, "subc(uint64,uint64)", 10, 3).abi_return) == 7
+    # composition: (a - b) | c — the biguint result must narrow to uint64
+    assert as_int(harness.call(app, "comp(uint64,uint64,uint64)", 0, 1, 0).abi_return) == M - 1

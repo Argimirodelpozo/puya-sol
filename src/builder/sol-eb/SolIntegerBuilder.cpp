@@ -84,8 +84,12 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	// literal typed <=64-bit so it misses otherIsBigUInt) reverted. buildBigUIntShift /
 	// buildBigUIntArithmeticShiftRight saturate correctly; emitOverflowCheck masks to the width
 	// (Solidity shifts don't overflow-check). Signed >> additionally needs SAR (sign-fill) here.
+	// uint64 UNCHECKED sub: the raw uint64 `-` opcode panics on underflow, but Solidity wraps. The
+	// sub-word wrapping (`a + 2^N - b`, below) needs `a + 2^N` to fit uint64 → only m_bits<64; uint64
+	// (m_bits==64) overflows it, so route through the biguint wrapping subtract instead (then narrow).
 	bool needsBigUInt = m_isBigUInt || otherIsBigUInt
 		|| (m_signed && _op == BuilderBinaryOp::Sub)
+		|| (m_bits == 64 && !m_signed && m_scope.isUnchecked() && _op == BuilderBinaryOp::Sub)
 		|| _op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift;
 
 	auto lhs = resolve();
@@ -146,7 +150,13 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			// Signed: skip `a>=b` assert — `1-2=-1` is valid two's complement, not underflow.
 			bool skipUnsignedAssert = m_signed || m_scope.isUnchecked();
 			auto result = buildWrappingSubtract(m_ctx, skipUnsignedAssert, std::move(lhs), std::move(rhs), _loc);
-			return wrap(emitOverflowCheck(std::move(result), _op, _loc));
+			result = emitOverflowCheck(std::move(result), _op, _loc);
+			// uint64 routed here for unchecked-underflow wrapping (above): the 256-bit wrap narrows
+			// to uint64 = the correct mod-2^64 value, and composes with surrounding uint64 ops.
+			if (!m_isBigUInt && result->wtype == awst::WType::biguintType())
+				result = TypeCoercion::implicitNumericCast(
+					std::move(result), awst::WType::uint64Type(), _loc);
+			return wrap(std::move(result));
 		}
 
 		if (_op == BuilderBinaryOp::Pow)
