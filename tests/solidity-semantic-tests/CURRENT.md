@@ -1,3 +1,21 @@
+# Semantic Test Status — v402
+
+> **fix(getter): signed struct-getter fields → 256-bit biguint tuple elements (4874d9bdfb,
+> 2026-06-20):** **57 failed / 1258 passed / 87 xf** (zero-reg, identical fail-set). Completes
+> 1be2f4877d, which sign-extended struct-getter signed fields but only to 64-bit for sub-64 widths
+> and left the tuple element WType native (uint64) — so a MULTI-field struct getter still returned a
+> sub-64 signed field (int16) uint64-shaped: `struct{...int16 b...} public s; s().b` at −32768 came
+> back as 2^64−32768 (the int128 case only canon-matched). Root: an explicit signed tuple return is
+> lowered to a 256-bit biguint element (FunctionBuilder mappedType=biguint + rewriteARC4Returns
+> signExtendToUint256), but the synthesized getter built its WTuple from native map() types and
+> sign-extended values only to 64-bit. Fix: a signed sub-256 field → 256-bit two's-complement biguint
+> in BOTH the value (projectStructFields signExtendToUint256) and the element type (new
+> getterElementWType), so a struct getter encodes signed fields exactly like an explicit return.
+> Found by the stateful fuzzer once it re-sampled getters after EACH mutation (the single-sample
+> sequencer never read the getter at a negative sub-64 field). Guard:
+> puyasolRegression/signed_struct_getter_sign_extension (extended to the multi-field tuple).
+> [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v401
 
 > **fix(getter): public struct auto-getter sign-extends signed sub-word fields (1be2f4877d,
@@ -12,9 +30,11 @@
 > SolFieldAccess (signExtendToUint64 <64, signExtendSignedElement 64<N<256 per field); single-field
 > structs route through it too (size>=1, lone field keeps the scalar return + signedGetterBits still
 > re-extends a <=64 field to the signed biguint ABI return). Guard:
-> puyasolRegression/signed_struct_getter_sign_extension. NB the differential fuzzer canonicalises
-> per-field-width (%2^N), so it is BLIND to ABI-return-WIDTH bugs — the raw-decode guard caught a
-> uint64-shaped int16 return the fuzzer passed. [[differential-fuzzing-spike]]
+> puyasolRegression/signed_struct_getter_sign_extension. NB the stateful fuzzer MISSED the int16
+> single-field case (the raw-decode guard caught it) — NOT a canon issue (canon %2^256 distinguishes
+> the uint64-shaped 2^64−5 from −5 fine) but GETTER UNDER-SAMPLING: a zero-arg getter got one call at
+> its ABI-order position (first), reading the INITIAL state before any mutation. Fixed in fuzz_state.py
+> by re-reading every zero-arg view getter after each mutation (then it flags). [[differential-fuzzing-spike]]
 
 # Semantic Test Status — v400
 
