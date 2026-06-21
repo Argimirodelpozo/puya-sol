@@ -1,3 +1,20 @@
+# Semantic Test Status — v414
+
+> **fix(asm): assembly-bodied fn 256-bit params expose as uint256 not uint512 (bee0d80a6c, 2026-06-21):**
+> **57 failed / 1267 passed / 88 xf** (zero-reg, identical fail-set; asm_signed_negatives xfail→pass).
+> Found by the generative fuzzer (Yul sdiv/smod/sar on negatives reverted/were wrong). ROOT CAUSE (TEAL
+> sig was `sdivF(uint512)uint512`): an asm-bodied fn exposed its 256-bit params as arc4.uint512 (64 bytes)
+> — the Yul body reinterprets the operand as biguint, puya maps biguint→ARC4UIntN(512); a negative int256
+> arrived as a 512-bit value and negate256()'s `maxU256-val` underflowed → empty `b-` panic. FIX
+> (FunctionBuilder): apply the biguint→ARC4 param remap to asm bodies (was skipped), but DEFER the
+> arg.wtype mutation until the decode rename loop (runs after buildBlock) so the Yul body builds against
+> the native biguint type. A naive skip-removal regressed inline_assembly_switch +
+> slot_access_via_mapping_pointer because the switch handler builds its dispatch from the (then-arc4)
+> wtype — deferring fixes both. Closes the asm-biguint-return "param side still open" (the missing failing
+> test was the fuzzer's). Return side (signed asm return still uint512) canonicalizes %2^256 → no
+> divergence, minor follow-up. Guard: puyasolRegression/asm_signed_negatives (xfail→pass).
+> [[asm-biguint-return-uint256]] [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v413
 
 > **fix(asm): Yul `byte(n,x)` for n>=32 returns 0 instead of reverting (160e36096f, 2026-06-21):** **57
