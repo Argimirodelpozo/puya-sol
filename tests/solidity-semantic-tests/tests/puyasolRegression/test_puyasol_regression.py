@@ -283,8 +283,10 @@ def test_signed_struct_getter_sign_extension(harness):
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/signed_struct_getter.sol")
     IMIN = -(1 << 127)
+    def w(v):                                                    # wrap raw uint → signed-256
+        return v - (1 << 256) if v > (1 << 255) else v
     def s256(r):
-        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+        return w(as_int(r.abi_return))
     # single-field int128 getter at the boundary (was +2^127, unsigned)
     harness.call(app, "setOne(int128)", IMIN)
     assert s256(harness.call(app, "one()")) == IMIN
@@ -295,3 +297,8 @@ def test_signed_struct_getter_sign_extension(harness):
     harness.call(app, "setSmall(int16)", -5)
     assert s256(harness.call(app, "small()")) == -5
     assert s256(harness.call(app, "readSmall()")) == -5
+    # multi-field struct getter: each signed field is 256-bit two's-complement in the tuple
+    # (a sub-64 int16 was uint64-shaped — found by the stateful fuzzer once getters were
+    # re-sampled after each mutation; the int128 case only canon-matched before).
+    harness.call(app, "setMany(int16,int128)", -3, IMIN)
+    assert [w(x) for x in harness.call(app, "many()").abi_return] == [0, -3, 0, IMIN]

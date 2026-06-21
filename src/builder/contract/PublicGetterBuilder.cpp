@@ -13,6 +13,25 @@ namespace puyasol::builder
 namespace
 {
 
+solidity::frontend::Type const* unwrapUDVT(solidity::frontend::Type const* t)
+{
+	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(t))
+		return &udvt->underlyingType();
+	return t;
+}
+
+// WType for a getter return/tuple element: a signed sub-256 integer becomes a 256-bit
+// two's-complement biguint (matching FunctionBuilder's signed-return lowering, so the
+// ABI element is uint256-on-wire and reads back signed) — in lockstep with the
+// signExtendToUint256 projectStructFields applies to the VALUE. Everything else maps natively.
+awst::WType const* getterElementWType(TypeMapper& tm, solidity::frontend::Type const* solType)
+{
+	if (auto const* it = dynamic_cast<solidity::frontend::IntegerType const*>(unwrapUDVT(solType)))
+		if (it->isSigned() && it->numBits() < 256)
+			return awst::WType::biguintType();
+	return tm.map(solType);
+}
+
 // Project a Solidity struct value into its public-accessor field list:
 // skip mapping members and non-bytes array members (matches solc's getter),
 // reading each remaining field off `base` and ARC4-decoding it to its native
@@ -53,15 +72,18 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 		{
 			std::shared_ptr<awst::Expression> decode =
 				awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
-			// Sign-extend signed sub-word fields (mirrors the SolFieldAccess rvalue
-			// read): a raw ARC4Decode yields the unsigned N-bit value, so the getter
-			// would return +2^127 for an int128 field at INT128_MIN. <64→uint64,
-			// 64<N<256→canonical 256-bit. No-op for unsigned / int256 / ==64.
-			if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(member.type))
-				if (fieldInt->isSigned() && fieldInt->numBits() < 64
-					&& nativeType == awst::WType::uint64Type())
-					decode = TypeCoercion::signExtendToUint64(std::move(decode), fieldInt->numBits(), loc);
-			decode = TypeCoercion::signExtendSignedElement(std::move(decode), member.type, loc);
+			// Signed fields → canonical 256-bit two's-complement biguint, matching how
+			// FunctionBuilder lowers a signed tuple RETURN (mappedType=biguint +
+			// signExtendToUint256, so the ABI element is uint256-on-wire and the client
+			// int{N} patch reads it signed). A raw ARC4Decode is the unsigned N-bit value
+			// (int128 INT128_MIN → +2^127); a 64-bit-only extension would still leave a
+			// sub-64 field (int16) uint64-shaped in the ABI tuple. No-op unsigned / int256.
+			// The tuple element WType is set to biguint in lockstep (getterElementWType).
+			if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+					unwrapUDVT(member.type)))
+				if (fieldInt->isSigned() && fieldInt->numBits() < 256)
+					decode = TypeCoercion::signExtendToUint256(
+						std::move(decode), fieldInt->numBits(), loc);
 			items.push_back(std::move(decode));
 		}
 		else
@@ -164,7 +186,9 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				std::vector<std::string> tupleNames;
 				for (size_t i = 0; i < solReturnTypes.size(); ++i)
 				{
-					tupleTypes.push_back(m_typeMapper.map(solReturnTypes[i]));
+					// Signed sub-256 elements → biguint (256-bit), matching the value
+					// projectStructFields produces and an explicit signed tuple return.
+					tupleTypes.push_back(getterElementWType(m_typeMapper, solReturnTypes[i]));
 					tupleNames.push_back(i < solReturnNames.size() ? solReturnNames[i] : "");
 				}
 				getter.returnType = m_typeMapper.createType<awst::WTuple>(
