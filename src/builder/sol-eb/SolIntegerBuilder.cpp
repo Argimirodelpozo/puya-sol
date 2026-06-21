@@ -514,8 +514,18 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// Mod 2^256: handles -0 overflow (2^256 wraps to 0).
 			auto modConst = makePow256(_loc);
 
-			auto wrapped = awst::makeBigUIntBinOp(std::move(addOne), awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
+			std::shared_ptr<awst::Expression> wrapped =
+				awst::makeBigUIntBinOp(std::move(addOne), awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
 
+			// Sub-word signed (64<N<256): same -INT_MIN overflow as the uint64 path — wrap to N bits
+			// + sign-extend to canonical 256-bit TC so it composes (e.g. int128 `(-a) > a` at INT128_MIN).
+			if (m_signed && m_bits < 256)
+			{
+				solidity::u256 modN = solidity::u256(1) << m_bits;
+				auto modN_c = awst::makeBiguintConstant(modN.str(), _loc);
+				auto masked = awst::makeBigUIntBinOp(std::move(wrapped), awst::BigUIntBinaryOperator::Mod, std::move(modN_c), _loc);
+				wrapped = TypeCoercion::signExtendToUint256(std::move(masked), m_bits, _loc);
+			}
 			return wrap(std::move(wrapped));
 		}
 		// uint64: -x via (2^64 - x) % 2^64 (0 - x underflows in uint64).
@@ -527,6 +537,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			auto pow2_64_2 = awst::makeBiguintConstant("18446744073709551616", _loc);
 			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, std::move(pow2_64_2), _loc);
 			auto result = TypeCoercion::implicitNumericCast(std::move(mod), awst::WType::uint64Type(), _loc);
+			// Sub-word signed: -INT_MIN computes to +2^(N-1), which overflows the N-bit range. Wrap
+			// to N bits + sign-extend so it reads as INT_MIN canonically when used as a subexpression
+			// (e.g. `(-a) > a`); the return/ABI path re-truncates, so a bare `-a` was already right.
+			if (m_signed && m_bits < 64)
+			{
+				auto maskC = awst::makeIntegerConstant((uint64_t(1) << m_bits) - 1, _loc);
+				auto masked = awst::makeUInt64BinOp(std::move(result), awst::UInt64BinaryOperator::BitAnd, std::move(maskC), _loc);
+				result = TypeCoercion::signExtendToUint64(std::move(masked), m_bits, _loc);
+			}
 			return wrap(std::move(result));
 		}
 	}

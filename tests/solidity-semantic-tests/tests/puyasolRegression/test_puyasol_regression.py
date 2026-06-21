@@ -400,3 +400,29 @@ def test_unchecked_uint64_sub_wraps(harness):
     assert as_int(harness.call(app, "subc(uint64,uint64)", 10, 3).abi_return) == 7
     # composition: (a - b) | c — the biguint result must narrow to uint64
     assert as_int(harness.call(app, "comp(uint64,uint64,uint64)", 0, 1, 0).abi_return) == M - 1
+
+
+def test_signed_subword_negate_compose(harness):
+    """puyasolRegression/contracts/signed_subword_negate.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer's ARRAY mode (fuzz_gen.py --arr). An unchecked unary minus on a
+    sub-word signed value did not wrap to N bits: -INT_MIN = +2^(N-1) overflows intN and must wrap to
+    INT_MIN. `-a` alone re-truncates on return so it looked right; as a subexpression in a signed
+    compare (whose XOR-sign-bit trick assumes canonical operands) the raw +2^(N-1) read as positive.
+    Fix masks + sign-extends the negation result (uint64 path for N<64, 256-bit path for 64<N<256).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_subword_negate.sol")
+    def s16(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    # (-a) > a at INT_MIN: -INT_MIN wraps to INT_MIN so both equal → false (was TRUE: -a read as +2^(N-1))
+    assert as_int(harness.call(app, "cmp8(int8)", -128).abi_return) == 0
+    assert as_int(harness.call(app, "cmp16(int16)", -32768).abi_return) == 0
+    assert as_int(harness.call(app, "cmp128(int128)", -(1 << 127)).abi_return) == 0
+    # non-MIN still correct: -5 > 5 false; 5 > -5 true
+    assert as_int(harness.call(app, "cmp16(int16)", 5).abi_return) == 0
+    assert as_int(harness.call(app, "cmp16(int16)", -5).abi_return) == 1
+    # bare negation unchanged (return path re-truncates)
+    assert s16(harness.call(app, "neg16(int16)", -32768)) == -32768   # -INT16_MIN wraps to INT16_MIN
+    assert s16(harness.call(app, "neg16(int16)", 5)) == -5
+    # checked negation of INT_MIN reverts
+    assert harness.call(app, "negc16(int16)", -32768, expect_revert=True).reverted
