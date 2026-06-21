@@ -1,3 +1,18 @@
+# Semantic Test Status — v410
+
+> **fix(exp): unchecked uint64 exponentiation wraps on overflow (fd62c32d4a, 2026-06-21):** **57 failed
+> / 1264 passed / 87 xf** (zero-reg, identical fail-set). Found by the generative fuzzer's NEW CAST mode
+> (fuzz_gen.py --cast — round-trip `ty(src(ty expr))` casts exercising the widen/narrow/sign-extend
+> matrix; here `(~uint64(uint256(d)))**3` = uint64_max**3). An UNCHECKED uint64 `a**k` whose power
+> overflows 2^64 REVERTED: the AVM `exp` opcode is uint64-only and asserts on overflow, but Solidity
+> wraps. The unchecked-exp biguint-wrap route (SolIntegerBuilder Pow case) covered sub-word (m_bits<64);
+> uint64 (==64) fell in the gap — exactly the unchecked-uint64-SUB gap (v408). Add/Mult at uint64 already
+> wrapped (backend); only exp was broken (and only the literal-exponent path — variable exponent was
+> clean). FIX: extend the route to m_bits<=64 (the 2^64 modulus spelled out, since `uint64_t(1)<<64` is
+> UB) + mod 2^64 + extract-low-8 btoi. The cast round-trips THEMSELVES diffed clean (conversion matrix
+> solid); the cast just built a MAX base that exposed the exp gap. Guard:
+> puyasolRegression/unchecked_uint64_exp. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v409
 
 > **fix(neg): unchecked unary minus on sub-word signed wraps to N bits + sign-extends (c7507d5f25,
