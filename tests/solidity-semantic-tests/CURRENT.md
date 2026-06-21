@@ -1,3 +1,20 @@
+# Semantic Test Status — v409
+
+> **fix(neg): unchecked unary minus on sub-word signed wraps to N bits + sign-extends (c7507d5f25,
+> 2026-06-21):** **57 failed / 1263 passed / 87 xf** (zero-reg, identical fail-set; a re-run flaked
+> test_blobhash under -n2 — it passes in isolation and passed in the fix-only run). Found by the
+> generative fuzzer's NEW ARRAY mode (fuzz_gen.py --arr — `T[]`/`T[][]` params with `arr[i]`/`mat[i][j]`
+> in loops; the nested loops compiled CLEAN, confirming the loop-condition fix 727f44ac2d generalizes to
+> random nesting). An UNCHECKED `-a` on a sub-word signed (int8/16/32/128) computed the full-width
+> negation but did NOT wrap to the N-bit range: `-INT_MIN = +2^(N-1)` overflows intN and must wrap to
+> INT_MIN. The return/ABI path re-truncates, so bare `-a` looked right; as a subexpression in a SIGNED
+> COMPARE (whose XOR-sign-bit trick assumes canonical operands) the raw +2^(N-1) read as positive —
+> `(-a) > a` at INT16_MIN gave TRUE (EVM: false). FIX in SolIntegerBuilder::unary_op(Negative): after the
+> `(2^64-x)%2^64` (uint64) / `~x+1 %2^256` (biguint) negation, for sub-word signed mask to N bits +
+> sign-extend (signExtendToUint64 for N<64, signExtendToUint256 for 64<N<256). Idempotent for non-MIN;
+> int64/int256 full-width boundaries skip it. Same canonical-form invariant as the rest of the sub-word
+> codec. Guard: puyasolRegression/signed_subword_negate. [[int24-subword-codec]] [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v408
 
 > **fix(sub): unchecked uint64 subtraction wraps on underflow (10f8960b30, 2026-06-21):**
