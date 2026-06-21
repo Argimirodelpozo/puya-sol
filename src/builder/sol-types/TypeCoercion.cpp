@@ -245,6 +245,20 @@ std::shared_ptr<awst::Expression> TypeCoercion::canonicalIntConstant(
 	return awst::makeIntegerConstant(_tcValue.str(), _loc, awst::WType::biguintType());
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::rationalIntConstant(
+	solidity::u256 const& _value,
+	awst::WType const* _mappedType,
+	awst::SourceLocation const& _loc
+)
+{
+	static solidity::u256 const uint64Max("18446744073709551615");
+	awst::WType const* wtype =
+		(_mappedType == awst::WType::uint64Type() && _value > uint64Max)
+			? awst::WType::biguintType()
+			: _mappedType;
+	return awst::makeIntegerConstant(_value.str(), _loc, wtype);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _solElemType,

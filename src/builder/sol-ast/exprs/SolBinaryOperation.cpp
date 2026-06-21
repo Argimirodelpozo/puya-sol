@@ -90,16 +90,11 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 			m_binOp.annotation().type))
 	{
 		if (!ratType->isFractional())
-		{
-			auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
-			auto val = ratType->literalValue(nullptr);
-			// u256 two's complement; promote to biguint if > uint64 (for sign extension).
-			static const solidity::u256 uint64Max("18446744073709551615");
-			if (resultType == awst::WType::uint64Type() && val > uint64Max)
-				resultType = awst::WType::biguintType();
-			auto e = awst::makeIntegerConstant(val.str(), m_loc, resultType);
-			return e;
-		}
+			// Solc folded the whole op to a non-fractional rational; emit its value via
+			// the shared helper (promotes uint64->biguint when the magnitude overflows).
+			return builder::TypeCoercion::rationalIntConstant(
+				ratType->literalValue(nullptr),
+				m_ctx.typeMapper.map(m_binOp.annotation().type), m_loc);
 	}
 	return nullptr;
 }

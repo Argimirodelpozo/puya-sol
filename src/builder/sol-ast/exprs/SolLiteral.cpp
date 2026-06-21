@@ -2,6 +2,7 @@
 
 #include "builder/sol-ast/exprs/SolLiteral.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/Numeric.h>
@@ -30,38 +31,18 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 		auto* mappedType = m_ctx.typeMapper.map(m_solType);
 		if (mappedType != awst::WType::uint64Type() && mappedType != awst::WType::biguintType())
 			mappedType = awst::WType::biguintType();
+		// A number literal's type is RationalNumberType (never a concrete intN here:
+		// m_solType = annotation().type), so no signed sub-word wrap is reachable —
+		// negative literals are UnaryOperation, type(T).min is SolMetaTypeAccess, and
+		// explicit casts are SolTypeConversion. The shared helper just promotes to
+		// biguint when the magnitude overflows uint64.
+		if (auto const* ratType = dynamic_cast<RationalNumberType const*>(m_solType))
+			return builder::TypeCoercion::rationalIntConstant(
+				ratType->literalValue(nullptr), mappedType, m_loc);
+		// Non-rational fallthrough (defensive): emit the raw literal text.
 		auto e = std::make_shared<awst::IntegerConstant>();
 		e->sourceLocation = m_loc;
-		if (auto const* ratType = dynamic_cast<RationalNumberType const*>(m_solType))
-		{
-			auto val = ratType->literalValue(nullptr);
-			// literalValue() returns u256 (two's complement for negatives).
-			static const solidity::u256 uint64Max("18446744073709551615");
-			if (mappedType == awst::WType::uint64Type() && val > uint64Max)
-			{
-				// Signed int≤64 literals: use 64-bit two's-complement (val mod 2^64) so
-				// comparisons against type(intN).min and other uint64 vars line up.
-				// Without it, -128 → biguint(2^256-128) ≠ uint64 int8_min 0xff..80.
-				bool signedSmall = false;
-				if (auto const* intType = dynamic_cast<IntegerType const*>(m_solType))
-					signedSmall = intType->isSigned() && intType->numBits() <= 64;
-				static const solidity::u256 twoPow64("18446744073709551616");
-				if (signedSmall)
-				{
-					solidity::u256 wrapped = val % twoPow64; // wrap to 64 bits
-					e->value = wrapped.str();
-				}
-				else
-				{
-					mappedType = awst::WType::biguintType();
-					e->value = val.str();
-				}
-			}
-			else
-				e->value = val.str();
-		}
-		else
-			e->value = m_literal.value();
+		e->value = m_literal.value();
 		e->wtype = mappedType;
 		return e;
 	}

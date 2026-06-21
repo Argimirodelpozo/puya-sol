@@ -86,6 +86,18 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Emit an integer constant from a non-fractional rational constant's value
+	/// (`RationalNumberType::literalValue()`, a 256-bit two's complement u256),
+	/// promoting `_mappedType` from uint64 to biguint when the magnitude overflows
+	/// uint64. Shared by SolLiteral (number literals) and tryConstantFold (folded
+	/// constant binary ops) — both width-less rationals, distinct from the
+	/// fixed-width `canonicalIntConstant` above.
+	static std::shared_ptr<awst::Expression> rationalIntConstant(
+		solidity::u256 const& _value,
+		awst::WType const* _mappedType,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Sign-extend a decoded signed sub-256 *array element* from its raw N-bit
 	/// two's complement to the canonical 256-bit biguint, matching how scalar
 	/// signed params are decoded — so `a[i]` compares/arithmetics equal to a
