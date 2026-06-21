@@ -14,6 +14,16 @@ The fuzzer is effectively a detector for "haven't deferred to solc here yet."
 ## A. Use `ConstantEvaluator` / `literalValue()` for ALL constant subexpressions
 **Status: highest value. Proven by the `int8(-1) == int8(-1)` bug (fixed 2026-06-21).**
 
+> **Step 1 DONE (v420, 0bec5aed44):** `type(intN).min/max` now uses solc's `IntegerType::min()/max()`
+> (256-bit TC u256) via a new shared `TypeCoercion::canonicalIntConstant(tcValue, bits)` — the single
+> "solc value -> canonical int constant" rule. Deleted ~40 lines of hand-rolled TC math in
+> SolMetaTypeAccess + the "lockstep with SolLiteral" coupling. Zero-reg, guard test_type_minmax_canonical.
+> **Next:** route SolLiteral's signed-small `%2^64` wrap and `SolBinaryOperation::tryConstantFold` through
+> the same `canonicalIntConstant` helper (collapses the 3rd/2nd hand-rolled sites). Then consider
+> `ConstantEvaluator::evaluate()` for non-literal constant subexpressions (closes the const-fold gap).
+> NB: SolLiteral already emits canonical signed-small literals (`val % 2^64`); the `int8(-1)` bug was
+> the explicit-cast path only (fixed in SolTypeConversion), so A is now consolidation, not bug-fixing.
+
 Today `ConstantEvaluator` is only used in `SolInlineAssembly.cpp`. The high-level path
 hand-rolls constants:
 - `type(intN).min` is computed by hand in `SolMetaTypeAccess.cpp`.
