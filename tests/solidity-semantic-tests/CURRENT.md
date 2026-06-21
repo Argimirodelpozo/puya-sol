@@ -1,3 +1,22 @@
+# Semantic Test Status — v403
+
+> **fix(loop): drain for-loop condition pre-statements — `uint256[][]` inline `a[i][j]` works
+> (727f44ac2d, 2026-06-20):** **57 failed / 1258 passed / 87 xf** (zero-reg, identical fail-set).
+> A for/while loop condition lowers to a WhileLoop condition (a pure expression, no statement slot),
+> so statements emitted while BUILDING the condition — the bounds-check assert + index cache for a
+> nested-array `a[i].length` — leaked into the loop BODY and ran AFTER the test that consumed them →
+> the condition read an undefined temp and reverted. This is why nested-array iteration reverted: in
+> `for (j; j < a[i].length; j++) s += a[i][j]` the inner condition evaluates the nested extraction
+> `a[i]`, whose pre-statements were orphaned. The element access `a[i][j]` was a red herring — the
+> body never even runs for `[[]]` yet it still reverted, and `T[] x = a[i]; x[j]` always worked. Fix:
+> the for-loop drains the condition's pre-statements (as SolIfStatement already does) and, when
+> non-empty, restructures to the do-while shape — `while(true){ <cond-pre>; if(!cond) break; <body>;
+> <post> }` — so they re-run each iteration before the test; empty-pre conditions keep the direct
+> form. `continue` still routes through the for-post. RETRACTS the long-standing "uint256[][] not
+> frontend-fixable" claim. Found by the differential fuzzer (uint256[][] probe). Guard:
+> puyasolRegression/nested_array_loop_condition. NB the non-do WHILE loop has the same orphaning (same
+> 1-pattern fix) — not yet applied. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v402
 
 > **fix(getter): signed struct-getter fields → 256-bit biguint tuple elements (4874d9bdfb,
