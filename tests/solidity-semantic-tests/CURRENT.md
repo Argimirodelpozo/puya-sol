@@ -1,3 +1,19 @@
+# Semantic Test Status — v418
+
+> **fix(intN): signed sub-word ordering compare sign-extends non-canonical operands (f5a1c51889, 2026-06-21):**
+> **57 failed / 1271 passed / 87 xf** (zero-reg; +signed_subword_compare guard). Found by the generative
+> fuzzer (--cf). A signed ordering comparison (`< <= > >=`) on a sub-word int (int8/16/32) returned the WRONG
+> result whenever an operand was not already sign-extended in its uint64 slot — a negative literal cast
+> (`int8(-1)` = 0xff, low N bits only) or an unchecked sub-word arithmetic result (`0 - (-128)` = 0x80.
+> ROOT CAUSE (SolIntegerBuilder::compare uint64 path): it XOR'd each operand with 2^63 to convert signed→
+> unsigned ordering but never sign-extended first, so 0xff (-1) sorted ABOVE 0x80…00 (0) → `int8(-1) < int8(0)`
+> was false; `(b%d) < 0`, `(b-d) < 0` etc. all misordered. ABI params arrive sign-extended (decode does it), so
+> the suite's variable-based comparisons passed and hid it; int64 (full width) and int256 (the biguint path
+> already calls signExtendToUint256) were correct. FIX: signExtendToUint64 each signed operand before the 2^63
+> XOR — mirrors the biguint branch; masks first so it's idempotent for canonical operands and a no-op for
+> int64. This is the `--cf` finding (seed 12005 f4 returned int8.min constant); distinct from the still-open
+> nested-ternary finding #15 (verified the fix does NOT touch f26). [[int24-subword-codec]] [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v417
 
 > **fix(intN): checked `-(intN.min)` reverts for int64 + int128 (overflow guard was defeated) (43bf1070f3, 2026-06-21):**
