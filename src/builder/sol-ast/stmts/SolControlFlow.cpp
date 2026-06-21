@@ -164,6 +164,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 		? bc.build(*m_node.condition())
 		: std::shared_ptr<awst::Expression>(awst::makeTrue(m_loc));
 
+	// Capture statements emitted while building the condition (e.g. the bounds-check
+	// assert + index cache for a nested-array `a[i].length`). A WhileLoop condition is a
+	// pure expression, so otherwise these leak into the loop BODY and run AFTER the test
+	// that consumes them → the condition reads undefined temps and reverts. Run them each
+	// iteration BEFORE the test (mirrors the do-while lowering below):
+	//   while (true) { <cond-pre>; if (!cond) break; <body>; <post> }
+	auto condPre = bc.takePrePending();
+	{ auto cp = bc.takePending(); for (auto& p: cp) condPre.push_back(std::move(p)); }
+
 	std::shared_ptr<awst::Statement> postStmt;
 	if (m_node.loopExpression())
 		postStmt = buildStatement(m_blk, *m_node.loopExpression());
@@ -191,8 +200,25 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 
 	if (postStmt) loopBody->body.push_back(postStmt);
 
-	outerBlock->body.push_back(
-		awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
+	if (condPre.empty())
+	{
+		// No condition pre-statements: keep the direct `while (cond) { body }` form.
+		outerBlock->body.push_back(
+			awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
+	}
+	else
+	{
+		// Re-evaluate the condition pre-statements + test each iteration before the body.
+		auto newBody = awst::makeBlock(m_loc);
+		for (auto& p: condPre) newBody->body.push_back(std::move(p));
+		auto breakBlk = awst::makeBlock(m_loc);
+		breakBlk->body.push_back(awst::makeLoopExit(m_loc));
+		newBody->body.push_back(
+			awst::makeIfElse(awst::makeNot(std::move(cond), m_loc), breakBlk, nullptr, m_loc));
+		for (auto& s: loopBody->body) newBody->body.push_back(std::move(s));
+		outerBlock->body.push_back(
+			awst::makeWhileLoop(awst::makeTrue(m_loc), std::move(newBody), m_loc));
+	}
 	return {outerBlock};
 }
 

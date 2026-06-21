@@ -302,3 +302,24 @@ def test_signed_struct_getter_sign_extension(harness):
     # re-sampled after each mutation; the int128 case only canon-matched before).
     harness.call(app, "setMany(int16,int128)", -3, IMIN)
     assert [w(x) for x in harness.call(app, "many()").abi_return] == [0, -3, 0, IMIN]
+
+
+def test_nested_array_loop_condition(harness):
+    """puyasolRegression/contracts/nested_array_loop.sol — NOT an o.g. semantic test.
+
+    A nested-array extraction in a loop CONDITION (`for j; j < a[i].length`) reverted: the
+    for-loop dropped the condition's prePendingStatements (the bounds-check assert + index
+    cache for `a[i]`) into the body, after the test that consumed them. The for-loop now
+    drains them and re-runs them each iteration before the test. Found by the differential
+    fuzzer (uint256[][] probe). Workaround was `T[] x = a[i]; x[j]`.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/nested_array_loop.sol")
+    def i(r): return as_int(r.abi_return)
+    assert i(harness.call(app, "sumNested(uint256[][])", [[1, 2], [3]])) == 6      # was REVERT
+    assert i(harness.call(app, "sumNested(uint256[][])", [[]])) == 0
+    assert i(harness.call(app, "sumNested(uint256[][])", [[5], [], [7, 8]])) == 20
+    assert i(harness.call(app, "sumNested(uint256[][])", [])) == 0
+    assert i(harness.call(app, "countNested(uint256[][])", [[1, 2, 3], [4]])) == 4
+    # break / continue still route through the for-post in the restructured loop
+    assert i(harness.call(app, "sumEvenIdx(uint256[])", [10, 1, 20, 1, 30])) == 60  # idx 0,2,4
+    assert i(harness.call(app, "sumEvenIdx(uint256[])", [10, 1, 99, 1, 30])) == 10  # break at idx 2
