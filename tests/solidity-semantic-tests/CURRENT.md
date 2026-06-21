@@ -1,3 +1,15 @@
+# Semantic Test Status — v408
+
+> **fix(sub): unchecked uint64 subtraction wraps on underflow (10f8960b30, 2026-06-21):**
+> **57 failed / 1262 passed / 87 xf** (zero-reg, identical fail-set). Found by the generative fuzzer's
+> NEW CONTROL-FLOW mode (fuzz_gen.py --cf — random loop/if/break/compound-assign bodies). An UNCHECKED
+> `uint64 a - b` with a<b REVERTED: the raw uint64 `-` opcode panics on underflow, but Solidity wraps
+> to a + 2^64 - b. The wrapping-sub fix covered sub-word (m_bits<64: `a+2^N` fits uint64) + biguint
+> (>64); uint64 (==64) fell in the gap — `a+2^64` overflows uint64, so it stayed on the raw opcode.
+> Fix: route uint64 unchecked Sub through the biguint wrapping subtract + narrow the result to uint64
+> (the 256-bit wrap → correct mod-2^64, and composes with surrounding uint64 ops). First --cf run →
+> first new bug. Guard: puyasolRegression/unchecked_uint64_sub. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v407
 
 > **fix(exp): signed sub-word `**` wraps unchecked overflow + narrows result to uint64 (7bede2a89d,
