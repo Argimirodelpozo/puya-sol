@@ -1,3 +1,15 @@
+# Semantic Test Status — v404
+
+> **fix(loop): drain non-do while-loop condition pre-statements (cc05eb5411, 2026-06-20):**
+> **57 failed / 1259 passed / 87 xf** (zero-reg, identical fail-set). Extends 727f44ac2d to the
+> non-do `while` loop, which had the IDENTICAL orphaning — building the condition (e.g. a
+> nested-array `a[i].length`) emits a bounds-check + index cache into prePendingStatements, which a
+> bare WhileLoop condition (a pure expression) can't hold, so they leaked into the body and ran after
+> the test → revert. Same fix: drain the condition's pre-statements and, when non-empty, restructure
+> to `while(true){ <cond-pre>; if(!cond) break; <body> }`; empty-pre keeps the direct form. No
+> for-post on a while loop; `continue` re-checks the condition at the top (correct). Guard:
+> puyasolRegression/nested_array_loop_condition extended with sumNestedWhile. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v403
 
 > **fix(loop): drain for-loop condition pre-statements — `uint256[][]` inline `a[i][j]` works
