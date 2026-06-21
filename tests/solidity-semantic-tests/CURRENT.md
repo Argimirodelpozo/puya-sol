@@ -1,3 +1,19 @@
+# Semantic Test Status — v419
+
+> **fix(intN): sub-word signed EQUALITY canonicalizes non-canonical operands (4b63508ed4, 2026-06-21):**
+> **57 failed / 1272 passed / 87 xf** (zero-reg; +signed_subword_equality guard). Found by the generative
+> fuzzer (--arr seed 13004 f0). The ==/!= analogue of the v418 ordering-compare fix — two non-canonical
+> operand sources reaching equality: (1) a negative LITERAL cast `int8(-1)` was emitted as the bare value
+> 255 (masked to N bits but NOT sign-extended), so `int8(-1) == int8(-1)` compared 255 vs a canonical -1
+> and was FALSE; fixed at the source in SolTypeConversion (sign-extend any signed sub-word cast result from
+> its own width — also fixes constant/Rational casts where srcInt was null, and narrowing casts the
+> source-width branch skipped). (2) an unchecked sub-word ARITHMETIC result (`acc=127; acc-=-128` wraps to
+> -1 but as 0xff) compared `== nonzero` wrongly because SolIntegerBuilder::compare only sign-extended
+> operands for ORDERING ops; fixed by unifying compare so it canonicalizes operands for ordering AND
+> equality (one chokepoint), with the sign-bit XOR applied only for ordering. Comparing to 0 hid both (0 is
+> canonical either way) — only `== nonzero` exposes them. Distinct from open finding #15.
+> [[int24-subword-codec]] [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v418
 
 > **fix(intN): signed sub-word ordering compare sign-extends non-canonical operands (f5a1c51889, 2026-06-21):**
