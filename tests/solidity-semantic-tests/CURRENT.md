@@ -1,3 +1,17 @@
+# Semantic Test Status — v421
+
+> **refactor(solc-reuse): SolLiteral dead-branch removal + shared rationalIntConstant (4c7f7032e3, 2026-06-21):**
+> **57 failed / 1273 passed / 87 xf** (zero-reg, behavior-preserving). solc-todo.md opportunity A, step 2.
+> (1) SolLiteral's "signed sub-word literal -> 64-bit TC wrap" branch was DEAD: it required m_solType to be
+> both RationalNumberType (outer cast) AND IntegerType (inner) — impossible, since m_solType =
+> annotation().type is RationalNumberType for a number literal. Negative literals are UnaryOperation,
+> type(T).min is SolMetaTypeAccess, casts are SolTypeConversion — none route through here. Removed (~15
+> lines), verified dead by a signed-literal/compare/arith fuzz vs live EVM. (2) SolLiteral and
+> tryConstantFold shared the same magnitude-promotion rule (literalValue() then uint64->biguint if it
+> overflows uint64); both are width-less rationals (distinct from the fixed-width canonicalIntConstant), so
+> extracted a small shared TypeCoercion::rationalIntConstant and routed both through it. Net: SolLiteral and
+> tryConstantFold shrink, one rule in one place. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v420
 
 > **refactor(solc-reuse): type(intN).min/max via solc min()/max() + one canonical helper (0bec5aed44, 2026-06-21):**

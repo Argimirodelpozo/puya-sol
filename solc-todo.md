@@ -18,11 +18,17 @@ The fuzzer is effectively a detector for "haven't deferred to solc here yet."
 > (256-bit TC u256) via a new shared `TypeCoercion::canonicalIntConstant(tcValue, bits)` — the single
 > "solc value -> canonical int constant" rule. Deleted ~40 lines of hand-rolled TC math in
 > SolMetaTypeAccess + the "lockstep with SolLiteral" coupling. Zero-reg, guard test_type_minmax_canonical.
-> **Next:** route SolLiteral's signed-small `%2^64` wrap and `SolBinaryOperation::tryConstantFold` through
-> the same `canonicalIntConstant` helper (collapses the 3rd/2nd hand-rolled sites). Then consider
-> `ConstantEvaluator::evaluate()` for non-literal constant subexpressions (closes the const-fold gap).
-> NB: SolLiteral already emits canonical signed-small literals (`val % 2^64`); the `int8(-1)` bug was
-> the explicit-cast path only (fixed in SolTypeConversion), so A is now consolidation, not bug-fixing.
+> **Step 2 DONE (v421, 4c7f7032e3):** (a) SolLiteral's signed-small `%2^64` wrap branch turned out to be
+> DEAD code (needed m_solType to be RationalNumberType AND IntegerType at once) — removed, verified dead by
+> fuzz. (b) SolLiteral + tryConstantFold share the same magnitude rule but are width-less rationals, so they
+> do NOT fit `canonicalIntConstant` (which needs a fixed width); extracted a separate small
+> `TypeCoercion::rationalIntConstant` and routed both through it. Two constant-emission shapes now exist:
+> width-based (`canonicalIntConstant`, for type(T).min/max + intN casts) and magnitude-based
+> (`rationalIntConstant`, for rationals).
+> **Next:** `ConstantEvaluator::evaluate()` for non-literal constant subexpressions (the only remaining A
+> item — closes the `type(uint64).max**2` const-fold gap). NB: SolLiteral was already canonical; the
+> `int8(-1)` bug was the explicit-cast path only (fixed in SolTypeConversion), so A is consolidation, not
+> bug-fixing — the correctness was already there.
 
 Today `ConstantEvaluator` is only used in `SolInlineAssembly.cpp`. The high-level path
 hand-rolls constants:
