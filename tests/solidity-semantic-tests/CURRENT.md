@@ -1,3 +1,18 @@
+# Semantic Test Status — v417
+
+> **fix(intN): checked `-(intN.min)` reverts for int64 + int128 (overflow guard was defeated) (43bf1070f3, 2026-06-21):**
+> **57 failed / 1270 passed / 87 xf** (zero-reg; +signed_negation_overflow guard). Found by the generative
+> fuzzer (--cast). Checked unary minus of `type(intN).min` overflows (the result 2^(N-1) doesn't fit intN) →
+> EVM reverts (Panic 0x11); AVM returned the value for **int64 and int128 only**. ROOT CAUSE
+> (SolIntegerBuilder::unary_op overflow guard): (1) int64 — the mask `(uint64_t(1) << 64) - 1` is C++ UB
+> (shift == type width) → 0, so the guard compared `operand & 0 == 0` against 2^63 and never fired; (2) int128
+> (any biguint-backed sub-256 signed) — the operand is the 256-bit sign-extended two's-complement, so
+> int128.min reads as 2^256-2^127, but the guard compared against 2^127 → never equal. int8/16/32 (narrower
+> uint64-backed, valid mask) and int256 (2^256-2^255 == 2^255) already reverted. FIX: mask all-ones when
+> N==64, and for biguint-backed operands compare against the sign-extended min 2^256-2^(N-1) (= 2^255 for
+> N==256, unchanged). `unchecked` still wraps to intN.min. Guard: puyasolRegression/signed_negation_overflow
+> (int8..256 checked-revert + int64/128 unchecked-wrap). [[int24-subword-codec]] [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v416
 
 > **fix(storage): wide dynamic-array `.length` divides by the element's real stride, not a fixed 32 (481f914810, 2026-06-21):**
