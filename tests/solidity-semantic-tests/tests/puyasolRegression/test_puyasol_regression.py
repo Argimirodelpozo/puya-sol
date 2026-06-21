@@ -348,3 +348,6 @@ def test_subword_shift_saturate(harness):
     assert s16(harness.call(app, "shlI16_256(int16)", 5)) == 0                     # was REVERT
     assert s16(harness.call(app, "shrI16_256(int16)", -1)) == -1                   # signed >>: sign-fill
     assert s16(harness.call(app, "shrI16_256(int16)", 100)) == 0                   # non-negative → 0
+    # shift as a sub-expression (was a puya compile error: biguint where uint64 expected)
+    assert as_int(harness.call(app, "comp(uint64,uint64)", 3, 0xFFFF).abi_return) == ((3 << 7) & 0xFFFF)
+    assert as_int(harness.call(app, "compR(uint16,uint16)", 0x80, 0x0F).abi_return) == (0x0F | (0x80 >> 3))

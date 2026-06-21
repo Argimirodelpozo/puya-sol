@@ -128,7 +128,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			else
 				result = buildBigUIntShift(std::move(lhs), std::move(shiftAmt),
 					_op == BuilderBinaryOp::LShift, _loc);
-			return wrap(emitOverflowCheck(std::move(result), _op, _loc));
+			result = emitOverflowCheck(std::move(result), _op, _loc);
+			// A sub-word value's native WType is uint64; narrow the biguint shift result back so
+			// it composes as a SUB-expression with surrounding uint64 ops — `(a << 7) & b` else
+			// hands a biguint to a UInt64BinaryOperation (puya: "expected uint64"). The value is
+			// masked/sign-extended to <=64 bits, so the cast is lossless. >64-bit stays biguint.
+			if (!m_isBigUInt && result->wtype == awst::WType::biguintType())
+				result = TypeCoercion::implicitNumericCast(
+					std::move(result), awst::WType::uint64Type(), _loc);
+			return wrap(std::move(result));
 		}
 
 		rhs = promoteToBigUInt(std::move(rhs), _loc);

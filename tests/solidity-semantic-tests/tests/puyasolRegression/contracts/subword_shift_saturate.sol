@@ -15,4 +15,8 @@ contract SubwordShift {
     function shl64_64(uint64 a)  external pure returns (uint64) { return a << 64; }    // was REVERT → 0
     function shlI16_256(int16 a) external pure returns (int16)  { return a << 256; }   // was REVERT → 0
     function shrI16_256(int16 a) external pure returns (int16)  { return a >> 256; }   // signed: sign-fill
+    // shift as a SUB-expression: the biguint shift result must narrow to uint64 to compose with the
+    // surrounding op (was a puya compile error "UInt64BinaryOperation expected uint64").
+    function comp(uint64 a, uint64 b)  external pure returns (uint64) { return (a << 7) & b; }
+    function compR(uint16 a, uint16 b) external pure returns (uint16) { return b | (a >> 3); }
 }
