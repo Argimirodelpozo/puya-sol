@@ -9,6 +9,18 @@ divergence found this cycle — wide-array `.length`, `int8(-1)` non-canonical,
 signed sub-word compare/equality — is puya recomputing something solc already has.
 The fuzzer is effectively a detector for "haven't deferred to solc here yet."
 
+**UPDATE 2026-06-22 — the canonicalization sub-throughline (now the dominant one).** An overnight
+fuzz+fix run shipped **7 zero-reg fixes (v427–v433), and 6 of them are the SAME bug**: a sub-256
+unsigned biguint left NON-CANONICAL (value exceeding 2^N, or a signed value not sign-extended) by a
+width-growing op, which the return/store path masks but a downstream CHECKED consumer or comparison does
+NOT — so it false-reverts or mis-compares. Sites patched ONE AT A TIME as the fuzzer found them:
+left-shift (v427), bitwise-NOT (v428), signed→unsigned cast (v429), unchecked sub+exp (v430), complex
+signed-mul operand (v431), `-type(intN).min` (v432). Each fix is "mask/sign-extend to the type width at
+this site." This is precisely the failure mode **opportunity F** (centralize canonicalization per-WType)
+exists to kill: today every CONSUMER must remember to canonicalize; the fuzzer just enumerates the ones
+that forgot. The business case for F is now proven, not hypothetical. (v433, short-circuit `&&`/`||`
+RHS scoping, was a separate codegen-scoping fix — not a solc-reuse item.)
+
 ---
 
 ## A. Use `ConstantEvaluator` / `literalValue()` for ALL constant subexpressions
@@ -106,12 +118,30 @@ construction — used for error/event encoding and the `intSelectorName`/
 `arc4EncodeArgsAtParamTypes` width logic that had bugs (see sol-eb-audit selector-width) —
 is something solc already builds correctly via `externalSignature()`.
 
-## F. Model `Type::cleanupNeededForOp` — the principled "centralize canonicalization"
+## F. Model `Type::cleanupNeededForOp` — the principled "centralize canonicalization"  ← NOW THE TOP OPPORTUNITY
 solc attaches, per type and per op, whether a value needs cleanup before use, decided
 once. That's the disciplined form of collapsing puya's ~54 scattered `signExtend*` call
 sites (across 19 files): attach a `canonicalize()` to each WType rather than remembering
-it at every consumer. This session alone needed canonicalization added at the cast,
-ordering-compare, and equality-compare sites — three places for one invariant.
+it at every consumer.
+
+**Evidence (2026-06-22): 6 fixes in one overnight run were all "forgot to canonicalize at this site."**
+v427 left-shift, v428 bitwise-NOT, v429 signed→unsigned cast, v430 unchecked sub+exp, v431 complex
+signed-mul operand, v432 `-type(intN).min` — each a `% 2^N` mask or sign-extend at the producing op,
+because a downstream checked consumer / `<= max` compare saw the non-canonical value. The fuzzer will
+keep finding the next forgotten site until canonicalization is correct-by-construction. The model:
+- A WTYPE INVARIANT: a uint/intN value is always stored masked-to-2^N (unsigned) or sign-extended-to-
+  256-bit (signed sub-256). Producers that can violate it (shift-left, `~`, sign-ext cast, unchecked
+  wrap) canonicalize; consumers can then ASSUME canonical and drop their defensive masks.
+- equivalently `cleanupNeededForOp(type, op)` decided once per (type, op) instead of remembered at 54
+  consumer sites.
+
+**Incremental path toward F (do these first):**
+1. Extract one `TypeCoercion::maskUnsignedToWidth(v, bits)` (and pair with the existing
+   `signExtendToUint64/256`) and route the ~5 inlined v427–v432 masks through it — pure consolidation,
+   names the invariant, lowers the cost of the full refactor.
+2. Audit the ~54 `signExtend*`/mask sites: classify each as PRODUCER-side (keep, it establishes the
+   invariant) vs CONSUMER-side (candidate to delete once producers are canonical).
+3. Attach `canonicalize()` to the WType (or a `(type,op)->bool` table) and flip consumers to assume.
 
 ## G. `type(I).interfaceId`, C3 linearization, overload resolution
 solc computes interface IDs (XOR of selectors), `linearizedBaseContracts` (C3 MRO for
@@ -127,5 +157,9 @@ than reimplement super/interface dispatch (likely already partly used via
 2. ~~**D** (commonType for comparisons)~~ — **DONE** v424: coerceToCommonInt drives comparison operand
    conversion off solc commonType; deleted narrowConstIfNegative + inline compare() canonicalization.
    Residual = apply the same coercion to the arith-path (binary_op) left-operand reinterpret, still open.
-3. **C** (size from solc) and **B** (storage layout from solc) — next tier, untouched.
-4. **E / F / G** — larger or partial-reuse refactors, untouched.
+3. **F** (centralize canonicalization) — **NOW THE TOP UNDONE OPPORTUNITY** (2026-06-22). 6 of the
+   session's 7 fixes were one forgotten-canonicalization site each; F makes it correct-by-construction.
+   Incremental: (1) extract `maskUnsignedToWidth` + route the v427–v432 masks through it [in progress];
+   (2) finish the D-residual arith-path coercion; (3) the full per-WType `canonicalize()` refactor.
+4. **C** (size from solc) and **B** (storage layout from solc) — not viable / off (boxes are 4 KB, not slots).
+5. **E / G** — larger or partial-reuse refactors, untouched.
