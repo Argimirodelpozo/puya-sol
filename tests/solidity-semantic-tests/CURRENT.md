@@ -1,3 +1,17 @@
+# Semantic Test Status — v426
+
+> **fix(intN): unchecked uint64 mul/add wrap mod 2^64 instead of reverting (12a9398b7f, 2026-06-22):**
+> **57 failed / 1277 passed / 87 xf** (zero-reg; +unchecked_uint64_mul_add guard). Found by the overnight
+> generative fuzzer (--cast). `unchecked` uint64 multiplication (and addition) that overflows 2^64 reverted
+> on the AVM — the `*`/`+` opcodes PANIC on overflow — where Solidity wraps. The sub-word (<64-bit) path
+> masks to 2^N (SolIntegerBuilder line ~293) and Sub is force-routed to the biguint wrapping path (line ~91),
+> Pow handled in its case — but full-width uint64 Add/Mult fell through to the panicking opcode (the
+> "Add/Mult already wrap at uint64" comment was WRONG). The fuzzer's per-call probe varies one arg so it hit
+> const*var (type(uint64).max * b) first; var*var overflow confirmed identical. FIX (SolIntegerBuilder
+> binary_op uint64 path): for `unchecked && !signed && m_bits==64 && (Add||Mult)`, wide-compute via biguint,
+> mod 2^64, narrow back to uint64. Checked mul/add still revert on overflow (unaffected). Companion of the
+> uint64 unchecked-sub/exp fixes. Guard test_unchecked_uint64_mul_add. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v425
 
 > **fix(intN): signed div/mod by a narrower divisor sign-extends operands to commonType (d9004c0413, 2026-06-22):**
