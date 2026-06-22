@@ -997,3 +997,30 @@ def test_short_circuit_rhs_side_effects(harness):
     assert bo(harness.call(app, "cmpAnd(uint64,uint64)", 2, 4)) == 0
     assert bo(harness.call(app, "plainOr(bool,bool)", False, True)) == 1
     assert bo(harness.call(app, "plainOr(bool,bool)", False, False)) == 0
+
+
+def test_mixed_width_signed_bitwise(harness):
+    """puyasolRegression/contracts/mixed_width_signed_bitwise.sol — NOT an o.g. semantic test.
+
+    A mixed-width bitwise op with a narrower SIGNED operand reinterpreted it at the common width without
+    sign-extension: int128(-1) & int16(-32768) ANDed the raw 0x8000 (+32768) instead of the sign-extended
+    int128 value (-32768). FIX (solc-todo opportunity D residual): coerce BOTH integer operands to
+    commonType, mirroring the comparison path. Both narrower-left and narrower-right were wrong.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/mixed_width_signed_bitwise.sol")
+    def sint(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    I128MAX = (1 << 127) - 1
+    # narrower SIGNED operand must sign-extend to the common width before the bitwise op
+    assert sint(harness.call(app, "andSR(int128,int16)", -1, -32768)) == -32768   # all-ones & (..FF8000)
+    assert sint(harness.call(app, "andSR(int128,int16)", -1, -1)) == -1
+    assert sint(harness.call(app, "andSR(int128,int16)", I128MAX, -1)) == I128MAX  # & all-ones
+    assert sint(harness.call(app, "andSR(int128,int16)", 12, 6)) == 4              # plain positives
+    assert sint(harness.call(app, "andSL(int16,int128)", -1, 255)) == 255          # (all-ones) & 0xFF
+    assert sint(harness.call(app, "andSL(int16,int128)", 5, 3)) == 1
+    assert sint(harness.call(app, "orSR(int128,int16)", 0, -1)) == -1              # 0 | (all-ones)
+    assert sint(harness.call(app, "orSL(int16,int128)", -1, 0)) == -1
+    assert sint(harness.call(app, "xorSR(int128,int16)", -1, -1)) == 0
+    assert sint(harness.call(app, "andSL8(int8,int256)", -1, 0xFFFF)) == 0xFFFF    # int8(-1)->int256 all-ones
+    # unsigned mixed-width unaffected
+    assert as_int(harness.call(app, "addU(uint16,uint128)", 5, 100).abi_return) == 105

@@ -236,16 +236,39 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	}
 	if (hasBinOp)
 	{
-		// Use common-type builder for arithmetic overflow width (e.g. uint8+uint16 → uint16).
+		// Drive operand conversion off solc's commonType (mirrors the comparison path): coerce BOTH
+		// integer operands to commonType, canonicalising — sign-extend a narrower SIGNED operand to
+		// the common width. Else `int128 & int16(-1)` ANDs the raw 16-bit value, not the sign-extended
+		// int128 (the D-residual from solc-todo.md opportunity D; the narrower-RIGHT case was active,
+		// not just latent). Shifts keep the left's own type and the right is the untouched shift
+		// amount, so skip them; a non-integer commonType keeps the bare left reinterpret.
 		auto* arithBuilder = leftBuilder.get();
-		std::unique_ptr<eb::InstanceBuilder> commonBuilder;
-		if (commonSolType && commonSolType != leftSolType)
+		auto* arithRight = rightBuilder.get();
+		std::unique_ptr<eb::InstanceBuilder> commonLeftHold, commonRightHold;
+		bool isShift = (builderOp == eb::BuilderBinaryOp::LShift
+			|| builderOp == eb::BuilderBinaryOp::RShift);
+		if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType) && !isShift)
 		{
-			commonBuilder = m_ctx.builderForInstance(commonSolType, _left);
-			if (commonBuilder)
-				arithBuilder = commonBuilder.get();
+			auto* commonW = m_ctx.typeMapper.map(commonSolType);
+			if (commonSolType != leftSolType)
+			{
+				auto lv = builder::TypeCoercion::coerceToCommonInt(_left, leftSolType, commonW, m_loc);
+				commonLeftHold = m_ctx.builderForInstance(commonSolType, lv);
+				if (commonLeftHold) arithBuilder = commonLeftHold.get();
+			}
+			if (commonSolType != rightSolType)
+			{
+				auto rv = builder::TypeCoercion::coerceToCommonInt(_right, rightSolType, commonW, m_loc);
+				commonRightHold = m_ctx.builderForInstance(commonSolType, rv);
+				if (commonRightHold) arithRight = commonRightHold.get();
+			}
 		}
-		auto result = arithBuilder->binary_op(*rightBuilder, builderOp, m_loc);
+		else if (commonSolType && commonSolType != leftSolType)
+		{
+			commonLeftHold = m_ctx.builderForInstance(commonSolType, _left);
+			if (commonLeftHold) arithBuilder = commonLeftHold.get();
+		}
+		auto result = arithBuilder->binary_op(*arithRight, builderOp, m_loc);
 		if (result) return result->resolve();
 	}
 

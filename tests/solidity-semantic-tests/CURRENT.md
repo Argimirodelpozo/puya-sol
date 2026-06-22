@@ -1,3 +1,18 @@
+# Semantic Test Status — v434
+
+> **fix(intN): mixed-width signed bitwise sign-extends both operands to commonType (2026-06-22):**
+> **57 failed / 1285 passed / 87 xf** (zero-reg; +mixed_width_signed_bitwise guard). Found while applying
+> solc-todo opportunity D's residual (driving arith/bitwise operand conversion off solc's commonType). A
+> mixed-width bitwise op (`&`/`|`/`^`) with a narrower SIGNED operand was reinterpreted at the common width
+> WITHOUT sign-extension: `int128(-1) & int16(-32768)` ANDed the raw 16-bit 0x8000 (+32768) instead of the
+> sign-extended int128 0x..FF8000 (−32768). BOTH narrower-left and narrower-right were wrong (the arith-path
+> reinterpret only ever touched the left, and even that without value conversion). Active bug, not just the
+> "latent" the residual note predicted. FIX (SolBinaryOperation hasBinOp path): coerce BOTH integer operands
+> to commonType via `coerceToCommonInt` (canonicalising / sign-extending), mirroring the comparison path
+> (v424). Shifts are skipped (the right operand is the shift amount, kept in its own type); a non-integer
+> commonType keeps the bare reinterpret; unsigned operands zero-extend (unchanged). Verified across
+> &/|/^ at int8/16/128/256 mixed widths + shift + unsigned controls. Guard test_mixed_width_signed_bitwise.
+
 # Semantic Test Status — v433
 
 > **fix: short-circuit && / || gate a side-effecting RHS behind the condition (2026-06-22):**
