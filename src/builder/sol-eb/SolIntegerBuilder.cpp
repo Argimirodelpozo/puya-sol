@@ -587,7 +587,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 			auto invert = awst::makeBitInvert(std::move(extract), awst::WType::bytesType(), _loc);
 
-			auto cast = awst::makeAsBiguint(std::move(invert), _loc);
+			std::shared_ptr<awst::Expression> cast = awst::makeAsBiguint(std::move(invert), _loc);
+			// ~x is defined mod 2^N, but the 32-byte invert sets all 256 bits — `~uint128(0)` would be
+			// 2^256-1, not 2^128-1. Consumers that mask (store/return/`& y`/compare) hide it, but a
+			// downstream CHECKED add overflow-checks the un-masked value (`(~b)+a` tests 2^256-1 <=
+			// 2^128-1 -> false-revert). Mask sub-256 back to 2^bits. Found by the fuzzer.
+			if (m_bits < 256)
+				cast = awst::makeBigUIntBinOp(std::move(cast), awst::BigUIntBinaryOperator::Mod,
+					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
+						awst::WType::biguintType()), _loc);
 			return wrap(std::move(cast));
 		}
 		{

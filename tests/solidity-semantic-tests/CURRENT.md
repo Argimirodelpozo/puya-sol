@@ -1,3 +1,16 @@
+# Semantic Test Status — v428
+
+> **fix(intN): biguint bitwise-NOT masks to the type width (2026-06-22):**
+> **57 failed / 1279 passed / 87 xf** (zero-reg; +bitinvert_subword_mask guard). Found by the overnight
+> generative fuzzer (--cast). Bitwise NOT of a sub-256 biguint type (uint65..uint248) inverted the full
+> 32-byte word, so `~uint128(0)` produced 2^256-1 instead of the mod-2^N value 2^128-1. Consumers that
+> re-mask (store / return / `& y` / compare) hid it, but a downstream CHECKED add overflow-checks the
+> un-masked value: `(~b) + a` tested `2^256-1 <= 2^128-1` and FALSE-REVERTED, and `(~c) / max` returned
+> ~2^128 not 1 (which also flipped a ternary condition into the reverting branch). Same non-canonical
+> sub-256 biguint class as the v427 left-shift truncation. FIX (SolIntegerBuilder BitInvert, m_isBigUInt
+> branch): after the 32-byte invert + asBiguint, mask `result mod 2^m_bits` for m_bits < 256; uint256
+> keeps the full-width invert. Guard test_bitinvert_subword_mask. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v427
 
 > **fix(intN): sub-word/uint64 left-shift truncates to the type width (2026-06-22):**

@@ -807,3 +807,30 @@ def test_subword_shift_truncate(harness):
     assert bo(harness.call(app, "shlCmpU64(uint64)", (1 << 64) - 1)) == 1
     # value correct when consumed in further arithmetic: 254<<1=252, 252|1 == 253
     assert as_int(harness.call(app, "shlMaskU8(uint8)", 254).abi_return) == 253
+
+
+def test_bitinvert_subword_mask(harness):
+    """puyasolRegression/contracts/bitinvert_subword_mask.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). Bitwise NOT of a sub-256 biguint type inverted the full
+    32-byte word, so ~uint128(0) was 2^256-1 not 2^128-1. A downstream checked add overflow-checks the
+    un-masked value: (~b)+a tested 2^256-1 <= 2^128-1 and false-reverted; (~c)/max returned ~2^128 not 1.
+    FIX: mask the biguint ~x result back to 2^bits for m_bits < 256.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/bitinvert_subword_mask.sol")
+    MAX128 = (1 << 128) - 1
+    # ~0 == 2^128-1 (mod 2^128), so ~0 + 0 == max (was a false-revert)
+    assert as_int(harness.call(app, "invAddU128(uint128,uint128)", 0, 0).abi_return) == MAX128
+    assert as_int(harness.call(app, "invAddU128(uint128,uint128)", 5, 3).abi_return) == (MAX128 - 5 + 3)
+    # real overflow still reverts: ~0 + 1 == 2^128 overflows uint128
+    assert harness.call(app, "invAddU128(uint128,uint128)", 0, 1, expect_revert=True).reverted
+    # ~0 / max == 1 (was ~2^128); ~1 / max == 0
+    assert as_int(harness.call(app, "invDivU128(uint128)", 0).abi_return) == 1
+    assert as_int(harness.call(app, "invDivU128(uint128)", 1).abi_return) == 0
+    # ~c stays within the type width
+    assert as_int(harness.call(app, "invMaskU128(uint128)", 0).abi_return) == 1
+    assert as_int(harness.call(app, "invMaskU128(uint128)", 12345).abi_return) == 1
+    # width-general (uint192): ~1 + 1 == 2^192-1
+    assert as_int(harness.call(app, "invAddU192(uint192)", 1).abi_return) == (1 << 192) - 1
+    # uint256 full-width invert unaffected: ~0 == 2^256-1
+    assert as_int(harness.call(app, "invU256(uint256)", 0).abi_return) == (1 << 256) - 1
