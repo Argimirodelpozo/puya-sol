@@ -759,3 +759,27 @@ def test_signed_mixedwidth_divmod(harness):
     assert s(harness.call(app, "div128_8(int128,int8)", 1000, -3)) == -333
     assert s(harness.call(app, "div256_16(int256,int16)", -(1 << 200), -32768)) == (1 << 200) // 32768
     assert s(harness.call(app, "mod256_16(int256,int16)", (1 << 200) + 5, 32767)) == ((1 << 200) + 5) % 32767
+
+
+def test_unchecked_uint64_mul_add(harness):
+    """puyasolRegression/contracts/unchecked_uint64_mul_add.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). unchecked uint64 mul/add that overflows 2^64 reverted (the
+    AVM `*`/`+` panic on overflow) where Solidity wraps mod 2^64. The sub-word path masks to 2^N and
+    Sub/Pow at uint64 were routed through wrapping paths, but full-width uint64 Add/Mult fell through to
+    the panicking opcode. FIX: uint64 unchecked Add/Mult wide-compute via biguint, mod 2^64, narrow back.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/unchecked_uint64_mul_add.sol")
+    MAX = (1 << 64) - 1
+    M = 1 << 64
+    # unchecked: wrap mod 2^64 (was a revert)
+    assert as_int(harness.call(app, "mul(uint64,uint64)", MAX, 2).abi_return) == (MAX * 2) % M  # 2^64-2
+    assert as_int(harness.call(app, "mul(uint64,uint64)", MAX, MAX).abi_return) == (MAX * MAX) % M  # 1
+    assert as_int(harness.call(app, "mul(uint64,uint64)", 1 << 40, 1 << 40).abi_return) == ((1 << 80) % M)  # 0
+    assert as_int(harness.call(app, "mul(uint64,uint64)", 7, 9).abi_return) == 63  # no overflow unaffected
+    assert as_int(harness.call(app, "add(uint64,uint64)", MAX, 5).abi_return) == (MAX + 5) % M  # 4
+    assert as_int(harness.call(app, "add(uint64,uint64)", 100, 200).abi_return) == 300
+    # checked: still reverts on overflow
+    assert harness.call(app, "mulChecked(uint64,uint64)", MAX, 2, expect_revert=True).reverted
+    assert harness.call(app, "addChecked(uint64,uint64)", MAX, 5, expect_revert=True).reverted
+    assert as_int(harness.call(app, "mulChecked(uint64,uint64)", 7, 9).abi_return) == 63  # in-range ok

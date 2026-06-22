@@ -215,6 +215,25 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	e->left = std::move(lhs);
 	e->right = std::move(rhs);
 
+	// uint64 (m_bits==64) unchecked Add/Mult: the AVM `+`/`*` opcodes PANIC on overflow,
+	// but Solidity `unchecked` wraps mod 2^64. (Sub is force-routed through the biguint
+	// wrapping path above; Pow is handled in its case; sub-word <64 masks below — only
+	// the full-width Add/Mult fell through to the panicking opcode.) Wide-compute via
+	// biguint, mod 2^64, narrow back to uint64 (low 8 bytes).
+	if (m_scope.isUnchecked() && !m_signed && m_bits == 64
+		&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
+	{
+		auto lb = promoteToBigUInt(std::move(e->left), _loc);
+		auto rb = promoteToBigUInt(std::move(e->right), _loc);
+		auto big = awst::makeBigUIntBinOp(std::move(lb),
+			_op == BuilderBinaryOp::Add ? awst::BigUIntBinaryOperator::Add
+				: awst::BigUIntBinaryOperator::Mult,
+			std::move(rb), _loc);
+		auto mod = awst::makeBigUIntBinOp(std::move(big), awst::BigUIntBinaryOperator::Mod,
+			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
+		return wrap(TypeCoercion::implicitNumericCast(std::move(mod), awst::WType::uint64Type(), _loc));
+	}
+
 	switch (_op)
 	{
 	case BuilderBinaryOp::Add: e->op = awst::UInt64BinaryOperator::Add; break;
