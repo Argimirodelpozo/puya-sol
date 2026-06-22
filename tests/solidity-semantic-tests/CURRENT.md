@@ -1,3 +1,18 @@
+# Semantic Test Status — v425
+
+> **fix(intN): signed div/mod by a narrower divisor sign-extends operands to commonType (d9004c0413, 2026-06-22):**
+> **57 failed / 1276 passed / 87 xf** (zero-reg; +signed_mixedwidth_divmod guard). Found by the generative
+> fuzzer (mixed-width arithmetic, while testing the D arithmetic path). SIGNED division/modulo with a
+> biguint-backed dividend (int128/int256) and a NARROWER signed divisor returned garbage: `int128 / int16`
+> gave 0, `%` gave the dividend. buildSignedDivMod masks both operands to N (commonType) bits and reads sign
+> via `>= 2^(N-1)`, but a narrow divisor (int16 -32768) arrives sign-extended only in its own 64-bit slot
+> (2^64-32768) and masks to a huge POSITIVE N-bit value -> wrong abs (small / huge = 0). FIX: coerceToCommonInt
+> each operand to canonical commonType (sign-extend from its OWN width) before buildSignedDivMod
+> (SolBinaryOperation, the non-compound `x/y` path); the compound `x/=y` path (binary_op -> eb::buildSignedModDiv,
+> which tests `>= 2^255`) gets the same sign-extension. Clean when divisor==dividend width / uint64-backed
+> dividend / unsigned. Reuses the v424 coerceToCommonInt helper. Guard test_signed_mixedwidth_divmod.
+> [[differential-fuzzing-spike]] [[signed-mixedwidth-div-bug]]
+
 # Semantic Test Status — v424
 
 > **refactor(intN): drive comparison operand conversion off solc commonType (aa1f493e57, 2026-06-22):**
