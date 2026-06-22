@@ -167,6 +167,17 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 		if (m_signed && (_op == BuilderBinaryOp::Mod || _op == BuilderBinaryOp::FloorDiv))
 		{
+			// buildSignedModDiv reads sign from `value >= 2^255`, so it needs canonical
+			// 256-bit two's complement. promoteToBigUInt above ZERO-extends, so a narrower
+			// signed operand (e.g. int16 -32768 -> 2^64-32768) reads as a huge POSITIVE
+			// number -> wrong abs/sign (int128/int16 div returned 0). Sign-extend each from
+			// its own width (idempotent for already-canonical int128/int256 operands).
+			unsigned lhsBits = _reverse ? otherInt->numBits() : m_bits;
+			unsigned rhsBits = _reverse ? m_bits : otherInt->numBits();
+			if (lhsBits < 256)
+				lhs = TypeCoercion::signExtendToUint256(std::move(lhs), lhsBits, _loc);
+			if (rhsBits < 256)
+				rhs = TypeCoercion::signExtendToUint256(std::move(rhs), rhsBits, _loc);
 			auto result = buildSignedModDiv(std::move(lhs), std::move(rhs), _op, _loc);
 			return wrap(std::move(result));
 		}

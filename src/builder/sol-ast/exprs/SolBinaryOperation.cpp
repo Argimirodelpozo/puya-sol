@@ -231,6 +231,17 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			if (op == Token::Div || op == Token::AssignDiv
 				|| op == Token::Mod || op == Token::AssignMod)
 			{
+				// buildSignedDivMod masks both operands to N (commonType) bits and reads
+				// sign from `>= 2^(N-1)`, so each must be canonical at the common width. A
+				// narrower signed divisor (int16 -32768) arrives sign-extended only in its
+				// own 64-bit slot (2^64-32768) and masks to a huge POSITIVE N-bit value ->
+				// wrong abs (int128/int16 div/mod returned 0 / the dividend). Sign-extend
+				// each from its own width to canonical commonType first.
+				auto* commonW = m_ctx.typeMapper.map(commonType);
+				left = builder::TypeCoercion::coerceToCommonInt(
+					std::move(left), m_binOp.leftExpression().annotation().type, commonW, m_loc);
+				right = builder::TypeCoercion::coerceToCommonInt(
+					std::move(right), m_binOp.rightExpression().annotation().type, commonW, m_loc);
 				return buildSignedDivMod(op, std::move(left), std::move(right), intType);
 			}
 			if (op == Token::Exp)

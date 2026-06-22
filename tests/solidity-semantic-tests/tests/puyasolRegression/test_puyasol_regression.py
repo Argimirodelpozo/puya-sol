@@ -737,3 +737,25 @@ def test_memory_subword_aggregate(harness):
     assert as_int(harness.call(app, "arr_idx(uint128,uint128,uint128,uint256)", 10, 20, 30, 2).abi_return) == 30
     assert s(harness.call(app, "sarr_idx(int16,int16,uint256)", 5, -7, 1)) == -7
     assert s(harness.call(app, "sarr_idx(int16,int16,uint256)", 5, -7, 2)) == -1
+
+
+def test_signed_mixedwidth_divmod(harness):
+    """puyasolRegression/contracts/signed_mixedwidth_divmod.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (mixed-width arithmetic). Signed div/mod with a biguint-backed dividend
+    (int128/int256) and a NARROWER signed divisor returned garbage (int128/int16 div -> 0, mod -> the
+    dividend) because buildSignedDivMod masked both to N (commonType) bits and read sign via >= 2^(N-1),
+    but the narrow divisor was sign-extended only in its 64-bit slot (2^64-32768), masking to a huge
+    POSITIVE value. FIX: coerceToCommonInt each operand to canonical commonType before buildSignedDivMod.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_mixedwidth_divmod.sol")
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v >= (1 << 255) else v
+    # int128 / int16
+    assert s(harness.call(app, "div128_16(int128,int16)", 100, -7)) == -14          # trunc toward zero
+    assert s(harness.call(app, "div128_16(int128,int16)", -8388609, -32768)) == 256  # was 0
+    assert s(harness.call(app, "mod128_16(int128,int16)", -8388609, -32768)) == -1   # was the dividend
+    assert s(harness.call(app, "mod128_16(int128,int16)", 100, -7)) == 2             # sign of dividend
+    assert s(harness.call(app, "div128_8(int128,int8)", 1000, -3)) == -333
+    assert s(harness.call(app, "div256_16(int256,int16)", -(1 << 200), -32768)) == (1 << 200) // 32768
+    assert s(harness.call(app, "mod256_16(int256,int16)", (1 << 200) + 5, 32767)) == ((1 << 200) + 5) % 32767
