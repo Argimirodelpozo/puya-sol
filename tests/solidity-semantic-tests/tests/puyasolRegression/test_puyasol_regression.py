@@ -964,3 +964,36 @@ def test_const_negate_typemin(harness):
     assert sint(harness.call(app, "negVar(int16)", 100)) == -100
     assert sint(harness.call(app, "negVar(int16)", -5)) == 5
     assert harness.call(app, "negVar(int16)", -32768, expect_revert=True).reverted  # runtime min still reverts
+
+
+def test_short_circuit_rhs_side_effects(harness):
+    """puyasolRegression/contracts/short_circuit_rhs_side_effects.sol — NOT an o.g. semantic test.
+
+    The RHS of a short-circuit && / || with side effects (a checked op's overflow/zero assert) had those
+    side effects HOISTED to the enclosing statement, so they ran unconditionally: `b != 0 && a/b > x`
+    divided by zero when b==0, and `(b==0) || (a/b==0)` reverted when b==0, where EVM short-circuits. FIX:
+    capture the RHS pre-statements and gate them behind the condition via an if/else (like the ternary).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/short_circuit_rhs_side_effects.sol")
+    bo = lambda r: as_int(r.abi_return)
+    I64MIN = -(1 << 63)
+    I64MAX = (1 << 63) - 1
+    # b==0 short-circuits -> RHS (a/b) is NOT evaluated -> no div-by-zero revert
+    assert bo(harness.call(app, "orDiv(int64,int64)", 10, 0)) == 1          # was a revert
+    assert bo(harness.call(app, "andDiv(int64,int64)", 10, 0)) == 0         # was a revert
+    assert bo(harness.call(app, "orNeg(int64,int64)", I64MIN, 0)) == 1      # was a revert (-min overflow)
+    assert bo(harness.call(app, "orAdd(int64,int64,int64)", I64MIN, I64MIN, 0)) == 1
+    assert bo(harness.call(app, "nested(int64,int64,int64)", 10, 0, 0)) == 1
+    # branch taken -> RHS IS evaluated -> correct value / real revert preserved
+    assert bo(harness.call(app, "orDiv(int64,int64)", 10, 2)) == 0          # 5 == 0 -> false
+    assert bo(harness.call(app, "orDiv(int64,int64)", 0, 5)) == 1           # 0 == 0 -> true
+    assert bo(harness.call(app, "andDiv(int64,int64)", 100, 10)) == 1       # 10 > 5 -> true
+    assert bo(harness.call(app, "andDiv(int64,int64)", 10, 10)) == 0        # 1 > 5 -> false
+    assert bo(harness.call(app, "rhsTaken(int64,int64)", 5, 1)) == 1        # 6 > 5
+    assert bo(harness.call(app, "rhsTaken(int64,int64)", 5, 0)) == 0        # short-circuit false
+    assert harness.call(app, "rhsTaken(int64,int64)", I64MAX, 1, expect_revert=True).reverted  # a+1 overflows when taken
+    # plain &&/|| unchanged
+    assert bo(harness.call(app, "cmpAnd(uint64,uint64)", 5, 4)) == 1
+    assert bo(harness.call(app, "cmpAnd(uint64,uint64)", 2, 4)) == 0
+    assert bo(harness.call(app, "plainOr(bool,bool)", False, True)) == 1
+    assert bo(harness.call(app, "plainOr(bool,bool)", False, False)) == 0

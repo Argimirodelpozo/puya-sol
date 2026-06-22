@@ -23,6 +23,11 @@ private:
 	std::shared_ptr<awst::Expression> tryUserDefinedOp();
 	/// Handle compile-time constant folding.
 	std::shared_ptr<awst::Expression> tryConstantFold();
+	/// Short-circuit && / || whose RHS has side effects (pre-statements, e.g. a checked op that can
+	/// revert): gate those side effects behind the condition so they run only when the RHS is reached
+	/// (`b != 0 && a / b > x` must not divide when b == 0). Returns nullptr for non-&&/|| or a
+	/// side-effect-free RHS (the plain boolean lowering then applies). Mirrors the ternary (SolConditional).
+	std::shared_ptr<awst::Expression> trySolShortCircuit();
 	/// Try sol-eb builder dispatch for comparison operators.
 	std::shared_ptr<awst::Expression> trySolEbDispatch(
 		std::shared_ptr<awst::Expression> _left,

@@ -99,6 +99,63 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 	return nullptr;
 }
 
+std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
+{
+	auto op = m_binOp.getOperator();
+	if (op != Token::And && op != Token::Or)
+		return nullptr;
+
+	auto left = buildExpr(m_binOp.leftExpression());
+
+	// Build the RHS, capturing any side effects it pushes (a checked op's overflow/zero assert, a
+	// `**` square-and-multiply loop, a nested short-circuit). They must run ONLY when the RHS is
+	// evaluated, else `b != 0 && a / b > x` divides by zero when b == 0 (EVM short-circuits).
+	auto preBefore = m_ctx.prePendingStatements.size();
+	auto right = buildExpr(m_binOp.rightExpression());
+	std::vector<std::shared_ptr<awst::Statement>> rhsSideEffects;
+	if (m_ctx.prePendingStatements.size() > preBefore)
+	{
+		rhsSideEffects.assign(
+			std::make_move_iterator(m_ctx.prePendingStatements.begin() + preBefore),
+			std::make_move_iterator(m_ctx.prePendingStatements.end()));
+		m_ctx.prePendingStatements.erase(
+			m_ctx.prePendingStatements.begin() + preBefore,
+			m_ctx.prePendingStatements.end());
+	}
+
+	auto boolOp = (op == Token::And)
+		? awst::BinaryBooleanOperator::And : awst::BinaryBooleanOperator::Or;
+	if (rhsSideEffects.empty())
+		return awst::makeBoolBinOp(std::move(left), boolOp, std::move(right), m_loc);
+
+	// RHS has side effects -> gate them behind the condition (mirror the ternary, SolConditional):
+	//   a && b  ==  a ? b : false   (b runs iff a is true)
+	//   a || b  ==  a ? true : b    (b runs iff a is false)
+	static int s_counter = 0;
+	std::string tempName = "__sc_" + std::to_string(s_counter++);
+	auto* boolType = awst::WType::boolType();
+
+	auto rhsBlock = awst::makeBlock(m_loc);
+	for (auto& st: rhsSideEffects)
+		rhsBlock->body.push_back(std::move(st));
+	rhsBlock->body.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tempName, boolType, m_loc), std::move(right), m_loc));
+
+	auto shortBlock = awst::makeBlock(m_loc);
+	shortBlock->body.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tempName, boolType, m_loc),
+		awst::makeBoolConstant(op == Token::Or, m_loc), m_loc));
+
+	if (op == Token::And)
+		m_ctx.prePendingStatements.push_back(
+			awst::makeIfElse(std::move(left), std::move(rhsBlock), std::move(shortBlock), m_loc));
+	else
+		m_ctx.prePendingStatements.push_back(
+			awst::makeIfElse(std::move(left), std::move(shortBlock), std::move(rhsBlock), m_loc));
+
+	return awst::makeVarExpression(tempName, boolType, m_loc);
+}
+
 std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right)
@@ -203,6 +260,10 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 
 	// 2. Constant folding
 	if (auto result = tryConstantFold())
+		return result;
+
+	// 2b. Short-circuit && / || whose RHS has side effects: gate them behind the condition.
+	if (auto result = trySolShortCircuit())
 		return result;
 
 	// 3. Build operands

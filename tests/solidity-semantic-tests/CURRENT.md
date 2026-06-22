@@ -1,3 +1,20 @@
+# Semantic Test Status — v433
+
+> **fix: short-circuit && / || gate a side-effecting RHS behind the condition (2026-06-22):**
+> **57 failed / 1284 passed / 87 xf** (zero-reg; +short_circuit_rhs_side_effects guard). Found while
+> fixing the signed-mul finding. The RHS of a short-circuit `&&`/`||` whose evaluation has SIDE EFFECTS
+> (a checked op's overflow/zero assert, a `**` square-and-multiply loop, a nested short-circuit) was
+> lowered with those side effects pushed to prePendingStatements and HOISTED to the enclosing statement,
+> so they ran UNCONDITIONALLY. EVM short-circuits: the classic guard idiom `b != 0 && a / b > x` divided
+> by zero when b==0, and `(b == 0) || (a / b == 0)` reverted when b==0 (and `(-a)`, `a**2`, `a+b` overflow
+> in a `||` RHS all false-reverted). The ternary (SolConditional) already scoped its branches correctly;
+> `&&`/`||` did not. FIX (SolBinaryOperation::trySolShortCircuit, dispatched after constant-fold): build
+> the RHS, capture the pre-statements it pushed, and gate them behind the condition via an if/else
+> (`a && b == a ? b : false`; `a || b == a ? true : b`) — mirroring the ternary. The side effect still
+> runs when the branch IS taken (no over-suppression); plain `&&`/`||` with no RHS side effects keep the
+> existing makeBoolBinOp lowering byte-for-byte. Verified: div/mod/neg/pow/add overflow in a guarded RHS,
+> nested short-circuits, branch-taken reverts preserved. Guard test_short_circuit_rhs_side_effects.
+
 # Semantic Test Status — v432
 
 > **fix(intN): `-type(intN).min` constant negation reverts (overflow) (2026-06-22):**
