@@ -161,6 +161,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			bool skipUnsignedAssert = m_signed || m_scope.isUnchecked();
 			auto result = buildWrappingSubtract(m_ctx, skipUnsignedAssert, std::move(lhs), std::move(rhs), _loc);
 			result = emitOverflowCheck(std::move(result), _op, _loc);
+			// Unchecked unsigned sub-256 biguint underflow wraps to 2^256 (buildWrappingSubtract),
+			// but Solidity wraps to 2^N: `uint128(0) - 1` is 2^128-1, not 2^256-1. Mask to the type
+			// width so checked consumers and `<= uintN.max` don't see a non-canonical value. (uint64
+			// narrows below; checked sub asserted a>=b so its result is in range; signed keeps 256-bit
+			// two's complement.) Found by the differential fuzzer.
+			if (m_scope.isUnchecked() && !m_signed && m_isBigUInt && m_bits < 256)
+				result = awst::makeBigUIntBinOp(std::move(result), awst::BigUIntBinaryOperator::Mod,
+					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
+						awst::WType::biguintType()), _loc);
 			// uint64 routed here for unchecked-underflow wrapping (above): the 256-bit wrap narrows
 			// to uint64 = the correct mod-2^64 value, and composes with surrounding uint64 ops.
 			if (!m_isBigUInt && result->wtype == awst::WType::biguintType())
@@ -172,7 +181,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (_op == BuilderBinaryOp::Pow)
 		{
 			auto result = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), std::move(lhs), std::move(rhs), _loc);
-			return wrap(emitOverflowCheck(std::move(result), _op, _loc));
+			result = emitOverflowCheck(std::move(result), _op, _loc);
+			// Unchecked sub-256 biguint exp wraps products mod 2^256 (buildBigUIntExp), but Solidity
+			// wraps to 2^N: e.g. `uint128 a ** 2` must be mod 2^128. Mask to the type width (same as the
+			// unchecked sub fix above). Found by the differential fuzzer.
+			if (m_scope.isUnchecked() && !m_signed && m_isBigUInt && m_bits < 256)
+				result = awst::makeBigUIntBinOp(std::move(result), awst::BigUIntBinaryOperator::Mod,
+					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
+						awst::WType::biguintType()), _loc);
+			return wrap(std::move(result));
 		}
 
 		if (m_signed && (_op == BuilderBinaryOp::Mod || _op == BuilderBinaryOp::FloorDiv))

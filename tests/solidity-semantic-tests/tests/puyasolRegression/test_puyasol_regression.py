@@ -864,3 +864,37 @@ def test_signed_to_unsigned_cast_trim(harness):
     # sanity: uint256(int256(-1)) stays full-width 2^256-1 (fix must NOT trim this)
     assert as_int(harness.call(app, "u256ofI256(int256)", -1).abi_return) == (1 << 256) - 1
     assert as_int(harness.call(app, "u256ofI256(int256)", 5).abi_return) == 5
+
+
+def test_unchecked_biguint_sub_exp_wrap(harness):
+    """puyasolRegression/contracts/unchecked_biguint_sub_exp_wrap.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). Unchecked sub-256 biguint subtraction (underflow) and
+    exponentiation wrapped to 2^256 instead of the type width 2^N — `unchecked uint128(0) - 1` was 2^256-1
+    not 2^128-1, and `uint128 a ** 2` kept the full product. The return path re-masked, so it only
+    surfaced when consumed: `<= type(uint128).max` returned the wrong boolean. FIX: mask the unchecked
+    unsigned sub-256 biguint sub/exp result to 2^N. Mul/Add already wrapped; uint256 keeps full width.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/unchecked_biguint_sub_exp_wrap.sol")
+    M128 = 1 << 128
+    MAX128 = M128 - 1
+    # unchecked sub underflow wraps mod 2^128 (was 2^256-1)
+    assert as_int(harness.call(app, "usub(uint128,uint128)", 0, 1).abi_return) == MAX128
+    assert as_int(harness.call(app, "usub(uint128,uint128)", 5, 8).abi_return) == (5 - 8) % M128
+    assert as_int(harness.call(app, "usub(uint128,uint128)", 100, 40).abi_return) == 60
+    assert as_int(harness.call(app, "usubCmp(uint128,uint128)", 0, 1).abi_return) == 1  # was 0
+    # unchecked exp wraps mod 2^128
+    assert as_int(harness.call(app, "uexp(uint128)", 1 << 64).abi_return) == ((1 << 128) % M128)  # 0
+    assert as_int(harness.call(app, "uexp(uint128)", MAX128).abi_return) == ((MAX128 * MAX128) % M128)  # 1
+    assert as_int(harness.call(app, "uexp(uint128)", 3).abi_return) == 9
+    assert as_int(harness.call(app, "uexpCmp(uint128)", 1 << 64).abi_return) == 1  # was 0
+    # width-general
+    assert as_int(harness.call(app, "usub200(uint200,uint200)", 0, 1).abi_return) == (1 << 200) - 1
+    assert as_int(harness.call(app, "uexp160(uint160)", 1 << 80).abi_return) == 0  # (2^80)^2 mod 2^160
+    # checked still reverts
+    assert harness.call(app, "csub(uint128,uint128)", 0, 1, expect_revert=True).reverted
+    assert harness.call(app, "cexp(uint128)", 1 << 64, expect_revert=True).reverted
+    assert as_int(harness.call(app, "csub(uint128,uint128)", 8, 5).abi_return) == 3  # in-range ok
+    # add/mul still wrap correctly (unchanged)
+    assert as_int(harness.call(app, "uadd(uint128,uint128)", MAX128, 5).abi_return) == ((MAX128 + 5) % M128)
+    assert as_int(harness.call(app, "umul(uint128,uint128)", MAX128, 2).abi_return) == ((MAX128 * 2) % M128)

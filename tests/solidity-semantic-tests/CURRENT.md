@@ -1,3 +1,19 @@
+# Semantic Test Status — v430
+
+> **fix(intN): unchecked biguint subtraction + exponentiation wrap to the type width (2026-06-22):**
+> **57 failed / 1281 passed / 87 xf** (zero-reg; +unchecked_biguint_sub_exp_wrap guard). Found by the
+> overnight generative fuzzer (--cast), via a proactive probe of the same non-canonical-biguint class as
+> the v427/v428/v429 fixes. Unchecked sub-256 biguint (uint65..uint248) SUBTRACTION (underflow) and
+> EXPONENTIATION wrapped to 2^256 — buildWrappingSubtract uses `(a + 2^256 - b) % 2^256`; buildBigUIntExp
+> wraps products mod 2^256 — instead of the type width 2^N. So `unchecked uint128(0) - 1` was 2^256-1 not
+> 2^128-1, and `uint128 a ** 2` kept the full product. The return path re-masked, so it only surfaced when
+> consumed: `<= type(uint128).max` returned the WRONG boolean (soundness), and checked consumers would
+> false-revert. Mul/Add already wrapped correctly (their biguint paths mod 2^N). FIX (SolIntegerBuilder
+> binary_op Sub + Pow paths): mask the result to 2^m_bits for `isUnchecked && !m_signed && m_isBigUInt &&
+> m_bits < 256`; uint256 keeps the full 2^256 wrap; checked sub/exp still revert (assert / overflow check
+> unaffected). Companion of the uint64 unchecked mul/add wrap (v426) and the shift/bitwise-NOT/cast-trim
+> canonicalisation fixes. Guard test_unchecked_biguint_sub_exp_wrap. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v429
 
 > **fix(intN): signed->unsigned biguint cast trims to the target width (2026-06-22):**
