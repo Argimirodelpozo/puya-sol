@@ -85,18 +85,20 @@ width/sign bugs live.
 
 Where: `SolBinaryOperation.cpp`, `TypeCoercion.cpp` (implicitNumericCast / promotion).
 
-**Investigated 2026-06-21 (comparisons):** net-additive, NOT a reduction. `compare()` has one
-caller (`SolBinaryOperation.cpp:145`) and comparisons don't use `commonType` today — but its
-per-operand promotion already handles mixed widths correctly, so coercing to `commonType` first
-*duplicates* it rather than replacing it. The canonicalization (cast/equality sign-extend) must stay
-regardless (commonType only handles cross-width; same-width non-canonical operands still need it).
-`narrowConstIfNegative` (~25 lines) can't be removed because literal operands (`x == -128`) are
-`RationalNumberType`, bypass an integer-typed coercion guard, and still reach `compare()` mismatched.
-**Residual real win:** the *arithmetic* path (`SolBinaryOperation.cpp:170-178`) uses
-`builderForInstance(commonType, _left)` which *reinterprets* the operand without converting the value
-— a latent signed-widening gap (a non-canonical operand in `int8 + int16` zero-extends the sign).
-Making it *coerce* via `signExtendSignedWiden` would be correct-by-construction. (Today's cast/equality
-fixes plug it at the source, so it's latent, not active.)
+**DONE 2026-06-22 (comparisons), v424 (aa1f493e57).** The earlier "net-additive" read missed the key move:
+make the `commonType` coercion ALSO canonicalize (sign-extend from each operand's own width), and it
+*replaces* `compare()`'s per-operand machinery instead of duplicating it. SolBinaryOperation coerces both
+integer comparison operands to the op's `commonType` via one shared `TypeCoercion::coerceToCommonInt`;
+`compare()` then gets uniform same-width canonical operands and **deleted** both `narrowConstIfNegative`
+(the fragile biguint-const mod-2^64 hack) and the inline ordering+equality sign-extension — it collapses
+to resolve -> promoteToBigUInt -> sign-bit XOR. The literal-operand objection dissolves because we coerce
+TO `commonType` (always the integer common type) rather than guarding on the operand's own
+`RationalNumberType`. Roughly LOC-neutral but structurally a real win: the scattered per-operand fix-ups
+become one solc-`commonType`-driven point. Verified zero-reg + 191-call mixed-width fuzz + signed guards.
+**Residual (still open):** the *arithmetic* path (`SolBinaryOperation.cpp` binary_op + AssignmentHelper)
+still `builderForInstance`-reinterprets the left operand to `commonType` without converting — apply the
+same `coerceToCommonInt` there to make it correct-by-construction (latent only, since canonicalization
+fixes plug the source).
 
 ## E. `FunctionType::externalSignature()` for canonical signature strings
 Method *selectors* are ARC4 (different scheme), but the canonical-param-type-name string
@@ -122,7 +124,8 @@ than reimplement super/interface dispatch (likely already partly used via
 ### Priority
 1. ~~**A** (ConstantEvaluator / canonical constants)~~ — **DONE** (v420-v422): type(T).min/max + SolLiteral
    dead-branch + shared canonicalIntConstant/rationalIntConstant; const-fold gap debunked (never existed).
-2. ~~**D** (commonType for comparisons)~~ — investigated, net-additive (see note above); residual = the
-   arith-path coerce-vs-reinterpret tweak, still open.
+2. ~~**D** (commonType for comparisons)~~ — **DONE** v424: coerceToCommonInt drives comparison operand
+   conversion off solc commonType; deleted narrowConstIfNegative + inline compare() canonicalization.
+   Residual = apply the same coercion to the arith-path (binary_op) left-operand reinterpret, still open.
 3. **C** (size from solc) and **B** (storage layout from solc) — next tier, untouched.
 4. **E / F / G** — larger or partial-reuse refactors, untouched.

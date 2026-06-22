@@ -1,3 +1,18 @@
+# Semantic Test Status — v424
+
+> **refactor(intN): drive comparison operand conversion off solc commonType (aa1f493e57, 2026-06-22):**
+> **57 failed / 1275 passed / 87 xf** (zero-reg, behavior-preserving). solc-todo.md opportunity D, done
+> right. SolBinaryOperation now coerces both integer comparison operands to the op's solc `commonType`
+> (canonicalising) via one shared TypeCoercion::coerceToCommonInt — convert the wtype, sign-extend a
+> signed operand from its own source width; a literal (RationalNumberType) just narrows its biguint
+> constant to the canonical low-64-bit TC. So compare() receives uniform same-width canonical operands and
+> its hand-rolled per-operand machinery is gone: deleted `narrowConstIfNegative` (the fragile biguint-const
+> mod-2^64 hack) AND the inline ordering+equality sign-extension added earlier this session — compare()
+> collapses to resolve -> promoteToBigUInt -> sign-bit XOR. Shifts/exp are naturally excluded (their
+> commonType is null/non-unified); arithmetic (binary_op) path unchanged. Verified: 191-call mixed-width
+> signed/unsigned comparison fuzz + signed_subword_compare/equality + negation guards all clean vs live
+> EVM. One solc-commonType-driven point replaces the scattered fix-ups. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v423
 
 > **test(solc-reuse): opportunity C investigated (not viable) + memory sub-word guard (f490e7c704, 2026-06-21):**
