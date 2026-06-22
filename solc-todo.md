@@ -123,7 +123,28 @@ construction — used for error/event encoding and the `intSelectorName`/
 `arc4EncodeArgsAtParamTypes` width logic that had bugs (see sol-eb-audit selector-width) —
 is something solc already builds correctly via `externalSignature()`.
 
-## F. Model `Type::cleanupNeededForOp` — the principled "centralize canonicalization"  ← NOW THE TOP OPPORTUNITY
+## F. Model `Type::cleanupNeededForOp` — the principled "centralize canonicalization"  ← GOAL SUBSTANTIALLY MET (closed 2026-06-22)
+
+**CLOSED 2026-06-22 (audit + decision).** F's GOAL — kill the "every consumer must remember to
+canonicalize" bug class — is substantially achieved, NOT via a per-WType `canonicalize()` but via ~5
+shared canonicalizers that the 38 call-sites (across 17 files) already route through:
+`signExtendToUint256/64`, `signExtendSignedElement`, `signExtendSignedWiden`, `maskUnsignedToWidth` (new,
+the producing ops), `coerceToCommonInt` (operand conversion — comparisons v424 + arith/bitwise v434).
+This session finished the PRODUCER side: every width-growing op (shift, `~`, signed→unsigned cast,
+unchecked wrap) now canonicalizes at the source, so the value is canonical before any consumer sees it.
+
+**Why the literal "attach `canonicalize()` to each WType" is NOT built (and shouldn't be):** puya's
+WType deliberately carries NO signedness (intN → `ARC4UIntN(n)` + an alias string), so a per-WType
+canonicalize() cannot decide sign-extend-vs-not without the Solidity type. And the sub-64 canonical form
+is CONTEXT-DEPENDENT (locals minimal, ABI params pre-extended — see [[int24-subword-codec]]), which is
+exactly why `signExtendSignedElement` deliberately skips ≤64-bit. A blanket auto-canonicalize would
+re-introduce the double-extension bugs the existing helpers avoid. So the realistic ceiling for F is "one
+named helper per canonicalization shape, called explicitly by sites that have the Solidity type" — which
+is what exists. The full consumer-flip (make decode/read producers canonical, delete the defensive
+consumer extends) is high-risk for diminishing value now the bug class is closed. Decision: leave it.
+
+### (historical pitch below)
+## (was) F. Model `Type::cleanupNeededForOp`
 solc attaches, per type and per op, whether a value needs cleanup before use, decided
 once. That's the disciplined form of collapsing puya's ~54 scattered `signExtend*` call
 sites (across 19 files): attach a `canonicalize()` to each WType rather than remembering
@@ -159,13 +180,15 @@ than reimplement super/interface dispatch (likely already partly used via
 ### Priority
 1. ~~**A** (ConstantEvaluator / canonical constants)~~ — **DONE** (v420-v422): type(T).min/max + SolLiteral
    dead-branch + shared canonicalIntConstant/rationalIntConstant; const-fold gap debunked (never existed).
-2. ~~**D** (commonType for comparisons)~~ — **DONE** v424: coerceToCommonInt drives comparison operand
-   conversion off solc commonType; deleted narrowConstIfNegative + inline compare() canonicalization.
-   Residual = apply the same coercion to the arith-path (binary_op) left-operand reinterpret, still open.
-3. **F** (centralize canonicalization) — **NOW THE TOP UNDONE OPPORTUNITY** (2026-06-22). 6 of the
-   session's 7 fixes were one forgotten-canonicalization site each; F makes it correct-by-construction.
-   Incremental: ~~(1) extract `maskUnsignedToWidth` + route the v427–v432 masks through it~~ DONE
-   (8a4b6d4284); ~~(2) the D-residual arith-path both-operand coercion~~ DONE (v434, 7615a14597, was an
-   active mixed-width-signed-bitwise bug); **(3) the full per-WType `canonicalize()` refactor — REMAINING.**
+2. ~~**D** (commonType for comparisons + arith)~~ — **DONE** v424 (comparisons) + v434 (arith/bitwise both
+   operands): coerceToCommonInt drives operand conversion off solc commonType; deleted narrowConstIfNegative
+   + inline compare() canonicalization; the arith-path residual turned out to be an active mixed-width
+   signed-bitwise bug, now fixed.
+3. ~~**F** (centralize canonicalization)~~ — **GOAL SUBSTANTIALLY MET / CLOSED** (2026-06-22). The bug
+   class is killed via ~5 shared canonicalizers; this session finished the producer side: ~~(1) extract
+   `maskUnsignedToWidth`~~ DONE (8a4b6d4284); ~~(2) D-residual arith both-operand coercion~~ DONE (v434,
+   7615a14597, an active bug). The literal per-WType `canonicalize()` is NOT built — puya's WType has no
+   sign info and sub-64 canonical form is context-dependent; the full consumer-flip is high-risk for
+   diminishing value. See the F section for the close-out rationale.
 4. **C** (size from solc) and **B** (storage layout from solc) — not viable / off (boxes are 4 KB, not slots).
 5. **E / G** — larger or partial-reuse refactors, untouched.
