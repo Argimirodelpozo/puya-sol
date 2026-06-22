@@ -107,10 +107,15 @@ to resolve -> promoteToBigUInt -> sign-bit XOR. The literal-operand objection di
 TO `commonType` (always the integer common type) rather than guarding on the operand's own
 `RationalNumberType`. Roughly LOC-neutral but structurally a real win: the scattered per-operand fix-ups
 become one solc-`commonType`-driven point. Verified zero-reg + 191-call mixed-width fuzz + signed guards.
-**Residual (still open):** the *arithmetic* path (`SolBinaryOperation.cpp` binary_op + AssignmentHelper)
-still `builderForInstance`-reinterprets the left operand to `commonType` without converting — apply the
-same `coerceToCommonInt` there to make it correct-by-construction (latent only, since canonicalization
-fixes plug the source).
+**Residual DONE 2026-06-22 (v434, 7615a14597) — and it was an ACTIVE bug, not latent.** The arith/bitwise
+path (`SolBinaryOperation.cpp` hasBinOp) reinterpreted the LEFT operand to `commonType` without value
+conversion AND never touched the right. Driving BOTH operands through `coerceToCommonInt` (mirroring the
+v424 comparison path) fixed a real divergence: mixed-width signed BITWISE (`int128(-1) & int16(-32768)`)
+ANDed the raw 16-bit operand instead of the sign-extended commonType value — wrong in both
+narrower-left and narrower-right positions. Shifts are excluded (right = shift amount, kept in its own
+type); unsigned zero-extends; non-integer commonType keeps the bare reinterpret. Guard
+test_mixed_width_signed_bitwise. Lesson: the "latent" reads in this doc are worth fuzzing — the
+canonicalization-at-source did NOT cover the mixed-width bitwise consumer.
 
 ## E. `FunctionType::externalSignature()` for canonical signature strings
 Method *selectors* are ARC4 (different scheme), but the canonical-param-type-name string
@@ -159,7 +164,8 @@ than reimplement super/interface dispatch (likely already partly used via
    Residual = apply the same coercion to the arith-path (binary_op) left-operand reinterpret, still open.
 3. **F** (centralize canonicalization) — **NOW THE TOP UNDONE OPPORTUNITY** (2026-06-22). 6 of the
    session's 7 fixes were one forgotten-canonicalization site each; F makes it correct-by-construction.
-   Incremental: (1) extract `maskUnsignedToWidth` + route the v427–v432 masks through it [in progress];
-   (2) finish the D-residual arith-path coercion; (3) the full per-WType `canonicalize()` refactor.
+   Incremental: ~~(1) extract `maskUnsignedToWidth` + route the v427–v432 masks through it~~ DONE
+   (8a4b6d4284); ~~(2) the D-residual arith-path both-operand coercion~~ DONE (v434, 7615a14597, was an
+   active mixed-width-signed-bitwise bug); **(3) the full per-WType `canonicalize()` refactor — REMAINING.**
 4. **C** (size from solc) and **B** (storage layout from solc) — not viable / off (boxes are 4 KB, not slots).
 5. **E / G** — larger or partial-reuse refactors, untouched.
