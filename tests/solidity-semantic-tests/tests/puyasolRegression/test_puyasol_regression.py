@@ -898,3 +898,39 @@ def test_unchecked_biguint_sub_exp_wrap(harness):
     # add/mul still wrap correctly (unchanged)
     assert as_int(harness.call(app, "uadd(uint128,uint128)", MAX128, 5).abi_return) == ((MAX128 + 5) % M128)
     assert as_int(harness.call(app, "umul(uint128,uint128)", MAX128, 2).abi_return) == ((MAX128 * 2) % M128)
+
+
+def test_signed_mul_complex_operand(harness):
+    """puyasolRegression/contracts/signed_mul_complex_operand.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). A complex (non-leaf) expression as the LEFT operand of a
+    checked signed multiply false-reverted: (bitwise/shift/cast-chain/ternary) * x REVERTED where EVM
+    returns the value (most visibly at x==0). Root: makeEvalOnce wraps the operand in a SingleEvaluation,
+    and puya mis-lowers SingleEvaluation(complex) in the signed-mul abs/overflow codegen (stack-slot
+    miscount). FIX: materialise a complex left operand of a signed multiply to a real local first.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_mul_complex_operand.sol")
+    def sint(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    I64MIN = -(1 << 63)
+    I64MAX = (1 << 63) - 1
+    # the formerly-false-reverting cases (complex left * 0) now return 0
+    assert sint(harness.call(app, "ternMul(int16,int16,int16)", 0, -32768, -32768)) == 0
+    assert sint(harness.call(app, "andMul(int64,int64,int64)", I64MIN, I64MIN, 0)) == 0
+    assert sint(harness.call(app, "notMul(int64,int64)", I64MIN, 0)) == 0
+    assert sint(harness.call(app, "shlMul(int64,int64)", I64MIN, 0)) == 0
+    assert sint(harness.call(app, "castMul(int64,int64)", I64MIN, 0)) == 0
+    # and they still compute the right value when non-zero
+    assert sint(harness.call(app, "ternMul(int16,int16,int16)", 2, 5, 3)) == 6   # (3<5?3:2)*2
+    assert sint(harness.call(app, "andMul(int64,int64,int64)", 7, 6, 2)) == 12
+    assert sint(harness.call(app, "notMul(int64,int64)", 0, 5)) == -5            # (~0)*5
+    assert sint(harness.call(app, "shlMul(int64,int64)", 3, 4)) == 24           # (3<<1)*4
+    assert sint(harness.call(app, "castMul(int64,int64)", -1, 5)) == -5         # int64(int8(-1))*5
+    assert sint(harness.call(app, "inRange(int64,int64)", 7, 6)) == 18
+    assert sint(harness.call(app, "inRange(int64,int64)", -1, -1)) == -3
+    # pure-left short-circuit stays clean
+    assert as_int(harness.call(app, "scAnd(int64,int64,int64)", I64MIN, I64MIN, 0).abi_return) == 1
+    assert as_int(harness.call(app, "scAnd(int64,int64,int64)", 7, 6, 2).abi_return) == 0
+    # real overflow STILL reverts (fix removes only the false revert)
+    assert harness.call(app, "overflowMul(int64,int64)", I64MAX, I64MAX, expect_revert=True).reverted
+    assert sint(harness.call(app, "overflowMul(int64,int64)", 2, 1)) == 9

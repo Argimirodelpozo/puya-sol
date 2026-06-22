@@ -1,3 +1,20 @@
+# Semantic Test Status — v431
+
+> **fix(intN): materialise a complex left operand of a signed multiply (2026-06-22):**
+> **57 failed / 1282 passed / 87 xf** (zero-reg; +signed_mul_complex_operand guard). Found by the
+> overnight generative fuzzer (--cast). A complex (non-leaf) expression used as the LEFT operand of a
+> checked SIGNED multiply false-reverted: `(bitwise/shift/cast-chain/ternary) * x` REVERTED where EVM
+> returns the value (most visibly at x==0, product 0). Root: SolBinaryOperation makeEvalOnce's each signed
+> operand into a SingleEvaluation, and puya mis-lowers `SingleEvaluation(complex)` in the signed-mul
+> abs/overflow codegen (a stack-slot miscount via dig/bury). Add/sub and a complex RIGHT operand were
+> unaffected; an explicit `T t = expr; t * x` was always clean. FIX (SolBinaryOperation signed path):
+> for Mul/AssignMul, when the (post-makeEvalOnce) LEFT operand is a SingleEvaluation, materialise it to a
+> REAL local via a pre-statement assignment (same scoping as the existing overflow check, so a pure left
+> stays correct in a short-circuit RHS; a reverting left in a short-circuit was already hoisted — a
+> SEPARATE pre-existing issue, not regressed). Verified across bitwise/shift/cast/ternary left operands +
+> short-circuit + real-overflow-still-reverts. Resolves the [[ternary-operand-signed-mul-falserevert]]
+> finding (incl. the reconciled f16 cast-chain shape). Guard test_signed_mul_complex_operand.
+
 # Semantic Test Status — v430
 
 > **fix(intN): unchecked biguint subtraction + exponentiation wrap to the type width (2026-06-22):**

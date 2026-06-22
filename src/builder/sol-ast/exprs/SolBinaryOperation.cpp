@@ -222,6 +222,20 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			// pure leaves pass through, keeping `x+y`/`x+1` codegen byte-identical.
 			left = awst::makeEvalOnce(std::move(left), m_loc);
 			right = awst::makeEvalOnce(std::move(right), m_loc);
+			// puya mis-lowers a SingleEvaluation(complex expr) used as the LEFT operand of a signed
+			// MULTIPLY (stack-slot miscount in the abs/overflow codegen) -> false revert for
+			// `(bitwise/shift/cast/ternary) * x`. Materialise a complex left operand to a REAL local
+			// (an explicit `T t = expr; t * x` is clean -- fuzzer discriminator); the right operand and
+			// add/sub are unaffected. Same pre-statement scoping as the existing overflow check.
+			if ((op == Token::Mul || op == Token::AssignMul)
+				&& dynamic_cast<awst::SingleEvaluation const*>(left.get()))
+			{
+				auto smulVar = awst::makeVarExpression(
+					"__smul_l_" + std::to_string(m_binOp.id()), left->wtype, m_loc);
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(smulVar, std::move(left), m_loc));
+				left = smulVar;
+			}
 			if (op == Token::Add || op == Token::AssignAdd
 				|| op == Token::Sub || op == Token::AssignSub
 				|| op == Token::Mul || op == Token::AssignMul)
