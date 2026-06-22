@@ -1,3 +1,18 @@
+# Semantic Test Status — v432
+
+> **fix(intN): `-type(intN).min` constant negation reverts (overflow) (2026-06-22):**
+> **57 failed / 1283 passed / 87 xf** (zero-reg; +const_negate_typemin guard). Found by the overnight
+> generative fuzzer (--cast). `-type(intN).min` overflows intN (no positive counterpart) and solc+EVM
+> REVERT at runtime, but the AVM folded it to the wrapped value (e.g. `-type(int16).min` returned int16.min
+> instead of reverting). The operand/result are RationalNumberType so the checked-signed negation path was
+> skipped; the <=64-bit constant-negation fast-path in SolIntegerBuilder::unary_op folded `0 - val` without
+> the overflow check (int128/int256 already reverted, since their value exceeds uint64 → stoull throws →
+> falls through to the checked path). FIX: skip the fold fast-path for the checked intN.min case
+> (`m_signed && !unchecked && !m_isBigUInt && val == 2^64 - 2^(N-1)`) so it falls through to the overflow
+> check that reverts. Unchecked still wraps to int16.min; `-type(intN).max`, runtime `-x` (reverts only at
+> x==min), and `-(min+1)` are unaffected. Resolves [[const-negate-typemin-divergence]]. Guard
+> test_const_negate_typemin. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v431
 
 > **fix(intN): materialise a complex left operand of a signed multiply (2026-06-22):**

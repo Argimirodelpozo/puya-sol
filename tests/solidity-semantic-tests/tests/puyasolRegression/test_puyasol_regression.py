@@ -934,3 +934,33 @@ def test_signed_mul_complex_operand(harness):
     # real overflow STILL reverts (fix removes only the false revert)
     assert harness.call(app, "overflowMul(int64,int64)", I64MAX, I64MAX, expect_revert=True).reverted
     assert sint(harness.call(app, "overflowMul(int64,int64)", 2, 1)) == 9
+
+
+def test_const_negate_typemin(harness):
+    """puyasolRegression/contracts/const_negate_typemin.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). `-type(intN).min` overflows intN and solc REVERTS at
+    runtime, but puya's <=64-bit constant-negation fast-path folded it to the wrapped value (int128/256
+    already reverted via fall-through). FIX: skip the fold for the checked intN.min case so it falls
+    through to the overflow check. Unchecked still wraps; normal negations stay correct.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/const_negate_typemin.sol")
+    def sint(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v > (1 << 255) else v
+    # -type(intN).min reverts at every width
+    assert harness.call(app, "negMin8()", expect_revert=True).reverted
+    assert harness.call(app, "negMin16()", expect_revert=True).reverted
+    assert harness.call(app, "negMin64()", expect_revert=True).reverted
+    assert harness.call(app, "negMin128()", expect_revert=True).reverted
+    assert harness.call(app, "negMin256()", expect_revert=True).reverted
+    assert harness.call(app, "nested()", expect_revert=True).reverted
+    assert harness.call(app, "tildeMin()", expect_revert=True).reverted
+    # unchecked wraps to int16.min (no revert)
+    assert sint(harness.call(app, "uncheckedMin()")) == -32768
+    # normal negations unaffected
+    assert sint(harness.call(app, "negMax16()")) == -32767
+    assert sint(harness.call(app, "negMinPlus()")) == 32767
+    assert sint(harness.call(app, "negConst()")) == -5
+    assert sint(harness.call(app, "negVar(int16)", 100)) == -100
+    assert sint(harness.call(app, "negVar(int16)", -5)) == 5
+    assert harness.call(app, "negVar(int16)", -32768, expect_revert=True).reverted  # runtime min still reverts

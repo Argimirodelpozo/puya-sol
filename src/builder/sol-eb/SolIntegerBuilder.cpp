@@ -463,7 +463,13 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			try
 			{
 				unsigned long long val = std::stoull(intConst->value);
-				if (val > 0)
+				// `-intN.min` (constant, <=64-bit) overflows intN; solc REVERTS. Skip this folding
+				// fast-path for intN.min so it falls through to the checked overflow path below (which
+				// reverts) instead of folding to the wrapped value. minVal = intN.min's uint64 two's
+				// complement (0 - 2^(N-1) mod 2^64). Found by the differential fuzzer.
+				bool isCheckedMin = m_signed && !m_scope.isUnchecked() && !m_isBigUInt
+					&& val == (0ULL - (1ULL << (m_bits - 1)));
+				if (val > 0 && !isCheckedMin)
 				{
 					if (m_isBigUInt)
 					{
