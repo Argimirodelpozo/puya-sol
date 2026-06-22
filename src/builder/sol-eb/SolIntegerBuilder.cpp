@@ -315,34 +315,11 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
 
-	// Run BEFORE promotion/signed XOR: when a uint64 slot is compared to a biguint
-	// constant whose magnitude exceeds 2^63 (e.g. -128 → 2^256-128 in 256-bit TC),
-	// naive itob-promote gives 2^64-128 ≠ the 32-byte form. Narrow the biguint
-	// constant mod 2^64 so both sides agree in 64-bit two's complement.
-	auto narrowConstIfNegative = [&](std::shared_ptr<awst::Expression>& wide,
-		std::shared_ptr<awst::Expression> const& other)
-	{
-		if (other->wtype != awst::WType::uint64Type()) return;
-		if (wide->wtype != awst::WType::biguintType()) return;
-		auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(wide.get());
-		if (!intConst) return;
-		try
-		{
-			solidity::u256 val(intConst->value);
-			static const solidity::u256 twoPow63("9223372036854775808");
-			static const solidity::u256 twoPow64("18446744073709551616");
-			if (val < twoPow63) return;
-			solidity::u256 wrapped = val % twoPow64;
-			auto e = awst::makeIntegerConstant(wrapped.str(), _loc);
-			wide = std::move(e);
-		}
-		catch (...) {}
-	};
-	if (!needsBigUInt && lhs->wtype != rhs->wtype)
-	{
-		narrowConstIfNegative(lhs, rhs);
-		narrowConstIfNegative(rhs, lhs);
-	}
+	// Operands arrive coerced to the op's commonType (same width + wtype, already
+	// canonical) from SolBinaryOperation's coerceToCommonInt, so the old
+	// narrowConstIfNegative const-narrowing and per-operand sign-extension here are
+	// unnecessary — only the biguint promotion (cheap no-op when already biguint) and
+	// the signed-ordering sign-bit XOR remain.
 
 	if (needsBigUInt)
 	{
@@ -352,30 +329,6 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 
 	bool isOrderingOp = (_op == BuilderComparisonOp::Lt || _op == BuilderComparisonOp::Lte
 		|| _op == BuilderComparisonOp::Gt || _op == BuilderComparisonOp::Gte);
-
-	// Canonicalise signed sub-word operands to their slot width for BOTH ordering AND
-	// equality. A non-canonical operand — a negative literal cast (int8(-1) = 0xff), an
-	// unchecked sub-word arithmetic result ((127 -= -128) = 0xff), or an ABI-decoded
-	// int128 in N-bit form (2^128-X, bit 255 clear) — else mis-orders (0xff sorts above
-	// 0x80…00) AND mis-equals (0xff != canonical -1). signExtend* mask first, so they are
-	// idempotent for already-canonical operands and a no-op for full-width int64/int256.
-	if (isSigned)
-	{
-		if (needsBigUInt)
-		{
-			if (m_signed)
-				lhs = TypeCoercion::signExtendToUint256(std::move(lhs), m_bits, _loc);
-			if (otherInt->isSigned())
-				rhs = TypeCoercion::signExtendToUint256(std::move(rhs), otherInt->numBits(), _loc);
-		}
-		else
-		{
-			if (m_signed && lhs->wtype == awst::WType::uint64Type())
-				lhs = TypeCoercion::signExtendToUint64(std::move(lhs), m_bits, _loc);
-			if (otherInt->isSigned() && rhs->wtype == awst::WType::uint64Type())
-				rhs = TypeCoercion::signExtendToUint64(std::move(rhs), otherInt->numBits(), _loc);
-		}
-	}
 
 	// Ordering additionally XORs the sign bit to convert signed → unsigned ordering
 	// (operands are already canonical above; equality compares them directly).

@@ -137,7 +137,24 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	}
 	if (hasCmpOp)
 	{
-		auto result = leftBuilder->compare(*rightBuilder, cmpOp, m_loc);
+		// Drive operand conversion off solc's commonType: coerce both integer
+		// operands to the comparison's common type (canonicalising), so compare()
+		// gets uniform same-width canonical operands — one solc-driven point that
+		// replaces the per-operand sign-extension / narrowConstIfNegative inside
+		// compare(). Non-integer comparisons (address/bytes) keep their builders.
+		auto* cmpL = leftBuilder.get();
+		auto* cmpR = rightBuilder.get();
+		std::unique_ptr<eb::InstanceBuilder> clHold, crHold;
+		if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType))
+		{
+			auto* commonW = m_ctx.typeMapper.map(commonSolType);
+			auto lv = builder::TypeCoercion::coerceToCommonInt(_left, leftSolType, commonW, m_loc);
+			auto rv = builder::TypeCoercion::coerceToCommonInt(_right, rightSolType, commonW, m_loc);
+			clHold = m_ctx.builderForInstance(commonSolType, lv);
+			crHold = m_ctx.builderForInstance(commonSolType, rv);
+			if (clHold && crHold) { cmpL = clHold.get(); cmpR = crHold.get(); }
+		}
+		auto result = cmpL->compare(*cmpR, cmpOp, m_loc);
 		if (result) return result->resolve();
 	}
 

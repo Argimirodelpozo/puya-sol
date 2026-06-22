@@ -228,6 +228,29 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 	return comma;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::coerceToCommonInt(
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::Type const* _srcSol,
+	awst::WType const* _commonW,
+	awst::SourceLocation const& _loc
+)
+{
+	using namespace solidity::frontend;
+	// 1. wtype: uint64<->biguint (a negative biguint literal narrows to low 64-bit TC).
+	auto v = implicitNumericCast(std::move(_value), _commonW, _loc);
+	// 2. sign-extend a SIGNED operand from its OWN source width so the value is canonical
+	//    at the common width. Unsigned operands carry no sign (zero-extend is right); a
+	//    literal (RationalNumberType, not an IntegerType) is already canonical post-cast.
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_srcSol))
+		_srcSol = &udvt->underlyingType();
+	if (auto const* srcInt = dynamic_cast<IntegerType const*>(_srcSol))
+		if (srcInt->isSigned())
+			v = (_commonW == awst::WType::biguintType())
+				? signExtendToUint256(std::move(v), srcInt->numBits(), _loc)
+				: signExtendToUint64(std::move(v), srcInt->numBits(), _loc);
+	return v;
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::canonicalIntConstant(
 	solidity::u256 const& _tcValue,
 	unsigned _bits,

@@ -73,6 +73,21 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Coerce a binary-op integer operand (built from `_srcSol`) to the operation's
+	/// `commonType` (`_commonW` = its mapped wtype), producing a CANONICAL value at the
+	/// common width: convert the wtype, then sign-extend a SIGNED operand from its own
+	/// source width. For a literal operand (RationalNumberType, `_srcSol` not an
+	/// IntegerType) the wtype conversion alone yields the canonical form (a negative
+	/// biguint constant narrows to its low 64-bit two's complement). Lets the binary-op
+	/// dispatch hand `compare()`/`binary_op` uniform same-width canonical operands —
+	/// the single solc-`commonType`-driven point that replaces per-operand fix-ups.
+	static std::shared_ptr<awst::Expression> coerceToCommonInt(
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::Type const* _srcSol,
+		awst::WType const* _commonW,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Emit a canonical AWST integer constant from a 256-bit two's-complement value
 	/// for an N-bit Solidity integer type. Centralises the "solc value -> canonical
 	/// constant" rule that SolLiteral, tryConstantFold and type(T).min/max each
