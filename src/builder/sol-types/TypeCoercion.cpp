@@ -228,6 +228,21 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 	return comma;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::maskUnsignedToWidth(
+	std::shared_ptr<awst::Expression> _value,
+	unsigned _bits,
+	awst::SourceLocation const& _loc
+)
+{
+	// Canonicalise an unsigned sub-256 biguint to its width: `value mod 2^bits`. Callers guard
+	// `bits < 256` (the 256-bit case is a no-op and `u256(1) << 256` overflows). The dual of
+	// signExtendToUint256 for the unsigned side; the invariant the v427–v432 fixes share.
+	return awst::makeBigUIntBinOp(
+		std::move(_value), awst::BigUIntBinaryOperator::Mod,
+		awst::makeIntegerConstant((solidity::u256(1) << _bits).str(), _loc, awst::WType::biguintType()),
+		_loc);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::coerceToCommonInt(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _srcSol,

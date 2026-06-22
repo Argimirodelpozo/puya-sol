@@ -73,6 +73,17 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Canonicalise an UNSIGNED sub-256 biguint to its type width: `value mod 2^bits`. The dual of
+	/// signExtendToUint256 for the unsigned side — every width-GROWING op (shift-left, `~`, unchecked
+	/// wrap, signed→unsigned cast) must apply it so the value stays in [0, 2^bits-1] and a downstream
+	/// CHECKED consumer / `<= type(uintN).max` compare doesn't see a non-canonical value. Callers guard
+	/// `bits < 256` (2^256 is a no-op / overflows u256). Names the invariant the v427–v432 fixes share.
+	static std::shared_ptr<awst::Expression> maskUnsignedToWidth(
+		std::shared_ptr<awst::Expression> _value,
+		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Coerce a binary-op integer operand (built from `_srcSol`) to the operation's
 	/// `commonType` (`_commonW` = its mapped wtype), producing a CANONICAL value at the
 	/// common width: convert the wtype, then sign-extend a SIGNED operand from its own

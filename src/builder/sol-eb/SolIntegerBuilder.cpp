@@ -137,11 +137,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			// LShift back to 2^bits (`uint8(254) << 1` is 252, not 508). RShift only shrinks the
 			// value so it always already fits. Found by the differential fuzzer.
 			if (_op == BuilderBinaryOp::LShift && !m_signed && m_bits < 256)
-				result = awst::makeBigUIntBinOp(std::move(result),
-					awst::BigUIntBinaryOperator::Mod,
-					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
-						awst::WType::biguintType()),
-					_loc);
+				result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_bits, _loc);
 			result = emitOverflowCheck(std::move(result), _op, _loc);
 			// A sub-word value's native WType is uint64; narrow the biguint shift result back so
 			// it composes as a SUB-expression with surrounding uint64 ops — `(a << 7) & b` else
@@ -167,9 +163,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			// narrows below; checked sub asserted a>=b so its result is in range; signed keeps 256-bit
 			// two's complement.) Found by the differential fuzzer.
 			if (m_scope.isUnchecked() && !m_signed && m_isBigUInt && m_bits < 256)
-				result = awst::makeBigUIntBinOp(std::move(result), awst::BigUIntBinaryOperator::Mod,
-					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
-						awst::WType::biguintType()), _loc);
+				result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_bits, _loc);
 			// uint64 routed here for unchecked-underflow wrapping (above): the 256-bit wrap narrows
 			// to uint64 = the correct mod-2^64 value, and composes with surrounding uint64 ops.
 			if (!m_isBigUInt && result->wtype == awst::WType::biguintType())
@@ -186,9 +180,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			// wraps to 2^N: e.g. `uint128 a ** 2` must be mod 2^128. Mask to the type width (same as the
 			// unchecked sub fix above). Found by the differential fuzzer.
 			if (m_scope.isUnchecked() && !m_signed && m_isBigUInt && m_bits < 256)
-				result = awst::makeBigUIntBinOp(std::move(result), awst::BigUIntBinaryOperator::Mod,
-					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
-						awst::WType::biguintType()), _loc);
+				result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_bits, _loc);
 			return wrap(std::move(result));
 		}
 
@@ -616,9 +608,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// downstream CHECKED add overflow-checks the un-masked value (`(~b)+a` tests 2^256-1 <=
 			// 2^128-1 -> false-revert). Mask sub-256 back to 2^bits. Found by the fuzzer.
 			if (m_bits < 256)
-				cast = awst::makeBigUIntBinOp(std::move(cast), awst::BigUIntBinaryOperator::Mod,
-					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
-						awst::WType::biguintType()), _loc);
+				cast = TypeCoercion::maskUnsignedToWidth(std::move(cast), m_bits, _loc);
 			return wrap(std::move(cast));
 		}
 		{

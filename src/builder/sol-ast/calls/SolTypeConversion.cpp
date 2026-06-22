@@ -420,14 +420,10 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 		bool signedToUnsigned = sourceIsSigned && !targetIntType->isSigned();
 		if ((targetBits < sourceBits || signedToUnsigned) && targetBits < 256)
 		{
-			// Use `b%` not `b&`: AVM `b&` returns max(len(a),len(b)) bytes
-			// (no leading-zero strip) — 32-byte ARC4 value & 16-byte mask
-			// leaves 32 bytes → fails `to_fixed_size` len check. `b%` gives
-			// minimum-length result. `b+ x 0` is folded by puya; `b%` is not.
-			solidity::u256 modulusVal = solidity::u256(1) << targetBits;
-			auto modulus = awst::makeIntegerConstant(modulusVal.str(), m_loc, awst::WType::biguintType());
-			auto bMod = awst::makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, std::move(modulus), m_loc);
-			return bMod;
+			// `value mod 2^targetBits` via the shared helper. (It uses `b%`, not `b&`: AVM `b&` returns
+			// max(len(a),len(b)) bytes with no leading-zero strip, so a 32-byte ARC4 value & a 16-byte
+			// mask stays 32 bytes and fails the `to_fixed_size` len check; `b%` gives the minimal width.)
+			return TypeCoercion::maskUnsignedToWidth(std::move(_expr), targetBits, m_loc);
 		}
 	}
 
