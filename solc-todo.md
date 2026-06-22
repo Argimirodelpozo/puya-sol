@@ -178,10 +178,21 @@ keep finding the next forgotten site until canonicalization is correct-by-constr
 3. Attach `canonicalize()` to the WType (or a `(type,op)->bool` table) and flip consumers to assume.
 
 ## G. `type(I).interfaceId`, C3 linearization, overload resolution
-solc computes interface IDs (XOR of selectors), `linearizedBaseContracts` (C3 MRO for
-super/virtual dispatch), and overload resolution (`referencedDeclaration`). Reuse rather
-than reimplement super/interface dispatch (likely already partly used via
-`referencedDeclaration`).
+**ALREADY DONE — investigated 2026-06-22. Nothing to do; "likely already partly used" was an
+understatement — it's fully reused where reusable.** All three parts:
+1. **C3 linearization** — puya already drives super/virtual dispatch off solc's
+   `annotation().linearizedBaseContracts` at 10+ sites (AWSTBuilder, ContractBuilder, SuperCallResolution,
+   ApprovalProgramBuilder, PostInitTriggers). No parallel MRO is reimplemented.
+2. **Overload / reference resolution** — `referencedDeclaration` is used across ~12 files (AWSTBuilder,
+   CallResolver, SolExpressionFactory, …); puya never re-resolves overloads itself. interfaceId even reuses
+   solc's `interfaceFunctionList(false)` for the own-functions enumeration.
+3. **interfaceId** — already implemented (SolMetaTypeAccess): XOR over the functions, but with ARC-4
+   `sha512_256` selectors, NOT solc's EVM keccak XOR (same ARC4-vs-EVM divergence as E — solc's interfaceId
+   VALUE can't be reused, only its function list, which it is). The on-chain `supportsInterface` XOR stays
+   self-consistent. (Aside: `externalSignature()` survives as a narrow FALLBACK there for non-FunctionDefinition
+   entries — the one place E's helper is actually touched.)
+Net: the LANGUAGE-level facts (MRO, reference resolution, function lists) are reused from solc; only the
+ABI-level selector VALUE is ARC4-specific (as it must be). G is closed.
 
 ---
 
@@ -203,5 +214,18 @@ than reimplement super/interface dispatch (likely already partly used via
    bool/address widths, signed→uintN selector collapse, 4 KB boxes not slots), so there is no solc fact to
    defer to. The pattern: "reuse solc" lands for VALUES (constants, commonType operand conversion) but not
    for puya's ABI/storage ABSTRACTIONS.
-5. **G** (interfaceId / C3 linearization / overload resolution) — the only untouched opportunity; likely
-   already partly used via `referencedDeclaration`. Not yet investigated.
+5. ~~**G** (interfaceId / C3 / overload resolution)~~ — **ALREADY DONE.** C3 (`linearizedBaseContracts`,
+   10+ sites), reference/overload resolution (`referencedDeclaration`, ~12 files), and interfaceId's
+   function-list enumeration (`interfaceFunctionList`) are all already reused from solc; only the
+   ARC4 selector VALUE is puya-specific (as it must be). Nothing to reimplement.
+
+---
+
+### Bottom line (2026-06-22): the solc-reuse backlog is worked through.
+- **Reuse LANDS for solc's VALUES / language-level facts** — and is now done: A (constants), D
+  (commonType operand conversion → caught a real mixed-width bitwise bug), G (MRO / reference resolution /
+  function lists, already reused), F's goal (canonicalization via shared helpers).
+- **Reuse does NOT land for puya's ABI / storage / WType ABSTRACTIONS** — B (4 KB boxes ≠ EVM slots),
+  C (box-vs-blob packed sizes), E (ARC4 sha512_256 selectors, signed→uintN, sub-64→uint64 ≠ EVM ABI).
+  These are deliberately distinct; there is no solc fact to defer to. Confirmed, not skipped.
+The one open item anywhere is the documented backend-DCE soundness edge (degenerate; left by decision).
