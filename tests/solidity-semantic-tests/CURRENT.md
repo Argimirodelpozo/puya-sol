@@ -1,3 +1,18 @@
+# Semantic Test Status — v427
+
+> **fix(intN): sub-word/uint64 left-shift truncates to the type width (2026-06-22):**
+> **57 failed / 1278 passed / 87 xf** (zero-reg; +subword_shift_truncate guard). Found by the overnight
+> generative fuzzer (--cast). Solidity truncates `x << n` to the operand type's width — shifts never
+> overflow-check, in checked OR unchecked code — so `uint8(254) << 1` is 252, not 508. The AVM ran the
+> shift in biguint and only wrapped to 2^256 (buildBigUIntShift), and emitOverflowCheck does not mask
+> LShift at all (LShift is not in its needsCheck list, and it is a no-op when unchecked) — so a sub-word
+> or uint64 left-shift was never masked back to 2^bits. The return path re-masks, so a bare return hid
+> the bug; it only surfaced when the shift result was consumed mid-expression (a comparison flipped:
+> 255 >= (254<<1) read 508 not 252). FIX (SolIntegerBuilder binary_op LShift branch): after
+> buildBigUIntShift, mask result mod 2^m_bits for `!m_signed && m_bits < 256`. RShift only shrinks the
+> value so it always fits; uint256 keeps the existing 2^256 wrap; signed sub-word LShift left for a
+> separate fix (needs mask-then-sign-extend). Guard test_subword_shift_truncate. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v426
 
 > **fix(intN): unchecked uint64 mul/add wrap mod 2^64 instead of reverting (12a9398b7f, 2026-06-22):**

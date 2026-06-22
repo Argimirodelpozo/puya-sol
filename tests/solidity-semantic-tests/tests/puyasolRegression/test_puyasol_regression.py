@@ -783,3 +783,27 @@ def test_unchecked_uint64_mul_add(harness):
     assert harness.call(app, "mulChecked(uint64,uint64)", MAX, 2, expect_revert=True).reverted
     assert harness.call(app, "addChecked(uint64,uint64)", MAX, 5, expect_revert=True).reverted
     assert as_int(harness.call(app, "mulChecked(uint64,uint64)", 7, 9).abi_return) == 63  # in-range ok
+
+
+def test_subword_shift_truncate(harness):
+    """puyasolRegression/contracts/subword_shift_truncate.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). Solidity truncates `x << n` to the operand type width
+    (shifts never overflow-check, checked or unchecked): `uint8(254) << 1` is 252, not 508. The AVM ran
+    the shift in biguint and only wrapped to 2^256 — never masked back to 2^bits for sub-word/uint64. The
+    return path re-masks, so the bug only surfaced when the shift result was consumed mid-expression.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/subword_shift_truncate.sol")
+    bo = lambda r: as_int(r.abi_return)  # bool -> 1/0
+    # uint8: 254<<1 == 252 (not 508); 128<<1 == 0 — both <= 255, so comparison is true (was false)
+    assert bo(harness.call(app, "shlCmpU8(uint8)", 254)) == 1
+    assert bo(harness.call(app, "shlCmpU8(uint8)", 128)) == 1
+    assert bo(harness.call(app, "shlCmpU8(uint8)", 127)) == 1  # 254, no truncation — unaffected
+    # checked variant: ~0=255, 255<<1 truncates to 254; 255>254 true (was 255>510 false)
+    assert bo(harness.call(app, "comboChkU8(uint8)", 0)) == 1
+    assert bo(harness.call(app, "comboChkU8(uint8)", 127)) == 1  # ~127=128, 128<<1=0
+    # wider sub-word + native uint64
+    assert bo(harness.call(app, "shlCmpU16(uint16)", 65534)) == 1
+    assert bo(harness.call(app, "shlCmpU64(uint64)", (1 << 64) - 1)) == 1
+    # value correct when consumed in further arithmetic: 254<<1=252, 252|1 == 253
+    assert as_int(harness.call(app, "shlMaskU8(uint8)", 254).abi_return) == 253

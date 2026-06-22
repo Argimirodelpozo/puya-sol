@@ -132,6 +132,16 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			else
 				result = buildBigUIntShift(std::move(lhs), std::move(shiftAmt),
 					_op == BuilderBinaryOp::LShift, _loc);
+			// Solidity truncates `x << n` to the type width — shifts never overflow-check, even when
+			// checked — but buildBigUIntShift only wraps to 2^256. Mask unsigned sub-word/uint64
+			// LShift back to 2^bits (`uint8(254) << 1` is 252, not 508). RShift only shrinks the
+			// value so it always already fits. Found by the differential fuzzer.
+			if (_op == BuilderBinaryOp::LShift && !m_signed && m_bits < 256)
+				result = awst::makeBigUIntBinOp(std::move(result),
+					awst::BigUIntBinaryOperator::Mod,
+					awst::makeIntegerConstant((solidity::u256(1) << m_bits).str(), _loc,
+						awst::WType::biguintType()),
+					_loc);
 			result = emitOverflowCheck(std::move(result), _op, _loc);
 			// A sub-word value's native WType is uint64; narrow the biguint shift result back so
 			// it composes as a SUB-expression with surrounding uint64 ops — `(a << 7) & b` else
