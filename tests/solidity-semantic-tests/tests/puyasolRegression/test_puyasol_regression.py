@@ -834,3 +834,33 @@ def test_bitinvert_subword_mask(harness):
     assert as_int(harness.call(app, "invAddU192(uint192)", 1).abi_return) == (1 << 192) - 1
     # uint256 full-width invert unaffected: ~0 == 2^256-1
     assert as_int(harness.call(app, "invU256(uint256)", 0).abi_return) == (1 << 256) - 1
+
+
+def test_signed_to_unsigned_cast_trim(harness):
+    """puyasolRegression/contracts/signed_to_unsigned_cast_trim.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (--cast). A same-width signed->unsigned biguint cast uintN(intN(x)) of
+    a NEGATIVE intN left the value in 256-bit two's-complement form (int128(-1) == 2^256-1) instead of
+    trimming to N bits (uint128 of it == 2^128-1). The return path re-canonicalised, so it only surfaced
+    when consumed: checked **1 / *1 / +0 false-reverted, and `<= type(uintN).max` returned the wrong bool.
+    FIX: applyNarrowingMask masks to 2^N for signed-source/unsigned-target casts even at equal width.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_to_unsigned_cast_trim.sol")
+    MAX128 = (1 << 128) - 1
+    HALF128 = 1 << 127  # int128.min bit pattern as a uint128 — the negative-int128 case
+    # uint128(int128(c)) round-trips to c; checked **1 / *1 / +0 no longer false-revert
+    for c in (MAX128, HALF128, MAX128 - 1, 5, 0):
+        assert as_int(harness.call(app, "castPow(uint128)", c).abi_return) == c
+        assert as_int(harness.call(app, "castMul(uint128)", c).abi_return) == c
+        assert as_int(harness.call(app, "castAdd(uint128)", c).abi_return) == c
+        assert as_int(harness.call(app, "castCmp(uint128)", c).abi_return) == 1  # always <= uint128.max
+    # wider biguint width (uint160)
+    MAX160 = (1 << 160) - 1
+    assert as_int(harness.call(app, "cast160(uint160)", MAX160).abi_return) == MAX160
+    assert as_int(harness.call(app, "cast160(uint160)", 1 << 159).abi_return) == (1 << 159)
+    # narrowing int256->int128->uint128 keeps the low 128 bits
+    assert as_int(harness.call(app, "castNarrow(uint256)", MAX128).abi_return) == MAX128
+    assert as_int(harness.call(app, "castNarrow(uint256)", 1 << 200).abi_return) == 0
+    # sanity: uint256(int256(-1)) stays full-width 2^256-1 (fix must NOT trim this)
+    assert as_int(harness.call(app, "u256ofI256(int256)", -1).abi_return) == (1 << 256) - 1
+    assert as_int(harness.call(app, "u256ofI256(int256)", 5).abi_return) == 5

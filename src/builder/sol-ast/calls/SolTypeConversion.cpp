@@ -405,9 +405,20 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 	if (_targetType == awst::WType::biguintType() && _expr->wtype == awst::WType::biguintType())
 	{
 		unsigned sourceBits = 256;
+		bool sourceIsSigned = false;
 		if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(solSourceType))
+		{
 			sourceBits = srcInt->numBits();
-		if (targetBits < sourceBits && targetBits < 256)
+			sourceIsSigned = srcInt->isSigned();
+		}
+		// Mask to the target width when narrowing OR when dropping a SIGNED source's sign-extension
+		// into an UNSIGNED target at the same width: int128(-1) is canonically 2^256-1, but
+		// uint128(int128(-1)) is 2^128-1, not 2^256-1 — else checked consumers (`** 1`, `* 1`, `+ 0`)
+		// and `<= uintN.max` see a non-canonical value (false revert / wrong compare). Mirrors the
+		// uint64 same-width signed→unsigned case above. uint256 (targetBits==256) keeps the full width:
+		// uint256(int256(-1)) IS 2^256-1. Found by the differential fuzzer.
+		bool signedToUnsigned = sourceIsSigned && !targetIntType->isSigned();
+		if ((targetBits < sourceBits || signedToUnsigned) && targetBits < 256)
 		{
 			// Use `b%` not `b&`: AVM `b&` returns max(len(a),len(b)) bytes
 			// (no leading-zero strip) — 32-byte ARC4 value & 16-byte mask

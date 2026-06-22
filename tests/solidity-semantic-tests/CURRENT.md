@@ -1,3 +1,19 @@
+# Semantic Test Status — v429
+
+> **fix(intN): signed->unsigned biguint cast trims to the target width (2026-06-22):**
+> **57 failed / 1280 passed / 87 xf** (zero-reg; +signed_to_unsigned_cast_trim guard). Found by the
+> overnight generative fuzzer (--cast). A same-width signed->unsigned biguint cast `uintN(intN(x))`
+> (65 <= N <= 248) of a NEGATIVE intN left the value in its canonical 256-bit two's-complement form
+> (`int128(-1)` is 2^256-1) instead of trimming to N bits (`uint128` of it is 2^128-1). applyNarrowingMask
+> masked only when `targetBits < sourceBits`, so a SAME-WIDTH int128->uint128 was never masked. The return
+> path re-canonicalised, so it only surfaced when the cast result was consumed: checked `** 1` / `* 1` /
+> `+ 0` FALSE-REVERTED (2^256-1 > uint128.max), and `<= type(uint128).max` returned the WRONG boolean (a
+> soundness bug). FIX (applyNarrowingMask, biguint case): also mask to 2^targetBits when the source is
+> SIGNED and the target UNSIGNED, mirroring the existing uint64 same-width signed->unsigned handling;
+> uint256 (targetBits==256) keeps the full width since `uint256(int256(-1))` IS 2^256-1. Same
+> non-canonical sub-256 biguint class as the v427/v428 shift + bitwise-NOT fixes. Guard
+> test_signed_to_unsigned_cast_trim. [[differential-fuzzing-spike]]
+
 # Semantic Test Status — v428
 
 > **fix(intN): biguint bitwise-NOT masks to the type width (2026-06-22):**
