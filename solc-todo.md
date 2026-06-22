@@ -118,10 +118,18 @@ test_mixed_width_signed_bitwise. Lesson: the "latent" reads in this doc are wort
 canonicalization-at-source did NOT cover the mixed-width bitwise consumer.
 
 ## E. `FunctionType::externalSignature()` for canonical signature strings
-Method *selectors* are ARC4 (different scheme), but the canonical-param-type-name string
-construction — used for error/event encoding and the `intSelectorName`/
-`arc4EncodeArgsAtParamTypes` width logic that had bugs (see sol-eb-audit selector-width) —
-is something solc already builds correctly via `externalSignature()`.
+**NOT VIABLE — investigated 2026-06-22.** The original pitch (reuse externalSignature for the
+"canonical-param-type-name string") was wrong: puya-sol has NO EVM-ABI signature anywhere, so there is
+nothing for externalSignature to feed. Every signature string is built from the ARC4 type-name rules,
+which diverge from EVM ABI on TWO axes (TypeCoercion::intSelectorName / wtypeToABIName):
+1. **signedness is always dropped** — `int128` is named `uint128` (ARC4 has no signed type);
+2. **sub-64 widths collapse to `uint64`** — `int16` / `uint8` / `uint64` all → `uint64`.
+externalSignature() emits the exact Solidity types (`int128`, `int16`, `uint8`), so it can produce
+NEITHER. Selectors AND custom errors hash the ARC4 string with `sha512_256(sig)[:4]` (MethodConstant),
+not EVM keccak; the only EVM-literal holdouts (`Error(string)` / `Panic(uint256)`) are HARDCODED magic
+constants (0x08c379a0 / 0x4e487b71), not constructed. Same conclusion as C/F: puya's ARC4 ABI model is
+deliberately distinct from solc's, which is exactly why these "reuse solc" swaps don't land. The
+selector-width logic is already correct (sol-eb-audit) and has no solc equivalent to defer to.
 
 ## F. Model `Type::cleanupNeededForOp` — the principled "centralize canonicalization"  ← GOAL SUBSTANTIALLY MET (closed 2026-06-22)
 
@@ -190,5 +198,10 @@ than reimplement super/interface dispatch (likely already partly used via
    7615a14597, an active bug). The literal per-WType `canonicalize()` is NOT built — puya's WType has no
    sign info and sub-64 canonical form is context-dependent; the full consumer-flip is high-risk for
    diminishing value. See the F section for the close-out rationale.
-4. **C** (size from solc) and **B** (storage layout from solc) — not viable / off (boxes are 4 KB, not slots).
-5. **E / G** — larger or partial-reuse refactors, untouched.
+4. **C** (size), **B** (storage layout), **E** (externalSignature) — all NOT VIABLE / off: each re-derives
+   something solc has, but puya's ARC4/box/WType model is deliberately distinct (sub-word widths, box-vs-blob,
+   bool/address widths, signed→uintN selector collapse, 4 KB boxes not slots), so there is no solc fact to
+   defer to. The pattern: "reuse solc" lands for VALUES (constants, commonType operand conversion) but not
+   for puya's ABI/storage ABSTRACTIONS.
+5. **G** (interfaceId / C3 linearization / overload resolution) — the only untouched opportunity; likely
+   already partly used via `referencedDeclaration`. Not yet investigated.
