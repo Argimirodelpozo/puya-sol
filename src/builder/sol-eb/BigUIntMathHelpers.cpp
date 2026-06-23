@@ -112,12 +112,7 @@ std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
 		awst::makeBigUIntBinOp(makePow256(_loc), awst::BigUIntBinaryOperator::FloorDiv, pow2n(), _loc), _loc);
 
 	// negative iff v >= 2^255.
-	auto neg = awst::makeNumericCompare(
-		vRead(), awst::NumericComparison::Gte,
-		awst::makeIntegerConstant(
-			"57896044618658097711785492504343953926634992332820282019728792003956564819968",
-			_loc, biguint),
-		_loc);
+	auto neg = TypeCoercion::isNegativeSigned(vRead(), 256, _loc);
 
 	// result = neg ? (sTmp | fill) : sTmp
 	auto orFill = awst::makeBigUIntBinOp(sRead(), awst::BigUIntBinaryOperator::BitOr, std::move(fill), _loc);
@@ -268,17 +263,13 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	_left = awst::makeVarExpression(lName, biguintW, _loc);
 	_right = awst::makeVarExpression(rName, biguintW, _loc);
 
-	// Two's complement: negative if value >= 2^255
-	static constexpr char const* POW_2_255 =
-		"57896044618658097711785492504343953926634992332820282019728792003956564819968";
-
 	auto makeConst = [&](char const* val) {
 		auto c = awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());
 		return c;
 	};
 
 	// isLeftNeg = left >= 2^255
-	auto isLeftNeg = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
+	auto isLeftNeg = TypeCoercion::isNegativeSigned(_left, 256, _loc);
 
 	// absLeft = isLeftNeg ? (2^256 - left) : left
 	auto negLeft = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, _left, _loc);
@@ -287,7 +278,7 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 		isLeftNeg, std::move(negLeft), _left, awst::WType::biguintType(), _loc);
 
 	// isRightNeg = right >= 2^255
-	auto isRightNeg = awst::makeNumericCompare(_right, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
+	auto isRightNeg = TypeCoercion::isNegativeSigned(_right, 256, _loc);
 
 	// absRight = isRightNeg ? (2^256 - right) : right
 	auto negRight = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, _right, _loc);

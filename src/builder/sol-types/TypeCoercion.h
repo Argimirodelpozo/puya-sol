@@ -97,6 +97,17 @@ public:
 	/// Was a ~12-line if/else copy-pasted at 5 sites.
 	static std::pair<std::string, std::string> pow2NAndHalf(unsigned _bits);
 
+	/// Bool expression "is this signed value negative?" — `value >= 2^(bits-1)`, for a value
+	/// already in canonical two's-complement biguint form. The single source for the sign-bit
+	/// test the signed arith / div-mod / shift / assembly-Yul paths each hand-rolled with the
+	/// 2^(N-1) literal. `value` is compared once (callers pass a var/temp if they reference it
+	/// again). bits==256 uses kHalfMax_256 (2^256 overflows u256).
+	static std::shared_ptr<awst::Expression> isNegativeSigned(
+		std::shared_ptr<awst::Expression> _value,
+		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Coerce a binary-op integer operand (built from `_srcSol`) to the operation's
 	/// `commonType` (`_commonW` = its mapped wtype), producing a CANONICAL value at the
 	/// common width: convert the wtype, then sign-extend a SIGNED operand from its own

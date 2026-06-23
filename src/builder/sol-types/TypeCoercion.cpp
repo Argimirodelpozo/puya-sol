@@ -252,6 +252,20 @@ std::pair<std::string, std::string> TypeCoercion::pow2NAndHalf(unsigned _bits)
 	return {(solidity::u256(1) << _bits).str(), (solidity::u256(1) << (_bits - 1)).str()};
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::isNegativeSigned(
+	std::shared_ptr<awst::Expression> _value,
+	unsigned _bits,
+	awst::SourceLocation const& _loc
+)
+{
+	// Negative iff the sign bit is set: value >= 2^(bits-1), for a canonical two's-complement
+	// biguint value. pow2NAndHalf handles the bits==256 overflow case.
+	auto threshold = awst::makeIntegerConstant(
+		pow2NAndHalf(_bits).second, _loc, awst::WType::biguintType());
+	return awst::makeNumericCompare(
+		std::move(_value), awst::NumericComparison::Gte, std::move(threshold), _loc);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::coerceToCommonInt(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _srcSol,

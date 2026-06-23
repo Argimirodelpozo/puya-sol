@@ -4,6 +4,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h" // makeStateGetWithDefault (box-keyed struct sstore)
+#include "builder/sol-types/TypeCoercion.h" // isNegativeSigned (shared sign-bit test)
 #include "Logger.h"
 
 #include <sstream>
@@ -61,14 +62,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::isNegative256(
 )
 {
 	// value ≥ 2^255 (biguint) or ≥ 2^63 (uint64) indicates a negative two's-complement.
-	auto halfMax = awst::makeIntegerConstant(
-		_origType && _origType == awst::WType::uint64Type()
-			? "9223372036854775808" // 2^63
-			: "57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
-		_loc, awst::WType::biguintType());
-
-	auto cmp = awst::makeNumericCompare(_val, awst::NumericComparison::Gte, std::move(halfMax), _loc);
-	return cmp;
+	unsigned bits = (_origType && _origType == awst::WType::uint64Type()) ? 64 : 256;
+	return TypeCoercion::isNegativeSigned(std::move(_val), bits, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
