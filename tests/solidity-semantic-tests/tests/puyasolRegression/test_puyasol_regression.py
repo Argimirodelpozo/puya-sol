@@ -948,6 +948,25 @@ def test_abi_bytes_roundtrip(harness):
     assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
 
 
+def test_abi_decode_tuple_signed_subword(harness):
+    """puyasolRegression/contracts/abi_decode_tuple_signed.sol — NOT an o.g. semantic test.
+
+    Found by the abi-round-trip fuzz probe. abi.decode of a TUPLE with a signed sub-64 element (int8/16/32)
+    returned DIRECTLY failed to COMPILE: the decode produces the native tuple (int16->uint64) but a
+    multi-return ABI function widens each signed sub-64 element to biguint (256-bit two's complement for
+    the ARC4 uint256 encoding), and the per-element widening in ReturnRewriter only handled tuple LITERALS
+    (`return (a,b)`), not an opaque tuple-producing expression -> `invalid return type [biguint, uint64]
+    expected [biguint, biguint]`. FIX: bind the opaque tuple to a temp, rebuild it as a literal with the
+    signed sub-64 elements sign-extended. Compiling rt2/rt3 guards the compile error; id* guard the values.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/abi_decode_tuple_signed.sol")
+    assert as_int(harness.call(app, "id2(uint128,int16)", 5, -100).abi_return) == 1
+    assert as_int(harness.call(app, "id2(uint128,int16)", 1 << 127, -32768).abi_return) == 1
+    assert as_int(harness.call(app, "id3(int16,int32,int8)", -1, -(1 << 31), -128).abi_return) == 1
+    assert as_int(harness.call(app, "id3(int16,int32,int8)", 32767, (1 << 31) - 1, 127).abi_return) == 1
+    assert as_int(harness.call(app, "id2u(uint128,uint16)", 9, 65535).abi_return) == 1  # unsigned control
+
+
 def test_signed_mul_complex_operand(harness):
     """puyasolRegression/contracts/signed_mul_complex_operand.sol — NOT an o.g. semantic test.
 

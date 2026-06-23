@@ -290,6 +290,44 @@ void rewriteARC4Returns(
 				}
 				tuple->wtype = method.returnType;
 			}
+			else if (returnParams.size() > 1)
+			{
+				// Opaque tuple-producing return value (abi.decode, an internal call returning a tuple)
+				// is NOT a tuple literal, so the per-item widening above can't reach its elements. Bind
+				// it to a temp (eval once: the value may be a side-effecting call), then rebuild as a
+				// tuple whose signed sub-64 elements are sign-extended to biguint to match the declared
+				// ABI return type. Without this the decoded uint64 element mismatched the biguint return
+				// slot and puya rejected the subroutine (invalid return type).
+				if (auto const* nativeTuple = dynamic_cast<awst::WTuple const*>(ret.value->wtype))
+				{
+					static int s_retTupleId = 0;
+					auto const* tupleWType = ret.value->wtype;
+					std::string tn = "__rettuple_" + std::to_string(++s_retTupleId);
+					auto bind = awst::makeAssignmentExpression(
+						awst::makeVarExpression(tn, tupleWType, srcLoc),
+						std::move(ret.value), srcLoc, tupleWType);
+					auto rebuilt = awst::makeTupleExpression(method.returnType, srcLoc);
+					for (size_t i = 0; i < nativeTuple->types().size(); ++i)
+					{
+						std::shared_ptr<awst::Expression> item = awst::makeTupleItem(
+							awst::makeVarExpression(tn, tupleWType, srcLoc),
+							static_cast<int>(i), nativeTuple->types()[i], srcLoc);
+						for (auto const& sr: signedReturns)
+							if (sr.index == i)
+							{
+								item = TypeCoercion::signExtendToUint256(
+									std::move(item), sr.bits, srcLoc);
+								break;
+							}
+						rebuilt->items.push_back(std::move(item));
+					}
+					rebuilt->wtype = method.returnType;
+					auto comma = awst::makeCommaExpression(method.returnType, srcLoc);
+					comma->expressions.push_back(std::move(bind));
+					comma->expressions.push_back(std::move(rebuilt));
+					ret.value = std::move(comma);
+				}
+			}
 		});
 
 		if (wrapSingleReturn)

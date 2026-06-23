@@ -1,3 +1,19 @@
+# Semantic Test Status — v437
+
+> **fix(abi): abi.decode of a TUPLE with a signed sub-64 element returned directly now compiles (2026-06-23):**
+> **57 failed / 1288 passed / 87 xf** (zero-reg; +abi_decode_tuple_signed guard). The open sibling of v436,
+> found by the same abi-round-trip probe. `return abi.decode(abi.encode(a,b), (uint128, int16));` from a
+> multi-return ABI function FAILED TO COMPILE: a multi-return widens each signed sub-64 element to biguint
+> (256-bit two's complement for the uint256 ARC4 encoding) and pushes a signedReturns entry, but the
+> per-element widening in ReturnRewriter only handled tuple LITERALS (`return (a,b)`) via a
+> `dynamic_cast<TupleExpression*>` — an opaque tuple-producing expression (abi.decode, an internal call
+> returning a tuple) fell through, leaving the decoded uint64 element mismatched against the biguint return
+> slot (`invalid return type [biguint, uint64] expected [biguint, biguint]`). Single int16 return, unsigned
+> sub-word tuples, and int128 tuples already compiled. FIX (ReturnRewriter): a new branch for a multi-return
+> whose value is NOT a tuple literal — bind it to a temp (eval once: the value may be a side-effecting
+> call), rebuild as a tuple literal via makeTupleItem with the signed sub-64 elements sign-extended to
+> biguint. Differ-verified vs live EVM (122 calls clean). Guard test_abi_decode_tuple_signed_subword.
+
 # Semantic Test Status — v436
 
 > **fix(abi): abi.decode(.,(bytes)) strips the ARC4 length prefix (2026-06-23):**
