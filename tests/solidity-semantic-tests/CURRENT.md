@@ -1,3 +1,17 @@
+# Semantic Test Status — v435
+
+> **fix(intN): unchecked sub-256 Add/Mult wrap to the type width, not 2^256 (2026-06-23):**
+> **57 failed / 1286 passed / 87 xf** (zero-reg; +unchecked_biguint_muladd_consumed guard). Found by the
+> generative fuzzer (seed 20006, body `(a * ~c) / ((c<<0) ^ a)` at uint128). Unchecked sub-256 biguint
+> Add/Mult wrapped the result via wrapMod256 (mod 2^256) instead of the type width 2^N. INVISIBLE for a
+> standalone `return a*b` (the ARC4 encode re-masks to 2^N) — so the sibling unchecked_biguint_sub_exp_wrap
+> guards, which only test standalone return, called add/mul "already correct". But a CONSUMED non-canonical
+> (>2^N, <2^256) intermediate is WRONG: `(2 * ~0) / 2` at uint128 divided the unwrapped 2^129-2 → 2^128-1
+> instead of (2^128-2)/2 = 2^127-1. FIX (SolIntegerBuilder biguint unchecked Add/Mult path): mask the result
+> to 2^N via maskUnsignedToWidth when m_bits < 256 (uint256 keeps the full wrapMod256). Same canonicalisation
+> class as the unchecked sub/exp fixes. Guard test_unchecked_biguint_muladd_consumed. Methodology: the
+> fuzzer's expression-TREES catch consumed-intermediate bugs that standalone-return guards structurally miss.
+
 # Semantic Test Status — v434
 
 > **fix(intN): mixed-width signed bitwise sign-extends both operands to commonType (2026-06-22):**

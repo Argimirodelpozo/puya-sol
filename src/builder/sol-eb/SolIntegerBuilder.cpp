@@ -221,7 +221,14 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		if (m_scope.isUnchecked()
 			&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
 		{
-			result = wrapMod256(std::move(result), _loc);
+			// Wrap to the TYPE width (mod 2^m_bits), not mod 2^256. A sub-256 unchecked
+			// Add/Mult can exceed 2^m_bits (e.g. uint128 2*(2^128-1)) yet stay < 2^256, so
+			// wrapMod256 left it non-canonical — correct when the value is masked again at
+			// the ARC4 encode, but wrong when consumed first (e.g. `(a*~c)/x` divides a
+			// too-wide dividend). Mirrors the unchecked sub/exp masking above.
+			result = (m_bits < 256)
+				? TypeCoercion::maskUnsignedToWidth(std::move(result), m_bits, _loc)
+				: wrapMod256(std::move(result), _loc);
 		}
 
 		return wrap(emitOverflowCheck(std::move(result), _op, _loc));

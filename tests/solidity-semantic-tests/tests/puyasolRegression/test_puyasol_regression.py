@@ -900,6 +900,35 @@ def test_unchecked_biguint_sub_exp_wrap(harness):
     assert as_int(harness.call(app, "umul(uint128,uint128)", MAX128, 2).abi_return) == ((MAX128 * 2) % M128)
 
 
+def test_unchecked_biguint_muladd_consumed(harness):
+    """puyasolRegression/contracts/unchecked_biguint_muladd_consumed.sol — NOT an o.g. semantic test.
+
+    Found by the generative fuzzer (seed 20006). Unchecked sub-256 biguint Add/Mult wrapped the result
+    to 2^256 (wrapMod256), not the type width 2^N. The standalone-return path re-masks, so the sibling
+    sub_exp_wrap guards (which only test `return a*b`) called add/mul "already correct" — but a CONSUMED
+    non-canonical (>2^N, <2^256) intermediate is WRONG: `(a * ~c) / x` divided a too-wide dividend. FIX:
+    mask the unchecked unsigned sub-256 Add/Mult result to 2^N.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/unchecked_biguint_muladd_consumed.sol"
+    )
+    M128 = 1 << 128
+
+    def mul_div(a, c):  # mirror EVM uint128 semantics
+        prod = (a * ((~c) & (M128 - 1))) % M128  # unchecked mult wraps mod 2^128
+        return prod // (((c << 0) % M128) ^ a)
+
+    assert mul_div(2, 0) == (1 << 127) - 1  # the fuzzer's case (was 2^128-1)
+    assert as_int(harness.call(app, "mulDiv(uint128,uint128)", 2, 0).abi_return) == mul_div(2, 0)
+    assert as_int(harness.call(app, "mulDiv(uint128,uint128)", 255, 0).abi_return) == mul_div(255, 0)
+    # unchecked add overflow consumed by a divide: (2^128-1 + 1)/2 == 0 (was 2^127)
+    assert as_int(harness.call(app, "addDiv(uint128,uint128,uint128)", M128 - 1, 1, 2).abi_return) == 0
+    # width-general uint200: (2^200-2)/2 == 2^199-1
+    assert as_int(harness.call(app, "mul200(uint200,uint200)", 2, 0).abi_return) == ((1 << 200) - 2) // 2
+    # standalone return still wraps correctly (re-masked at encode): 2^64 * 2^64 == 0 mod 2^128
+    assert as_int(harness.call(app, "umul(uint128,uint128)", 1 << 64, 1 << 64).abi_return) == 0
+
+
 def test_signed_mul_complex_operand(harness):
     """puyasolRegression/contracts/signed_mul_complex_operand.sol — NOT an o.g. semantic test.
 

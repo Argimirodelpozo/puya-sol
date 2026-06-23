@@ -8,7 +8,8 @@ pragma solidity ^0.8.0;
 // return path re-masked, so it only surfaced when consumed — `<= type(uint128).max` returned the WRONG
 // boolean (soundness), and checked consumers would false-revert. FIX: mask the unchecked unsigned
 // sub-256 biguint sub/exp result to 2^N (the uint64 mul/add wrap and the v427/v428/v429 fixes are the
-// same canonicalisation class). Mul/Add already wrapped correctly; uint256 keeps the full 2^256 wrap.
+// same canonicalisation class). Mul/Add look correct for a STANDALONE return (re-masked at encode) but
+// are wrong once consumed — fixed separately, see unchecked_biguint_muladd_consumed; uint256 keeps 2^256.
 contract UncheckedBiguintSubExpWrap {
     function usub(uint128 a, uint128 b) external pure returns (uint128) { unchecked { return a - b; } }   // 0-1 == 2^128-1
     function uexp(uint128 a)            external pure returns (uint128) { unchecked { return a ** 2; } }   // (2^64)^2 == 0 mod 2^128
@@ -19,7 +20,8 @@ contract UncheckedBiguintSubExpWrap {
     // checked must still revert on under/overflow
     function csub(uint128 a, uint128 b) external pure returns (uint128) { return a - b; }
     function cexp(uint128 a)            external pure returns (uint128) { return a ** 2; }
-    // unchecked add/mul were already correct; keep as a guard they stay so
+    // standalone unchecked add/mul re-mask at encode (the CONSUMED case is fixed in
+    // unchecked_biguint_muladd_consumed); keep these as a guard standalone stays correct
     function uadd(uint128 a, uint128 b) external pure returns (uint128) { unchecked { return a + b; } }
     function umul(uint128 a, uint128 b) external pure returns (uint128) { unchecked { return a * b; } }
 }
