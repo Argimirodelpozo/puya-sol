@@ -90,11 +90,15 @@ def test_immutable_signed(harness):
     # `y` is bytes2("ab") right-padded to 32 bytes — same on both.
     assert y == 0x6162000000000000000000000000000000000000000000000000000000000000
 
-def test_immutable_tag_too_large_bug(harness):  # currently fails
+def test_immutable_tag_too_large_bug(harness):
     """immutable/contracts/immutable_tag_too_large_bug.sol"""
     app = harness.compile_and_deploy('immutable/contracts/immutable_tag_too_large_bug.sol')
     r = harness.call(app, 'f()')
-    assert tuple(as_int(x) for x in r.abi_return) == (-1, 1,)
+    # f() returns (x, (x*(x-y))/(x+y)) = (-1, 1) with x=int256 (x=-1, y=4 after the constructor).
+    # The AVM encodes a signed return as uint256 (256-bit two's complement — identical bytes to EVM's
+    # int256 -1), so -1 decodes as 2^256-1. Accept either decoding (mirrors test_immutable above).
+    got = tuple(as_int(v) for v in r.abi_return)
+    assert got in ((-1, 1), ((1 << 256) - 1, 1))
 
 def test_increment_decrement(harness):
     """immutable/contracts/increment_decrement.sol"""
