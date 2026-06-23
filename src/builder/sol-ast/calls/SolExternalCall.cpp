@@ -48,45 +48,20 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 		return solTypeToARC4Name(_type);
 	};
 
-	std::string selector = _memberAccess.memberName() + "(";
 	auto const* extRefDecl = _memberAccess.annotation().referencedDeclaration;
-
+	std::vector<std::string> paramNames, retNames;
 	if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(extRefDecl))
 	{
-		bool first = true;
 		for (auto const& param: funcDef->parameters())
-		{
-			if (!first) selector += ",";
-			selector += solTypeToARC4Name(param->type());
-			first = false;
-		}
-		selector += ")";
-		if (funcDef->returnParameters().size() > 1)
-		{
-			selector += "(";
-			bool firstRet = true;
-			for (auto const& retParam: funcDef->returnParameters())
-			{
-				if (!firstRet) selector += ",";
-				selector += solTypeToARC4Ret(retParam->type());
-				firstRet = false;
-			}
-			selector += ")";
-		}
-		else if (funcDef->returnParameters().size() == 1)
-			selector += solTypeToARC4Ret(funcDef->returnParameters()[0]->type());
-		else
-			selector += "void";
+			paramNames.push_back(solTypeToARC4Name(param->type()));
+		for (auto const& retParam: funcDef->returnParameters())
+			retNames.push_back(solTypeToARC4Ret(retParam->type()));
 	}
 	else if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extRefDecl))
-	{
-		selector += ")";
-		selector += solTypeToARC4Ret(varDecl->type());
-	}
-	else
-		selector += ")void";
+		retNames.push_back(solTypeToARC4Ret(varDecl->type()));
+	// else: no params/returns -> "name()void"
 
-	return selector;
+	return builder::TypeCoercion::buildArc4Selector(_memberAccess.memberName(), paramNames, retNames);
 }
 
 std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(

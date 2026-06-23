@@ -235,76 +235,24 @@ std::string InnerCallHandlers::buildMethodSelector(
 	std::string const& _name,
 	solidity::frontend::FunctionType const& _funcType)
 {
-	std::string sel = _name + "(";
-	bool first = true;
+	std::vector<std::string> paramNames, retNames;
 	for (auto const& paramType : _funcType.parameterTypes())
-	{
-		if (!first) sel += ",";
-		sel += solTypeToARC4Impl(_ctx, paramType);
-		first = false;
-	}
-	sel += ")";
-
-	auto const& rets = _funcType.returnParameterTypes();
-	if (rets.size() > 1)
-	{
-		sel += "(";
-		bool firstRet = true;
-		for (auto const& retType : rets)
-		{
-			if (!firstRet) sel += ",";
-			sel += solTypeToARC4RetImpl(_ctx, retType);
-			firstRet = false;
-		}
-		sel += ")";
-	}
-	else if (rets.size() == 1)
-		sel += solTypeToARC4RetImpl(_ctx, rets[0]);
-	else
-		sel += "void";
-
-	return sel;
+		paramNames.push_back(solTypeToARC4Impl(_ctx, paramType));
+	for (auto const& retType : _funcType.returnParameterTypes())
+		retNames.push_back(solTypeToARC4RetImpl(_ctx, retType));
+	return builder::TypeCoercion::buildArc4Selector(_name, paramNames, retNames);
 }
 
 std::string InnerCallHandlers::buildMethodSelector(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const* _func)
 {
-	auto solTypeToARC4 = [&](solidity::frontend::Type const* _type) {
-		return solTypeToARC4Impl(_ctx, _type);
-	};
-	auto solTypeToARC4Ret = [&](solidity::frontend::Type const* _type) {
-		return solTypeToARC4RetImpl(_ctx, _type);
-	};
-
-	std::string sel = _func->name() + "(";
-	bool first = true;
+	std::vector<std::string> paramNames, retNames;
 	for (auto const& param : _func->parameters())
-	{
-		if (!first) sel += ",";
-		sel += solTypeToARC4(param->type());
-		first = false;
-	}
-	sel += ")";
-
-	if (_func->returnParameters().size() > 1)
-	{
-		sel += "(";
-		bool firstRet = true;
-		for (auto const& retParam : _func->returnParameters())
-		{
-			if (!firstRet) sel += ",";
-			sel += solTypeToARC4Ret(retParam->type());
-			firstRet = false;
-		}
-		sel += ")";
-	}
-	else if (_func->returnParameters().size() == 1)
-		sel += solTypeToARC4Ret(_func->returnParameters()[0]->type());
-	else
-		sel += "void";
-
-	return sel;
+		paramNames.push_back(solTypeToARC4Impl(_ctx, param->type()));
+	for (auto const& retParam : _func->returnParameters())
+		retNames.push_back(solTypeToARC4RetImpl(_ctx, retParam->type()));
+	return builder::TypeCoercion::buildArc4Selector(_func->name(), paramNames, retNames);
 }
 
 // ── Payment ──

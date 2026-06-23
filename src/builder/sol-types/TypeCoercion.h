@@ -250,6 +250,18 @@ public:
 	static std::optional<std::string> intSelectorReturnName(
 		solidity::frontend::Type const* _type);
 
+	/// Assemble an ARC4 method selector from a name and the already-mapped ARC4
+	/// type-name strings for params and returns: `name(p0,p1,...)` followed by the
+	/// return suffix — `(r0,r1,...)` for >1 return, the single name for exactly 1,
+	/// or `void` for none. The four caller/encoder selector builders (SolExternalCall,
+	/// both InnerCallHandlers overloads, AbiEncoderBuilder) hand-rolled this identical
+	/// skeleton; only their per-type name mappers differ, so those stay at each site
+	/// and feed the mapped strings here.
+	static std::string buildArc4Selector(
+		std::string const& _name,
+		std::vector<std::string> const& _paramNames,
+		std::vector<std::string> const& _retNames);
+
 	// ── Defaults ─────────────────────────────────────────────────
 
 	/// Type-correct default value expression (0 / false / empty bytes / …).

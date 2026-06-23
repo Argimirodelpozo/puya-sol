@@ -243,32 +243,12 @@ std::string AbiEncoderBuilder::buildARC4MethodSelector(
 		return solTypeToARC4(_type);
 	};
 
-	std::string sel = _funcDef->name() + "(";
-	bool first = true;
+	std::vector<std::string> paramNames, retNames;
 	for (auto const& param : _funcDef->parameters())
-	{
-		if (!first) sel += ",";
-		sel += solTypeToARC4(param->type());
-		first = false;
-	}
-	sel += ")";
-	if (_funcDef->returnParameters().size() > 1)
-	{
-		sel += "(";
-		bool firstRet = true;
-		for (auto const& r : _funcDef->returnParameters())
-		{
-			if (!firstRet) sel += ",";
-			sel += solTypeToARC4Ret(r->type());
-			firstRet = false;
-		}
-		sel += ")";
-	}
-	else if (_funcDef->returnParameters().size() == 1)
-		sel += solTypeToARC4Ret(_funcDef->returnParameters()[0]->type());
-	else
-		sel += "void";
-	return sel;
+		paramNames.push_back(solTypeToARC4(param->type()));
+	for (auto const& r : _funcDef->returnParameters())
+		retNames.push_back(solTypeToARC4Ret(r->type()));
+	return builder::TypeCoercion::buildArc4Selector(_funcDef->name(), paramNames, retNames);
 }
 
 // ── encodePacked / encode ──

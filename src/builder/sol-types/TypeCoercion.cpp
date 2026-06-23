@@ -542,6 +542,30 @@ std::optional<std::string> TypeCoercion::intSelectorReturnName(
 	return std::nullopt;
 }
 
+std::string TypeCoercion::buildArc4Selector(
+	std::string const& _name,
+	std::vector<std::string> const& _paramNames,
+	std::vector<std::string> const& _retNames)
+{
+	auto join = [](std::vector<std::string> const& _parts) {
+		std::string s;
+		for (size_t i = 0; i < _parts.size(); ++i)
+		{
+			if (i) s += ",";
+			s += _parts[i];
+		}
+		return s;
+	};
+	std::string sel = _name + "(" + join(_paramNames) + ")";
+	if (_retNames.size() > 1)
+		sel += "(" + join(_retNames) + ")";
+	else if (_retNames.size() == 1)
+		sel += _retNames[0];
+	else
+		sel += "void";
+	return sel;
+}
+
 // ── Defaults ─────────────────────────────────────────────────────
 
 std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
