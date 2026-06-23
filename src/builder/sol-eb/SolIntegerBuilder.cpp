@@ -548,10 +548,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// + sign-extend to canonical 256-bit TC so it composes (e.g. int128 `(-a) > a` at INT128_MIN).
 			if (m_signed && m_bits < 256)
 			{
-				solidity::u256 modN = solidity::u256(1) << m_bits;
-				auto modN_c = awst::makeBiguintConstant(modN.str(), _loc);
-				auto masked = awst::makeBigUIntBinOp(std::move(wrapped), awst::BigUIntBinaryOperator::Mod, std::move(modN_c), _loc);
-				wrapped = TypeCoercion::signExtendToUint256(std::move(masked), m_bits, _loc);
+				// signExtendToUint256 masks to N bits internally — no pre-mask needed.
+				wrapped = TypeCoercion::signExtendToUint256(std::move(wrapped), m_bits, _loc);
 			}
 			return wrap(std::move(wrapped));
 		}
@@ -569,9 +567,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			// (e.g. `(-a) > a`); the return/ABI path re-truncates, so a bare `-a` was already right.
 			if (m_signed && m_bits < 64)
 			{
-				auto maskC = awst::makeIntegerConstant((uint64_t(1) << m_bits) - 1, _loc);
-				auto masked = awst::makeUInt64BinOp(std::move(result), awst::UInt64BinaryOperator::BitAnd, std::move(maskC), _loc);
-				result = TypeCoercion::signExtendToUint64(std::move(masked), m_bits, _loc);
+				// signExtendToUint64 masks to N bits internally — no pre-mask needed.
+				result = TypeCoercion::signExtendToUint64(std::move(result), m_bits, _loc);
 			}
 			return wrap(std::move(result));
 		}
