@@ -76,20 +76,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 	{
 		unsigned bits = intType->numBits();
 		// -x = (2^N - x) mod 2^N; overflow: x == 2^(N-1) i.e. INT_MIN
-		std::string pow2NStr, halfNStr;
-		if (bits == 256)
-		{
-			pow2NStr = kPow2_256;
-			halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-		}
-		else
-		{
-			solidity::u256 pow2N = solidity::u256(1) << bits;
-			solidity::u256 halfN = solidity::u256(1) << (bits - 1);
-			std::ostringstream oss1, oss2;
-			oss1 << pow2N; pow2NStr = oss1.str();
-			oss2 << halfN; halfNStr = oss2.str();
-		}
+		auto [pow2NStr, halfNStr] = builder::TypeCoercion::pow2NAndHalf(bits);
 
 		auto makeBiguintConst = [&](std::string const& val) {
 			auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
@@ -326,8 +313,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	if (dynamic_cast<awst::BoxValueExpression const*>(_operand.get()))
 		_operand = builder::StorageMapper::makeStateGetWithDefault(_operand, _operand->wtype, m_loc);
 
-	static const std::string pow256 =
-		kPow2_256;
 	static const std::string pow256Minus1 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
@@ -344,20 +329,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	{
 		if (isSigned && signedBits > 0)
 		{
-			std::string pow2NStr2, halfNStr2;
-			if (signedBits == 256)
-			{
-				pow2NStr2 = pow256;
-				halfNStr2 = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-			}
-			else
-			{
-				solidity::u256 p = solidity::u256(1) << signedBits;
-				solidity::u256 h = solidity::u256(1) << (signedBits - 1);
-				std::ostringstream o1, o2;
-				o1 << p; pow2NStr2 = o1.str();
-				o2 << h; halfNStr2 = o2.str();
-			}
+			auto [pow2NStr2, halfNStr2] = builder::TypeCoercion::pow2NAndHalf(signedBits);
 
 			auto makeBConst = [&](std::string const& v) {
 				auto c = awst::makeIntegerConstant(v, m_loc, awst::WType::biguintType());

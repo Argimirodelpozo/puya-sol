@@ -378,21 +378,8 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 	bool isSub = (_op == BuilderBinaryOp::Sub);
 	bool isMul = (_op == BuilderBinaryOp::Mult);
 
-	// 2^N and 2^(N-1). u256(1)<<256 overflows, so the full-width case uses literals.
-	std::string pow2NStr, halfNStr;
-	if (_bits == 256)
-	{
-		pow2NStr = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
-		halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-	}
-	else
-	{
-		std::ostringstream pow2NOss, halfNOss;
-		pow2NOss << (solidity::u256(1) << _bits);
-		halfNOss << (solidity::u256(1) << (_bits - 1));
-		pow2NStr = pow2NOss.str();
-		halfNStr = halfNOss.str();
-	}
+	// 2^N (wrap modulus) and 2^(N-1) (sign-bit boundary).
+	auto [pow2NStr, halfNStr] = TypeCoercion::pow2NAndHalf(_bits);
 
 	auto makeBiguintConst = [&](std::string const& val) {
 		return awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());

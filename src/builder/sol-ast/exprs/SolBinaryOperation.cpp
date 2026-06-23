@@ -421,20 +421,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 {
 	unsigned bits = _intType->numBits();
 
-	std::string pow2NStr, halfNStr;
-	if (bits == 256)
-	{
-		pow2NStr = kPow2_256;
-		halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-	}
-	else
-	{
-		solidity::u256 pow2N = solidity::u256(1) << bits;
-		solidity::u256 halfN = solidity::u256(1) << (bits - 1);
-		std::ostringstream oss1, oss2;
-		oss1 << pow2N; pow2NStr = oss1.str();
-		oss2 << halfN; halfNStr = oss2.str();
-	}
+	auto [pow2NStr, halfNStr] = builder::TypeCoercion::pow2NAndHalf(bits);
 
 	auto makeBiguintConst = [&](std::string const& val) {
 		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
@@ -549,20 +536,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	unsigned bits = _intType->numBits();
 	bool isDiv = (_op == Token::Div || _op == Token::AssignDiv);
 
-	std::string pow2NStr, halfNStr;
-	if (bits == 256)
-	{
-		pow2NStr = kPow2_256;
-		halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
-	}
-	else
-	{
-		solidity::u256 pow2N = solidity::u256(1) << bits;
-		solidity::u256 halfN = solidity::u256(1) << (bits - 1);
-		std::ostringstream oss1, oss2;
-		oss1 << pow2N; pow2NStr = oss1.str();
-		oss2 << halfN; halfNStr = oss2.str();
-	}
+	auto [pow2NStr, halfNStr] = builder::TypeCoercion::pow2NAndHalf(bits);
 
 	auto makeBiguintConst = [&](std::string const& val) {
 		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());

@@ -243,6 +243,15 @@ std::shared_ptr<awst::Expression> TypeCoercion::maskUnsignedToWidth(
 		_loc);
 }
 
+std::pair<std::string, std::string> TypeCoercion::pow2NAndHalf(unsigned _bits)
+{
+	// 2^N (wrap modulus) and 2^(N-1) (signed sign-bit / INT_MIN boundary). u256(1) << 256
+	// overflows, so the full-width case uses the centralised literals.
+	if (_bits == 256)
+		return {kPow2_256, kHalfMax_256};
+	return {(solidity::u256(1) << _bits).str(), (solidity::u256(1) << (_bits - 1)).str()};
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::coerceToCommonInt(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _srcSol,

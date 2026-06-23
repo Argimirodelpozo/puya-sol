@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace solidity::frontend
@@ -31,6 +32,11 @@ namespace puyasol::builder
 /// copies of the same 78-digit literal scattered through the codebase.
 inline constexpr char const* kPow2_256 =
 	"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+/// 2^255 as a decimal string — the signed 256-bit boundary (|type(int256).min| and the
+/// sign-bit threshold). Centralised like kPow2_256; was hardcoded at ~9 sites.
+inline constexpr char const* kHalfMax_256 =
+	"57896044618658097711785492504343953926634992332820282019728792003956564819968";
 
 /// Construct a biguint IntegerConstant holding 2^256. Wraps the common
 /// `makeIntegerConstant(kPow2_256, loc, biguintType())` call used by
@@ -83,6 +89,13 @@ public:
 		unsigned _bits,
 		awst::SourceLocation const& _loc
 	);
+
+	/// Return {2^bits, 2^(bits-1)} as decimal strings for an N-bit integer type — the
+	/// modulus (two's-complement wrap) and the INT_MIN / sign-bit boundary that the signed
+	/// arith / negate / inc-dec / div-mod / exp paths all need. Centralises the bits==256
+	/// special case (u256(1)<<256 overflows u256, so kPow2_256 / kHalfMax_256 are used).
+	/// Was a ~12-line if/else copy-pasted at 5 sites.
+	static std::pair<std::string, std::string> pow2NAndHalf(unsigned _bits);
 
 	/// Coerce a binary-op integer operand (built from `_srcSol`) to the operation's
 	/// `commonType` (`_commonW` = its mapped wtype), producing a CANONICAL value at the
