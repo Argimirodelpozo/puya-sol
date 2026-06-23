@@ -929,6 +929,25 @@ def test_unchecked_biguint_muladd_consumed(harness):
     assert as_int(harness.call(app, "umul(uint128,uint128)", 1 << 64, 1 << 64).abi_return) == 0
 
 
+def test_abi_bytes_roundtrip(harness):
+    """puyasolRegression/contracts/abi_bytes_roundtrip.sol — NOT an o.g. semantic test.
+
+    Found by the abi-round-trip fuzz probe. abi.decode(abi.encode(b),(bytes)) did not round-trip a
+    `bytes` value: handleDecode short-circuited (decoded->wtype == targetType, both `bytes`) and returned
+    the ARC4 byte[] encoding (uint16 length prefix + data) instead of ARC4-decoding to raw bytes — the
+    result was 2 bytes too long and r[0] was the length high-byte (0), not b[0]. string was already
+    correct (its wtype `bytes` != target `string` → fell through to ARC4Decode). FIX: exclude dynamic
+    bytes/string targets from the short-circuit so `bytes` also routes through ARC4Decode.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/abi_bytes_roundtrip.sol")
+    assert as_int(harness.call(app, "rtLen(bytes)", b"abc").abi_return) == 3        # was 5
+    assert as_int(harness.call(app, "rtLen(bytes)", b"").abi_return) == 0           # was 2
+    assert as_int(harness.call(app, "rtLen(bytes)", bytes(40)).abi_return) == 40    # was 42
+    assert as_int(harness.call(app, "rtFirst(bytes)", b"abc").abi_return) == 97     # 'a', was 0
+    assert as_int(harness.call(app, "rtEq(bytes)", b"hello world").abi_return) == 1
+    assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
+
+
 def test_signed_mul_complex_operand(harness):
     """puyasolRegression/contracts/signed_mul_complex_operand.sol — NOT an o.g. semantic test.
 

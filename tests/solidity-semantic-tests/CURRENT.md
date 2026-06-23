@@ -1,3 +1,18 @@
+# Semantic Test Status — v436
+
+> **fix(abi): abi.decode(.,(bytes)) strips the ARC4 length prefix (2026-06-23):**
+> **57 failed / 1287 passed / 87 xf** (zero-reg; +abi_bytes_roundtrip guard). Found by an abi-round-trip
+> fuzz probe. abi.decode(abi.encode(b), (bytes)) did NOT round-trip a `bytes` value — handleDecode
+> short-circuited (`decoded->wtype == targetType`, both `bytes`) and returned the ARC4 byte[] encoding
+> (uint16 length prefix + data) instead of ARC4-decoding to raw bytes, so the result was 2 bytes too long
+> and r[0] was the length high-byte (0) not b[0]. `string` was already correct (its wtype `bytes` differs
+> from the `string` target → it fell through to ARC4Decode). FIX (AbiEncoderBuilder::handleDecode): exclude
+> dynamic bytes/string targets from the wtype-equality short-circuit so `bytes` also routes through
+> reinterpret→ARC4Decode (mapToARC4Type(bytes) is a distinct ARC4DynamicArray, so the decode strips the
+> prefix). Guard test_abi_bytes_roundtrip. OPEN sibling finding (NOT fixed): abi.decode of a TUPLE with a
+> signed sub-word element (e.g. (uint128,int16,address)) returned directly fails to COMPILE — the int16
+> decodes to uint64 but the return type maps it to biguint and no coercion bridges them.
+
 # Semantic Test Status — v435
 
 > **fix(intN): unchecked sub-256 Add/Mult wrap to the type width, not 2^256 (2026-06-23):**

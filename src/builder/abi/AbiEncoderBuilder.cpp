@@ -378,7 +378,14 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 
 	auto decoded = _ctx.buildExpr(*_callNode.arguments()[0]);
 
-	if (!targetType || decoded->wtype == targetType)
+	// A dynamic bytes/string target is ARC4-encoded as byte[] (uint16 length + data). Its wtype is
+	// `bytes`, which equals the `bytes` TARGET's wtype — but the value still needs ARC4Decode to strip
+	// the length prefix, so abi.decode(abi.encode(b),(bytes)) round-trips to raw `b` not the encoded
+	// form. (string already falls through here since its wtype `bytes` != target `string`; bytes did
+	// not, so the short-circuit returned the length-prefixed encoding.)
+	bool dynByteTarget = (targetType == awst::WType::bytesType()
+		|| targetType == awst::WType::stringType());
+	if (!targetType || (decoded->wtype == targetType && !dynByteTarget))
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(decoded));
 
 	// ── ARC4-everywhere: the input bytes ARE the ARC4 encoding. Reinterpret to
