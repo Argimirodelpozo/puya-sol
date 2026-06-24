@@ -324,6 +324,41 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			signedBits = it->numBits();
 	}
 
+	unsigned unsignedBits = 0;
+	if (!isSigned)
+	{
+		if (auto const* it = dynamic_cast<IntegerType const*>(
+				m_unaryOp.subExpression().annotation().type))
+			unsignedBits = it->numBits();
+	}
+
+	// Checked unsigned `++` overflow guard. The signed path (below) and `x += 1` both check, but the
+	// unsigned inc just computes base+1: native uint64 add reverts on its own, but a sub-word
+	// (uint8..uint56) add yields e.g. 256 that later masks to 0, and a biguint (uint65..uint256) add
+	// yields the exact 2^N with no auto-revert — both silently wrapped. Assert result <= 2^bits-1 via a
+	// self-contained comma so it composes in both the prefix value and the postfix write. (Dec underflow
+	// is already caught: uint64 `-` and biguint `b-` revert on a negative result.) Found by the differential fuzzer.
+	auto guardUIncOverflow = [&](std::shared_ptr<awst::Expression> bin, unsigned bits)
+		-> std::shared_ptr<awst::Expression>
+	{
+		auto* wt = bin->wtype;
+		static int s_uincCounter = 0;
+		std::string tmpName = "__uinc_" + std::to_string(s_uincCounter++);
+		solidity::u256 maxV = (bits >= 256) ? (solidity::u256(0) - 1)
+		                                     : ((solidity::u256(1) << bits) - 1);
+		std::ostringstream oss; oss << maxV;
+		auto bind = awst::makeAssignmentExpression(
+			awst::makeVarExpression(tmpName, wt, m_loc), std::move(bin), m_loc, wt);
+		auto cmp = awst::makeNumericCompare(
+			awst::makeVarExpression(tmpName, wt, m_loc), awst::NumericComparison::Lte,
+			awst::makeIntegerConstant(oss.str(), m_loc, wt), m_loc);
+		auto comma = awst::makeCommaExpression(wt, m_loc);
+		comma->expressions.push_back(std::move(bind));
+		comma->expressions.push_back(awst::makeAssert(std::move(cmp), m_loc, "overflow"));
+		comma->expressions.push_back(awst::makeVarExpression(tmpName, wt, m_loc));
+		return comma;
+	};
+
 	auto makeNewValue = [&](std::shared_ptr<awst::Expression> base)
 		-> std::shared_ptr<awst::Expression>
 	{
@@ -395,12 +430,19 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		{
 			auto one = awst::makeOne(m_loc, awst::WType::biguintType());
 			auto bin = awst::makeBigUIntBinOp(std::move(base), isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
+			// biguint (uint65..uint256) add never auto-reverts — guard checked inc at 2^N.
+			if (isInc && !m_scope.isUnchecked() && unsignedBits > 0)
+				return guardUIncOverflow(std::move(bin), unsignedBits);
 			return bin;
 		}
 		else
 		{
 			auto one = awst::makeOne(m_loc);
 			auto bin = awst::makeUInt64BinOp(std::move(base), isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
+			// Sub-word (uint8..uint56) add yields up to 2^bits that masks to 0 — guard checked inc.
+			// uint64 (bits==64) is left to the native `+` opcode, which reverts on overflow.
+			if (isInc && !m_scope.isUnchecked() && unsignedBits > 0 && unsignedBits < 64)
+				return guardUIncOverflow(std::move(bin), unsignedBits);
 			return bin;
 		}
 	};

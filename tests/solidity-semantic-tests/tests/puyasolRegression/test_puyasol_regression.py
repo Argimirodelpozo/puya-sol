@@ -970,6 +970,32 @@ def test_abi_bytes_roundtrip(harness):
     assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
 
 
+def test_unsigned_inc_overflow(harness):
+    """puyasolRegression/contracts/unsigned_inc_overflow.sol — NOT an o.g. semantic test.
+
+    Found by the differential fuzzer (compound-edges probe). Checked unsigned `x++`/`++x` missed the
+    overflow assert that `x += 1` emits: SolUnaryOperation::handleIncDec's makeNewValue had the check on
+    the signed branch only; the unsigned branches just computed base+1. Native uint64 reverted by luck
+    (its `+` opcode overflows), but a sub-word (uint8..uint56) add yielded e.g. 256 that masked to 0, and
+    a biguint (uint65..uint256) add yielded the exact 2^N — both silently WRAPPED where EVM reverts (a
+    soundness bug: `counter++` at max wrapped). FIX: guardUIncOverflow asserts result <= 2^bits-1 for
+    checked sub-word + biguint inc (uint64 left to its native opcode). %= / dec / unchecked unaffected.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/unsigned_inc_overflow.sol")
+    # overflow at max must revert (was silently wrapping to 0)
+    assert harness.call(app, "postInc8(uint8)", 255, expect_revert=True).reverted
+    assert harness.call(app, "preInc8(uint8)", 255, expect_revert=True).reverted
+    assert harness.call(app, "postInc16(uint16)", 65535, expect_revert=True).reverted
+    assert harness.call(app, "postInc128(uint128)", (1 << 128) - 1, expect_revert=True).reverted
+    assert harness.call(app, "postInc256(uint256)", (1 << 256) - 1, expect_revert=True).reverted
+    # in-range increments still correct
+    assert as_int(harness.call(app, "postInc8(uint8)", 5).abi_return) == 6
+    assert as_int(harness.call(app, "postInc8(uint8)", 254).abi_return) == 255
+    assert as_int(harness.call(app, "postInc128(uint128)", 7).abi_return) == 8
+    # unchecked still wraps (no false revert)
+    assert as_int(harness.call(app, "uncheckedInc8(uint8)", 255).abi_return) == 0
+
+
 def test_compound_signed_div_overflow(harness):
     """puyasolRegression/contracts/compound_signed_div_overflow.sol — NOT an o.g. semantic test.
 

@@ -1,3 +1,18 @@
+# Semantic Test Status — v440
+
+> **fix(sol-ast): checked unsigned `x++`/`++x` missed the overflow assert (2026-06-24):**
+> **56 failed / 1292 passed / 87 xf** (zero-reg; +unsigned_inc_overflow guard). Found by the
+> differential fuzzer (compound-edges probe). SolUnaryOperation::handleIncDec's makeNewValue emitted the
+> inc/dec overflow check on the SIGNED branch only; the two unsigned branches just computed base+1. A
+> native uint64 reverted by luck (its `+` opcode overflows), but a SUB-WORD (uint8..uint56) add yielded
+> e.g. 256 that later masked to 0, and a BIGUINT (uint65..uint256) add yielded the exact 2^N with no
+> auto-revert — both silently WRAPPED where EVM reverts (a SOUNDNESS bug: `counter++` at type max wrapped
+> instead of reverting). FIX: guardUIncOverflow asserts result <= 2^bits-1 for checked sub-word + biguint
+> inc, via a self-contained comma `(t=base+1, assert t<=max, t)` that composes in both the prefix value
+> and the postfix prePending write; uint64 left to its native opcode. `+= 1` / `x=x+1` already checked
+> (binary_op path); dec underflow already reverts (uint64/biguint `Sub` opcode); unchecked unaffected.
+> Guard test_unsigned_inc_overflow. NOTE separate OPEN finding: unchecked x++/x-- don't WRAP at the
+> boundary (AVM reverts vs EVM wraps) — dec all widths + uint256 inc; recorded, not in this commit.
 # Semantic Test Status — v439
 
 > **fix(sol-eb): compound `x /= b` signed-division intN.min/-1 overflow not checked (2026-06-24):**
