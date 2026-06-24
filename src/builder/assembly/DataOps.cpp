@@ -120,8 +120,11 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 			}
 		}
 
+		// Skip calldata params: their m_localConstants entry is the calldata HEAD OFFSET (for the
+		// `.offset`/`.length` paths), not a value. A bare param used as a value (memory offset etc.)
+		// must resolve to its runtime value, so fall through to the runtime VarExpression.
 		auto it = m_localConstants.find(name);
-		if (it != m_localConstants.end())
+		if (it != m_localConstants.end() && !m_calldataParamNames.count(name))
 			return it->second;
 
 		auto cit = m_constants.find(name);

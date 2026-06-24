@@ -825,6 +825,13 @@ private:
 	/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
 	std::map<std::string, uint64_t> m_localConstants;
 
+	/// Names of calldata PARAMS whose head byte-offset is stashed in m_localConstants (for the
+	/// `.offset`/`.length` suffix + calldataMap paths). A BARE param name used as a value (e.g. as a
+	/// memory offset `mstore(off, v)`) must resolve to its RUNTIME value, not that calldata-offset
+	/// constant — so the bare-name constant resolvers skip these. (Solidity requires `.offset` for
+	/// reference-type calldata, so no valid bare-aggregate-as-offset case exists.)
+	std::set<std::string> m_calldataParamNames;
+
 	/// Solidity `constant` vars referenced in assembly: name → decimal string.
 	/// "__slot_"-prefixed values are storage-slot refs (see m_storageSlotVars).
 	std::map<std::string, std::string> m_constants;

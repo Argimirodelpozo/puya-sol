@@ -121,6 +121,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_returnType = _returnType;
 	m_locals.clear();
 	m_localConstants.clear();
+	m_calldataParamNames.clear();
 	m_calldataMap.clear();
 	m_asmFunctions.clear();
 	m_upgradedLocals.clear();
@@ -507,8 +508,10 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantOffset(
 
 	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_expr.get()))
 	{
+		// Calldata params: m_localConstants holds their calldata head offset (for `.offset`), not a
+		// value — a bare param used as an offset must resolve to its runtime value (skip here).
 		auto it = m_localConstants.find(varExpr->name);
-		if (it != m_localConstants.end())
+		if (it != m_localConstants.end() && !m_calldataParamNames.count(varExpr->name))
 			return it->second;
 	}
 
@@ -754,6 +757,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	// Save state so the outer block can resume after the subroutine is built.
 	auto savedLocals = std::move(m_locals);
 	auto savedConstants = std::move(m_localConstants);
+	auto savedCalldataParamNames = std::move(m_calldataParamNames);
 	auto savedUpgraded = std::move(m_upgradedLocals);
 	auto savedParamBitWidths = m_paramBitWidths;
 	auto savedPending = std::move(m_pendingStatements);
@@ -766,6 +770,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	m_locals.clear();
 	m_localConstants.clear();
+	m_calldataParamNames.clear();
 	m_upgradedLocals.clear();
 	m_pendingStatements.clear();
 	m_haltEmitted = false;
@@ -839,6 +844,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	m_locals = std::move(savedLocals);
 	m_localConstants = std::move(savedConstants);
+	m_calldataParamNames = std::move(savedCalldataParamNames);
 	m_upgradedLocals = std::move(savedUpgraded);
 	m_paramBitWidths = std::move(savedParamBitWidths);
 	m_pendingStatements = std::move(savedPending);

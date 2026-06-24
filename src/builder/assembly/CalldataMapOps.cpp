@@ -73,6 +73,7 @@ void AssemblyBuilder::initializeCalldataMap(
 	{
 		int elementCount = computeFlatElementCount(type);
 		m_localConstants[name] = offset;
+		m_calldataParamNames.insert(name);
 		for (int i = 0; i < elementCount; ++i)
 		{
 			CalldataElement elem;

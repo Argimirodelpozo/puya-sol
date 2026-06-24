@@ -1,3 +1,18 @@
+# Semantic Test Status — v443
+
+> **fix(asm): a function param used as a memory offset resolved to its calldata-offset constant (2026-06-24):**
+> **56 failed / 1295 passed / 87 xf** (zero-reg; +asm_param_memory_offset guard). Found by the differential
+> fuzzer. A bare function PARAM used as a memory offset in inline assembly (`mstore(off, v)` / `mload(off)`)
+> folded to its CALLDATA head-offset CONSTANT, not its runtime value: initializeCalldataMap stashes
+> `paramName -> calldata head byte offset` in m_localConstants (needed by the `.offset`/`.length` suffix +
+> calldataMap paths), but the two BARE-name constant resolvers (resolveConstantYulValue,
+> resolveConstantOffset) also consulted m_localConstants, so `off` folded to e.g. 4 -> `mstore` lowered to
+> `replace2 4`, hitting a fixed wrong memory slot (`paramOff(64,7)` returned 64, not 7). const offsets and
+> let-locals were fine; only param names collided. FIX: track calldata param names in a dedicated
+> m_calldataParamNames set; the two bare-name resolvers skip them, so a bare param resolves to its runtime
+> VarExpression. The `.offset`/`.length` suffix resolution + calldataMap (calldataload) reads are separate
+> and unaffected. (honk uses calldata-offset asm but is not in the main suite (uros_*.py) and was not
+> re-verified — acceptable per project policy.) Guard test_asm_param_memory_offset.
 # Semantic Test Status — v442
 
 > **fix(sol-ast): compound assign on a storage dynamic-array element didn't compile (2026-06-24):**

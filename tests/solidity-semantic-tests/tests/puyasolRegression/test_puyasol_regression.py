@@ -970,6 +970,28 @@ def test_abi_bytes_roundtrip(harness):
     assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
 
 
+def test_asm_param_memory_offset(harness):
+    """puyasolRegression/contracts/asm_param_memory_offset.sol — NOT an o.g. semantic test.
+
+    Found by the differential fuzzer. A function PARAM used as a memory offset in inline assembly
+    (mstore(off, v) / mload(off)) resolved to its CALLDATA head-offset CONSTANT instead of its runtime
+    value: initializeCalldataMap stashes paramName -> calldata head byte offset in m_localConstants (for
+    the .offset/.length paths), but the bare-name constant resolvers (resolveConstantYulValue /
+    resolveConstantOffset) also consulted it, so `off` folded to e.g. constant 4 -> mstore lowered to
+    `replace2 4`, hitting a fixed wrong slot. const/let-local offsets were fine; only param names collided.
+    FIX: track calldata param names (m_calldataParamNames); the two bare-name resolvers skip them so a
+    bare param resolves to its runtime VarExpression. The .offset/.length suffix + calldataMap paths are
+    unaffected (separate reads).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_param_memory_offset.sol")
+    assert as_int(harness.call(app, "paramOff(uint256,uint256)", 64, 7).abi_return) == 7      # was 64
+    assert as_int(harness.call(app, "paramOff(uint256,uint256)", 96, 12345).abi_return) == 12345
+    assert as_int(harness.call(app, "paramOffAdd(uint256,uint256)", 64, 7).abi_return) == 7   # was 64
+    assert as_int(harness.call(app, "twoParams(uint256,uint256,uint256)", 0, 0, 100).abi_return) == 201  # 100 + 101
+    assert as_int(harness.call(app, "constOff(uint256)", 7).abi_return) == 7        # control still works
+    assert as_int(harness.call(app, "letOff(uint256,uint256)", 64, 7).abi_return) == 7  # control still works
+
+
 def test_dynarray_compound_assign(harness):
     """puyasolRegression/contracts/dynarray_compound_assign.sol — NOT an o.g. semantic test.
 
