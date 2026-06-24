@@ -426,6 +426,37 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			}
 			return mod;
 		}
+		else if (!isSigned && m_scope.isUnchecked() && unsignedBits > 0)
+		{
+			// Unsigned UNCHECKED inc/dec must WRAP mod 2^N (EVM), but the native uint64 +/- opcodes and
+			// the biguint b- opcode REVERT at the boundary (uint64 max+1 overflows, 0-1 underflows).
+			// Compute in biguint: inc = v+1; dec = v + (2^N-1) [add max, not subtract 1, to dodge
+			// underflow]; then mod 2^N. Narrow back to uint64 for sub-word/uint64 backings.
+			auto makeBConst = [&](std::string const& v) {
+				return awst::makeIntegerConstant(v, m_loc, awst::WType::biguintType());
+			};
+			static const std::string pow2_256Str =
+				"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			bool nativeBack = !isBigUInt(base->wtype);
+			auto val = promoteToSignedBiguint(std::move(base), m_loc);
+			std::shared_ptr<awst::Expression> added;
+			if (isInc)
+				added = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst("1"), m_loc);
+			else
+			{
+				std::string maxStr = (unsignedBits >= 256)
+					? pow256Minus1
+					: ((solidity::u256(1) << unsignedBits) - 1).str();
+				added = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst(maxStr), m_loc);
+			}
+			std::string pow2NStr = (unsignedBits >= 256)
+				? pow2_256Str
+				: (solidity::u256(1) << unsignedBits).str();
+			auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr), m_loc);
+			if (nativeBack)
+				return awst::makeBiguintToUInt64(std::move(mod), m_loc);
+			return mod;
+		}
 		else if (isBigUInt(base->wtype))
 		{
 			auto one = awst::makeOne(m_loc, awst::WType::biguintType());

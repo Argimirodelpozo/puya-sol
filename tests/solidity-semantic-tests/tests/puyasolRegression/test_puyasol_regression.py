@@ -970,6 +970,31 @@ def test_abi_bytes_roundtrip(harness):
     assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
 
 
+def test_unchecked_incdec_wrap(harness):
+    """puyasolRegression/contracts/unchecked_incdec_wrap.sol — NOT an o.g. semantic test.
+
+    Found by the differential fuzzer (inc/dec probe). `unchecked { x++ }` / `unchecked { x-- }` at the
+    type boundary REVERTED on AVM where EVM WRAPS mod 2^N: the native uint64 +/- opcodes and the biguint
+    b- opcode revert on over/underflow (0-1, max+1), and there's no full-width downstream mask for
+    uint256 inc. Broken: dec at 0 (all widths) + uint256 inc at max. FIX (SolUnaryOperation::handleIncDec
+    makeNewValue): a dedicated unsigned-unchecked branch computes the wrap in biguint — inc = v+1,
+    dec = v + (2^N-1) [add max instead of subtract 1, dodging underflow] — then mod 2^N, narrowed back to
+    uint64 for sub-word/uint64 backings. Checked paths + signed branch untouched.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/unchecked_incdec_wrap.sol")
+    assert as_int(harness.call(app, "decU8(uint8)", 0).abi_return) == 255          # was REVERT
+    assert as_int(harness.call(app, "decU128(uint128)", 0).abi_return) == (1 << 128) - 1
+    assert as_int(harness.call(app, "decU256(uint256)", 0).abi_return) == (1 << 256) - 1
+    assert as_int(harness.call(app, "decU64(uint64)", 0).abi_return) == (1 << 64) - 1
+    assert as_int(harness.call(app, "incU256(uint256)", (1 << 256) - 1).abi_return) == 0  # was REVERT
+    assert as_int(harness.call(app, "incU64(uint64)", (1 << 64) - 1).abi_return) == 0
+    assert as_int(harness.call(app, "preDecU8(uint8)", 0).abi_return) == 255
+    # non-boundary still correct
+    assert as_int(harness.call(app, "decU8(uint8)", 5).abi_return) == 4
+    assert as_int(harness.call(app, "incU256(uint256)", 9).abi_return) == 10
+    assert as_int(harness.call(app, "decU64(uint64)", 100).abi_return) == 99
+
+
 def test_unsigned_inc_overflow(harness):
     """puyasolRegression/contracts/unsigned_inc_overflow.sol — NOT an o.g. semantic test.
 

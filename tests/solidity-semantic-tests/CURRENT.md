@@ -1,3 +1,17 @@
+# Semantic Test Status — v441
+
+> **fix(sol-ast): unchecked unsigned x++/x-- didn't WRAP at the type boundary (2026-06-24):**
+> **56 failed / 1293 passed / 87 xf** (zero-reg; +unchecked_incdec_wrap guard). Found by the
+> differential fuzzer (inc/dec probe). `unchecked { x++ }` / `unchecked { x-- }` REVERTED on AVM where
+> EVM WRAPS mod 2^N: the native uint64 +/- opcodes and the biguint b- opcode revert on over/underflow
+> (uint64 max+1, 0-1), and uint256 inc has no full-width downstream mask. Broken: dec at 0 (ALL unsigned
+> widths → revert vs wrap-to-max) + uint256 inc at max (→ revert vs 0). (sub-256 inc already wrapped via
+> the downstream mask; signed unchecked already wrapped via its mod-2^N.) FIX
+> (SolUnaryOperation::handleIncDec makeNewValue): a dedicated unsigned-UNCHECKED branch computes the wrap
+> in biguint, dodging the reverting opcodes — inc = v+1, dec = v + (2^N-1) [add max instead of subtract
+> 1], then mod 2^N, narrowed back to uint64 for sub-word/uint64 backings. Checked paths (incl. the v440
+> overflow guard) + the signed branch untouched. Companion to v440 (checked unsigned ++ overflow). Guard
+> test_unchecked_incdec_wrap.
 # Semantic Test Status — v440
 
 > **fix(sol-ast): checked unsigned `x++`/`++x` missed the overflow assert (2026-06-24):**
