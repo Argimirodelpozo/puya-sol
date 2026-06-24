@@ -196,16 +196,26 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			auto it = m_localConstants.find(baseName);
 			if (it != m_localConstants.end())
 			{
-				auto node = awst::makeIntegerConstant(it->second, loc, awst::WType::biguintType());
-				return node;
+				// Dynamic calldata param: .offset is a RUNTIME data position read byte-addressed from
+				// __cd_blob (its head holds a tail pointer). Static params keep the constant head pos.
+				auto typeIt = m_locals.find(baseName);
+				if (m_useSyntheticCalldata && typeIt != m_locals.end()
+					&& isDynamicCalldataType(typeIt->second))
+					return calldataDynOffset(it->second, loc);
+				return awst::makeIntegerConstant(it->second, loc, awst::WType::biguintType());
 			}
 		}
 		else if (suffix == "length")
 		{
-			// .length for calldata arrays/bytes — emit len(param)
 			auto paramIt = m_locals.find(baseName);
 			if (paramIt != m_locals.end())
 			{
+				// Dynamic calldata param: .length = the EVM-ABI length word read from __cd_blob.
+				auto cdIt = m_localConstants.find(baseName);
+				if (m_useSyntheticCalldata && cdIt != m_localConstants.end()
+					&& isDynamicCalldataType(paramIt->second))
+					return calldataDynLength(cdIt->second, loc);
+				// Fallback: len() of the decoded value (correct for bytes/string without the blob).
 				auto paramVar = awst::makeVarExpression(baseName, paramIt->second, loc);
 				return awst::makeLen(std::move(paramVar), loc);
 			}

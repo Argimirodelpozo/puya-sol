@@ -20,6 +20,24 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 
 	scanExpr = [&](solidity::yul::Expression const& _expr) {
 		if (found) return;
+		if (auto const* id = std::get_if<solidity::yul::Identifier>(&_expr))
+		{
+			// A dynamic calldata param's `.offset`/`.length` is read at runtime from __cd_blob, so it
+			// needs the blob stood up even when there is no calldataload/copy/size in the block.
+			std::string n = id->name.str();
+			auto dot = n.rfind('.');
+			if (dot != std::string::npos)
+			{
+				std::string suffix = n.substr(dot + 1);
+				if (suffix == "offset" || suffix == "length")
+				{
+					auto it = m_locals.find(n.substr(0, dot));
+					if (it != m_locals.end() && isDynamicCalldataType(it->second))
+						found = true;
+				}
+			}
+			return;
+		}
 		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
 		{
 			std::string n = getFunctionName(call->functionName);
@@ -102,7 +120,9 @@ std::shared_ptr<awst::Expression> padTo32Multiple(
 	return awst::makeRightPadTo32Multiple(std::move(_bytes), _loc);
 }
 
-bool isDynamicAbi(awst::WType const* _type)
+} // anonymous
+
+bool AssemblyBuilder::isDynamicCalldataType(awst::WType const* _type) const
 {
 	if (!_type) return false;
 	if (_type == awst::WType::bytesType()) return true;
@@ -116,7 +136,33 @@ bool isDynamicAbi(awst::WType const* _type)
 	return false;
 }
 
-} // anonymous
+std::shared_ptr<awst::Expression> AssemblyBuilder::calldataDynOffset(
+	uint64_t _headPos, awst::SourceLocation const& _loc)
+{
+	auto u64 = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type()); };
+	// headWord = btoi(extract3(__cd_blob, headPos+24, 8))  — low 8 bytes of the 32-byte head pointer.
+	auto headWord = awst::makeBtoi(awst::makeExtract3(
+		awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc),
+		u64(_headPos + 24), u64(8), _loc), _loc);
+	// .offset = headWord + 36  (4-byte selector + 32-byte length word).
+	auto offU64 = awst::makeUInt64BinOp(std::move(headWord), awst::UInt64BinaryOperator::Add, u64(36), _loc);
+	return awst::makeAsBiguint(awst::makeItob(std::move(offU64), _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::calldataDynLength(
+	uint64_t _headPos, awst::SourceLocation const& _loc)
+{
+	auto u64 = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type()); };
+	auto headWord = awst::makeBtoi(awst::makeExtract3(
+		awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc),
+		u64(_headPos + 24), u64(8), _loc), _loc);
+	// length word sits at byte (4 + headWord); its low 8 bytes at (4 + headWord + 24) = headWord + 28.
+	auto lenPos = awst::makeUInt64BinOp(std::move(headWord), awst::UInt64BinaryOperator::Add, u64(28), _loc);
+	auto lenU64 = awst::makeBtoi(awst::makeExtract3(
+		awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc),
+		std::move(lenPos), u64(8), _loc), _loc);
+	return awst::makeAsBiguint(awst::makeItob(std::move(lenU64), _loc), _loc);
+}
 
 void AssemblyBuilder::buildSyntheticCalldataBlob(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
@@ -161,7 +207,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
-		if (isDynamicAbi(type))
+		if (isDynamicCalldataType(type))
 		{
 			// Head: current tail offset (updated in pass 2 after emitting the tail body).
 			_out.push_back(awst::makeAssignmentStatement(
@@ -216,7 +262,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
-		if (!isDynamicAbi(type)) continue;
+		if (!isDynamicCalldataType(type)) continue;
 
 		auto var = awst::makeVarExpression(name, type, _loc);
 		auto lenExpr = lenOf(var);
@@ -272,7 +318,7 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		// entry, i.e. exactly the value that head should hold).
 		for (size_t j = i + 1; j < _params.size(); ++j)
 		{
-			if (!isDynamicAbi(_params[j].second)) continue;
+			if (!isDynamicCalldataType(_params[j].second)) continue;
 			uint64_t headByteOffset = 4 + j * 32;
 			auto patch = awst::makeReplace3(bytesVar(CD_BLOB_VAR), u64Const(headByteOffset), pad32BE(u64Var("__cd_tail_off"), _loc), _loc);
 			_out.push_back(awst::makeAssignmentStatement(bytesVar(CD_BLOB_VAR), std::move(patch), _loc));

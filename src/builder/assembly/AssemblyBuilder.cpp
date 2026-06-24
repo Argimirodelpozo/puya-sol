@@ -114,7 +114,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	std::map<std::string, StateVarSlot> const& _stateVarSlots,
 	std::map<solidity::yul::Identifier const*,
 		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs,
-	std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName
+	std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName,
+	size_t _numCalldataParams
 )
 {
 	m_returnType = _returnType;
@@ -140,12 +141,18 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	for (auto const& [name, type]: _params)
 		m_locals[name] = type ? type : awst::WType::biguintType();
 
-	initializeCalldataMap(_params);
+	// The synthetic calldata blob + offset map model the EVM calldata buffer, which holds ONLY
+	// the function's real input args — not the external refs / return vars SolInlineAssembly
+	// appends to _params. Slice to the leading calldata params so the EVM-ABI head/tail layout
+	// (and thus .offset/.length) is correct.
+	size_t nCd = std::min(_numCalldataParams, _params.size());
+	m_calldataParams.assign(_params.begin(), _params.begin() + nCd);
 
-	// Enable synthetic-calldata blob if Yul accesses calldata at non-constant offsets
-	// or uses calldatasize. Blob is emitted in the prelude below, after array-param init.
+	initializeCalldataMap(m_calldataParams);
+
+	// Enable synthetic-calldata blob if Yul accesses calldata at non-constant offsets / calldatasize
+	// / a dynamic param's .offset|.length. Blob is emitted in the prelude below, after array-param init.
 	m_useSyntheticCalldata = detectDynamicCalldataAccess(_block);
-	m_calldataParams = _params;
 
 	// Detect array parameter for blob initialization
 	for (auto const& [name, type]: _params)
@@ -400,7 +407,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 	// Build __cd_blob (selector + head + tail) for dynamic-offset calldataload/calldatasize.
 	if (m_useSyntheticCalldata)
-		buildSyntheticCalldataBlob(_params, _out, loc);
+		buildSyntheticCalldataBlob(m_calldataParams, _out, loc);
 
 	// Write array param elements into blob at 0x80 + i*0x20
 	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)

@@ -95,7 +95,12 @@ public:
 		std::map<std::string, StateVarSlot> const& _stateVarSlots = {},
 		std::map<solidity::yul::Identifier const*,
 			solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs = {},
-		std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName = {}
+		std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName = {},
+		/// Number of leading _params that are the function's real CALLDATA args (the rest are
+		/// external refs / return vars appended by SolInlineAssembly). The synthetic calldata
+		/// blob + offset map are built from ONLY these — using the full augmented list inflates
+		/// the EVM-ABI head and breaks .offset/.length. Default = all (back-compat).
+		size_t _numCalldataParams = ~size_t(0)
 	);
 
 	/// Extract function name from a Yul FunctionName (Identifier or BuiltinName).
@@ -778,6 +783,16 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out,
 		awst::SourceLocation const& _loc
 	);
+
+	/// True for a dynamic-ABI calldata param (bytes/string/dynamic array): its head in the
+	/// EVM-ABI blob is a tail POINTER, so .offset/.length must be read at runtime from __cd_blob.
+	bool isDynamicCalldataType(awst::WType const* _type) const;
+
+	/// Runtime .offset / .length of a dynamic calldata param, read byte-addressed from __cd_blob:
+	/// headWord = u64@(headPos); .offset = headWord + 36 (4 selector + 32 length word);
+	/// .length = u64@(headWord + 4). _headPos = the param's head byte position (m_localConstants).
+	std::shared_ptr<awst::Expression> calldataDynOffset(uint64_t _headPos, awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> calldataDynLength(uint64_t _headPos, awst::SourceLocation const& _loc);
 
 	static int computeFlatElementCount(awst::WType const* _type);
 	static int computeARC4ByteSize(awst::WType const* _type);

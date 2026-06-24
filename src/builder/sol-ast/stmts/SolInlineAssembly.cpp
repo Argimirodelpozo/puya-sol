@@ -467,7 +467,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		structRefSlotLocals,
 		stateVarSlots,
 		annotation.externalReferences,
-		declNameFn);
+		declNameFn,
+		// Only the function's own params are real calldata args; externalReferences appended
+		// to augmentedParams above (return vars, outer locals) are NOT in the EVM calldata buffer.
+		m_blk.fn.params.size());
 	// An unconditional top-level halt (EVM return/revert → AVM program exit) makes
 	// everything after this block dead — flag the enclosing block so SolBlock skips
 	// the rest (puya rejects unreachable code).
