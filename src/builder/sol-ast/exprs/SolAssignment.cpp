@@ -345,9 +345,23 @@ SolAssignment::applyCompoundAssignment(
 	// target is the read form; wrap BoxValue in StateGet to read the stored value.
 	// makeWritableTarget in toAwst still yields the write target from the same node.
 	auto currentValue = _target;
+	auto* targetSolType = m_assignment.leftHandSide().annotation().type;
 	if (dynamic_cast<awst::BoxValueExpression const*>(currentValue.get()))
 		currentValue = builder::StorageMapper::makeStateGetWithDefault(currentValue, currentValue->wtype, m_loc);
-	auto* targetSolType = m_assignment.leftHandSide().annotation().type;
+	else if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(currentValue.get()))
+	{
+		// Storage dynamic-array element: the write-form indexes a box and yields the ARC4-ENCODED
+		// element (Encoded(uintN)); the compound arithmetic itob's that and fails. Decode to the native
+		// value (memory/calldata index exprs already carry native values, so gate on a box base; the
+		// later applyArc4EncodeIfNeeded re-encodes the result). Mirrors the read path's decode.
+		if (dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
+		{
+			auto* nativeType = m_ctx.typeMapper.map(targetSolType);
+			if (currentValue->wtype != nativeType)
+				currentValue = builder::TypeCoercion::signExtendSignedElement(
+					awst::makeARC4Decode(currentValue, nativeType, m_loc), targetSolType, m_loc);
+		}
+	}
 	auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 		m_ctx, _op, targetSolType, currentValue, _value, m_loc);
 	if (builderResult)

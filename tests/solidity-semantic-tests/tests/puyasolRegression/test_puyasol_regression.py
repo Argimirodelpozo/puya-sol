@@ -970,6 +970,42 @@ def test_abi_bytes_roundtrip(harness):
     assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
 
 
+def test_dynarray_compound_assign(harness):
+    """puyasolRegression/contracts/dynarray_compound_assign.sol — NOT an o.g. semantic test.
+
+    Found by the differential fuzzer. Compound assignment on a STORAGE dynamic-array element
+    (arr[i] += / -= / *= / |= / /= b) failed to COMPILE (puya backend itob(Encoded(uintN))): SolAssignment
+    applyCompoundAssignment reused the LHS write-form (which indexes a box and is ARC4-ENCODED) as the read
+    value, so the arithmetic itob'd the encoded bytes. Plain arr[i]=arr[i]+b, memory/mapping/fixed/nested,
+    and struct fields all worked. FIX: decode the box-array-element write-form (makeARC4Decode +
+    signExtendSignedElement) before the compound op, gated on a BoxValue base so memory/calldata index
+    exprs stay untouched; the existing applyArc4EncodeIfNeeded re-encodes the result. (arr[i]++/-- via the
+    separate handleIncDec path still doesn't persist the box write — left as the pre-existing compile error.)
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/dynarray_compound_assign.sol")  # was a compile error
+    M = 1 << 256
+    def sgn(v):
+        return v - M if v >= (1 << 255) else v
+    for v in (10, 20, 30):
+        harness.call(app, "pushA(uint128)", v)
+    harness.call(app, "addA(uint256,uint128)", 1, 5)        # a[1] = 25
+    assert as_int(harness.call(app, "getA(uint256)", 0).abi_return) == 10   # neighbours untouched
+    assert as_int(harness.call(app, "getA(uint256)", 1).abi_return) == 25   # persisted
+    assert as_int(harness.call(app, "getA(uint256)", 2).abi_return) == 30
+    harness.call(app, "pushB(int64)", -10)
+    harness.call(app, "subB(uint256,int64)", 0, 5)          # b[0] = -15
+    assert sgn(as_int(harness.call(app, "getB(uint256)", 0).abi_return)) == -15
+    harness.call(app, "subB(uint256,int64)", 0, -20)        # b[0] = 5
+    assert sgn(as_int(harness.call(app, "getB(uint256)", 0).abi_return)) == 5
+    harness.call(app, "pushC(uint256)", 100)
+    harness.call(app, "divC(uint256,uint256)", 0, 4)        # c[0] = 25
+    assert as_int(harness.call(app, "getC(uint256)", 0).abi_return) == 25
+    harness.call(app, "pushD(uint8)", 200)
+    harness.call(app, "addD(uint256,uint8)", 0, 50)         # d[0] = 250
+    assert as_int(harness.call(app, "getD(uint256)", 0).abi_return) == 250
+    assert harness.call(app, "addD(uint256,uint8)", 0, 100, expect_revert=True).reverted  # 250+100 overflow
+
+
 def test_unchecked_incdec_wrap(harness):
     """puyasolRegression/contracts/unchecked_incdec_wrap.sol — NOT an o.g. semantic test.
 

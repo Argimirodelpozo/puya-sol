@@ -1,3 +1,18 @@
+# Semantic Test Status — v442
+
+> **fix(sol-ast): compound assign on a storage dynamic-array element didn't compile (2026-06-24):**
+> **56 failed / 1294 passed / 87 xf** (zero-reg; +dynarray_compound_assign guard). Found by the
+> differential fuzzer. `arr[i] += / -= / *= / |= / /= b` on a STORAGE dynamic array failed to COMPILE
+> (puya backend `incompatible argument types on Intrinsic(itob): received Encoded(uintN)`): SolAssignment
+> applyCompoundAssignment reused the LHS write-form — which indexes a box and is the ARC4-ENCODED element —
+> as the read value, so the arithmetic itob'd the encoded bytes. Plain `arr[i]=arr[i]+b`, memory/mapping/
+> fixed-size/nested arrays, and struct fields all worked (each hits a different decoding path). FIX: decode
+> the box-array-element write-form (makeARC4Decode + signExtendSignedElement) before the compound op, gated
+> on a BoxValue base so memory/calldata index exprs stay untouched; the existing applyArc4EncodeIfNeeded
+> re-encodes the result. Verified persisting + no-aliasing (read-back getters) + stateful fuzz 195 calls
+> clean vs live EVM across widths/signs/ops. NOTE still open: `arr[i]++`/`--` (separate handleIncDec path)
+> — the analogous decode compiled but the box write didn't persist, so left as the fail-loud compile error.
+> Guard test_dynarray_compound_assign.
 # Semantic Test Status — v441
 
 > **fix(sol-ast): unchecked unsigned x++/x-- didn't WRAP at the type boundary (2026-06-24):**
