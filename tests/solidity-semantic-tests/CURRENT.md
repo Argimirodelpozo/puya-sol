@@ -1,3 +1,16 @@
+# Semantic Test Status — v439
+
+> **fix(sol-eb): compound `x /= b` signed-division intN.min/-1 overflow not checked (2026-06-24):**
+> **56 failed / 1291 passed / 87 xf** (zero-reg; +compound_signed_div_overflow guard). Found by the
+> differential fuzzer (signed mixed-width div probe). EVM reverts on the one signed-division overflow
+> case `intN.min / -1` (= +2^(N-1), doesn't fit intN); the plain `a / b` path emits that assert
+> (SolBinaryOperation::buildSignedDivMod) but the compound `x /= b` path routes through the eb builder
+> (SolIntegerBuilder::binary_op -> buildSignedModDiv), which canonicalises to 256-bit, divides, and
+> WRAPS the result back to intN.min silently — AVM returned intN.min where EVM reverts. Affected every
+> width (int128/int256, mixed + same operand widths). FIX: emit the int_min/-1 assert in the eb
+> signed-FloorDiv branch via a comma-expression (operands are 256-bit sign-extended, so
+> intMin=2^256-2^(lhsBits-1), -1=2^256-1; operands pinned to comma-lets, referenced by both guard and
+> divide). `%=` unaffected (mod by -1 = 0). unchecked wraps. Guard test_compound_signed_div_overflow.
 # Semantic Test Status — v438
 
 > **fix(asm): Yul sar(0, x) no-op shift returned -1 for negative x (2026-06-24):**

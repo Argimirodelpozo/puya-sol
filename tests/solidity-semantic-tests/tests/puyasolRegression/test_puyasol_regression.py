@@ -970,6 +970,32 @@ def test_abi_bytes_roundtrip(harness):
     assert as_int(harness.call(app, "stEq(string)", "hello").abi_return) == 1       # string control
 
 
+def test_compound_signed_div_overflow(harness):
+    """puyasolRegression/contracts/compound_signed_div_overflow.sol — NOT an o.g. semantic test.
+
+    Found by the differential fuzzer (signed mixed-width div probe). Compound `x /= b` on a signed
+    type skipped the `intN.min / -1` overflow check that EVM reverts on: the plain `a / b` path emits
+    it (SolBinaryOperation::buildSignedDivMod) but the compound path routes through the eb builder
+    (SolIntegerBuilder::binary_op -> buildSignedModDiv), which wrapped the result back to intN.min
+    silently. Affected every width (int128/int256, mixed + same). FIX: emit the int_min/-1 assert in
+    the eb signed-FloorDiv branch (operands are 256-bit sign-extended: intMin=2^256-2^(N-1), -1=2^256-1).
+    `%=` is unaffected (mod by -1 = 0, no overflow).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/compound_signed_div_overflow.sol")
+    MIN128 = -(1 << 127)
+    MIN256 = -(1 << 255)
+    M = 1 << 256
+    # the overflow case must revert on every shape (was silently returning intN.min)
+    assert harness.call(app, "compMix(int128,int16)", MIN128, -1, expect_revert=True).reverted
+    assert harness.call(app, "compSame(int128,int128)", MIN128, -1, expect_revert=True).reverted
+    assert harness.call(app, "comp256(int256,int256)", MIN256, -1, expect_revert=True).reverted
+    # mod by -1 is fine (0); min/1 is fine (no overflow); normal divisions still correct
+    assert as_int(harness.call(app, "compMod(int128,int128)", MIN128, -1).abi_return) == 0
+    assert as_int(harness.call(app, "compMix(int128,int16)", MIN128, 1).abi_return) == (M + MIN128)
+    assert as_int(harness.call(app, "compMix(int128,int16)", -100, 7).abi_return) == (M - 14)  # -100/7 = -14 trunc
+    assert as_int(harness.call(app, "comp256(int256,int256)", 50, 3).abi_return) == 16
+
+
 def test_abi_decode_tuple_signed_subword(harness):
     """puyasolRegression/contracts/abi_decode_tuple_signed.sol — NOT an o.g. semantic test.
 
