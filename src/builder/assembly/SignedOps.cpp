@@ -236,29 +236,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	auto shrResult = handleShr(coercedArgs, _loc);
 	auto valNeg = isNegative256(val, _loc);
 
-	auto shiftAmt = _args[0];
-	std::shared_ptr<awst::Expression> shiftU64;
-	if (shiftAmt->wtype != awst::WType::uint64Type())
-		shiftU64 = safeBtoi(shiftAmt, _loc);
-	else
-		shiftU64 = shiftAmt;
-
-	auto shiftGe256 = awst::makeNumericCompare(
-		ensureBiguint(_args[0], _loc), awst::NumericComparison::Gte,
-		awst::makeBiguintConstant("256", _loc), _loc);
-	auto sub256 = awst::makeUInt64BinOp(
-		awst::makeIntegerConstant("256", _loc), awst::UInt64BinaryOperator::Sub,
-		std::move(shiftU64), _loc);
-	auto complementShift = awst::makeConditional(
-		std::move(shiftGe256), awst::makeIntegerConstant("0", _loc),
-		std::move(sub256), awst::WType::uint64Type(), _loc);
-
-	auto pow2Complement = buildPowerOf2(complementShift, _loc);
-	auto maxU256 = awst::makeBiguintConstant(
-		"115792089237316195423570985008687907853269984665640564039457584007913129639935", _loc);
+	// fillMask = the high `shift` sign bits = MAX - shr(shift, MAX). Using shr (which already
+	// saturates to 0 for shift>=256 and is identity for shift==0) avoids the 2^256 / underflow edge
+	// cases of the old 256-shift complement: at shift==0, shr(0,MAX)=MAX so fillMask=0 (sar(0,x)=x,
+	// previously all-ones for negative x); at shift>=256, shr=0 so fillMask=MAX (all sign bits).
+	auto maxStr = std::string(
+		"115792089237316195423570985008687907853269984665640564039457584007913129639935");
+	std::vector<std::shared_ptr<awst::Expression>> shrMaxArgs = {
+		_args[0], awst::makeBiguintConstant(maxStr, _loc)};
+	auto shrMax = handleShr(shrMaxArgs, _loc);
 	auto fillMask = makeBigUIntBinOp(
-		makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, pow2Complement, _loc),
-		awst::BigUIntBinaryOperator::Add, awst::makeBiguintConstant("1", _loc), _loc);
+		awst::makeBiguintConstant(maxStr, _loc), awst::BigUIntBinaryOperator::Sub,
+		std::move(shrMax), _loc);
 
 	auto negResult = awst::makeAsBiguint(
 		awst::makeBytesOr(awst::makeAsBytes(shrResult, _loc),

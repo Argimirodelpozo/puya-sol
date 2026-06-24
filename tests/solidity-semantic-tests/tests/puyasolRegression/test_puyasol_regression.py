@@ -929,6 +929,28 @@ def test_unchecked_biguint_muladd_consumed(harness):
     assert as_int(harness.call(app, "umul(uint128,uint128)", 1 << 64, 1 << 64).abi_return) == 0
 
 
+def test_asm_sar_shift_zero(harness):
+    """puyasolRegression/contracts/asm_sar_shift_zero.sol — NOT an o.g. semantic test.
+
+    Found by the asm-opcode fuzz probe. Yul `sar(0, x)` (arithmetic shift-right by ZERO) returned
+    all-ones (-1) for a negative x instead of x unchanged: complementShift = 256 - shift = 256 at
+    shift 0, and 2^256 overflows u256 (wraps to 1) so fillMask = MAX, giving shr|MAX = -1. The
+    shift>=256 boundary was handled but not shift==0. FIX: fillMask = MAX - shr(shift, MAX) (shr
+    saturates for >=256 and is identity for 0, so no 2^256 / underflow edge).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_sar_shift_zero.sol")
+    M = 1 << 256
+    neg2 = M - 2  # -2 in 256-bit two's complement
+    assert as_int(harness.call(app, "sar0(uint256)", neg2).abi_return) == neg2   # was M-1 (-1)
+    assert as_int(harness.call(app, "sar0(uint256)", 7).abi_return) == 7
+    assert as_int(harness.call(app, "sar0(uint256)", M - 1).abi_return) == M - 1  # -1 -> -1
+    assert as_int(harness.call(app, "sarN(uint256,uint256)", 1, 8).abi_return) == 4
+    assert as_int(harness.call(app, "sarN(uint256,uint256)", 4, M - 256).abi_return) == M - 16  # sar(4,-256)
+    assert as_int(harness.call(app, "sarN(uint256,uint256)", 255, 1 << 255).abi_return) == M - 1
+    assert as_int(harness.call(app, "sarN(uint256,uint256)", 256, M - 1).abi_return) == M - 1  # >=256 neg -> -1
+    assert as_int(harness.call(app, "sarN(uint256,uint256)", 256, 7).abi_return) == 0           # >=256 pos -> 0
+
+
 def test_abi_bytes_roundtrip(harness):
     """puyasolRegression/contracts/abi_bytes_roundtrip.sol — NOT an o.g. semantic test.
 

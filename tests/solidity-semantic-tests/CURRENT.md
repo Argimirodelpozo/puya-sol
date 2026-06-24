@@ -1,3 +1,18 @@
+# Semantic Test Status — v438
+
+> **fix(asm): Yul sar(0, x) no-op shift returned -1 for negative x (2026-06-24):**
+> **56 failed / 1290 passed / 87 xf** (zero-reg; +asm_sar_shift_zero guard; one -n2 blobhash flake
+> ignored). Found by a NEW asm-opcode fuzz probe (exercises Yul handlers the generative fuzzer never
+> emits — signextend/byte/addmod/mulmod/shl/shr/sar/div/sdiv/mod/smod/slt/sgt/not/mul/add/sub, 599 calls
+> now fully clean vs live EVM; asm exp() is a deliberate fail-loud hard-error). `sar(0, x)` (arithmetic
+> shift-right by ZERO) returned all-ones (-1) for a negative x instead of x unchanged: complementShift =
+> 256 - shift = 256 at shift 0, and 2^256 overflows u256 (wraps to 1) so fillMask = MAX, giving shr|MAX =
+> -1. The shift>=256 boundary was handled but not shift==0. FIX (handleSar): fillMask = MAX - shr(shift,
+> MAX) — shr already saturates to 0 for shift>=256 (fillMask=MAX, all sign bits) and is identity for
+> shift==0 (fillMask=0, sar(0,x)=x); removes the 2^256/underflow edge. (An interim shift==0 conditional
+> reused `val` across branches → puya "undefined register" SE-dominance hazard; the shr-based fillMask
+> avoids it.) Guard test_asm_sar_shift_zero.
+
 # Semantic Test Status — v437
 
 > **fix(abi): abi.decode of a TUPLE with a signed sub-64 element returned directly now compiles (2026-06-23):**
