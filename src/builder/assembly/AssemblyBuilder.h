@@ -794,6 +794,12 @@ private:
 	std::shared_ptr<awst::Expression> calldataDynOffset(uint64_t _headPos, awst::SourceLocation const& _loc);
 	std::shared_ptr<awst::Expression> calldataDynLength(uint64_t _headPos, awst::SourceLocation const& _loc);
 
+	/// Seed mutable `__cd_off_<name>` / `__cd_len_<name>` (offset,length) locals for each dynamic
+	/// calldata param from the blob, so `.offset`/`.length` read them and `x.offset := V` can
+	/// repoint x into __cd_blob (a value read becomes extract3(__cd_blob, off, len)).
+	void initCalldataPointerLocals(
+		std::vector<std::shared_ptr<awst::Statement>>& _out, awst::SourceLocation const& _loc);
+
 	static int computeFlatElementCount(awst::WType const* _type);
 	static int computeARC4ByteSize(awst::WType const* _type);
 	std::shared_ptr<awst::Expression> accessFlatElement(

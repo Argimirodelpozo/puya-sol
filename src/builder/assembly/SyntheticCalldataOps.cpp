@@ -164,6 +164,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::calldataDynLength(
 	return awst::makeAsBiguint(awst::makeItob(std::move(lenU64), _loc), _loc);
 }
 
+void AssemblyBuilder::initCalldataPointerLocals(
+	std::vector<std::shared_ptr<awst::Statement>>& _out, awst::SourceLocation const& _loc)
+{
+	for (auto const& [name, type]: m_calldataParams)
+	{
+		if (!isDynamicCalldataType(type)) continue;
+		auto cdIt = m_localConstants.find(name);
+		if (cdIt == m_localConstants.end()) continue;
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), _loc),
+			calldataDynOffset(cdIt->second, _loc), _loc));
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), _loc),
+			calldataDynLength(cdIt->second, _loc), _loc));
+	}
+}
+
 void AssemblyBuilder::buildSyntheticCalldataBlob(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	std::vector<std::shared_ptr<awst::Statement>>& _out,

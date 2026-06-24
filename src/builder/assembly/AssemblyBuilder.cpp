@@ -408,6 +408,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// Build __cd_blob (selector + head + tail) for dynamic-offset calldataload/calldatasize.
 	if (m_useSyntheticCalldata)
 		buildSyntheticCalldataBlob(m_calldataParams, _out, loc);
+		initCalldataPointerLocals(_out, loc);
 
 	// Write array param elements into blob at 0x80 + i*0x20
 	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)

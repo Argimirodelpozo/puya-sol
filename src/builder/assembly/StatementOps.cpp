@@ -211,6 +211,25 @@ void AssemblyBuilder::buildAssignment(
 		{
 			std::string suffix = name.substr(dotIdx + 1);
 			std::string baseName = name.substr(0, dotIdx);
+			// Dynamic calldata param: `x.offset := V` / `x.length := L` repoints x within __cd_blob —
+			// write the mutable pointer local so later reads / value-extracts see the new range.
+			if ((suffix == "offset" || suffix == "length") && _assign.value)
+			{
+				auto typeIt = m_locals.find(baseName);
+				if (m_useSyntheticCalldata && typeIt != m_locals.end()
+					&& isDynamicCalldataType(typeIt->second))
+				{
+					auto rhs = buildExpression(*_assign.value);
+					drainPendingStatements(_out);
+					if (!rhs)
+						return;
+					std::string local = (suffix == "offset" ? "__cd_off_" : "__cd_len_") + baseName;
+					_out.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(local, awst::WType::biguintType(), loc),
+						std::move(rhs), loc));
+					return;
+				}
+			}
 			if (suffix == "selector" || suffix == "address")
 			{
 				auto fullIt = m_locals.find(name);
