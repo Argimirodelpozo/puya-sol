@@ -1142,6 +1142,38 @@ def test_unsigned_inc_overflow(harness):
     assert as_int(harness.call(app, "uncheckedInc8(uint8)", 255).abi_return) == 0
 
 
+def test_compound_signed_subword_divmod(harness):
+    """puyasolRegression/contracts/compound_signed_subword_divmod.sol — NOT an o.g. semantic test.
+
+    Found by the overnight campaign (rich storage-mutation sweep). Compound signed /= and %= on a
+    uint64-backed type (int8/16/32/64) fell to the NATIVE UNSIGNED uint64 div/mod path because
+    SolIntegerBuilder::binary_op's `needsBigUInt` gate didn't include signed FloorDiv/Mod -> wrong for
+    negative operands (int64 -1 / int64.min gave 1 not 0; int16 -32768 / -128 gave 0 not 256). Plain a/b
+    was always correct (it uses SolBinaryOperation's signed path, not the eb builder). FIX: add
+    `m_signed && (FloorDiv || Mod)` to needsBigUInt so the signed biguint path (buildSignedModDiv) handles
+    these. unsigned + biguint-backed (int128/256) were already correct.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/compound_signed_subword_divmod.sol")
+    M = 1 << 256
+    def s8(v):
+        v &= 0xFF
+        return v - 256 if v >= 128 else v
+    def s16(v):
+        v &= 0xFFFF
+        return v - 65536 if v >= 32768 else v
+    def s64(v):
+        v &= (1 << 64) - 1
+        return v - (1 << 64) if v >= (1 << 63) else v
+    assert s8(as_int(harness.call(app, "dI8(int8,int8)", -100, 7).abi_return)) == -100 // 7 + (1 if (-100) % 7 else 0)  # trunc toward 0 = -14
+    assert s8(as_int(harness.call(app, "dI8(int8,int8)", -7, -2).abi_return)) == 3       # -7/-2 trunc = 3
+    assert s8(as_int(harness.call(app, "mI8(int8,int8)", -7, 3).abi_return)) == -1       # -7 % 3 = -1
+    assert s16(as_int(harness.call(app, "dI16(int16,int16)", -32768, -128).abi_return)) == 256   # was 0
+    assert s16(as_int(harness.call(app, "dI16(int16,int16)", -32768, -2).abi_return)) == 16384
+    assert s64(as_int(harness.call(app, "dI64(int64,int64)", -1, -(1 << 63)).abi_return)) == 0    # was 1
+    assert s64(as_int(harness.call(app, "dI64(int64,int64)", 100, -7).abi_return)) == -14
+    assert s8(as_int(harness.call(app, "uI8(int8,int8)", -100, 7).abi_return)) == -14
+
+
 def test_compound_signed_div_overflow(harness):
     """puyasolRegression/contracts/compound_signed_div_overflow.sol — NOT an o.g. semantic test.
 

@@ -89,6 +89,10 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	// (m_bits==64) overflows it, so route through the biguint wrapping subtract instead (then narrow).
 	bool needsBigUInt = m_isBigUInt || otherIsBigUInt
 		|| (m_signed && _op == BuilderBinaryOp::Sub)
+		// Signed div/mod needs the biguint signed path (buildSignedModDiv); otherwise a uint64-backed
+		// signed type (int8/16/32/64) falls to the native UNSIGNED uint64 div/mod — wrong for negative
+		// operands (e.g. compound int64 -1/int64.min gave 1, not 0). Found by the differential fuzzer.
+		|| (m_signed && (_op == BuilderBinaryOp::FloorDiv || _op == BuilderBinaryOp::Mod))
 		|| (m_bits == 64 && !m_signed && m_scope.isUnchecked() && _op == BuilderBinaryOp::Sub)
 		|| _op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift;
 

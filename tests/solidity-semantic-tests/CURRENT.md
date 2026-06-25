@@ -1,3 +1,20 @@
+# Semantic Test Status — v446
+
+> **fix(sol-eb): compound signed /= and %= on uint64-backed types did unsigned division (2026-06-25):**
+> **56 failed / 1298 passed / 87 xf** (zero-reg; +compound_signed_subword_divmod guard). Found by the
+> OVERNIGHT CAMPAIGN's rich storage-mutation sweep (random compound + inc/dec on scalar/array/mapping/
+> struct). Compound `x /= b` / `x %= b` on a uint64-backed signed type (int8/16/32/64) fell to the NATIVE
+> UNSIGNED uint64 div/mod path and was wrong for NEGATIVE operands: `needsBigUInt`
+> (SolIntegerBuilder::binary_op) gated the signed biguint path (buildSignedModDiv) but did NOT include
+> signed div/mod, so a uint64-backed signed type never reached it. E.g. compound int64 `-1 / int64.min`
+> gave 1 not 0 (because unsigned `(2^64-1)/2^63 == 1`); int16 `-32768 / -128` gave 0 not 256. Plain `a/b`
+> was always correct (SolBinaryOperation's signed path, a different code path); biguint-backed
+> (int128/256) and unsigned were already correct. FIX: add `m_signed && (FloorDiv || Mod)` to
+> needsBigUInt so uint64-backed signed div/mod routes through the biguint signed path (sign-extend
+> operands -> buildSignedModDiv). Verified 294 calls (all widths × div/mod × checked/unchecked ×
+> mixed-width × storage) clean vs live EVM. ⚠️ CORRECTS the [[signed-mixedwidth-div-bug]] note's
+> "uint64-backed dividend is CLEAN" claim — true for PLAIN a/b, false for COMPOUND /=. Guard
+> test_compound_signed_subword_divmod.
 # Semantic Test Status — v445
 
 > **fix(sol-ast): struct state-var field ++/-- didn't compile (2026-06-25):**
