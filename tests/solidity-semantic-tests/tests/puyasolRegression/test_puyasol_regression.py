@@ -1028,6 +1028,39 @@ def test_dynarray_compound_assign(harness):
     assert harness.call(app, "addD(uint256,uint8)", 0, 100, expect_revert=True).reverted  # 250+100 overflow
 
 
+def test_struct_field_incdec(harness):
+    """puyasolRegression/contracts/struct_field_incdec.sol — NOT an o.g. semantic test.
+
+    Found by the differential fuzzer. Struct STATE-VAR field ++/-- (st.x++) failed to COMPILE
+    ('unsupported assignment target', puya backend) whenever the contract has 2+ functions (the struct
+    stays boxed and SolUnaryOperation::handleIncDec emitted a bare FieldExpression write puya rejects).
+    FIX: rebuild the struct copy-on-write (box := struct-with-field-replaced) like the compound-assignment
+    path, reading the other fields with-default so a fresh (non-existent) box yields defaults instead of
+    reverting. Handles top-level + nested fields, signed + unsigned + sub-word, prefix + postfix + return,
+    fresh + initialized, with checked overflow.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/struct_field_incdec.sol")  # was a compile error
+    M = 1 << 256
+    def sgn(v):
+        return v - M if v >= (1 << 255) else v
+    # fresh struct: inc treats absent field as 0
+    harness.call(app, "incD()")                                 # fresh d: 0 -> 1 (no revert)
+    assert as_int(harness.call(app, "getD()").abi_return) == 1
+    harness.call(app, "setSt(int8,uint128,int64,uint8)", 5, 100, -7, 200)
+    assert sgn(as_int(harness.call(app, "postIncA()").abi_return)) == 5    # postfix returns OLD
+    assert sgn(as_int(harness.call(app, "getA()").abi_return)) == 6        # persisted
+    assert as_int(harness.call(app, "getB()").abi_return) == 100           # neighbours untouched
+    assert sgn(as_int(harness.call(app, "preIncA()").abi_return)) == 7     # prefix returns NEW
+    assert sgn(as_int(harness.call(app, "getA()").abi_return)) == 7
+    harness.call(app, "decC()")
+    assert sgn(as_int(harness.call(app, "getC()").abi_return)) == -8
+    # nested struct field
+    harness.call(app, "setO(uint64,int32,uint128)", 10, -3, 100)
+    assert as_int(harness.call(app, "incNX()").abi_return) == 10           # postfix OLD
+    assert as_int(harness.call(app, "getNX()").abi_return) == 11           # persisted
+    assert sgn(as_int(harness.call(app, "getNY()").abi_return)) == -3      # neighbour untouched
+
+
 def test_dynarray_incdec(harness):
     """puyasolRegression/contracts/dynarray_incdec.sol — NOT an o.g. semantic test.
 

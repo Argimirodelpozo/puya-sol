@@ -4,6 +4,7 @@
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
+#include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -511,9 +512,60 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		return newValue;
 	};
 
+	// Boxed STRUCT FIELD inc/dec: a bare `field := v` assignment is rejected by puya once the struct is
+	// boxed (any 2nd function keeps the struct in a box). Rebuild the struct copy-on-write
+	// (box := struct-with-field-replaced) like SolAssignment's compound path.
+	auto structFieldTypeOf = [&](std::shared_ptr<awst::Expression> const& writeTarget)
+		-> awst::ARC4Struct const*
+	{
+		auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(writeTarget.get());
+		if (!fieldExpr) return nullptr;
+		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
+		if (!structType)
+			if (auto const* sg = dynamic_cast<awst::StateGet const*>(fieldExpr->base.get()))
+				structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
+		return structType;
+	};
+	auto buildStructFieldCowWrite = [&](std::shared_ptr<awst::Expression> const& writeTarget,
+		awst::ARC4Struct const* structType,
+		std::shared_ptr<awst::Expression> nativeFieldValue) -> std::shared_ptr<awst::Statement>
+	{
+		auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(writeTarget.get());
+		awst::WType const* arc4FieldType = nullptr;
+		for (auto const& [fn, ft]: structType->fields())
+			if (fn == fieldExpr->name) { arc4FieldType = ft; break; }
+		std::shared_ptr<awst::Expression> encoded = std::move(nativeFieldValue);
+		if (arc4FieldType && encoded->wtype != arc4FieldType)
+			encoded = awst::makeARC4Encode(std::move(encoded), arc4FieldType, m_loc);
+		auto fbase = awst::unwrapStateGet(fieldExpr->base);
+		// Read the OTHER fields with-default so a fresh (non-existent) top-level box yields defaults
+		// instead of reverting (matches compound). rebuildArc4StructChainCOW only wraps the read base for
+		// NESTED structs; for a top-level struct (fbase is a bare BoxValue) we must wrap it here. The
+		// write target stays the bare box (unwrapped).
+		auto readBase = fbase;
+		if (dynamic_cast<awst::BoxValueExpression const*>(fbase.get()))
+			readBase = builder::StorageMapper::makeStateGetWithDefault(fbase, fbase->wtype, m_loc);
+		auto newStruct = awst::makeStructWithReplacedField(structType, readBase, fieldExpr->name, std::move(encoded), m_loc);
+		auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(m_ctx, fbase, std::move(newStruct), m_loc);
+		auto target = awst::makeWritableTarget(std::move(cow.assignTarget));
+		return awst::makeAssignmentStatement(std::move(target), std::move(cow.assignValue), m_loc);
+	};
+
 	if (isPrefix)
 	{
 		auto writeTarget = makeWriteTarget(_operand);
+		if (auto const* structType = structFieldTypeOf(writeTarget))
+		{
+			static int sfPreCounter = 0;
+			std::string pName = "__sfpre_" + std::to_string(sfPreCounter++);
+			auto nv = makeNewValue(_operand);
+			auto* nvType = nv->wtype;
+			auto nvVar = awst::makeVarExpression(pName, nvType, m_loc);
+			m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(nvVar, std::move(nv), m_loc));
+			m_ctx.prePendingStatements.push_back(buildStructFieldCowWrite(writeTarget, structType,
+				awst::makeVarExpression(pName, nvType, m_loc)));
+			return awst::makeVarExpression(pName, nvType, m_loc);
+		}
 		auto newValue = maybeEncode(writeTarget, makeNewValue(_operand));
 		return awst::makeAssignmentExpression(
 			std::move(writeTarget), std::move(newValue), m_loc, _operand->wtype);
@@ -531,6 +583,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 
 		auto writeTarget = makeWriteTarget(_operand);
+		if (auto const* structType = structFieldTypeOf(writeTarget))
+		{
+			m_ctx.prePendingStatements.push_back(buildStructFieldCowWrite(writeTarget, structType,
+				makeNewValue(tempVar)));
+			return tempVar;
+		}
 		auto newValue = maybeEncode(writeTarget, makeNewValue(tempVar));
 
 		auto incrStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newValue), m_loc);

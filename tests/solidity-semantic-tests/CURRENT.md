@@ -1,3 +1,21 @@
+# Semantic Test Status — v445
+
+> **fix(sol-ast): struct state-var field ++/-- didn't compile (2026-06-25):**
+> **56 failed / 1297 passed / 87 xf** (zero-reg; +struct_field_incdec guard). Found by the differential
+> fuzzer. `st.x++` / `st.x--` on a struct STATE VAR failed to COMPILE ('unsupported assignment target',
+> puya backend) whenever the contract has 2+ functions: with a single function puya keeps the struct in
+> registers, but any 2nd function (even unrelated) keeps it BOXED, and SolUnaryOperation::handleIncDec
+> emitted a bare `FieldExpression := v` write that puya rejects for a boxed struct field. (`st.x += 1`
+> compiled fine — it routes through SolAssignment's struct copy-on-write.) FIX: in handleIncDec, when the
+> inc/dec target is an ARC4-struct field, rebuild the struct COW (box := struct-with-field-replaced) via
+> makeStructWithReplacedField + rebuildArc4StructChainCOW (the compound path's helpers), reading the OTHER
+> fields with makeStateGetWithDefault so a fresh (never-set) box yields defaults instead of reverting
+> (rebuildArc4StructChainCOW only wraps the read base for NESTED structs; a top-level struct needs it
+> here). Handles top-level + nested fields, signed + unsigned + sub-word, prefix + postfix + return, fresh
+> + initialized, checked overflow. Verified stateful fuzz (155+84+135 calls) clean vs live EVM. NOTE: the
+> earlier "doesn't persist" diagnosis was a confounded manual test — expect_revert=True makes
+> state-changing calls SIMULATE (no commit), so getters read uncommitted state; the stateful differ
+> (execute+commit) is authoritative. Guard test_struct_field_incdec.
 # Semantic Test Status — v444
 
 > **fix(sol-ast): ++/-- on a storage dynamic-array element didn't compile (2026-06-24):**
