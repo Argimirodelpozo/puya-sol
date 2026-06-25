@@ -374,8 +374,17 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 
 	// .call(abi.encodeCall(...)) → inner app call
-	if (_memberName == "call" && !_callValue && !_callNode.arguments().empty())
+	// staticcall lowers IDENTICALLY to call on the AVM (an inner ApplicationCall txn): there is no
+	// inner-txn read-only flag, so the EVM static (no-state-change) guarantee can't be enforced. Route
+	// staticcall through the same handling as call and warn that "static" is not respected. (Precompile
+	// staticcalls, self-calls, encodeCall/encodeWithSignature typed routing all come along for free.)
+	if ((_memberName == "call" || _memberName == "staticcall") && !_callValue && !_callNode.arguments().empty())
 	{
+		if (_memberName == "staticcall")
+			Logger::instance().warning(
+				"address.staticcall(data) lowers to a regular inner application call on the AVM — the "
+				"EVM read-only (no-state-change) guarantee is NOT enforced; the callee may mutate state.",
+				_loc);
 		auto const& dataArg = *_callNode.arguments()[0];
 
 		// Self-call with abi.encodeWithSignature/WithSelector: resolve to a

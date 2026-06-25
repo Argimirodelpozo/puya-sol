@@ -1,3 +1,17 @@
+# Semantic Test Status — v447
+
+> **feat(itxn): address.staticcall(data) lowers to an inner app-call instead of hard-erroring (2026-06-25):**
+> **56 failed / 1299 passed / 87 xf** (zero-reg; +staticcall_inner guard; no test flips — capability
+> addition). `address.staticcall(data)` to a non-precompile previously HARD-ERRORED
+> (InnerCallHandlers.cpp). On the AVM staticcall lowers IDENTICALLY to call (both become an inner
+> ApplicationCall txn; there is no inner-txn read-only flag), so we route staticcall through the same
+> `call` handling — encodeCall/encodeWithSignature typed routing, precompiles, self-call resolution, raw
+> `handleCallWithRawData` — and emit a one-time WARNING that the EVM read-only (no-state-change) guarantee
+> is NOT enforced (the callee may mutate state). Net: `address(this).staticcall(abi.encodeWithSignature(
+> "foo(uint256)",v))` now resolves to a direct subroutine call and runs (was a compile error). FOUNDATION
+> for the abiEncodeDecode staticcall tests (still need self-call `encodeCall` selector→inherited-method
+> resolution) and exposes tstore_hidden_staticcall as an xfail candidate (it asserts EVM read-only
+> enforcement = the accepted divergence). Guard test_staticcall_inner.
 # Semantic Test Status — v446
 
 > **fix(sol-eb): compound signed /= and %= on uint64-backed types did unsigned division (2026-06-25):**

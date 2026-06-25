@@ -1142,6 +1142,21 @@ def test_unsigned_inc_overflow(harness):
     assert as_int(harness.call(app, "uncheckedInc8(uint8)", 255).abi_return) == 0
 
 
+def test_staticcall_inner(harness):
+    """puyasolRegression/contracts/staticcall_inner.sol — NOT an o.g. semantic test.
+
+    address.staticcall(data) to a non-precompile previously HARD-ERRORED. It now lowers like .call --
+    an inner ApplicationCall txn (InnerCallHandlers merges staticcall into the call path) -- with a
+    warning that the EVM read-only guarantee is NOT enforced on AVM. A self-staticcall with
+    abi.encodeWithSignature resolves to a direct subroutine call (the self-call resolution path, now
+    reachable from staticcall). Guards both the compile (no hard-error) and the runtime value.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/staticcall_inner.sol")  # was a hard-error
+    assert as_int(harness.call(app, "selfStatic(uint256)", 5).abi_return) == 105
+    assert as_int(harness.call(app, "selfStatic(uint256)", 0).abi_return) == 100
+    assert as_int(harness.call(app, "selfCall(uint256)", 7).abi_return) == 107
+
+
 def test_compound_signed_subword_divmod(harness):
     """puyasolRegression/contracts/compound_signed_subword_divmod.sol — NOT an o.g. semantic test.
 
