@@ -1028,6 +1028,36 @@ def test_dynarray_compound_assign(harness):
     assert harness.call(app, "addD(uint256,uint8)", 0, 100, expect_revert=True).reverted  # 250+100 overflow
 
 
+def test_dynarray_incdec(harness):
+    """puyasolRegression/contracts/dynarray_incdec.sol — NOT an o.g. semantic test.
+
+    Companion to test_dynarray_compound_assign: arr[i]++ / arr[i]-- on a STORAGE dynamic-array element.
+    Same ARC4-encoded-element decode (SolUnaryOperation::handleIncDec, gated on a BoxValue index base);
+    the box_replace write persists, postfix returns OLD / prefix returns NEW, sub-word checked overflow
+    reverts. (Compound += already fixed separately; this is the unary path.)
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/dynarray_incdec.sol")
+    M = 1 << 256
+    def sgn(v):
+        return v - M if v >= (1 << 255) else v
+    harness.call(app, "pushA(uint128)", 10)
+    harness.call(app, "pushA(uint128)", 20)
+    assert as_int(harness.call(app, "postIncA(uint256)", 0).abi_return) == 10   # postfix returns OLD
+    assert as_int(harness.call(app, "getA(uint256)", 0).abi_return) == 11       # persisted
+    assert as_int(harness.call(app, "getA(uint256)", 1).abi_return) == 20       # neighbour untouched
+    assert as_int(harness.call(app, "preIncA(uint256)", 0).abi_return) == 12    # prefix returns NEW
+    assert as_int(harness.call(app, "getA(uint256)", 0).abi_return) == 12
+    harness.call(app, "decA(uint256)", 0)
+    assert as_int(harness.call(app, "getA(uint256)", 0).abi_return) == 11
+    harness.call(app, "pushB(int64)", -5)
+    harness.call(app, "incB(uint256)", 0)
+    assert sgn(as_int(harness.call(app, "getB(uint256)", 0).abi_return)) == -4
+    harness.call(app, "pushC(uint8)", 254)
+    harness.call(app, "incC(uint256)", 0)
+    assert as_int(harness.call(app, "getC(uint256)", 0).abi_return) == 255
+    assert harness.call(app, "incC(uint256)", 0, expect_revert=True).reverted   # 255++ overflow
+
+
 def test_unchecked_incdec_wrap(harness):
     """puyasolRegression/contracts/unchecked_incdec_wrap.sol — NOT an o.g. semantic test.
 

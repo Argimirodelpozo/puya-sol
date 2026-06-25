@@ -312,6 +312,15 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 	if (dynamic_cast<awst::BoxValueExpression const*>(_operand.get()))
 		_operand = builder::StorageMapper::makeStateGetWithDefault(_operand, _operand->wtype, m_loc);
+	else if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(_operand.get()))
+	{
+		if (dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
+		{
+			auto* nativeType = m_ctx.typeMapper.map(m_unaryOp.subExpression().annotation().type);
+			if (_operand->wtype != nativeType)
+				_operand = awst::makeARC4Decode(_operand, nativeType, m_loc);
+		}
+	}
 
 	static const std::string pow256Minus1 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639935";

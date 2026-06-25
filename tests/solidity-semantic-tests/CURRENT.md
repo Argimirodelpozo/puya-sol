@@ -1,3 +1,17 @@
+# Semantic Test Status — v444
+
+> **fix(sol-ast): ++/-- on a storage dynamic-array element didn't compile (2026-06-24):**
+> **56 failed / 1296 passed / 87 xf** (zero-reg; +dynarray_incdec guard). Companion to v442 (compound
+> arr[i] op= b). `arr[i]++` / `arr[i]--` on a STORAGE dynamic array failed to COMPILE with the same puya
+> backend itob(Encoded(uintN)): SolUnaryOperation::handleIncDec read the ARC4-ENCODED box-element
+> write-form without decoding, so makeNewValue's base+1 itob'd the encoded bytes. FIX: decode the
+> box-array-element operand (makeARC4Decode) before the inc/dec, gated on a BoxValue index base;
+> makeWriteTarget already peels the ARC4Decode back to the index lvalue (the box_replace write persists)
+> and maybeEncode re-encodes the result. No sign-extend needed (the inc/dec mask canonicalises signed
+> sub-256, and makeWriteTarget only peels a bare ARC4Decode). Verified persist + postfix-returns-OLD /
+> prefix-returns-NEW + sub-word checked overflow, stateful fuzz 190 calls clean vs live EVM. (An earlier
+> revert of this exact change was a MISREAD of a confounded manual test; the box_replace write was always
+> emitted and does persist.) Guard test_dynarray_incdec.
 # Semantic Test Status — v443
 
 > **fix(asm): a function param used as a memory offset resolved to its calldata-offset constant (2026-06-24):**
