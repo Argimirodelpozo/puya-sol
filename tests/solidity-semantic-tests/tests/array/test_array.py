@@ -1001,7 +1001,14 @@ def test_invalid_encoding_for_storage_byte_array(harness):
     r = harness.call(app, 'y()')
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x00,)
 
-def test_long_byte_array_cleanup_after_delete(harness):  # currently fails
+@pytest.mark.xfail(reason=(
+    "EVM flat keccak-addressable storage: a long `bytes` lays its data across consecutive slots from "
+    "keccak256(slot), and the test plants a canary at keccak256(slot)+3 via an assembly storage pointer "
+    "(canary.slot := ...), then checks delete zeroes exactly the data slots without touching it. The "
+    "address math matches (memory-hash -> storage slot), but puya-sol's ARC4 box model doesn't lay array "
+    "data across sload-able keccak slots, so the canary write doesn't round-trip (reads 0). No AVM analog."),
+    strict=False)
+def test_long_byte_array_cleanup_after_delete(harness):
     """array/contracts/long_byte_array_cleanup_after_delete.sol"""
     app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_delete.sol')
     r = harness.call(app, 'getArrayDataAreaSlot()')
@@ -1019,7 +1026,13 @@ def test_long_byte_array_cleanup_after_delete(harness):  # currently fails
     r = harness.call(app, 'canaryValue()')
     assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-def test_long_byte_array_cleanup_after_overwrite_with_long(harness):  # currently fails
+@pytest.mark.xfail(reason=(
+    "EVM flat keccak-addressable storage: same family as cleanup_after_delete. Long `bytes` data lives "
+    "at keccak256(slot)+n with a canary planted just past it via an assembly storage pointer; the test "
+    "checks shrink/overwrite cleans only the array's slots. puya-sol's ARC4 box model has no keccak-derived "
+    "data area or sload-able adjacent slots, so the canary write doesn't round-trip (reads 0). No AVM analog."),
+    strict=False)
+def test_long_byte_array_cleanup_after_overwrite_with_long(harness):
     """array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol"""
     app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol')
     r = harness.call(app, 'arrayLength()')
