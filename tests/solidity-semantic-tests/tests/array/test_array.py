@@ -789,7 +789,13 @@ def test_fixed_out_of_bounds_array_access(harness):
     r = harness.call(app, "length()")
     assert as_int(r.abi_return) == 4
 
-def test_function_array_cross_calls(harness):  # currently fails
+@pytest.mark.xfail(reason=(
+    "external function-pointer callbacks form a C->D->C call graph (C passes pointers to its own "
+    "methods to D, D invokes them back into C). External function pointers lower to inner ApplicationCall "
+    "txns, and the AVM forbids re-entering an app already on the call stack (protocol-level reentrancy "
+    "guard: 'attempt to re-enter'). The EVM permits this; there is no AVM analog, so it is unavoidable."),
+    strict=True)
+def test_function_array_cross_calls(harness):
     """array/contracts/function_array_cross_calls.sol"""
     app = harness.compile_and_deploy("array/contracts/function_array_cross_calls.sol", contract_name="C")
     r = harness.call(app, "test()")
