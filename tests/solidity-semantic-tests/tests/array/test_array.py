@@ -869,7 +869,14 @@ def test_inline_array_strings_from_document(harness):
     r = harness.call(app, "f(uint256)", 3)
     assert r.abi_return == 'array'
 
-def test_invalid_encoding_for_storage_byte_array(harness):  # currently fails
+@pytest.mark.xfail(reason=(
+    "tests EVM-internal storage encoding for dynamic `bytes` (short: length*2 inline; long: length*2+1 "
+    "with data at keccak256(slot)) and the Panic 0x22 raised when that header is corrupted via "
+    "`assembly { sstore(x.slot, 64/5) }`. The AVM stores bytes in an ARC4 box with no inline/keccak "
+    "length-header scheme, so there is nothing to corrupt and no 0x22 analog. Also the assertions expect "
+    "raw EVM-ABI memory words (offset/length/padded) vs puya-sol's natural ARC4 bytes."),
+    strict=False)
+def test_invalid_encoding_for_storage_byte_array(harness):
     """array/contracts/invalid_encoding_for_storage_byte_array.sol"""
     app = harness.compile_and_deploy('array/contracts/invalid_encoding_for_storage_byte_array.sol')
     r = harness.call(app, 'x()')
