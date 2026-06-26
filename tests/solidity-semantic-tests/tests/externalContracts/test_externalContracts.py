@@ -33,9 +33,11 @@ def test_base64(harness):
     r = harness.call(app, 'encode_inline_asm(bytes)', b"")
     assert r.abi_return == ""
 
-def test_deposit_contract(harness):  # currently fails
+def test_deposit_contract(harness):
     """externalContracts/contracts/deposit_contract.sol — ETH 2.0 deposit contract."""
-    app = harness.compile_and_deploy('externalContracts/contracts/deposit_contract.sol — ETH 2.0 deposit contract.')
+    # The constructor precomputes a 32-level zero-hash merkle branch (opcode-heavy); pool deploy budget.
+    app = harness.compile_and_deploy('externalContracts/contracts/deposit_contract.sol',
+                                     postinit_budget_pool=14)
 
 def test_prbmath_signed(harness):  # currently fails
     """externalContracts/contracts/prbmath_signed.sol"""
