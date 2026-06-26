@@ -1155,6 +1155,9 @@ def test_staticcall_inner(harness):
     assert as_int(harness.call(app, "selfStatic(uint256)", 5).abi_return) == 105
     assert as_int(harness.call(app, "selfStatic(uint256)", 0).abi_return) == 100
     assert as_int(harness.call(app, "selfCall(uint256)", 7).abi_return) == 107
+    # encodeCall self-resolution (function-ref selector -> same method on `this`, incl. inherited)
+    assert as_int(harness.call(app, "selfStaticCall(uint256)", 9).abi_return) == 109
+    assert as_int(harness.call(app, "selfStaticInherited(uint256)", 30).abi_return) == 37
 
 
 def test_compound_signed_subword_divmod(harness):

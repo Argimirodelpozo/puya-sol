@@ -1,3 +1,20 @@
+# Semantic Test Status — v448
+
+> **feat(itxn): encodeCall self-resolution + ARC4 return encoding for self-staticcall; xfail 2 abi_encode_call (2026-06-25):**
+> **54 failed / 1299 passed / 89 xf** (zero-reg; 2 abiEncodeDecode fails → xfail; +encodeCall guard). Builds
+> on v447 (.staticcall → inner call). (1) `address(this).{call,staticcall}(abi.encodeCall(M, args))` now
+> self-resolves to a DIRECT subroutine call: the inline self-call resolver (InnerCallHandlers) was extended
+> from encodeWithSignature/encodeWithSelector to also accept encodeCall — the function-ref's selector is
+> mapped to the same-signature method on `this` (so `X.a`/`Base.a`/`this.a`/`C.b` all dispatch to the
+> inherited/overridden impl by name+arity), and the tuple args are spread. (2) The self-resolved return is
+> now ARC4-encoded (makeARC4Encode) instead of a hand-rolled pad-to-32 — the AVM-native shape that
+> abi.decode round-trips (arc4.uint256 is 32 bytes; arc4.uint8 is 1, NOT padded — accepted divergence).
+> Verified all forms with PARAM args (guard test_staticcall_inner: selfStaticCall/selfStaticInherited).
+> XFAILED: test_abi_encode_call_declaration (LITERAL args → puya optimizer constant-folds the
+> abi.decode(arc4_encode(a(1))) round-trip to uint64 → `b+ wanted bigint got uint64`; candidate puya
+> backend bug, puyabug.md #7) + test_abi_encode_call_special_args (dual EVM-vs-AVM divergence:
+> encodeWithSignature uses KECCAK selectors vs encodeCall ARC4 → assertConsistentSelectors reverts; returns
+> are ARC4 byte[] not EVM-ABI words).
 # Semantic Test Status — v447
 
 > **feat(itxn): address.staticcall(data) lowers to an inner app-call instead of hard-erroring (2026-06-25):**

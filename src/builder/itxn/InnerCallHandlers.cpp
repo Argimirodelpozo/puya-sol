@@ -406,7 +406,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					//   address(this).call(abi.encodeWithSignature("fn(types)", args...))
 					//   address(this).call(abi.encodeWithSelector(this.fn.selector, args...))
 					std::string fnName;
-					size_t firstArgIdx = 1;  // index in encCallExpr args where method args start
+					// Method args, normalised across the three encode forms:
+					//   encodeWithSignature("fn(types)", a, b, …) → args spread at indices 1..
+					//   encodeWithSelector(this.fn.selector, a, b, …) → args spread at indices 1..
+					//   encodeCall(C.fn, (a, b, …)) → args as a TUPLE in index 1 (or a single value)
+					std::vector<ASTPointer<Expression const>> resolvedArgs;
 					if (encMA && encMA->memberName() == "encodeWithSignature"
 						&& !encCallExpr->arguments().empty())
 					{
@@ -417,25 +421,46 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							if (parenPos != std::string::npos)
 								fnName = sig.substr(0, parenPos);
 						}
+						for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
+							resolvedArgs.push_back(encCallExpr->arguments()[i]);
 					}
 					else if (encMA && encMA->memberName() == "encodeWithSelector"
 						&& !encCallExpr->arguments().empty())
 					{
 						// `this.fn.selector` = MemberAccess("selector", MemberAccess("fn", this)).
 						if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
-						{
 							if (selMA->memberName() == "selector")
-							{
 								if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
-								{
 									fnName = fnMA->memberName();
-								}
+						for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
+							resolvedArgs.push_back(encCallExpr->arguments()[i]);
+					}
+					else if (encMA && encMA->memberName() == "encodeCall"
+						&& !encCallExpr->arguments().empty())
+					{
+						// encodeCall(Contract.fn, (args…)): the fn ref is only a SELECTOR source —
+						// dispatch resolves the same-signature method on `this` (name+arity below), so an
+						// inherited/overridden impl + its return type are used. Args are a tuple in index 1.
+						auto const* fref = encCallExpr->arguments()[0].get();
+						if (auto const* m = dynamic_cast<MemberAccess const*>(fref))
+							fnName = m->memberName();
+						else if (auto const* id = dynamic_cast<Identifier const*>(fref))
+							fnName = id->name();
+						if (encCallExpr->arguments().size() >= 2)
+						{
+							auto const& argsExpr = *encCallExpr->arguments()[1];
+							if (auto const* tup = dynamic_cast<TupleExpression const*>(&argsExpr))
+							{
+								for (auto const& comp : tup->components())
+									if (comp) resolvedArgs.push_back(comp);
 							}
+							else
+								resolvedArgs.push_back(encCallExpr->arguments()[1]);
 						}
 					}
 					if (!fnName.empty())
 					{
-						size_t nArgs = encCallExpr->arguments().size() - firstArgIdx;
+						size_t nArgs = resolvedArgs.size();
 						FunctionDefinition const* target = nullptr;
 						if (_ctx.currentContract)
 						{
@@ -453,46 +478,27 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							// Revert isolation differs: reverts propagate instead of
 							// being caught as success=false.
 							Logger::instance().warning(
-								"`address(this).call(abi.encode" +
-								std::string(encMA->memberName() == "encodeWithSelector"
-									? "WithSelector" : "WithSignature") +
+								"`address(this).call(abi." + encMA->memberName() +
 								"(...))` self-call rewritten to direct `" + fnName +
 								"(...)` invocation. AVM doesn't support self inner-txn "
 								"calls; revert-isolation semantics may differ.",
 								_loc);
 
-							// Encode a return value as exactly 32 bytes (EVM ABI / abi.decode shape).
-							// makeLeftPadToN ensures exactly 32 even when biguint minimal-rep is shorter.
-							auto encodeAs32 = [&_loc](std::shared_ptr<awst::Expression> v)
+							// Encode a return value as ARC4 — the AVM-native shape that abi.decode round-trips.
+							// This is deliberately NOT EVM-ABI 32-byte padding (accepted divergence):
+							// arc4.uint256 is 32 bytes but arc4.uint8 is 1 byte, etc. Going through the real
+							// ARC4 encoder (not a hand-rolled itob+leftPad) keeps the value's type intact, so
+							// abi.decode(result,(uint)) yields a biguint and downstream arithmetic doesn't hit
+							// a uint64/`b+` mismatch (the hand-rolled path let the optimizer fold a constant
+							// result to uint64, breaking `r += abi.decode(...)`).
+							auto encodeArc4 = [&_loc](std::shared_ptr<awst::Expression> v, awst::WType const* arc4T)
 								-> std::shared_ptr<awst::Expression>
 							{
-								if (v->wtype == awst::WType::uint64Type())
-								{
-									auto bytes = awst::makeItob(std::move(v), _loc);
-									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
-								}
-								if (v->wtype == awst::WType::biguintType())
-								{
-									auto bytes = awst::makeAsBytes(std::move(v), _loc);
-									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
-								}
-								if (v->wtype == awst::WType::boolType())
-								{
-									auto asInt = awst::makeAsUInt64(std::move(v), _loc);
-									auto bytes = awst::makeItob(std::move(asInt), _loc);
-									return awst::makeLeftPadToN(std::move(bytes), 32, _loc);
-								}
-								if (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)
-								{
-									// bytesN: right-pad to 32 (EVM convention).
-									auto bw = dynamic_cast<awst::BytesWType const*>(v->wtype);
-									int len = bw && bw->length() ? *bw->length() : 32;
-									auto bytes = awst::makeAsBytes(std::move(v), _loc);
-									if (len < 32)
-										return awst::makeRightPad(std::move(bytes), 32 - len, _loc);
-									return bytes;
-								}
-								return awst::makeAsBytes(std::move(v), _loc);
+								if (!arc4T) arc4T = awst::WType::bytesType();
+								if (v->wtype == arc4T)
+									return awst::makeAsBytes(std::move(v), _loc);
+								auto enc = awst::makeARC4Encode(std::move(v), arc4T, _loc);
+								return awst::makeAsBytes(std::move(enc), _loc);
 							};
 
 							size_t nReturns = target->returnParameters().size();
@@ -501,9 +507,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								auto call = awst::makeSubroutineCall(
 									awst::InstanceMethodTarget{target->name()},
 									awst::WType::voidType(), _loc);
-								for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
-									awst::pushCallArg(call->args,
-										_ctx.buildExpr(*encCallExpr->arguments()[i]));
+								for (auto const& a : resolvedArgs)
+									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
 								auto stmt = awst::makeExpressionStatement(call, _loc);
 								_ctx.prePendingStatements.push_back(std::move(stmt));
 								return std::make_unique<GenericResultBuilder>(_ctx,
@@ -516,10 +521,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								auto call = awst::makeSubroutineCall(
 									awst::InstanceMethodTarget{target->name()},
 									retType, _loc);
-								for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
-									awst::pushCallArg(call->args,
-										_ctx.buildExpr(*encCallExpr->arguments()[i]));
-								auto dataBytes = encodeAs32(std::move(call));
+								for (auto const& a : resolvedArgs)
+									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
+								auto dataBytes = encodeArc4(std::move(call), _ctx.typeMapper.mapToARC4Type(retType));
 								return std::make_unique<GenericResultBuilder>(_ctx,
 									makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 							}
@@ -536,9 +540,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							auto call = awst::makeSubroutineCall(
 								awst::InstanceMethodTarget{target->name()},
 								tupleTypeOwned, _loc);
-							for (size_t i = firstArgIdx; i < encCallExpr->arguments().size(); ++i)
-								awst::pushCallArg(call->args,
-									_ctx.buildExpr(*encCallExpr->arguments()[i]));
+							for (auto const& a : resolvedArgs)
+								awst::pushCallArg(call->args, _ctx.buildExpr(*a));
 							// nextSingleEvalId() prevents identical calls from merging (see sol-ast-audit).
 							auto cachedCall = awst::makeSingleEvaluation(
 								std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
@@ -548,7 +551,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							{
 								auto* itemType = tupleTypeOwned->types()[i];
 								auto item = awst::makeTupleItem(cachedCall, static_cast<int>(i), itemType, _loc);
-								parts.push_back(encodeAs32(std::move(item)));
+								parts.push_back(encodeArc4(std::move(item), _ctx.typeMapper.mapToARC4Type(itemType)));
 							}
 							std::shared_ptr<awst::Expression> dataBytes = std::move(parts[0]);
 							for (size_t i = 1; i < parts.size(); ++i)
