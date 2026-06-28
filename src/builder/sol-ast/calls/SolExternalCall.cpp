@@ -17,6 +17,21 @@ using namespace solidity::frontend;
 
 static constexpr int TxnTypeAppl = 6;
 
+/// A SIGNED Solidity integer RETURN is encoded by the callee as a 32-byte uint256 (sign-extended
+/// two's complement), regardless of width (see TypeCoercion::intSelectorReturnName). So a signed
+/// int8/16/32/64 — whose WType is uint64Type — arrives as 32 bytes on the wire, NOT 8. The caller's
+/// decode must account for that (extract the low 8 bytes, then btoi) instead of btoi-ing 32 bytes
+/// ("btoi arg too long"). int128/int256 (biguint WType) already decode 32 bytes correctly.
+static bool isSignedIntReturn(solidity::frontend::Type const* _t)
+{
+	if (!_t)
+		return false;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_t))
+		_t = &udvt->underlyingType();
+	auto const* intT = dynamic_cast<IntegerType const*>(_t);
+	return intT && intT->isSigned();
+}
+
 
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
@@ -209,7 +224,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 
 std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	std::shared_ptr<awst::Expression> _create,
-	awst::WType const* _returnType)
+	awst::WType const* _returnType,
+	solidity::frontend::Type const* _solReturnType)
 {
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
@@ -235,6 +251,14 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	}
 	else if (_returnType == awst::WType::uint64Type())
 	{
+		// Signed int8/16/32/64: callee sent a 32-byte uint256 (sign-extended TC). The low 8 bytes are
+		// the canonical uint64-backed two's-complement form — extract them, then btoi. Unsigned uint64
+		// is 8 bytes on the wire, so btoi directly.
+		if (isSignedIntReturn(_solReturnType))
+		{
+			auto low8 = awst::makeExtract(std::move(stripPrefix), 24, 8, m_loc);
+			return awst::makeBtoi(std::move(low8), m_loc);
+		}
 		return awst::makeBtoi(std::move(stripPrefix), m_loc);
 	}
 	else if (_returnType == awst::WType::boolType())
@@ -484,7 +508,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return submitAndReturn(std::move(create), retType);
+	return submitAndReturn(std::move(create), retType, m_call.annotation().type);
 }
 
 } // namespace puyasol::builder::sol_ast

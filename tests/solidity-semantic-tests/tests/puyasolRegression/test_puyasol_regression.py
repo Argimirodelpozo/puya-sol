@@ -1361,3 +1361,25 @@ def test_mixed_width_signed_bitwise(harness):
     assert sint(harness.call(app, "andSL8(int8,int256)", -1, 0xFFFF)) == 0xFFFF    # int8(-1)->int256 all-ones
     # unsigned mixed-width unaffected
     assert as_int(harness.call(app, "addU(uint16,uint128)", 5, 100).abi_return) == 105
+
+
+def test_external_call_signed_narrow_return(harness):
+    """puyasolRegression/contracts/external_call_signed_narrow_return.sol — NOT an o.g. semantic test.
+
+    A SIGNED narrow-int (int8/16/32/64) RETURN from an external/inner contract call. The callee
+    encodes a signed int return as a 32-byte uint256 (sign-extended); the caller used to decode it
+    with an 8-byte `btoi` → "btoi arg too long, got 32 bytes" → revert on EVERY such call
+    (value-independent). Fixed by extracting the low 8 bytes (canonical uint64-backed form) before
+    btoi when the Solidity return type is signed. Found by the cross-contract differential fuzzer.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/external_call_signed_narrow_return.sol", contract_name="Caller")
+    # Forwards widen+offset (+1000) so the observable is a clean positive int; broken decode reverts.
+    assert as_int(harness.call(app, "g8(int256)", 5).abi_return) == 1005
+    assert as_int(harness.call(app, "g8(int256)", -5).abi_return) == 995
+    assert as_int(harness.call(app, "g8(int256)", 128).abi_return) == 872     # int8(128) wraps to -128
+    assert as_int(harness.call(app, "g16(int256)", -100).abi_return) == 900
+    assert as_int(harness.call(app, "g32(int256)", -7).abi_return) == 993
+    assert as_int(harness.call(app, "g64(int256)", -1).abi_return) == 999
+    assert as_int(harness.call(app, "g64(int256)", 9).abi_return) == 1009
+    assert as_int(harness.call(app, "gu32(uint256)", 42).abi_return) == 1042   # unsigned control
