@@ -1393,3 +1393,9 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "g128(uint128,uint128)", 7, 9).abi_return) == 16
     assert as_int(harness.call(app, "g128(uint128,uint128)", 1 << 127, 1 << 126).abi_return) == (1 << 127) + (1 << 126)
     assert as_int(harness.call(app, "gpmix(uint128,uint64)", 100, 50).abi_return) == 150   # mixed uint128/uint64
+    # signed sub-word in a STRUCT field / ARRAY element across a call (callee names it int64, caller used
+    # to drop the sign to uint64 -> selector mismatch). Now both use the canonical nestedArc4Name.
+    assert as_int(harness.call(app, "gStruct(int64,int64)", 3, 4).abi_return) == 1007
+    assert as_int(harness.call(app, "gStruct(int64,int64)", -5, -9).abi_return) == 986     # -14 + 1000
+    assert as_int(harness.call(app, "gArr(int64)", 5).abi_return) == 1010                  # 5+5 + 1000
+    assert as_int(harness.call(app, "gArr(int64)", -3).abi_return) == 994                  # -3+-3 + 1000

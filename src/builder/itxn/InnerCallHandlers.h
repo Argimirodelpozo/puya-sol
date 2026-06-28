@@ -143,4 +143,10 @@ public:
 
 };
 
+/// Canonical ARC4 ABI type name for a NESTED position (struct field / array element): exact bit width,
+/// signedness PRESERVED (nested int8 = "int8", not "uint8"), recursing structs/arrays. Verified against
+/// puya's emitted `method "..."` signatures — reuse anywhere a cross-contract selector must match the
+/// callee's published ABI (e.g. SolExternalCall typed calls + the .call() path).
+std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const* _type);
+
 } // namespace puyasol::builder::eb

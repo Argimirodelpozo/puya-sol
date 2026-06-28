@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3662-4084.
 
 #include "builder/sol-ast/calls/SolExternalCall.h"
+#include "builder/itxn/InnerCallHandlers.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -52,8 +53,11 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 			if (bw->length().has_value())
 				return "byte[" + std::to_string(*bw->length()) + "]";
 		}
-		auto* arc4Type = m_ctx.typeMapper.mapToARC4Type(rawType);
-		return builder::TypeCoercion::wtypeToABIName(arc4Type);
+		// Aggregates (struct/array): use the canonical nested namer, which PRESERVES signedness for
+		// elements (struct field int64 = "int64", not "uint64") to match the callee's published ABI /
+		// puya's emitted signature. wtypeToABIName drops the ARC4UIntN sign alias → selector mismatch
+		// → router err on cross-contract calls with signed struct/array elements. (Found by the fuzzer.)
+		return eb::nestedArc4Name(m_ctx, _type);
 	};
 	// Signed int returns → "uint256" (full 256-bit two's complement);
 	// non-int types identical to params.

@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+// Signed sub-word in a STRUCT field / ARRAY element across a call: the callee names it `int64`
+// (canonical, sign-preserved) but the caller (SolExternalCall) used wtypeToABIName which dropped the
+// sign to `uint64` -> selector mismatch -> router err. Fixed by routing the caller's aggregate naming
+// through the canonical nestedArc4Name (same namer the callee/puya use).
+struct Pair { int64 px; int64 py; }
 // Regression: a SIGNED narrow-int (int8/16/32/64) RETURN from an external/inner contract call.
 // The callee encodes a signed int return as a 32-byte uint256 (sign-extended), but the caller used
 // to decode it with an 8-byte `btoi` → "btoi arg too long, got 32 bytes" → revert on EVERY such call
@@ -20,6 +25,11 @@ contract Cee {
     // uint128), but the caller's tuple decode used a fixed 32B field -> wrong offsets -> revert.
     function p128(uint128 a, uint128 b) external pure returns (uint128, uint128) { return (a, b); }
     function pmix(uint128 a, uint64 b) external pure returns (uint128, uint64) { return (a, b); }
+    // signed STRUCT-field / ARRAY-element returns + args (callee names them int64 vs caller's old uint64).
+    function packP(int64 a, int64 b) external pure returns (Pair memory) { return Pair(a, b); }
+    function unpackP(Pair memory p) external pure returns (int64) { unchecked { return p.px + p.py; } }
+    function mkArr(int64 a) external pure returns (int64[] memory) { int64[] memory r = new int64[](2); r[0]=a; r[1]=a; return r; }
+    function sumArr(int64[] memory xs) external pure returns (int64) { int64 s; unchecked { for(uint i;i<xs.length;i++) s+=xs[i]; } return s; }
 }
 contract Caller {
     Cee c;
@@ -45,5 +55,14 @@ contract Caller {
     function gpmix(uint128 a, uint64 b) external returns (uint256) {
         (uint128 x, uint64 y) = c.pmix(a, b);
         return uint256(x) + uint256(y);
+    }
+    // struct return then struct arg re-passed; widen+offset for a clean positive observable.
+    function gStruct(int64 a, int64 b) external returns (int256) {
+        Pair memory p = c.packP(a, b);
+        return int256(c.unpackP(p)) + 1000;
+    }
+    // array return then array arg re-passed.
+    function gArr(int64 a) external returns (int256) {
+        return int256(c.sumArr(c.mkArr(a))) + 1000;
     }
 }

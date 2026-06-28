@@ -144,15 +144,11 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	return cast;
 }
 
-namespace
-{
-
 // Nested ARC4 type name (struct-field / array-element position).
 // Differs from top-level: exact bit width (not collapsed to uint64),
 // signedness preserved (e.g. nested int8 = "int8", not "uint8").
 // Verified against puya's `method "..."` output.
-std::string nestedArc4Name(
-	ContractContext& _ctx, solidity::frontend::Type const* _type)
+std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
 	using namespace solidity::frontend;
 	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
@@ -189,8 +185,14 @@ std::string nestedArc4Name(
 		}
 		return s + ")";
 	}
-	return _type->toString(true);
+	// Unhandled (e.g. external function pointers, contracts): name it the SAME way the callee
+	// does — via the ARC4 type mapping — so cross-contract selectors match (toString would
+	// give e.g. "function () external" where puya publishes "byte[12]").
+	return TypeCoercion::wtypeToABIName(_ctx.typeMapper.mapToARC4Type(_ctx.typeMapper.map(_type)));
 }
+
+namespace
+{
 
 // Top-level param name: scalars collapse to "uint64"/"uintN" (signedness dropped);
 // enums → "uint64"; aggregates expand via nestedArc4Name to match puya's tuple form.
