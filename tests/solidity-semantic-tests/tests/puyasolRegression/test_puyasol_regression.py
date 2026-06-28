@@ -1383,3 +1383,8 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "g64(int256)", -1).abi_return) == 999
     assert as_int(harness.call(app, "g64(int256)", 9).abi_return) == 1009
     assert as_int(harness.call(app, "gu32(uint256)", 42).abi_return) == 1042   # unsigned control
+    # signed-narrow TUPLE return (callee named it uint512 vs caller uint256 → router err; now uint256).
+    assert as_int(harness.call(app, "gpair(int64,int64)", 3, 4).abi_return) == 1007
+    assert as_int(harness.call(app, "gpair(int64,int64)", -3, -9).abi_return) == 988    # -12 + 1000
+    assert as_int(harness.call(app, "gpair(int64,int64)", 100, -50).abi_return) == 1050
+    assert as_int(harness.call(app, "gmixed(int64,uint64)", -5, 8).abi_return) == 1003   # -5 + 8 + 1000

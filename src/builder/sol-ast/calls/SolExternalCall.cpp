@@ -286,16 +286,23 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 
 		auto tuple = awst::makeTupleExpression(_returnType, m_loc);
 
+		// Per-field Solidity types — a signed int field is 32 bytes on the wire (callee names it
+		// uint256), so its uint64-backed WType needs a 32→low-8 decode, not a bare 8-byte btoi.
+		auto const* solTuple = dynamic_cast<TupleType const*>(_solReturnType);
+
 		int offset = 0;
 		for (size_t i = 0; i < tupleType->types().size(); ++i)
 		{
 			auto const* fieldType = tupleType->types()[i];
+			Type const* solField = (solTuple && i < solTuple->components().size())
+				? solTuple->components()[i] : nullptr;
+			bool signedNarrow = (fieldType == awst::WType::uint64Type()) && isSignedIntReturn(solField);
 			int fieldSize = 0;
 
 			if (fieldType == awst::WType::biguintType())
 				fieldSize = 32;
 			else if (fieldType == awst::WType::uint64Type())
-				fieldSize = 8;
+				fieldSize = signedNarrow ? 32 : 8;   // signed int8/16/32/64 arrive as a 32-byte uint256
 			else if (fieldType == awst::WType::boolType())
 				fieldSize = 1;
 			else if (fieldType == awst::WType::accountType())
@@ -321,7 +328,15 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			}
 			else if (fieldType == awst::WType::uint64Type())
 			{
-				decoded = awst::makeBtoi(std::move(extract), m_loc);
+				// signedNarrow: extract is the 32-byte uint256; its low 8 bytes are the canonical
+				// uint64-backed two's-complement form. Unsigned uint64: extract is already 8 bytes.
+				if (signedNarrow)
+				{
+					auto low8 = awst::makeExtract(std::move(extract), 24, 8, m_loc);
+					decoded = awst::makeBtoi(std::move(low8), m_loc);
+				}
+				else
+					decoded = awst::makeBtoi(std::move(extract), m_loc);
 			}
 			else if (fieldType == awst::WType::boolType())
 			{

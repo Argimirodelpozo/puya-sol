@@ -12,6 +12,10 @@ contract Cee {
     function r32(int256 a) external pure returns (int32) { return int32(a); }
     function r64(int256 a) external pure returns (int64) { return int64(a); }
     function u32(uint256 a) external pure returns (uint32) { return uint32(a); }   // unsigned control
+    // signed-narrow TUPLE return: callee used to name these uint512 (vs caller uint256) → selector
+    // mismatch → router err. Now named uint256 on both sides.
+    function pair(int64 a, int64 b) external pure returns (int64, int64) { return (a, b); }
+    function mixed(int64 a, uint64 b) external pure returns (int64, uint64) { return (a, b); }
 }
 contract Caller {
     Cee c;
@@ -21,4 +25,13 @@ contract Caller {
     function g32(int256 a) external returns (int256) { return int256(c.r32(a)) + 1000; }
     function g64(int256 a) external returns (int256) { return int256(c.r64(a)) + 1000; }
     function gu32(uint256 a) external returns (uint256) { return uint256(c.u32(a)) + 1000; }
+    // tuple-return forwards: widen+offset so the observable is a clean positive int.
+    function gpair(int64 a, int64 b) external returns (int256) {
+        (int64 x, int64 y) = c.pair(a, b);
+        return int256(x) + int256(y) + 1000;
+    }
+    function gmixed(int64 a, uint64 b) external returns (int256) {
+        (int64 x, uint64 y) = c.mixed(a, b);
+        return int256(x) + int256(uint256(y)) + 1000;
+    }
 }
