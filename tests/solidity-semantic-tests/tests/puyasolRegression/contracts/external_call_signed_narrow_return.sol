@@ -16,6 +16,10 @@ contract Cee {
     // mismatch → router err. Now named uint256 on both sides.
     function pair(int64 a, int64 b) external pure returns (int64, int64) { return (a, b); }
     function mixed(int64 a, uint64 b) external pure returns (int64, uint64) { return (a, b); }
+    // UNSIGNED biguint (uint128/uint256) in a TUPLE return: encoded at natural N/8-byte width (16B for
+    // uint128), but the caller's tuple decode used a fixed 32B field -> wrong offsets -> revert.
+    function p128(uint128 a, uint128 b) external pure returns (uint128, uint128) { return (a, b); }
+    function pmix(uint128 a, uint64 b) external pure returns (uint128, uint64) { return (a, b); }
 }
 contract Caller {
     Cee c;
@@ -33,5 +37,13 @@ contract Caller {
     function gmixed(int64 a, uint64 b) external returns (int256) {
         (int64 x, uint64 y) = c.mixed(a, b);
         return int256(x) + int256(uint256(y)) + 1000;
+    }
+    function g128(uint128 a, uint128 b) external returns (uint256) {
+        (uint128 x, uint128 y) = c.p128(a, b);
+        return uint256(x) + uint256(y);
+    }
+    function gpmix(uint128 a, uint64 b) external returns (uint256) {
+        (uint128 x, uint64 y) = c.pmix(a, b);
+        return uint256(x) + uint256(y);
     }
 }

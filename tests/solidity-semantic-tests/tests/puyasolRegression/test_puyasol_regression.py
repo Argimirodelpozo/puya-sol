@@ -1388,3 +1388,8 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "gpair(int64,int64)", -3, -9).abi_return) == 988    # -12 + 1000
     assert as_int(harness.call(app, "gpair(int64,int64)", 100, -50).abi_return) == 1050
     assert as_int(harness.call(app, "gmixed(int64,uint64)", -5, 8).abi_return) == 1003   # -5 + 8 + 1000
+    # UNSIGNED biguint (uint128/uint256) in a tuple return: callee encodes at natural N/8 width (16B for
+    # uint128) but caller used a fixed 32B field -> wrong offsets. Now width comes from the Sol type.
+    assert as_int(harness.call(app, "g128(uint128,uint128)", 7, 9).abi_return) == 16
+    assert as_int(harness.call(app, "g128(uint128,uint128)", 1 << 127, 1 << 126).abi_return) == (1 << 127) + (1 << 126)
+    assert as_int(harness.call(app, "gpmix(uint128,uint64)", 100, 50).abi_return) == 150   # mixed uint128/uint64

@@ -300,7 +300,20 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			int fieldSize = 0;
 
 			if (fieldType == awst::WType::biguintType())
+			{
+				// The callee encodes an UNSIGNED uintN (64<N<=256) at its NATURAL N/8-byte ARC4 width
+				// (uint128 -> 16B), not 32. Signed (int128/256) and uint256 are 32B. Match it so the
+				// tuple offsets line up; makeAsBiguint below is length-agnostic.
 				fieldSize = 32;
+				if (!isSignedIntReturn(solField))
+				{
+					Type const* st = solField;
+					if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(st))
+						st = &udvt->underlyingType();
+					if (auto const* it = dynamic_cast<IntegerType const*>(st))
+						fieldSize = static_cast<int>(it->numBits() / 8);
+				}
+			}
 			else if (fieldType == awst::WType::uint64Type())
 				fieldSize = signedNarrow ? 32 : 8;   // signed int8/16/32/64 arrive as a 32-byte uint256
 			else if (fieldType == awst::WType::boolType())
