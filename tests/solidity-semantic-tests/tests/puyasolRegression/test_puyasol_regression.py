@@ -1399,3 +1399,21 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "gStruct(int64,int64)", -5, -9).abi_return) == 986     # -14 + 1000
     assert as_int(harness.call(app, "gArr(int64)", 5).abi_return) == 1010                  # 5+5 + 1000
     assert as_int(harness.call(app, "gArr(int64)", -3).abi_return) == 994                  # -3+-3 + 1000
+
+
+def test_modifier_stack_conditional(harness):
+    """puyasolRegression/contracts/modifier_stack_conditional.sol — NOT an o.g. semantic test.
+
+    Found by the dedicated MODIFIER fuzz axis. Stacked modifiers `m() gated both` must nest with the
+    LEFTMOST outermost (Solidity evaluates modifiers left-to-right): `if (gate) { ctr++; _; ctr++; }`.
+    The pre-fix body inliner iterated modifiers forward and wrapped each as the OUTER layer, so the
+    rightmost (`both`) became outermost -> `ctr++; if (gate) {_;} ctr++` and ctr incremented even when
+    gate was false. Fix iterates modifiers right-to-left (mirrors the viaIR chain builder).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_stack_conditional.sol")
+    assert as_int(harness.call(app, "getCtr()").abi_return) == 0
+    harness.call(app, "m()")                 # gate=false -> gated skips -> both must NOT run
+    assert as_int(harness.call(app, "getCtr()").abi_return) == 0   # was 2 (both ran unconditionally)
+    harness.call(app, "setGate(bool)", True)
+    harness.call(app, "m()")                 # gate=true -> both runs, ctr += 2
+    assert as_int(harness.call(app, "getCtr()").abi_return) == 2

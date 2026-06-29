@@ -214,8 +214,16 @@ void inlineModifiers(
 			loc));
 	}
 
-	for (auto const& modInvocation: _func.modifiers())
+	// Iterate modifiers RIGHT-to-LEFT: each pass wraps the accumulated _body as the new
+	// modifier's placeholder (i.e. as its inner layer), so processing the rightmost first /
+	// leftmost last makes the LEFTMOST modifier the outermost — matching Solidity's left-to-right
+	// modifier evaluation. Forward order reversed the nesting, so a stacked inner modifier's
+	// pre/post code escaped an outer modifier's conditional `_;` (e.g. `gated both` ran both's
+	// body unconditionally). The viaIR chain builder already iterates in reverse for this reason.
+	auto const& _mods = _func.modifiers();
+	for (auto _modIt = _mods.rbegin(); _modIt != _mods.rend(); ++_modIt)
 	{
+		auto const& modInvocation = *_modIt;
 		auto const* modDef = dynamic_cast<solidity::frontend::ModifierDefinition const*>(
 			modInvocation->name().annotation().referencedDeclaration);
 
