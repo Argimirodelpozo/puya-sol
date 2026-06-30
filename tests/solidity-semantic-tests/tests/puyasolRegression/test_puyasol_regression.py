@@ -1417,3 +1417,28 @@ def test_modifier_stack_conditional(harness):
     harness.call(app, "setGate(bool)", True)
     harness.call(app, "m()")                 # gate=true -> both runs, ctr += 2
     assert as_int(harness.call(app, "getCtr()").abi_return) == 2
+
+
+def test_modifier_multiple_placeholder(harness):
+    """puyasolRegression/contracts/modifier_multiple_placeholder.sol — NOT an o.g. semantic test.
+
+    Found by the modifier fuzz axis. A modifier with multiple `_;` (e.g. `twice() { _; _; }`) runs the
+    function body once per placeholder. The body inliner splices the placeholder body per `_;`; before
+    the fix it shared the same AWST nodes across the copies, so a checked-arithmetic body aliased its
+    overflow-assert temps (and SingleEvaluation cache keys) and miscompiled — the AVM value diverged
+    from EVM and reverts flipped. Fixed by deep-cloning the spliced body per `_;` (awst::cloneBlock,
+    fresh SingleEvaluation ids, sharing preserved within each splice).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_multiple_placeholder.sol")
+    # addTwice: body (acc = acc + v) runs twice -> +2v
+    harness.call(app, "addTwice(uint256)", 5)
+    assert as_int(harness.call(app, "getAcc()").abi_return) == 10      # was wrong (aliased)
+    harness.call(app, "addTwice(uint256)", 3)
+    assert as_int(harness.call(app, "getAcc()").abi_return) == 16      # 10 + 2*3
+    # addStacked: both(twice(body)) -> ctr += 2, acc += 2v
+    harness.call(app, "addStacked(uint256)", 4)
+    assert as_int(harness.call(app, "getAcc()").abi_return) == 24      # 16 + 2*4
+    assert as_int(harness.call(app, "getCtr()").abi_return) == 2
+    # value-returning body under twice -> returns v (last `_;` wins)
+    assert as_int(harness.call(app, "ret(uint256)", 7).abi_return) == 7

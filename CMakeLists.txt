@@ -39,6 +39,7 @@ set(SOURCES
 	src/Logger.cpp
 	src/awst/WType.cpp
 	src/awst/Node.cpp
+	src/awst/Clone.cpp
 	src/awst/Termination.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp

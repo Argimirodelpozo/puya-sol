@@ -10,6 +10,7 @@
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "awst/Clone.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -121,13 +122,17 @@ public:
 
 	ResultT visitPlaceholder(PlaceholderStatement const& _n) override
 	{
-		// Modifier `_;` — splice in the placeholder body if one is set
-		// on the current block context.
+		// Modifier `_;` — splice in the placeholder body if one is set on the current block
+		// context. DEEP-CLONE it: a modifier may contain several `_;` (the body runs once per
+		// placeholder), and splicing the same shared nodes would alias them so a later in-place
+		// pass corrupts every copy. Each splice gets an independent tree; cloneBlock preserves
+		// any DAG sharing within the body and re-mints SingleEvaluation ids.
 		if (m_blk.placeholderBody)
 		{
+			auto cloned = awst::cloneBlock(m_blk.placeholderBody);
 			auto block = awst::makeBlock(locOf(_n));
-			for (auto const& s: m_blk.placeholderBody->body)
-				block->body.push_back(s);
+			for (auto& s: cloned->body)
+				block->body.push_back(std::move(s));
 			return {block};
 		}
 		return {};
