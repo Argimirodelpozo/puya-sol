@@ -466,22 +466,29 @@ def compile_sol(
                 stdout=front.stdout, stderr=front.stderr,
             )
 
-        # Stage 2 — backend. Reuse cached TEAL if the AWST is unchanged;
-        # otherwise run the full puya-sol (frontend+backend+child-tmpl gen,
-        # exactly as before) and cache its backend artifacts. Running the full
-        # compiler on a miss (rather than puya directly) preserves the
-        # post-backend deploy.tmpl.json generation for `new C()` children.
+        # Stage 2 — backend. Reuse cached TEAL if the AWST is unchanged.
+        # On a miss, first try the session-persistent `puya serve` backend
+        # (see puya_serve.py): it runs the same awst_to_teal + artifact
+        # writing on the stage-1 AWST without re-paying the Python import
+        # startup, and ports the deploy.tmpl.json child-template step. On
+        # ANY non-success there, fall back to the full puya-sol run
+        # (frontend+backend+child-tmpl gen, exactly as before) — the
+        # subprocess stays the source of truth for failures. Either way the
+        # backend artifacts land in out_dir and are cached identically
+        # (serve output is byte-identical to subprocess output).
         bkey = _backend_cache_key(
             out_dir,
             _flags_blob(remappings, ensure_budget, via_yul_behavior, evm_version),
         )
         if not (bkey and _backend_cache_lookup(bkey, out_dir)):
-            full = _run(str(PUYA))
-            if full.returncode != 0:
-                raise CompileError(
-                    f"puya-sol exited {full.returncode}",
-                    stdout=full.stdout, stderr=full.stderr,
-                )
+            from .puya_serve import compile_via_server
+            if not compile_via_server(out_dir, timeout=timeout):
+                full = _run(str(PUYA))
+                if full.returncode != 0:
+                    raise CompileError(
+                        f"puya-sol exited {full.returncode}",
+                        stdout=full.stdout, stderr=full.stderr,
+                    )
             if bkey:
                 _backend_cache_store(bkey, out_dir)
     except subprocess.TimeoutExpired as e:
