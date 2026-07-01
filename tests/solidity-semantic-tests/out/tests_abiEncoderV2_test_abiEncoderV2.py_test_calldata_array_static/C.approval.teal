@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_array_static.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 3
+    intcblock 1 0 3 96
     bytecblock 0x151f7c75
-    intc_2 // 0
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -44,13 +44,13 @@ main_i_route@8:
     dup
     bury 2
     len
-    intc_3 // 3
+    intc_2 // 3
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -70,18 +70,18 @@ main_ternary_merge@15:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@14:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@15
 
 main_h_route@7:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 3
+    intc_2 // 3
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
     callsub h
@@ -96,7 +96,7 @@ main_h_route@7:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_g_route@6:
@@ -104,13 +104,13 @@ main_g_route@6:
     dup
     bury 2
     len
-    pushint 96
+    intc_3 // 96
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -130,18 +130,18 @@ main_ternary_merge@22:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@21:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@22
 
 main_f_route@5:
     txna ApplicationArgs 1
     dup
     len
-    pushint 96
+    intc_3 // 96
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
     callsub f
@@ -156,7 +156,7 @@ main_f_route@5:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -166,55 +166,19 @@ f:
     txn GroupIndex
     bz f_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 f_ternary_merge@3:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
     frame_dig -1
-    extract 0 32 // on error: index access is out of bounds
-    dig 1
-    swap
-    concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    frame_dig -1
-    extract 32 32 // on error: index access is out of bounds
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
-    extract 64 32 // on error: index access is out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
     retsub
 
 f_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b f_ternary_merge@3
 
 
@@ -224,53 +188,17 @@ h:
     txn GroupIndex
     bz h_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 h_ternary_merge@3:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
     frame_dig -1
-    extract 0 1 // on error: index access is out of bounds
-    dig 1
-    swap
-    concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    frame_dig -1
-    extract 1 1 // on error: index access is out of bounds
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
-    extract 2 1 // on error: index access is out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    frame_dig -1
     retsub
 
 h_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b h_ternary_merge@3

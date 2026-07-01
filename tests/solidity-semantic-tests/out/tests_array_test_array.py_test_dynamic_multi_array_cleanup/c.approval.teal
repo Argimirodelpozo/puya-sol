@@ -90,7 +90,8 @@ main_while_top@20:
 
 main_ternary_merge@23:
     itob
-    pushbytes 0x03
+    pushint 3
+    itob
     b<
     bz main_while_top@25
     bytec_0 // "data"
@@ -121,7 +122,8 @@ main_while_top@25:
     box_extract
     btoi
     itob
-    pushbytes 0x04
+    pushint 4
+    itob
     b<
     bz main_while_top@27
     bytec_0 // "data"
@@ -193,9 +195,20 @@ main_while_top@27:
     box_extract
     btoi
     itob
-    pushbytes 0x05
+    pushint 5
+    itob
     b<
-    bz main_after_while@29
+    bz main_after_while@31
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@30
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@30:
     bytec_0 // "data"
     box_get
     assert // box exists
@@ -278,7 +291,17 @@ main_while_top@27:
     box_put
     b main_while_top@27
 
-main_after_while@29:
+main_after_while@31:
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@33
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@33:
     bytec_0 // "data"
     intc_3 // 6
     intc_0 // 2

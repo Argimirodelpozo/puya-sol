@@ -59,13 +59,19 @@ main_f4_route@10:
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@17:
     !
     assert // not payable
     dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
+    bnz main_after_if_else@33
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@33:
+    dup
     assert // assertion failed
     bytec_0 // 0x151f7c75
     dig 2
@@ -76,7 +82,7 @@ main_ternary_merge@27:
 
 main_ternary_false@16:
     intc_1 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@17
 
 main_f3_route@9:
     txna ApplicationArgs 1
@@ -91,19 +97,25 @@ main_f3_route@9:
     getbit
     bury 1
     txn GroupIndex
-    bz main_ternary_false@21
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+main_ternary_merge@24:
     !
     assert // not payable
     dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
+    bnz main_after_if_else@26
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036d73670000000000000000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@26:
+    dup
     assert // msg
     bytec_0 // 0x151f7c75
     dig 2
@@ -112,9 +124,9 @@ main_ternary_merge@22:
     intc_0 // 1
     return
 
-main_ternary_false@21:
+main_ternary_false@23:
     intc_1 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@24
 
 main_f2_route@8:
     txna ApplicationArgs 1
@@ -129,26 +141,37 @@ main_f2_route@8:
     getbit
     bury 1
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@30
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@27
 
-main_ternary_false@26:
+main_ternary_merge@31:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bnz main_after_if_else@33
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e66616e6379206d65737361676521000000000000000000000000000000000000
+    log
+    b main_after_if_else@33
+
+main_ternary_false@30:
     intc_1 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@31
 
 main_succeed_route@7:
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@37
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+main_ternary_merge@38:
     !
     assert // not payable
     pushbytes 0x151f7c7580
@@ -156,26 +179,26 @@ main_ternary_merge@32:
     intc_0 // 1
     return
 
-main_ternary_false@31:
+main_ternary_false@37:
     intc_1 // 0
-    b main_ternary_merge@32
+    b main_ternary_merge@38
 
 main_fail_route@6:
     txn GroupIndex
-    bz main_ternary_false@36
+    bz main_ternary_false@42
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+main_ternary_merge@43:
     !
     assert // not payable
     err
 
-main_ternary_false@36:
+main_ternary_false@42:
     intc_1 // 0
-    b main_ternary_merge@37
+    b main_ternary_merge@43
 
 main_f_route@5:
     txna ApplicationArgs 1
@@ -190,13 +213,13 @@ main_f_route@5:
     getbit
     bury 1
     txn GroupIndex
-    bz main_ternary_false@41
+    bz main_ternary_false@47
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+main_ternary_merge@48:
     !
     assert // not payable
     dupn 2
@@ -211,6 +234,6 @@ main_ternary_merge@42:
     intc_0 // 1
     return
 
-main_ternary_false@41:
+main_ternary_false@47:
     intc_1 // 0
-    b main_ternary_merge@42
+    b main_ternary_merge@48

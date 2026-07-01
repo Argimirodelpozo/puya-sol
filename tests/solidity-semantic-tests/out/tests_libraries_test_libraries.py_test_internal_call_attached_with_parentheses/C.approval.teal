@@ -87,6 +87,10 @@ L.f:
     pushbytes 0x02
     b+
     dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_2 // 32
     <=

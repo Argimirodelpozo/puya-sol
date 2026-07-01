@@ -1,0 +1,400 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/staticcall_inner.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_2 // 0
+    dupn 4
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3a66639d 0x3c194190 0xd03137cd 0xac51744c 0xe15ba368 0xecfb8eec // method "foo(uint256)uint256", method "selfStatic(uint256)uint256", method "selfCall(uint256)uint256", method "selfStaticCall(uint256)uint256", method "selfStaticInherited(uint256)uint256", method "bar(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_foo_route@5 main_selfStatic_route@6 main_selfCall_route@7 main_selfStaticCall_route@8 main_selfStaticInherited_route@9 main_bar_route@10
+    err
+
+main_bar_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub bar
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_selfStaticInherited_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dig 5
+    callsub bar
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    bury 5
+    len
+    itob
+    intc_0 // 32
+    itob
+    b==
+    bz main_bool_false@21
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@22:
+    dup
+    bnz main_after_if_else@24
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001b696e6865726974656420656e636f646543616c6c206661696c65640000000000
+    log
+
+main_after_if_else@24:
+    dup
+    assert // inherited encodeCall failed
+    bytec_0 // 0x151f7c75
+    dig 4
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@21:
+    intc_2 // 0
+    bury 1
+    b main_bool_merge@22
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main_selfStaticCall_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    dig 5
+    callsub foo
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    bury 6
+    len
+    itob
+    intc_0 // 32
+    itob
+    b==
+    bz main_bool_false@31
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@32:
+    dup
+    bnz main_after_if_else@34
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000011656e636f646543616c6c206661696c6564000000000000000000000000000000
+    log
+
+main_after_if_else@34:
+    dup
+    assert // encodeCall failed
+    bytec_0 // 0x151f7c75
+    dig 5
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@31:
+    intc_2 // 0
+    bury 1
+    b main_bool_merge@32
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_selfCall_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    dig 5
+    callsub foo
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    bury 3
+    len
+    itob
+    intc_0 // 32
+    itob
+    b==
+    bz main_bool_false@41
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@42:
+    dup
+    bnz main_after_if_else@44
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b63616c6c206661696c6564000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@44:
+    dup
+    assert // call failed
+    bytec_0 // 0x151f7c75
+    dig 2
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@41:
+    intc_2 // 0
+    bury 1
+    b main_bool_merge@42
+
+main_ternary_false@38:
+    intc_2 // 0
+    b main_ternary_merge@39
+
+main_selfStatic_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    dig 5
+    callsub foo
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    bury 4
+    len
+    itob
+    intc_0 // 32
+    itob
+    b==
+    bz main_bool_false@51
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@52:
+    dup
+    bnz main_after_if_else@54
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001173746174696363616c6c206661696c6564000000000000000000000000000000
+    log
+
+main_after_if_else@54:
+    dup
+    assert // staticcall failed
+    bytec_0 // 0x151f7c75
+    dig 3
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@51:
+    intc_2 // 0
+    bury 1
+    b main_bool_merge@52
+
+main_ternary_false@48:
+    intc_2 // 0
+    b main_ternary_merge@49
+
+main_foo_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub foo
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/staticcall_inner.sol.C.foo(__arc4_x: bytes) -> bytes:
+foo:
+    proto 1 1
+    txn GroupIndex
+    bz foo_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 100
+    itob
+    frame_dig -1
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+foo_ternary_false@2:
+    intc_2 // 0
+    b foo_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/staticcall_inner.sol.C.bar(__arc4_x: bytes) -> bytes:
+bar:
+    proto 1 1
+    txn GroupIndex
+    bz bar_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bar_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 7
+    itob
+    frame_dig -1
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+bar_ternary_false@2:
+    intc_2 // 0
+    b bar_ternary_merge@3

@@ -1122,7 +1122,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1136,7 +1137,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
                   "line": 118,
@@ -1151,11 +1152,58 @@
                   "immutable": true,
                   "length": null
                 },
-                "op_code": "concat",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "IntrinsicCall",
+                "expr": {
+                  "_type": "ARC4Encode",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
+                    "line": 118,
+                    "end_line": 134,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4Tuple",
+                    "name": "arc4.tuple",
+                    "immutable": true,
+                    "types": [
+                      {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.uint256>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      {
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint256, 1>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "array_size": 1,
+                        "arc4_alias": null,
+                        "source_location": null
+                      }
+                    ],
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "value": {
+                    "_type": "TupleExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
                       "line": 118,
@@ -1165,967 +1213,105 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
+                      "_type": "WTuple",
+                      "name": "tuple",
                       "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "concat",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                          "line": 118,
-                          "end_line": 134,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "extract3",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                  "line": 118,
-                                  "end_line": 134,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                      "line": 118,
-                                      "end_line": 134,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 32,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                  "line": 118,
-                                  "end_line": 134,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                      "line": 118,
-                                      "end_line": 134,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 64,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          {
-                            "_type": "UInt64BinaryOperation",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "left": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                "line": 118,
-                                "end_line": 134,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "op_code": "len",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                    "line": 118,
-                                    "end_line": 134,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                        "line": 118,
-                                        "end_line": 134,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                            "line": 118,
-                                            "end_line": 134,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 32,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                        "line": 118,
-                                        "end_line": 134,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "itob",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                            "line": 118,
-                                            "end_line": 134,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 64,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            "op": "-",
-                            "right": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                "line": 118,
-                                "end_line": 134,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "value": 32,
-                              "teal_alias": null
-                            }
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 32,
-                            "teal_alias": null
-                          }
-                        ]
-                      },
-                      {
-                        "_type": "ReinterpretCast",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                          "line": 118,
-                          "end_line": 134,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "expr": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                            "line": 132,
-                            "end_line": 133,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4StaticArray",
-                            "name": "arc4.static_array<arc4.uint256, 1>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "array_size": 1,
+                      "types": [
+                        {
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "name": "b"
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        {
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 1>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "array_size": 1,
+                          "arc4_alias": null,
+                          "source_location": null
                         }
+                      ],
+                      "names": null,
+                      "source_location": null
+                    },
+                    "items": [
+                      {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
+                          "line": 129,
+                          "end_line": 130,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "name": "a"
+                      },
+                      {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
+                          "line": 132,
+                          "end_line": 133,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 1>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "array_size": 1,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "name": "b"
                       }
                     ]
                   },
-                  {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                      "line": 118,
-                      "end_line": 134,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "concat",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                          "line": 118,
-                          "end_line": 134,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "extract3",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                  "line": 118,
-                                  "end_line": 134,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                      "line": 118,
-                                      "end_line": 134,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 32,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                  "line": 118,
-                                  "end_line": 134,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "UInt64BinaryOperation",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                      "line": 118,
-                                      "end_line": 134,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "left": {
-                                      "_type": "UInt64BinaryOperation",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                        "line": 118,
-                                        "end_line": 134,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "left": {
-                                        "_type": "IntrinsicCall",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                          "line": 118,
-                                          "end_line": 134,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "op_code": "len",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "ReinterpretCast",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                              "line": 118,
-                                              "end_line": 134,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "expr": {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                                "line": 129,
-                                                "end_line": 130,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "ARC4DynamicArray",
-                                                "name": "arc4.dynamic_array<arc4.uint256>",
-                                                "immutable": false,
-                                                "element_type": {
-                                                  "_type": "ARC4UIntN",
-                                                  "name": "arc4.uint256",
-                                                  "immutable": true,
-                                                  "n": 256,
-                                                  "arc4_alias": null,
-                                                  "source_location": null
-                                                },
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "name": "a"
-                                            }
-                                          }
-                                        ]
-                                      },
-                                      "op": "-",
-                                      "right": {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                          "line": 118,
-                                          "end_line": 134,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "value": 2,
-                                        "teal_alias": null
-                                      }
-                                    },
-                                    "op": "//",
-                                    "right": {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                        "line": 118,
-                                        "end_line": 134,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 32,
-                                      "teal_alias": null
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          {
-                            "_type": "UInt64BinaryOperation",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "left": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                "line": 118,
-                                "end_line": 134,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "op_code": "len",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                    "line": 118,
-                                    "end_line": 134,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                        "line": 118,
-                                        "end_line": 134,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                            "line": 118,
-                                            "end_line": 134,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 32,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                        "line": 118,
-                                        "end_line": 134,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "itob",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "UInt64BinaryOperation",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                            "line": 118,
-                                            "end_line": 134,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "left": {
-                                            "_type": "UInt64BinaryOperation",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                              "line": 118,
-                                              "end_line": 134,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "left": {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                                "line": 118,
-                                                "end_line": 134,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "op_code": "len",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "ReinterpretCast",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                                    "line": 118,
-                                                    "end_line": 134,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "expr": {
-                                                    "_type": "VarExpression",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                                      "line": 129,
-                                                      "end_line": 130,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "ARC4DynamicArray",
-                                                      "name": "arc4.dynamic_array<arc4.uint256>",
-                                                      "immutable": false,
-                                                      "element_type": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint256",
-                                                        "immutable": true,
-                                                        "n": 256,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "arc4_alias": null,
-                                                      "source_location": null
-                                                    },
-                                                    "name": "a"
-                                                  }
-                                                }
-                                              ]
-                                            },
-                                            "op": "-",
-                                            "right": {
-                                              "_type": "IntegerConstant",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                                "line": 118,
-                                                "end_line": 134,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "value": 2,
-                                              "teal_alias": null
-                                            }
-                                          },
-                                          "op": "//",
-                                          "right": {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                              "line": 118,
-                                              "end_line": 134,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 32,
-                                            "teal_alias": null
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            "op": "-",
-                            "right": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                "line": 118,
-                                "end_line": 134,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "value": 32,
-                              "teal_alias": null
-                            }
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 32,
-                            "teal_alias": null
-                          }
-                        ]
-                      },
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                          "line": 118,
-                          "end_line": 134,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "extract",
-                        "immediates": [
-                          2,
-                          0
-                        ],
-                        "stack_args": [
-                          {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                              "line": 118,
-                              "end_line": 134,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "expr": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_static_array.sol",
-                                "line": 129,
-                                "end_line": 130,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "ARC4DynamicArray",
-                                "name": "arc4.dynamic_array<arc4.uint256>",
-                                "immutable": false,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint256",
-                                  "immutable": true,
-                                  "n": 256,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "name": "a"
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
+                  "error_message": null
+                }
               }
             }
           ],
@@ -2476,7 +1662,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2956,7 +2143,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

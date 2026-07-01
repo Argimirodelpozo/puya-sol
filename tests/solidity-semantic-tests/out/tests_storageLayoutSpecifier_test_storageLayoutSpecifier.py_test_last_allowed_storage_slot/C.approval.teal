@@ -94,9 +94,14 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
-    dup
-    pushbytes 0x02
+    pushint 2
+    itob
+    dig 1
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     dig 1
     app_global_put

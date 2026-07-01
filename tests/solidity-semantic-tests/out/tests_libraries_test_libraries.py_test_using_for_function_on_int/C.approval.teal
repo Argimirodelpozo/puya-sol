@@ -81,7 +81,12 @@ main_ternary_false@8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_for_function_on_int.sol.D.double(self: bytes) -> bytes:
 D.double:
     proto 1 1
-    pushbytes 0x02
+    pushint 2
+    itob
     frame_dig -1
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub

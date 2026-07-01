@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/claude-1000/multisource_bksr3vch/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_nbvky9fd/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -49,17 +49,22 @@ main_foo_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    callsub /tmp/multisource_nbvky9fd/s2.sol.f_21
     callsub f
-    callsub /tmp/claude-1000/multisource_bksr3vch/s2.sol.f_69
+    dup2
     b>=
     assert // underflow
-    callsub f
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub /tmp/claude-1000/multisource_bksr3vch/s2.sol.f_69
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -80,15 +85,15 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/claude-1000/multisource_bksr3vch/s2.sol.f_21() -> bytes:
+// /tmp/multisource_nbvky9fd/s2.sol.f() -> bytes:
 f:
-    pushint 2
+    intc_0 // 1
     itob
     retsub
 
 
-// /tmp/claude-1000/multisource_bksr3vch/s2.sol.f_69() -> bytes:
-/tmp/claude-1000/multisource_bksr3vch/s2.sol.f_69:
-    intc_0 // 1
+// /tmp/multisource_nbvky9fd/s2.sol.f_21() -> bytes:
+/tmp/multisource_nbvky9fd/s2.sol.f_21:
+    pushint 2
     itob
     retsub

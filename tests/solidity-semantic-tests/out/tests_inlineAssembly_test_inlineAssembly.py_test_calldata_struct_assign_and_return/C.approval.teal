@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign_and_return.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64 4 18446744073709551360
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000042 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 1 32 4 18446744073709551360
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000042 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     intc_0 // 0
-    dupn 16
+    dupn 17
     pushint 4096
     bzero
     dup
@@ -35,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xdd4ba0fa 0xafedb2e5 0x3f72e9ed // method "g()(uint512,uint512)", method "h()uint256", method "i()uint256"
+    pushbytess 0x595e23e2 0xafedb2e5 0x3f72e9ed // method "g()(uint256,uint256)", method "h()uint256", method "i()uint256"
     txna ApplicationArgs 0
     match main_g_route@5 main_h_route@6 main_i_route@7
     err
@@ -56,7 +56,7 @@ main_ternary_merge@14:
     txn NumAppArgs
     bz main_ternary_false@17
     txna ApplicationArgs 0
-    bury 16
+    bury 15
 
 main_ternary_merge@18:
     txn NumAppArgs
@@ -66,7 +66,7 @@ main_ternary_merge@18:
     txna ApplicationArgs 1
 
 main_ternary_merge@21:
-    dig 16
+    dig 15
     swap
     concat
     bury 14
@@ -312,7 +312,7 @@ main_ternary_false@20:
 main_ternary_false@17:
     intc_0 // 0
     bzero
-    bury 16
+    bury 15
     b main_ternary_merge@18
 
 main_ternary_false@64:
@@ -359,9 +359,11 @@ main_ternary_merge@177:
     assert // not payable
     callsub f
     dup
-    bury 18
+    bury 17
     intc_0 // 0
     getbyte
+    pushint 256
+    %
     dup
     pushint 128
     >=
@@ -379,14 +381,24 @@ main_ternary_merge@180:
     bz main_ternary_false@182
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 15
 
 main_ternary_merge@183:
-    dig 16
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    dup
+    bury 19
+    b|
+    bury 18
+    dig 15
     intc_1 // 1
     getbyte
+    pushint 256
+    %
     dup
     pushint 128
     >=
@@ -404,29 +416,17 @@ main_ternary_merge@186:
     bz main_ternary_false@188
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@189:
-    dig 15
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
-    bzero
+    dig 17
+    b|
+    dig 18
     swap
-    dig 1
-    b|
-    uncover 2
-    dup
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    uncover 2
-    b|
     concat
     pushbytes 0x151f7c75
     swap
@@ -442,7 +442,6 @@ main_ternary_false@185:
     b main_ternary_merge@186
 
 main_ternary_false@182:
-    bury 15
     b main_ternary_merge@183
 
 main_ternary_false@179:

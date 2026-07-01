@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/erc7201_param_ternary_operator.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x01 0x00 "x" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x00 "x" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 0
     pushbytes ""
     dup
@@ -87,22 +87,22 @@ main_ternary_merge@13:
 
 main_ternary_merge@19:
     keccak256
-    bytec_0 // 0x01
+    pushbytes 0x01
     b-
     dig 3
     b|
     keccak256
     extract 0 31
-    bytec_1 // 0x00
+    bytec_0 // 0x00
     concat
-    bytec_2 // "x"
+    bytec_1 // "x"
     callsub erc7201Mock
     b==
-    bytec_1 // 0x00
+    bytec_0 // 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -112,7 +112,7 @@ main_ternary_merge@19:
 main_ternary_false@15:
     dup
     bz main_ternary_false@17
-    bytec_2 // "x"
+    bytec_1 // "x"
     b main_ternary_merge@19
 
 main_ternary_false@17:
@@ -134,15 +134,15 @@ main_simple_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    bytec_2 // "x"
+    bytec_1 // "x"
     callsub erc7201Mock
     pushbytes 0x87b4891dabfa6386a559a842738ea7cea3c9f195f3e5e60ccbd5b6d66c3b5000
     b==
-    bytec_1 // 0x00
+    bytec_0 // 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -159,19 +159,24 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    dup
-    bytec_0 // 0x01
+    intc_0 // 1
+    itob
+    dup2
     b>=
     assert // underflow
     intc_2 // 32
     bzero
-    swap
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    uncover 2
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_0 // 0x01
+    uncover 2
     b-
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     concat
     dup
     len

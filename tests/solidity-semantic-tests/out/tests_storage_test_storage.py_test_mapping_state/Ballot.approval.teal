@@ -125,8 +125,13 @@ main_after_if_else@18:
     pushbytes 0x
     cover 2
     select
-    pushbytes 0x01
+    intc_0 // 1
+    itob
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dig 1
     box_del
     pop

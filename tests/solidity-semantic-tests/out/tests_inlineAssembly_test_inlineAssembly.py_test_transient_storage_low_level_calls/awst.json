@@ -1065,7 +1065,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1997,7 +1998,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3316,7 +3318,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "x",
+            "name": "__arc4_x",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
               "line": 285,
@@ -3326,9 +3328,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -3577,7 +3582,73 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                "line": 285,
+                "end_line": 291,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                  "line": 285,
+                  "end_line": 291,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "x"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                  "line": 285,
+                  "end_line": 291,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                    "line": 285,
+                    "end_line": 291,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_x"
+                },
+                "error_message": null
               }
             },
             {
@@ -4244,7 +4315,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -4972,7 +5044,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -5581,7 +5654,7 @@
                   "name": "account",
                   "immutable": true
                 },
-                "name": "d"
+                "name": "d__40"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -5867,7 +5940,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__49"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -5959,10 +6032,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "name": "success"
+                  "name": "success__49"
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {
@@ -6028,7 +6102,7 @@
                   },
                   "operator": "==",
                   "rhs": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
                       "line": 785,
@@ -6042,12 +6116,50 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 6,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                        "line": 785,
+                        "end_line": 800,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                            "line": 799,
+                            "end_line": 800,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 6,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   }
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {
@@ -6369,7 +6481,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -6978,7 +7091,7 @@
                   "name": "account",
                   "immutable": true
                 },
-                "name": "d"
+                "name": "d__91"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -7314,7 +7427,7 @@
                                       "name": "account",
                                       "immutable": true
                                     },
-                                    "name": "d"
+                                    "name": "d__91"
                                   }
                                 }
                               ]
@@ -7545,7 +7658,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__100"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -7637,10 +7750,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "name": "success"
+                  "name": "success__100"
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {
@@ -7830,7 +7944,7 @@
                                       "name": "account",
                                       "immutable": true
                                     },
-                                    "name": "d"
+                                    "name": "d__91"
                                   }
                                 }
                               ]
@@ -8001,7 +8115,7 @@
                   },
                   "operator": "==",
                   "rhs": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
                       "line": 1128,
@@ -8015,12 +8129,50 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 1,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                        "line": 1128,
+                        "end_line": 1140,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                            "line": 1139,
+                            "end_line": 1140,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   }
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {
@@ -8342,7 +8494,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -8951,7 +9104,7 @@
                   "name": "account",
                   "immutable": true
                 },
-                "name": "d"
+                "name": "d__142"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -9101,6 +9254,260 @@
               }
             },
             {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                "line": 1340,
+                "end_line": 1388,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "SubmitInnerTransaction",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                  "line": 1340,
+                  "end_line": 1388,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WInnerTransaction",
+                  "name": "inner_transaction_appl",
+                  "immutable": true,
+                  "transaction_type": 6
+                },
+                "itxns": [
+                  {
+                    "_type": "CreateInnerTransaction",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                      "line": 1340,
+                      "end_line": 1388,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WInnerTransactionFields",
+                      "name": "inner_transaction_fields_appl",
+                      "immutable": true,
+                      "transaction_type": 6
+                    },
+                    "fields": {
+                      "ApplicationArgs": {
+                        "_type": "TupleExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1340,
+                          "end_line": 1388,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WTuple",
+                          "name": "tuple",
+                          "immutable": true,
+                          "types": [
+                            {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            }
+                          ],
+                          "names": null,
+                          "source_location": null
+                        },
+                        "items": [
+                          {
+                            "_type": "MethodConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                              "line": 1340,
+                              "end_line": 1388,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "value": {
+                              "_type": "MethodSignatureString",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                "line": 1340,
+                                "end_line": 1388,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "value": "get()uint256"
+                            }
+                          }
+                        ]
+                      },
+                      "ApplicationID": {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1340,
+                          "end_line": 1388,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "application",
+                          "immutable": true
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                            "line": 1340,
+                            "end_line": 1388,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "btoi",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                "line": 1340,
+                                "end_line": 1388,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "extract",
+                              "immediates": [
+                                24,
+                                8
+                              ],
+                              "stack_args": [
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                    "line": 1340,
+                                    "end_line": 1388,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                      "line": 1348,
+                                      "end_line": 1349,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "account",
+                                      "immutable": true
+                                    },
+                                    "name": "d__142"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "Fee": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1340,
+                          "end_line": 1388,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      },
+                      "OnCompletion": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1340,
+                          "end_line": 1388,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      },
+                      "TypeEnum": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1340,
+                          "end_line": 1388,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 6,
+                        "teal_alias": null
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
               "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
@@ -9191,7 +9598,7 @@
                     "value": true
                   },
                   {
-                    "_type": "BytesConstant",
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
                       "line": 1340,
@@ -9206,8 +9613,35 @@
                       "immutable": true,
                       "length": null
                     },
-                    "value": "",
-                    "encoding": "base16"
+                    "op_code": "extract",
+                    "immediates": [
+                      4,
+                      0
+                    ],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1340,
+                          "end_line": 1388,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itxn",
+                        "immediates": [
+                          "LastLog"
+                        ],
+                        "stack_args": []
+                      }
+                    ]
                   }
                 ]
               }
@@ -9237,7 +9671,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__151"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -9315,7 +9749,7 @@
                   "immutable": true,
                   "length": null
                 },
-                "name": "result"
+                "name": "result__153"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -9408,10 +9842,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "name": "success"
+                  "name": "success__151"
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {
@@ -9455,11 +9890,66 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ReinterpretCast",
+                    "_type": "ARC4Decode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
                       "line": 1432,
                       "end_line": 1458,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                        "line": 1432,
+                        "end_line": 1458,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "expr": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1443,
+                          "end_line": 1449,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "name": "result__153"
+                      }
+                    },
+                    "error_message": null
+                  },
+                  "operator": "==",
+                  "rhs": {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                      "line": 1432,
+                      "end_line": 1463,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
@@ -9474,7 +9964,7 @@
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
                         "line": 1432,
-                        "end_line": 1458,
+                        "end_line": 1463,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -9485,33 +9975,15 @@
                         "immutable": true,
                         "length": null
                       },
-                      "op_code": "extract3",
+                      "op_code": "itob",
                       "immediates": [],
                       "stack_args": [
-                        {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
-                            "line": 1443,
-                            "end_line": 1449,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "name": "result"
-                        },
                         {
                           "_type": "IntegerConstant",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
-                            "line": 1432,
-                            "end_line": 1458,
+                            "line": 1462,
+                            "end_line": 1463,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
@@ -9523,50 +9995,14 @@
                           },
                           "value": 0,
                           "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
-                            "line": 1432,
-                            "end_line": 1458,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 32,
-                          "teal_alias": null
                         }
                       ]
                     }
-                  },
-                  "operator": "==",
-                  "rhs": {
-                    "_type": "IntegerConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
-                      "line": 1432,
-                      "end_line": 1463,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "value": 0,
-                    "teal_alias": null
                   }
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {
@@ -9888,7 +10324,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -10406,7 +10843,7 @@
                   "name": "account",
                   "immutable": true
                 },
-                "name": "d"
+                "name": "d__193"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -10556,6 +10993,260 @@
               }
             },
             {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                "line": 1627,
+                "end_line": 1678,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "SubmitInnerTransaction",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                  "line": 1627,
+                  "end_line": 1678,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WInnerTransaction",
+                  "name": "inner_transaction_appl",
+                  "immutable": true,
+                  "transaction_type": 6
+                },
+                "itxns": [
+                  {
+                    "_type": "CreateInnerTransaction",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                      "line": 1627,
+                      "end_line": 1678,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WInnerTransactionFields",
+                      "name": "inner_transaction_fields_appl",
+                      "immutable": true,
+                      "transaction_type": 6
+                    },
+                    "fields": {
+                      "ApplicationArgs": {
+                        "_type": "TupleExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1627,
+                          "end_line": 1678,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WTuple",
+                          "name": "tuple",
+                          "immutable": true,
+                          "types": [
+                            {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            }
+                          ],
+                          "names": null,
+                          "source_location": null
+                        },
+                        "items": [
+                          {
+                            "_type": "MethodConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                              "line": 1627,
+                              "end_line": 1678,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "value": {
+                              "_type": "MethodSignatureString",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                "line": 1627,
+                                "end_line": 1678,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "value": "addOne()void"
+                            }
+                          }
+                        ]
+                      },
+                      "ApplicationID": {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1627,
+                          "end_line": 1678,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "application",
+                          "immutable": true
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                            "line": 1627,
+                            "end_line": 1678,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "btoi",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                "line": 1627,
+                                "end_line": 1678,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "extract",
+                              "immediates": [
+                                24,
+                                8
+                              ],
+                              "stack_args": [
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                    "line": 1627,
+                                    "end_line": 1678,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                                      "line": 1635,
+                                      "end_line": 1636,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "account",
+                                      "immutable": true
+                                    },
+                                    "name": "d__193"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "Fee": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1627,
+                          "end_line": 1678,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      },
+                      "OnCompletion": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1627,
+                          "end_line": 1678,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      },
+                      "TypeEnum": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1627,
+                          "end_line": 1678,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 6,
+                        "teal_alias": null
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
               "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
@@ -10646,7 +11337,7 @@
                     "value": true
                   },
                   {
-                    "_type": "BytesConstant",
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
                       "line": 1627,
@@ -10661,8 +11352,35 @@
                       "immutable": true,
                       "length": null
                     },
-                    "value": "",
-                    "encoding": "base16"
+                    "op_code": "extract",
+                    "immediates": [
+                      4,
+                      0
+                    ],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol",
+                          "line": 1627,
+                          "end_line": 1678,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itxn",
+                        "immediates": [
+                          "LastLog"
+                        ],
+                        "stack_args": []
+                      }
+                    ]
                   }
                 ]
               }
@@ -10692,7 +11410,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__202"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -10799,11 +11517,12 @@
                       "name": "bool",
                       "immutable": true
                     },
-                    "name": "success"
+                    "name": "success__202"
                   }
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             },
             {

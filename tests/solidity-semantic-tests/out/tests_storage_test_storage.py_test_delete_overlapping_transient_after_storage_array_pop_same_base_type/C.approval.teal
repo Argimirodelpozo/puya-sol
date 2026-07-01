@@ -6,6 +6,7 @@ main:
     intcblock 32 1 0 2
     bytecblock "arr" 0x "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 "__dyn_storage"
     bytec_1 // ""
+    dup
     pushint 4096
     bzero
     dup
@@ -78,8 +79,8 @@ main_ternary_merge@15:
     -
     extract_uint64
     dup
-    bury 2
-    bnz main_else_body@28
+    bury 3
+    bnz main_else_body@30
     intc_0 // 32
     bzero
     bytec_0 // "arr"
@@ -92,7 +93,7 @@ main_ternary_merge@15:
     intc_0 // 32
     extract3
 
-main_after_inlined___puyasol___storage_read@29:
+main_after_inlined___puyasol___storage_read@31:
     load 0
     store 0
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -112,12 +113,12 @@ main_after_inlined___puyasol___storage_read@29:
     intc_1 // 1
     return
 
-main_else_body@28:
+main_else_body@30:
     bytec 4 // "__dyn_storage"
     pushint 8192
     box_create
     pop
-    dup
+    dig 1
     pushint 256
     %
     intc_0 // 32
@@ -126,7 +127,7 @@ main_else_body@28:
     swap
     intc_0 // 32
     box_extract
-    b main_after_inlined___puyasol___storage_read@29
+    b main_after_inlined___puyasol___storage_read@31
 
 main_ternary_false@14:
     intc_2 // 0
@@ -153,8 +154,17 @@ main_ternary_merge@20:
     store 5
     load 5
     extract 0 32
-    bytec_1 // 0x
+    intc_2 // 0
+    itob
     b==
+    dup
+    bury 2
+    bnz main_after_if_else@22
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@22:
+    dup
     assert
     bytec_0 // "arr"
     intc_2 // 0
@@ -196,13 +206,13 @@ main_ternary_false@19:
 
 main_pushArr_route@6:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@26
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@27:
     !
     assert // not payable
     bytec_0 // "arr"
@@ -239,9 +249,9 @@ main_ternary_merge@25:
     intc_1 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@26:
     intc_2 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@27
 
 main___postInit_route@5:
     bytec_2 // "__ctor_pending"

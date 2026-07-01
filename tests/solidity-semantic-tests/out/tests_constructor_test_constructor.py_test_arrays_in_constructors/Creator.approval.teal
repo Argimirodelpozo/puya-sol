@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/arrays_in_constructors.sol.Creator.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 6
+    intcblock 0 1 6 32
     bytecblock TMPL_APPROVAL_Main TMPL_CLEAR_Main
     intc_0 // 0
     dup
@@ -26,7 +26,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -45,7 +45,7 @@ main_f_route@4:
     dup
     bury 3
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
@@ -54,7 +54,7 @@ main_f_route@4:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
     pushint 2
     +
@@ -65,7 +65,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -75,7 +75,7 @@ main_ternary_merge@9:
     itxn_begin
     bytec_0 // TMPL_APPROVAL_Main
     bytec_1 // TMPL_CLEAR_Main
-    intc_3 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -98,7 +98,7 @@ main_ternary_merge@9:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -114,7 +114,7 @@ main_ternary_merge@9:
     itxn_begin
     pushint 24
     extract_uint64
-    intc_3 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -128,26 +128,17 @@ main_ternary_merge@9:
     itxn LastLog
     extract 4 0
     itxn_begin
-    intc_1 // 32
-    bzero
-    uncover 3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    intc_3 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    uncover 2
+    swap
     itxn_field ApplicationID
     pushbytes 0xc8283ac6 // method "part(uint256)address"
     itxn_field ApplicationArgs
+    swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -167,7 +158,7 @@ main_ternary_merge@9:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@8:

@@ -121,7 +121,8 @@ __fallback_ternary_merge@3:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x02
+    pushint 2
+    itob
     b==
     bz __fallback_after_if_else@5
     retsub
@@ -133,6 +134,10 @@ __fallback_after_if_else@5:
     assert // check x exists
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put

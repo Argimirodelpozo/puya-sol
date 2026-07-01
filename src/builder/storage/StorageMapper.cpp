@@ -8,6 +8,7 @@
 
 #include <liblangutil/SourceLocation.h>
 
+#include <algorithm>
 #include <set>
 
 namespace puyasol::builder
@@ -122,6 +123,63 @@ std::shared_ptr<awst::Expression> StorageMapper::makeBoxLenTuple(
 		std::vector<awst::WType const*>{
 			awst::WType::uint64Type(), awst::WType::boolType()});
 	return awst::makeBoxLen(std::move(_key), tupleType, _loc);
+}
+
+std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
+	TypeMapper& _typeMapper,
+	std::shared_ptr<awst::Expression> const& _target,
+	bool _isResize,
+	awst::SourceLocation const& _loc)
+{
+	// Walk to the root BoxValue through the read/write chain, noting whether an element INDEX is
+	// crossed (a partial write). StateGet wraps a read form; peel it. Index/Field lead to the root box.
+	awst::Expression const* cur = _target.get();
+	bool hasIndex = false;
+	awst::BoxValueExpression const* root = nullptr;
+	while (cur)
+	{
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(cur))
+			cur = sg->field.get();
+		else if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(cur))
+		{ hasIndex = true; cur = idx->base.get(); }
+		else if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(cur))
+			cur = fe->base.get();
+		else if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(cur))
+		{ root = bv; break; }
+		else
+			break;
+	}
+	if (!root || !root->key)
+		return nullptr;
+	// A whole-box assignment (`st = S(...)`, `arr = [...]`) creates its own box (box_put of the value);
+	// only a PARTIAL element write or a RESIZE (push/pop) needs the box pre-materialised.
+	if (!_isResize && !hasIndex)
+		return nullptr;
+
+	auto enc = arc4DefaultEncoding(root->wtype);
+	if (!enc || enc->empty() || enc->size() > 32768)
+		return nullptr;
+
+	// A zeroed box is a valid ARC4 default for static-element types → box_create (size only, no bytes
+	// constant on the stack). A non-zero default (dynamic-element head offsets) needs box_put, and that
+	// constant must fit the AVM stack limit (a large box_put "exceeds stack size limits").
+	bool const allZeros = std::all_of(enc->begin(), enc->end(), [](uint8_t b) { return b == 0; });
+	std::shared_ptr<awst::Expression> createExpr;
+	if (allZeros)
+		createExpr = awst::makeBoxCreate(
+			root->key, awst::makeIntegerConstant(enc->size(), _loc), _loc);
+	else if (enc->size() <= 4096)
+		createExpr = awst::makeBoxPut(
+			root->key, awst::makeBytesConstant(std::move(*enc), _loc), _loc);
+	else
+		return nullptr;
+
+	auto boxLen = makeBoxLenTuple(_typeMapper, root->key, _loc);
+	auto exists = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), _loc);
+	auto notExists = awst::makeNot(std::move(exists), _loc);
+	auto thenBlock = awst::makeBlock(_loc);
+	thenBlock->body.push_back(awst::makeExpressionStatement(std::move(createExpr), _loc));
+	return awst::makeIfElse(std::move(notExists), std::move(thenBlock), nullptr, _loc);
 }
 
 // ── Multi-box helpers ──

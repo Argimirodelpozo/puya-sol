@@ -1,0 +1,225 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.approval_program() -> uint64:
+main:
+    intcblock 1 0 8 18446744073709551615
+    bytecblock 0x151f7c75 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 0
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x80cdd786 0xd75ae69a 0x8e2a0636 0x59f787bf 0x4ea41782 0x977ba647 // method "pow1077()uint256", method "half256p1()uint256", method "bigShift()uint256", method "bigMul()uint256", method "maxU64sqWrap()uint64", method "maxU64sqChecked()uint256"
+    txna ApplicationArgs 0
+    match main_pow1077_route@5 main_half256p1_route@6 main_bigShift_route@7 main_bigMul_route@8 main_maxU64sqWrap_route@9 main_maxU64sqChecked_route@10
+    err
+
+main_maxU64sqChecked_route@10:
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    intc_3 // 18446744073709551615
+    pushint 2
+    exp
+    itob
+    pushint 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@16:
+    intc_1 // 0
+    b main_ternary_merge@17
+
+main_maxU64sqWrap_route@9:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    bytec_1 // 0x01
+    bury 1
+    intc_3 // 18446744073709551615
+    itob
+    bury 3
+    pushint 2
+    itob
+    bury 2
+
+main_while_top@24:
+    dig 1
+    bytec_2 // 0x
+    b>
+    bz main_after_while@28
+    dig 1
+    bytec_1 // 0x01
+    b&
+    bytec_2 // 0x
+    b!=
+    bz main_after_if_else@27
+    dup
+    dig 3
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 1
+
+main_after_if_else@27:
+    dig 1
+    pushbytes 0x02
+    b/
+    bury 2
+    dig 2
+    dup
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 3
+    b main_while_top@24
+
+main_after_while@28:
+    intc_2 // 8
+    bzero
+    dig 1
+    pushbytes 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_bigMul_route@8:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000300000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
+
+main_bigShift_route@7:
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000100000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@37:
+    intc_1 // 0
+    b main_ternary_merge@38
+
+main_half256p1_route@6:
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_1 // 0
+    b main_ternary_merge@43
+
+main_pow1077_route@5:
+    txn GroupIndex
+    bz main_ternary_false@47
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@48:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75dd15fe86affad91249ef0eb713f39ebeaa987b6e6fd2a0000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@47:
+    intc_1 // 0
+    b main_ternary_merge@48

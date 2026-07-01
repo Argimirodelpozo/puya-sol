@@ -1,0 +1,140 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/uint256_of_internal_call.sol.Uint256OfInternalCall.approval_program() -> uint64:
+main:
+    intcblock 16 1 0 32
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x151f7c75
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x85e6e9c6 0x39b66198 // method "peer(uint128)uint128", method "widen(uint128)uint256"
+    txna ApplicationArgs 0
+    match main_peer_route@5 main_widen_route@6
+    err
+
+main_widen_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    dupn 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_peer_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 16
+    bzero
+    dig 1
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18

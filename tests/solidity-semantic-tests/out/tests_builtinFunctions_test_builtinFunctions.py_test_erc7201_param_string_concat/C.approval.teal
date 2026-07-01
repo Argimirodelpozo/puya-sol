@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/erc7201_param_string_concat.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -74,19 +74,24 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    dup
-    bytec_0 // 0x01
+    intc_0 // 1
+    itob
+    dup2
     b>=
     assert // underflow
     intc_1 // 32
     bzero
-    swap
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_0 // 0x01
+    uncover 2
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     concat
     dup
     len

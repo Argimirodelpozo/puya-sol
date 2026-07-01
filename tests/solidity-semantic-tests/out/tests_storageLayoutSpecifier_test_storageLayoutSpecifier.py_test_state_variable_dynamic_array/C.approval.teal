@@ -279,6 +279,16 @@ main_ternary_merge@50:
     intc_2 // 2
     uncover 2
     box_replace // on error: index out of bounds
+    bytec_1 // "arrayC"
+    box_len
+    bury 1
+    bnz main_after_if_else@54
+    bytec_1 // "arrayC"
+    intc_2 // 2
+    box_create
+    pop
+
+main_after_if_else@54:
     bytec_0 // "arrayA"
     pushint 34
     intc_0 // 32
@@ -287,6 +297,16 @@ main_ternary_merge@50:
     pushint 34
     uncover 2
     box_replace // on error: index out of bounds
+    bytec_1 // "arrayC"
+    box_len
+    bury 1
+    bnz main_after_if_else@56
+    bytec_1 // "arrayC"
+    intc_2 // 2
+    box_create
+    pop
+
+main_after_if_else@56:
     bytec_0 // "arrayA"
     intc_2 // 2
     intc_0 // 32
@@ -324,13 +344,13 @@ main_ternary_false@49:
 
 main_initA_route@6:
     txn GroupIndex
-    bz main_ternary_false@54
+    bz main_ternary_false@60
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@55:
+main_ternary_merge@61:
     !
     assert // not payable
     bytec_0 // "arrayA"
@@ -374,9 +394,9 @@ main_ternary_merge@55:
     intc_1 // 1
     return
 
-main_ternary_false@54:
+main_ternary_false@60:
     intc_3 // 0
-    b main_ternary_merge@55
+    b main_ternary_merge@61
 
 main___postInit_route@5:
     bytec_3 // "__ctor_pending"

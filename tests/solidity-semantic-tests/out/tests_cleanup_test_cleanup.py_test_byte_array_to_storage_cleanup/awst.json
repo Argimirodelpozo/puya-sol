@@ -969,7 +969,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -1400,7 +1401,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1438,7 +1440,7 @@
                   "arc4_alias": null,
                   "source_location": null
                 },
-                "name": "x"
+                "name": "x__18"
               },
               "value": {
                 "_type": "NewArray",
@@ -1615,7 +1617,7 @@
                         "arc4_alias": null,
                         "source_location": null
                       },
-                      "name": "x"
+                      "name": "x__18"
                     },
                     "_1": {
                       "_type": "ARC4Encode",
@@ -1685,7 +1687,7 @@
                   "immutable": true,
                   "length": null
                 },
-                "name": "m"
+                "name": "m__31"
               },
               "value": {
                 "_type": "IntrinsicCall",
@@ -1805,7 +1807,7 @@
                     "immutable": true,
                     "length": null
                   },
-                  "name": "m"
+                  "name": "m__31"
                 }
               }
             },
@@ -2398,7 +2400,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2427,7 +2430,7 @@
                   "immutable": true,
                   "length": null
                 },
-                "name": "m"
+                "name": "m__55"
               },
               "value": {
                 "_type": "IntrinsicCall",
@@ -2748,7 +2751,7 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "name": "m"
+                                        "name": "m__55"
                                       }
                                     },
                                     "op": "+",
@@ -3035,7 +3038,7 @@
                                                   "immutable": true,
                                                   "length": null
                                                 },
-                                                "name": "m"
+                                                "name": "m__55"
                                               }
                                             },
                                             "op": "+",
@@ -3214,7 +3217,7 @@
                             "immediates": [],
                             "stack_args": [
                               {
-                                "_type": "IntrinsicCall",
+                                "_type": "SingleEvaluation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
                                   "line": 398,
@@ -3229,84 +3232,102 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "op_code": "concat",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                      "line": 398,
-                                      "end_line": 432,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                    "line": 398,
+                                    "end_line": 432,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                        "line": 398,
+                                        "end_line": 432,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "bzero",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                            "line": 398,
+                                            "end_line": 432,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 32,
+                                          "teal_alias": null
+                                        }
+                                      ]
                                     },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "bzero",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                        "line": 398,
+                                        "end_line": 432,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
                                         "_type": "IntegerConstant",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                          "line": 398,
-                                          "end_line": 432,
+                                          "line": 427,
+                                          "end_line": 431,
                                           "comment_lines": 0,
                                           "column": null,
                                           "end_column": null
                                         },
                                         "wtype": {
                                           "_type": "WType",
-                                          "name": "uint64",
+                                          "name": "biguint",
                                           "immutable": true
                                         },
-                                        "value": 32,
+                                        "value": 66,
                                         "teal_alias": null
                                       }
-                                    ]
-                                  },
-                                  {
-                                    "_type": "ReinterpretCast",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                      "line": 398,
-                                      "end_line": 432,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "expr": {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                        "line": 427,
-                                        "end_line": 431,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "value": 66,
-                                      "teal_alias": null
                                     }
-                                  }
-                                ]
+                                  ]
+                                },
+                                "_id": 1048577
                               },
                               {
                                 "_type": "UInt64BinaryOperation",
@@ -3342,7 +3363,7 @@
                                   "immediates": [],
                                   "stack_args": [
                                     {
-                                      "_type": "IntrinsicCall",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
                                         "line": 398,
@@ -3357,84 +3378,102 @@
                                         "immutable": true,
                                         "length": null
                                       },
-                                      "op_code": "concat",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                            "line": 398,
-                                            "end_line": 432,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
+                                      "source": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                          "line": 398,
+                                          "end_line": 432,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "concat",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                              "line": 398,
+                                              "end_line": 432,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "bzero",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                                  "line": 398,
+                                                  "end_line": 432,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 32,
+                                                "teal_alias": null
+                                              }
+                                            ]
                                           },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "bzero",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
+                                          {
+                                            "_type": "ReinterpretCast",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
+                                              "line": 398,
+                                              "end_line": 432,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "expr": {
                                               "_type": "IntegerConstant",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                                "line": 398,
-                                                "end_line": 432,
+                                                "line": 427,
+                                                "end_line": 431,
                                                 "comment_lines": 0,
                                                 "column": null,
                                                 "end_column": null
                                               },
                                               "wtype": {
                                                 "_type": "WType",
-                                                "name": "uint64",
+                                                "name": "biguint",
                                                 "immutable": true
                                               },
-                                              "value": 32,
+                                              "value": 66,
                                               "teal_alias": null
                                             }
-                                          ]
-                                        },
-                                        {
-                                          "_type": "ReinterpretCast",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                            "line": 398,
-                                            "end_line": 432,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "expr": {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/byte_array_to_storage_cleanup.sol",
-                                              "line": 427,
-                                              "end_line": 431,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "biguint",
-                                              "immutable": true
-                                            },
-                                            "value": 66,
-                                            "teal_alias": null
                                           }
-                                        }
-                                      ]
+                                        ]
+                                      },
+                                      "_id": 1048577
                                     }
                                   ]
                                 },
@@ -3654,7 +3693,7 @@
                     "immutable": true,
                     "length": null
                   },
-                  "name": "m"
+                  "name": "m__55"
                 }
               }
             },
@@ -4266,7 +4305,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -4940,7 +4980,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

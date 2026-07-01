@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_functions.sol.Flow.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 32
+    intcblock 1 2 0 24
     bytecblock "t" 0x000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending"
     pushint 4096
     bzero
@@ -63,10 +63,10 @@ main_ternary_merge@13:
     callsub __funcptr_dispatch_ret_u256
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     swap
     dig 1
@@ -82,7 +82,7 @@ main_ternary_merge@13:
     callsub __funcptr_dispatch_ret_u256
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
     uncover 2
@@ -130,6 +130,16 @@ main___postInit_route@5:
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@19
+    bytec_0 // "t"
+    intc_3 // 24
+    box_create
+    pop
+
+main_after_if_else@19:
+    bytec_0 // "t"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000
     cover 2
@@ -146,6 +156,16 @@ main___postInit_route@5:
     intc_2 // 0
     uncover 2
     box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@21
+    bytec_0 // "t"
+    intc_3 // 24
+    box_create
+    pop
+
+main_after_if_else@21:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000
@@ -168,6 +188,16 @@ main___postInit_route@5:
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@23
+    bytec_0 // "t"
+    intc_3 // 24
+    box_create
+    pop
+
+main_after_if_else@23:
+    bytec_0 // "t"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000
     cover 2
@@ -187,6 +217,16 @@ main___postInit_route@5:
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@25
+    bytec_0 // "t"
+    intc_3 // 24
+    box_create
+    pop
+
+main_after_if_else@25:
+    bytec_0 // "t"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000
     cover 2
@@ -203,6 +243,16 @@ main___postInit_route@5:
     pushint 12
     uncover 2
     box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@27
+    bytec_0 // "t"
+    intc_3 // 24
+    box_create
+    pop
+
+main_after_if_else@27:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000

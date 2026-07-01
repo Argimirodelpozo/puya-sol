@@ -822,7 +822,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "packed",
+            "name": "__arc4_packed",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
               "line": 639,
@@ -832,9 +832,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -1086,7 +1089,73 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                "line": 639,
+                "end_line": 653,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                  "line": 639,
+                  "end_line": 653,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "packed"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                  "line": 639,
+                  "end_line": 653,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                    "line": 639,
+                    "end_line": 653,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_packed"
+                },
+                "error_message": null
               }
             },
             {
@@ -1442,7 +1511,7 @@
                     "immediates": [],
                     "stack_args": [
                       {
-                        "_type": "IntrinsicCall",
+                        "_type": "SingleEvaluation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                           "line": 622,
@@ -1457,66 +1526,27 @@
                           "immutable": true,
                           "length": null
                         },
-                        "op_code": "concat",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                              "line": 622,
-                              "end_line": 798,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "bzero",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                  "line": 622,
-                                  "end_line": 798,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 20,
-                                "teal_alias": null
-                              }
-                            ]
+                        "source": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                            "line": 622,
+                            "end_line": 798,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                              "line": 622,
-                              "end_line": 798,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "expr": {
-                              "_type": "BigUIntBinaryOperation",
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "concat",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                 "line": 622,
@@ -1526,12 +1556,52 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "left": {
-                                "_type": "VarExpression",
+                              "op_code": "bzero",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                    "line": 622,
+                                    "end_line": 798,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 20,
+                                  "teal_alias": null
+                                }
+                              ]
+                            },
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                "line": 622,
+                                "end_line": 798,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "BigUIntBinaryOperation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                   "line": 622,
@@ -1545,30 +1615,47 @@
                                   "name": "biguint",
                                   "immutable": true
                                 },
-                                "name": "r"
-                              },
-                              "op": "%",
-                              "right": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                  "line": 622,
-                                  "end_line": 798,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                                "left": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                    "line": 622,
+                                    "end_line": 798,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "r"
                                 },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "value": "1461501637330902918203684832716283019655932542976",
-                                "teal_alias": null
+                                "op": "%",
+                                "right": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                    "line": 622,
+                                    "end_line": 798,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "value": "1461501637330902918203684832716283019655932542976",
+                                  "teal_alias": null
+                                }
                               }
                             }
-                          }
-                        ]
+                          ]
+                        },
+                        "_id": 1048577
                       },
                       {
                         "_type": "UInt64BinaryOperation",
@@ -1604,7 +1691,7 @@
                           "immediates": [],
                           "stack_args": [
                             {
-                              "_type": "IntrinsicCall",
+                              "_type": "SingleEvaluation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                 "line": 622,
@@ -1619,66 +1706,27 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                    "line": 622,
-                                    "end_line": 798,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                        "line": 622,
-                                        "end_line": 798,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 20,
-                                      "teal_alias": null
-                                    }
-                                  ]
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                  "line": 622,
+                                  "end_line": 798,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
                                 },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                    "line": 622,
-                                    "end_line": 798,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "BigUIntBinaryOperation",
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                       "line": 622,
@@ -1688,12 +1736,52 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
                                     },
-                                    "left": {
-                                      "_type": "VarExpression",
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                          "line": 622,
+                                          "end_line": 798,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 20,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                      "line": 622,
+                                      "end_line": 798,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "BigUIntBinaryOperation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                         "line": 622,
@@ -1707,30 +1795,47 @@
                                         "name": "biguint",
                                         "immutable": true
                                       },
-                                      "name": "r"
-                                    },
-                                    "op": "%",
-                                    "right": {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                        "line": 622,
-                                        "end_line": 798,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                      "left": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                          "line": 622,
+                                          "end_line": 798,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "r"
                                       },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "value": "1461501637330902918203684832716283019655932542976",
-                                      "teal_alias": null
+                                      "op": "%",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                          "line": 622,
+                                          "end_line": 798,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": "1461501637330902918203684832716283019655932542976",
+                                        "teal_alias": null
+                                      }
                                     }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "_id": 1048577
                             }
                           ]
                         },
@@ -1826,7 +1931,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "packed",
+            "name": "__arc4_packed",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
               "line": 821,
@@ -1836,9 +1941,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -2090,7 +2198,73 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                "line": 821,
+                "end_line": 835,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                  "line": 821,
+                  "end_line": 835,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "packed"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                  "line": 821,
+                  "end_line": 835,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                    "line": 821,
+                    "end_line": 835,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_packed"
+                },
+                "error_message": null
               }
             },
             {
@@ -2446,7 +2620,7 @@
                     "immediates": [],
                     "stack_args": [
                       {
-                        "_type": "IntrinsicCall",
+                        "_type": "SingleEvaluation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                           "line": 804,
@@ -2461,66 +2635,27 @@
                           "immutable": true,
                           "length": null
                         },
-                        "op_code": "concat",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                              "line": 804,
-                              "end_line": 972,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "bzero",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                  "line": 804,
-                                  "end_line": 972,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 16,
-                                "teal_alias": null
-                              }
-                            ]
+                        "source": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                            "line": 804,
+                            "end_line": 972,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                              "line": 804,
-                              "end_line": 972,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "expr": {
-                              "_type": "BigUIntBinaryOperation",
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "concat",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                 "line": 804,
@@ -2530,12 +2665,52 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "left": {
-                                "_type": "VarExpression",
+                              "op_code": "bzero",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                    "line": 804,
+                                    "end_line": 972,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 16,
+                                  "teal_alias": null
+                                }
+                              ]
+                            },
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                "line": 804,
+                                "end_line": 972,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "BigUIntBinaryOperation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                   "line": 804,
@@ -2549,30 +2724,47 @@
                                   "name": "biguint",
                                   "immutable": true
                                 },
-                                "name": "r"
-                              },
-                              "op": "%",
-                              "right": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                  "line": 804,
-                                  "end_line": 972,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                                "left": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                    "line": 804,
+                                    "end_line": 972,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "r"
                                 },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "value": "340282366920938463463374607431768211456",
-                                "teal_alias": null
+                                "op": "%",
+                                "right": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                    "line": 804,
+                                    "end_line": 972,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "value": "340282366920938463463374607431768211456",
+                                  "teal_alias": null
+                                }
                               }
                             }
-                          }
-                        ]
+                          ]
+                        },
+                        "_id": 1048578
                       },
                       {
                         "_type": "UInt64BinaryOperation",
@@ -2608,7 +2800,7 @@
                           "immediates": [],
                           "stack_args": [
                             {
-                              "_type": "IntrinsicCall",
+                              "_type": "SingleEvaluation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                 "line": 804,
@@ -2623,66 +2815,27 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                    "line": 804,
-                                    "end_line": 972,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                        "line": 804,
-                                        "end_line": 972,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 16,
-                                      "teal_alias": null
-                                    }
-                                  ]
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                  "line": 804,
+                                  "end_line": 972,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
                                 },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                    "line": 804,
-                                    "end_line": 972,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "BigUIntBinaryOperation",
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                       "line": 804,
@@ -2692,12 +2845,52 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
                                     },
-                                    "left": {
-                                      "_type": "VarExpression",
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                          "line": 804,
+                                          "end_line": 972,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 16,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                      "line": 804,
+                                      "end_line": 972,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "BigUIntBinaryOperation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
                                         "line": 804,
@@ -2711,30 +2904,47 @@
                                         "name": "biguint",
                                         "immutable": true
                                       },
-                                      "name": "r"
-                                    },
-                                    "op": "%",
-                                    "right": {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
-                                        "line": 804,
-                                        "end_line": 972,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                      "left": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                          "line": 804,
+                                          "end_line": 972,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "r"
                                       },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "value": "340282366920938463463374607431768211456",
-                                      "teal_alias": null
+                                      "op": "%",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol",
+                                          "line": 804,
+                                          "end_line": 972,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": "340282366920938463463374607431768211456",
+                                        "teal_alias": null
+                                      }
                                     }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "_id": 1048578
                             }
                           ]
                         },

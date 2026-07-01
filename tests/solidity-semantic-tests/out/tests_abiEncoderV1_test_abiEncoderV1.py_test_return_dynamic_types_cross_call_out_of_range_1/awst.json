@@ -822,7 +822,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "x",
+            "name": "__arc4_x",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
               "line": 30,
@@ -832,9 +832,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -1084,7 +1087,73 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                "line": 30,
+                "end_line": 36,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                  "line": 30,
+                  "end_line": 36,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "x"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                  "line": 30,
+                  "end_line": 36,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                    "line": 30,
+                    "end_line": 36,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_x"
+                },
+                "error_message": null
               }
             },
             {
@@ -1299,7 +1368,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
                               "line": 103,
@@ -1314,84 +1383,102 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                  "line": 103,
-                                  "end_line": 118,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                "line": 103,
+                                "end_line": 118,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                    "line": 103,
+                                    "end_line": 118,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                        "line": 103,
+                                        "end_line": 118,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 32,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                    "line": 103,
+                                    "end_line": 118,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
                                     "_type": "IntegerConstant",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                      "line": 103,
-                                      "end_line": 118,
+                                      "line": 113,
+                                      "end_line": 117,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "biguint",
                                       "immutable": true
                                     },
                                     "value": 32,
                                     "teal_alias": null
                                   }
-                                ]
-                              },
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                  "line": 103,
-                                  "end_line": 118,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                    "line": 113,
-                                    "end_line": 117,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "value": 32,
-                                  "teal_alias": null
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "_id": 1048577
                           },
                           {
                             "_type": "UInt64BinaryOperation",
@@ -1427,7 +1514,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
                                     "line": 103,
@@ -1442,84 +1529,102 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                        "line": 103,
-                                        "end_line": 118,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                      "line": 103,
+                                      "end_line": 118,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                          "line": 103,
+                                          "end_line": 118,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                              "line": 103,
+                                              "end_line": 118,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                          "line": 103,
+                                          "end_line": 118,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
                                           "_type": "IntegerConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                            "line": 103,
-                                            "end_line": 118,
+                                            "line": 113,
+                                            "end_line": 117,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
                                           "value": 32,
                                           "teal_alias": null
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                        "line": 103,
-                                        "end_line": 118,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                          "line": 113,
-                                          "end_line": 117,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "value": 32,
-                                        "teal_alias": null
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048577
                                 }
                               ]
                             },
@@ -1677,7 +1782,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
                               "line": 131,
@@ -1692,84 +1797,102 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                  "line": 131,
-                                  "end_line": 149,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                "line": 131,
+                                "end_line": 149,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                    "line": 131,
+                                    "end_line": 149,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                        "line": 131,
+                                        "end_line": 149,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 32,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                    "line": 131,
+                                    "end_line": 149,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
                                     "_type": "IntegerConstant",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                      "line": 131,
-                                      "end_line": 149,
+                                      "line": 144,
+                                      "end_line": 148,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "biguint",
                                       "immutable": true
                                     },
-                                    "value": 32,
+                                    "value": 33,
                                     "teal_alias": null
                                   }
-                                ]
-                              },
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                  "line": 131,
-                                  "end_line": 149,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                    "line": 144,
-                                    "end_line": 148,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "value": 33,
-                                  "teal_alias": null
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "_id": 1048578
                           },
                           {
                             "_type": "UInt64BinaryOperation",
@@ -1805,7 +1928,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
                                     "line": 131,
@@ -1820,84 +1943,102 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                        "line": 131,
-                                        "end_line": 149,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                      "line": 131,
+                                      "end_line": 149,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                          "line": 131,
+                                          "end_line": 149,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                              "line": 131,
+                                              "end_line": 149,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
+                                          "line": 131,
+                                          "end_line": 149,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
                                           "_type": "IntegerConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                            "line": 131,
-                                            "end_line": 149,
+                                            "line": 144,
+                                            "end_line": 148,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 32,
+                                          "value": 33,
                                           "teal_alias": null
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                        "line": 131,
-                                        "end_line": 149,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol",
-                                          "line": 144,
-                                          "end_line": 148,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "value": 33,
-                                        "teal_alias": null
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048578
                                 }
                               ]
                             },
@@ -2419,7 +2560,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

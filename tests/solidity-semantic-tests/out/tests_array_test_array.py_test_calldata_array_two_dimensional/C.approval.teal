@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_two_dimensional.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 32 0 1
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 0x010000000000000000
     intc_2 // 0
     dupn 3
     pushbytes ""
@@ -118,7 +118,7 @@ main_ternary_merge@18:
     dig 3
     dig 6
     dig 6
-    callsub test(38,u256,u256)
+    callsub test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)
     pop
     dup
     len
@@ -201,7 +201,7 @@ main_after_for@23:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub test(38,u256,u256)
+    callsub test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)
     pop
     bytec_0 // 0x151f7c75
     swap
@@ -276,9 +276,14 @@ main_after_for@28:
 main_ternary_merge@31:
     !
     assert // not payable
+    dig 5
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 6
+    swap
     concat
     dup
     len
@@ -388,19 +393,27 @@ main_ternary_false@38:
     b main_ternary_merge@39
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_two_dimensional.sol.C.test(38,u256,u256)(a: bytes, __arc4_i: bytes, __arc4_j: bytes) -> bytes, bytes:
-test(38,u256,u256):
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_two_dimensional.sol.C.test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)(a: bytes, __arc4_i: bytes, __arc4_j: bytes) -> bytes, bytes:
+test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256):
     proto 3 2
     txn GroupIndex
-    bz test(38,u256,u256)_ternary_false@2
+    bz test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_ternary_false@2
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-test(38,u256,u256)_ternary_merge@3:
+test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_ternary_merge@3:
     !
     assert // not payable
+    frame_dig -2
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig -1
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
     dup
@@ -448,6 +461,6 @@ test(38,u256,u256)_ternary_merge@3:
     frame_dig -3
     retsub
 
-test(38,u256,u256)_ternary_false@2:
+test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_ternary_false@2:
     intc_2 // 0
-    b test(38,u256,u256)_ternary_merge@3
+    b test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_ternary_merge@3

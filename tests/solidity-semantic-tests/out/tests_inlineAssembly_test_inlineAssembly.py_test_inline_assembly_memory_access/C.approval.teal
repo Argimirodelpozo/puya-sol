@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_memory_access.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 8
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     dup
     pushbytes ""
@@ -67,23 +68,29 @@ main_while_top@10:
     dig 3
     b>
     bz main_after_while@12
+    dig 2
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_2 // 8
     bzero
     dup
-    dig 4
-    dup
-    cover 2
+    dig 2
     concat
     dup
     len
     intc_2 // 8
     -
     extract_uint64
-    swap
-    pushbytes 0x01
+    intc_1 // 1
+    itob
+    dig 3
     b+
     dup
-    bury 6
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     uncover 2
     swap
     concat
@@ -96,10 +103,17 @@ main_while_top@10:
     &
     itob
     extract 7 1
-    dig 3
+    dig 4
     cover 2
     replace3
-    bury 2
+    bury 3
+    pushbytes 0x01
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 3
     b main_while_top@10
 
 main_after_while@12:

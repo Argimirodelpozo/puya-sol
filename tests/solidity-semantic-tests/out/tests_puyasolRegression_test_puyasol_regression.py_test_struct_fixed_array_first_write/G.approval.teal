@@ -1,0 +1,308 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_fixed_array_first_write.sol.G.approval_program() -> uint64:
+main:
+    intcblock 1 16 0 8
+    bytecblock "st" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 0x010000000000000000
+    intc_2 // 0
+    dupn 3
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5d1701b7 0x7cff7f9a 0xcb3477a0 0x1a731961 // method "setStInner(uint256,uint128)void", method "getStInner(uint256)uint256", method "setStX(uint64)void", method "getStX()uint64"
+    txna ApplicationArgs 0
+    match main_setStInner_route@5 main_getStInner_route@6 main_setStX_route@7 main_getStX_route@8
+    err
+
+main_getStX_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    bytec_0 // "st"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 8
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_setStX_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    bytec_0 // "st"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    dig 2
+    concat
+    bytec_0 // "st"
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_getStInner_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    pushint 2
+    itob
+    dig 4
+    b>
+    bz main_else_body@30
+    dig 3
+    dup
+    bytec 6 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "st"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    extract 0 32
+    swap
+    intc_1 // 16
+    *
+    intc_1 // 16
+    extract3 // on error: index access is out of bounds
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_3 // 0x80000000000000000000000000000000
+    b>=
+    bz main_ternary_false@28
+    bytec 4 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+main_after_if_else@31:
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_3 // 0x80000000000000000000000000000000
+    b>=
+    bz main_ternary_false@33
+    bytec 4 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+main_ternary_merge@34:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@33:
+    b main_ternary_merge@34
+
+main_ternary_false@28:
+    b main_after_if_else@31
+
+main_else_body@30:
+    pushbytes 0x
+    b main_after_if_else@31
+
+main_ternary_false@24:
+    intc_2 // 0
+    b main_ternary_merge@25
+
+main_setStInner_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    intc_1 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    dig 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_3 // 0x80000000000000000000000000000000
+    b>=
+    bz main_ternary_false@41
+    bytec 4 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+    bury 1
+
+main_ternary_merge@42:
+    pushint 2
+    itob
+    dig 4
+    b>
+    bz main_after_if_else@46
+    dig 3
+    bytec 6 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "st"
+    box_len
+    bury 1
+    bnz main_after_if_else@45
+    bytec_0 // "st"
+    pushint 40
+    box_create
+    pop
+
+main_after_if_else@45:
+    intc_1 // 16
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_1 // 16
+    -
+    intc_1 // 16
+    extract3
+    dup
+    len
+    intc_1 // 16
+    <=
+    assert // overflow
+    b|
+    intc_3 // 8
+    bzero
+    dig 5
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 2
+    <
+    assert // index out of bounds
+    intc_1 // 16
+    *
+    bytec_0 // "st"
+    swap
+    uncover 2
+    box_replace // on error: index out of bounds
+
+main_after_if_else@46:
+    intc_0 // 1
+    return
+
+main_ternary_false@41:
+    bury 1
+    b main_ternary_merge@42
+
+main_ternary_false@38:
+    intc_2 // 0
+    b main_ternary_merge@39

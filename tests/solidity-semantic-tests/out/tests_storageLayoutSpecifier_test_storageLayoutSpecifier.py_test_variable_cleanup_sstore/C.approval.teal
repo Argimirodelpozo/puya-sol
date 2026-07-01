@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 32
     bytecblock "b" "x" "y"
     pushbytes ""
     pushint 4096
@@ -38,7 +38,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xea3376d0 // method "f()(uint64,uint512,byte[16])"
+    pushbytes 0x7bdc89a4 // method "f()(uint64,uint256,byte[16])"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -88,10 +88,16 @@ main_ternary_merge@9:
     bz main_ternary_false@11
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@12:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
@@ -102,14 +108,6 @@ main_ternary_merge@12:
     dig 2
     itob
     uncover 2
-    dup
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    intc_2 // 64
-    bzero
-    b|
     concat
     swap
     concat

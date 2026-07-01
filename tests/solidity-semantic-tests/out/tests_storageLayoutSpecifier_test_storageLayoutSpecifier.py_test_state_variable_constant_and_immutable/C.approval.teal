@@ -57,12 +57,18 @@ main_ternary_merge@13:
     pushbytes "y"
     app_global_get_ex
     assert // check y exists
-    dup
-    pushbytes 0x63
-    b>
+    pushint 99
+    itob
+    dig 1
+    b<
     assert
-    pushbytes 0x02
+    pushint 2
+    itob
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_2 // 32

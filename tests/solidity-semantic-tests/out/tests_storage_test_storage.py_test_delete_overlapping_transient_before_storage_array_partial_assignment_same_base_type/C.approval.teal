@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 128
-    bytecblock "__ctor_pending" "large" "small" 0x
+    bytecblock "large" "__ctor_pending" "small" 0x
+    bytec_3 // ""
     pushint 4096
     bzero
     dup
@@ -24,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -64,7 +65,7 @@ main_ternary_merge@14:
     concat
     replace2 64
     store 0
-    bytec_1 // "large"
+    bytec_0 // "large"
     box_get
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -91,6 +92,9 @@ main_setAndClear_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
+    bytec_0 // "large"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000004
+    box_put
     bytec_2 // "small"
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014
     app_global_put
@@ -104,11 +108,27 @@ main_ternary_merge@19:
     store 5
     load 5
     extract 0 32
-    bytec_3 // 0x
+    intc_1 // 0
+    itob
     b==
+    dup
+    bury 2
+    bnz main_after_if_else@21
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@21:
+    dup
     assert
-    bytec_1 // "large"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 0
+    bytec_2 // "small"
+    app_global_get_ex
+    assert // check small exists
+    pushint 64
+    bzero
+    concat
+    bytec_0 // "large"
+    swap
     box_put
     intc_0 // 1
     return
@@ -118,13 +138,13 @@ main_ternary_false@18:
     b main_ternary_merge@19
 
 main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "large"
+    bytec_0 // "large"
     intc_2 // 128
     box_create
     pop

@@ -113,6 +113,10 @@ main_ternary_merge@19:
     dup
     b+
     dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_0 // 32
     <=

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2
-    bytecblock 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93 "__ctor_pending" "dynamicData" 0x151f7c75 "data" 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytecblock 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93 "__ctor_pending" 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c "dynamicData" 0x151f7c75 "data" 0x0000000000000000000000000000000000000000000000000000000000000008
     intc_1 // 0
     dupn 2
     pushint 4096
@@ -78,7 +78,7 @@ main_ternary_merge@14:
     -
     intc_0 // 32
     extract3
-    bytec_2 // "dynamicData"
+    bytec_3 // "dynamicData"
     concat
     sha256
     box_get
@@ -101,7 +101,7 @@ main_ternary_merge@14:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -147,7 +147,7 @@ main_ternary_merge@19:
     -
     intc_0 // 32
     extract3
-    bytec 4 // "data"
+    bytec 5 // "data"
     concat
     sha256
     box_get
@@ -167,7 +167,7 @@ main_ternary_merge@19:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -185,19 +185,25 @@ main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec 4 // "data"
+    bytec 5 // "data"
     intc_3 // 2
     box_create
     pop
-    bytec_2 // "dynamicData"
+    bytec_3 // "dynamicData"
     intc_3 // 2
     box_create
     pop
-    bytec 5 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+    box_len
+    bury 1
+    bnz main_after_if_else@23
+    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
     pushint 256
     box_create
     pop
-    bytec 5 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+
+main_after_if_else@23:
+    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
     pushint 64
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
@@ -205,21 +211,22 @@ main___postInit_route@5:
     itob
     bury 1
 
-main_while_top@22:
-    dup
-    pushbytes 0x03
-    b<
-    bz main_after_while@26
+main_while_top@24:
+    pushint 3
+    itob
+    dig 1
+    b>
+    bz main_after_while@28
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     box_len
     bury 1
-    bnz main_after_if_else@25
+    bnz main_after_if_else@27
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     intc_3 // 2
     box_create
     pop
 
-main_after_if_else@25:
+main_after_if_else@27:
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     intc_1 // 0
     intc_3 // 2
@@ -254,10 +261,24 @@ main_after_if_else@25:
     dup
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 1
-    b main_while_top@22
+    b main_while_top@24
 
-main_after_while@26:
+main_after_while@28:
+    bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
+    box_len
+    bury 1
+    bnz main_after_if_else@30
+    bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@30:
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     pushint 66
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000008

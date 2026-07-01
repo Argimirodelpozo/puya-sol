@@ -35,8 +35,13 @@ main:
     bytec_3 // "j"
     bytec_1 // 0x
     app_global_put
-    pushbytes 0x01
+    intc_0 // 1
+    itob
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "i"
     dig 2
     app_global_put

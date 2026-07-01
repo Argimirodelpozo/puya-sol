@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/named_args_overload.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x151f7c75
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -42,7 +43,7 @@ main_after_if_else@2:
 main_call_route@9:
     txna ApplicationArgs 1
     dup
-    bury 2
+    bury 5
     len
     intc_0 // 32
     ==
@@ -57,8 +58,9 @@ main_call_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dup
-    pushbytes 0x
+    intc_2 // 0
+    itob
+    dig 4
     b==
     bz main_after_if_else@18
     callsub f()
@@ -80,12 +82,14 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     return
 
 main_after_if_else@18:
-    dup
-    pushbytes 0x01
-    b==
-    bz main_after_if_else@20
     intc_1 // 1
     itob
+    dup
+    bury 4
+    dig 4
+    b==
+    bz main_after_if_else@20
+    dig 2
     callsub f(u256)
     dup
     len
@@ -98,14 +102,15 @@ main_after_if_else@18:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/named_args_overload.sol.C.call@27
 
 main_after_if_else@20:
+    pushint 2
+    itob
     dup
-    pushbytes 0x02
+    bury 3
+    dig 4
     b==
     bz main_after_if_else@22
-    intc_3 // 2
-    itob
-    intc_1 // 1
-    itob
+    dig 1
+    dig 3
     callsub f(u256,u256)
     dup
     len
@@ -118,16 +123,15 @@ main_after_if_else@20:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/named_args_overload.sol.C.call@27
 
 main_after_if_else@22:
-    dup
-    pushbytes 0x03
-    b==
-    bz main_after_if_else@24
-    intc_3 // 2
-    itob
     pushint 3
     itob
-    intc_1 // 1
-    itob
+    dup
+    bury 2
+    dig 4
+    b==
+    bz main_after_if_else@24
+    dup2
+    dig 4
     callsub f(u256,u256,u256)
     dup
     len
@@ -140,16 +144,16 @@ main_after_if_else@22:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/named_args_overload.sol.C.call@27
 
 main_after_if_else@24:
-    dup
-    pushbytes 0x04
+    pushint 4
+    itob
+    dig 4
     b==
     bz main_after_if_else@26
-    intc_3 // 2
-    itob
     pushint 5
     itob
-    intc_1 // 1
-    itob
+    dig 2
+    swap
+    dig 4
     callsub f(u256,u256,u256)
     dup
     len
@@ -300,6 +304,10 @@ f(u256,u256)_ternary_merge@3:
     frame_dig -1
     b+
     dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_0 // 32
     <=
@@ -330,8 +338,16 @@ f(u256,u256,u256)_ternary_merge@3:
     frame_dig -3
     frame_dig -2
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_dig -1
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32

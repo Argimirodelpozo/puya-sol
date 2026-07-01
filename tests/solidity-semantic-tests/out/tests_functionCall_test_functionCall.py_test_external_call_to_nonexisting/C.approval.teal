@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_to_nonexisting.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 24 6 1
-    bytecblock "i" 0x01 0x8c6966f0
+    bytecblock "i" 0x8c6966f0
     intc_0 // 0
     pushint 4096
     bzero
@@ -60,8 +60,9 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dup
-    pushbytes 0x
+    intc_0 // 0
+    itob
+    dig 1
     b==
     bz main_else_body@11
     itxn_begin
@@ -83,9 +84,14 @@ main_ternary_merge@9:
     itxn_submit
 
 main_after_if_else@21:
-    bytec_1 // 0x01
+    intc_3 // 1
+    itob
     dig 1
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     pushint 32
@@ -102,8 +108,9 @@ main_after_if_else@21:
     return
 
 main_else_body@11:
-    dup
-    bytec_1 // 0x01
+    intc_3 // 1
+    itob
+    dig 1
     b==
     bz main_else_body@13
     itxn_begin
@@ -126,8 +133,9 @@ main_else_body@11:
     b main_after_if_else@21
 
 main_else_body@13:
-    dup
-    pushbytes 0x02
+    pushint 2
+    itob
+    dig 1
     b==
     bz main_else_body@15
     itxn_begin
@@ -144,14 +152,15 @@ main_else_body@13:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "c()void"
+    bytec_1 // method "c()void"
     itxn_field ApplicationArgs
     itxn_submit
     b main_after_if_else@21
 
 main_else_body@15:
-    dup
-    pushbytes 0x03
+    pushint 3
+    itob
+    dig 1
     b==
     bz main_else_body@17
     itxn_begin
@@ -168,14 +177,15 @@ main_else_body@15:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "c()void"
+    bytec_1 // method "c()void"
     itxn_field ApplicationArgs
     itxn_submit
     b main_after_if_else@21
 
 main_else_body@17:
-    dup
-    pushbytes 0x04
+    pushint 4
+    itob
+    dig 1
     b==
     bz main_else_body@19
     itxn_begin
@@ -198,8 +208,9 @@ main_else_body@17:
     b main_after_if_else@21
 
 main_else_body@19:
-    dup
-    pushbytes 0x05
+    pushint 5
+    itob
+    dig 1
     b==
     bz main_after_if_else@21
     itxn_begin

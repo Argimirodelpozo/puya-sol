@@ -34,7 +34,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x973cc995 0xe5b223a1 // method "mask160(uint512)uint160", method "mask128(uint512)uint128"
+    pushbytess 0xcf0bf2d5 0xc9378f4f // method "mask160(uint256)uint160", method "mask128(uint256)uint128"
     txna ApplicationArgs 0
     match main_mask160_route@5 main_mask128_route@6
     err
@@ -44,9 +44,9 @@ main_mask128_route@6:
     dup
     bury 2
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -100,9 +100,9 @@ main_mask160_route@5:
     dup
     bury 2
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex

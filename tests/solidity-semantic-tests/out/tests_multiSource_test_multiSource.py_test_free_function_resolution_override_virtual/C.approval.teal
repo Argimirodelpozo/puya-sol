@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/claude-1000/multisource_icw0jn8h/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_05dzeuuz/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     pushint 4096
@@ -49,8 +49,13 @@ main_ternary_merge@9:
     !
     assert // not payable
     callsub f
-    pushbytes 0x01
+    intc_0 // 1
+    itob
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -71,7 +76,7 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/claude-1000/multisource_icw0jn8h/s2.sol.f() -> bytes:
+// /tmp/multisource_05dzeuuz/s2.sol.f() -> bytes:
 f:
     pushint 1337
     itob

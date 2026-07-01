@@ -969,7 +969,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -1399,7 +1400,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1438,7 +1440,7 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "i"
+                    "name": "i__13"
                   },
                   "value": {
                     "_type": "ReinterpretCast",
@@ -1536,11 +1538,11 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "i"
+                      "name": "i__13"
                     },
                     "operator": "<",
                     "rhs": {
-                      "_type": "IntegerConstant",
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                         "line": 107,
@@ -1554,8 +1556,45 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": 1000,
-                      "teal_alias": null
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                          "line": 107,
+                          "end_line": 115,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                              "line": 111,
+                              "end_line": 115,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 1000,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
                     }
                   },
                   "loop_body": {
@@ -1684,7 +1723,7 @@
                                   "source_location": null
                                 },
                                 "value": {
-                                  "_type": "BigUIntBinaryOperation",
+                                  "_type": "CommaExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                                     "line": 145,
@@ -1698,42 +1737,218 @@
                                     "name": "biguint",
                                     "immutable": true
                                   },
-                                  "left": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                      "line": 145,
-                                      "end_line": 146,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                                  "expressions": [
+                                    {
+                                      "_type": "AssignmentExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 145,
+                                        "end_line": 150,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "target": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 145,
+                                          "end_line": 150,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "__checked_0"
+                                      },
+                                      "value": {
+                                        "_type": "BigUIntBinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 145,
+                                          "end_line": 150,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 145,
+                                            "end_line": 146,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "i__13"
+                                        },
+                                        "op": "+",
+                                        "right": {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 145,
+                                            "end_line": 150,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "expr": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                              "line": 145,
+                                              "end_line": 150,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "itob",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                  "line": 149,
+                                                  "end_line": 150,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 1,
+                                                "teal_alias": null
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
+                                    {
+                                      "_type": "AssertExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 145,
+                                        "end_line": 150,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "void",
+                                        "immutable": true
+                                      },
+                                      "condition": {
+                                        "_type": "NumericComparisonExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 145,
+                                          "end_line": 150,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "bool",
+                                          "immutable": true
+                                        },
+                                        "lhs": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 145,
+                                            "end_line": 150,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "__checked_0"
+                                        },
+                                        "operator": "<=",
+                                        "rhs": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 145,
+                                            "end_line": 150,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      "error_message": "overflow",
+                                      "comment": "overflow",
+                                      "explicit": true
                                     },
-                                    "name": "i"
-                                  },
-                                  "op": "+",
-                                  "right": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                      "line": 145,
-                                      "end_line": 150,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "value": 1,
-                                    "teal_alias": null
-                                  }
+                                    {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 145,
+                                        "end_line": 150,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "name": "__checked_0"
+                                    }
+                                  ]
                                 },
                                 "error_message": null
                               }
@@ -1781,10 +1996,10 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "name": "i"
+                            "name": "i__13"
                           },
                           "value": {
-                            "_type": "BigUIntBinaryOperation",
+                            "_type": "CommaExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                               "line": 117,
@@ -1798,42 +2013,181 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "left": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 119,
-                                "end_line": 120,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "expressions": [
+                              {
+                                "_type": "AssignmentExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 117,
+                                  "end_line": 120,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "target": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 117,
+                                    "end_line": 120,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "__uinc_0"
+                                },
+                                "value": {
+                                  "_type": "BigUIntBinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 117,
+                                    "end_line": 120,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 119,
+                                      "end_line": 120,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "i__13"
+                                  },
+                                  "op": "+",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 117,
+                                      "end_line": 120,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                              {
+                                "_type": "AssertExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 117,
+                                  "end_line": 120,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "void",
+                                  "immutable": true
+                                },
+                                "condition": {
+                                  "_type": "NumericComparisonExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 117,
+                                    "end_line": 120,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  },
+                                  "lhs": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 117,
+                                      "end_line": 120,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "__uinc_0"
+                                  },
+                                  "operator": "<=",
+                                  "rhs": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 117,
+                                      "end_line": 120,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                    "teal_alias": null
+                                  }
+                                },
+                                "error_message": "overflow",
+                                "comment": "overflow",
+                                "explicit": true
                               },
-                              "name": "i"
-                            },
-                            "op": "+",
-                            "right": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 117,
-                                "end_line": 120,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 1,
-                              "teal_alias": null
-                            }
+                              {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 117,
+                                  "end_line": 120,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__uinc_0"
+                              }
+                            ]
                           }
                         }
                       }
@@ -2137,7 +2491,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2176,7 +2531,7 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "i"
+                    "name": "i__36"
                   },
                   "value": {
                     "_type": "ReinterpretCast",
@@ -2274,11 +2629,11 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "i"
+                      "name": "i__36"
                     },
                     "operator": "<",
                     "rhs": {
-                      "_type": "IntegerConstant",
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                         "line": 217,
@@ -2292,8 +2647,45 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": 1000,
-                      "teal_alias": null
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                          "line": 217,
+                          "end_line": 225,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                              "line": 221,
+                              "end_line": 225,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 1000,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
                     }
                   },
                   "loop_body": {
@@ -2308,7 +2700,7 @@
                     },
                     "body": [
                       {
-                        "_type": "ExpressionStatement",
+                        "_type": "Block",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                           "line": 244,
@@ -2317,38 +2709,19 @@
                           "column": null,
                           "end_column": null
                         },
-                        "expr": {
-                          "_type": "AssertExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                            "line": 244,
-                            "end_line": 270,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "void",
-                            "immutable": true
-                          },
-                          "condition": {
-                            "_type": "NumericComparisonExpression",
+                        "body": [
+                          {
+                            "_type": "AssignmentStatement",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                               "line": 252,
-                              "end_line": 269,
+                              "end_line": 260,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            },
-                            "lhs": {
-                              "_type": "ARC4Decode",
+                            "target": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                                 "line": 252,
@@ -2362,8 +2735,53 @@
                                 "name": "biguint",
                                 "immutable": true
                               },
-                              "value": {
-                                "_type": "IndexExpression",
+                              "name": "__ckidx_0"
+                            },
+                            "value": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                "line": 258,
+                                "end_line": 259,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "i__36"
+                            }
+                          },
+                          {
+                            "_type": "ExpressionStatement",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                              "line": 252,
+                              "end_line": 260,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "expr": {
+                              "_type": "AssertExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                "line": 252,
+                                "end_line": 260,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "void",
+                                "immutable": true
+                              },
+                              "condition": {
+                                "_type": "NumericComparisonExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                                   "line": 252,
@@ -2373,60 +2791,12 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint256",
-                                  "immutable": true,
-                                  "n": 256,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "_type": "WType",
+                                  "name": "bool",
+                                  "immutable": true
                                 },
-                                "base": {
-                                  "_type": "BoxValueExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                    "line": 252,
-                                    "end_line": 260,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4DynamicArray",
-                                    "name": "arc4.dynamic_array<arc4.uint256>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint256",
-                                      "immutable": true,
-                                      "n": 256,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "key": {
-                                    "_type": "BytesConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                      "line": 252,
-                                      "end_line": 260,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "box_key",
-                                      "immutable": true
-                                    },
-                                    "value": "VRCX|c>",
-                                    "encoding": "utf8"
-                                  },
-                                  "exists_assertion_message": null
-                                },
-                                "index": {
-                                  "_type": "IntrinsicCall",
+                                "lhs": {
+                                  "_type": "VarExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                                     "line": 252,
@@ -2437,14 +2807,111 @@
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "biguint",
                                     "immutable": true
                                   },
-                                  "op_code": "btoi",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
+                                  "name": "__ckidx_0"
+                                },
+                                "operator": "<",
+                                "rhs": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 252,
+                                    "end_line": 260,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "value": "18446744073709551616",
+                                  "teal_alias": null
+                                }
+                              },
+                              "error_message": "array index out of bounds",
+                              "comment": "array index out of bounds",
+                              "explicit": true
+                            }
+                          },
+                          {
+                            "_type": "ExpressionStatement",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                              "line": 244,
+                              "end_line": 270,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "expr": {
+                              "_type": "AssertExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                "line": 244,
+                                "end_line": 270,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "void",
+                                "immutable": true
+                              },
+                              "condition": {
+                                "_type": "NumericComparisonExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 252,
+                                  "end_line": 269,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "bool",
+                                  "immutable": true
+                                },
+                                "lhs": {
+                                  "_type": "ARC4Decode",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 252,
+                                    "end_line": 260,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "value": {
+                                    "_type": "IndexExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 252,
+                                      "end_line": 260,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint256",
+                                      "immutable": true,
+                                      "n": 256,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "base": {
+                                      "_type": "BoxValueExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                                         "line": 252,
@@ -2454,53 +2921,353 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                        "_type": "ARC4DynamicArray",
+                                        "name": "arc4.dynamic_array<arc4.uint256>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint256",
+                                          "immutable": true,
+                                          "n": 256,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "arc4_alias": null,
+                                        "source_location": null
                                       },
-                                      "op_code": "extract3",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                            "line": 252,
-                                            "end_line": 260,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "concat",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                "line": 252,
-                                                "end_line": 260,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
+                                      "key": {
+                                        "_type": "BytesConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 252,
+                                          "end_line": 260,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "box_key",
+                                          "immutable": true
+                                        },
+                                        "value": "VRCX|c>",
+                                        "encoding": "utf8"
+                                      },
+                                      "exists_assertion_message": null
+                                    },
+                                    "index": {
+                                      "_type": "SingleEvaluation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 252,
+                                        "end_line": 260,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "source": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 252,
+                                          "end_line": 260,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "btoi",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                              "line": 252,
+                                              "end_line": 260,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "extract3",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "SingleEvaluation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                  "line": 252,
+                                                  "end_line": 260,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "source": {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                    "line": 252,
+                                                    "end_line": 260,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "op_code": "concat",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                        "line": 252,
+                                                        "end_line": 260,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "op_code": "bzero",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntegerConstant",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                            "line": 252,
+                                                            "end_line": 260,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "uint64",
+                                                            "immutable": true
+                                                          },
+                                                          "value": 8,
+                                                          "teal_alias": null
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "_type": "ReinterpretCast",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                        "line": 252,
+                                                        "end_line": 260,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "expr": {
+                                                        "_type": "VarExpression",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                          "line": 252,
+                                                          "end_line": 260,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "WType",
+                                                          "name": "biguint",
+                                                          "immutable": true
+                                                        },
+                                                        "name": "__ckidx_0"
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                "_id": 1048577
                                               },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "bzero",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
+                                              {
+                                                "_type": "UInt64BinaryOperation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                  "line": 252,
+                                                  "end_line": 260,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "left": {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                    "line": 252,
+                                                    "end_line": 260,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "op_code": "len",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "SingleEvaluation",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                        "line": 252,
+                                                        "end_line": 260,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "source": {
+                                                        "_type": "IntrinsicCall",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                          "line": 252,
+                                                          "end_line": 260,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "op_code": "concat",
+                                                        "immediates": [],
+                                                        "stack_args": [
+                                                          {
+                                                            "_type": "IntrinsicCall",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                              "line": 252,
+                                                              "end_line": 260,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "BytesWType",
+                                                              "name": "bytes",
+                                                              "immutable": true,
+                                                              "length": null
+                                                            },
+                                                            "op_code": "bzero",
+                                                            "immediates": [],
+                                                            "stack_args": [
+                                                              {
+                                                                "_type": "IntegerConstant",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                                  "line": 252,
+                                                                  "end_line": 260,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "value": 8,
+                                                                "teal_alias": null
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "_type": "ReinterpretCast",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                              "line": 252,
+                                                              "end_line": 260,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "BytesWType",
+                                                              "name": "bytes",
+                                                              "immutable": true,
+                                                              "length": null
+                                                            },
+                                                            "expr": {
+                                                              "_type": "VarExpression",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                                "line": 252,
+                                                                "end_line": 260,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "WType",
+                                                                "name": "biguint",
+                                                                "immutable": true
+                                                              },
+                                                              "name": "__ckidx_0"
+                                                            }
+                                                          }
+                                                        ]
+                                                      },
+                                                      "_id": 1048577
+                                                    }
+                                                  ]
+                                                },
+                                                "op": "-",
+                                                "right": {
                                                   "_type": "IntegerConstant",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
@@ -2518,79 +3285,9 @@
                                                   "value": 8,
                                                   "teal_alias": null
                                                 }
-                                              ]
-                                            },
-                                            {
-                                              "_type": "ReinterpretCast",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                "line": 252,
-                                                "end_line": 260,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
                                               },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "expr": {
-                                                "_type": "VarExpression",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                  "line": 258,
-                                                  "end_line": 259,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "WType",
-                                                  "name": "biguint",
-                                                  "immutable": true
-                                                },
-                                                "name": "i"
-                                              }
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "_type": "UInt64BinaryOperation",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                            "line": 252,
-                                            "end_line": 260,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "left": {
-                                            "_type": "IntrinsicCall",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                              "line": 252,
-                                              "end_line": 260,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "op_code": "len",
-                                            "immediates": [],
-                                            "stack_args": [
                                               {
-                                                "_type": "IntrinsicCall",
+                                                "_type": "IntegerConstant",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                                                   "line": 252,
@@ -2600,193 +3297,260 @@
                                                   "end_column": null
                                                 },
                                                 "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
                                                 },
-                                                "op_code": "concat",
-                                                "immediates": [],
-                                                "stack_args": [
-                                                  {
-                                                    "_type": "IntrinsicCall",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                      "line": 252,
-                                                      "end_line": 260,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "op_code": "bzero",
-                                                    "immediates": [],
-                                                    "stack_args": [
-                                                      {
-                                                        "_type": "IntegerConstant",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                          "line": 252,
-                                                          "end_line": 260,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "WType",
-                                                          "name": "uint64",
-                                                          "immutable": true
-                                                        },
-                                                        "value": 8,
-                                                        "teal_alias": null
-                                                      }
-                                                    ]
-                                                  },
-                                                  {
-                                                    "_type": "ReinterpretCast",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                      "line": 252,
-                                                      "end_line": 260,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "expr": {
-                                                      "_type": "VarExpression",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                                        "line": 258,
-                                                        "end_line": 259,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "biguint",
-                                                        "immutable": true
-                                                      },
-                                                      "name": "i"
-                                                    }
-                                                  }
-                                                ]
+                                                "value": 8,
+                                                "teal_alias": null
                                               }
                                             ]
-                                          },
-                                          "op": "-",
-                                          "right": {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                              "line": 252,
-                                              "end_line": 260,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 8,
-                                            "teal_alias": null
                                           }
+                                        ]
+                                      },
+                                      "_id": 1048578
+                                    }
+                                  },
+                                  "error_message": null
+                                },
+                                "operator": "==",
+                                "rhs": {
+                                  "_type": "CommaExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 264,
+                                    "end_line": 269,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "expressions": [
+                                    {
+                                      "_type": "AssignmentExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 264,
+                                        "end_line": 269,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "target": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 264,
+                                          "end_line": 269,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
                                         },
-                                        {
-                                          "_type": "IntegerConstant",
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "__checked_1"
+                                      },
+                                      "value": {
+                                        "_type": "BigUIntBinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 264,
+                                          "end_line": 269,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "VarExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                            "line": 252,
-                                            "end_line": 260,
+                                            "line": 264,
+                                            "end_line": 265,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 8,
+                                          "name": "i__36"
+                                        },
+                                        "op": "+",
+                                        "right": {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 264,
+                                            "end_line": 269,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "expr": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                              "line": 264,
+                                              "end_line": 269,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "itob",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                                  "line": 268,
+                                                  "end_line": 269,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 1,
+                                                "teal_alias": null
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "_type": "AssertExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 264,
+                                        "end_line": 269,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "void",
+                                        "immutable": true
+                                      },
+                                      "condition": {
+                                        "_type": "NumericComparisonExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                          "line": 264,
+                                          "end_line": 269,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "bool",
+                                          "immutable": true
+                                        },
+                                        "lhs": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 264,
+                                            "end_line": 269,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "__checked_1"
+                                        },
+                                        "operator": "<=",
+                                        "rhs": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                            "line": 264,
+                                            "end_line": 269,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
                                           "teal_alias": null
                                         }
-                                      ]
+                                      },
+                                      "error_message": "overflow",
+                                      "comment": "overflow",
+                                      "explicit": true
+                                    },
+                                    {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                        "line": 264,
+                                        "end_line": 269,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "name": "__checked_1"
                                     }
                                   ]
                                 }
                               },
-                              "error_message": null
-                            },
-                            "operator": "==",
-                            "rhs": {
-                              "_type": "BigUIntBinaryOperation",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 264,
-                                "end_line": 269,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "left": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                  "line": 264,
-                                  "end_line": 265,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "name": "i"
-                              },
-                              "op": "+",
-                              "right": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                  "line": 264,
-                                  "end_line": 269,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "value": 1,
-                                "teal_alias": null
-                              }
+                              "error_message": null,
+                              "comment": null,
+                              "explicit": true
                             }
-                          },
-                          "error_message": null,
-                          "comment": null
-                        }
+                          }
+                        ],
+                        "label": null,
+                        "comment": null
                       },
                       {
                         "_type": "ExpressionStatement",
@@ -2828,10 +3592,10 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "name": "i"
+                            "name": "i__36"
                           },
                           "value": {
-                            "_type": "BigUIntBinaryOperation",
+                            "_type": "CommaExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                               "line": 227,
@@ -2845,42 +3609,181 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "left": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 229,
-                                "end_line": 230,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "expressions": [
+                              {
+                                "_type": "AssignmentExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 227,
+                                  "end_line": 230,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "target": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 227,
+                                    "end_line": 230,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "__uinc_1"
+                                },
+                                "value": {
+                                  "_type": "BigUIntBinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 227,
+                                    "end_line": 230,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 229,
+                                      "end_line": 230,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "i__36"
+                                  },
+                                  "op": "+",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 227,
+                                      "end_line": 230,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                              {
+                                "_type": "AssertExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 227,
+                                  "end_line": 230,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "void",
+                                  "immutable": true
+                                },
+                                "condition": {
+                                  "_type": "NumericComparisonExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 227,
+                                    "end_line": 230,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  },
+                                  "lhs": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 227,
+                                      "end_line": 230,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "__uinc_1"
+                                  },
+                                  "operator": "<=",
+                                  "rhs": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 227,
+                                      "end_line": 230,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                    "teal_alias": null
+                                  }
+                                },
+                                "error_message": "overflow",
+                                "comment": "overflow",
+                                "explicit": true
                               },
-                              "name": "i"
-                            },
-                            "op": "+",
-                            "right": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 227,
-                                "end_line": 230,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 1,
-                              "teal_alias": null
-                            }
+                              {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 227,
+                                  "end_line": 230,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__uinc_1"
+                              }
+                            ]
                           }
                         }
                       }
@@ -3184,7 +4087,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3223,7 +4127,7 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "i"
+                    "name": "i__61"
                   },
                   "value": {
                     "_type": "ReinterpretCast",
@@ -3321,11 +4225,11 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "i"
+                      "name": "i__61"
                     },
                     "operator": "<",
                     "rhs": {
-                      "_type": "IntegerConstant",
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                         "line": 333,
@@ -3339,8 +4243,45 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": 1000,
-                      "teal_alias": null
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                          "line": 333,
+                          "end_line": 341,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                              "line": 337,
+                              "end_line": 341,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 1000,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
                     }
                   },
                   "loop_body": {
@@ -3486,10 +4427,10 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "name": "i"
+                            "name": "i__61"
                           },
                           "value": {
-                            "_type": "BigUIntBinaryOperation",
+                            "_type": "CommaExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
                               "line": 343,
@@ -3503,42 +4444,181 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "left": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 345,
-                                "end_line": 346,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "expressions": [
+                              {
+                                "_type": "AssignmentExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 343,
+                                  "end_line": 346,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "target": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 343,
+                                    "end_line": 346,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "__uinc_2"
+                                },
+                                "value": {
+                                  "_type": "BigUIntBinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 343,
+                                    "end_line": 346,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 345,
+                                      "end_line": 346,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "i__61"
+                                  },
+                                  "op": "+",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 343,
+                                      "end_line": 346,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                              {
+                                "_type": "AssertExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 343,
+                                  "end_line": 346,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "void",
+                                  "immutable": true
+                                },
+                                "condition": {
+                                  "_type": "NumericComparisonExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                    "line": 343,
+                                    "end_line": 346,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  },
+                                  "lhs": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 343,
+                                      "end_line": 346,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "__uinc_2"
+                                  },
+                                  "operator": "<=",
+                                  "rhs": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                      "line": 343,
+                                      "end_line": 346,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                    "teal_alias": null
+                                  }
+                                },
+                                "error_message": "overflow",
+                                "comment": "overflow",
+                                "explicit": true
                               },
-                              "name": "i"
-                            },
-                            "op": "+",
-                            "right": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
-                                "line": 343,
-                                "end_line": 346,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 1,
-                              "teal_alias": null
-                            }
+                              {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol",
+                                  "line": 343,
+                                  "end_line": 346,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__uinc_2"
+                              }
+                            ]
                           }
                         }
                       }

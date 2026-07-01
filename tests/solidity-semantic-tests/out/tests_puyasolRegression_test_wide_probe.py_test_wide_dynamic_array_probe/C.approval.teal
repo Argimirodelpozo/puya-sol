@@ -1,0 +1,254 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/_wide_probe.sol.C.approval_program() -> uint64:
+main:
+    intcblock 16 0 1 2
+    bytecblock "a" "__ctor_pending" 0x151f7c75
+    intc_1 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7b473b04 0x237e4457 0x4b01c4a9 // method "__postInit()void", method "push(uint128)void", method "len()uint256", method "get(uint256)uint128"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_push_route@6 main_len_route@7 main_get_route@8
+    err
+
+main_get_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    dig 1
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 16
+    bzero
+    pushint 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 16
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "a"
+    swap
+    intc_0 // 16
+    box_extract // on error: index out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_len_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    bytec_0 // "a"
+    box_len
+    pop
+    intc_3 // 2
+    >=
+    bz main_ternary_false@22
+    bytec_0 // "a"
+    box_len
+    pop
+
+main_ternary_merge@23:
+    intc_3 // 2
+    -
+    pushint 32
+    /
+    itob
+    pushint 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@22:
+    intc_3 // 2
+    b main_ternary_merge@23
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_push_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    intc_0 // 16
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "a"
+    intc_1 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // "a"
+    box_len
+    pop
+    dig 2
+    intc_0 // 16
+    *
+    +
+    bytec_0 // "a"
+    swap
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "a"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_0 // 16
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "a"
+    swap
+    intc_1 // 0
+    uncover 3
+    box_splice
+    intc_2 // 1
+    return
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "a"
+    intc_3 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "received" 0x
+    bytecblock "received" 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
     bytec_1 // ""
     dup
@@ -127,10 +127,19 @@ main_ternary_merge@25:
     bytec_0 // "received"
     app_global_get_ex
     assert // check received exists
-    dig 3
-    pushbytes 0x01
+    intc_0 // 1
+    itob
+    dig 4
     b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "received"
     swap
     app_global_put

@@ -1066,7 +1066,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1110,7 +1111,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ReinterpretCast",
+                    "_type": "SingleEvaluation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
                       "line": 84,
@@ -1124,8 +1125,8 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "expr": {
-                      "_type": "IntrinsicCall",
+                    "source": {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
                         "line": 84,
@@ -1135,41 +1136,58 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
                       },
-                      "op_code": "itob",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
-                            "line": 84,
-                            "end_line": 96,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "op_code": "global",
-                          "immediates": [
-                            "Round"
-                          ],
-                          "stack_args": []
-                        }
-                      ]
-                    }
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
+                          "line": 84,
+                          "end_line": 100,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
+                              "line": 84,
+                              "end_line": 96,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "global",
+                            "immediates": [
+                              "Round"
+                            ],
+                            "stack_args": []
+                          }
+                        ]
+                      }
+                    },
+                    "_id": 1048577
                   },
                   "operator": ">=",
                   "rhs": {
-                    "_type": "IntegerConstant",
+                    "_type": "SingleEvaluation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
                       "line": 84,
@@ -1183,12 +1201,67 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 1,
-                    "teal_alias": null
+                    "source": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
+                        "line": 84,
+                        "end_line": 100,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
+                          "line": 84,
+                          "end_line": 100,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/uncalled_blockhash.sol",
+                              "line": 99,
+                              "end_line": 100,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 1,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
+                    },
+                    "_id": 1048578
                   }
                 },
                 "error_message": "underflow",
-                "comment": "underflow"
+                "comment": "underflow",
+                "explicit": true
               }
             },
             {

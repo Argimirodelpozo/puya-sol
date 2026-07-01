@@ -69,6 +69,8 @@ main_ternary_merge@14:
     intc_2 // 32
     extract3
     b~
+    pushbytes 0x010000000000000000000000000000000000000000
+    b%
     dig 1
     swap
     concat
@@ -116,7 +118,7 @@ main_ternary_merge@19:
     intc_0 // 16
     bzero
     dig 1
-    pushbytes 0xffffffffffffffffffffffffffffffff7fffffffffffffffffffffffffffffff
+    pushbytes 0x7fffffffffffffffffffffffffffffff
     b&
     dig 1
     swap
@@ -153,13 +155,13 @@ main_notU128_route@5:
     ==
     assert // invalid number of bytes for arc4.uint128
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@25:
     !
     assert // not payable
     intc_0 // 16
@@ -175,6 +177,8 @@ main_ternary_merge@24:
     intc_2 // 32
     extract3
     b~
+    pushbytes 0x0100000000000000000000000000000000
+    b%
     dig 1
     swap
     concat
@@ -197,6 +201,6 @@ main_ternary_merge@24:
     intc_1 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@24:
     pushint 0
-    b main_ternary_merge@24
+    b main_ternary_merge@25

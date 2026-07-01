@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/mappings_array2d_pop_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 2 1 8
-    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x "__ctor_pending" 0x0000 0x00020000
-    intc_0 // 0
-    dupn 21
+    intcblock 2 1 0 32
+    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x "__ctor_pending" 0x0000 0x010000000000000000 0x00020000
+    intc_2 // 0
+    dupn 5
     bytec_3 // ""
     dup
     pushint 4096
@@ -29,9 +29,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 4 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -49,7 +49,7 @@ main_d_route@10:
     txn GroupIndex
     bz main_ternary_false@16
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -64,18 +64,18 @@ main_ternary_merge@17:
     box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@16:
-    intc_0 // 0
+    intc_2 // 0
     b main_ternary_merge@17
 
 main_p_route@9:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -87,32 +87,32 @@ main_ternary_merge@25:
     swap
     dup
     cover 2
-    bury 22
+    bury 6
     assert // box exists
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
-    intc_2 // 1
+    intc_1 // 1
     -
     dup
     itob
     extract 6 0
     bury 4
-    intc_1 // 2
+    intc_0 // 2
     *
     bury 1
-    intc_1 // 2
+    intc_0 // 2
     bury 2
 
-main_while_top@99:
+main_while_top@51:
     dup2
     <=
-    bz main_after_while@101
-    dig 19
+    bz main_after_while@53
+    dig 3
     dig 2
     dup
     cover 2
     extract_uint16
-    intc_1 // 2
+    intc_0 // 2
     -
     itob
     extract 6 0
@@ -120,13 +120,13 @@ main_while_top@99:
     swap
     concat
     bury 4
-    intc_1 // 2
+    intc_0 // 2
     +
     bury 2
-    b main_while_top@99
+    b main_while_top@51
 
-main_after_while@101:
-    dig 19
+main_after_while@53:
+    dig 3
     extract 2 0
     dup
     dig 2
@@ -143,25 +143,25 @@ main_after_while@101:
     bytec_0 // "a"
     swap
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@24:
-    intc_0 // 0
+    intc_2 // 0
     b main_ternary_merge@25
 
 main_map_route@8:
     txna ApplicationArgs 1
     dup
-    bury 25
+    bury 9
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -175,260 +175,96 @@ main_ternary_merge@30:
     bytec_0 // "a"
     box_get
     pop
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
 
 main_ternary_merge@33:
     itob
-    bytec_2 // 0x01
+    intc_1 // 1
+    itob
+    dup2
     b>=
     assert // underflow
-    intc_3 // 8
+    swap
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec 6 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
     bzero
-    bury 17
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@35
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@36:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 17
-    swap
+    dup
+    uncover 2
     concat
-    bury 14
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@38
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@39:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 17
-    swap
-    concat
+    dup
     len
-    intc_3 // 8
+    pushint 8
     -
-    dig 14
-    swap
     extract_uint64
-    intc_1 // 2
+    intc_0 // 2
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "a"
     swap
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "a"
     swap
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     itob
-    bytec_2 // 0x01
+    dup
+    dig 3
     b>=
     assert // underflow
-    pushint 32
+    intc_3 // 32
     bzero
     dup
-    bury 12
-    dig 24
+    dig 12
     concat
     dup
     len
-    pushint 32
+    intc_3 // 32
     -
-    pushint 32
+    intc_3 // 32
     extract3
-    bury 10
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@41
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@42:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 17
-    swap
-    concat
-    bury 8
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@44
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@45:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 17
-    dup
     uncover 2
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 9
-    swap
-    extract_uint64
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    itob
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_2 // 0x01
+    uncover 4
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    concat
-    bury 6
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@47
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@48:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 17
-    swap
-    concat
-    bury 4
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@50
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@51:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 17
     dup
-    uncover 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    uncover 3
+    swap
     concat
+    dup
     len
-    intc_3 // 8
+    pushint 8
     -
-    dig 5
-    swap
-    extract_uint64
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 6
-    swap
-    intc_3 // 8
+    pushint 8
     extract3
     pushbytes "b"
     concat
     sha256
-    dig 10
-    swap
     concat
     sha256
     box_get
@@ -437,66 +273,44 @@ main_ternary_merge@51:
     select
     dup
     len
-    pushint 32
+    intc_3 // 32
     <=
     assert // overflow
-    dig 11
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@50:
-    intc_0 // 0
-    b main_ternary_merge@51
-
-main_ternary_false@47:
-    intc_0 // 0
-    b main_ternary_merge@48
-
-main_ternary_false@44:
-    intc_0 // 0
-    b main_ternary_merge@45
-
-main_ternary_false@41:
-    intc_0 // 0
-    b main_ternary_merge@42
-
-main_ternary_false@38:
-    intc_0 // 0
-    b main_ternary_merge@39
-
-main_ternary_false@35:
-    intc_0 // 0
-    b main_ternary_merge@36
-
 main_ternary_false@32:
-    intc_0 // 0
+    intc_2 // 0
     b main_ternary_merge@33
 
 main_ternary_false@29:
-    intc_0 // 0
+    intc_2 // 0
     b main_ternary_merge@30
 
 main_n2_route@7:
     txn GroupIndex
-    bz main_ternary_false@55
+    bz main_ternary_false@37
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@56:
+main_ternary_merge@38:
     !
     assert // not payable
     bytec_0 // "a"
     box_get
     assert // box exists
-    bytec 6 // 0x00020000
-    intc_2 // 1
+    intc_1 // 1
+    itob
+    bury 6
+    bytec 7 // 0x00020000
+    intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
     box_del
@@ -507,82 +321,51 @@ main_ternary_merge@56:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@58
+    bz main_ternary_false@40
     bytec_0 // "a"
     box_get
     pop
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
 
-main_ternary_merge@59:
+main_ternary_merge@41:
     itob
-    bytec_2 // 0x01
+    dup
+    dig 6
+    dup
+    cover 3
     b>=
     assert // underflow
-    bytec_0 // "a"
-    box_get
-    swap
-    bury 22
-    assert // box exists
-    intc_3 // 8
-    bzero
-    bury 16
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@61
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@62:
-    itob
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_2 // 0x01
+    swap
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 16
-    swap
-    concat
-    bury 13
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@64
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@65:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 16
-    swap
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 13
-    swap
-    extract_uint64
-    dig 21
     dup
-    cover 2
-    dig 1
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec 6 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "a"
+    box_get
+    assert // box exists
+    pushint 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup2
     callsub dynamic_array_read_dynamic_element
     bytec 5 // 0x0000
-    intc_2 // 1
+    intc_1 // 1
     callsub dynamic_array_concat_byte_length_head
     swap
     callsub dynamic_array_replace_dynamic_element
@@ -592,55 +375,50 @@ main_ternary_merge@65:
     bytec_0 // "a"
     swap
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@64:
-    intc_0 // 0
-    b main_ternary_merge@65
+main_ternary_false@40:
+    intc_2 // 0
+    b main_ternary_merge@41
 
-main_ternary_false@61:
-    intc_0 // 0
-    b main_ternary_merge@62
-
-main_ternary_false@58:
-    intc_0 // 0
-    b main_ternary_merge@59
-
-main_ternary_false@55:
-    intc_0 // 0
-    b main_ternary_merge@56
+main_ternary_false@37:
+    intc_2 // 0
+    b main_ternary_merge@38
 
 main_n1_route@6:
     txna ApplicationArgs 1
     dup
-    bury 25
+    bury 9
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 24
+    bury 8
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@69
+    bz main_ternary_false@45
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@70:
+main_ternary_merge@46:
     !
     assert // not payable
     bytec_0 // "a"
     box_get
     assert // box exists
-    bytec 6 // 0x00020000
-    intc_2 // 1
+    intc_1 // 1
+    itob
+    bury 7
+    bytec 7 // 0x00020000
+    intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
     box_del
@@ -651,84 +429,57 @@ main_ternary_merge@70:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@72
+    bz main_ternary_false@48
     bytec_0 // "a"
     box_get
     pop
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
 
-main_ternary_merge@73:
+main_ternary_merge@49:
     itob
-    bytec_2 // 0x01
+    dup
+    dig 7
+    dup
+    cover 3
     b>=
     assert // underflow
-    bytec_0 // "a"
-    box_get
-    swap
-    bury 23
-    assert // box exists
-    intc_3 // 8
-    bzero
-    bury 15
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@75
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@76:
-    itob
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_2 // 0x01
+    dig 1
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 15
-    swap
-    concat
-    bury 12
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@78
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@79:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 15
-    swap
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 12
-    swap
-    extract_uint64
-    dig 22
     dup
-    cover 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec 6 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "a"
+    box_get
+    assert // box exists
+    pushint 8
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 2
     dig 1
     callsub dynamic_array_read_dynamic_element
     bytec 5 // 0x0000
-    intc_2 // 1
+    intc_1 // 1
     callsub dynamic_array_concat_byte_length_head
+    uncover 3
     swap
+    dig 2
     callsub dynamic_array_replace_dynamic_element
     bytec_0 // "a"
     box_del
@@ -736,309 +487,90 @@ main_ternary_merge@79:
     bytec_0 // "a"
     swap
     box_put
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@81
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@82:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 15
-    swap
-    concat
-    bury 9
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@84
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@85:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 15
-    swap
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 9
-    swap
-    extract_uint64
-    intc_1 // 2
+    intc_0 // 2
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "a"
     swap
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "a"
     swap
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     itob
-    bytec_2 // 0x01
+    dup
+    dig 3
     b>=
     assert // underflow
-    pushint 32
+    intc_3 // 32
     bzero
-    dig 24
+    dig 11
     concat
     dup
     len
-    pushint 32
+    intc_3 // 32
     -
-    pushint 32
+    intc_3 // 32
     extract3
-    bury 7
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@87
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@88:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 15
     swap
-    concat
-    bury 5
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@90
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@91:
-    itob
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_2 // 0x01
+    uncover 3
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 15
     dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     uncover 2
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 6
-    swap
-    extract_uint64
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    concat
-    bury 19
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@93
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@94:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 15
     swap
     concat
-    bury 18
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@96
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@97:
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 15
     dup
-    uncover 2
-    concat
     len
-    intc_3 // 8
+    pushint 8
     -
-    dig 19
-    swap
-    extract_uint64
-    intc_1 // 2
-    *
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    intc_1 // 2
-    +
-    bytec_0 // "a"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    itob
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_2 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    concat
-    len
-    intc_3 // 8
-    -
-    dig 19
-    swap
-    intc_3 // 8
+    pushint 8
     extract3
     pushbytes "b"
     concat
     sha256
-    dig 7
-    swap
     concat
     sha256
     dup
     box_del
     pop
-    dig 23
+    dig 7
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@96:
-    intc_0 // 0
-    b main_ternary_merge@97
+main_ternary_false@48:
+    intc_2 // 0
+    b main_ternary_merge@49
 
-main_ternary_false@93:
-    intc_0 // 0
-    b main_ternary_merge@94
-
-main_ternary_false@90:
-    intc_0 // 0
-    b main_ternary_merge@91
-
-main_ternary_false@87:
-    intc_0 // 0
-    b main_ternary_merge@88
-
-main_ternary_false@84:
-    intc_0 // 0
-    b main_ternary_merge@85
-
-main_ternary_false@81:
-    intc_0 // 0
-    b main_ternary_merge@82
-
-main_ternary_false@78:
-    intc_0 // 0
-    b main_ternary_merge@79
-
-main_ternary_false@75:
-    intc_0 // 0
-    b main_ternary_merge@76
-
-main_ternary_false@72:
-    intc_0 // 0
-    b main_ternary_merge@73
-
-main_ternary_false@69:
-    intc_0 // 0
-    b main_ternary_merge@70
+main_ternary_false@45:
+    intc_2 // 0
+    b main_ternary_merge@46
 
 main___postInit_route@5:
     bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec 4 // "__ctor_pending"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "a"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -1048,10 +580,10 @@ dynamic_array_read_dynamic_element:
     frame_dig -2
     extract 2 0
     frame_dig -2
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
     frame_dig -1
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 2
     swap
@@ -1059,10 +591,10 @@ dynamic_array_read_dynamic_element:
     dig 2
     len
     frame_dig -1
-    intc_2 // 1
+    intc_1 // 1
     +
     dup
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 5
     swap
@@ -1079,19 +611,19 @@ dynamic_array_read_dynamic_element:
 dynamic_array_concat_byte_length_head:
     proto 3 1
     frame_dig -3
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
     dup
-    intc_1 // 2
+    intc_0 // 2
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     frame_dig -3
-    intc_1 // 2
+    intc_0 // 2
     dig 2
     substring3
     frame_dig -1
-    intc_1 // 2
+    intc_0 // 2
     *
     bzero
     concat
@@ -1111,10 +643,10 @@ dynamic_array_concat_byte_length_head:
     itob
     extract 6 0
     swap
-    intc_1 // 2
+    intc_0 // 2
     *
     dup
-    intc_0 // 0
+    intc_2 // 0
 
 dynamic_array_concat_byte_length_head_for_header@2:
     frame_dig 4
@@ -1135,11 +667,11 @@ dynamic_array_concat_byte_length_head_for_header@2:
     frame_bury 0
     dig 1
     extract_uint16
-    intc_1 // 2
+    intc_0 // 2
     +
     +
     frame_bury 3
-    intc_1 // 2
+    intc_0 // 2
     +
     frame_bury 4
     b dynamic_array_concat_byte_length_head_for_header@2
@@ -1157,7 +689,7 @@ dynamic_array_concat_dynamic_element:
     proto 3 1
     bytec_3 // ""
     frame_dig -3
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
     dup
     frame_dig -1
@@ -1168,12 +700,12 @@ dynamic_array_concat_dynamic_element:
     frame_dig -3
     extract 2 0
     swap
-    intc_1 // 2
+    intc_0 // 2
     *
     frame_dig -1
-    intc_1 // 2
+    intc_0 // 2
     *
-    intc_0 // 0
+    intc_2 // 0
 
 dynamic_array_concat_dynamic_element_for_header@1:
     frame_dig 5
@@ -1193,7 +725,7 @@ dynamic_array_concat_dynamic_element_for_header@1:
     swap
     concat
     frame_bury 1
-    intc_1 // 2
+    intc_0 // 2
     +
     frame_bury 5
     b dynamic_array_concat_dynamic_element_for_header@1
@@ -1202,7 +734,7 @@ dynamic_array_concat_dynamic_element_after_for@4:
     frame_dig 2
     len
     frame_bury 0
-    intc_0 // 0
+    intc_2 // 0
     frame_bury 5
 
 dynamic_array_concat_dynamic_element_for_header@5:
@@ -1223,7 +755,7 @@ dynamic_array_concat_dynamic_element_for_header@5:
     swap
     concat
     frame_bury 1
-    intc_1 // 2
+    intc_0 // 2
     +
     frame_bury 5
     b dynamic_array_concat_dynamic_element_for_header@5
@@ -1262,9 +794,9 @@ dynamic_array_replace_dynamic_element:
     dup
     len
     frame_dig -1
-    intc_2 // 1
+    intc_1 // 1
     +
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 2
     dig 1
@@ -1272,13 +804,13 @@ dynamic_array_replace_dynamic_element:
     dig 4
     frame_dig -1
     -
-    intc_2 // 1
+    intc_1 // 1
     -
     dig 3
     cover 2
     select
     frame_dig -1
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 4
     swap
@@ -1287,7 +819,7 @@ dynamic_array_replace_dynamic_element:
     -
     cover 6
     dig 4
-    intc_0 // 0
+    intc_2 // 0
     uncover 2
     substring3
     frame_dig -2
@@ -1299,7 +831,7 @@ dynamic_array_replace_dynamic_element:
     concat
     cover 2
     swap
-    intc_1 // 2
+    intc_0 // 2
     *
     swap
 
@@ -1324,7 +856,7 @@ dynamic_array_replace_dynamic_element_for_header@2:
     swap
     replace3
     frame_bury 3
-    intc_1 // 2
+    intc_0 // 2
     +
     frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2

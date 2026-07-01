@@ -81,7 +81,12 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    dig 3
     dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 1
     itob
     intc_2 // 32
     bzero
@@ -90,7 +95,7 @@ main_ternary_merge@9:
     b|
     pushint 8
     bzero
-    dig 6
+    uncover 3
     concat
     dup
     len

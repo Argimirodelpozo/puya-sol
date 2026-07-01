@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/multiple_inheritance.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" "y" 0x "w" 0x151f7c75
+    bytecblock "x" "y" 0x "w" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     pushint 4096
     bzero
@@ -201,6 +201,10 @@ main_ternary_merge@36:
     app_global_get_ex
     assert // check y exists
     b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_3 // "w"
     swap
     app_global_put
@@ -231,13 +235,22 @@ g_ternary_merge@3:
     assert // check x exists
     frame_dig -1
     b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     callsub f
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x01
+    intc_1 // 1
+    itob
     b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_1 // "y"
     swap
     app_global_put

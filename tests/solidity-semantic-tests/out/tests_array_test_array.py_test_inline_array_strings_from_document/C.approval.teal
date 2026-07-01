@@ -57,9 +57,13 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    dupn 2
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_2 // 8
     bzero
-    dig 1
+    swap
     concat
     dup
     len

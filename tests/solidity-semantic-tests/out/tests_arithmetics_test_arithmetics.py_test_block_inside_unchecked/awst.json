@@ -1068,7 +1068,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1142,7 +1143,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "max"
+                "name": "max__6"
               },
               "value": {
                 "_type": "IntegerConstant",
@@ -1188,7 +1189,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "x"
+                "name": "x__14"
               },
               "value": {
                 "_type": "BigUIntBinaryOperation",
@@ -1235,11 +1236,11 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "max"
+                    "name": "max__6"
                   },
                   "op": "+",
                   "right": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/block_inside_unchecked.sol",
                       "line": 122,
@@ -1253,8 +1254,45 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 1,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/block_inside_unchecked.sol",
+                        "line": 122,
+                        "end_line": 129,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/block_inside_unchecked.sol",
+                            "line": 128,
+                            "end_line": 129,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   }
                 },
                 "op": "%",
@@ -1335,7 +1373,7 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "name": "x"
+                  "name": "x__14"
                 }
               }
             },

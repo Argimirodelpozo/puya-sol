@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_for.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
-    intc_1 // 0
+    intc_2 // 0
     dupn 2
     pushint 4096
     bzero
@@ -30,7 +30,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x607ebd63 // method "f(uint512)uint256"
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -45,9 +45,9 @@ main_f_route@4:
     dup
     bury 4
     len
-    pushint 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -61,44 +61,43 @@ main_ternary_merge@9:
     load 0
     store 0
     bytec_1 // 0x01
-    bury 1
-    dig 2
     bury 2
+    dig 2
+    bury 1
 
 main_while_top@10:
-    dig 1
+    dup
     pushbytes 0x
     b>
     bz main_after_while@12
-    dup
-    dig 2
+    dup2
     dup
     cover 2
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
+    bury 3
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     bytec_1 // 0x01
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
+    bury 1
     b main_while_top@10
 
 main_after_while@12:
     load 0
     store 0
-    dup
+    dig 1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -109,5 +108,5 @@ main_after_while@12:
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9

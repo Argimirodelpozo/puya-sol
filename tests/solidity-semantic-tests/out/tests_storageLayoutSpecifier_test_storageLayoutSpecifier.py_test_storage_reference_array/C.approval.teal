@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock "array" "__ctor_pending"
+    bytecblock "array" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     dup
     pushint 4096
@@ -121,9 +121,10 @@ main_ternary_merge@22:
     bury 1
 
 main_while_top@23:
-    dup
-    pushbytes 0x0a
-    b<
+    pushint 10
+    itob
+    dig 1
+    b>
     bz main_after_while@27
     bytec_0 // "array"
     box_len
@@ -135,11 +136,16 @@ main_while_top@23:
     pop
 
 main_after_if_else@26:
+    intc_1 // 1
+    itob
+    dig 1
     dup
-    pushbytes 0x01
+    uncover 2
     b+
     dup
-    bury 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_2 // 32
@@ -189,6 +195,13 @@ main_after_if_else@26:
     intc_0 // 0
     uncover 3
     box_splice
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 1
     b main_while_top@23
 
 main_after_while@27:

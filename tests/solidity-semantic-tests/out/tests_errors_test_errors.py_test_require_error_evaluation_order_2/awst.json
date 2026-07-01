@@ -1000,7 +1000,8 @@
                   }
                 },
                 "error_message": "ABI bool validation",
-                "comment": "ABI bool validation"
+                "comment": "ABI bool validation",
+                "explicit": true
               }
             },
             {
@@ -1525,7 +1526,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1606,11 +1608,12 @@
                   }
                 },
                 "error_message": "ABI bool validation",
-                "comment": "ABI bool validation"
+                "comment": "ABI bool validation",
+                "explicit": true
               }
             },
             {
-              "_type": "ExpressionStatement",
+              "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
                 "line": 234,
@@ -1619,27 +1622,283 @@
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "SubroutineCallExpression",
+              "target": {
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
-                  "line": 250,
-                  "end_line": 253,
+                  "line": 234,
+                  "end_line": 255,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "name": "__require_err_blob_1"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                  "line": 234,
+                  "end_line": 255,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "concat",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "MethodConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                      "line": 234,
+                      "end_line": 255,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "value": {
+                      "_type": "MethodSignatureString",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                        "line": 234,
+                        "end_line": 255,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "value": "E(uint256)"
+                    }
+                  },
+                  {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                      "line": 234,
+                      "end_line": 255,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "expr": {
+                      "_type": "ARC4Encode",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                        "line": 234,
+                        "end_line": 255,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "value": {
+                        "_type": "SubroutineCallExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                          "line": 250,
+                          "end_line": 253,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "target": {
+                          "_type": "InstanceMethodTarget",
+                          "member_name": "h"
+                        },
+                        "args": []
+                      },
+                      "error_message": null
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "IfElse",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                "line": 234,
+                "end_line": 255,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "condition": {
+                "_type": "Not",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                  "line": 234,
+                  "end_line": 255,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "biguint",
+                  "name": "bool",
                   "immutable": true
                 },
-                "target": {
-                  "_type": "InstanceMethodTarget",
-                  "member_name": "h"
+                "expr": {
+                  "_type": "SingleEvaluation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                    "line": 234,
+                    "end_line": 255,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "source": {
+                    "_type": "SubroutineCallExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                      "line": 242,
+                      "end_line": 246,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    },
+                    "target": {
+                      "_type": "InstanceMethodTarget",
+                      "member_name": "g"
+                    },
+                    "args": [
+                      {
+                        "name": null,
+                        "value": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                            "line": 244,
+                            "end_line": 245,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "name": "c"
+                        }
+                      }
+                    ]
+                  },
+                  "_id": 1048577
+                }
+              },
+              "if_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                  "line": 234,
+                  "end_line": 255,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
                 },
-                "args": []
-              }
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                      "line": 234,
+                      "end_line": 255,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                        "line": 234,
+                        "end_line": 255,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "op_code": "log",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                            "line": 234,
+                            "end_line": 255,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "name": "__require_err_blob_1"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
+              },
+              "else_branch": null
             },
             {
               "_type": "ExpressionStatement",
@@ -1667,11 +1926,11 @@
                   "immutable": true
                 },
                 "condition": {
-                  "_type": "SubroutineCallExpression",
+                  "_type": "SingleEvaluation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
-                    "line": 242,
-                    "end_line": 246,
+                    "line": 234,
+                    "end_line": 255,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
@@ -1681,35 +1940,53 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "g"
-                  },
-                  "args": [
-                    {
-                      "name": null,
-                      "value": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
-                          "line": 244,
-                          "end_line": 245,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "name": "c"
+                  "source": {
+                    "_type": "SubroutineCallExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                      "line": 242,
+                      "end_line": 246,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    },
+                    "target": {
+                      "_type": "InstanceMethodTarget",
+                      "member_name": "g"
+                    },
+                    "args": [
+                      {
+                        "name": null,
+                        "value": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_evaluation_order_2.sol",
+                            "line": 244,
+                            "end_line": 245,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "name": "c"
+                        }
                       }
-                    }
-                  ]
+                    ]
+                  },
+                  "_id": 1048577
                 },
                 "error_message": "E",
-                "comment": "E"
+                "comment": "E",
+                "explicit": false
               }
             }
           ],

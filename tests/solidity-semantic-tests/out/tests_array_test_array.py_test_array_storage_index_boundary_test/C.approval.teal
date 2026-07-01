@@ -176,9 +176,14 @@ main_ternary_merge@22:
     b main_while_top@19
 
 main_after_while@24:
+    dig 1
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 2
+    swap
     concat
     dup
     len

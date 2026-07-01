@@ -1,0 +1,136 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/_sdr.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 64 0
+    bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x7cde18b5 // method "sdivF(uint512)uint512"
+    txna ApplicationArgs 0
+    match main_sdivF_route@4
+    err
+
+main_sdivF_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    load 0
+    store 0
+    dup
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bytec_3 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    bytec_3 // 0x
+    b!=
+    bz main_ternary_false@15
+    bz main_ternary_false@12
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 1
+    b-
+    bytec_0 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@13:
+    pushbytes 0x03
+    b/
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@20:
+    load 0
+    store 0
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    dup
+    b main_ternary_merge@13
+
+main_ternary_false@15:
+    bz main_ternary_false@17
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 1
+    b-
+    bytec_0 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@18:
+    pushbytes 0x03
+    b/
+    b main_ternary_merge@20
+
+main_ternary_false@17:
+    dup
+    b main_ternary_merge@18
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

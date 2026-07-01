@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
     intcblock 2 32 1 0
-    bytecblock "data" "__ctor_pending" 0x151f7c75
+    bytecblock "data" "__ctor_pending" 0x151f7c75 0x010000000000000000
     intc_3 // 0
     dupn 2
     pushint 4096
@@ -106,9 +106,14 @@ main_get_route@8:
 main_ternary_merge@24:
     !
     assert // not payable
+    dig 1
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -159,6 +164,20 @@ main_set_route@7:
 main_ternary_merge@29:
     !
     assert // not payable
+    dig 1
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@31
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@31:
     pushint 8
     bzero
     dig 2
@@ -194,28 +213,28 @@ main_enlarge_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@35
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@36:
     !
     assert // not payable
 
-main_while_top@35:
+main_while_top@37:
     bytec_0 // "data"
     box_len
     pop
     intc_0 // 2
     >=
-    bz main_ternary_false@37
+    bz main_ternary_false@39
     bytec_0 // "data"
     box_len
     pop
 
-main_ternary_merge@38:
+main_ternary_merge@40:
     intc_0 // 2
     -
     intc_1 // 32
@@ -223,7 +242,7 @@ main_ternary_merge@38:
     itob
     dig 3
     b<
-    bz main_after_while@40
+    bz main_after_while@42
     bytec_0 // "data"
     intc_3 // 0
     intc_0 // 2
@@ -255,20 +274,20 @@ main_ternary_merge@38:
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b main_while_top@35
+    b main_while_top@37
 
-main_after_while@40:
+main_after_while@42:
     bytec_0 // "data"
     box_len
     pop
     intc_0 // 2
     >=
-    bz main_ternary_false@42
+    bz main_ternary_false@44
     bytec_0 // "data"
     box_len
     pop
 
-main_ternary_merge@43:
+main_ternary_merge@45:
     intc_0 // 2
     -
     intc_1 // 32
@@ -284,17 +303,17 @@ main_ternary_merge@43:
     intc_2 // 1
     return
 
-main_ternary_false@42:
+main_ternary_false@44:
     intc_0 // 2
-    b main_ternary_merge@43
+    b main_ternary_merge@45
 
-main_ternary_false@37:
+main_ternary_false@39:
     intc_0 // 2
-    b main_ternary_merge@38
+    b main_ternary_merge@40
 
-main_ternary_false@33:
+main_ternary_false@35:
     intc_3 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@36
 
 main___postInit_route@5:
     bytec_1 // "__ctor_pending"

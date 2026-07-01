@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/claude-1000/multisource_uy94vcbc/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_d4_4tv_j/s2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 2 4
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -49,33 +49,37 @@ main_foo_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_105
     callsub f
+    callsub /tmp/multisource_d4_4tv_j/s2.sol.f_28
+    dup2
     b>=
     assert // underflow
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_105
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub f
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     callsub g
+    dup2
     b>=
     assert // underflow
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_105
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub f
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    callsub g
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -96,47 +100,43 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_28() -> bytes:
+// /tmp/multisource_d4_4tv_j/s2.sol.f() -> bytes:
 f:
-    intc_2 // 2
+    pushint 1000
     itob
-    retsub
-
-
-// /tmp/claude-1000/multisource_uy94vcbc/s2.sol.g() -> bytes:
-g:
-    intc_3 // 4
-    itob
-    retsub
-
-
-// /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_105() -> bytes:
-/tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_105:
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_63
-    pushbytes 0x03e8
+    callsub /tmp/multisource_d4_4tv_j/s2.sol.f_28
     b+
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.g_71
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    callsub g
+    dup2
     b>=
     assert // underflow
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_63
-    pushbytes 0x0100000000000000000000000000000000000000000000000000000000000003e8
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub /tmp/claude-1000/multisource_uy94vcbc/s2.sol.g_71
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub
 
 
-// /tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_63() -> bytes:
-/tmp/claude-1000/multisource_uy94vcbc/s2.sol.f_63:
-    intc_2 // 2
+// /tmp/multisource_d4_4tv_j/s2.sol.f_28() -> bytes:
+/tmp/multisource_d4_4tv_j/s2.sol.f_28:
+    pushint 2
     itob
     retsub
 
 
-// /tmp/claude-1000/multisource_uy94vcbc/s2.sol.g_71() -> bytes:
-/tmp/claude-1000/multisource_uy94vcbc/s2.sol.g_71:
-    intc_3 // 4
+// /tmp/multisource_d4_4tv_j/s2.sol.g() -> bytes:
+g:
+    pushint 4
     itob
     retsub

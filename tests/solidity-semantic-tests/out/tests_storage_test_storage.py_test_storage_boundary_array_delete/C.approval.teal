@@ -64,7 +64,10 @@ main_ternary_merge@14:
     replace2 64
     store 0
     callsub getArray
-    pushint 24
+    dup
+    len
+    intc_0 // 8
+    -
     extract_uint64
     bytec_1 // "__dyn_storage"
     pushint 8192
@@ -101,18 +104,23 @@ main_ternary_merge@19:
     !
     assert // not payable
     callsub getArray
+    intc_0 // 8
+    bzero
+    dup
+    dig 2
+    b|
     dup
     len
     intc_0 // 8
     -
-    dig 1
-    swap
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     bytec_2 // 0x01
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -120,9 +128,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x02
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -130,9 +140,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x03
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -140,9 +152,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x04
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -150,9 +164,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x05
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -160,9 +176,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x06
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -170,9 +188,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x07
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -180,9 +200,11 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dup
+    dig 1
     pushbytes 0x08
     b+
+    dig 1
+    b|
     dup
     len
     intc_0 // 8
@@ -190,8 +212,10 @@ main_ternary_merge@19:
     extract_uint64
     bytec_0 // 0x
     callsub __storage_write
+    swap
     pushbytes 0x09
     b+
+    b|
     dup
     len
     intc_0 // 8
@@ -224,14 +248,19 @@ main_ternary_merge@24:
     bury 1
 
 main_while_top@25:
-    dup
-    pushbytes 0x0a
-    b<
+    pushint 10
+    itob
+    dig 1
+    b>
     bz main_after_while@27
-    dup2
+    intc_0 // 8
+    bzero
+    dig 2
+    dig 2
     dup
-    cover 2
+    cover 3
     b+
+    b|
     dup
     len
     intc_0 // 8
@@ -241,6 +270,10 @@ main_while_top@25:
     callsub __storage_write
     bytec_2 // 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 1
     b main_while_top@25
 

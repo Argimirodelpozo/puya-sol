@@ -115,9 +115,14 @@ main_ternary_merge@19:
     bytec_1 // "s"
     dig 1
     app_global_put
+    dig 2
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 3
+    swap
     concat
     dup
     len

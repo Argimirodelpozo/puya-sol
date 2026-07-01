@@ -1096,7 +1096,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1124,7 +1125,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "i"
+                "name": "i__9"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -1207,7 +1208,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "sum"
+                "name": "sum__13"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -1305,7 +1306,7 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "name": "i"
+                  "name": "i__9"
                 },
                 "operator": "<",
                 "rhs": {
@@ -1425,7 +1426,7 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "idx"
+                      "name": "idx__21"
                     },
                     "value": {
                       "_type": "VarExpression",
@@ -1442,7 +1443,7 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "i"
+                      "name": "i__9"
                     }
                   },
                   {
@@ -1485,11 +1486,11 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "name": "idx"
+                        "name": "idx__21"
                       },
                       "operator": ">=",
                       "rhs": {
-                        "_type": "IntegerConstant",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                           "line": 214,
@@ -1503,8 +1504,45 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "value": 10,
-                        "teal_alias": null
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 214,
+                            "end_line": 223,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "itob",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 221,
+                                "end_line": 223,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 10,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       }
                     },
                     "if_branch": {
@@ -1539,6 +1577,133 @@
                     "_type": "AssignmentStatement",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                      "line": 253,
+                      "end_line": 261,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "target": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                        "line": 253,
+                        "end_line": 261,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "__ckidx_0"
+                    },
+                    "value": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                        "line": 257,
+                        "end_line": 260,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "idx__21"
+                    }
+                  },
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                      "line": 253,
+                      "end_line": 261,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "AssertExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                        "line": 253,
+                        "end_line": 261,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "condition": {
+                        "_type": "NumericComparisonExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                          "line": 253,
+                          "end_line": 261,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "lhs": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 253,
+                            "end_line": 261,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "name": "__ckidx_0"
+                        },
+                        "operator": "<",
+                        "rhs": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 253,
+                            "end_line": 261,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "value": "18446744073709551616",
+                          "teal_alias": null
+                        }
+                      },
+                      "error_message": "array index out of bounds",
+                      "comment": "array index out of bounds",
+                      "explicit": true
+                    }
+                  },
+                  {
+                    "_type": "AssignmentStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                       "line": 244,
                       "end_line": 261,
                       "comment_lines": 0,
@@ -1560,7 +1725,7 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "x"
+                      "name": "x__30"
                     },
                     "value": {
                       "_type": "ARC4Decode",
@@ -1660,7 +1825,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                                     "line": 253,
@@ -1675,30 +1840,82 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                        "line": 253,
-                                        "end_line": 261,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 253,
+                                      "end_line": 261,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                          "line": 253,
+                                          "end_line": 261,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                              "line": 253,
+                                              "end_line": 261,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                          "line": 253,
+                                          "end_line": 261,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "VarExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                                             "line": 253,
@@ -1709,49 +1926,15 @@
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 8,
-                                          "teal_alias": null
+                                          "name": "__ckidx_0"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                        "line": 253,
-                                        "end_line": 261,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                          "line": 257,
-                                          "end_line": 260,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "idx"
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048577
                                 },
                                 {
                                   "_type": "UInt64BinaryOperation",
@@ -1787,7 +1970,7 @@
                                     "immediates": [],
                                     "stack_args": [
                                       {
-                                        "_type": "IntrinsicCall",
+                                        "_type": "SingleEvaluation",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                                           "line": 253,
@@ -1802,30 +1985,82 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "op_code": "concat",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "IntrinsicCall",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                              "line": 253,
-                                              "end_line": 261,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
+                                        "source": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                            "line": 253,
+                                            "end_line": 261,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "concat",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                                "line": 253,
+                                                "end_line": 261,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "bzero",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                                    "line": 253,
+                                                    "end_line": 261,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 8,
+                                                  "teal_alias": null
+                                                }
+                                              ]
                                             },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "op_code": "bzero",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntegerConstant",
+                                            {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                                "line": 253,
+                                                "end_line": 261,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "VarExpression",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                                                   "line": 253,
@@ -1836,49 +2071,15 @@
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "uint64",
+                                                  "name": "biguint",
                                                   "immutable": true
                                                 },
-                                                "value": 8,
-                                                "teal_alias": null
+                                                "name": "__ckidx_0"
                                               }
-                                            ]
-                                          },
-                                          {
-                                            "_type": "ReinterpretCast",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                              "line": 253,
-                                              "end_line": 261,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "expr": {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                                "line": 257,
-                                                "end_line": 260,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "name": "idx"
                                             }
-                                          }
-                                        ]
+                                          ]
+                                        },
+                                        "_id": 1048577
                                       }
                                     ]
                                   },
@@ -1968,11 +2169,11 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "name": "x"
+                        "name": "x__30"
                       },
                       "operator": ">=",
                       "rhs": {
-                        "_type": "IntegerConstant",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                           "line": 279,
@@ -1986,8 +2187,45 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "value": 1000,
-                        "teal_alias": null
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 279,
+                            "end_line": 288,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "itob",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 284,
+                                "end_line": 288,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1000,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       }
                     },
                     "if_branch": {
@@ -2026,10 +2264,10 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "name": "n"
+                            "name": "n__39"
                           },
                           "value": {
-                            "_type": "BigUIntBinaryOperation",
+                            "_type": "CommaExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                               "line": 317,
@@ -2043,42 +2281,218 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "left": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                "line": 317,
-                                "end_line": 318,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "expressions": [
+                              {
+                                "_type": "AssignmentExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                  "line": 317,
+                                  "end_line": 322,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "target": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                    "line": 317,
+                                    "end_line": 322,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "__checked_0"
+                                },
+                                "value": {
+                                  "_type": "BigUIntBinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                    "line": 317,
+                                    "end_line": 322,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 317,
+                                      "end_line": 318,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "i__9"
+                                  },
+                                  "op": "+",
+                                  "right": {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 317,
+                                      "end_line": 322,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "expr": {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                        "line": 317,
+                                        "end_line": 322,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "itob",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                            "line": 321,
+                                            "end_line": 322,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 1,
+                                          "teal_alias": null
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                              {
+                                "_type": "AssertExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                  "line": 317,
+                                  "end_line": 322,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "void",
+                                  "immutable": true
+                                },
+                                "condition": {
+                                  "_type": "NumericComparisonExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                    "line": 317,
+                                    "end_line": 322,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  },
+                                  "lhs": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 317,
+                                      "end_line": 322,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "__checked_0"
+                                  },
+                                  "operator": "<=",
+                                  "rhs": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 317,
+                                      "end_line": 322,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                    "teal_alias": null
+                                  }
+                                },
+                                "error_message": "overflow",
+                                "comment": "overflow",
+                                "explicit": true
                               },
-                              "name": "i"
-                            },
-                            "op": "+",
-                            "right": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                "line": 317,
-                                "end_line": 322,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 1,
-                              "teal_alias": null
-                            }
+                              {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                  "line": 317,
+                                  "end_line": 322,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__checked_0"
+                              }
+                            ]
                           }
                         },
                         {
@@ -2121,7 +2535,7 @@
                                 "name": "biguint",
                                 "immutable": true
                               },
-                              "name": "i"
+                              "name": "i__9"
                             },
                             "value": {
                               "_type": "VarExpression",
@@ -2138,7 +2552,7 @@
                                 "name": "biguint",
                                 "immutable": true
                               },
-                              "name": "n"
+                              "name": "n__39"
                             }
                           }
                         },
@@ -2193,10 +2607,10 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "name": "y"
+                            "name": "y__51"
                           },
                           "value": {
-                            "_type": "BigUIntBinaryOperation",
+                            "_type": "CommaExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                               "line": 431,
@@ -2210,41 +2624,180 @@
                               "name": "biguint",
                               "immutable": true
                             },
-                            "left": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                "line": 431,
-                                "end_line": 434,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "expressions": [
+                              {
+                                "_type": "AssignmentExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                  "line": 431,
+                                  "end_line": 438,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "target": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                    "line": 431,
+                                    "end_line": 438,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "__checked_1"
+                                },
+                                "value": {
+                                  "_type": "BigUIntBinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                    "line": 431,
+                                    "end_line": 438,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 431,
+                                      "end_line": 434,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "sum__13"
+                                  },
+                                  "op": "+",
+                                  "right": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 437,
+                                      "end_line": 438,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "x__30"
+                                  }
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                              {
+                                "_type": "AssertExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                  "line": 431,
+                                  "end_line": 438,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "void",
+                                  "immutable": true
+                                },
+                                "condition": {
+                                  "_type": "NumericComparisonExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                    "line": 431,
+                                    "end_line": 438,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  },
+                                  "lhs": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 431,
+                                      "end_line": 438,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "__checked_1"
+                                  },
+                                  "operator": "<=",
+                                  "rhs": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                      "line": 431,
+                                      "end_line": 438,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                    "teal_alias": null
+                                  }
+                                },
+                                "error_message": "overflow",
+                                "comment": "overflow",
+                                "explicit": true
                               },
-                              "name": "sum"
-                            },
-                            "op": "+",
-                            "right": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                                "line": 437,
-                                "end_line": 438,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "name": "x"
-                            }
+                              {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                  "line": 431,
+                                  "end_line": 438,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__checked_1"
+                              }
+                            ]
                           }
                         },
                         {
@@ -2287,7 +2840,7 @@
                                 "name": "biguint",
                                 "immutable": true
                               },
-                              "name": "sum"
+                              "name": "sum__13"
                             },
                             "value": {
                               "_type": "VarExpression",
@@ -2304,7 +2857,7 @@
                                 "name": "biguint",
                                 "immutable": true
                               },
-                              "name": "y"
+                              "name": "y__51"
                             }
                           }
                         }
@@ -2353,11 +2906,11 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "name": "sum"
+                        "name": "sum__13"
                       },
                       "operator": ">=",
                       "rhs": {
-                        "_type": "IntegerConstant",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                           "line": 495,
@@ -2371,8 +2924,45 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "value": 500,
-                        "teal_alias": null
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 495,
+                            "end_line": 505,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "itob",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 502,
+                                "end_line": 505,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 500,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       }
                     },
                     "if_branch": {
@@ -2429,7 +3019,7 @@
                                 "name": "biguint",
                                 "immutable": true
                               },
-                              "name": "sum"
+                              "name": "sum__13"
                             },
                             "error_message": null
                           }
@@ -2482,7 +3072,7 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "i"
+                      "name": "i__9"
                     }
                   },
                   {
@@ -2510,10 +3100,10 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "name": "i"
+                      "name": "i__9"
                     },
                     "value": {
-                      "_type": "BigUIntBinaryOperation",
+                      "_type": "CommaExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
                         "line": 531,
@@ -2527,42 +3117,181 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "left": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                          "line": 531,
-                          "end_line": 534,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                      "expressions": [
+                        {
+                          "_type": "AssignmentExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 531,
+                            "end_line": 534,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "target": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                              "line": 531,
+                              "end_line": 534,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "name": "__uinc_0"
+                          },
+                          "value": {
+                            "_type": "BigUIntBinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                              "line": 531,
+                              "end_line": 534,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 531,
+                                "end_line": 534,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "__postinc_0"
+                            },
+                            "op": "+",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 531,
+                                "end_line": 534,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          }
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
+                        {
+                          "_type": "AssertExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 531,
+                            "end_line": 534,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "void",
+                            "immutable": true
+                          },
+                          "condition": {
+                            "_type": "NumericComparisonExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                              "line": 531,
+                              "end_line": 534,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "bool",
+                              "immutable": true
+                            },
+                            "lhs": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 531,
+                                "end_line": 534,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "__uinc_0"
+                            },
+                            "operator": "<=",
+                            "rhs": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                                "line": 531,
+                                "end_line": 534,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                              "teal_alias": null
+                            }
+                          },
+                          "error_message": "overflow",
+                          "comment": "overflow",
+                          "explicit": true
                         },
-                        "name": "__postinc_0"
-                      },
-                      "op": "+",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
-                          "line": 531,
-                          "end_line": 534,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "value": 1,
-                        "teal_alias": null
-                      }
+                        {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol",
+                            "line": 531,
+                            "end_line": 534,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "name": "__uinc_0"
+                        }
+                      ]
                     }
                   },
                   {
@@ -2641,7 +3370,7 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "name": "sum"
+                  "name": "sum__13"
                 },
                 "error_message": null
               }

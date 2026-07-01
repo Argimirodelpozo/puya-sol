@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 16 32 1000000
-    bytecblock 0x01 TMPL_APPROVAL_T TMPL_CLEAR_T TMPL_APPROVAL_U TMPL_CLEAR_U
+    bytecblock TMPL_APPROVAL_T TMPL_CLEAR_T TMPL_APPROVAL_U TMPL_CLEAR_U
     intc_0 // 0
     pushint 4096
     bzero
@@ -57,13 +57,14 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dup
-    pushbytes 0x
+    intc_0 // 0
+    itob
+    dig 1
     b==
     bz main_else_body@11
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_T
-    bytec_2 // TMPL_CLEAR_T
+    bytec_0 // TMPL_APPROVAL_T
+    bytec_1 // TMPL_CLEAR_T
     pushint 6
     itxn_field TypeEnum
     intc_2 // 16
@@ -91,9 +92,14 @@ main_ternary_merge@9:
     itxn_submit
 
 main_after_if_else@13:
-    bytec_0 // 0x01
+    intc_1 // 1
+    itob
     dig 1
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_3 // 32
@@ -110,13 +116,14 @@ main_after_if_else@13:
     return
 
 main_else_body@11:
-    dup
-    bytec_0 // 0x01
+    intc_1 // 1
+    itob
+    dig 1
     b==
     bz main_after_if_else@13
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_U
-    bytec 4 // TMPL_CLEAR_U
+    bytec_2 // TMPL_APPROVAL_U
+    bytec_3 // TMPL_CLEAR_U
     pushint 6
     itxn_field TypeEnum
     intc_2 // 16

@@ -153,7 +153,7 @@
             },
             "operator": "==",
             "rhs": {
-              "_type": "IntegerConstant",
+              "_type": "ReinterpretCast",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
                 "line": 75,
@@ -167,8 +167,45 @@
                 "name": "biguint",
                 "immutable": true
               },
-              "value": 0,
-              "teal_alias": null
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                  "line": 75,
+                  "end_line": 88,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "itob",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                      "line": 87,
+                      "end_line": 88,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
+                ]
+              }
             }
           },
           "if_branch": {
@@ -372,7 +409,7 @@
                     },
                     "op": "//",
                     "right": {
-                      "_type": "IntegerConstant",
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
                         "line": 130,
@@ -386,8 +423,45 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": 2,
-                      "teal_alias": null
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                          "line": 130,
+                          "end_line": 142,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                              "line": 141,
+                              "end_line": 142,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 2,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
                     }
                   }
                 }
@@ -438,7 +512,7 @@
               "name": "power"
             },
             "value": {
-              "_type": "BigUIntBinaryOperation",
+              "_type": "CommaExpression",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
                 "line": 149,
@@ -452,41 +526,180 @@
                 "name": "biguint",
                 "immutable": true
               },
-              "left": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
-                  "line": 149,
-                  "end_line": 154,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
+              "expressions": [
+                {
+                  "_type": "AssignmentExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                    "line": 149,
+                    "end_line": 163,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "target": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                      "line": 149,
+                      "end_line": 163,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "name": "__checked_0"
+                  },
+                  "value": {
+                    "_type": "BigUIntBinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                      "line": 149,
+                      "end_line": 163,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                        "line": 149,
+                        "end_line": 154,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "power"
+                    },
+                    "op": "*",
+                    "right": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                        "line": 158,
+                        "end_line": 163,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "power"
+                    }
+                  }
                 },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                {
+                  "_type": "AssertExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                    "line": 149,
+                    "end_line": 163,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "void",
+                    "immutable": true
+                  },
+                  "condition": {
+                    "_type": "NumericComparisonExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                      "line": 149,
+                      "end_line": 163,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    },
+                    "lhs": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                        "line": 149,
+                        "end_line": 163,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "__checked_0"
+                    },
+                    "operator": "<=",
+                    "rhs": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                        "line": 149,
+                        "end_line": 163,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                      "teal_alias": null
+                    }
+                  },
+                  "error_message": "overflow",
+                  "comment": "overflow",
+                  "explicit": true
                 },
-                "name": "power"
-              },
-              "op": "*",
-              "right": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
-                  "line": 158,
-                  "end_line": 163,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
-                },
-                "name": "power"
-              }
+                {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                    "line": 149,
+                    "end_line": 163,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "name": "__checked_0"
+                }
+              ]
             }
           }
         },
@@ -549,7 +762,7 @@
               },
               "op": "&",
               "right": {
-                "_type": "IntegerConstant",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
                   "line": 173,
@@ -563,13 +776,50 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "value": 1,
-                "teal_alias": null
+                "expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                    "line": 173,
+                    "end_line": 185,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "itob",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                        "line": 184,
+                        "end_line": 185,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
+                    }
+                  ]
+                }
               }
             },
             "operator": "==",
             "rhs": {
-              "_type": "IntegerConstant",
+              "_type": "ReinterpretCast",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
                 "line": 173,
@@ -583,8 +833,45 @@
                 "name": "biguint",
                 "immutable": true
               },
-              "value": 1,
-              "teal_alias": null
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                  "line": 173,
+                  "end_line": 190,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "itob",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                      "line": 189,
+                      "end_line": 190,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 1,
+                    "teal_alias": null
+                  }
+                ]
+              }
             }
           },
           "if_branch": {
@@ -641,7 +928,7 @@
                     "name": "power"
                   },
                   "value": {
-                    "_type": "BigUIntBinaryOperation",
+                    "_type": "CommaExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
                       "line": 200,
@@ -655,41 +942,180 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "left": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
-                        "line": 200,
-                        "end_line": 205,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
+                    "expressions": [
+                      {
+                        "_type": "AssignmentExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                          "line": 200,
+                          "end_line": 213,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "target": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                            "line": 200,
+                            "end_line": 213,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "name": "__checked_1"
+                        },
+                        "value": {
+                          "_type": "BigUIntBinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                            "line": 200,
+                            "end_line": 213,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                              "line": 200,
+                              "end_line": 205,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "name": "power"
+                          },
+                          "op": "*",
+                          "right": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                              "line": 209,
+                              "end_line": 213,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "name": "base"
+                          }
+                        }
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                      {
+                        "_type": "AssertExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                          "line": 200,
+                          "end_line": 213,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "void",
+                          "immutable": true
+                        },
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                            "line": 200,
+                            "end_line": 213,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                              "line": 200,
+                              "end_line": 213,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "name": "__checked_1"
+                          },
+                          "operator": "<=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                              "line": 200,
+                              "end_line": 213,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                            "teal_alias": null
+                          }
+                        },
+                        "error_message": "overflow",
+                        "comment": "overflow",
+                        "explicit": true
                       },
-                      "name": "power"
-                    },
-                    "op": "*",
-                    "right": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
-                        "line": 209,
-                        "end_line": 213,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "name": "base"
-                    }
+                      {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/recursion.sol",
+                          "line": 200,
+                          "end_line": 213,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "__checked_1"
+                      }
+                    ]
                   }
                 }
               }
@@ -1849,7 +2275,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

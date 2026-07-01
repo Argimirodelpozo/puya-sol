@@ -808,7 +808,7 @@
             },
             "operator": "<",
             "rhs": {
-              "_type": "IntegerConstant",
+              "_type": "ReinterpretCast",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
                 "line": 132,
@@ -822,8 +822,45 @@
                 "name": "biguint",
                 "immutable": true
               },
-              "value": 20,
-              "teal_alias": null
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                  "line": 132,
+                  "end_line": 148,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "itob",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                      "line": 146,
+                      "end_line": 148,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 20,
+                    "teal_alias": null
+                  }
+                ]
+              }
             }
           },
           "loop_body": {
@@ -1074,6 +1111,218 @@
             "label": null,
             "comment": null
           }
+        },
+        {
+          "_type": "IfElse",
+          "source_location": {
+            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+            "line": 183,
+            "end_line": 195,
+            "comment_lines": 0,
+            "column": null,
+            "end_column": null
+          },
+          "condition": {
+            "_type": "Not",
+            "source_location": {
+              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+              "line": 183,
+              "end_line": 195,
+              "comment_lines": 0,
+              "column": null,
+              "end_column": null
+            },
+            "wtype": {
+              "_type": "WType",
+              "name": "bool",
+              "immutable": true
+            },
+            "expr": {
+              "_type": "TupleItemExpression",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                "line": 183,
+                "end_line": 195,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "wtype": {
+                "_type": "WType",
+                "name": "bool",
+                "immutable": true
+              },
+              "base": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                  "line": 183,
+                  "end_line": 195,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WTuple",
+                  "name": "tuple",
+                  "immutable": true,
+                  "types": [
+                    {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    }
+                  ],
+                  "names": null,
+                  "source_location": null
+                },
+                "op_code": "box_len",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                      "line": 183,
+                      "end_line": 185,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "box_key",
+                      "immutable": true
+                    },
+                    "expr": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                        "line": 183,
+                        "end_line": 185,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "name": "_s"
+                    }
+                  }
+                ]
+              },
+              "index": 1
+            }
+          },
+          "if_branch": {
+            "_type": "Block",
+            "source_location": {
+              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+              "line": 183,
+              "end_line": 195,
+              "comment_lines": 0,
+              "column": null,
+              "end_column": null
+            },
+            "body": [
+              {
+                "_type": "ExpressionStatement",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                  "line": 183,
+                  "end_line": 195,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                    "line": 183,
+                    "end_line": 195,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "void",
+                    "immutable": true
+                  },
+                  "op_code": "box_put",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                        "line": 183,
+                        "end_line": 185,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "box_key",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                          "line": 183,
+                          "end_line": 185,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "name": "_s"
+                      }
+                    },
+                    {
+                      "_type": "BytesConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol",
+                        "line": 183,
+                        "end_line": 195,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "value": "000000000000000000000000000000000000000003rYY",
+                      "encoding": "base16"
+                    }
+                  ]
+                }
+              }
+            ],
+            "label": null,
+            "comment": null
+          },
+          "else_branch": null
         },
         {
           "_type": "ExpressionStatement",
@@ -2314,7 +2563,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -2764,7 +3014,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

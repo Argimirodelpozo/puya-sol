@@ -145,13 +145,17 @@ main_get_b_route@7:
 main_ternary_merge@32:
     !
     assert // not payable
+    dupn 2
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_2 // 0
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
     intc_3 // 8
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len

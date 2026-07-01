@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_nested_load.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 0 1 38 32
     bytecblock "m_x" 0x0102000300000000000000000000000000000000000000000000000000000000000000040506 0x0506 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -24,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -42,7 +43,7 @@ main_store_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -55,31 +56,31 @@ main_ternary_merge@13:
     dig 1
     pushint 88
     extract_uint64
-    pushint 38
+    intc_2 // 38
     +
     itob
     concat
     replace2 64
     store 0
-    intc_2 // 32
+    intc_3 // 32
     bzero
     bytec_0 // "m_x"
     bytec_1 // 0x0102000300000000000000000000000000000000000000000000000000000000000000040506
     box_put
     bytec_1 // 0x0102000300000000000000000000000000000000000000000000000000000000000000040506
-    intc_1 // 0
+    intc_0 // 0
     getbyte
     itob
     pushbytes 0x0200030000000000000000000000000000000000000000000000000000000000000004
-    intc_1 // 0
+    intc_0 // 0
     getbyte
     itob
     bytec_2 // 0x0506
-    intc_1 // 0
+    intc_0 // 0
     getbyte
     itob
     bytec_2 // 0x0506
-    intc_0 // 1
+    intc_1 // 1
     getbyte
     itob
     uncover 3
@@ -107,18 +108,18 @@ main_ternary_merge@13:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@13
 
 main_load_route@5:
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -185,25 +186,45 @@ main_ternary_merge@18:
     extract 0 1
     swap
     extract 1 2
-    intc_2 // 32
+    intc_3 // 32
     bzero
-    cover 2
+    bury 5
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     concat
-    uncover 3
+    uncover 2
     extract 0 1
     swap
     concat
-    uncover 2
+    swap
     concat
     bytec_0 // "m_x"
     swap
     box_put
     bytec_0 // "m_x"
+    box_len
+    bury 1
+    bnz main_after_if_else@20
+    bytec_0 // "m_x"
+    intc_2 // 38
+    box_create
+    pop
+
+main_after_if_else@20:
+    bytec_0 // "m_x"
     pushint 36
     pushbytes 0x05
     box_replace // on error: index out of bounds
+    bytec_0 // "m_x"
+    box_len
+    bury 1
+    bnz main_after_if_else@22
+    bytec_0 // "m_x"
+    intc_2 // 38
+    box_create
+    pop
+
+main_after_if_else@22:
     bytec_0 // "m_x"
     pushint 37
     pushbytes 0x06
@@ -214,17 +235,17 @@ main_ternary_merge@18:
     cover 2
     select
     dup
-    intc_1 // 0
+    intc_0 // 0
     getbyte
     itob
     dig 1
     extract 1 35
     dup
-    intc_1 // 0
+    intc_0 // 0
     getbyte
     itob
     dig 1
-    intc_0 // 1
+    intc_1 // 1
     extract_uint16
     itob
     uncover 2
@@ -232,27 +253,29 @@ main_ternary_merge@18:
     uncover 4
     extract 36 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     getbyte
     itob
     swap
-    intc_0 // 1
+    intc_1 // 1
     getbyte
     itob
     uncover 5
     dig 6
+    dup
+    cover 2
     b|
-    uncover 5
-    dig 6
-    b|
-    uncover 5
-    dig 6
-    b|
-    uncover 4
-    dig 6
-    b|
-    uncover 4
     uncover 6
+    dig 2
+    b|
+    uncover 6
+    dig 3
+    b|
+    uncover 5
+    dig 4
+    b|
+    uncover 5
+    uncover 5
     b|
     uncover 4
     uncover 4
@@ -269,9 +292,9 @@ main_ternary_merge@18:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@17:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@18

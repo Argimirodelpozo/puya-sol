@@ -5,6 +5,7 @@
 main:
     intcblock 1 0 32
     bytecblock 0x "x"
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -102,10 +103,16 @@ main_ternary_merge@18:
     store 5
     load 5
     extract 0 32
-    bytec_0 // 0x
+    intc_1 // 0
+    itob
     b==
-    assert
-    intc_0 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@20
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@20:
     return
 
 main_ternary_false@17:

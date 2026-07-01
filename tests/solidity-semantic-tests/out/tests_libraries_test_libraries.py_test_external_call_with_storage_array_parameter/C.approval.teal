@@ -106,6 +106,10 @@ L.f:
     frame_dig -1
     extract 32 32 // on error: index access is out of bounds
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_dig -1
     dup
     retsub

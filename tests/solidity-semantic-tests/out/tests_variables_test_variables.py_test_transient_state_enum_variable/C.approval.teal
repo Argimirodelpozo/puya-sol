@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_enum_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 31
+    intcblock 1 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -62,18 +63,21 @@ main_ternary_merge@15:
     store 5
     callsub g
     load 5
-    intc_2 // 31
+    pushint 31
     getbyte
+    dup
     pushint 4
     <
     assert // enum out of range
-    load 5
-    intc_2 // 31
-    getbyte
     intc_0 // 1
     ==
-    assert
-    intc_0 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@17
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@17:
     return
 
 main_ternary_false@14:

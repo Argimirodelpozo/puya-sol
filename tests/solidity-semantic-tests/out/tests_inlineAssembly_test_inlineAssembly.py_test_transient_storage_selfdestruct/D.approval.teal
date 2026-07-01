@@ -4,7 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16 1000000
-    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860
+    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -116,6 +117,9 @@ main_ternary_merge@20:
     dig 1
     app_global_put
     itxn_begin
+    pushint 42
+    itob
+    swap
     pushint 24
     extract_uint64
     intc_2 // 6
@@ -158,10 +162,14 @@ main_ternary_merge@20:
     itxn_submit
     itxn LastLog
     extract 4 0
-    pushbytes 0x2a
     b==
-    assert
-    intc_1 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@29
+    bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@29:
     return
 
 main_ternary_false@19:
@@ -170,16 +178,18 @@ main_ternary_false@19:
 
 main_destroy_route@6:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@26
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@27:
     !
     assert // not payable
     itxn_begin
+    pushint 42
+    itob
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -226,15 +236,17 @@ main_ternary_merge@25:
     itxn_submit
     itxn LastLog
     extract 4 0
-    pushbytes 0x2a
     b==
-    assert
-    intc_1 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@29
+    bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
     return
 
-main_ternary_false@24:
+main_ternary_false@26:
     intc_0 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@27
 
 main___postInit_route@5:
     bytec_1 // "__ctor_pending"

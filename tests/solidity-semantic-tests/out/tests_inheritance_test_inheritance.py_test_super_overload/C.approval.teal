@@ -58,9 +58,14 @@ main_f_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    pushbytes 0x02
+    pushint 2
+    itob
     dig 2
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_2 // 32

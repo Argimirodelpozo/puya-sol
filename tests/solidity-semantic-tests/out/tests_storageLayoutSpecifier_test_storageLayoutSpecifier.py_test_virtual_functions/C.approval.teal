@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/virtual_functions.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 "x" 0x "y" "z"
+    bytecblock 0x151f7c75 "x" 0x "y" "z" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -186,8 +186,13 @@ main_ternary_merge@37:
     !
     assert // not payable
     callsub g
-    pushbytes 0x03
+    pushint 3
+    itob
     b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec 4 // "z"
     dig 1
     app_global_put
@@ -236,8 +241,13 @@ g_ternary_merge@3:
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x02
+    pushint 2
+    itob
     b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_3 // "y"
     dig 1
     app_global_put

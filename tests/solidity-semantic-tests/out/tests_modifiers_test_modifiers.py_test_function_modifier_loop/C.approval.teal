@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_loop.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 64
+    bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     dupn 2
     pushint 4096
@@ -65,12 +66,21 @@ main_while_top@10:
     b<
     bz main_after_while@12
     dup
-    pushbytes 0x01
+    bytec_0 // 0x01
     b+
-    bury 1
-    dig 1
-    pushbytes 0x01
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 2
+    bytec_0 // 0x01
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    bury 2
     bury 2
     b main_while_top@10
 

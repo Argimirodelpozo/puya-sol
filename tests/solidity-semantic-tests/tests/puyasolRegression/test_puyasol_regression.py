@@ -1497,3 +1497,4 @@ def test_multidim_fixed_array_box_size(harness):
     assert s256(harness.call(app, "getGrid(uint256,uint256)", 0, 1)) == 22
     assert s256(harness.call(app, "getGrid(uint256,uint256)", 1, 0)) == -(1 << 255)
     assert s256(harness.call(app, "getGrid(uint256,uint256)", 1, 1)) == -7
+

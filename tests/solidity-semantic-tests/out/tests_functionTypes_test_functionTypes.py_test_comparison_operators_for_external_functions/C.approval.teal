@@ -4,8 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x2d4970c7 0xf2b65f27 0x0a449f0b 0xd70fdf03 0x151f7c7580
+    bytecblock 0x2d4970c7 0xf2b65f27 0x0a449f0b 0xd70fdf03 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x151f7c7580
     intc_1 // 0
+    dupn 3
+    pushbytes ""
     dupn 3
     pushint 4096
     bzero
@@ -60,22 +62,22 @@ main_ternary_merge@17:
     bytec_0 // method "f()void"
     concat
     dup
-    bury 5
+    bury 9
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    bury 4
+    bury 8
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    bury 3
+    bury 7
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    bury 2
+    bury 6
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
@@ -86,165 +88,202 @@ main_ternary_merge@17:
     itob
     bytec_1 // method "g()void"
     concat
-    dig 3
+    dig 7
     ==
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 2
+    dig 6
     ==
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 1
+    dig 5
     ==
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 4
+    dig 8
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 4
+    dig 8
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 4
+    dig 8
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 3
+    dig 7
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 3
+    dig 7
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 3
+    dig 7
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 2
+    dig 6
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 2
+    dig 6
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 2
+    dig 6
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 1
+    dig 5
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 1
+    dig 5
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 1
+    dig 5
     !=
     bz main_bool_false@34
     intc_0 // 1
+    bury 4
 
 main_bool_merge@35:
+    dig 3
+    bnz main_after_if_else@37
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@37:
+    dig 3
     assert
-    dig 3
-    dig 3
+    dig 7
+    dig 7
     !=
-    bz main_bool_false@39
-    dig 3
+    bz main_bool_false@41
+    dig 7
+    dig 6
+    !=
+    bz main_bool_false@41
+    dig 7
+    dig 5
+    !=
+    bz main_bool_false@41
+    intc_0 // 1
+    bury 3
+
+main_bool_merge@42:
     dig 2
+    bnz main_after_if_else@44
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@44:
+    dig 2
+    assert
+    dig 6
+    dig 6
     !=
-    bz main_bool_false@39
-    dig 3
+    bz main_bool_false@47
+    dig 6
+    dig 5
+    !=
+    bz main_bool_false@47
+    intc_0 // 1
+    bury 2
+
+main_bool_merge@48:
     dig 1
-    !=
-    bz main_bool_false@39
-    intc_0 // 1
+    bnz main_after_if_else@50
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
 
-main_bool_merge@40:
-    assert
-    dig 2
-    dig 2
-    !=
-    bz main_bool_false@43
-    dig 2
+main_after_if_else@50:
     dig 1
-    !=
-    bz main_bool_false@43
-    intc_0 // 1
-
-main_bool_merge@44:
     assert
-    dup2
+    dig 5
+    dig 5
     !=
-    bz main_bool_false@46
+    bz main_bool_false@52
     intc_0 // 1
+    bury 1
 
-main_bool_merge@47:
+main_bool_merge@53:
+    dup
+    bnz main_after_if_else@55
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@55:
+    dup
     assert
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_bool_false@46:
+main_bool_false@52:
     intc_1 // 0
-    b main_bool_merge@47
+    bury 1
+    b main_bool_merge@53
 
-main_bool_false@43:
+main_bool_false@47:
     intc_1 // 0
-    b main_bool_merge@44
+    bury 2
+    b main_bool_merge@48
 
-main_bool_false@39:
+main_bool_false@41:
     intc_1 // 0
-    b main_bool_merge@40
+    bury 3
+    b main_bool_merge@42
 
 main_bool_false@34:
     intc_1 // 0
+    bury 4
     b main_bool_merge@35
 
 main_ternary_false@16:
@@ -253,13 +292,13 @@ main_ternary_false@16:
 
 main_comparison_operators_for_external_functions_route@9:
     txn GroupIndex
-    bz main_ternary_false@51
+    bz main_ternary_false@59
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@52:
+main_ternary_merge@60:
     !
     assert // not payable
     global CurrentApplicationID
@@ -271,7 +310,7 @@ main_ternary_merge@52:
     bytec_1 // method "g()void"
     concat
     !=
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
@@ -281,7 +320,7 @@ main_ternary_merge@52:
     bytec_2 // method "h()void"
     concat
     !=
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
@@ -291,7 +330,7 @@ main_ternary_merge@52:
     bytec_3 // method "i()void"
     concat
     !=
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
@@ -301,7 +340,7 @@ main_ternary_merge@52:
     bytec_2 // method "h()void"
     concat
     !=
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
@@ -311,7 +350,7 @@ main_ternary_merge@52:
     bytec_3 // method "i()void"
     concat
     !=
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
@@ -321,7 +360,7 @@ main_ternary_merge@52:
     bytec_3 // method "i()void"
     concat
     !=
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
@@ -331,7 +370,7 @@ main_ternary_merge@52:
     bytec_0 // method "f()void"
     concat
     ==
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
@@ -341,7 +380,7 @@ main_ternary_merge@52:
     bytec_1 // method "g()void"
     concat
     ==
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
@@ -351,7 +390,7 @@ main_ternary_merge@52:
     bytec_2 // method "h()void"
     concat
     ==
-    bz main_bool_false@63
+    bz main_bool_false@71
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
@@ -361,77 +400,86 @@ main_ternary_merge@52:
     bytec_3 // method "i()void"
     concat
     ==
-    bz main_bool_false@63
+    bz main_bool_false@71
     intc_0 // 1
+    bury 4
 
-main_bool_merge@64:
+main_bool_merge@72:
+    dig 3
+    bnz main_after_if_else@74
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@74:
+    dig 3
     assert
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_bool_false@63:
+main_bool_false@71:
     intc_1 // 0
-    b main_bool_merge@64
+    bury 4
+    b main_bool_merge@72
 
-main_ternary_false@51:
+main_ternary_false@59:
     intc_1 // 0
-    b main_ternary_merge@52
+    b main_ternary_merge@60
 
 main_i_route@8:
-    txn GroupIndex
-    bz main_ternary_false@68
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@84:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-main_ternary_false@68:
-    intc_1 // 0
-    b main_ternary_merge@84
-
-main_h_route@7:
-    txn GroupIndex
-    bz main_ternary_false@73
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@84
-
-main_ternary_false@73:
-    intc_1 // 0
-    b main_ternary_merge@84
-
-main_g_route@6:
     txn GroupIndex
     bz main_ternary_false@78
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@84
+
+main_ternary_merge@94:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
 
 main_ternary_false@78:
     intc_1 // 0
-    b main_ternary_merge@84
+    b main_ternary_merge@94
 
-main_f_route@5:
+main_h_route@7:
     txn GroupIndex
     bz main_ternary_false@83
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@84
+    b main_ternary_merge@94
 
 main_ternary_false@83:
     intc_1 // 0
-    b main_ternary_merge@84
+    b main_ternary_merge@94
+
+main_g_route@6:
+    txn GroupIndex
+    bz main_ternary_false@88
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@94
+
+main_ternary_false@88:
+    intc_1 // 0
+    b main_ternary_merge@94
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@93
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@94
+
+main_ternary_false@93:
+    intc_1 // 0
+    b main_ternary_merge@94

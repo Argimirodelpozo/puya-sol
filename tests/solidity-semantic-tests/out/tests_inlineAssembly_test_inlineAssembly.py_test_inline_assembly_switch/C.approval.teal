@@ -29,7 +29,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x607ebd63 // method "f(uint512)uint256"
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -44,9 +44,9 @@ main_f_route@4:
     dup
     bury 3
     len
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex

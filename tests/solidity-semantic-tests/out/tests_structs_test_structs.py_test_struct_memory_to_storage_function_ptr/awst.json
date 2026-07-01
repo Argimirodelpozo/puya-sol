@@ -969,7 +969,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -1434,7 +1435,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1543,7 +1545,7 @@
                   "source_location": null,
                   "desc": null
                 },
-                "name": "m"
+                "name": "m__42"
               },
               "value": {
                 "_type": "NewStruct",
@@ -2225,7 +2227,7 @@
                     "source_location": null,
                     "desc": null
                   },
-                  "name": "m"
+                  "name": "m__42"
                 }
               }
             },
@@ -2712,7 +2714,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                               "line": 417,
@@ -2727,30 +2729,82 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                  "line": 417,
-                                  "end_line": 422,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                "line": 417,
+                                "end_line": 422,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                    "line": 417,
+                                    "end_line": 422,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                        "line": 417,
+                                        "end_line": 422,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 16,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                    "line": 417,
+                                    "end_line": 422,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "ARC4Decode",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                       "line": 417,
@@ -2761,144 +2815,98 @@
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "biguint",
                                       "immutable": true
                                     },
-                                    "value": 16,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                  "line": 417,
-                                  "end_line": 422,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "ARC4Decode",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                    "line": 417,
-                                    "end_line": 422,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "value": {
-                                    "_type": "FieldExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                      "line": 417,
-                                      "end_line": 422,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint128",
-                                      "immutable": true,
-                                      "n": 128,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "base": {
+                                    "value": {
                                       "_type": "FieldExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                         "line": 417,
-                                        "end_line": 420,
+                                        "end_line": 422,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "ARC4Struct",
-                                        "name": "S",
-                                        "immutable": false,
-                                        "fields": [
-                                          {
-                                            "name": "a",
-                                            "wtype": {
-                                              "_type": "ARC4UIntN",
-                                              "name": "arc4.uint32",
-                                              "immutable": true,
-                                              "n": 32,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            },
-                                            "description": null
-                                          },
-                                          {
-                                            "name": "b",
-                                            "wtype": {
-                                              "_type": "ARC4UIntN",
-                                              "name": "arc4.uint128",
-                                              "immutable": true,
-                                              "n": 128,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            },
-                                            "description": null
-                                          },
-                                          {
-                                            "name": "c",
-                                            "wtype": {
-                                              "_type": "ARC4UIntN",
-                                              "name": "arc4.uint256",
-                                              "immutable": true,
-                                              "n": 256,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            },
-                                            "description": null
-                                          },
-                                          {
-                                            "name": "f",
-                                            "wtype": {
-                                              "_type": "ARC4UIntN",
-                                              "name": "arc4.uint64",
-                                              "immutable": true,
-                                              "n": 64,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            },
-                                            "description": null
-                                          }
-                                        ],
-                                        "frozen": false,
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint128",
+                                        "immutable": true,
+                                        "n": 128,
                                         "arc4_alias": null,
-                                        "source_location": null,
-                                        "desc": null
+                                        "source_location": null
                                       },
                                       "base": {
-                                        "_type": "StateGet",
+                                        "_type": "FieldExpression",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                           "line": 417,
-                                          "end_line": 418,
+                                          "end_line": 420,
                                           "comment_lines": 0,
                                           "column": null,
                                           "end_column": null
                                         },
-                                        "field": {
-                                          "_type": "BoxValueExpression",
+                                        "wtype": {
+                                          "_type": "ARC4Struct",
+                                          "name": "S",
+                                          "immutable": false,
+                                          "fields": [
+                                            {
+                                              "name": "a",
+                                              "wtype": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint32",
+                                                "immutable": true,
+                                                "n": 32,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "description": null
+                                            },
+                                            {
+                                              "name": "b",
+                                              "wtype": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint128",
+                                                "immutable": true,
+                                                "n": 128,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "description": null
+                                            },
+                                            {
+                                              "name": "c",
+                                              "wtype": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint256",
+                                                "immutable": true,
+                                                "n": 256,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "description": null
+                                            },
+                                            {
+                                              "name": "f",
+                                              "wtype": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint64",
+                                                "immutable": true,
+                                                "n": 64,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "description": null
+                                            }
+                                          ],
+                                          "frozen": false,
+                                          "arc4_alias": null,
+                                          "source_location": null,
+                                          "desc": null
+                                        },
+                                        "base": {
+                                          "_type": "StateGet",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                             "line": 417,
@@ -2907,93 +2915,123 @@
                                             "column": null,
                                             "end_column": null
                                           },
-                                          "wtype": {
-                                            "_type": "ARC4Struct",
-                                            "name": "X",
-                                            "immutable": false,
-                                            "fields": [
-                                              {
-                                                "name": "a",
-                                                "wtype": {
-                                                  "_type": "ARC4UIntN",
-                                                  "name": "arc4.uint256",
-                                                  "immutable": true,
-                                                  "n": 256,
-                                                  "arc4_alias": null,
-                                                  "source_location": null
+                                          "field": {
+                                            "_type": "BoxValueExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                              "line": 417,
+                                              "end_line": 418,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4Struct",
+                                              "name": "X",
+                                              "immutable": false,
+                                              "fields": [
+                                                {
+                                                  "name": "a",
+                                                  "wtype": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint256",
+                                                    "immutable": true,
+                                                    "n": 256,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "description": null
                                                 },
-                                                "description": null
+                                                {
+                                                  "name": "s",
+                                                  "wtype": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "S",
+                                                    "immutable": false,
+                                                    "fields": [
+                                                      {
+                                                        "name": "a",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint32",
+                                                          "immutable": true,
+                                                          "n": 32,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "b",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint128",
+                                                          "immutable": true,
+                                                          "n": 128,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "c",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint256",
+                                                          "immutable": true,
+                                                          "n": 256,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "f",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint64",
+                                                          "immutable": true,
+                                                          "n": 64,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      }
+                                                    ],
+                                                    "frozen": false,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "description": null
+                                                }
+                                              ],
+                                              "frozen": false,
+                                              "arc4_alias": null,
+                                              "source_location": null,
+                                              "desc": null
+                                            },
+                                            "key": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                                "line": 417,
+                                                "end_line": 418,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
                                               },
-                                              {
-                                                "name": "s",
-                                                "wtype": {
-                                                  "_type": "ARC4Struct",
-                                                  "name": "S",
-                                                  "immutable": false,
-                                                  "fields": [
-                                                    {
-                                                      "name": "a",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint32",
-                                                        "immutable": true,
-                                                        "n": 32,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "b",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint128",
-                                                        "immutable": true,
-                                                        "n": 128,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "c",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint256",
-                                                        "immutable": true,
-                                                        "n": 256,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "f",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint64",
-                                                        "immutable": true,
-                                                        "n": 64,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    }
-                                                  ],
-                                                  "frozen": false,
-                                                  "arc4_alias": null,
-                                                  "source_location": null,
-                                                  "desc": null
-                                                },
-                                                "description": null
-                                              }
-                                            ],
-                                            "frozen": false,
-                                            "arc4_alias": null,
-                                            "source_location": null,
-                                            "desc": null
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "box_key",
+                                                "immutable": true
+                                              },
+                                              "value": "cm",
+                                              "encoding": "utf8"
+                                            },
+                                            "exists_assertion_message": null
                                           },
-                                          "key": {
+                                          "default": {
                                             "_type": "BytesConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
@@ -3004,123 +3042,105 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "WType",
-                                              "name": "box_key",
-                                              "immutable": true
+                                              "_type": "ARC4Struct",
+                                              "name": "X",
+                                              "immutable": false,
+                                              "fields": [
+                                                {
+                                                  "name": "a",
+                                                  "wtype": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint256",
+                                                    "immutable": true,
+                                                    "n": 256,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "description": null
+                                                },
+                                                {
+                                                  "name": "s",
+                                                  "wtype": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "S",
+                                                    "immutable": false,
+                                                    "fields": [
+                                                      {
+                                                        "name": "a",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint32",
+                                                          "immutable": true,
+                                                          "n": 32,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "b",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint128",
+                                                          "immutable": true,
+                                                          "n": 128,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "c",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint256",
+                                                          "immutable": true,
+                                                          "n": 256,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "f",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint64",
+                                                          "immutable": true,
+                                                          "n": 64,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      }
+                                                    ],
+                                                    "frozen": false,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "description": null
+                                                }
+                                              ],
+                                              "frozen": false,
+                                              "arc4_alias": null,
+                                              "source_location": null,
+                                              "desc": null
                                             },
-                                            "value": "cm",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": null
+                                            "value": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                                            "encoding": "base16"
+                                          }
                                         },
-                                        "default": {
-                                          "_type": "BytesConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                            "line": 417,
-                                            "end_line": 418,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "ARC4Struct",
-                                            "name": "X",
-                                            "immutable": false,
-                                            "fields": [
-                                              {
-                                                "name": "a",
-                                                "wtype": {
-                                                  "_type": "ARC4UIntN",
-                                                  "name": "arc4.uint256",
-                                                  "immutable": true,
-                                                  "n": 256,
-                                                  "arc4_alias": null,
-                                                  "source_location": null
-                                                },
-                                                "description": null
-                                              },
-                                              {
-                                                "name": "s",
-                                                "wtype": {
-                                                  "_type": "ARC4Struct",
-                                                  "name": "S",
-                                                  "immutable": false,
-                                                  "fields": [
-                                                    {
-                                                      "name": "a",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint32",
-                                                        "immutable": true,
-                                                        "n": 32,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "b",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint128",
-                                                        "immutable": true,
-                                                        "n": 128,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "c",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint256",
-                                                        "immutable": true,
-                                                        "n": 256,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "f",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint64",
-                                                        "immutable": true,
-                                                        "n": 64,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    }
-                                                  ],
-                                                  "frozen": false,
-                                                  "arc4_alias": null,
-                                                  "source_location": null,
-                                                  "desc": null
-                                                },
-                                                "description": null
-                                              }
-                                            ],
-                                            "frozen": false,
-                                            "arc4_alias": null,
-                                            "source_location": null,
-                                            "desc": null
-                                          },
-                                          "value": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                                          "encoding": "base16"
-                                        }
+                                        "name": "s"
                                       },
-                                      "name": "s"
+                                      "name": "b"
                                     },
-                                    "name": "b"
-                                  },
-                                  "error_message": null
+                                    "error_message": null
+                                  }
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "_id": 1048577
                           },
                           {
                             "_type": "UInt64BinaryOperation",
@@ -3156,7 +3176,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                     "line": 417,
@@ -3171,30 +3191,82 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                        "line": 417,
-                                        "end_line": 422,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                      "line": 417,
+                                      "end_line": 422,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                          "line": 417,
+                                          "end_line": 422,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                              "line": 417,
+                                              "end_line": 422,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 16,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                          "line": 417,
+                                          "end_line": 422,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "ARC4Decode",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                             "line": 417,
@@ -3205,144 +3277,98 @@
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 16,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                        "line": 417,
-                                        "end_line": 422,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "ARC4Decode",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                          "line": 417,
-                                          "end_line": 422,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "value": {
-                                          "_type": "FieldExpression",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                            "line": 417,
-                                            "end_line": 422,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint128",
-                                            "immutable": true,
-                                            "n": 128,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "base": {
+                                          "value": {
                                             "_type": "FieldExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                               "line": 417,
-                                              "end_line": 420,
+                                              "end_line": 422,
                                               "comment_lines": 0,
                                               "column": null,
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "ARC4Struct",
-                                              "name": "S",
-                                              "immutable": false,
-                                              "fields": [
-                                                {
-                                                  "name": "a",
-                                                  "wtype": {
-                                                    "_type": "ARC4UIntN",
-                                                    "name": "arc4.uint32",
-                                                    "immutable": true,
-                                                    "n": 32,
-                                                    "arc4_alias": null,
-                                                    "source_location": null
-                                                  },
-                                                  "description": null
-                                                },
-                                                {
-                                                  "name": "b",
-                                                  "wtype": {
-                                                    "_type": "ARC4UIntN",
-                                                    "name": "arc4.uint128",
-                                                    "immutable": true,
-                                                    "n": 128,
-                                                    "arc4_alias": null,
-                                                    "source_location": null
-                                                  },
-                                                  "description": null
-                                                },
-                                                {
-                                                  "name": "c",
-                                                  "wtype": {
-                                                    "_type": "ARC4UIntN",
-                                                    "name": "arc4.uint256",
-                                                    "immutable": true,
-                                                    "n": 256,
-                                                    "arc4_alias": null,
-                                                    "source_location": null
-                                                  },
-                                                  "description": null
-                                                },
-                                                {
-                                                  "name": "f",
-                                                  "wtype": {
-                                                    "_type": "ARC4UIntN",
-                                                    "name": "arc4.uint64",
-                                                    "immutable": true,
-                                                    "n": 64,
-                                                    "arc4_alias": null,
-                                                    "source_location": null
-                                                  },
-                                                  "description": null
-                                                }
-                                              ],
-                                              "frozen": false,
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint128",
+                                              "immutable": true,
+                                              "n": 128,
                                               "arc4_alias": null,
-                                              "source_location": null,
-                                              "desc": null
+                                              "source_location": null
                                             },
                                             "base": {
-                                              "_type": "StateGet",
+                                              "_type": "FieldExpression",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                                 "line": 417,
-                                                "end_line": 418,
+                                                "end_line": 420,
                                                 "comment_lines": 0,
                                                 "column": null,
                                                 "end_column": null
                                               },
-                                              "field": {
-                                                "_type": "BoxValueExpression",
+                                              "wtype": {
+                                                "_type": "ARC4Struct",
+                                                "name": "S",
+                                                "immutable": false,
+                                                "fields": [
+                                                  {
+                                                    "name": "a",
+                                                    "wtype": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint32",
+                                                      "immutable": true,
+                                                      "n": 32,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "description": null
+                                                  },
+                                                  {
+                                                    "name": "b",
+                                                    "wtype": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint128",
+                                                      "immutable": true,
+                                                      "n": 128,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "description": null
+                                                  },
+                                                  {
+                                                    "name": "c",
+                                                    "wtype": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint256",
+                                                      "immutable": true,
+                                                      "n": 256,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "description": null
+                                                  },
+                                                  {
+                                                    "name": "f",
+                                                    "wtype": {
+                                                      "_type": "ARC4UIntN",
+                                                      "name": "arc4.uint64",
+                                                      "immutable": true,
+                                                      "n": 64,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "description": null
+                                                  }
+                                                ],
+                                                "frozen": false,
+                                                "arc4_alias": null,
+                                                "source_location": null,
+                                                "desc": null
+                                              },
+                                              "base": {
+                                                "_type": "StateGet",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
                                                   "line": 417,
@@ -3351,93 +3377,123 @@
                                                   "column": null,
                                                   "end_column": null
                                                 },
-                                                "wtype": {
-                                                  "_type": "ARC4Struct",
-                                                  "name": "X",
-                                                  "immutable": false,
-                                                  "fields": [
-                                                    {
-                                                      "name": "a",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint256",
-                                                        "immutable": true,
-                                                        "n": 256,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
+                                                "field": {
+                                                  "_type": "BoxValueExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                                    "line": 417,
+                                                    "end_line": 418,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "ARC4Struct",
+                                                    "name": "X",
+                                                    "immutable": false,
+                                                    "fields": [
+                                                      {
+                                                        "name": "a",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint256",
+                                                          "immutable": true,
+                                                          "n": 256,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
                                                       },
-                                                      "description": null
+                                                      {
+                                                        "name": "s",
+                                                        "wtype": {
+                                                          "_type": "ARC4Struct",
+                                                          "name": "S",
+                                                          "immutable": false,
+                                                          "fields": [
+                                                            {
+                                                              "name": "a",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint32",
+                                                                "immutable": true,
+                                                                "n": 32,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            },
+                                                            {
+                                                              "name": "b",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint128",
+                                                                "immutable": true,
+                                                                "n": 128,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            },
+                                                            {
+                                                              "name": "c",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint256",
+                                                                "immutable": true,
+                                                                "n": 256,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            },
+                                                            {
+                                                              "name": "f",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint64",
+                                                                "immutable": true,
+                                                                "n": 64,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            }
+                                                          ],
+                                                          "frozen": false,
+                                                          "arc4_alias": null,
+                                                          "source_location": null,
+                                                          "desc": null
+                                                        },
+                                                        "description": null
+                                                      }
+                                                    ],
+                                                    "frozen": false,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
+                                                  },
+                                                  "key": {
+                                                    "_type": "BytesConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
+                                                      "line": 417,
+                                                      "end_line": 418,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
                                                     },
-                                                    {
-                                                      "name": "s",
-                                                      "wtype": {
-                                                        "_type": "ARC4Struct",
-                                                        "name": "S",
-                                                        "immutable": false,
-                                                        "fields": [
-                                                          {
-                                                            "name": "a",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint32",
-                                                              "immutable": true,
-                                                              "n": 32,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          },
-                                                          {
-                                                            "name": "b",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint128",
-                                                              "immutable": true,
-                                                              "n": 128,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          },
-                                                          {
-                                                            "name": "c",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint256",
-                                                              "immutable": true,
-                                                              "n": 256,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          },
-                                                          {
-                                                            "name": "f",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint64",
-                                                              "immutable": true,
-                                                              "n": 64,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          }
-                                                        ],
-                                                        "frozen": false,
-                                                        "arc4_alias": null,
-                                                        "source_location": null,
-                                                        "desc": null
-                                                      },
-                                                      "description": null
-                                                    }
-                                                  ],
-                                                  "frozen": false,
-                                                  "arc4_alias": null,
-                                                  "source_location": null,
-                                                  "desc": null
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "box_key",
+                                                      "immutable": true
+                                                    },
+                                                    "value": "cm",
+                                                    "encoding": "utf8"
+                                                  },
+                                                  "exists_assertion_message": null
                                                 },
-                                                "key": {
+                                                "default": {
                                                   "_type": "BytesConstant",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
@@ -3448,123 +3504,105 @@
                                                     "end_column": null
                                                   },
                                                   "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "box_key",
-                                                    "immutable": true
+                                                    "_type": "ARC4Struct",
+                                                    "name": "X",
+                                                    "immutable": false,
+                                                    "fields": [
+                                                      {
+                                                        "name": "a",
+                                                        "wtype": {
+                                                          "_type": "ARC4UIntN",
+                                                          "name": "arc4.uint256",
+                                                          "immutable": true,
+                                                          "n": 256,
+                                                          "arc4_alias": null,
+                                                          "source_location": null
+                                                        },
+                                                        "description": null
+                                                      },
+                                                      {
+                                                        "name": "s",
+                                                        "wtype": {
+                                                          "_type": "ARC4Struct",
+                                                          "name": "S",
+                                                          "immutable": false,
+                                                          "fields": [
+                                                            {
+                                                              "name": "a",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint32",
+                                                                "immutable": true,
+                                                                "n": 32,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            },
+                                                            {
+                                                              "name": "b",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint128",
+                                                                "immutable": true,
+                                                                "n": 128,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            },
+                                                            {
+                                                              "name": "c",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint256",
+                                                                "immutable": true,
+                                                                "n": 256,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            },
+                                                            {
+                                                              "name": "f",
+                                                              "wtype": {
+                                                                "_type": "ARC4UIntN",
+                                                                "name": "arc4.uint64",
+                                                                "immutable": true,
+                                                                "n": 64,
+                                                                "arc4_alias": null,
+                                                                "source_location": null
+                                                              },
+                                                              "description": null
+                                                            }
+                                                          ],
+                                                          "frozen": false,
+                                                          "arc4_alias": null,
+                                                          "source_location": null,
+                                                          "desc": null
+                                                        },
+                                                        "description": null
+                                                      }
+                                                    ],
+                                                    "frozen": false,
+                                                    "arc4_alias": null,
+                                                    "source_location": null,
+                                                    "desc": null
                                                   },
-                                                  "value": "cm",
-                                                  "encoding": "utf8"
-                                                },
-                                                "exists_assertion_message": null
+                                                  "value": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                                                  "encoding": "base16"
+                                                }
                                               },
-                                              "default": {
-                                                "_type": "BytesConstant",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_memory_to_storage_function_ptr.sol",
-                                                  "line": 417,
-                                                  "end_line": 418,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "ARC4Struct",
-                                                  "name": "X",
-                                                  "immutable": false,
-                                                  "fields": [
-                                                    {
-                                                      "name": "a",
-                                                      "wtype": {
-                                                        "_type": "ARC4UIntN",
-                                                        "name": "arc4.uint256",
-                                                        "immutable": true,
-                                                        "n": 256,
-                                                        "arc4_alias": null,
-                                                        "source_location": null
-                                                      },
-                                                      "description": null
-                                                    },
-                                                    {
-                                                      "name": "s",
-                                                      "wtype": {
-                                                        "_type": "ARC4Struct",
-                                                        "name": "S",
-                                                        "immutable": false,
-                                                        "fields": [
-                                                          {
-                                                            "name": "a",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint32",
-                                                              "immutable": true,
-                                                              "n": 32,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          },
-                                                          {
-                                                            "name": "b",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint128",
-                                                              "immutable": true,
-                                                              "n": 128,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          },
-                                                          {
-                                                            "name": "c",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint256",
-                                                              "immutable": true,
-                                                              "n": 256,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          },
-                                                          {
-                                                            "name": "f",
-                                                            "wtype": {
-                                                              "_type": "ARC4UIntN",
-                                                              "name": "arc4.uint64",
-                                                              "immutable": true,
-                                                              "n": 64,
-                                                              "arc4_alias": null,
-                                                              "source_location": null
-                                                            },
-                                                            "description": null
-                                                          }
-                                                        ],
-                                                        "frozen": false,
-                                                        "arc4_alias": null,
-                                                        "source_location": null,
-                                                        "desc": null
-                                                      },
-                                                      "description": null
-                                                    }
-                                                  ],
-                                                  "frozen": false,
-                                                  "arc4_alias": null,
-                                                  "source_location": null,
-                                                  "desc": null
-                                                },
-                                                "value": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                                                "encoding": "base16"
-                                              }
+                                              "name": "s"
                                             },
-                                            "name": "s"
+                                            "name": "b"
                                           },
-                                          "name": "b"
-                                        },
-                                        "error_message": null
+                                          "error_message": null
+                                        }
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048577
                                 }
                               ]
                             },
@@ -4594,7 +4632,7 @@
                                     "source_location": null,
                                     "desc": null
                                   },
-                                  "name": "m"
+                                  "name": "m__42"
                                 },
                                 "name": "s"
                               },
@@ -5258,7 +5296,8 @@
                         "value": false
                       },
                       "error_message": "invalid function pointer",
-                      "comment": "invalid function pointer"
+                      "comment": "invalid function pointer",
+                      "explicit": true
                     }
                   }
                 ],
@@ -5499,7 +5538,8 @@
                         "value": false
                       },
                       "error_message": "unknown function selector in self-call dispatch",
-                      "comment": "unknown function selector in self-call dispatch"
+                      "comment": "unknown function selector in self-call dispatch",
+                      "explicit": true
                     }
                   }
                 ],

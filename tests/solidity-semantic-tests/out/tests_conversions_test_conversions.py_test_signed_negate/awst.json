@@ -1089,7 +1089,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1235,7 +1236,8 @@
                   }
                 },
                 "error_message": "signed negation overflow",
-                "comment": "signed negation overflow"
+                "comment": "signed negation overflow",
+                "explicit": true
               }
             },
             {
@@ -1970,7 +1972,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2132,7 +2135,7 @@
                     "immutable": true
                   },
                   "left": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                       "line": 572,
@@ -2146,8 +2149,45 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 0,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                        "line": 572,
+                        "end_line": 577,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                            "line": 576,
+                            "end_line": 577,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 0,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   },
                   "op": "^",
                   "right": {
@@ -2503,7 +2543,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2649,7 +2690,8 @@
                   }
                 },
                 "error_message": "ABI validation",
-                "comment": "ABI validation"
+                "comment": "ABI validation",
+                "explicit": true
               }
             },
             {
@@ -2810,7 +2852,8 @@
                   }
                 },
                 "error_message": "signed negation overflow",
-                "comment": "signed negation overflow"
+                "comment": "signed negation overflow",
+                "explicit": true
               }
             },
             {
@@ -2971,7 +3014,8 @@
                   }
                 },
                 "error_message": "overflow",
-                "comment": "overflow"
+                "comment": "overflow",
+                "explicit": true
               }
             },
             {
@@ -3018,7 +3062,7 @@
                     "immutable": true
                   },
                   "left": {
-                    "_type": "BigUIntBinaryOperation",
+                    "_type": "CommaExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                       "line": 783,
@@ -3032,27 +3076,13 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "left": {
-                      "_type": "BigUIntBinaryOperation",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                        "line": 791,
-                        "end_line": 807,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "left": {
-                        "_type": "BigUIntBinaryOperation",
+                    "expressions": [
+                      {
+                        "_type": "AssignmentExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                          "line": 791,
-                          "end_line": 807,
+                          "line": 783,
+                          "end_line": 830,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -3062,12 +3092,12 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "left": {
-                          "_type": "ReinterpretCast",
+                        "target": {
+                          "_type": "VarExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                            "line": 791,
-                            "end_line": 807,
+                            "line": 783,
+                            "end_line": 830,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
@@ -3077,8 +3107,25 @@
                             "name": "biguint",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "BytesUnaryOperation",
+                          "name": "__checked_1"
+                        },
+                        "value": {
+                          "_type": "BigUIntBinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                            "line": 783,
+                            "end_line": 830,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "BigUIntBinaryOperation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                               "line": 791,
@@ -3088,14 +3135,12 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "op": "~",
-                            "expr": {
-                              "_type": "IntrinsicCall",
+                            "left": {
+                              "_type": "BigUIntBinaryOperation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                                 "line": 791,
@@ -3105,16 +3150,27 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
                               },
-                              "op_code": "extract3",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
+                              "left": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                  "line": 791,
+                                  "end_line": 807,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "expr": {
+                                  "_type": "BytesUnaryOperation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                                     "line": 791,
@@ -3129,199 +3185,69 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                        "line": 791,
-                                        "end_line": 807,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                            "line": 791,
-                                            "end_line": 807,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 32,
-                                          "teal_alias": null
-                                        }
-                                      ]
+                                  "op": "~",
+                                  "expr": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                      "line": 791,
+                                      "end_line": 807,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
                                     },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                        "line": 791,
-                                        "end_line": 807,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "VarExpression",
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract3",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                          "line": 792,
+                                          "line": 791,
                                           "end_line": 807,
                                           "comment_lines": 0,
                                           "column": null,
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
                                         },
-                                        "name": "amountRemaining"
-                                      }
-                                    }
-                                  ]
-                                },
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                    "line": 791,
-                                    "end_line": 807,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "op_code": "-",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                        "line": 791,
-                                        "end_line": 807,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "op_code": "len",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                            "line": 791,
-                                            "end_line": 807,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "concat",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                                "line": 791,
-                                                "end_line": 807,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "bzero",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntegerConstant",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                                    "line": 791,
-                                                    "end_line": 807,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "value": 32,
-                                                  "teal_alias": null
-                                                }
-                                              ]
+                                        "op_code": "concat",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                              "line": 791,
+                                              "end_line": 807,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
                                             },
-                                            {
-                                              "_type": "ReinterpretCast",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                                "line": 791,
-                                                "end_line": 807,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "expr": {
-                                                "_type": "VarExpression",
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "bzero",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                                  "line": 792,
+                                                  "line": 791,
                                                   "end_line": 807,
                                                   "comment_lines": 0,
                                                   "column": null,
@@ -3329,42 +3255,305 @@
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "biguint",
+                                                  "name": "uint64",
                                                   "immutable": true
                                                 },
-                                                "name": "amountRemaining"
+                                                "value": 32,
+                                                "teal_alias": null
                                               }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "ReinterpretCast",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                              "line": 791,
+                                              "end_line": 807,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "expr": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                                "line": 792,
+                                                "end_line": 807,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "amountRemaining"
                                             }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                        "line": 791,
-                                        "end_line": 807,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                          "line": 791,
+                                          "end_line": 807,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "-",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                              "line": 791,
+                                              "end_line": 807,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "op_code": "len",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                                  "line": 791,
+                                                  "end_line": 807,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "concat",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                                      "line": 791,
+                                                      "end_line": 807,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "bzero",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntegerConstant",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                                          "line": 791,
+                                                          "end_line": 807,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "WType",
+                                                          "name": "uint64",
+                                                          "immutable": true
+                                                        },
+                                                        "value": 32,
+                                                        "teal_alias": null
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_type": "ReinterpretCast",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                                      "line": 791,
+                                                      "end_line": 807,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "expr": {
+                                                      "_type": "VarExpression",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                                        "line": 792,
+                                                        "end_line": 807,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "biguint",
+                                                        "immutable": true
+                                                      },
+                                                      "name": "amountRemaining"
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                              "line": 791,
+                                              "end_line": 807,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "value": 32,
-                                      "teal_alias": null
-                                    }
-                                  ]
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                          "line": 791,
+                                          "end_line": 807,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 32,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  }
+                                }
+                              },
+                              "op": "+",
+                              "right": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                  "line": 791,
+                                  "end_line": 807,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
                                 },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "value": 1,
+                                "teal_alias": null
+                              }
+                            },
+                            "op": "%",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                "line": 791,
+                                "end_line": 807,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                              "teal_alias": null
+                            }
+                          },
+                          "op": "*",
+                          "right": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                              "line": 783,
+                              "end_line": 830,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                                "line": 783,
+                                "end_line": 830,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "itob",
+                              "immediates": [],
+                              "stack_args": [
                                 {
-                                  "_type": "IntegerConstant",
+                                  "_type": "VarExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                                    "line": 791,
-                                    "end_line": 807,
+                                    "line": 812,
+                                    "end_line": 829,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
@@ -3374,71 +3563,15 @@
                                     "name": "uint64",
                                     "immutable": true
                                   },
-                                  "value": 32,
-                                  "teal_alias": null
+                                  "name": "__checked_0"
                                 }
                               ]
                             }
                           }
-                        },
-                        "op": "+",
-                        "right": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                            "line": 791,
-                            "end_line": 807,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 1,
-                          "teal_alias": null
                         }
                       },
-                      "op": "%",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                          "line": 791,
-                          "end_line": 807,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                        "teal_alias": null
-                      }
-                    },
-                    "op": "*",
-                    "right": {
-                      "_type": "ReinterpretCast",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                        "line": 783,
-                        "end_line": 830,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "expr": {
-                        "_type": "IntrinsicCall",
+                      {
+                        "_type": "AssertExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                           "line": 783,
@@ -3448,38 +3581,88 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
+                          "_type": "WType",
+                          "name": "void",
+                          "immutable": true
                         },
-                        "op_code": "itob",
-                        "immediates": [],
-                        "stack_args": [
-                          {
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                            "line": 783,
+                            "end_line": 830,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
                             "_type": "VarExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
-                              "line": 812,
-                              "end_line": 829,
+                              "line": 783,
+                              "end_line": 830,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "uint64",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "name": "__checked_0"
+                            "name": "__checked_1"
+                          },
+                          "operator": "<=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                              "line": 783,
+                              "end_line": 830,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                            "teal_alias": null
                           }
-                        ]
+                        },
+                        "error_message": "overflow",
+                        "comment": "overflow",
+                        "explicit": true
+                      },
+                      {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                          "line": 783,
+                          "end_line": 830,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "__checked_1"
                       }
-                    }
+                    ]
                   },
                   "op": "//",
                   "right": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
                       "line": 782,
@@ -3493,8 +3676,45 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 1000000,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                        "line": 782,
+                        "end_line": 841,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol",
+                            "line": 834,
+                            "end_line": 841,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1000000,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   }
                 },
                 "error_message": null

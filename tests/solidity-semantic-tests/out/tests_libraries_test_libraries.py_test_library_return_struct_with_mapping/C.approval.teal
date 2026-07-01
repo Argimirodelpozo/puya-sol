@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/library_return_struct_with_mapping.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 32
     pushint 4096
     bzero
     dup
@@ -22,7 +23,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,7 +41,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -48,14 +49,25 @@ main_ternary_merge@9:
     !
     assert // not payable
     callsub Lib.get
-    pop
     load 0
     store 0
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
 main_ternary_false@8:

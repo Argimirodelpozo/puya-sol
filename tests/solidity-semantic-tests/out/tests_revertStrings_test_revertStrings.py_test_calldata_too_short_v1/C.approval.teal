@@ -41,16 +41,16 @@ main_d_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
-    dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -62,9 +62,7 @@ main_ternary_merge@9:
     !
     assert // not payable
     dup
-    extract 2 32
-    pushint 24
-    extract_uint64
+    btoi
     pushint 255
     &
     itob

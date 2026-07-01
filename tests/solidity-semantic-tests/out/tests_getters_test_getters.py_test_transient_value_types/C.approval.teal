@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 8 64
-    bytecblock 0xff 0x151f7c75 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0xff 0x151f7c75 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     pushint 4096
     bzero
     dup
@@ -77,13 +77,8 @@ main_ternary_merge@15:
     replace2 31
     store 5
     callsub x
-    dig 1
-    swap
     concat
-    callsub x
-    uncover 2
-    swap
-    concat
+    dup
     len
     intc_2 // 8
     -
@@ -97,8 +92,6 @@ main_ternary_merge@15:
     bz main_ternary_false@17
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@18:
     dup
@@ -148,8 +141,6 @@ x_ternary_merge@3:
     bz x_ternary_false@5
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     retsub
 
 x_ternary_false@5:

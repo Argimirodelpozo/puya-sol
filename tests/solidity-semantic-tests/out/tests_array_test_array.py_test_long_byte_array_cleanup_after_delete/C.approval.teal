@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" "__ctor_pending" 0x151f7c75 "__dyn_storage"
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "__dyn_storage"
     intc_2 // 0
     pushint 4096
     bzero
@@ -102,20 +102,26 @@ main_ternary_merge@28:
     bury 1
 
 main_while_top@29:
-    dup
-    pushbytes 0x60
-    b<
+    pushint 96
+    itob
+    dig 1
+    b>
     bz main_after_while@31
     bytec_1 // "testArray"
     box_get
     assert // box exists
     intc_3 // 8
     bzero
-    dig 2
-    pushbytes 0x01
+    intc_0 // 1
+    itob
+    dig 3
+    dup
+    cover 4
     b+
     dup
-    bury 4
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     concat
     dup
     len
@@ -133,6 +139,13 @@ main_while_top@29:
     bytec_1 // "testArray"
     swap
     box_put
+    pushbytes 0x01
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 1
     b main_while_top@29
 
 main_after_while@31:
@@ -277,7 +290,7 @@ main_ternary_merge@36:
     concat
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -300,8 +313,13 @@ main_ternary_merge@41:
     !
     assert // not payable
     callsub getArrayDataAreaSlot
-    pushbytes 0x03
+    pushint 3
+    itob
     b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -310,7 +328,7 @@ main_ternary_merge@41:
     intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -323,7 +341,7 @@ main_ternary_false@40:
 
 main_getArrayDataAreaSlot_route@6:
     callsub getArrayDataAreaSlot
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -364,7 +382,7 @@ __storage_read:
     retsub
 
 __storage_read_else_body@2:
-    bytec 4 // "__dyn_storage"
+    bytec 5 // "__dyn_storage"
     pushint 8192
     box_create
     pop
@@ -373,7 +391,7 @@ __storage_read_else_body@2:
     %
     intc_1 // 32
     *
-    bytec 4 // "__dyn_storage"
+    bytec 5 // "__dyn_storage"
     swap
     intc_1 // 32
     box_extract
@@ -382,6 +400,9 @@ __storage_read_else_body@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot() -> bytes:
 getArrayDataAreaSlot:
+    proto 0 1
+    intc_2 // 0
+    pushbytes ""
     txn GroupIndex
     bz getArrayDataAreaSlot_ternary_false@2
     txn GroupIndex
@@ -401,12 +422,22 @@ getArrayDataAreaSlot_ternary_merge@3:
     load 0
     extract 0 32
     keccak256
+    dup
+    frame_bury 0
     load 0
     store 0
-    dup
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     b==
+    dup
+    frame_bury 1
+    bnz getArrayDataAreaSlot_after_if_else@5
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+getArrayDataAreaSlot_after_if_else@5:
+    frame_dig 1
     assert
+    frame_dig 0
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
@@ -417,6 +448,7 @@ getArrayDataAreaSlot_ternary_merge@3:
     intc_1 // 32
     bzero
     b|
+    frame_bury 0
     retsub
 
 getArrayDataAreaSlot_ternary_false@2:

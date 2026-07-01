@@ -1087,7 +1087,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1228,7 +1229,7 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "name": "b"
+                "name": "b__8"
               },
               "value": {
                 "_type": "IntegerConstant",
@@ -1274,7 +1275,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "c"
+                "name": "c__12"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -1358,7 +1359,7 @@
                   "immutable": true,
                   "length": 32
                 },
-                "name": "input"
+                "name": "input__16"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -1396,7 +1397,7 @@
                   "immediates": [],
                   "stack_args": [
                     {
-                      "_type": "IntrinsicCall",
+                      "_type": "SingleEvaluation",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
                         "line": 147,
@@ -1411,83 +1412,101 @@
                         "immutable": true,
                         "length": null
                       },
-                      "op_code": "concat",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                            "line": 147,
-                            "end_line": 171,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
+                      "source": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                          "line": 147,
+                          "end_line": 171,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                              "line": 147,
+                              "end_line": 171,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                  "line": 147,
+                                  "end_line": 171,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 32,
+                                "teal_alias": null
+                              }
+                            ]
                           },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "bzero",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntegerConstant",
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                              "line": 147,
+                              "end_line": 171,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                "line": 147,
-                                "end_line": 171,
+                                "line": 163,
+                                "end_line": 169,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
                                 "_type": "WType",
-                                "name": "uint64",
+                                "name": "biguint",
                                 "immutable": true
                               },
-                              "value": 32,
-                              "teal_alias": null
+                              "name": "_input"
                             }
-                          ]
-                        },
-                        {
-                          "_type": "ReinterpretCast",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                            "line": 147,
-                            "end_line": 171,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "expr": {
-                            "_type": "VarExpression",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                              "line": 163,
-                              "end_line": 169,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "name": "_input"
                           }
-                        }
-                      ]
+                        ]
+                      },
+                      "_id": 1048577
                     },
                     {
                       "_type": "UInt64BinaryOperation",
@@ -1523,7 +1542,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
                               "line": 147,
@@ -1538,83 +1557,101 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                  "line": 147,
-                                  "end_line": 171,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                "line": 147,
+                                "end_line": 171,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                    "line": 147,
+                                    "end_line": 171,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                        "line": 147,
+                                        "end_line": 171,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 32,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                    "line": 147,
+                                    "end_line": 171,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                      "line": 147,
-                                      "end_line": 171,
+                                      "line": 163,
+                                      "end_line": 169,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "biguint",
                                       "immutable": true
                                     },
-                                    "value": 32,
-                                    "teal_alias": null
+                                    "name": "_input"
                                   }
-                                ]
-                              },
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                  "line": 147,
-                                  "end_line": 171,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                    "line": 163,
-                                    "end_line": 169,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "name": "_input"
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "_id": 1048577
                           }
                         ]
                       },
@@ -1911,7 +1948,7 @@
                                           "immutable": true,
                                           "length": 32
                                         },
-                                        "name": "input"
+                                        "name": "input__16"
                                       }
                                     }
                                   ]
@@ -1972,7 +2009,7 @@
                                             "name": "uint64",
                                             "immutable": true
                                           },
-                                          "name": "b"
+                                          "name": "b__8"
                                         }
                                       ]
                                     }
@@ -2012,7 +2049,7 @@
                                   "immutable": true,
                                   "length": 32
                                 },
-                                "name": "input"
+                                "name": "input__16"
                               }
                             }
                           ]
@@ -2037,7 +2074,7 @@
                           "immediates": [],
                           "stack_args": [
                             {
-                              "_type": "IntrinsicCall",
+                              "_type": "SingleEvaluation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
                                 "line": 198,
@@ -2052,83 +2089,101 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                    "line": 198,
-                                    "end_line": 244,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                  "line": 198,
+                                  "end_line": 244,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                      "line": 198,
+                                      "end_line": 244,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                          "line": 198,
+                                          "end_line": 244,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 32,
+                                        "teal_alias": null
+                                      }
+                                    ]
                                   },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                      "line": 198,
+                                      "end_line": 244,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "VarExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                        "line": 198,
-                                        "end_line": 244,
+                                        "line": 242,
+                                        "end_line": 243,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
                                       },
                                       "wtype": {
                                         "_type": "WType",
-                                        "name": "uint64",
+                                        "name": "biguint",
                                         "immutable": true
                                       },
-                                      "value": 32,
-                                      "teal_alias": null
+                                      "name": "c__12"
                                     }
-                                  ]
-                                },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                    "line": 198,
-                                    "end_line": 244,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                      "line": 242,
-                                      "end_line": 243,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "name": "c"
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "_id": 1048578
                             },
                             {
                               "_type": "UInt64BinaryOperation",
@@ -2164,7 +2219,7 @@
                                 "immediates": [],
                                 "stack_args": [
                                   {
-                                    "_type": "IntrinsicCall",
+                                    "_type": "SingleEvaluation",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
                                       "line": 198,
@@ -2179,83 +2234,101 @@
                                       "immutable": true,
                                       "length": null
                                     },
-                                    "op_code": "concat",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntrinsicCall",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                          "line": 198,
-                                          "end_line": 244,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
+                                    "source": {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                        "line": 198,
+                                        "end_line": 244,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "concat",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                            "line": 198,
+                                            "end_line": 244,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "bzero",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                                "line": 198,
+                                                "end_line": 244,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 32,
+                                              "teal_alias": null
+                                            }
+                                          ]
                                         },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "op_code": "bzero",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "IntegerConstant",
+                                        {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
+                                            "line": 198,
+                                            "end_line": 244,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "expr": {
+                                            "_type": "VarExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                              "line": 198,
-                                              "end_line": 244,
+                                              "line": 242,
+                                              "end_line": 243,
                                               "comment_lines": 0,
                                               "column": null,
                                               "end_column": null
                                             },
                                             "wtype": {
                                               "_type": "WType",
-                                              "name": "uint64",
+                                              "name": "biguint",
                                               "immutable": true
                                             },
-                                            "value": 32,
-                                            "teal_alias": null
+                                            "name": "c__12"
                                           }
-                                        ]
-                                      },
-                                      {
-                                        "_type": "ReinterpretCast",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                          "line": 198,
-                                          "end_line": 244,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "expr": {
-                                          "_type": "VarExpression",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed.sol",
-                                            "line": 242,
-                                            "end_line": 243,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "biguint",
-                                            "immutable": true
-                                          },
-                                          "name": "c"
                                         }
-                                      }
-                                    ]
+                                      ]
+                                    },
+                                    "_id": 1048578
                                   }
                                 ]
                               },

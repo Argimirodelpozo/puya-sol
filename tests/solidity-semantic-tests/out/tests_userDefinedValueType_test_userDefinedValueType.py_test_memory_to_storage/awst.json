@@ -969,7 +969,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -1547,7 +1548,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2144,7 +2146,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2657,7 +2660,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3178,7 +3182,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -4461,7 +4466,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -4655,7 +4661,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                               "line": 146,
@@ -4670,30 +4676,82 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                  "line": 146,
-                                  "end_line": 166,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                "line": 146,
+                                "end_line": 166,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                    "line": 146,
+                                    "end_line": 166,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                        "line": 146,
+                                        "end_line": 166,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 8,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                    "line": 146,
+                                    "end_line": 166,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                                       "line": 146,
@@ -4704,49 +4762,15 @@
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "biguint",
                                       "immutable": true
                                     },
-                                    "value": 8,
-                                    "teal_alias": null
+                                    "name": "key0"
                                   }
-                                ]
-                              },
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                  "line": 146,
-                                  "end_line": 166,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                    "line": 146,
-                                    "end_line": 166,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "name": "key0"
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "_id": 1048577
                           },
                           {
                             "_type": "UInt64BinaryOperation",
@@ -4782,7 +4806,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                                     "line": 146,
@@ -4797,30 +4821,82 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                        "line": 146,
-                                        "end_line": 166,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                      "line": 146,
+                                      "end_line": 166,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                          "line": 146,
+                                          "end_line": 166,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                              "line": 146,
+                                              "end_line": 166,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                          "line": 146,
+                                          "end_line": 166,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "VarExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                                             "line": 146,
@@ -4831,49 +4907,15 @@
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 8,
-                                          "teal_alias": null
+                                          "name": "key0"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                        "line": 146,
-                                        "end_line": 166,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                          "line": 146,
-                                          "end_line": 166,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "key0"
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048577
                                 }
                               ]
                             },
@@ -5236,7 +5278,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -5447,7 +5490,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                               "line": 172,
@@ -5462,30 +5505,82 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                  "line": 172,
-                                  "end_line": 187,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                "line": 172,
+                                "end_line": 187,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                    "line": 172,
+                                    "end_line": 187,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                        "line": 172,
+                                        "end_line": 187,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 8,
+                                      "teal_alias": null
+                                    }
+                                  ]
                                 },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                    "line": 172,
+                                    "end_line": 187,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                                       "line": 172,
@@ -5496,49 +5591,15 @@
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "biguint",
                                       "immutable": true
                                     },
-                                    "value": 8,
-                                    "teal_alias": null
+                                    "name": "key0"
                                   }
-                                ]
-                              },
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                  "line": 172,
-                                  "end_line": 187,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "expr": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                    "line": 172,
-                                    "end_line": 187,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "name": "key0"
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "_id": 1048578
                           },
                           {
                             "_type": "UInt64BinaryOperation",
@@ -5574,7 +5635,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                                     "line": 172,
@@ -5589,30 +5650,82 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                        "line": 172,
-                                        "end_line": 187,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                      "line": 172,
+                                      "end_line": 187,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                          "line": 172,
+                                          "end_line": 187,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                              "line": 172,
+                                              "end_line": 187,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
+                                          "line": 172,
+                                          "end_line": 187,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "VarExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
                                             "line": 172,
@@ -5623,49 +5736,15 @@
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 8,
-                                          "teal_alias": null
+                                          "name": "key0"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                        "line": 172,
-                                        "end_line": 187,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/memory_to_storage.sol",
-                                          "line": 172,
-                                          "end_line": 187,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "key0"
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048578
                                 }
                               ]
                             },

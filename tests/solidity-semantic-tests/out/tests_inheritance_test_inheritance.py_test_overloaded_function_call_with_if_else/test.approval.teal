@@ -158,6 +158,10 @@ f(u256,u256)_ternary_merge@3:
     frame_dig -1
     b+
     dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_1 // 32
     <=

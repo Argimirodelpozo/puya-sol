@@ -1,0 +1,125 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/getter_abi_validation.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 255 32 0
+    bytecblock "__ctor_pending" 0x "m" 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
+    bytec_1 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xe01b61b8 // method "__postInit()void", method "m(uint64)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_m_route@6
+    err
+
+main_m_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    dupn 2
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    itob
+    bytec_2 // "m"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_3 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_2 // "m"
+    pushint 2
+    box_create
+    pop
+    pushint 99
+    itob
+    bytec_3 // 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034
+    box_del
+    pop
+    bytec_3 // 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034
+    swap
+    box_put
+    pushint 42
+    itob
+    bytec 4 // 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
+    box_del
+    pop
+    bytec 4 // 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
+    swap
+    box_put
+    intc_0 // 1
+    return

@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_push_pop.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 32 0 1
-    bytecblock "storageArray" "__ctor_pending" 0x068101 0x
-    intc_2 // 0
+    intcblock 2 0 32 1
+    bytecblock "storageArray" "__ctor_pending" 0x068101
+    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -47,7 +47,7 @@ main_set_get_length_route@6:
     dup
     bury 2
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -75,7 +75,7 @@ main_while_top@33:
     itxn_field ApprovalProgram
     bytec_2 // 0x068101
     itxn_field ClearStateProgram
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_submit
     b main_while_top@33
@@ -94,21 +94,21 @@ main_while_top@14:
 main_ternary_merge@17:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
     dig 1
     b<
     bz main_while_top@19
     bytec_0 // "storageArray"
-    intc_2 // 0
+    intc_1 // 0
     intc_0 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 32
+    intc_2 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -119,16 +119,16 @@ main_ternary_merge@17:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_2 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
     b main_while_top@14
@@ -147,14 +147,15 @@ main_while_top@19:
 main_ternary_merge@22:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
-    bytec_3 // 0x
+    intc_1 // 0
+    itob
     b>
     bz main_after_while@24
     bytec_0 // "storageArray"
-    intc_2 // 0
+    intc_1 // 0
     intc_0 // 2
     box_extract
     btoi
@@ -164,22 +165,22 @@ main_ternary_merge@22:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 32
-    bytec_3 // 0x
+    intc_2 // 32
+    pushbytes 0x
     box_splice
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 32
+    intc_2 // 32
     -
     bytec_0 // "storageArray"
     swap
@@ -200,10 +201,10 @@ main_after_while@24:
 main_ternary_merge@27:
     intc_0 // 2
     -
-    intc_1 // 32
+    intc_2 // 32
     /
     itob
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -226,7 +227,7 @@ main_ternary_false@16:
     b main_ternary_merge@17
 
 main_ternary_false@12:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main___postInit_route@5:
@@ -234,7 +235,7 @@ main___postInit_route@5:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "storageArray"
     intc_0 // 2

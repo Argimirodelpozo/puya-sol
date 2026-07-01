@@ -1,0 +1,110 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/_byte.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 64
+    intc_2 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xbeb74cd1 // method "byteF(uint512,uint512)uint256"
+    txna ApplicationArgs 0
+    match main_byteF_route@4
+    err
+
+main_byteF_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    load 0
+    store 0
+    intc_1 // 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushint 8
+    bzero
+    dig 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 1
+    extract3
+    load 0
+    store 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

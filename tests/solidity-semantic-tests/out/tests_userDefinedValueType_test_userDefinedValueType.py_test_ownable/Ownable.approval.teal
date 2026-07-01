@@ -85,9 +85,9 @@ main_ternary_merge@20:
     app_global_get_ex
     assert // check owner exists
     ==
-    bnz main_after_if_else@22
+    bnz main_after_if_else@24
     global CallerApplicationID
-    assert // OnlyOwner
+    bz main_if_body@32
     intc_2 // 24
     bzero
     global CallerApplicationID
@@ -98,14 +98,19 @@ main_ternary_merge@20:
     app_global_get_ex
     assert // check owner exists
     ==
-    assert // OnlyOwner
+    bz main_if_body@32
 
-main_after_if_else@22:
+main_after_if_else@24:
     bytec_0 // "owner"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
+
+main_if_body@32:
+    pushbytes 0x7b9d8e89 // method "OnlyOwner()"
+    log
+    err // OnlyOwner
 
 main_ternary_false@19:
     intc_0 // 0
@@ -120,13 +125,13 @@ main_setOwner_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@29:
     !
     assert // not payable
     txn Sender
@@ -135,9 +140,9 @@ main_ternary_merge@27:
     app_global_get_ex
     assert // check owner exists
     ==
-    bnz main_after_if_else@29
+    bnz main_after_if_else@33
     global CallerApplicationID
-    assert // OnlyOwner
+    bz main_if_body@32
     intc_2 // 24
     bzero
     global CallerApplicationID
@@ -148,9 +153,10 @@ main_ternary_merge@27:
     app_global_get_ex
     assert // check owner exists
     ==
-    assert // OnlyOwner
+    bnz main_after_if_else@33
+    b main_if_body@32
 
-main_after_if_else@29:
+main_after_if_else@33:
     intc_0 // 0
     bytec_0 // "owner"
     app_global_get_ex
@@ -169,9 +175,9 @@ main_after_if_else@29:
     intc_1 // 1
     return
 
-main_ternary_false@26:
+main_ternary_false@28:
     intc_0 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@29
 
 main___postInit_route@5:
     bytec_1 // "__ctor_pending"

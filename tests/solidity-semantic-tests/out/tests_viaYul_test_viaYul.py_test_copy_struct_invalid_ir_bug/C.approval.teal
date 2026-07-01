@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/copy_struct_invalid_ir_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 12 1 2
+    intcblock 0 12 2 1
     bytecblock "array" 0x0c88cb4e "externalCalled" "__ctor_pending" 0x0001
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -25,9 +26,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_2 // 1
+    intc_3 // 1
     app_global_put
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -47,7 +48,7 @@ main_f_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -73,7 +74,7 @@ main_ternary_merge@14:
     intc_1 // 12
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
-    intc_3 // 2
+    intc_2 // 2
     intc_1 // 12
     box_extract // on error: index out of bounds
     bytec 4 // 0x0001
@@ -91,7 +92,7 @@ main_ternary_merge@14:
     intc_1 // 12
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
-    intc_3 // 2
+    intc_2 // 2
     intc_1 // 12
     box_extract // on error: index out of bounds
     extract 0 12
@@ -101,7 +102,7 @@ main_ternary_merge@14:
     ==
     bz main_else_body@16
     bytec_0 // "array"
-    intc_3 // 2
+    intc_2 // 2
     intc_1 // 12
     box_extract // on error: index out of bounds
     extract 0 12
@@ -138,10 +139,16 @@ main_after_if_else@20:
     bytec_2 // "externalCalled"
     app_global_get_ex
     assert // check externalCalled exists
-    pushbytes 0x02
+    intc_2 // 2
+    itob
     b==
-    assert
-    intc_2 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@22
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@22:
     return
 
 main_else_body@19:
@@ -170,7 +177,7 @@ main_else_body@19:
 main_else_body@16:
     itxn_begin
     bytec_0 // "array"
-    intc_3 // 2
+    intc_2 // 2
     intc_1 // 12
     box_extract // on error: index out of bounds
     extract 0 12
@@ -196,7 +203,7 @@ main_ternary_false@13:
 
 main_ext_route@6:
     callsub ext
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main___postInit_route@5:
@@ -207,7 +214,7 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     bytec_0 // "array"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 0
@@ -215,7 +222,7 @@ main___postInit_route@5:
     bytec_2 // "externalCalled"
     swap
     app_global_put
-    intc_2 // 1
+    intc_3 // 1
     return
 
 
@@ -224,7 +231,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    intc_3 // 2
+    intc_2 // 2
     box_extract
     btoi
     frame_dig -5
@@ -247,7 +254,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    intc_3 // 2
+    intc_2 // 2
     +
     swap
     frame_dig -1
@@ -266,7 +273,7 @@ ext:
     txn GroupIndex
     bz ext_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 

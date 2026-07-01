@@ -1,0 +1,2408 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/immutable_tag_too_large_bug.sol.C.approval_program() -> uint64:
+main:
+    intcblock 18446744073692774400 0 1 16777216 8388608 16777215 9223372036854775808
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x01000000 "x" 0x800000 "y" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_1 // 0
+    dupn 54
+    pushbytes ""
+    dupn 26
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    itob
+    bytec_3 // "x"
+    swap
+    app_global_put
+    pushint 3
+    itob
+    bytec 5 // "y"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b!=
+    assert // signed inc/dec overflow
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b!=
+    assert // signed inc/dec overflow
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // "x"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    assert // check y exists
+    dup
+    bytec 9 // 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    assert // signed inc/dec overflow
+    pushbytes 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 9 // 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    assert // signed inc/dec overflow
+    pushbytes 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b!=
+    assert // signed inc/dec overflow
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 5 // "y"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 68
+    assert // check y exists
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    bury 82
+    assert // check x exists
+    pushbytes 0x
+    b==
+    bnz main_bool_true@36
+    dig 79
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    !
+    dig 67
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 15
+    !
+    ==
+    bz main_ternary_false@28
+    bnz main_ternary_false@23
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 80
+    b-
+    bury 35
+
+main_ternary_merge@24:
+    dig 11
+    bnz main_ternary_false@26
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 66
+    b-
+
+main_ternary_merge@27:
+    dig 35
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+
+main_ternary_merge@35:
+    bz main_bool_false@37
+
+main_bool_true@36:
+    intc_2 // 1
+
+main_bool_merge@38:
+    assert // signed arithmetic overflow
+    dig 79
+    dig 66
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 70
+    pushbytes 0x
+    b==
+    dup
+    bury 9
+    bnz main_bool_true@55
+    dig 68
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 8
+    bnz main_ternary_false@42
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 69
+    b-
+    bury 49
+
+main_ternary_merge@43:
+    dig 6
+    bnz main_ternary_false@45
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 69
+    b-
+
+main_ternary_merge@46:
+    dig 49
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    bz main_bool_false@56
+
+main_bool_true@55:
+    intc_2 // 1
+
+main_bool_merge@57:
+    assert // signed arithmetic overflow
+    pushint 8
+    bzero
+    bury 30
+    dig 68
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 83
+    dup
+    bytec 7 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    swap
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@59
+    bytec 8 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+
+main_ternary_merge@60:
+    dig 30
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc 5 // 16777215
+    &
+    intc_3 // 16777216
+    %
+    dup
+    intc 4 // 8388608
+    >=
+    bz main_ternary_false@62
+    intc_0 // 18446744073692774400
+    +
+    bury 24
+
+main_ternary_merge@63:
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 61
+    assert // check y exists
+    pushbytes 0x
+    b==
+    bnz main_bool_true@76
+    pushint 100
+    itob
+    bury 29
+    dig 58
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bz main_ternary_false@70
+    bnz main_ternary_false@68
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 59
+    b-
+
+main_ternary_merge@69:
+    dig 29
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+
+main_ternary_merge@75:
+    bz main_bool_false@77
+
+main_bool_true@76:
+    intc_2 // 1
+
+main_bool_merge@78:
+    assert // signed arithmetic overflow
+    pushint 100
+    itob
+    dig 59
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 72
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    !
+    bury 2
+    intc_2 // 1
+    itob
+    bury 29
+    bz main_bool_true@80
+    dig 70
+    dig 28
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dig 1
+    ==
+    bz main_bool_false@81
+
+main_bool_true@80:
+    intc_2 // 1
+
+main_bool_merge@82:
+    assert // signed arithmetic overflow
+    dig 70
+    dig 28
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 7 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    swap
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@84
+    bytec 8 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+
+main_ternary_merge@85:
+    dig 30
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc 5 // 16777215
+    &
+    intc_3 // 16777216
+    %
+    dup
+    intc 4 // 8388608
+    >=
+    bz main_ternary_false@87
+    intc_0 // 18446744073692774400
+    +
+    bury 23
+
+main_ternary_merge@88:
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    bytec 7 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    swap
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@90
+    bytec 8 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+
+main_ternary_merge@91:
+    dig 30
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc 5 // 16777215
+    &
+    intc_3 // 16777216
+    %
+    dup
+    intc 4 // 8388608
+    >=
+    bz main_ternary_false@93
+    intc_0 // 18446744073692774400
+    +
+    bury 22
+
+main_ternary_merge@94:
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 81
+    assert // check x exists
+    pushint 2
+    itob
+    bury 33
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bz main_ternary_false@100
+    bnz main_ternary_false@97
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 79
+    b-
+
+main_ternary_merge@98:
+    dig 32
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+
+main_ternary_merge@105:
+    bz main_bool_false@107
+    intc_2 // 1
+
+main_bool_merge@108:
+    assert // signed arithmetic overflow
+    dig 78
+    dig 32
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 68
+    dig 23
+    intc_3 // 16777216
+    %
+    dup
+    intc 4 // 8388608
+    >=
+    bz main_ternary_false@110
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@111:
+    intc 6 // 9223372036854775808
+    ^
+    intc 6 // 9223372036854775808
+    <
+    bz main_after_if_else@410
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 80
+    assert // check x exists
+    pushbytes 0x
+    b==
+    bnz main_bool_true@129
+    dig 77
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 22
+    bnz main_ternary_false@116
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 78
+    b-
+    bury 47
+
+main_ternary_merge@117:
+    dig 20
+    bnz main_ternary_false@119
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 78
+    b-
+
+main_ternary_merge@120:
+    dig 47
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    bz main_bool_false@130
+
+main_bool_true@129:
+    intc_2 // 1
+
+main_bool_merge@131:
+    assert // signed arithmetic overflow
+    dig 77
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 77
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 60
+    assert // check y exists
+    pushbytes 0x
+    b==
+    bnz main_bool_true@148
+    dig 76
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    !
+    dig 59
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 23
+    !
+    ==
+    bz main_ternary_false@140
+    bnz main_ternary_false@135
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 77
+    b-
+    bury 46
+
+main_ternary_merge@136:
+    dig 19
+    bnz main_ternary_false@138
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 58
+    b-
+
+main_ternary_merge@139:
+    dig 46
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+
+main_ternary_merge@147:
+    bz main_bool_false@149
+
+main_bool_true@148:
+    intc_2 // 1
+
+main_bool_merge@150:
+    assert // signed arithmetic overflow
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 59
+    assert // check x exists
+    pushbytes 0x
+    b!=
+    assert // division by zero
+    dig 76
+    dig 58
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 71
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b==
+    bz main_bool_false@153
+    dig 56
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b==
+    bz main_bool_false@153
+    intc_2 // 1
+
+main_bool_merge@154:
+    !
+    assert // signed division overflow
+    dig 69
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 20
+    !
+    dig 57
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 20
+    !
+    !=
+    bz main_ternary_false@169
+    dig 18
+    bnz main_ternary_false@157
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 70
+    b-
+    bury 44
+
+main_ternary_merge@158:
+    dig 17
+    bnz main_ternary_false@160
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 57
+    b-
+
+main_ternary_merge@161:
+    dig 44
+    swap
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@169
+    dig 18
+    bnz main_ternary_false@164
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 70
+    b-
+    bury 43
+
+main_ternary_merge@165:
+    dig 17
+    bnz main_ternary_false@167
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 57
+    b-
+
+main_ternary_merge@168:
+    dig 43
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 67
+
+main_ternary_merge@176:
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    assert // check y exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_else_body@179
+    dig 66
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    b<=
+    bz main_else_body@179
+    intc_2 // 1
+
+main_after_if_else@187:
+    assert
+    dig 68
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    dig 68
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    b>=
+    bz main_after_if_else@245
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    pushbytes 0x8000000000000000000000ffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    bz main_bool_false@191
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_bool_false@191
+    intc_2 // 1
+    bury 25
+
+main_bool_merge@192:
+    dig 24
+    bnz main_after_if_else@194
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@194:
+    dig 24
+    assert
+    dig 7
+    bnz main_bool_true@211
+    dig 68
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 17
+    bnz main_ternary_false@198
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 69
+    b-
+    bury 41
+
+main_ternary_merge@199:
+    dig 15
+    bnz main_ternary_false@201
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 69
+    b-
+
+main_ternary_merge@202:
+    dig 41
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    bz main_bool_false@212
+
+main_bool_true@211:
+    intc_2 // 1
+
+main_bool_merge@213:
+    assert // signed arithmetic overflow
+    dig 67
+    pushbytes 0x
+    b!=
+    assert // division by zero
+    dig 81
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b==
+    bz main_bool_false@216
+    dig 67
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b==
+    bz main_bool_false@216
+    intc_2 // 1
+
+main_bool_merge@217:
+    !
+    assert // signed division overflow
+    dig 81
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 16
+    !
+    dig 68
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 16
+    !
+    dup
+    bury 15
+    !=
+    bz main_ternary_false@232
+    dig 14
+    bnz main_ternary_false@220
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 82
+    b-
+    bury 40
+
+main_ternary_merge@221:
+    dig 13
+    bnz main_ternary_false@223
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 68
+    b-
+
+main_ternary_merge@224:
+    dig 40
+    swap
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@232
+    dig 14
+    bnz main_ternary_false@227
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 82
+    b-
+    bury 39
+
+main_ternary_merge@228:
+    dig 13
+    bnz main_ternary_false@230
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 68
+    b-
+
+main_ternary_merge@231:
+    dig 39
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 69
+
+main_ternary_merge@239:
+    dig 68
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    bury 12
+    dig 13
+    !=
+    bnz main_bool_true@242
+    dig 68
+    dig 68
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dig 11
+    ==
+    bz main_bool_false@243
+
+main_bool_true@242:
+    intc_2 // 1
+
+main_bool_merge@244:
+    assert // signed arithmetic overflow
+
+main_after_if_else@245:
+    dig 21
+    intc_3 // 16777216
+    %
+    dup
+    bury 27
+    intc 4 // 8388608
+    >=
+    dup
+    bury 11
+    bz main_ternary_false@247
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@248:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    pushbytes 0x
+    b!=
+    assert // division by zero
+    dig 22
+    intc_3 // 16777216
+    %
+    dup
+    bury 28
+    intc 4 // 8388608
+    >=
+    dup
+    bury 10
+    bz main_ternary_false@250
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@251:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@302
+    dig 8
+    bz main_ternary_false@254
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@255:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@260
+    dig 8
+    bz main_ternary_false@258
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@259:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bury 37
+
+main_ternary_merge@264:
+    dig 9
+    bz main_ternary_false@266
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@267:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@272
+    dig 9
+    bz main_ternary_false@270
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@271:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+
+main_ternary_merge@276:
+    dig 37
+    swap
+    b%
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@302
+    dig 8
+    bz main_ternary_false@279
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@280:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@285
+    dig 8
+    bz main_ternary_false@283
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@284:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bury 36
+
+main_ternary_merge@289:
+    dig 9
+    bz main_ternary_false@291
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@292:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@297
+    dig 9
+    bz main_ternary_false@295
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@296:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+
+main_ternary_merge@301:
+    dig 36
+    swap
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bytec_2 // 0x01000000
+    b%
+
+main_ternary_merge@327:
+    dig 30
+    swap
+    concat
+    bury 31
+    dig 8
+    bz main_ternary_false@329
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@330:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@381
+    dig 8
+    bz main_ternary_false@333
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@334:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@339
+    dig 8
+    bz main_ternary_false@337
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@338:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bury 33
+
+main_ternary_merge@343:
+    dig 9
+    bz main_ternary_false@345
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@346:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@351
+    dig 9
+    bz main_ternary_false@349
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@350:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+
+main_ternary_merge@355:
+    dig 33
+    swap
+    b%
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@381
+    dig 8
+    bz main_ternary_false@358
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@359:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@364
+    dig 8
+    bz main_ternary_false@362
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@363:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bury 55
+
+main_ternary_merge@368:
+    dig 9
+    bz main_ternary_false@370
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@371:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@376
+    dig 9
+    bz main_ternary_false@374
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@375:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+
+main_ternary_merge@380:
+    dig 55
+    swap
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bytec_2 // 0x01000000
+    b%
+
+main_ternary_merge@406:
+    dig 30
+    swap
+    concat
+    len
+    pushint 8
+    -
+    dig 31
+    swap
+    extract_uint64
+    intc_3 // 16777216
+    %
+    dup
+    intc 4 // 8388608
+    >=
+    bz main_ternary_false@408
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@409:
+    assert
+    dig 23
+    intc 5 // 16777215
+    &
+    itob
+    bytec 4 // 0x800000
+    b!=
+    assert // signed negation overflow
+
+main_after_if_else@410:
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 65
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    bury 7
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 65
+    assert // check y exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    ==
+    bnz main_bool_true@412
+    dig 62
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 62
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dig 6
+    ==
+    bz main_bool_false@413
+
+main_bool_true@412:
+    intc_2 // 1
+
+main_bool_merge@414:
+    assert // signed arithmetic overflow
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    bury 82
+    assert // check x exists
+    dig 62
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 62
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 75
+    pushbytes 0x
+    b==
+    bnz main_bool_true@431
+    dig 80
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    !
+    dig 75
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 8
+    !
+    ==
+    bz main_ternary_false@423
+    bnz main_ternary_false@418
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 81
+    b-
+    bury 53
+
+main_ternary_merge@419:
+    dig 4
+    bnz main_ternary_false@421
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 74
+    b-
+
+main_ternary_merge@422:
+    dig 53
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+
+main_ternary_merge@430:
+    bz main_bool_false@432
+
+main_bool_true@431:
+    intc_2 // 1
+
+main_bool_merge@433:
+    assert // signed arithmetic overflow
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 63
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    bury 5
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 63
+    assert // check y exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    !=
+    bnz main_bool_true@435
+    dig 60
+    dig 60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dig 4
+    ==
+    bz main_bool_false@436
+
+main_bool_true@435:
+    intc_2 // 1
+
+main_bool_merge@437:
+    assert // signed arithmetic overflow
+    dig 60
+    dig 60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 74
+    pushbytes 0x
+    b!=
+    assert // division by zero
+    dig 80
+    dig 74
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 73
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b==
+    bz main_bool_false@440
+    dig 72
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b==
+    bz main_bool_false@440
+    intc_2 // 1
+
+main_bool_merge@441:
+    !
+    assert // signed division overflow
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    dup
+    bury 77
+    b|
+    bury 76
+    dig 71
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 4
+    !
+    dig 73
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
+    bury 4
+    !
+    !=
+    bz main_ternary_false@456
+    dig 2
+    bnz main_ternary_false@444
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 72
+    b-
+    bury 51
+
+main_ternary_merge@445:
+    dig 1
+    bnz main_ternary_false@447
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 73
+    b-
+
+main_ternary_merge@448:
+    dig 51
+    swap
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@456
+    dig 2
+    bnz main_ternary_false@451
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 72
+    b-
+    bury 50
+
+main_ternary_merge@452:
+    dig 1
+    bnz main_ternary_false@454
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 73
+    b-
+
+main_ternary_merge@455:
+    dig 50
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@463:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    dig 75
+    b|
+    dig 76
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@454:
+    dig 72
+    b main_ternary_merge@455
+
+main_ternary_false@451:
+    dig 71
+    bury 50
+    b main_ternary_merge@452
+
+main_ternary_false@456:
+    dig 2
+    bnz main_ternary_false@458
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 72
+    b-
+    bury 48
+
+main_ternary_merge@459:
+    dig 1
+    bnz main_ternary_false@461
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 73
+    b-
+
+main_ternary_merge@462:
+    dig 48
+    swap
+    b/
+    b main_ternary_merge@463
+
+main_ternary_false@461:
+    dig 72
+    b main_ternary_merge@462
+
+main_ternary_false@458:
+    dig 71
+    bury 48
+    b main_ternary_merge@459
+
+main_ternary_false@447:
+    dig 72
+    b main_ternary_merge@448
+
+main_ternary_false@444:
+    dig 71
+    bury 51
+    b main_ternary_merge@445
+
+main_bool_false@440:
+    intc_1 // 0
+    b main_bool_merge@441
+
+main_bool_false@436:
+    intc_1 // 0
+    b main_bool_merge@437
+
+main_bool_false@432:
+    intc_1 // 0
+    b main_bool_merge@433
+
+main_ternary_false@421:
+    dig 73
+    b main_ternary_merge@422
+
+main_ternary_false@418:
+    dig 80
+    bury 53
+    b main_ternary_merge@419
+
+main_ternary_false@423:
+    bnz main_ternary_false@425
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 81
+    b-
+    bury 52
+
+main_ternary_merge@426:
+    dig 4
+    bnz main_ternary_false@428
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 74
+    b-
+
+main_ternary_merge@429:
+    dig 52
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>
+    !
+    b main_ternary_merge@430
+
+main_ternary_false@428:
+    dig 73
+    b main_ternary_merge@429
+
+main_ternary_false@425:
+    dig 80
+    bury 52
+    b main_ternary_merge@426
+
+main_bool_false@413:
+    intc_1 // 0
+    b main_bool_merge@414
+
+main_ternary_false@408:
+    b main_ternary_merge@409
+
+main_ternary_false@374:
+    dig 25
+    b main_ternary_merge@375
+
+main_ternary_false@376:
+    dig 9
+    bz main_ternary_false@378
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@379:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    b main_ternary_merge@380
+
+main_ternary_false@378:
+    dig 25
+    b main_ternary_merge@379
+
+main_ternary_false@370:
+    dig 25
+    b main_ternary_merge@371
+
+main_ternary_false@362:
+    dig 26
+    b main_ternary_merge@363
+
+main_ternary_false@364:
+    dig 8
+    bz main_ternary_false@366
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@367:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bury 55
+    b main_ternary_merge@368
+
+main_ternary_false@366:
+    dig 26
+    b main_ternary_merge@367
+
+main_ternary_false@358:
+    dig 26
+    b main_ternary_merge@359
+
+main_ternary_false@381:
+    dig 8
+    bz main_ternary_false@383
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@384:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@389
+    dig 8
+    bz main_ternary_false@387
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@388:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bury 54
+
+main_ternary_merge@393:
+    dig 9
+    bz main_ternary_false@395
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@396:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@401
+    dig 9
+    bz main_ternary_false@399
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@400:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+
+main_ternary_merge@405:
+    dig 54
+    swap
+    b%
+    b main_ternary_merge@406
+
+main_ternary_false@399:
+    dig 25
+    b main_ternary_merge@400
+
+main_ternary_false@401:
+    dig 9
+    bz main_ternary_false@403
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@404:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    b main_ternary_merge@405
+
+main_ternary_false@403:
+    dig 25
+    b main_ternary_merge@404
+
+main_ternary_false@395:
+    dig 25
+    b main_ternary_merge@396
+
+main_ternary_false@387:
+    dig 26
+    b main_ternary_merge@388
+
+main_ternary_false@389:
+    dig 8
+    bz main_ternary_false@391
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@392:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bury 54
+    b main_ternary_merge@393
+
+main_ternary_false@391:
+    dig 26
+    b main_ternary_merge@392
+
+main_ternary_false@383:
+    dig 26
+    b main_ternary_merge@384
+
+main_ternary_false@349:
+    dig 25
+    b main_ternary_merge@350
+
+main_ternary_false@351:
+    dig 9
+    bz main_ternary_false@353
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@354:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    b main_ternary_merge@355
+
+main_ternary_false@353:
+    dig 25
+    b main_ternary_merge@354
+
+main_ternary_false@345:
+    dig 25
+    b main_ternary_merge@346
+
+main_ternary_false@337:
+    dig 26
+    b main_ternary_merge@338
+
+main_ternary_false@339:
+    dig 8
+    bz main_ternary_false@341
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@342:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bury 33
+    b main_ternary_merge@343
+
+main_ternary_false@341:
+    dig 26
+    b main_ternary_merge@342
+
+main_ternary_false@333:
+    dig 26
+    b main_ternary_merge@334
+
+main_ternary_false@329:
+    dig 26
+    b main_ternary_merge@330
+
+main_ternary_false@295:
+    dig 25
+    b main_ternary_merge@296
+
+main_ternary_false@297:
+    dig 9
+    bz main_ternary_false@299
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@300:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    b main_ternary_merge@301
+
+main_ternary_false@299:
+    dig 25
+    b main_ternary_merge@300
+
+main_ternary_false@291:
+    dig 25
+    b main_ternary_merge@292
+
+main_ternary_false@283:
+    dig 26
+    b main_ternary_merge@284
+
+main_ternary_false@285:
+    dig 8
+    bz main_ternary_false@287
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@288:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bury 36
+    b main_ternary_merge@289
+
+main_ternary_false@287:
+    dig 26
+    b main_ternary_merge@288
+
+main_ternary_false@279:
+    dig 26
+    b main_ternary_merge@280
+
+main_ternary_false@302:
+    dig 8
+    bz main_ternary_false@304
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@305:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@310
+    dig 8
+    bz main_ternary_false@308
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@309:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+    bury 34
+
+main_ternary_merge@314:
+    dig 9
+    bz main_ternary_false@316
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@317:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec 4 // 0x800000
+    b<
+    bnz main_ternary_false@322
+    dig 9
+    bz main_ternary_false@320
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@321:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bytec_2 // 0x01000000
+    swap
+    b-
+
+main_ternary_merge@326:
+    dig 34
+    swap
+    b%
+    b main_ternary_merge@327
+
+main_ternary_false@320:
+    dig 25
+    b main_ternary_merge@321
+
+main_ternary_false@322:
+    dig 9
+    bz main_ternary_false@324
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@325:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    b main_ternary_merge@326
+
+main_ternary_false@324:
+    dig 25
+    b main_ternary_merge@325
+
+main_ternary_false@316:
+    dig 25
+    b main_ternary_merge@317
+
+main_ternary_false@308:
+    dig 26
+    b main_ternary_merge@309
+
+main_ternary_false@310:
+    dig 8
+    bz main_ternary_false@312
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@313:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bury 34
+    b main_ternary_merge@314
+
+main_ternary_false@312:
+    dig 26
+    b main_ternary_merge@313
+
+main_ternary_false@304:
+    dig 26
+    b main_ternary_merge@305
+
+main_ternary_false@270:
+    dig 25
+    b main_ternary_merge@271
+
+main_ternary_false@272:
+    dig 9
+    bz main_ternary_false@274
+    dig 25
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@275:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    b main_ternary_merge@276
+
+main_ternary_false@274:
+    dig 25
+    b main_ternary_merge@275
+
+main_ternary_false@266:
+    dig 25
+    b main_ternary_merge@267
+
+main_ternary_false@258:
+    dig 26
+    b main_ternary_merge@259
+
+main_ternary_false@260:
+    dig 8
+    bz main_ternary_false@262
+    dig 26
+    intc_0 // 18446744073692774400
+    +
+
+main_ternary_merge@263:
+    itob
+    bytec_2 // 0x01000000
+    b%
+    bury 37
+    b main_ternary_merge@264
+
+main_ternary_false@262:
+    dig 26
+    b main_ternary_merge@263
+
+main_ternary_false@254:
+    dig 26
+    b main_ternary_merge@255
+
+main_ternary_false@250:
+    dig 26
+    b main_ternary_merge@251
+
+main_ternary_false@247:
+    dig 25
+    b main_ternary_merge@248
+
+main_bool_false@243:
+    intc_1 // 0
+    b main_bool_merge@244
+
+main_ternary_false@230:
+    dig 67
+    b main_ternary_merge@231
+
+main_ternary_false@227:
+    dig 81
+    bury 39
+    b main_ternary_merge@228
+
+main_ternary_false@232:
+    dig 14
+    bnz main_ternary_false@234
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 82
+    b-
+    bury 38
+
+main_ternary_merge@235:
+    dig 13
+    bnz main_ternary_false@237
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 68
+    b-
+
+main_ternary_merge@238:
+    dig 38
+    swap
+    b/
+    bury 69
+    b main_ternary_merge@239
+
+main_ternary_false@237:
+    dig 67
+    b main_ternary_merge@238
+
+main_ternary_false@234:
+    dig 81
+    bury 38
+    b main_ternary_merge@235
+
+main_ternary_false@223:
+    dig 67
+    b main_ternary_merge@224
+
+main_ternary_false@220:
+    dig 81
+    bury 40
+    b main_ternary_merge@221
+
+main_bool_false@216:
+    intc_1 // 0
+    b main_bool_merge@217
+
+main_bool_false@212:
+    intc_1 // 0
+    b main_bool_merge@213
+
+main_ternary_false@201:
+    dig 68
+    b main_ternary_merge@202
+
+main_ternary_false@198:
+    dig 68
+    bury 41
+    b main_ternary_merge@199
+
+main_bool_false@191:
+    intc_1 // 0
+    bury 25
+    b main_bool_merge@192
+
+main_else_body@179:
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    assert // check y exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    bz main_else_body@185
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 67
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    bury 18
+    intc_1 // 0
+    bytec 5 // "y"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 67
+    assert // check y exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    ==
+    bnz main_bool_true@182
+    dig 64
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 64
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dig 17
+    ==
+    bz main_bool_false@183
+
+main_bool_true@182:
+    intc_2 // 1
+
+main_bool_merge@184:
+    assert // signed arithmetic overflow
+    dig 64
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 64
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    b>
+    b main_after_if_else@187
+
+main_bool_false@183:
+    intc_1 // 0
+    b main_bool_merge@184
+
+main_else_body@185:
+    intc_1 // 0
+    b main_after_if_else@187
+
+main_ternary_false@167:
+    dig 56
+    b main_ternary_merge@168
+
+main_ternary_false@164:
+    dig 69
+    bury 43
+    b main_ternary_merge@165
+
+main_ternary_false@169:
+    dig 18
+    bnz main_ternary_false@171
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 70
+    b-
+    bury 42
+
+main_ternary_merge@172:
+    dig 17
+    bnz main_ternary_false@174
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 57
+    b-
+
+main_ternary_merge@175:
+    dig 42
+    swap
+    b/
+    bury 67
+    b main_ternary_merge@176
+
+main_ternary_false@174:
+    dig 56
+    b main_ternary_merge@175
+
+main_ternary_false@171:
+    dig 69
+    bury 42
+    b main_ternary_merge@172
+
+main_ternary_false@160:
+    dig 56
+    b main_ternary_merge@161
+
+main_ternary_false@157:
+    dig 69
+    bury 44
+    b main_ternary_merge@158
+
+main_bool_false@153:
+    intc_1 // 0
+    b main_bool_merge@154
+
+main_bool_false@149:
+    intc_1 // 0
+    b main_bool_merge@150
+
+main_ternary_false@138:
+    dig 57
+    b main_ternary_merge@139
+
+main_ternary_false@135:
+    dig 76
+    bury 46
+    b main_ternary_merge@136
+
+main_ternary_false@140:
+    bnz main_ternary_false@142
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 77
+    b-
+    bury 45
+
+main_ternary_merge@143:
+    dig 19
+    bnz main_ternary_false@145
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 58
+    b-
+
+main_ternary_merge@146:
+    dig 45
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>
+    !
+    b main_ternary_merge@147
+
+main_ternary_false@145:
+    dig 57
+    b main_ternary_merge@146
+
+main_ternary_false@142:
+    dig 76
+    bury 45
+    b main_ternary_merge@143
+
+main_bool_false@130:
+    intc_1 // 0
+    b main_bool_merge@131
+
+main_ternary_false@119:
+    dig 77
+    b main_ternary_merge@120
+
+main_ternary_false@116:
+    dig 77
+    bury 47
+    b main_ternary_merge@117
+
+main_ternary_false@110:
+    b main_ternary_merge@111
+
+main_bool_false@107:
+    intc_1 // 0
+    b main_bool_merge@108
+
+main_ternary_false@97:
+    dig 78
+    b main_ternary_merge@98
+
+main_ternary_false@100:
+    bnz main_ternary_false@102
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 79
+    b-
+
+main_ternary_merge@103:
+    dig 32
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>
+    !
+    b main_ternary_merge@105
+
+main_ternary_false@102:
+    dig 78
+    b main_ternary_merge@103
+
+main_ternary_false@93:
+    bury 22
+    b main_ternary_merge@94
+
+main_ternary_false@90:
+    b main_ternary_merge@91
+
+main_ternary_false@87:
+    bury 23
+    b main_ternary_merge@88
+
+main_ternary_false@84:
+    b main_ternary_merge@85
+
+main_bool_false@81:
+    intc_1 // 0
+    b main_bool_merge@82
+
+main_bool_false@77:
+    intc_1 // 0
+    b main_bool_merge@78
+
+main_ternary_false@68:
+    dig 58
+    b main_ternary_merge@69
+
+main_ternary_false@70:
+    bnz main_ternary_false@73
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 59
+    b-
+
+main_ternary_merge@74:
+    dig 29
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>
+    !
+    b main_ternary_merge@75
+
+main_ternary_false@73:
+    dig 58
+    b main_ternary_merge@74
+
+main_ternary_false@62:
+    bury 24
+    b main_ternary_merge@63
+
+main_ternary_false@59:
+    b main_ternary_merge@60
+
+main_bool_false@56:
+    intc_1 // 0
+    b main_bool_merge@57
+
+main_ternary_false@45:
+    dig 68
+    b main_ternary_merge@46
+
+main_ternary_false@42:
+    dig 68
+    bury 49
+    b main_ternary_merge@43
+
+main_bool_false@37:
+    intc_1 // 0
+    b main_bool_merge@38
+
+main_ternary_false@26:
+    dig 65
+    b main_ternary_merge@27
+
+main_ternary_false@23:
+    dig 79
+    bury 35
+    b main_ternary_merge@24
+
+main_ternary_false@28:
+    bnz main_ternary_false@30
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 80
+    b-
+    bury 56
+
+main_ternary_merge@31:
+    dig 11
+    bnz main_ternary_false@33
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 66
+    b-
+
+main_ternary_merge@34:
+    dig 56
+    b*
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>
+    !
+    b main_ternary_merge@35
+
+main_ternary_false@33:
+    dig 65
+    b main_ternary_merge@34
+
+main_ternary_false@30:
+    dig 79
+    bury 56
+    b main_ternary_merge@31

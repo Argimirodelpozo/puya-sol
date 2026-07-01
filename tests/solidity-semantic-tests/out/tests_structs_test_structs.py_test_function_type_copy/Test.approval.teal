@@ -3,8 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/function_type_copy.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 1 24 6
-    bytecblock "__ctor_pending" 0x21f5b0f3 0x79c18c5e 0x769c4dc6 TMPL_APPROVAL_C TMPL_CLEAR_C
+    intcblock 0 1 3 24
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" 0x21f5b0f3 0x79c18c5e 0x769c4dc6 TMPL_APPROVAL_C TMPL_CLEAR_C
+    intc_0 // 0
+    pushbytes ""
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -24,7 +27,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -37,9 +40,9 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0xf59e3cc4 // method "__postInit()void", method "test()bool"
-    bytec_1 // method "random1()void"
-    bytec_2 // method "random2()void"
-    bytec_3 // method "random3()void"
+    bytec_2 // method "random1()void"
+    bytec_3 // method "random2()void"
+    bytec 4 // method "random3()void"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_test_route@6 main_random1_route@7 main_random2_route@8 main_random3_route@9
     err
@@ -99,21 +102,23 @@ main_test_route@6:
 main_ternary_merge@31:
     !
     assert // not payable
+    intc_2 // 3
+    itob
     global CurrentApplicationID
     itob
-    bytec_1 // method "random1()void"
+    bytec_2 // method "random1()void"
     concat
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000
     swap
     replace2 2 // on error: index access is out of bounds
     global CurrentApplicationID
     itob
-    bytec_2 // method "random2()void"
+    bytec_3 // method "random2()void"
     concat
     replace2 14 // on error: index access is out of bounds
     global CurrentApplicationID
     itob
-    bytec_3 // method "random3()void"
+    bytec 4 // method "random3()void"
     concat
     replace2 26 // on error: index access is out of bounds
     itxn_begin
@@ -121,9 +126,9 @@ main_ternary_merge@31:
     pushbytes "c"
     app_global_get_ex
     assert // check c exists
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -143,34 +148,67 @@ main_ternary_merge@31:
     len
     substring3
     dup
+    bury 7
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    pushbytes 0x03
     b==
-    assert
     dup
+    bury 5
+    bnz main_after_if_else@33
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@33:
+    dig 3
+    assert
+    dig 4
     extract 2 12
     global CurrentApplicationID
     itob
-    bytec_1 // method "random1()void"
+    bytec_2 // method "random1()void"
     concat
     ==
-    assert
     dup
+    bury 4
+    bnz main_after_if_else@35
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@35:
+    dig 2
+    assert
+    dig 4
     extract 14 12
     global CurrentApplicationID
     itob
-    bytec_2 // method "random2()void"
+    bytec_3 // method "random2()void"
     concat
     ==
+    dup
+    bury 3
+    bnz main_after_if_else@37
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@37:
+    dig 1
     assert
+    dig 4
     extract 26 12
     global CurrentApplicationID
     itob
-    bytec_3 // method "random3()void"
+    bytec 4 // method "random3()void"
     concat
     ==
+    dup
+    bury 2
+    bnz main_after_if_else@39
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@39:
+    dup
     assert
     pushbytes 0x151f7c7580
     log
@@ -182,16 +220,16 @@ main_ternary_false@30:
     b main_ternary_merge@31
 
 main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_C
-    bytec 5 // TMPL_CLEAR_C
-    intc_3 // 6
+    bytec 5 // TMPL_APPROVAL_C
+    bytec 6 // TMPL_CLEAR_C
+    pushint 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -199,7 +237,7 @@ main___postInit_route@5:
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    pushint 3
+    intc_2 // 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
     itxn_field ApprovalProgram
@@ -217,7 +255,7 @@ main___postInit_route@5:
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    intc_2 // 24
+    intc_3 // 24
     bzero
     swap
     itob

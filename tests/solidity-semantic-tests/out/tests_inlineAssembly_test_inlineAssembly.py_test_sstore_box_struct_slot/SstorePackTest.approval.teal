@@ -4,9 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/sstore_box_struct_slot.sol.SstorePackTest.approval_program() -> uint64:
 main:
     intcblock 32 1 0 16
-    bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff
+    bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff "__ctor_pending" 0x151f7c75 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
-    dupn 5
+    dupn 4
     pushint 4096
     bzero
     dup
@@ -26,7 +26,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -38,7 +38,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x0e113077 0xccb40464 0xab554c58 0xa336bd67 0xeb7e7b76 // method "__postInit()void", method "setPacked(uint512,uint512,uint512)void", method "setC(uint256,uint256)void", method "getA(uint256)uint128", method "getB(uint256)uint256", method "getC(uint256)uint256"
+    pushbytess 0xbacc49e3 0x4ba66b84 0xccb40464 0xab554c58 0xa336bd67 0xeb7e7b76 // method "__postInit()void", method "setPacked(uint256,uint128,uint128)void", method "setC(uint256,uint256)void", method "getA(uint256)uint128", method "getB(uint256)uint256", method "getC(uint256)uint256"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_setPacked_route@6 main_setC_route@7 main_getA_route@8 main_getB_route@9 main_getC_route@10
     err
@@ -46,7 +46,7 @@ main_after_if_else@2:
 main_getC_route@10:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 3
     len
     intc_0 // 32
     ==
@@ -63,7 +63,7 @@ main_ternary_merge@17:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 5
+    dig 2
     concat
     dup
     len
@@ -79,7 +79,7 @@ main_ternary_merge@17:
     cover 2
     select
     extract 32 32
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -93,7 +93,7 @@ main_ternary_false@16:
 main_getB_route@9:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 3
     len
     intc_0 // 32
     ==
@@ -112,7 +112,7 @@ main_ternary_merge@22:
     bzero
     dup
     bury 2
-    dig 5
+    dig 2
     concat
     dup
     len
@@ -128,18 +128,26 @@ main_ternary_merge@22:
     cover 2
     select
     extract 16 16
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    pushbytes 0x80000000000000000000000000000000
+    bytec 5 // 0x80000000000000000000000000000000
     b>=
     bz main_ternary_false@24
-    pushbytes 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@25:
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec 5 // 0x80000000000000000000000000000000
+    b>=
+    bz main_ternary_false@27
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+main_ternary_merge@28:
     dup
     len
     intc_0 // 32
@@ -147,12 +155,15 @@ main_ternary_merge@25:
     assert // overflow
     dig 1
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+main_ternary_false@27:
+    b main_ternary_merge@28
 
 main_ternary_false@24:
     b main_ternary_merge@25
@@ -164,26 +175,26 @@ main_ternary_false@21:
 main_getA_route@8:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@32
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@33:
     !
     assert // not payable
     intc_3 // 16
     bzero
     intc_0 // 32
     bzero
-    dig 6
+    dig 3
     concat
     dup
     len
@@ -214,45 +225,45 @@ main_ternary_merge@30:
     <=
     assert // overflow
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@32:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@33
 
 main_setC_route@7:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 7
+    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@34
+    bz main_ternary_false@37
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@35:
+main_ternary_merge@38:
     !
     assert // not payable
     intc_0 // 32
     bzero
-    dig 5
+    dig 2
     concat
     dup
     len
@@ -273,61 +284,72 @@ main_ternary_merge@35:
     swap
     extract 16 16
     concat
-    dig 7
+    dig 4
     concat
     box_put
     intc_1 // 1
     return
 
-main_ternary_false@34:
+main_ternary_false@37:
     intc_2 // 0
-    b main_ternary_merge@35
+    b main_ternary_merge@38
 
 main_setPacked_route@6:
     txna ApplicationArgs 1
     dup
     bury 3
     len
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_3 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    txna ApplicationArgs 3
     dup
     bury 5
     len
-    pushint 64
+    intc_3 // 16
     ==
-    assert // invalid number of bytes for arc4.uint512
-    txna ApplicationArgs 3
-    dup
-    bury 4
-    len
-    pushint 64
-    ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint128
     txn GroupIndex
-    bz main_ternary_false@39
+    bz main_ternary_false@42
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@40:
+main_ternary_merge@43:
     !
     assert // not payable
+    dig 3
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec 5 // 0x80000000000000000000000000000000
+    b>=
+    bz main_ternary_false@45
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+main_ternary_merge@46:
     load 0
     store 0
     intc_0 // 32
     bzero
-    dig 4
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
+    dig 6
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
-    dig 4
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    uncover 2
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
     b*
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     b|
     dig 1
@@ -371,15 +393,18 @@ main_ternary_merge@40:
     intc_1 // 1
     return
 
-main_ternary_false@39:
+main_ternary_false@45:
+    b main_ternary_merge@46
+
+main_ternary_false@42:
     intc_2 // 0
-    b main_ternary_merge@40
+    b main_ternary_merge@43
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_0 // "data"

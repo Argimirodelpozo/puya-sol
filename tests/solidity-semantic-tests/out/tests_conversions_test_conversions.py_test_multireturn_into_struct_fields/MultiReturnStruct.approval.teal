@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/multireturn_struct.sol.MultiReturnStruct.approval_program() -> uint64:
 main:
     intcblock 32 1 0 24
-    bytecblock 0x151f7c75
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     intc_2 // 0
     pushint 4096
     bzero
@@ -69,12 +69,24 @@ main_ternary_merge@13:
     concat
     replace2 64
     store 0
-    dupn 2
-    pushbytes 0x0a
+    pushint 10
+    itob
+    dig 1
+    dup
+    uncover 2
     b+
-    swap
-    pushbytes 0x14
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 20
+    itob
+    uncover 2
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -105,12 +117,16 @@ main_ternary_merge@13:
     extract 32 32
     b+
     dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -151,18 +167,40 @@ main_ternary_merge@18:
     concat
     replace2 64
     store 0
-    dupn 2
-    pushbytes 0x01
-    b+
+    intc_1 // 1
+    itob
     dig 1
-    pushbytes 0x02
+    dup
+    uncover 2
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 2
+    itob
     dig 2
-    pushbytes 0x03
     b+
-    uncover 3
-    pushbytes 0x04
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 3
+    itob
+    dig 3
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 4
+    itob
+    uncover 4
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -244,19 +282,31 @@ main_ternary_merge@18:
     dig 1
     extract 32 32
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dig 1
     extract 64 32
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     swap
     extract 96 32
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

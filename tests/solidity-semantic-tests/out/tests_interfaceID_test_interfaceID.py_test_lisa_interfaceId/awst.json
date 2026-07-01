@@ -973,7 +973,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -1222,7 +1223,7 @@
                                 "length": 4
                               },
                               "expr": {
-                                "_type": "IntrinsicCall",
+                                "_type": "MethodConstant",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
                                   "line": 703,
@@ -1237,53 +1238,18 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "op_code": "extract",
-                                "immediates": [
-                                  0,
-                                  4
-                                ],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
-                                      "line": 703,
-                                      "end_line": 734,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "keccak256",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "BytesConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
-                                          "line": 703,
-                                          "end_line": 734,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "value": "b9HcVZ*p{VNp5sya%N#;Whi2KbY*iiDF",
-                                        "encoding": "utf8"
-                                      }
-                                    ]
-                                  }
-                                ]
+                                "value": {
+                                  "_type": "MethodSignatureString",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
+                                    "line": 703,
+                                    "end_line": 734,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "value": "supportsInterface(byte[4])bool"
+                                }
                               }
                             }
                           },
@@ -1424,7 +1390,7 @@
                               "length": null
                             },
                             "expr": {
-                              "_type": "BytesConstant",
+                              "_type": "ReinterpretCast",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
                                 "line": 1131,
@@ -1439,8 +1405,82 @@
                                 "immutable": true,
                                 "length": 4
                               },
-                              "value": "bGEdS",
-                              "encoding": "base16"
+                              "expr": {
+                                "_type": "BytesBinaryOperation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
+                                  "line": 1131,
+                                  "end_line": 1156,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "left": {
+                                  "_type": "MethodConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
+                                    "line": 1131,
+                                    "end_line": 1156,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "value": {
+                                    "_type": "MethodSignatureString",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
+                                      "line": 1131,
+                                      "end_line": 1156,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "value": "is2D()bool"
+                                  }
+                                },
+                                "op": "^",
+                                "right": {
+                                  "_type": "MethodConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
+                                    "line": 1131,
+                                    "end_line": 1156,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "value": {
+                                    "_type": "MethodSignatureString",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa_interfaceId.sol",
+                                      "line": 1131,
+                                      "end_line": 1156,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "value": "skinColor()string"
+                                  }
+                                }
+                              }
                             }
                           },
                           {
@@ -1777,7 +1817,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2099,7 +2140,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2440,7 +2482,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

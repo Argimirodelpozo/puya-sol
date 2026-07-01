@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_three_dimensional_dynamic_array_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 32 0 1
-    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000020
-    intc_2 // 0
+    intcblock 2 0 1 32
+    bytecblock 0x010000000000000000 0x151f7c75
+    intc_1 // 0
     dupn 6
     pushbytes ""
     dupn 10
@@ -28,7 +28,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -47,7 +47,7 @@ main_l_route@9:
     bury 12
     pushint 4
     bury 3
-    intc_2 // 0
+    intc_1 // 0
     bury 6
 
 main_for_header@14:
@@ -72,7 +72,7 @@ main_for_header@14:
     bury 13
     pushint 4
     bury 2
-    intc_2 // 0
+    intc_1 // 0
     bury 5
 
 main_for_header@16:
@@ -100,7 +100,7 @@ main_for_header@16:
     dup
     len
     dig 1
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
     intc_0 // 2
@@ -108,15 +108,15 @@ main_for_header@16:
     assert // invalid tail pointer at index 0 of ((len+uint256[]))
     swap
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
     pushint 4
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 5
     b main_for_header@16
@@ -127,7 +127,7 @@ main_after_for@18:
     +
     bury 3
     dig 5
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 6
     b main_for_header@14
@@ -142,32 +142,41 @@ main_after_for@19:
     dup
     bury 19
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     bury 18
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@22:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
+    dig 17
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 17
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
     dup
-    dig 20
+    uncover 2
     concat
     dup
     len
@@ -175,14 +184,14 @@ main_ternary_merge@22:
     -
     extract_uint64
     swap
-    dig 19
+    uncover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 14
+    dig 13
     uncover 2
     intc_0 // 2
     callsub static_array_read_dynamic_element
@@ -190,48 +199,26 @@ main_ternary_merge@22:
     intc_0 // 2
     callsub static_array_read_dynamic_element
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     len
     substring3
     dup
     len
-    intc_0 // 2
-    -
-    intc_1 // 32
-    /
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    extract 2 0
-    concat
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    dup
-    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@21:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@22
 
 main_k_route@8:
@@ -239,7 +226,7 @@ main_k_route@8:
     dup
     bury 13
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     bury 10
@@ -251,7 +238,7 @@ main_k_route@8:
     bury 2
     extract 2 0
     bury 15
-    intc_2 // 0
+    intc_1 // 0
     bury 6
 
 main_for_header@25:
@@ -274,7 +261,7 @@ main_for_header@25:
     len
     substring3
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     bury 9
@@ -283,7 +270,7 @@ main_for_header@25:
     bury 3
     extract 2 0
     bury 14
-    intc_2 // 0
+    intc_1 // 0
     bury 5
 
 main_for_header@27:
@@ -311,7 +298,7 @@ main_for_header@27:
     dup
     len
     dig 1
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
     intc_0 // 2
@@ -319,15 +306,15 @@ main_for_header@27:
     assert // invalid tail pointer at index 0 of ((len+uint256[]))
     swap
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
     pushint 4
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 5
     b main_for_header@27
@@ -340,7 +327,7 @@ main_after_for@29:
     +
     bury 3
     dig 5
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 6
     b main_for_header@25
@@ -356,32 +343,41 @@ main_after_for@30:
     dup
     bury 19
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     bury 18
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@32
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@33:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
+    dig 17
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 17
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
     dup
-    dig 20
+    uncover 2
     concat
     dup
     len
@@ -389,61 +385,39 @@ main_ternary_merge@33:
     -
     extract_uint64
     swap
-    dig 19
+    uncover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 14
+    dig 13
     uncover 2
     callsub dynamic_array_read_dynamic_element
     swap
     callsub dynamic_array_read_dynamic_element
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     len
     substring3
     dup
     len
-    intc_0 // 2
-    -
-    intc_1 // 32
-    /
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    extract 2 0
-    concat
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    dup
-    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@32:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@33
 
 main_h_route@7:
@@ -451,12 +425,12 @@ main_h_route@7:
     bury 12
     intc_0 // 2
     bury 3
-    intc_2 // 0
+    intc_1 // 0
     bury 6
 
 main_for_header@36:
     dig 5
-    intc_3 // 1
+    intc_2 // 1
     <
     bz main_after_for@41
     dig 5
@@ -474,7 +448,7 @@ main_for_header@36:
     len
     substring3
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     bury 11
@@ -483,7 +457,7 @@ main_for_header@36:
     bury 3
     extract 2 0
     bury 15
-    intc_2 // 0
+    intc_1 // 0
     bury 5
 
 main_for_header@38:
@@ -508,15 +482,15 @@ main_for_header@38:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 5
     b main_for_header@38
@@ -529,7 +503,7 @@ main_after_for@40:
     +
     bury 3
     dig 5
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 6
     b main_for_header@36
@@ -544,36 +518,39 @@ main_after_for@41:
     dup
     bury 19
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@43
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@44:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
+    dig 17
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 19
+    swap
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 13
-    intc_2 // 0
-    intc_3 // 1
+    dig 12
+    intc_1 // 0
+    intc_2 // 1
     callsub static_array_read_dynamic_element
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 2
     >
@@ -587,48 +564,26 @@ main_ternary_merge@44:
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     extract3
     dup
     len
-    intc_0 // 2
-    -
-    intc_1 // 32
-    /
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    extract 2 0
-    concat
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    dup
-    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@43:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@44
 
 main_g_route@6:
@@ -636,7 +591,7 @@ main_g_route@6:
     dup
     bury 13
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     bury 13
@@ -648,7 +603,7 @@ main_g_route@6:
     bury 2
     extract 2 0
     bury 15
-    intc_2 // 0
+    intc_1 // 0
     bury 6
 
 main_for_header@47:
@@ -671,7 +626,7 @@ main_for_header@47:
     len
     substring3
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     bury 12
@@ -680,7 +635,7 @@ main_for_header@47:
     bury 3
     extract 2 0
     bury 14
-    intc_2 // 0
+    intc_1 // 0
     bury 5
 
 main_for_header@49:
@@ -705,15 +660,15 @@ main_for_header@49:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 5
     b main_for_header@49
@@ -726,7 +681,7 @@ main_after_for@51:
     +
     bury 3
     dig 5
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 6
     b main_for_header@47
@@ -742,39 +697,54 @@ main_after_for@52:
     dup
     bury 19
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     bury 18
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     bury 17
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@54
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@55:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
+    dig 17
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 17
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 17
+    dup
+    cover 3
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
     dup
-    dig 20
+    uncover 2
     concat
     dup
     len
@@ -782,7 +752,7 @@ main_ternary_merge@55:
     -
     extract_uint64
     dig 1
-    dig 20
+    uncover 3
     concat
     dup
     len
@@ -790,18 +760,18 @@ main_ternary_merge@55:
     -
     extract_uint64
     uncover 2
-    dig 19
+    uncover 3
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 15
+    dig 14
     uncover 3
     callsub dynamic_array_read_dynamic_element
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dig 3
     >
@@ -815,45 +785,38 @@ main_ternary_merge@55:
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     extract3
     extract 2 0
     swap
-    intc_1 // 32
+    intc_3 // 32
     *
-    intc_1 // 32
+    intc_3 // 32
     extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@54:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@55
 
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     bury 6
@@ -865,7 +828,7 @@ main_f_route@5:
     bury 2
     extract 2 0
     bury 15
-    intc_2 // 0
+    intc_1 // 0
     bury 6
 
 main_for_header@58:
@@ -890,15 +853,15 @@ main_for_header@58:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     +
     bury 4
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 6
     b main_for_header@58
@@ -914,32 +877,41 @@ main_after_for@60:
     dup
     bury 19
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     bury 18
     len
-    intc_1 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@62
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@63:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
+    dig 17
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 17
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
     dup
-    dig 20
+    uncover 2
     concat
     dup
     len
@@ -947,7 +919,7 @@ main_ternary_merge@63:
     -
     extract_uint64
     swap
-    dig 19
+    uncover 2
     concat
     dup
     len
@@ -955,51 +927,44 @@ main_ternary_merge@63:
     -
     extract_uint64
     dig 1
-    dig 7
+    dig 6
     <
     assert // index out of bounds
     swap
     intc_0 // 2
     *
-    dig 17
+    dig 16
     dup
     uncover 2
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     extract3
     extract 2 0
     swap
-    intc_1 // 32
+    intc_3 // 32
     *
-    intc_1 // 32
+    intc_3 // 32
     extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@62:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@63
 
 
@@ -1009,7 +974,7 @@ dynamic_array_read_dynamic_element:
     frame_dig -2
     extract 2 0
     frame_dig -2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     frame_dig -1
     intc_0 // 2
@@ -1020,7 +985,7 @@ dynamic_array_read_dynamic_element:
     dig 2
     len
     frame_dig -1
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     intc_0 // 2
@@ -1048,7 +1013,7 @@ static_array_read_dynamic_element:
     frame_dig -3
     len
     frame_dig -2
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     intc_0 // 2

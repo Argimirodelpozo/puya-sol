@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/claude-1000/multisource_5b6t8oaj/C.sol.CContract.approval_program() -> uint64:
+// /tmp/multisource_uyqiw7pd/C.sol.CContract.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
@@ -48,6 +48,8 @@ main_error3_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
+    pushbytes 0xc51aa6e40009422e41206572726f72
+    log
     err // ErrorA
 
 main_ternary_false@13:
@@ -62,14 +64,16 @@ main_error2_route@6:
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@19:
     !
     assert // not payable
+    pushbytes 0x32ccb0710011422e42436f6e7472616374206572726f72
+    log
     err // ErrorB
 
 main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@19
 
 main_error1_route@5:
     txn GroupIndex
@@ -78,7 +82,13 @@ main_error1_route@5:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    pushbytes 0x32ccb071000742206572726f72
+    log
+    err // ErrorB
 
 main_ternary_false@23:
     intc_1 // 0

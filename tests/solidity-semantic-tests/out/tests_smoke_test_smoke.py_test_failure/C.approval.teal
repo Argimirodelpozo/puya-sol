@@ -49,6 +49,8 @@ main_h_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
     err
 
 main_ternary_false@14:
@@ -79,6 +81,12 @@ main_ternary_merge@20:
     intc_0 // 1
     <=
     assert // ABI bool validation
+    bnz main_after_if_else@22
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f56616c75652069732066616c73652e0000000000000000000000000000000000
+    log
+
+main_after_if_else@22:
+    dup
     assert // Value is false.
     intc_0 // 1
     return
@@ -98,40 +106,48 @@ main_f_route@6:
     getbit
     bury 1
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@26
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@27:
     !
     assert // not payable
     dupn 2
     intc_0 // 1
     <=
     assert // ABI bool validation
+    bnz main_after_if_else@29
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@29:
+    dup
     assert // assertion failed
     intc_0 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@26:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@27
 
 main_e_route@5:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@33
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@34:
     !
     assert // not payable
-    err // revert
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000135472616e73616374696f6e206661696c65642e00000000000000000000000000
+    log
+    err // Transaction failed.
 
-main_ternary_false@29:
+main_ternary_false@33:
     intc_1 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@34

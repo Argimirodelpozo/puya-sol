@@ -66,10 +66,9 @@ main_ternary_merge@14:
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz main_ternary_false@16
-    pushbytes 0x26121ff0
-
-main_ternary_merge@17:
+    pushbytess 0xf2b65f27 0x2d4970c7 // method "g()void", method "f()void"
+    uncover 2
+    select
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -77,23 +76,19 @@ main_ternary_merge@17:
     intc_0 // 1
     return
 
-main_ternary_false@16:
-    pushbytes 0xe2179b8e
-    b main_ternary_merge@17
-
 main_ternary_false@13:
     intc_1 // 0
     b main_ternary_merge@14
 
 main_getContract_route@6:
     txn GroupIndex
-    bz main_ternary_false@21
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+main_ternary_merge@19:
     !
     assert // not payable
     intc_1 // 0
@@ -107,9 +102,9 @@ main_ternary_merge@22:
     intc_0 // 1
     return
 
-main_ternary_false@21:
+main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@19
 
 main___postInit_route@5:
     bytec_0 // "__ctor_pending"

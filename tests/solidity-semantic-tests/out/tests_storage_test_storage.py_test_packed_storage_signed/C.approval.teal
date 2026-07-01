@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_signed.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 8 1 32
-    bytecblock "a" 0x0100 "b" "c" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "a" 0x0100 "b" "c" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     intc_0 // 0
     dup
     pushint 4096
@@ -116,14 +116,12 @@ main_ternary_merge@9:
     dup
     pushbytes 0x80
     b>=
-    bz main_ternary_false@11
+    bz main_ternary_false@13
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     bury 2
 
-main_ternary_merge@12:
+main_ternary_merge@14:
     intc_0 // 0
     bytec_2 // "b"
     app_global_get_ex
@@ -140,13 +138,11 @@ main_ternary_merge@12:
     dup
     pushbytes 0x80
     b>=
-    bz main_ternary_false@14
+    bz main_ternary_false@16
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
-main_ternary_merge@15:
+main_ternary_merge@17:
     intc_0 // 0
     pushbytes "d"
     app_global_get_ex
@@ -191,12 +187,12 @@ main_ternary_merge@15:
     intc_2 // 1
     return
 
-main_ternary_false@14:
-    b main_ternary_merge@15
+main_ternary_false@16:
+    b main_ternary_merge@17
 
-main_ternary_false@11:
+main_ternary_false@13:
     bury 2
-    b main_ternary_merge@12
+    b main_ternary_merge@14
 
 main_ternary_false@8:
     intc_0 // 0

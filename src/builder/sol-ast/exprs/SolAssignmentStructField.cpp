@@ -132,54 +132,11 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		}
 	}
 
-	// `n[k][i].f = v` where n is `mapping(K => T[N])`: per-entry box is lazy;
-	// emit box_create as a pre-statement so box_replace finds it.
-	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(assignTarget2.get()))
-	{
-		if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(idx->base.get()))
-		{
-			if (bv->key && builder::StorageMapper::isMappingDerivedKey(bv->key.get()))
-			{
-				bool dynamicArc4 = false;
-				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
-					dynamicArc4 = builder::arc4IsDynamic(sa);
-				if (dynamicArc4)
-				{
-					if (auto enc = builder::arc4DefaultEncoding(bv->wtype))
-					{
-						if (enc->size() > 0 && enc->size() <= 32768)
-						{
-							auto putCall = awst::makeIntrinsicCall(
-								"box_put", awst::WType::voidType(), m_loc);
-							putCall->stackArgs.push_back(bv->key);
-							putCall->stackArgs.push_back(awst::makeBytesConstant(
-								std::move(*enc), m_loc));
-							m_ctx.queuePreStmt(std::move(putCall), m_loc);
-						}
-					}
-				}
-				else
-				{
-					uint64_t totalSize = 0;
-					if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(bv->wtype))
-					{
-						int elemSize = builder::computeEncodedElementSize(sa->elementType());
-						if (elemSize > 0 && sa->arraySize() > 0)
-							totalSize = static_cast<uint64_t>(elemSize) * static_cast<uint64_t>(sa->arraySize());
-					}
-					if (totalSize > 0 && totalSize <= 32768)
-					{
-						auto createCall = awst::makeIntrinsicCall(
-							"box_create", awst::WType::boolType(), m_loc);
-						createCall->stackArgs.push_back(bv->key);
-						createCall->stackArgs.push_back(
-							awst::makeIntegerConstant(totalSize, m_loc));
-						m_ctx.queuePreStmt(std::move(createCall), m_loc);
-					}
-				}
-			}
-		}
-	}
+	// Centralized box-lifecycle: `n[k][i].f = v` / `n[k][i] = v` — the lazy mapping-entry box must
+	// exist before box_replace. Shared with maybePrePopulateBox / SolArrayMethod::emitEnsureBox.
+	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
+			m_ctx.typeMapper, assignTarget2, /*isResize=*/false, m_loc))
+		m_ctx.queuePrePending(std::move(stmt));
 
 	auto e = awst::makeAssignmentExpression(
 		std::move(assignTarget2), std::move(assignValue2), m_loc);

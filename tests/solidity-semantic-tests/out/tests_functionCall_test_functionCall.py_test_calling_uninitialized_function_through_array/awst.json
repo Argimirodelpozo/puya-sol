@@ -1136,7 +1136,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1180,11 +1181,11 @@
                     "immutable": true
                   },
                   "left": {
-                    "_type": "AppStateExpression",
+                    "_type": "SingleEvaluation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
                       "line": 88,
-                      "end_line": 93,
+                      "end_line": 97,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
@@ -1194,8 +1195,8 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "key": {
-                      "_type": "BytesConstant",
+                    "source": {
+                      "_type": "AppStateExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
                         "line": 88,
@@ -1206,13 +1207,30 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "state_key",
+                        "name": "biguint",
                         "immutable": true
                       },
-                      "value": "ZFO{Icm",
-                      "encoding": "utf8"
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                          "line": 88,
+                          "end_line": 93,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "ZFO{Icm",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check mutex exists"
                     },
-                    "exists_assertion_message": "check mutex exists"
+                    "_id": 1048577
                   },
                   "op": "^",
                   "right": {
@@ -1251,7 +1269,7 @@
                     "immutable": true
                   },
                   "left": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
                       "line": 88,
@@ -1265,8 +1283,45 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 0,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                        "line": 88,
+                        "end_line": 97,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                            "line": 96,
+                            "end_line": 97,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 0,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   },
                   "op": "^",
                   "right": {
@@ -1464,7 +1519,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
                                     "line": 140,
@@ -1479,84 +1534,102 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                        "line": 140,
-                                        "end_line": 152,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                      "line": 140,
+                                      "end_line": 152,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                          "line": 140,
+                                          "end_line": 152,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                              "line": 140,
+                                              "end_line": 152,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                          "line": 140,
+                                          "end_line": 152,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
                                           "_type": "IntegerConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                            "line": 140,
-                                            "end_line": 152,
+                                            "line": 150,
+                                            "end_line": 151,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "biguint",
                                             "immutable": true
                                           },
-                                          "value": 32,
+                                          "value": 7,
                                           "teal_alias": null
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                        "line": 140,
-                                        "end_line": 152,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                          "line": 150,
-                                          "end_line": 151,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "value": 7,
-                                        "teal_alias": null
                                       }
-                                    }
-                                  ]
+                                    ]
+                                  },
+                                  "_id": 1048578
                                 },
                                 {
                                   "_type": "UInt64BinaryOperation",
@@ -1592,7 +1665,7 @@
                                     "immediates": [],
                                     "stack_args": [
                                       {
-                                        "_type": "IntrinsicCall",
+                                        "_type": "SingleEvaluation",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
                                           "line": 140,
@@ -1607,84 +1680,102 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "op_code": "concat",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "IntrinsicCall",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                              "line": 140,
-                                              "end_line": 152,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
+                                        "source": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                            "line": 140,
+                                            "end_line": 152,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "concat",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                                "line": 140,
+                                                "end_line": 152,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "bzero",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                                    "line": 140,
+                                                    "end_line": 152,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 32,
+                                                  "teal_alias": null
+                                                }
+                                              ]
                                             },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "op_code": "bzero",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
+                                            {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
+                                                "line": 140,
+                                                "end_line": 152,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
                                                 "_type": "IntegerConstant",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                                  "line": 140,
-                                                  "end_line": 152,
+                                                  "line": 150,
+                                                  "end_line": 151,
                                                   "comment_lines": 0,
                                                   "column": null,
                                                   "end_column": null
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "uint64",
+                                                  "name": "biguint",
                                                   "immutable": true
                                                 },
-                                                "value": 32,
+                                                "value": 7,
                                                 "teal_alias": null
                                               }
-                                            ]
-                                          },
-                                          {
-                                            "_type": "ReinterpretCast",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                              "line": 140,
-                                              "end_line": 152,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "expr": {
-                                              "_type": "IntegerConstant",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_uninitialized_function_through_array.sol",
-                                                "line": 150,
-                                                "end_line": 151,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "value": 7,
-                                              "teal_alias": null
                                             }
-                                          }
-                                        ]
+                                          ]
+                                        },
+                                        "_id": 1048578
                                       }
                                     ]
                                   },
@@ -2386,7 +2477,7 @@
                   "arc4_alias": null,
                   "source_location": null
                 },
-                "name": "x"
+                "name": "x__24"
               },
               "value": {
                 "_type": "BytesConstant",
@@ -2509,7 +2600,7 @@
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "name": "x"
+                          "name": "x__24"
                         },
                         "index": {
                           "_type": "IntegerConstant",
@@ -2745,7 +2836,8 @@
                   "value": false
                 },
                 "error_message": "invalid function pointer",
-                "comment": "invalid function pointer"
+                "comment": "invalid function pointer",
+                "explicit": true
               }
             }
           ],
@@ -2852,7 +2944,8 @@
                   "value": false
                 },
                 "error_message": "unknown function selector in self-call dispatch",
-                "comment": "unknown function selector in self-call dispatch"
+                "comment": "unknown function selector in self-call dispatch",
+                "explicit": true
               }
             }
           ],

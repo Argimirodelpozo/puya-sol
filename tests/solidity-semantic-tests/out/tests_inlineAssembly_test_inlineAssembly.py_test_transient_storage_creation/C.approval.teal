@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_creation.sol.C.approval_program() -> uint64:
 main:
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -21,7 +22,7 @@ main:
     replace2 64
     store 0
     txn ApplicationID
-    bnz main_after_if_else@2
+    bnz main_after_if_else@4
     load 0
     store 0
     load 5
@@ -32,13 +33,19 @@ main:
     extract 0 32
     load 0
     store 0
-    pushbytes 0x2a
+    pushint 42
+    itob
     b==
-    assert
-    pushint 1
+    dup
+    bury 2
+    bnz main_after_if_else@3
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@3:
     return
 
-main_after_if_else@2:
+main_after_if_else@4:
     txn NumAppArgs
     !
     assert

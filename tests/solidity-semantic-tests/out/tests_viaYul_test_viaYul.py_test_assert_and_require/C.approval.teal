@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/assert_and_require.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0x151f7c75
     intc_1 // 0
     pushbytes ""
     pushint 4096
@@ -58,7 +59,7 @@ main_f2_route@6:
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@13:
     !
     assert // not payable
     dupn 2
@@ -66,7 +67,7 @@ main_ternary_merge@18:
     <=
     assert // ABI bool validation
     assert
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     dig 2
     concat
     log
@@ -75,7 +76,7 @@ main_ternary_merge@18:
 
 main_ternary_false@12:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@13
 
 main_f_route@5:
     txna ApplicationArgs 1
@@ -95,7 +96,27 @@ main_f_route@5:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@18
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bnz main_after_if_else@20
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@20:
+    dup
+    assert
+    bytec_0 // 0x151f7c75
+    dig 2
+    concat
+    log
+    intc_0 // 1
+    return
 
 main_ternary_false@17:
     intc_1 // 0

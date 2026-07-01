@@ -127,6 +127,23 @@ public:
 		std::shared_ptr<awst::Expression> _key,
 		awst::SourceLocation const& _loc);
 
+	/// CENTRALIZED box-lifecycle prologue. A PARTIAL write (`box[i] = v` / `st.f[i] = v`) or a RESIZE
+	/// (`arr.push()/.pop()`) needs its backing box to already exist with a valid ARC4 default — else
+	/// box_replace / ArrayExtend hits "no such box". A lazily-created state-var or mapping-entry box may
+	/// not exist yet on a first such op (EVM auto-zero-inits storage; the AVM box must be materialised).
+	/// Walks `_target` (through StateGet / IndexExpression / FieldExpression) to the ROOT BoxValue and
+	/// returns an idempotent `if (!box_exists) <create>` statement: box_create(size) when the ARC4
+	/// default is all-zeros (static-element types; no large stack constant), else box_put(default) for a
+	/// non-zero default (dynamic head offsets) that fits the stack. Returns nullptr when there's no root
+	/// box, when it's a whole-box (non-partial, non-resize) write, or when no valid small default exists.
+	/// This is the single place that used to be duplicated (and diverged, leaving gaps = bugs) across
+	/// maybePrePopulateBox, SolAssignmentStructField, and SolArrayMethod::emitEnsureBox.
+	static std::shared_ptr<awst::Statement> makeEnsureRootBoxForWrite(
+		TypeMapper& _typeMapper,
+		std::shared_ptr<awst::Expression> const& _target,
+		bool _isResize,
+		awst::SourceLocation const& _loc);
+
 private:
 	TypeMapper& m_typeMapper;
 

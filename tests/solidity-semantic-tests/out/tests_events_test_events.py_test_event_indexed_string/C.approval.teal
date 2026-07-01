@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock "x" "y" "__ctor_pending" 0x
+    intcblock 0 1 128 90
+    bytecblock "y" "x" "__ctor_pending" 0x
     intc_0 // 0
     bytec_3 // ""
     pushint 4096
@@ -59,22 +59,27 @@ main_ternary_merge@13:
     bury 2
 
 main_while_top@14:
-    dig 1
-    pushbytes 0x5a
-    b<
+    intc_3 // 90
+    itob
+    dig 2
+    b>
     bz main_after_while@16
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     pushbytes 0x00
     concat
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     dig 1
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 2
     b main_while_top@14
 
@@ -84,11 +89,11 @@ main_after_while@16:
 
 main_while_top@17:
     dup
-    pushint 90
+    intc_3 // 90
     <
     bz main_after_while@19
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dig 1
@@ -99,33 +104,77 @@ main_while_top@17:
     dig 2
     uncover 2
     replace3
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     intc_1 // 1
     +
+    dup
+    pushint 255
+    <=
+    assert // overflow
     bury 1
     b main_while_top@17
 
 main_after_while@19:
-    bytec_1 // "y"
+    bytec_0 // "y"
+    box_len
+    bury 1
+    bnz main_after_if_else@21
+    bytec_0 // "y"
+    intc_2 // 128
+    box_create
+    pop
+
+main_after_if_else@21:
+    bytec_0 // "y"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     box_replace // on error: index out of bounds
-    bytec_1 // "y"
+    bytec_0 // "y"
+    box_len
+    bury 1
+    bnz main_after_if_else@23
+    bytec_0 // "y"
+    intc_2 // 128
+    box_create
+    pop
+
+main_after_if_else@23:
+    bytec_0 // "y"
     pushint 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     box_replace // on error: index out of bounds
-    bytec_1 // "y"
+    bytec_0 // "y"
+    box_len
+    bury 1
+    bnz main_after_if_else@25
+    bytec_0 // "y"
+    intc_2 // 128
+    box_create
+    pop
+
+main_after_if_else@25:
+    bytec_0 // "y"
     pushint 64
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
     box_replace // on error: index out of bounds
-    bytec_1 // "y"
+    bytec_0 // "y"
+    box_len
+    bury 1
+    bnz main_after_if_else@27
+    bytec_0 // "y"
+    intc_2 // 128
+    box_create
+    pop
+
+main_after_if_else@27:
+    bytec_0 // "y"
     pushint 96
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     box_replace // on error: index out of bounds
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -134,7 +183,7 @@ main_after_while@19:
     extract 6 2
     swap
     concat
-    bytec_1 // "y"
+    bytec_0 // "y"
     box_get
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -162,11 +211,11 @@ main___postInit_route@5:
     bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec_1 // "y"
-    pushint 128
+    bytec_0 // "y"
+    intc_2 // 128
     box_create
     pop
-    bytec_0 // "x"
+    bytec_1 // "x"
     bytec_3 // 0x
     app_global_put
     intc_1 // 1

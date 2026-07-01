@@ -122,6 +122,10 @@ main_ternary_merge@18:
     assert // check test exists
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "test"
     swap
     app_global_put

@@ -1,0 +1,97 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol.B.approval_program() -> uint64:
+main:
+    intcblock 0 1 6 16
+    bytecblock 0x2d4970c7 TMPL_APPROVAL_A TMPL_CLEAR_A
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    bytec_0 // method "f()void"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_1 // TMPL_APPROVAL_A
+    bytec_2 // TMPL_CLEAR_A
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "f()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return
+
+main_ternary_false@8:
+    intc_0 // 0
+    b main_ternary_merge@9

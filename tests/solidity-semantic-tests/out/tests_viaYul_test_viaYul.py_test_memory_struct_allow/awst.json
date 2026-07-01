@@ -1085,7 +1085,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1700,7 +1701,7 @@
                 "immediates": [],
                 "stack_args": [
                   {
-                    "_type": "IntrinsicCall",
+                    "_type": "SingleEvaluation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
                       "line": 298,
@@ -1715,84 +1716,102 @@
                       "immutable": true,
                       "length": null
                     },
-                    "op_code": "concat",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                          "line": 298,
-                          "end_line": 317,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                    "source": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                        "line": 298,
+                        "end_line": 317,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "concat",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                            "line": 298,
+                            "end_line": 317,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "bzero",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                "line": 298,
+                                "end_line": 317,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
                         },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "bzero",
-                        "immediates": [],
-                        "stack_args": [
-                          {
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                            "line": 298,
+                            "end_line": 317,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
                             "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                              "line": 298,
-                              "end_line": 317,
+                              "line": 314,
+                              "end_line": 316,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "uint64",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "value": 32,
+                            "value": 42,
                             "teal_alias": null
                           }
-                        ]
-                      },
-                      {
-                        "_type": "ReinterpretCast",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                          "line": 298,
-                          "end_line": 317,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "expr": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                            "line": 314,
-                            "end_line": 316,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 42,
-                          "teal_alias": null
                         }
-                      }
-                    ]
+                      ]
+                    },
+                    "_id": 1048577
                   },
                   {
                     "_type": "UInt64BinaryOperation",
@@ -1828,7 +1847,7 @@
                       "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "IntrinsicCall",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
                             "line": 298,
@@ -1843,84 +1862,102 @@
                             "immutable": true,
                             "length": null
                           },
-                          "op_code": "concat",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                "line": 298,
-                                "end_line": 317,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                          "source": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                              "line": 298,
+                              "end_line": 317,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "concat",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                  "line": 298,
+                                  "end_line": 317,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "bzero",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                      "line": 298,
+                                      "end_line": 317,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 32,
+                                    "teal_alias": null
+                                  }
+                                ]
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "bzero",
-                              "immediates": [],
-                              "stack_args": [
-                                {
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                  "line": 298,
+                                  "end_line": 317,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                    "line": 298,
-                                    "end_line": 317,
+                                    "line": 314,
+                                    "end_line": 316,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "biguint",
                                     "immutable": true
                                   },
-                                  "value": 32,
+                                  "value": 42,
                                   "teal_alias": null
                                 }
-                              ]
-                            },
-                            {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                "line": 298,
-                                "end_line": 317,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "expr": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                  "line": 314,
-                                  "end_line": 316,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "value": 42,
-                                "teal_alias": null
                               }
-                            }
-                          ]
+                            ]
+                          },
+                          "_id": 1048577
                         }
                       ]
                     },
@@ -1963,6 +2000,123 @@
                     "teal_alias": null
                   }
                 ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                "line": 298,
+                "end_line": 317,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssertExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                  "line": 298,
+                  "end_line": 317,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                    "line": 298,
+                    "end_line": 317,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                      "line": 298,
+                      "end_line": 317,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                        "line": 298,
+                        "end_line": 317,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__mem_dyn_off_0"
+                    },
+                    "op": "+",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                        "line": 298,
+                        "end_line": 317,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 32,
+                      "teal_alias": null
+                    }
+                  },
+                  "operator": "<=",
+                  "rhs": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                      "line": 298,
+                      "end_line": 317,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 20480,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": "EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)",
+                "comment": "EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)",
+                "explicit": true
               }
             },
             {
@@ -2908,7 +3062,7 @@
                 "immediates": [],
                 "stack_args": [
                   {
-                    "_type": "IntrinsicCall",
+                    "_type": "SingleEvaluation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
                       "line": 330,
@@ -2923,84 +3077,102 @@
                       "immutable": true,
                       "length": null
                     },
-                    "op_code": "concat",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                          "line": 330,
-                          "end_line": 358,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                    "source": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                        "line": 330,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "concat",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                            "line": 330,
+                            "end_line": 358,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "bzero",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                "line": 330,
+                                "end_line": 358,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
                         },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "bzero",
-                        "immediates": [],
-                        "stack_args": [
-                          {
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                            "line": 330,
+                            "end_line": 358,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
                             "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                              "line": 330,
-                              "end_line": 358,
+                              "line": 355,
+                              "end_line": 357,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "uint64",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "value": 32,
+                            "value": 42,
                             "teal_alias": null
                           }
-                        ]
-                      },
-                      {
-                        "_type": "ReinterpretCast",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                          "line": 330,
-                          "end_line": 358,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "expr": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                            "line": 355,
-                            "end_line": 357,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 42,
-                          "teal_alias": null
                         }
-                      }
-                    ]
+                      ]
+                    },
+                    "_id": 1048578
                   },
                   {
                     "_type": "UInt64BinaryOperation",
@@ -3036,7 +3208,7 @@
                       "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "IntrinsicCall",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
                             "line": 330,
@@ -3051,84 +3223,102 @@
                             "immutable": true,
                             "length": null
                           },
-                          "op_code": "concat",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                "line": 330,
-                                "end_line": 358,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                          "source": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                              "line": 330,
+                              "end_line": 358,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "concat",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                  "line": 330,
+                                  "end_line": 358,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "bzero",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                      "line": 330,
+                                      "end_line": 358,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 32,
+                                    "teal_alias": null
+                                  }
+                                ]
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "bzero",
-                              "immediates": [],
-                              "stack_args": [
-                                {
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                                  "line": 330,
+                                  "end_line": 358,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                    "line": 330,
-                                    "end_line": 358,
+                                    "line": 355,
+                                    "end_line": 357,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "biguint",
                                     "immutable": true
                                   },
-                                  "value": 32,
+                                  "value": 42,
                                   "teal_alias": null
                                 }
-                              ]
-                            },
-                            {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                "line": 330,
-                                "end_line": 358,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "expr": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
-                                  "line": 355,
-                                  "end_line": 357,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "value": 42,
-                                "teal_alias": null
                               }
-                            }
-                          ]
+                            ]
+                          },
+                          "_id": 1048578
                         }
                       ]
                     },
@@ -3171,6 +3361,123 @@
                     "teal_alias": null
                   }
                 ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                "line": 330,
+                "end_line": 358,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssertExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                  "line": 330,
+                  "end_line": 358,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                    "line": 330,
+                    "end_line": 358,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                      "line": 330,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                        "line": 330,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__mem_dyn_off_1"
+                    },
+                    "op": "+",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                        "line": 330,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 32,
+                      "teal_alias": null
+                    }
+                  },
+                  "operator": "<=",
+                  "rhs": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol",
+                      "line": 330,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 20480,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": "EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)",
+                "comment": "EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)",
+                "explicit": true
               }
             },
             {
@@ -4057,7 +4364,7 @@
                   "source_location": null,
                   "desc": null
                 },
-                "name": "s"
+                "name": "s__15"
               },
               "value": {
                 "_type": "BytesConstant",
@@ -4265,7 +4572,7 @@
                               "source_location": null,
                               "desc": null
                             },
-                            "name": "s"
+                            "name": "s__15"
                           },
                           "name": "a"
                         },
@@ -4404,7 +4711,7 @@
                               "source_location": null,
                               "desc": null
                             },
-                            "name": "s"
+                            "name": "s__15"
                           },
                           "name": "b"
                         },

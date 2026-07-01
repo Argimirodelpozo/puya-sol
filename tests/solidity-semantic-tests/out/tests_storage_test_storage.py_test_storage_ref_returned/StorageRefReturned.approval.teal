@@ -311,8 +311,13 @@ L.bump:
     select
     dup
     extract 0 32
-    pushbytes 0x01
+    intc_1 // 1
+    itob
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32

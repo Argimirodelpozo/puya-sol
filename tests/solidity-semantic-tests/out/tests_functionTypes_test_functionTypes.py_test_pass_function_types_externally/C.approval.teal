@@ -251,9 +251,14 @@ g:
 g_ternary_merge@3:
     !
     assert // not payable
+    intc_1 // 1
+    itob
     frame_dig -1
-    pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32

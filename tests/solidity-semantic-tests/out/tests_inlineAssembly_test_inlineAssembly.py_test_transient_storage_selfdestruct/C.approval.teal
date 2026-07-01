@@ -34,7 +34,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xd5fa9f39 0xf08d7860 0xb30e2ea6 // method "set(uint512)void", method "get()uint256", method "terminate(address)void"
+    pushbytess 0x7cb116cd 0xf08d7860 0xb30e2ea6 // method "set(uint256)void", method "get()uint256", method "terminate(address)void"
     txna ApplicationArgs 0
     match main_set_route@5 main_get_route@6 main_terminate_route@7
     err
@@ -42,7 +42,7 @@ main_after_if_else@2:
 main_terminate_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
+    bury 2
     len
     intc_2 // 32
     ==
@@ -64,7 +64,7 @@ main_ternary_merge@14:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    dig 1
+    dup
     itxn_field CloseRemainderTo
     intc_1 // 0
     itxn_field Amount
@@ -117,11 +117,11 @@ main_ternary_false@18:
 main_set_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
+    bury 3
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
@@ -137,7 +137,7 @@ main_ternary_merge@24:
     load 5
     intc_2 // 32
     bzero
-    dig 2
+    dig 3
     b|
     replace2 0
     store 5

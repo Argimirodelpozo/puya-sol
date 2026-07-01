@@ -69,6 +69,10 @@ main_while_top@11:
     dig 1
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 2
     b main_while_top@11
 

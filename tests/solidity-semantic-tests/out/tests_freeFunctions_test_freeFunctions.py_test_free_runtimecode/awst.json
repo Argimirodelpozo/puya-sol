@@ -131,7 +131,7 @@
             },
             "operator": ">",
             "rhs": {
-              "_type": "IntegerConstant",
+              "_type": "ReinterpretCast",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/free_runtimecode.sol",
                 "line": 79,
@@ -145,8 +145,45 @@
                 "name": "biguint",
                 "immutable": true
               },
-              "value": 20,
-              "teal_alias": null
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/free_runtimecode.sol",
+                  "line": 79,
+                  "end_line": 110,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "itob",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/free_runtimecode.sol",
+                      "line": 108,
+                      "end_line": 110,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 20,
+                    "teal_alias": null
+                  }
+                ]
+              }
             }
           }
         }
@@ -1336,7 +1373,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -2569,7 +2607,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

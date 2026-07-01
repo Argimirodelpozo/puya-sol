@@ -1635,7 +1635,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1701,7 +1702,7 @@
                     "immediates": [],
                     "stack_args": [
                       {
-                        "_type": "IntrinsicCall",
+                        "_type": "SingleEvaluation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
                           "line": 179,
@@ -1716,66 +1717,27 @@
                           "immutable": true,
                           "length": null
                         },
-                        "op_code": "concat",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
-                              "line": 179,
-                              "end_line": 180,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "bzero",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
-                                  "line": 179,
-                                  "end_line": 180,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 16,
-                                "teal_alias": null
-                              }
-                            ]
+                        "source": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                            "line": 179,
+                            "end_line": 180,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
-                              "line": 179,
-                              "end_line": 180,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "expr": {
-                              "_type": "AppStateExpression",
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "concat",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
                                 "line": 179,
@@ -1785,12 +1747,52 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "key": {
-                                "_type": "BytesConstant",
+                              "op_code": "bzero",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                    "line": 179,
+                                    "end_line": 180,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 16,
+                                  "teal_alias": null
+                                }
+                              ]
+                            },
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                "line": 179,
+                                "end_line": 180,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "AppStateExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
                                   "line": 179,
@@ -1801,16 +1803,33 @@
                                 },
                                 "wtype": {
                                   "_type": "WType",
-                                  "name": "state_key",
+                                  "name": "biguint",
                                   "immutable": true
                                 },
-                                "value": "c>",
-                                "encoding": "utf8"
-                              },
-                              "exists_assertion_message": "check y exists"
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                    "line": 179,
+                                    "end_line": 180,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "c>",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": "check y exists"
+                              }
                             }
-                          }
-                        ]
+                          ]
+                        },
+                        "_id": 1048577
                       },
                       {
                         "_type": "UInt64BinaryOperation",
@@ -1846,7 +1865,7 @@
                           "immediates": [],
                           "stack_args": [
                             {
-                              "_type": "IntrinsicCall",
+                              "_type": "SingleEvaluation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
                                 "line": 179,
@@ -1861,66 +1880,27 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
-                                    "line": 179,
-                                    "end_line": 180,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
-                                        "line": 179,
-                                        "end_line": 180,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 16,
-                                      "teal_alias": null
-                                    }
-                                  ]
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                  "line": 179,
+                                  "end_line": 180,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
                                 },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
-                                    "line": 179,
-                                    "end_line": 180,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "AppStateExpression",
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
                                       "line": 179,
@@ -1930,12 +1910,52 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
                                     },
-                                    "key": {
-                                      "_type": "BytesConstant",
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                          "line": 179,
+                                          "end_line": 180,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 16,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                      "line": 179,
+                                      "end_line": 180,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "AppStateExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
                                         "line": 179,
@@ -1946,16 +1966,33 @@
                                       },
                                       "wtype": {
                                         "_type": "WType",
-                                        "name": "state_key",
+                                        "name": "biguint",
                                         "immutable": true
                                       },
-                                      "value": "c>",
-                                      "encoding": "utf8"
-                                    },
-                                    "exists_assertion_message": "check y exists"
+                                      "key": {
+                                        "_type": "BytesConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/transient_state_variable_initialization.sol",
+                                          "line": 179,
+                                          "end_line": 180,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "state_key",
+                                          "immutable": true
+                                        },
+                                        "value": "c>",
+                                        "encoding": "utf8"
+                                      },
+                                      "exists_assertion_message": "check y exists"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              },
+                              "_id": 1048577
                             }
                           ]
                         },

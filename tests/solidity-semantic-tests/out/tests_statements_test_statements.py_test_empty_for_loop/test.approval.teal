@@ -54,10 +54,14 @@ main_ternary_merge@9:
 main_while_top@10:
     pushbytes 0x01
     b+
-    dup
-    pushbytes 0x0a
+    dupn 2
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 10
+    itob
     b>=
-    bz main_while_top@10
+    bz main_after_if_else@12
     dup
     len
     intc_1 // 32
@@ -72,6 +76,9 @@ main_while_top@10:
     log
     intc_0 // 1
     return
+
+main_after_if_else@12:
+    b main_while_top@10
 
 main_ternary_false@8:
     pushint 0

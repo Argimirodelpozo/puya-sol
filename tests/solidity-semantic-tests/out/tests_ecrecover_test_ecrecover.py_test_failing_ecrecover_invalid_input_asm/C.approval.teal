@@ -67,7 +67,12 @@ main_ternary_merge@9:
     intc_2 // 8
     -
     extract_uint64
-    dup
+    dupn 2
+    pushint 32
+    +
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_0 // 4096
     <
     bz main_else_body@11

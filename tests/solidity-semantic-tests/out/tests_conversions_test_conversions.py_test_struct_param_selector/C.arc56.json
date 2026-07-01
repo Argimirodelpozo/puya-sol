@@ -1,0 +1,295 @@
+{
+    "name": "C",
+    "structs": {
+        "Nested": [
+            {
+                "name": "p",
+                "type": "P"
+            },
+            {
+                "name": "c",
+                "type": "uint8"
+            }
+        ],
+        "P": [
+            {
+                "name": "a",
+                "type": "uint256"
+            },
+            {
+                "name": "b",
+                "type": "uint256"
+            }
+        ],
+        "WithEnum": [
+            {
+                "name": "e",
+                "type": "uint8"
+            },
+            {
+                "name": "s",
+                "type": "int8"
+            },
+            {
+                "name": "b",
+                "type": "byte[3]"
+            }
+        ]
+    },
+    "methods": [
+        {
+            "name": "takeStruct",
+            "args": [
+                {
+                    "type": "(uint256,uint256)",
+                    "struct": "P",
+                    "name": "p"
+                }
+            ],
+            "returns": {
+                "type": "uint256"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "takeNested",
+            "args": [
+                {
+                    "type": "((uint256,uint256),uint8)",
+                    "struct": "Nested",
+                    "name": "n"
+                }
+            ],
+            "returns": {
+                "type": "uint256"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "takeStructArr",
+            "args": [
+                {
+                    "type": "(uint256,uint256)[]",
+                    "name": "ps"
+                }
+            ],
+            "returns": {
+                "type": "uint256"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "takeEnumStruct",
+            "args": [
+                {
+                    "type": "(uint8,int8,byte[3])",
+                    "struct": "WithEnum",
+                    "name": "w"
+                }
+            ],
+            "returns": {
+                "type": "uint256"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "selStruct",
+            "args": [],
+            "returns": {
+                "type": "byte[4]"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "selNested",
+            "args": [],
+            "returns": {
+                "type": "byte[4]"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "selStructArr",
+            "args": [],
+            "returns": {
+                "type": "byte[4]"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "selEnumStruct",
+            "args": [],
+            "returns": {
+                "type": "byte[4]"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {},
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        329
+                    ],
+                    "errorMessage": "invalid array length header"
+                },
+                {
+                    "pc": [
+                        380
+                    ],
+                    "errorMessage": "invalid number of bytes for Nested"
+                },
+                {
+                    "pc": [
+                        421
+                    ],
+                    "errorMessage": "invalid number of bytes for P"
+                },
+                {
+                    "pc": [
+                        288
+                    ],
+                    "errorMessage": "invalid number of bytes for WithEnum"
+                },
+                {
+                    "pc": [
+                        341
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.dynamic_array<P>"
+                },
+                {
+                    "pc": [
+                        170,
+                        200,
+                        230,
+                        260,
+                        301,
+                        354,
+                        393,
+                        434
+                    ],
+                    "errorMessage": "not payable"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvY29udmVyc2lvbnMvY29udHJhY3RzL3N0cnVjdF9wYXJhbV9zZWxlY3Rvci5zb2wuQy5hcHByb3ZhbF9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgaW50Y2Jsb2NrIDEgMCAzMiA2NAogICAgYnl0ZWNibG9jayAweDE1MWY3Yzc1CiAgICBpbnRjXzEgLy8gMAogICAgZHVwbiAyCiAgICBwdXNoYnl0ZXMgIiIKICAgIHB1c2hpbnQgNDA5NgogICAgYnplcm8KICAgIGR1cAogICAgc3RvcmUgNQogICAgZHVwCiAgICBzdG9yZSAwCiAgICBkdXAKICAgIHN0b3JlIDEKICAgIGR1cAogICAgc3RvcmUgMgogICAgZHVwCiAgICBzdG9yZSAzCiAgICBzdG9yZSA0CiAgICBsb2FkIDAKICAgIHB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwODAKICAgIHJlcGxhY2UyIDY0CiAgICBzdG9yZSAwCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydAogICAgcHVzaGJ5dGVzcyAweDRiNzZjZmJhIDB4YTYzMThiMTYgMHhhZTc0MWU3NCAweGJjZjNjMjU3IDB4NjFlN2ViYzEgMHgzZmMyNGVjMSAweDU2NzhkZjU3IDB4YWJlZWFkNmEgLy8gbWV0aG9kICJ0YWtlU3RydWN0KCh1aW50MjU2LHVpbnQyNTYpKXVpbnQyNTYiLCBtZXRob2QgInRha2VOZXN0ZWQoKCh1aW50MjU2LHVpbnQyNTYpLHVpbnQ4KSl1aW50MjU2IiwgbWV0aG9kICJ0YWtlU3RydWN0QXJyKCh1aW50MjU2LHVpbnQyNTYpW10pdWludDI1NiIsIG1ldGhvZCAidGFrZUVudW1TdHJ1Y3QoKHVpbnQ4LGludDgsYnl0ZVszXSkpdWludDI1NiIsIG1ldGhvZCAic2VsU3RydWN0KClieXRlWzRdIiwgbWV0aG9kICJzZWxOZXN0ZWQoKWJ5dGVbNF0iLCBtZXRob2QgInNlbFN0cnVjdEFycigpYnl0ZVs0XSIsIG1ldGhvZCAic2VsRW51bVN0cnVjdCgpYnl0ZVs0XSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fdGFrZVN0cnVjdF9yb3V0ZUA1IG1haW5fdGFrZU5lc3RlZF9yb3V0ZUA2IG1haW5fdGFrZVN0cnVjdEFycl9yb3V0ZUA3IG1haW5fdGFrZUVudW1TdHJ1Y3Rfcm91dGVAOCBtYWluX3NlbFN0cnVjdF9yb3V0ZUA5IG1haW5fc2VsTmVzdGVkX3JvdXRlQDEwIG1haW5fc2VsU3RydWN0QXJyX3JvdXRlQDExIG1haW5fc2VsRW51bVN0cnVjdF9yb3V0ZUAxMgogICAgZXJyCgptYWluX3NlbEVudW1TdHJ1Y3Rfcm91dGVAMTI6CiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogbWFpbl90ZXJuYXJ5X2ZhbHNlQDE4CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAoKbWFpbl90ZXJuYXJ5X21lcmdlQDE5OgogICAgIQogICAgYXNzZXJ0IC8vIG5vdCBwYXlhYmxlCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NWJjZjNjMjU3CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUAxODoKICAgIGludGNfMSAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUAxOQoKbWFpbl9zZWxTdHJ1Y3RBcnJfcm91dGVAMTE6CiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogbWFpbl90ZXJuYXJ5X2ZhbHNlQDIzCiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAoKbWFpbl90ZXJuYXJ5X21lcmdlQDI0OgogICAgIQogICAgYXNzZXJ0IC8vIG5vdCBwYXlhYmxlCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NWFlNzQxZTc0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUAyMzoKICAgIGludGNfMSAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUAyNAoKbWFpbl9zZWxOZXN0ZWRfcm91dGVAMTA6CiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogbWFpbl90ZXJuYXJ5X2ZhbHNlQDI4CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAoKbWFpbl90ZXJuYXJ5X21lcmdlQDI5OgogICAgIQogICAgYXNzZXJ0IC8vIG5vdCBwYXlhYmxlCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NWE2MzE4YjE2CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUAyODoKICAgIGludGNfMSAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUAyOQoKbWFpbl9zZWxTdHJ1Y3Rfcm91dGVAOToKICAgIHR4biBHcm91cEluZGV4CiAgICBieiBtYWluX3Rlcm5hcnlfZmFsc2VAMzMKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZ3R4bnMgQW1vdW50CgptYWluX3Rlcm5hcnlfbWVyZ2VAMzQ6CiAgICAhCiAgICBhc3NlcnQgLy8gbm90IHBheWFibGUKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1NGI3NmNmYmEKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl90ZXJuYXJ5X2ZhbHNlQDMzOgogICAgaW50Y18xIC8vIDAKICAgIGIgbWFpbl90ZXJuYXJ5X21lcmdlQDM0CgptYWluX3Rha2VFbnVtU3RydWN0X3JvdXRlQDg6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGJ1cnkgMwogICAgbGVuCiAgICBwdXNoaW50IDUKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIFdpdGhFbnVtCiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogbWFpbl90ZXJuYXJ5X2ZhbHNlQDM4CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAoKbWFpbl90ZXJuYXJ5X21lcmdlQDM5OgogICAgIQogICAgYXNzZXJ0IC8vIG5vdCBwYXlhYmxlCiAgICBkaWcgMQogICAgaW50Y18xIC8vIDAKICAgIGdldGJ5dGUKICAgIHB1c2hpbnQgMjU1CiAgICAmCiAgICBpdG9iCiAgICBpbnRjXzIgLy8gMzIKICAgIGJ6ZXJvCiAgICBifAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl90ZXJuYXJ5X2ZhbHNlQDM4OgogICAgaW50Y18xIC8vIDAKICAgIGIgbWFpbl90ZXJuYXJ5X21lcmdlQDM5CgptYWluX3Rha2VTdHJ1Y3RBcnJfcm91dGVANzoKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgaW50Y18xIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGR1cAogICAgYnVyeSAzCiAgICBpbnRjXzMgLy8gNjQKICAgICoKICAgIHB1c2hpbnQgMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8UD4KICAgIHR4biBHcm91cEluZGV4CiAgICBieiBtYWluX3Rlcm5hcnlfZmFsc2VANDMKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZ3R4bnMgQW1vdW50CgptYWluX3Rlcm5hcnlfbWVyZ2VANDQ6CiAgICAhCiAgICBhc3NlcnQgLy8gbm90IHBheWFibGUKICAgIGR1cAogICAgaXRvYgogICAgaW50Y18yIC8vIDMyCiAgICBiemVybwogICAgYnwKICAgIGJ5dGVjXzAgLy8gMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUA0MzoKICAgIGludGNfMSAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUA0NAoKbWFpbl90YWtlTmVzdGVkX3JvdXRlQDY6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGJ1cnkgNQogICAgbGVuCiAgICBwdXNoaW50IDY1CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBOZXN0ZWQKICAgIHR4biBHcm91cEluZGV4CiAgICBieiBtYWluX3Rlcm5hcnlfZmFsc2VANDgKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZ3R4bnMgQW1vdW50CgptYWluX3Rlcm5hcnlfbWVyZ2VANDk6CiAgICAhCiAgICBhc3NlcnQgLy8gbm90IHBheWFibGUKICAgIGRpZyAzCiAgICBpbnRjXzMgLy8gNjQKICAgIGdldGJ5dGUKICAgIGl0b2IKICAgIGludGNfMiAvLyAzMgogICAgYnplcm8KICAgIGJ8CiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX3Rlcm5hcnlfZmFsc2VANDg6CiAgICBpbnRjXzEgLy8gMAogICAgYiBtYWluX3Rlcm5hcnlfbWVyZ2VANDkKCm1haW5fdGFrZVN0cnVjdF9yb3V0ZUA1OgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBidXJ5IDQKICAgIGxlbgogICAgaW50Y18zIC8vIDY0CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBQCiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogbWFpbl90ZXJuYXJ5X2ZhbHNlQDUzCiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAoKbWFpbl90ZXJuYXJ5X21lcmdlQDU0OgogICAgIQogICAgYXNzZXJ0IC8vIG5vdCBwYXlhYmxlCiAgICBkaWcgMgogICAgZXh0cmFjdCAwIDMyCiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX3Rlcm5hcnlfZmFsc2VANTM6CiAgICBpbnRjXzEgLy8gMAogICAgYiBtYWluX3Rlcm5hcnlfbWVyZ2VANTQK",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvY29udmVyc2lvbnMvY29udHJhY3RzL3N0cnVjdF9wYXJhbV9zZWxlY3Rvci5zb2wuQy5jbGVhcl9zdGF0ZV9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgcHVzaGludCAxCiAgICByZXR1cm4K"
+    },
+    "byteCode": {
+        "approval": "DCAEAQAgQCYBBBUffHUjRwKAAIGAIK9JNQVJNQBJNQFJNQJJNQM1BDQAgCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgFxANQAxGEAAAiJDMRkURDEYRIIIBEt2z7oEpjGLFgSudB50BLzzwlcEYefrwQQ/wk7BBFZ431cEq+6tajYaAI4IAP8A1QCnAHkAWwA9AB8AAQAxFkEAFTEWIgk4CBREgAgVH3x1vPPCV7AiQyNC/+0xFkEAFTEWIgk4CBREgAgVH3x1rnQedLAiQyNC/+0xFkEAFTEWIgk4CBREgAgVH3x1pjGLFrAiQyNC/+0xFkEAFTEWIgk4CBREgAgVH3x1S3bPurAiQyNC/+02GgFJRQMVgQUSRDEWQQAaMRYiCTgIFERLASNVgf8BGhYkr6soTFCwIkMjQv/oNhoBSSNZSUUDJQuBAghMFRJEMRZBABMxFiIJOAgUREkWJK+rKExQsCJDI0L/7zYaAUlFBRWBQRJEMRZBABYxFiIJOAgUREsDJVUWJK+rKExQsCJDI0L/7DYaAUlFBBUlEkQxFkEAEzEWIgk4CBRESwJXACAoTFCwIkMjQv/v",
+        "clear": "DIEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 9,
+            "patch": 0
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}

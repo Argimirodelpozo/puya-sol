@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/signextend_adddelta.sol.C.approval_program() -> uint64:
 main:
-    intcblock 16 1 0 64
-    bytecblock 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 16 1 0
+    bytecblock 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     intc_2 // 0
     dupn 2
     pushint 4096
@@ -30,7 +30,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x0f38365a // method "addDelta(uint512,uint512)uint128"
+    pushbytes 0x14de603b // method "addDelta(uint128,uint128)uint128"
     txna ApplicationArgs 0
     match main_addDelta_route@4
     err
@@ -43,18 +43,18 @@ main_addDelta_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
+    bury 4
     len
-    intc_3 // 64
+    intc_0 // 16
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 2
+    bury 3
     len
-    intc_3 // 64
+    intc_0 // 16
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint128
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -65,13 +65,23 @@ main_addDelta_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    dig 1
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    pushbytes 0x80000000000000000000000000000000
+    b>=
+    bz main_ternary_false@11
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+main_ternary_merge@12:
     load 0
     store 0
-    dig 1
-    pushbytes 0xffffffffffffffffffffffffffffffff
+    dig 3
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
-    bury 3
-    dup
+    bury 2
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
@@ -81,14 +91,14 @@ main_ternary_merge@9:
     dup
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
-    bz main_ternary_false@14
+    bz main_ternary_false@18
     bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
-    pushbytes 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b|
 
-main_ternary_merge@17:
-    dig 3
+main_ternary_merge@21:
+    dig 1
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -128,10 +138,13 @@ main_ternary_merge@17:
     intc_1 // 1
     return
 
-main_ternary_false@14:
+main_ternary_false@18:
     bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
-    b main_ternary_merge@17
+    b main_ternary_merge@21
+
+main_ternary_false@11:
+    b main_ternary_merge@12
 
 main_ternary_false@8:
     intc_2 // 0

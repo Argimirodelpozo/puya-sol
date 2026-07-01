@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_cleanup.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
-    bytecblock 0x151f7c75 "__ctor_pending" "s"
+    intcblock 1 0 4096 2
+    bytecblock 0x151f7c75 "__ctor_pending" "s" 0x000000000000000000000000000000000000000000000000000000000000000e
     intc_1 // 0
     dup
-    pushint 4096
+    intc_2 // 4096
     bzero
     dup
     store 5
@@ -48,7 +48,7 @@ main_fromSlice_route@9:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -109,7 +109,7 @@ main_fromCalldata_route@7:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -143,7 +143,7 @@ main_fromMemory_route@6:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -163,10 +163,31 @@ main_ternary_merge@31:
     assert // not payable
     load 0
     store 0
+    pushint 8
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dupn 2
+    pushint 32
+    +
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_2 // 4096
+    <
+    bz main_else_body@33
     load 0
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000e
-    replace2 4
+    swap
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000e
+    replace3
     store 0
+
+main_after_if_else@34:
     load 0
     store 0
     bytec_0 // 0x151f7c75
@@ -175,6 +196,20 @@ main_ternary_merge@31:
     log
     intc_0 // 1
     return
+
+main_else_body@33:
+    dup
+    intc_2 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_2 // 4096
+    %
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000e
+    replace3
+    stores
+    b main_after_if_else@34
 
 main_ternary_false@30:
     intc_1 // 0

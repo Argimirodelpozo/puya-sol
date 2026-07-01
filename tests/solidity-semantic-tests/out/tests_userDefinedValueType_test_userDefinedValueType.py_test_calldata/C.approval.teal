@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/calldata.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock "addresses" "__ctor_pending" 0x01 0x0000 0x151f7c7580
+    bytecblock "addresses" "__ctor_pending" 0x010000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000 0x151f7c7580
     intc_0 // 0
     pushint 4096
     bzero
@@ -103,13 +103,13 @@ main_ternary_merge@22:
     box_del
     pop
     bytec_0 // "addresses"
-    bytec_3 // 0x0000
+    bytec 5 // 0x0000
     box_put
     pushbytes 0x000500000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000019000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001b000000000000000000000000000000000000000000000000000000000000001c
     callsub g
     callsub test_equality
     pop
-    bytec 4 // 0x151f7c7580
+    bytec 6 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -133,13 +133,13 @@ main_ternary_merge@27:
     box_del
     pop
     bytec_0 // "addresses"
-    bytec_3 // 0x0000
+    bytec 5 // 0x0000
     box_put
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000001500000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000017
     callsub f
     callsub test_equality
     pop
-    bytec 4 // 0x151f7c7580
+    bytec 6 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -226,8 +226,16 @@ f_while_top@4:
     b>
     bz f_after_while@6
     frame_dig 0
-    bytec_2 // 0x01
+    dup
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_3 // 0x01
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_bury 0
     b f_while_top@4
 
@@ -274,8 +282,16 @@ g_while_top@4:
     b>
     bz g_after_while@6
     frame_dig 0
-    bytec_2 // 0x01
+    dup
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_3 // 0x01
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_bury 0
     b g_while_top@4
 
@@ -331,11 +347,14 @@ test_equality_while_top@4:
     frame_dig 1
     b<
     bz test_equality_after_while@6
-    pushint 8
-    bzero
     frame_dig 0
     dup
-    cover 2
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    dig 1
     concat
     dup
     len
@@ -360,8 +379,12 @@ test_equality_while_top@4:
     box_extract // on error: index out of bounds
     ==
     assert
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_bury 0
     b test_equality_while_top@4
 

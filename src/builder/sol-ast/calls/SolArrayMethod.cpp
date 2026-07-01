@@ -55,39 +55,12 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				// (0x0000) before ArrayExtend/ArrayPop. Guarded by box_len.exists
 				// so subsequent pushes (box already >2 bytes) skip the create.
 				auto emitEnsureBox = [&]() {
-					// Nested case (IndexExpression base): outer box holds the
-					// whole multi-dim array; no per-entry box to create.
-					// Storage-pointer alias: SolIdentifier resolution returns
-					// StateGet(BoxValueExpression). Unwrap so box_create runs
-					// against the aliased slot — without this `A(m[1])` + push
-					// skips the create and trips ArrayExtend's box-exists assert.
-					auto unwrapped = baseAwst;
-					if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(unwrapped))
-						unwrapped = sg->field;
-					auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(unwrapped.get());
-					if (!bv || !bv->key)
-						return;
-					auto boxKey = bv->key;
-
-					auto boxLen = builder::StorageMapper::makeBoxLenTuple(
-						m_ctx.typeMapper, boxKey, m_loc);
-
-					auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
-
-					auto notExists = awst::makeNot(std::move(existsVal), m_loc);
-
-					auto createCall = awst::makeIntrinsicCall(
-						"box_create", awst::WType::boolType(), m_loc);
-					createCall->stackArgs.push_back(boxKey);
-					createCall->stackArgs.push_back(awst::makeIntegerConstant("2", m_loc));
-					auto createStmt = awst::makeExpressionStatement(
-						std::move(createCall), m_loc);
-
-					auto ifBranch = awst::makeBlock(m_loc);
-					ifBranch->body.push_back(std::move(createStmt));
-
-					m_ctx.queuePrePending(awst::makeIfElse(
-						std::move(notExists), std::move(ifBranch), nullptr, m_loc));
+					// Centralized box-lifecycle: a push/pop RESIZE needs the root box (bare dyn-array box, or the
+					// STRUCT box for `m[k].arr.push()` reached through a FieldExpression) to exist first. Shared
+					// with maybePrePopulateBox / SolAssignmentStructField via makeEnsureRootBoxForWrite.
+					if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
+							m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
+						m_ctx.queuePrePending(std::move(stmt));
 				};
 
 				if (memberName == "push" && !m_call.arguments().empty())

@@ -1154,7 +1154,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1272,8 +1273,8 @@
               "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                "line": 146,
-                "end_line": 152,
+                "line": 132,
+                "end_line": 138,
                 "comment_lines": 0,
                 "column": null,
                 "end_column": null
@@ -1282,8 +1283,8 @@
                 "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                  "line": 146,
-                  "end_line": 152,
+                  "line": 132,
+                  "end_line": 138,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
@@ -1296,11 +1297,11 @@
                 "name": "__mod_x_2"
               },
               "value": {
-                "_type": "VarExpression",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                  "line": 150,
-                  "end_line": 151,
+                  "line": 132,
+                  "end_line": 138,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
@@ -1310,7 +1311,45 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "x"
+                "expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                    "line": 132,
+                    "end_line": 138,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "itob",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                        "line": 136,
+                        "end_line": 137,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 2,
+                      "teal_alias": null
+                    }
+                  ]
+                }
               }
             },
             {
@@ -1457,7 +1496,7 @@
                         "exists_assertion_message": "check a exists"
                       },
                       "value": {
-                        "_type": "BigUIntBinaryOperation",
+                        "_type": "CommaExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
                           "line": 73,
@@ -1471,59 +1510,198 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "left": {
-                          "_type": "AppStateExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                            "line": 73,
-                            "end_line": 74,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "key": {
-                            "_type": "BytesConstant",
+                        "expressions": [
+                          {
+                            "_type": "AssignmentExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
                               "line": 73,
-                              "end_line": 74,
+                              "end_line": 79,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "state_key",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "value": "VE",
-                            "encoding": "utf8"
+                            "target": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                "line": 73,
+                                "end_line": 79,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "__checked_2"
+                            },
+                            "value": {
+                              "_type": "BigUIntBinaryOperation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                "line": 73,
+                                "end_line": 79,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "left": {
+                                "_type": "AppStateExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                  "line": 73,
+                                  "end_line": 74,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                    "line": 73,
+                                    "end_line": 74,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "VE",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": "check a exists"
+                              },
+                              "op": "+",
+                              "right": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                  "line": 78,
+                                  "end_line": 79,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__mod_x_2"
+                              }
+                            }
                           },
-                          "exists_assertion_message": "check a exists"
-                        },
-                        "op": "+",
-                        "right": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                            "line": 78,
-                            "end_line": 79,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
+                          {
+                            "_type": "AssertExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                              "line": 73,
+                              "end_line": 79,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "void",
+                              "immutable": true
+                            },
+                            "condition": {
+                              "_type": "NumericComparisonExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                "line": 73,
+                                "end_line": 79,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "bool",
+                                "immutable": true
+                              },
+                              "lhs": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                  "line": 73,
+                                  "end_line": 79,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__checked_2"
+                              },
+                              "operator": "<=",
+                              "rhs": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                  "line": 73,
+                                  "end_line": 79,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                "teal_alias": null
+                              }
+                            },
+                            "error_message": "overflow",
+                            "comment": "overflow",
+                            "explicit": true
                           },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "name": "__mod_x_2"
-                        }
+                          {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                              "line": 73,
+                              "end_line": 79,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "name": "__checked_2"
+                          }
+                        ]
                       }
                     }
                   },
@@ -1765,7 +1943,7 @@
                                   "exists_assertion_message": "check a exists"
                                 },
                                 "value": {
-                                  "_type": "BigUIntBinaryOperation",
+                                  "_type": "CommaExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
                                     "line": 73,
@@ -1779,59 +1957,198 @@
                                     "name": "biguint",
                                     "immutable": true
                                   },
-                                  "left": {
-                                    "_type": "AppStateExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                      "line": 73,
-                                      "end_line": 74,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "key": {
-                                      "_type": "BytesConstant",
+                                  "expressions": [
+                                    {
+                                      "_type": "AssignmentExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
                                         "line": 73,
-                                        "end_line": 74,
+                                        "end_line": 79,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
                                       },
                                       "wtype": {
                                         "_type": "WType",
-                                        "name": "state_key",
+                                        "name": "biguint",
                                         "immutable": true
                                       },
-                                      "value": "VE",
-                                      "encoding": "utf8"
+                                      "target": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                          "line": 73,
+                                          "end_line": 79,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "__checked_1"
+                                      },
+                                      "value": {
+                                        "_type": "BigUIntBinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                          "line": 73,
+                                          "end_line": 79,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "AppStateExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                            "line": 73,
+                                            "end_line": 74,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "key": {
+                                            "_type": "BytesConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                              "line": 73,
+                                              "end_line": 74,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "state_key",
+                                              "immutable": true
+                                            },
+                                            "value": "VE",
+                                            "encoding": "utf8"
+                                          },
+                                          "exists_assertion_message": "check a exists"
+                                        },
+                                        "op": "+",
+                                        "right": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                            "line": 78,
+                                            "end_line": 79,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "__mod_x_1"
+                                        }
+                                      }
                                     },
-                                    "exists_assertion_message": "check a exists"
-                                  },
-                                  "op": "+",
-                                  "right": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                      "line": 78,
-                                      "end_line": 79,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                                    {
+                                      "_type": "AssertExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                        "line": 73,
+                                        "end_line": 79,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "void",
+                                        "immutable": true
+                                      },
+                                      "condition": {
+                                        "_type": "NumericComparisonExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                          "line": 73,
+                                          "end_line": 79,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "bool",
+                                          "immutable": true
+                                        },
+                                        "lhs": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                            "line": 73,
+                                            "end_line": 79,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "__checked_1"
+                                        },
+                                        "operator": "<=",
+                                        "rhs": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                            "line": 73,
+                                            "end_line": 79,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      "error_message": "overflow",
+                                      "comment": "overflow",
+                                      "explicit": true
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "name": "__mod_x_1"
-                                  }
+                                    {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                        "line": 73,
+                                        "end_line": 79,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "name": "__checked_1"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -1850,8 +2167,8 @@
                                   "_type": "AssignmentStatement",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                    "line": 132,
-                                    "end_line": 138,
+                                    "line": 146,
+                                    "end_line": 152,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
@@ -1860,8 +2177,8 @@
                                     "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                      "line": 132,
-                                      "end_line": 138,
+                                      "line": 146,
+                                      "end_line": 152,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
@@ -1874,11 +2191,11 @@
                                     "name": "__mod_x_0"
                                   },
                                   "value": {
-                                    "_type": "ReinterpretCast",
+                                    "_type": "VarExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                      "line": 132,
-                                      "end_line": 138,
+                                      "line": 150,
+                                      "end_line": 151,
                                       "comment_lines": 0,
                                       "column": null,
                                       "end_column": null
@@ -1888,45 +2205,7 @@
                                       "name": "biguint",
                                       "immutable": true
                                     },
-                                    "expr": {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                        "line": 132,
-                                        "end_line": 138,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "itob",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                            "line": 136,
-                                            "end_line": 137,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 2,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    }
+                                    "name": "x"
                                   }
                                 },
                                 {
@@ -2073,7 +2352,7 @@
                                             "exists_assertion_message": "check a exists"
                                           },
                                           "value": {
-                                            "_type": "BigUIntBinaryOperation",
+                                            "_type": "CommaExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
                                               "line": 73,
@@ -2087,59 +2366,198 @@
                                               "name": "biguint",
                                               "immutable": true
                                             },
-                                            "left": {
-                                              "_type": "AppStateExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                                "line": 73,
-                                                "end_line": 74,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "key": {
-                                                "_type": "BytesConstant",
+                                            "expressions": [
+                                              {
+                                                "_type": "AssignmentExpression",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
                                                   "line": 73,
-                                                  "end_line": 74,
+                                                  "end_line": 79,
                                                   "comment_lines": 0,
                                                   "column": null,
                                                   "end_column": null
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "state_key",
+                                                  "name": "biguint",
                                                   "immutable": true
                                                 },
-                                                "value": "VE",
-                                                "encoding": "utf8"
+                                                "target": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                    "line": 73,
+                                                    "end_line": 79,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "name": "__checked_0"
+                                                },
+                                                "value": {
+                                                  "_type": "BigUIntBinaryOperation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                    "line": 73,
+                                                    "end_line": 79,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "left": {
+                                                    "_type": "AppStateExpression",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                      "line": 73,
+                                                      "end_line": 74,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "key": {
+                                                      "_type": "BytesConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                        "line": 73,
+                                                        "end_line": 74,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "state_key",
+                                                        "immutable": true
+                                                      },
+                                                      "value": "VE",
+                                                      "encoding": "utf8"
+                                                    },
+                                                    "exists_assertion_message": "check a exists"
+                                                  },
+                                                  "op": "+",
+                                                  "right": {
+                                                    "_type": "VarExpression",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                      "line": 78,
+                                                      "end_line": 79,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "name": "__mod_x_0"
+                                                  }
+                                                }
                                               },
-                                              "exists_assertion_message": "check a exists"
-                                            },
-                                            "op": "+",
-                                            "right": {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
-                                                "line": 78,
-                                                "end_line": 79,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
+                                              {
+                                                "_type": "AssertExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                  "line": 73,
+                                                  "end_line": 79,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "void",
+                                                  "immutable": true
+                                                },
+                                                "condition": {
+                                                  "_type": "NumericComparisonExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                    "line": 73,
+                                                    "end_line": 79,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "bool",
+                                                    "immutable": true
+                                                  },
+                                                  "lhs": {
+                                                    "_type": "VarExpression",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                      "line": 73,
+                                                      "end_line": 79,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "name": "__checked_0"
+                                                  },
+                                                  "operator": "<=",
+                                                  "rhs": {
+                                                    "_type": "IntegerConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                      "line": 73,
+                                                      "end_line": 79,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                                    "teal_alias": null
+                                                  }
+                                                },
+                                                "error_message": "overflow",
+                                                "comment": "overflow",
+                                                "explicit": true
                                               },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "name": "__mod_x_0"
-                                            }
+                                              {
+                                                "_type": "VarExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol",
+                                                  "line": 73,
+                                                  "end_line": 79,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "biguint",
+                                                  "immutable": true
+                                                },
+                                                "name": "__checked_0"
+                                              }
+                                            ]
                                           }
                                         }
                                       },
@@ -2599,7 +3017,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

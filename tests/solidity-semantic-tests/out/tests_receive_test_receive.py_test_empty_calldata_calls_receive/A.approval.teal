@@ -103,6 +103,10 @@ __receive:
     assert // check x exists
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put

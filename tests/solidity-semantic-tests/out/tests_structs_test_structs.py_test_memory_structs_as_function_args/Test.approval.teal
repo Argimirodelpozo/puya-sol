@@ -120,8 +120,9 @@ main_ternary_false@8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
 extract:
     proto 2 2
+    intc_2 // 0
+    itob
     frame_dig -1
-    pushbytes 0x
     b==
     bz extract_else_body@2
     frame_dig -2
@@ -132,8 +133,9 @@ extract:
     retsub
 
 extract_else_body@2:
+    intc_0 // 1
+    itob
     frame_dig -1
-    pushbytes 0x01
     b==
     bz extract_else_body@4
     frame_dig -2

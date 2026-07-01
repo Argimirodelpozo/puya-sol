@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/contracts/calldata_memory_copy.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 8
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     pushint 4096
     bzero
@@ -101,11 +102,14 @@ sum_while_top@1:
     frame_dig 1
     b>
     bz sum_after_while@3
-    intc_3 // 8
-    bzero
     frame_dig 1
     dup
-    cover 2
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    dig 1
     concat
     dup
     len
@@ -121,10 +125,19 @@ sum_while_top@1:
     extract3 // on error: index access is out of bounds
     frame_dig 0
     b+
-    frame_bury 0
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
     pushbytes 0x01
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_bury 1
+    frame_bury 0
     b sum_while_top@1
 
 sum_after_while@3:

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_if.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    intc_1 // 0
+    intcblock 1 32 0
+    intc_2 // 0
     dup
     pushint 4096
     bzero
@@ -29,7 +29,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x607ebd63 // method "f(uint512)uint256"
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -44,9 +44,9 @@ main_f_route@4:
     dup
     bury 3
     len
-    pushint 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -76,10 +76,10 @@ main_after_if_else@11:
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -90,5 +90,5 @@ main_after_if_else@11:
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9

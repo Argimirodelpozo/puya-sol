@@ -1089,7 +1089,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1201,7 +1202,7 @@
                 },
                 "operator": ">",
                 "rhs": {
-                  "_type": "IntegerConstant",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
                     "line": 81,
@@ -1215,8 +1216,45 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": 10,
-                  "teal_alias": null
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                      "line": 81,
+                      "end_line": 87,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                          "line": 85,
+                          "end_line": 87,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 10,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
                 }
               },
               "if_branch": {
@@ -1259,7 +1297,7 @@
                         "source_location": null
                       },
                       "value": {
-                        "_type": "BigUIntBinaryOperation",
+                        "_type": "CommaExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
                           "line": 96,
@@ -1273,42 +1311,218 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "left": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
-                            "line": 96,
-                            "end_line": 97,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
+                        "expressions": [
+                          {
+                            "_type": "AssignmentExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                              "line": 96,
+                              "end_line": 102,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "target": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                "line": 96,
+                                "end_line": 102,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "__checked_0"
+                            },
+                            "value": {
+                              "_type": "BigUIntBinaryOperation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                "line": 96,
+                                "end_line": 102,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "left": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                  "line": 96,
+                                  "end_line": 97,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "x"
+                              },
+                              "op": "+",
+                              "right": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                  "line": 96,
+                                  "end_line": 102,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "expr": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                    "line": 96,
+                                    "end_line": 102,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                        "line": 100,
+                                        "end_line": 102,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 10,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                }
+                              }
+                            }
                           },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                          {
+                            "_type": "AssertExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                              "line": 96,
+                              "end_line": 102,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "void",
+                              "immutable": true
+                            },
+                            "condition": {
+                              "_type": "NumericComparisonExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                "line": 96,
+                                "end_line": 102,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "bool",
+                                "immutable": true
+                              },
+                              "lhs": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                  "line": 96,
+                                  "end_line": 102,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__checked_0"
+                              },
+                              "operator": "<=",
+                              "rhs": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                                  "line": 96,
+                                  "end_line": 102,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                "teal_alias": null
+                              }
+                            },
+                            "error_message": "overflow",
+                            "comment": "overflow",
+                            "explicit": true
                           },
-                          "name": "x"
-                        },
-                        "op": "+",
-                        "right": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
-                            "line": 96,
-                            "end_line": 102,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 10,
-                          "teal_alias": null
-                        }
+                          {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/simple_throw.sol",
+                              "line": 96,
+                              "end_line": 102,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "name": "__checked_0"
+                          }
+                        ]
                       },
                       "error_message": null
                     }
@@ -1371,7 +1585,8 @@
                         "value": false
                       },
                       "error_message": "revert",
-                      "comment": "revert"
+                      "comment": "revert",
+                      "explicit": true
                     }
                   }
                 ],

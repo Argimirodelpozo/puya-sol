@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/contracts/shift_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000010000 0x151f7c75
     intc_2 // 0
     pushint 4096
@@ -34,7 +34,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbc7feb88 0xe9ae96d6 // method "f(uint512)(uint256,uint256,uint256)", method "g(uint512)(uint256,uint256,uint256)"
+    pushbytess 0xc14fe2fb 0xc83489b8 // method "f(uint256)(uint256,uint256,uint256)", method "g(uint256)(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6
     err
@@ -44,9 +44,9 @@ main_g_route@6:
     dup
     bury 2
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -162,17 +162,17 @@ main_f_route@5:
     dup
     bury 2
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@23
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@24:
     !
     assert // not payable
     intc_0 // 32
@@ -277,6 +277,6 @@ main_ternary_merge@18:
     intc_1 // 1
     return
 
-main_ternary_false@17:
+main_ternary_false@23:
     intc_2 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@24

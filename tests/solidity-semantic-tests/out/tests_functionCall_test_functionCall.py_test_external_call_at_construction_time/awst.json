@@ -1097,7 +1097,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             }
           ],
@@ -2260,7 +2261,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3461,7 +3463,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3573,7 +3576,7 @@
                 },
                 "operator": "==",
                 "rhs": {
-                  "_type": "IntegerConstant",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
                     "line": 289,
@@ -3587,8 +3590,45 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": 0,
-                  "teal_alias": null
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                      "line": 289,
+                      "end_line": 295,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                          "line": 294,
+                          "end_line": 295,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
                 }
               },
               "if_branch": {
@@ -4210,7 +4250,7 @@
                       },
                       "operator": "==",
                       "rhs": {
-                        "_type": "IntegerConstant",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
                           "line": 323,
@@ -4224,8 +4264,45 @@
                           "name": "biguint",
                           "immutable": true
                         },
-                        "value": 1,
-                        "teal_alias": null
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                            "line": 323,
+                            "end_line": 329,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "itob",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                                "line": 328,
+                                "end_line": 329,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       }
                     },
                     "if_branch": {
@@ -4828,7 +4905,7 @@
                   "source_location": null
                 },
                 "value": {
-                  "_type": "BigUIntBinaryOperation",
+                  "_type": "CommaExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
                     "line": 355,
@@ -4842,42 +4919,218 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "left": {
-                    "_type": "IntegerConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
-                      "line": 355,
-                      "end_line": 360,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
+                  "expressions": [
+                    {
+                      "_type": "AssignmentExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                        "line": 355,
+                        "end_line": 360,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "target": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                          "line": 355,
+                          "end_line": 360,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "__checked_0"
+                      },
+                      "value": {
+                        "_type": "BigUIntBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                          "line": 355,
+                          "end_line": 360,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "left": {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                            "line": 355,
+                            "end_line": 360,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "expr": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                              "line": 355,
+                              "end_line": 360,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                                  "line": 355,
+                                  "end_line": 356,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 1,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
+                        },
+                        "op": "+",
+                        "right": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                            "line": 359,
+                            "end_line": 360,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "name": "c"
+                        }
+                      }
                     },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                    {
+                      "_type": "AssertExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                        "line": 355,
+                        "end_line": 360,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "condition": {
+                        "_type": "NumericComparisonExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                          "line": 355,
+                          "end_line": 360,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "lhs": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                            "line": 355,
+                            "end_line": 360,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "name": "__checked_0"
+                        },
+                        "operator": "<=",
+                        "rhs": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                            "line": 355,
+                            "end_line": 360,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                          "teal_alias": null
+                        }
+                      },
+                      "error_message": "overflow",
+                      "comment": "overflow",
+                      "explicit": true
                     },
-                    "value": 1,
-                    "teal_alias": null
-                  },
-                  "op": "+",
-                  "right": {
-                    "_type": "VarExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
-                      "line": 359,
-                      "end_line": 360,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "name": "c"
-                  }
+                    {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol",
+                        "line": 355,
+                        "end_line": 360,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "__checked_0"
+                    }
+                  ]
                 },
                 "error_message": null
               }

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/abi_encode_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 5 32
     bytecblock "x"
     pushint 4096
     bzero
@@ -52,7 +52,7 @@ main_f_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    pushint 5
+    intc_2 // 5
     itob
     pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000007
     callsub c
@@ -80,14 +80,14 @@ main_c_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 32
+    intc_3 // 32
     *
     pushint 2
     +
@@ -114,25 +114,29 @@ c:
 c_ternary_merge@3:
     !
     assert // not payable
+    intc_2 // 5
+    itob
     frame_dig -2
-    pushbytes 0x05
     b==
     assert
     frame_dig -1
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    pushbytes 0x02
+    pushint 2
+    itob
     b==
     assert
     frame_dig -1
     extract 2 32
-    pushbytes 0x06
+    pushint 6
+    itob
     b==
     assert
     frame_dig -1
     extract 34 32
-    pushbytes 0x07
+    pushint 7
+    itob
     b==
     assert
     bytec_0 // "x"

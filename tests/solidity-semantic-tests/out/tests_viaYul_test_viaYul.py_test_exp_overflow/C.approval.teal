@@ -104,6 +104,10 @@ main_after_if_else@17:
 main_after_while@18:
     dig 2
     dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_1 // 32
     <=

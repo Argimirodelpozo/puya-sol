@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/contracts/return_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 88 1280 32 1
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -125,6 +125,10 @@ main_ternary_merge@9:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_2 // 32
     <=
@@ -142,6 +146,10 @@ main_ternary_merge@9:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_2 // 32
     <=
@@ -155,6 +163,10 @@ main_ternary_merge@9:
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_2 // 32

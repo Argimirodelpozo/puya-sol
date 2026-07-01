@@ -25,10 +25,10 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "ghello_world_interfaceId"
-    pushbytes 0xc6be8b58
+    pushbytes 0x9335d03f
     app_global_put
     bytec_1 // "ERC165_interfaceId"
-    pushbytes 0x01ffc9a7
+    pushbytes 0x4e22a3ba // method "supportsInterface(byte[4])bool"
     app_global_put
     intc_0 // 1
     return
@@ -107,7 +107,7 @@ main_hello_world_derived_interfaceId_route@10:
 main_ternary_merge@34:
     !
     assert // not payable
-    pushbytes 0x151f7c7585295877
+    pushbytes 0x151f7c75307ed880
     log
     intc_0 // 1
     return
@@ -137,17 +137,17 @@ main_hello_world_interfaceId_route@8:
     -
     gtxns Amount
 
-main_ternary_merge@44:
+main_ternary_merge@39:
     !
     assert // not payable
-    pushbytes 0x151f7c75c6be8b58
+    pushbytes 0x151f7c759335d03f
     log
     intc_0 // 1
     return
 
 main_ternary_false@38:
     intc_1 // 0
-    b main_ternary_merge@44
+    b main_ternary_merge@39
 
 main_hello_world_route@7:
     txn GroupIndex
@@ -156,7 +156,14 @@ main_hello_world_route@7:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@44
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75c6be8b58
+    log
+    intc_0 // 1
+    return
 
 main_ternary_false@43:
     intc_1 // 0
@@ -173,7 +180,7 @@ main_world_route@6:
 main_ternary_merge@49:
     !
     assert // not payable
-    pushbytes 0x151f7c75df419679
+    pushbytes 0x151f7c75990ed928
     log
     intc_0 // 1
     return
@@ -193,7 +200,7 @@ main_hello_route@5:
 main_ternary_merge@54:
     !
     assert // not payable
-    pushbytes 0x151f7c7519ff1d21
+    pushbytes 0x151f7c750a3b0917
     log
     intc_0 // 1
     return

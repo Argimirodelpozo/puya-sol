@@ -1154,7 +1154,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1465,7 +1466,7 @@
                                   "length": null
                                 },
                                 "expr": {
-                                  "_type": "BigUIntBinaryOperation",
+                                  "_type": "CommaExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                     "line": 100,
@@ -1479,23 +1480,9 @@
                                     "name": "biguint",
                                     "immutable": true
                                   },
-                                  "left": {
-                                    "_type": "ReinterpretCast",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 100,
-                                      "end_line": 110,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "expr": {
-                                      "_type": "IntrinsicCall",
+                                  "expressions": [
+                                    {
+                                      "_type": "AssignmentExpression",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                         "line": 100,
@@ -1505,19 +1492,44 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
                                       },
-                                      "op_code": "extract",
-                                      "immediates": [
-                                        0,
-                                        32
-                                      ],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
+                                      "target": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                          "line": 100,
+                                          "end_line": 110,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "__checked_0"
+                                      },
+                                      "value": {
+                                        "_type": "BigUIntBinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                          "line": 100,
+                                          "end_line": 110,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "ReinterpretCast",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                             "line": 100,
@@ -1527,38 +1539,166 @@
                                             "end_column": null
                                           },
                                           "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
                                           },
-                                          "op_code": "load",
-                                          "immediates": [
-                                            5
-                                          ],
-                                          "stack_args": []
+                                          "expr": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                              "line": 100,
+                                              "end_line": 110,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "extract",
+                                            "immediates": [
+                                              0,
+                                              32
+                                            ],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                                  "line": 100,
+                                                  "end_line": 110,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "load",
+                                                "immediates": [
+                                                  5
+                                                ],
+                                                "stack_args": []
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "op": "+",
+                                        "right": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                            "line": 109,
+                                            "end_line": 110,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "v"
                                         }
-                                      ]
+                                      }
+                                    },
+                                    {
+                                      "_type": "AssertExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 100,
+                                        "end_line": 110,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "void",
+                                        "immutable": true
+                                      },
+                                      "condition": {
+                                        "_type": "NumericComparisonExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                          "line": 100,
+                                          "end_line": 110,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "bool",
+                                          "immutable": true
+                                        },
+                                        "lhs": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                            "line": 100,
+                                            "end_line": 110,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "__checked_0"
+                                        },
+                                        "operator": "<=",
+                                        "rhs": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                            "line": 100,
+                                            "end_line": 110,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      "error_message": "overflow",
+                                      "comment": "overflow",
+                                      "explicit": true
+                                    },
+                                    {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 100,
+                                        "end_line": 110,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "name": "__checked_0"
                                     }
-                                  },
-                                  "op": "+",
-                                  "right": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 109,
-                                      "end_line": 110,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "name": "v"
-                                  }
+                                  ]
                                 }
                               }
                             ]
@@ -1864,7 +2004,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3191,7 +3332,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3396,7 +3538,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__23"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -3488,10 +3630,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "name": "success"
+                  "name": "success__23"
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             }
           ],
@@ -3823,7 +3966,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -3889,400 +4033,6 @@
                   "name": "__arc4_v"
                 },
                 "error_message": null
-              }
-            },
-            {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                "line": 476,
-                "end_line": 543,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                  "line": 476,
-                  "end_line": 543,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                },
-                "name": "__rawcall_data_1"
-              },
-              "value": {
-                "_type": "IntrinsicCall",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                  "line": 495,
-                  "end_line": 542,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                },
-                "op_code": "concat",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                      "line": 495,
-                      "end_line": 542,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "extract",
-                    "immediates": [
-                      0,
-                      4
-                    ],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                          "line": 495,
-                          "end_line": 542,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "keccak256",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "StringConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                              "line": 519,
-                              "end_line": 538,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            "value": "setValue(uint256)"
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                      "line": 495,
-                      "end_line": 542,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "extract3",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                          "line": 495,
-                          "end_line": 542,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "concat",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                              "line": 495,
-                              "end_line": 542,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "bzero",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                  "line": 495,
-                                  "end_line": 542,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 32,
-                                "teal_alias": null
-                              }
-                            ]
-                          },
-                          {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                              "line": 495,
-                              "end_line": 542,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "expr": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 540,
-                                "end_line": 541,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "name": "v"
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        "_type": "UInt64BinaryOperation",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                          "line": 495,
-                          "end_line": 542,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "left": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                            "line": 495,
-                            "end_line": 542,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "op_code": "len",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 495,
-                                "end_line": 542,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 495,
-                                    "end_line": 542,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "bzero",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                        "line": 495,
-                                        "end_line": 542,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 32,
-                                      "teal_alias": null
-                                    }
-                                  ]
-                                },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 495,
-                                    "end_line": 542,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 540,
-                                      "end_line": 541,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "name": "v"
-                                  }
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "op": "-",
-                        "right": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                            "line": 495,
-                            "end_line": 542,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 32,
-                          "teal_alias": null
-                        }
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                          "line": 495,
-                          "end_line": 542,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 32,
-                        "teal_alias": null
-                      }
-                    ]
-                  }
-                ]
               }
             },
             {
@@ -4362,7 +4112,7 @@
                         },
                         "items": [
                           {
-                            "_type": "ConditionalExpression",
+                            "_type": "MethodConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                               "line": 476,
@@ -4377,8 +4127,8 @@
                               "immutable": true,
                               "length": null
                             },
-                            "condition": {
-                              "_type": "NumericComparisonExpression",
+                            "value": {
+                              "_type": "MethodSignatureString",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                 "line": 476,
@@ -4387,165 +4137,11 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "bool",
-                                "immutable": true
-                              },
-                              "lhs": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                  "line": 476,
-                                  "end_line": 543,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "len",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 476,
-                                      "end_line": 543,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "name": "__rawcall_data_1"
-                                  }
-                                ]
-                              },
-                              "operator": ">=",
-                              "rhs": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                  "line": 476,
-                                  "end_line": 543,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 4,
-                                "teal_alias": null
-                              }
-                            },
-                            "true_expr": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 476,
-                                "end_line": 543,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "extract3",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 476,
-                                    "end_line": 543,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "name": "__rawcall_data_1"
-                                },
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 476,
-                                    "end_line": 543,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 0,
-                                  "teal_alias": null
-                                },
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 476,
-                                    "end_line": 543,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 4,
-                                  "teal_alias": null
-                                }
-                              ]
-                            },
-                            "false_expr": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 476,
-                                "end_line": 543,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "name": "__rawcall_data_1"
+                              "value": "setValue(uint256)"
                             }
                           },
                           {
-                            "_type": "ConditionalExpression",
+                            "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                               "line": 476,
@@ -4560,23 +4156,11 @@
                               "immutable": true,
                               "length": null
                             },
-                            "condition": {
-                              "_type": "NumericComparisonExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 476,
-                                "end_line": 543,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "bool",
-                                "immutable": true
-                              },
-                              "lhs": {
-                                "_type": "IntrinsicCall",
+                            "op_code": "extract3",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "SingleEvaluation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                   "line": 476,
@@ -4586,74 +4170,13 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
                                 },
-                                "op_code": "len",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "VarExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 476,
-                                      "end_line": 543,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "name": "__rawcall_data_1"
-                                  }
-                                ]
-                              },
-                              "operator": ">=",
-                              "rhs": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                  "line": 476,
-                                  "end_line": 543,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 4,
-                                "teal_alias": null
-                              }
-                            },
-                            "true_expr": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 476,
-                                "end_line": 543,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "extract3",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "VarExpression",
+                                "source": {
+                                  "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                     "line": 476,
@@ -4668,61 +4191,137 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "name": "__rawcall_data_1"
-                                },
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 476,
-                                    "end_line": 543,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 4,
-                                  "teal_alias": null
-                                },
-                                {
-                                  "_type": "UInt64BinaryOperation",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                    "line": 476,
-                                    "end_line": 543,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "left": {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 476,
-                                      "end_line": 543,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 476,
+                                        "end_line": 543,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "bzero",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                            "line": 476,
+                                            "end_line": 543,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 32,
+                                          "teal_alias": null
+                                        }
+                                      ]
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "len",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 476,
+                                        "end_line": 543,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
                                         "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                          "line": 540,
+                                          "end_line": 541,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "v"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "_id": 1048577
+                              },
+                              {
+                                "_type": "UInt64BinaryOperation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                  "line": 476,
+                                  "end_line": 543,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "left": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                    "line": 476,
+                                    "end_line": 543,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "SingleEvaluation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 476,
+                                        "end_line": 543,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "source": {
+                                        "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                                           "line": 476,
@@ -4737,51 +4336,127 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "name": "__rawcall_data_1"
-                                      }
-                                    ]
+                                        "op_code": "concat",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                              "line": 476,
+                                              "end_line": 543,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "bzero",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                                  "line": 476,
+                                                  "end_line": 543,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 32,
+                                                "teal_alias": null
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "ReinterpretCast",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                              "line": 476,
+                                              "end_line": 543,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "expr": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                                "line": 540,
+                                                "end_line": 541,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "v"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "_id": 1048577
+                                    }
+                                  ]
+                                },
+                                "op": "-",
+                                "right": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                    "line": 476,
+                                    "end_line": 543,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  "op": "-",
-                                  "right": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                      "line": 476,
-                                      "end_line": 543,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 4,
-                                    "teal_alias": null
-                                  }
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 32,
+                                  "teal_alias": null
                                 }
-                              ]
-                            },
-                            "false_expr": {
-                              "_type": "BytesConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
-                                "line": 476,
-                                "end_line": 543,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "value": "",
-                              "encoding": "base16"
-                            }
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                  "line": 476,
+                                  "end_line": 543,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 32,
+                                "teal_alias": null
+                              }
+                            ]
                           }
                         ]
                       },
@@ -5044,11 +4719,35 @@
                       "immutable": true,
                       "length": null
                     },
-                    "op_code": "itxn",
+                    "op_code": "extract",
                     "immediates": [
-                      "LastLog"
+                      4,
+                      0
                     ],
-                    "stack_args": []
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 476,
+                          "end_line": 543,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itxn",
+                        "immediates": [
+                          "LastLog"
+                        ],
+                        "stack_args": []
+                      }
+                    ]
                   }
                 ]
               }
@@ -5078,7 +4777,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__46"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -5170,10 +4869,11 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "name": "success"
+                  "name": "success__46"
                 },
                 "error_message": null,
-                "comment": null
+                "comment": null,
+                "explicit": true
               }
             }
           ],
@@ -5505,7 +5205,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -5571,6 +5272,584 @@
                   "name": "__arc4_v"
                 },
                 "error_message": null
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                "line": 695,
+                "end_line": 768,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "SubmitInnerTransaction",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                  "line": 695,
+                  "end_line": 768,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WInnerTransaction",
+                  "name": "inner_transaction_appl",
+                  "immutable": true,
+                  "transaction_type": 6
+                },
+                "itxns": [
+                  {
+                    "_type": "CreateInnerTransaction",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                      "line": 695,
+                      "end_line": 768,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WInnerTransactionFields",
+                      "name": "inner_transaction_fields_appl",
+                      "immutable": true,
+                      "transaction_type": 6
+                    },
+                    "fields": {
+                      "ApplicationArgs": {
+                        "_type": "TupleExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 695,
+                          "end_line": 768,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WTuple",
+                          "name": "tuple",
+                          "immutable": true,
+                          "types": [
+                            {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            }
+                          ],
+                          "names": null,
+                          "source_location": null
+                        },
+                        "items": [
+                          {
+                            "_type": "MethodConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                              "line": 695,
+                              "end_line": 768,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "value": {
+                              "_type": "MethodSignatureString",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                "line": 695,
+                                "end_line": 768,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "value": "setValue(uint256)"
+                            }
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                              "line": 695,
+                              "end_line": 768,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "extract3",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "SingleEvaluation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                  "line": 695,
+                                  "end_line": 768,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                    "line": 695,
+                                    "end_line": 768,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 695,
+                                        "end_line": 768,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "bzero",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                            "line": 695,
+                                            "end_line": 768,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 32,
+                                          "teal_alias": null
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 695,
+                                        "end_line": 768,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                          "line": 765,
+                                          "end_line": 766,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "v"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "_id": 1048578
+                              },
+                              {
+                                "_type": "UInt64BinaryOperation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                  "line": 695,
+                                  "end_line": 768,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "left": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                    "line": 695,
+                                    "end_line": 768,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "SingleEvaluation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                        "line": 695,
+                                        "end_line": 768,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "source": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                          "line": 695,
+                                          "end_line": 768,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "concat",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                              "line": 695,
+                                              "end_line": 768,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "bzero",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                                  "line": 695,
+                                                  "end_line": 768,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 32,
+                                                "teal_alias": null
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "ReinterpretCast",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                              "line": 695,
+                                              "end_line": 768,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "expr": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                                "line": 765,
+                                                "end_line": 766,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "v"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "_id": 1048578
+                                    }
+                                  ]
+                                },
+                                "op": "-",
+                                "right": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                    "line": 695,
+                                    "end_line": 768,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 32,
+                                  "teal_alias": null
+                                }
+                              },
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                  "line": 695,
+                                  "end_line": 768,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 32,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "ApplicationID": {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 695,
+                          "end_line": 768,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "application",
+                          "immutable": true
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                            "line": 695,
+                            "end_line": 768,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "btoi",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                "line": 695,
+                                "end_line": 768,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "extract",
+                              "immediates": [
+                                24,
+                                8
+                              ],
+                              "stack_args": [
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                    "line": 695,
+                                    "end_line": 768,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                                      "line": 695,
+                                      "end_line": 708,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "account",
+                                      "immutable": true
+                                    },
+                                    "name": "otherContract"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "Fee": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 695,
+                          "end_line": 768,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      },
+                      "OnCompletion": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 695,
+                          "end_line": 768,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      },
+                      "TypeEnum": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 695,
+                          "end_line": 768,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 6,
+                        "teal_alias": null
+                      }
+                    }
+                  }
+                ]
               }
             },
             {
@@ -5664,7 +5943,7 @@
                     "value": true
                   },
                   {
-                    "_type": "BytesConstant",
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
                       "line": 695,
@@ -5679,8 +5958,35 @@
                       "immutable": true,
                       "length": null
                     },
-                    "value": "",
-                    "encoding": "base16"
+                    "op_code": "extract",
+                    "immediates": [
+                      4,
+                      0
+                    ],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol",
+                          "line": 695,
+                          "end_line": 768,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itxn",
+                        "immediates": [
+                          "LastLog"
+                        ],
+                        "stack_args": []
+                      }
+                    ]
                   }
                 ]
               }
@@ -5710,7 +6016,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__71"
               },
               "value": {
                 "_type": "TupleItemExpression",
@@ -5787,7 +6093,7 @@
                   "name": "bool",
                   "immutable": true
                 },
-                "name": "success"
+                "name": "success__71"
               }
             }
           ],
@@ -6084,7 +6390,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -7209,7 +7516,8 @@
                   ]
                 },
                 "error_message": "__postInit already called",
-                "comment": "__postInit already called"
+                "comment": "__postInit already called",
+                "explicit": true
               }
             },
             {
@@ -8963,7 +9271,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -10469,7 +10778,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -11955,7 +12265,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {

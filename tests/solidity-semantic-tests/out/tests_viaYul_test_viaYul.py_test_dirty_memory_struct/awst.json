@@ -1065,7 +1065,8 @@
                   }
                 },
                 "error_message": "not payable",
-                "comment": "not payable"
+                "comment": "not payable",
+                "explicit": true
               }
             },
             {
@@ -1134,39 +1135,14 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4Struct",
-                  "name": "S",
-                  "immutable": false,
-                  "fields": [
-                    {
-                      "name": "m",
-                      "wtype": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "arc4.dynamic_array<arc4.uint8>",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint8",
-                          "immutable": true,
-                          "n": 8,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "description": null
-                    }
-                  ],
-                  "frozen": false,
-                  "arc4_alias": null,
-                  "source_location": null,
-                  "desc": null
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
                 },
-                "name": "s"
+                "name": "__blobagg_off_11"
               },
               "value": {
-                "_type": "BytesConstant",
+                "_type": "IntrinsicCall",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
                   "line": 115,
@@ -1176,37 +1152,54 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4Struct",
-                  "name": "S",
-                  "immutable": false,
-                  "fields": [
-                    {
-                      "name": "m",
-                      "wtype": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "arc4.dynamic_array<arc4.uint8>",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint8",
-                          "immutable": true,
-                          "n": 8,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "description": null
-                    }
-                  ],
-                  "frozen": false,
-                  "arc4_alias": null,
-                  "source_location": null,
-                  "desc": null
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
                 },
-                "value": "00IC2",
-                "encoding": "base16"
+                "op_code": "extract_uint64",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 115,
+                      "end_line": 125,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "load",
+                    "immediates": [
+                      0
+                    ],
+                    "stack_args": []
+                  },
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 115,
+                      "end_line": 125,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 88,
+                    "teal_alias": null
+                  }
+                ]
               }
             },
             {
@@ -1220,7 +1213,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "ARC4Decode",
+                "_type": "AssignmentExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
                   "line": 135,
@@ -1230,25 +1223,35 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4DynamicArray",
-                  "name": "arc4.dynamic_array<arc4.uint8>",
-                  "immutable": false,
-                  "element_type": {
-                    "_type": "ARC4UIntN",
-                    "name": "arc4.uint8",
-                    "immutable": true,
-                    "n": 8,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
                 },
-                "value": {
-                  "_type": "FieldExpression",
+                "target": {
+                  "_type": "BytesConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
                     "line": 135,
+                    "end_line": 138,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "value": "",
+                  "encoding": "base16"
+                },
+                "value": {
+                  "_type": "NewArray",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                    "line": 141,
                     "end_line": 155,
                     "comment_lines": 0,
                     "column": null,
@@ -1269,184 +1272,30 @@
                     "arc4_alias": null,
                     "source_location": null
                   },
-                  "base": {
-                    "_type": "AssignmentExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                      "line": 135,
-                      "end_line": 155,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "ARC4Struct",
-                      "name": "S",
-                      "immutable": false,
-                      "fields": [
-                        {
-                          "name": "m",
-                          "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint8>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint8",
-                              "immutable": true,
-                              "n": 8,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "description": null
-                        }
-                      ],
-                      "frozen": false,
-                      "arc4_alias": null,
-                      "source_location": null,
-                      "desc": null
-                    },
-                    "target": {
-                      "_type": "VarExpression",
+                  "values": [
+                    {
+                      "_type": "BytesConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                        "line": 135,
-                        "end_line": 136,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4Struct",
-                        "name": "S",
-                        "immutable": false,
-                        "fields": [
-                          {
-                            "name": "m",
-                            "wtype": {
-                              "_type": "ARC4DynamicArray",
-                              "name": "arc4.dynamic_array<arc4.uint8>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "description": null
-                          }
-                        ],
-                        "frozen": false,
-                        "arc4_alias": null,
-                        "source_location": null,
-                        "desc": null
-                      },
-                      "name": "s"
-                    },
-                    "value": {
-                      "_type": "NewStruct",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                        "line": 135,
+                        "line": 141,
                         "end_line": 155,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ARC4Struct",
-                        "name": "S",
-                        "immutable": false,
-                        "fields": [
-                          {
-                            "name": "m",
-                            "wtype": {
-                              "_type": "ARC4DynamicArray",
-                              "name": "arc4.dynamic_array<arc4.uint8>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "description": null
-                          }
-                        ],
-                        "frozen": false,
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint8",
+                        "immutable": true,
+                        "n": 8,
                         "arc4_alias": null,
-                        "source_location": null,
-                        "desc": null
+                        "source_location": null
                       },
-                      "values": {
-                        "m": {
-                          "_type": "NewArray",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                            "line": 141,
-                            "end_line": 155,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint8>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint8",
-                              "immutable": true,
-                              "n": 8,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "values": [
-                            {
-                              "_type": "BytesConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                                "line": 141,
-                                "end_line": 155,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "value": "00",
-                              "encoding": "base16"
-                            }
-                          ]
-                        }
-                      }
+                      "value": "00",
+                      "encoding": "base16"
                     }
-                  },
-                  "name": "m"
-                },
-                "error_message": null
+                  ]
+                }
               }
             },
             {
@@ -1505,7 +1354,7 @@
               }
             },
             {
-              "_type": "ExpressionStatement",
+              "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
                 "line": 188,
@@ -1514,7 +1363,24 @@
                 "column": null,
                 "end_column": null
               },
-              "expr": {
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
+                },
+                "name": "__mem_dyn_off_0"
+              },
+              "value": {
                 "_type": "IntrinsicCall",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
@@ -1526,13 +1392,11 @@
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "void",
+                  "name": "uint64",
                   "immutable": true
                 },
-                "op_code": "store",
-                "immediates": [
-                  0
-                ],
+                "op_code": "extract_uint64",
+                "immediates": [],
                 "stack_args": [
                   {
                     "_type": "IntrinsicCall",
@@ -1550,7 +1414,7 @@
                       "immutable": true,
                       "length": null
                     },
-                    "op_code": "replace3",
+                    "op_code": "concat",
                     "immediates": [],
                     "stack_args": [
                       {
@@ -1569,11 +1433,410 @@
                           "immutable": true,
                           "length": null
                         },
-                        "op_code": "load",
-                        "immediates": [
-                          0
-                        ],
-                        "stack_args": []
+                        "op_code": "bzero",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                              "line": 188,
+                              "end_line": 211,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 8,
+                            "teal_alias": null
+                          }
+                        ]
+                      },
+                      {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 188,
+                          "end_line": 211,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "expr": {
+                          "_type": "BigUIntBinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 195,
+                            "end_line": 205,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "BigUIntBinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                              "line": 195,
+                              "end_line": 205,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 195,
+                                "end_line": 205,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 195,
+                                  "end_line": 205,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                      "line": 199,
+                                      "end_line": 200,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "name": "__blobagg_off_11"
+                                  }
+                                ]
+                              }
+                            },
+                            "op": "+",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 202,
+                                "end_line": 204,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "value": 64,
+                              "teal_alias": null
+                            }
+                          },
+                          "op": "%",
+                          "right": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                              "line": 195,
+                              "end_line": 205,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                            "teal_alias": null
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "op_code": "-",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 188,
+                          "end_line": 211,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "op_code": "len",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                              "line": 188,
+                              "end_line": 211,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "concat",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 188,
+                                  "end_line": 211,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "bzero",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                      "line": 188,
+                                      "end_line": 211,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 8,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              },
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 188,
+                                  "end_line": 211,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "BigUIntBinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                    "line": 195,
+                                    "end_line": 205,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "BigUIntBinaryOperation",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                      "line": 195,
+                                      "end_line": 205,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "left": {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                        "line": 195,
+                                        "end_line": 205,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "expr": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                          "line": 195,
+                                          "end_line": 205,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "itob",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 199,
+                                              "end_line": 200,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "name": "__blobagg_off_11"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "op": "+",
+                                    "right": {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                        "line": 202,
+                                        "end_line": 204,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "value": 64,
+                                      "teal_alias": null
+                                    }
+                                  },
+                                  "op": "%",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                      "line": 195,
+                                      "end_line": 205,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                                    "teal_alias": null
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
                       },
                       {
                         "_type": "IntegerConstant",
@@ -1590,29 +1853,224 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "value": 64,
+                        "value": 8,
                         "teal_alias": null
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                "line": 188,
+                "end_line": 211,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "name": "__mem_dyn_val_0"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "extract3",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "SingleEvaluation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "source": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                          "line": 188,
-                          "end_line": 211,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "concat",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 188,
+                            "end_line": 211,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "bzero",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 188,
+                                "end_line": 211,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
                         },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "extract3",
-                        "immediates": [],
-                        "stack_args": [
-                          {
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 188,
+                            "end_line": 211,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                              "line": 207,
+                              "end_line": 210,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": 257,
+                            "teal_alias": null
+                          }
+                        }
+                      ]
+                    },
+                    "_id": 1048577
+                  },
+                  {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "op_code": "len",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "SingleEvaluation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 188,
+                            "end_line": 211,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "source": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
@@ -1707,22 +2165,291 @@
                               }
                             ]
                           },
-                          {
-                            "_type": "UInt64BinaryOperation",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                              "line": 188,
-                              "end_line": 211,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "left": {
+                          "_id": 1048577
+                        }
+                      ]
+                    },
+                    "op": "-",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 32,
+                      "teal_alias": null
+                    }
+                  },
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 32,
+                    "teal_alias": null
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                "line": 188,
+                "end_line": 211,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssertExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                    "line": 188,
+                    "end_line": 211,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__mem_dyn_off_0"
+                    },
+                    "op": "+",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 32,
+                      "teal_alias": null
+                    }
+                  },
+                  "operator": "<=",
+                  "rhs": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 20480,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": "EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)",
+                "comment": "EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "IfElse",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                "line": 188,
+                "end_line": 211,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "condition": {
+                "_type": "NumericComparisonExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
+                },
+                "lhs": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                    "line": 188,
+                    "end_line": 211,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "name": "__mem_dyn_off_0"
+                },
+                "operator": "<",
+                "rhs": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                    "line": 188,
+                    "end_line": 211,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 4096,
+                  "teal_alias": null
+                }
+              },
+              "if_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "op_code": "store",
+                      "immediates": [
+                        0
+                      ],
+                      "stack_args": [
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 188,
+                            "end_line": 211,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "replace3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
                               "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
@@ -1733,113 +2460,19 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "op_code": "len",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                                    "line": 188,
-                                    "end_line": 211,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                                        "line": 188,
-                                        "end_line": 211,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                                            "line": 188,
-                                            "end_line": 211,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 32,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                                        "line": 188,
-                                        "end_line": 211,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                                          "line": 207,
-                                          "end_line": 210,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "value": 257,
-                                        "teal_alias": null
-                                      }
-                                    }
-                                  ]
-                                }
-                              ]
+                              "op_code": "load",
+                              "immediates": [
+                                0
+                              ],
+                              "stack_args": []
                             },
-                            "op": "-",
-                            "right": {
-                              "_type": "IntegerConstant",
+                            {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
                                 "line": 188,
@@ -1853,33 +2486,306 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "value": 32,
-                              "teal_alias": null
+                              "name": "__mem_dyn_off_0"
+                            },
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 188,
+                                "end_line": 211,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__mem_dyn_val_0"
                             }
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                              "line": 188,
-                              "end_line": 211,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 32,
-                            "teal_alias": null
-                          }
-                        ]
-                      }
-                    ]
+                          ]
+                        }
+                      ]
+                    }
                   }
-                ]
+                ],
+                "label": null,
+                "comment": null
+              },
+              "else_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                  "line": 188,
+                  "end_line": 211,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "AssignmentStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "target": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__mem_dyn_slot_0"
+                    },
+                    "value": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 188,
+                          "end_line": 211,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "__mem_dyn_off_0"
+                      },
+                      "op": "//",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 188,
+                          "end_line": 211,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 4096,
+                        "teal_alias": null
+                      }
+                    }
+                  },
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                      "line": 188,
+                      "end_line": 211,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 188,
+                        "end_line": 211,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "op_code": "stores",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 188,
+                            "end_line": 211,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "name": "__mem_dyn_slot_0"
+                        },
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 188,
+                            "end_line": 211,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "replace3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 188,
+                                "end_line": 211,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "loads",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                    "line": 188,
+                                    "end_line": 211,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "name": "__mem_dyn_slot_0"
+                                }
+                              ]
+                            },
+                            {
+                              "_type": "UInt64BinaryOperation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 188,
+                                "end_line": 211,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "left": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 188,
+                                  "end_line": 211,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "name": "__mem_dyn_off_0"
+                              },
+                              "op": "%",
+                              "right": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 188,
+                                  "end_line": 211,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 4096,
+                                "teal_alias": null
+                              }
+                            },
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 188,
+                                "end_line": 211,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__mem_dyn_val_0"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
               }
             },
             {
@@ -1962,13 +2868,13 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "name": "x"
+                "name": "x__25"
               },
               "value": {
-                "_type": "ARC4Decode",
+                "_type": "IntrinsicCall",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                  "line": 240,
+                  "line": 230,
                   "end_line": 246,
                   "comment_lines": 0,
                   "column": null,
@@ -1979,113 +2885,934 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "value": {
-                  "_type": "IndexExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                    "line": 240,
-                    "end_line": 246,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4UIntN",
-                    "name": "arc4.uint8",
-                    "immutable": true,
-                    "n": 8,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "base": {
-                    "_type": "FieldExpression",
+                "op_code": "btoi",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                      "line": 240,
-                      "end_line": 243,
+                      "line": 230,
+                      "end_line": 246,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ARC4DynamicArray",
-                      "name": "arc4.dynamic_array<arc4.uint8>",
-                      "immutable": false,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint8",
-                        "immutable": true,
-                        "n": 8,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "arc4_alias": null,
-                      "source_location": null
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    "base": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                        "line": 240,
-                        "end_line": 241,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4Struct",
-                        "name": "S",
-                        "immutable": false,
-                        "fields": [
-                          {
-                            "name": "m",
-                            "wtype": {
-                              "_type": "ARC4DynamicArray",
-                              "name": "arc4.dynamic_array<arc4.uint8>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
+                    "op_code": "extract3",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "SingleEvaluation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 230,
+                          "end_line": 246,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "source": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 230,
+                            "end_line": 246,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "concat",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 230,
+                                "end_line": 246,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              "arc4_alias": null,
-                              "source_location": null
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "bzero",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                    "line": 230,
+                                    "end_line": 246,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 8,
+                                  "teal_alias": null
+                                }
+                              ]
                             },
-                            "description": null
-                          }
-                        ],
-                        "frozen": false,
-                        "arc4_alias": null,
-                        "source_location": null,
-                        "desc": null
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 230,
+                                "end_line": 246,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 240,
+                                  "end_line": 246,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "expr": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                    "line": 240,
+                                    "end_line": 246,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "extract3",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                        "line": 240,
+                                        "end_line": 246,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "loads",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                            "line": 240,
+                                            "end_line": 246,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "UInt64BinaryOperation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 240,
+                                              "end_line": 246,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "left": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                "line": 240,
+                                                "end_line": 246,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "name": "__blobagg_off_11"
+                                            },
+                                            "op": "+",
+                                            "right": {
+                                              "_type": "UInt64BinaryOperation",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                "line": 240,
+                                                "end_line": 246,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "left": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                  "line": 244,
+                                                  "end_line": 245,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 0,
+                                                "teal_alias": null
+                                              },
+                                              "op": "*",
+                                              "right": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                  "line": 240,
+                                                  "end_line": 246,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 8,
+                                                "teal_alias": null
+                                              }
+                                            }
+                                          },
+                                          "op": "//",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 240,
+                                              "end_line": 246,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 4096,
+                                            "teal_alias": null
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                        "line": 240,
+                                        "end_line": 246,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "UInt64BinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                          "line": 240,
+                                          "end_line": 246,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                            "line": 240,
+                                            "end_line": 246,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "name": "__blobagg_off_11"
+                                        },
+                                        "op": "+",
+                                        "right": {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                            "line": 240,
+                                            "end_line": 246,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 244,
+                                              "end_line": 245,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 0,
+                                            "teal_alias": null
+                                          },
+                                          "op": "*",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 240,
+                                              "end_line": 246,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        }
+                                      },
+                                      "op": "%",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                          "line": 240,
+                                          "end_line": 246,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 4096,
+                                        "teal_alias": null
+                                      }
+                                    },
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                        "line": 240,
+                                        "end_line": 246,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 32,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "_id": 1048578
                       },
-                      "name": "s"
-                    },
-                    "name": "m"
-                  },
-                  "index": {
-                    "_type": "IntegerConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
-                      "line": 244,
-                      "end_line": 245,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "value": 0,
-                    "teal_alias": null
+                      {
+                        "_type": "UInt64BinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 230,
+                          "end_line": 246,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "left": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 230,
+                            "end_line": 246,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "len",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "SingleEvaluation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                "line": 230,
+                                "end_line": 246,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                  "line": 230,
+                                  "end_line": 246,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                      "line": 230,
+                                      "end_line": 246,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "bzero",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                          "line": 230,
+                                          "end_line": 246,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 8,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                      "line": 230,
+                                      "end_line": 246,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                        "line": 240,
+                                        "end_line": 246,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "expr": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                          "line": 240,
+                                          "end_line": 246,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "extract3",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 240,
+                                              "end_line": 246,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "loads",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "UInt64BinaryOperation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                  "line": 240,
+                                                  "end_line": 246,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "left": {
+                                                  "_type": "UInt64BinaryOperation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                    "line": 240,
+                                                    "end_line": 246,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "left": {
+                                                    "_type": "VarExpression",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                      "line": 240,
+                                                      "end_line": 246,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "name": "__blobagg_off_11"
+                                                  },
+                                                  "op": "+",
+                                                  "right": {
+                                                    "_type": "UInt64BinaryOperation",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                      "line": 240,
+                                                      "end_line": 246,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "left": {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                        "line": 244,
+                                                        "end_line": 245,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 0,
+                                                      "teal_alias": null
+                                                    },
+                                                    "op": "*",
+                                                    "right": {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                        "line": 240,
+                                                        "end_line": 246,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 8,
+                                                      "teal_alias": null
+                                                    }
+                                                  }
+                                                },
+                                                "op": "//",
+                                                "right": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                    "line": 240,
+                                                    "end_line": 246,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 4096,
+                                                  "teal_alias": null
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "UInt64BinaryOperation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 240,
+                                              "end_line": 246,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "left": {
+                                              "_type": "UInt64BinaryOperation",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                "line": 240,
+                                                "end_line": 246,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "left": {
+                                                "_type": "VarExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                  "line": 240,
+                                                  "end_line": 246,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "name": "__blobagg_off_11"
+                                              },
+                                              "op": "+",
+                                              "right": {
+                                                "_type": "UInt64BinaryOperation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                  "line": 240,
+                                                  "end_line": 246,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "left": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                    "line": 244,
+                                                    "end_line": 245,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 0,
+                                                  "teal_alias": null
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                    "line": 240,
+                                                    "end_line": 246,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 8,
+                                                  "teal_alias": null
+                                                }
+                                              }
+                                            },
+                                            "op": "%",
+                                            "right": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                                "line": 240,
+                                                "end_line": 246,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 4096,
+                                              "teal_alias": null
+                                            }
+                                          },
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                                              "line": 240,
+                                              "end_line": 246,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "_id": 1048578
+                            }
+                          ]
+                        },
+                        "op": "-",
+                        "right": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 230,
+                            "end_line": 246,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 8,
+                          "teal_alias": null
+                        }
+                      },
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                          "line": 230,
+                          "end_line": 246,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 8,
+                        "teal_alias": null
+                      }
+                    ]
                   }
-                },
-                "error_message": null
+                ]
               }
             },
             {
@@ -2113,7 +3840,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "r"
+                "name": "r__32"
               },
               "value": {
                 "_type": "IntegerConstant",
@@ -2214,7 +3941,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "name": "r"
+                "name": "r__32"
               },
               "value": {
                 "_type": "ReinterpretCast",
@@ -2265,7 +3992,7 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "name": "x"
+                      "name": "x__25"
                     }
                   ]
                 }
@@ -2398,11 +4125,11 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "r"
+                    "name": "r__32"
                   },
                   "operator": "==",
                   "rhs": {
-                    "_type": "IntegerConstant",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
                       "line": 330,
@@ -2416,8 +4143,45 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": 1,
-                    "teal_alias": null
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                        "line": 330,
+                        "end_line": 339,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_struct.sol",
+                            "line": 335,
+                            "end_line": 339,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   }
                 }
               }

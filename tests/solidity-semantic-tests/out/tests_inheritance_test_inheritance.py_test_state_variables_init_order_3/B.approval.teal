@@ -403,9 +403,14 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
+    pushint 3
+    itob
     frame_dig -1
-    pushbytes 0x03
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec 4 // "c"
     swap
     app_global_put

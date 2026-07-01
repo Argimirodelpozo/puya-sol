@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/modifer_recursive.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 64
-    bytecblock 0x01 "called" 0x 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "called" 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,8 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "called"
-    bytec_2 // 0x
+    bytec_0 // "called"
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -53,7 +53,7 @@ main_ternary_merge@13:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "called"
+    bytec_0 // "called"
     app_global_get_ex
     assert // check called exists
     dup
@@ -64,7 +64,7 @@ main_ternary_merge@13:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -91,7 +91,7 @@ main_f_route@5:
     intc_3 // 64
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -115,16 +115,21 @@ f_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "called"
+    bytec_0 // "called"
     app_global_get_ex
     assert // check called exists
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec_1 // "called"
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "called"
     swap
     app_global_put
+    intc_1 // 0
+    itob
     frame_dig -1
-    bytec_2 // 0x
     b==
     bz f_else_body@7
     pushint 2
@@ -135,33 +140,40 @@ f_after_if_else@13:
     retsub
 
 f_else_body@7:
+    intc_0 // 1
+    itob
     frame_dig -1
-    bytec_0 // 0x01
+    dig 1
     b>=
     assert // underflow
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     frame_bury 2
     frame_dig -1
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_0 // 0x01
+    swap
     b-
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     callsub f
     frame_bury 0
-    pushbytes 0x02
+    pushint 2
+    itob
     frame_bury 1
 
 f_while_top@8:
     frame_dig 1
-    bytec_2 // 0x
+    bytec_1 // 0x
     b>
     bz f_after_while@12
     frame_dig 1
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b&
-    bytec_2 // 0x
+    bytec_1 // 0x
     b!=
     bz f_after_if_else@11
     frame_dig 2
@@ -182,6 +194,10 @@ f_after_if_else@11:
 
 f_after_while@12:
     frame_dig 2
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     b f_after_if_else@13
 
 f_ternary_false@2:

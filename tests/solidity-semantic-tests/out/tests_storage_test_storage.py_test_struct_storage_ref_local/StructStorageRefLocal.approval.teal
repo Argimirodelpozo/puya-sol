@@ -319,8 +319,13 @@ L.bump:
     select
     dup
     extract 0 32
-    pushbytes 0x01
+    intc_1 // 1
+    itob
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -463,8 +468,16 @@ L.checkInit:
     cover 2
     select
     extract 0 32
-    pushbytes 0x
+    intc_2 // 0
+    itob
     b!=
+    dup
+    bnz L.checkInit_after_if_else@2
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000084e4f545f494e4954000000000000000000000000000000000000000000000000
+    log
+
+L.checkInit_after_if_else@2:
+    frame_dig 0
     assert // NOT_INIT
     retsub
 

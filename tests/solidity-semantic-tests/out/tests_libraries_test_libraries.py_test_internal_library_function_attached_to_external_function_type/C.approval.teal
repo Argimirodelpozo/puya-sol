@@ -79,8 +79,13 @@ main_ternary_merge@13:
     callsub identity
 
 main_after_if_else@17:
-    pushbytes 0x02
+    pushint 2
+    itob
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_2 // 32

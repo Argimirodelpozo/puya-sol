@@ -49,9 +49,14 @@ main:
     bytec_2 // "z"
     intc_0 // 0
     app_global_put
-    uncover 2
-    pushbytes 0x01
+    intc_1 // 1
+    itob
+    uncover 3
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put
@@ -186,8 +191,6 @@ main_ternary_merge@23:
     bz main_ternary_false@25
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@26:
     dup

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/erc7201_param_locations.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock 0x00 0x151f7c75 0x01 "example.contract" "example.main" "storageVarStr" 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x00 0x151f7c75 "example.contract" "example.main" 0x01 "storageVarStr" 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 0
     dup
     pushint 4096
@@ -27,7 +27,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 5 // "storageVarStr"
-    bytec_3 // "example.contract"
+    bytec_2 // "example.contract"
     app_global_put
     intc_1 // 1
     return
@@ -54,7 +54,7 @@ main_literalParam_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
-    bytec 4 // "example.main"
+    bytec_3 // "example.main"
     callsub erc7201Mock
     bytec 6 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     b==
@@ -101,7 +101,7 @@ main_ternary_merge@22:
     dig 1
     substring 2 5
     keccak256
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b-
     b|
     keccak256
@@ -153,14 +153,14 @@ main_ternary_merge@27:
     bzero
     dig 2
     keccak256
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b-
     b|
     keccak256
     extract 0 31
     bytec_0 // 0x00
     concat
-    bytec 4 // "example.main"
+    bytec_3 // "example.main"
     callsub erc7201Mock
     b==
     bytec_0 // 0x00
@@ -189,7 +189,7 @@ main_memoryVar_route@7:
 main_ternary_merge@32:
     !
     assert // not payable
-    bytec 4 // "example.main"
+    bytec_3 // "example.main"
     callsub erc7201Mock
     bytec 6 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     b==
@@ -219,7 +219,7 @@ main_constStorageVar_route@6:
 main_ternary_merge@37:
     !
     assert // not payable
-    bytec_3 // "example.contract"
+    bytec_2 // "example.contract"
     callsub erc7201Mock
     pushbytes 0x3900f6bf9776dcf7feeb475cf1a84528427ce740b518e42c213bbb76e98e6700
     b==
@@ -256,14 +256,14 @@ main_ternary_merge@42:
     app_global_get_ex
     assert // check storageVarStr exists
     keccak256
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b-
     b|
     keccak256
     extract 0 31
     bytec_0 // 0x00
     concat
-    bytec_3 // "example.contract"
+    bytec_2 // "example.contract"
     callsub erc7201Mock
     b==
     bytec_0 // 0x00
@@ -287,19 +287,24 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    dup
-    bytec_2 // 0x01
+    intc_1 // 1
+    itob
+    dup2
     b>=
     assert // underflow
     intc_2 // 32
     bzero
-    swap
+    uncover 2
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_2 // 0x01
+    uncover 2
     b-
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     concat
     dup
     len

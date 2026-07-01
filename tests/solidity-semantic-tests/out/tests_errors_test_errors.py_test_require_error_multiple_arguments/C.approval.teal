@@ -45,14 +45,16 @@ main_g_route@6:
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@13:
     !
     assert // not payable
+    pushbytes 0x11945000000000000000000000000000000000000000000000000000000000000000000400420000000000000000000000000000000000000000000000000000000000000006000466697665
+    log
     err // CustomError
 
 main_ternary_false@12:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@13
 
 main_f_route@5:
     txn GroupIndex
@@ -61,7 +63,13 @@ main_f_route@5:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@18
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushbytes 0x11945000000000000000000000000000000000000000000000000000000000000000000100420000000000000000000000000000000000000000000000000000000000000003000374776f
+    log
+    err // CustomError
 
 main_ternary_false@17:
     intc_1 // 0

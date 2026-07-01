@@ -92,4 +92,8 @@ L.add:
     frame_dig -2
     frame_dig -1
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub

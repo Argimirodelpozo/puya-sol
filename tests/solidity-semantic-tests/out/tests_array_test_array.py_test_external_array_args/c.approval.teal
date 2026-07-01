@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/external_array_args.sol.c.approval_program() -> uint64:
 main:
     intcblock 32 8 0 1
+    bytecblock 0x010000000000000000
     intc_2 // 0
     dupn 5
     pushint 4096
@@ -99,10 +100,15 @@ main_test_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    dig 5
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_1 // 8
     bzero
     dup
-    dig 7
+    uncover 2
     concat
     dup
     len
@@ -115,8 +121,13 @@ main_ternary_merge@9:
     swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    dig 1
-    dig 7
+    dig 6
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 2
+    swap
     concat
     dup
     len
@@ -130,8 +141,13 @@ main_ternary_merge@9:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    uncover 2
     dig 6
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 3
+    swap
     concat
     dup
     len

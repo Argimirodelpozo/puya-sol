@@ -1,0 +1,527 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/compound_builtin_side_effect_once.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 7
+    bytecblock "cnt" 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x07 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dup
+    bytec_2 // ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "cnt"
+    bytec_2 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc898a03c 0x3af91ee5 0xde1753a1 0x5b547f5c 0x7035846c 0x35011ef9 // method "subOnce()(uint256,uint256)", method "smodOnce()(uint256,uint256)", method "sdivOnce()(uint256,uint256)", method "addmodOnce()(uint256,uint256)", method "mulmodOnce()(uint256,uint256)", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main_subOnce_route@5 main_smodOnce_route@6 main_sdivOnce_route@7 main_addmodOnce_route@8 main_mulmodOnce_route@9 main_cnt_route@10
+    err
+
+main_cnt_route@10:
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@16:
+    intc_0 // 0
+    b main_ternary_merge@17
+
+main_mulmodOnce_route@9:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    intc_3 // 7
+    itob
+    callsub u
+    dup
+    bytec_2 // 0x
+    b!=
+    assert // modulo by zero
+    pushbytes 0x32
+    swap
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_addmodOnce_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    intc_3 // 7
+    itob
+    callsub u
+    dup
+    bytec_2 // 0x
+    b!=
+    assert // modulo by zero
+    pushbytes 0x0f
+    swap
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@26:
+    intc_0 // 0
+    b main_ternary_merge@27
+
+main_sdivOnce_route@7:
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 2
+    itob
+    callsub s
+    dup
+    bury 5
+    bytec 6 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 2
+    bnz main_ternary_false@46
+    dup
+    bz main_ternary_false@39
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+main_ternary_merge@40:
+    bytec 4 // 0x07
+    swap
+    b/
+    bytec_2 // 0x
+    b==
+    bnz main_ternary_false@46
+    dup
+    bz main_ternary_false@44
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+main_ternary_merge@45:
+    bytec 4 // 0x07
+    swap
+    b/
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@51:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@44:
+    dig 3
+    b main_ternary_merge@45
+
+main_ternary_false@46:
+    dup
+    bz main_ternary_false@49
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+main_ternary_merge@50:
+    bytec 4 // 0x07
+    swap
+    b/
+    b main_ternary_merge@51
+
+main_ternary_false@49:
+    dig 3
+    b main_ternary_merge@50
+
+main_ternary_false@39:
+    dig 3
+    b main_ternary_merge@40
+
+main_ternary_false@31:
+    intc_0 // 0
+    b main_ternary_merge@32
+
+main_smodOnce_route@6:
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 3
+    itob
+    callsub s
+    dup
+    bury 4
+    bytec 6 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 3
+    bz main_ternary_false@59
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+main_ternary_merge@60:
+    bytec 4 // 0x07
+    swap
+    b%
+    bytec_2 // 0x
+    b==
+    bnz main_ternary_false@66
+    dig 1
+    bz main_ternary_false@64
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+main_ternary_merge@65:
+    bytec 4 // 0x07
+    swap
+    b%
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@71:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@64:
+    dig 2
+    b main_ternary_merge@65
+
+main_ternary_false@66:
+    dig 1
+    bz main_ternary_false@69
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+main_ternary_merge@70:
+    bytec 4 // 0x07
+    swap
+    b%
+    b main_ternary_merge@71
+
+main_ternary_false@69:
+    dig 2
+    b main_ternary_merge@70
+
+main_ternary_false@59:
+    dig 2
+    b main_ternary_merge@60
+
+main_ternary_false@55:
+    intc_0 // 0
+    b main_ternary_merge@56
+
+main_subOnce_route@5:
+    txn GroupIndex
+    bz main_ternary_false@75
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@76:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 100
+    itob
+    pushint 30
+    itob
+    callsub u
+    swap
+    dig 1
+    b>=
+    assert // underflow
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000064
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@75:
+    intc_0 // 0
+    b main_ternary_merge@76
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/compound_builtin_side_effect_once.sol.C.u(v: bytes) -> bytes:
+u:
+    proto 1 1
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/compound_builtin_side_effect_once.sol.C.s(v: bytes) -> bytes:
+s:
+    proto 1 1
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    frame_dig -1
+    retsub
