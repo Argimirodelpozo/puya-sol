@@ -70,6 +70,7 @@ def test_calldata_to_storage(harness):
     assert bytes(harness.call(app, "l(uint256)", 0).abi_return) == b"ab"
     assert bytes(harness.call(app, "l(uint256)", 1).abi_return) == b"cd"
 
+@pytest.mark.xfail(reason="manufactures dirty (non-masked) high bits via inline assembly (wrap/unwrap do `y := x` on a uint256) exploiting EVM's untyped 32-byte word, then checks the compiler masks them on a typed uint8 read. The AVM has no untyped word — ARC4/biguint values are width-exact and always clean — so the dirt can't be produced and the masking isn't observable. EVM-fundamental.", strict=False)
 def test_cleanup(harness):
     """userDefinedValueType/contracts/cleanup.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/cleanup.sol")
@@ -86,6 +87,7 @@ def test_cleanup(harness):
     assert tuple(as_int(x) for x in harness.call(app, "mem()").abi_return) == (255, 255)
     assert tuple(as_int(x) for x in harness.call(app, "stor()").abi_return) == (1, 255, 2)
 
+@pytest.mark.xfail(reason="abicoder-v1 variant of test_cleanup: same asm-manufactured dirty high bits (wrap does `y := x`) checked for truncation on a typed read. AVM ARC4 values are width-exact/clean and algosdk rejects an out-of-range uint8 arg before dispatch, so the dirty-bit truncation isn't observable. EVM-fundamental.", strict=False)
 def test_cleanup_abicoderv1(harness):
     """userDefinedValueType/contracts/cleanup_abicoderv1.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/cleanup_abicoderv1.sol")
@@ -262,7 +264,8 @@ def test_conversion_abicoderv1(harness):
     r = harness.call(app, "m(uint16)", 257)
     assert as_int(r.abi_return) == 1
 
-def test_dirty_slot(harness):  # currently fails
+@pytest.mark.xfail(reason="uses inline assembly `sstore(a.slot, <full 32-byte word>)` to dirty a sub-word var's storage slot, then checks reads mask to width and asserts EVM 32-byte packed-slot byte layouts (b() == 0x0401..). The AVM has no 32-byte storage slots (box/blob storage) and no untyped word to dirty, so neither the raw sstore nor the packed-word layout exists. EVM-fundamental.", strict=False)
+def test_dirty_slot(harness):
     """userDefinedValueType/contracts/dirty_slot.sol"""
     app = harness.compile_and_deploy('userDefinedValueType/contracts/dirty_slot.sol')
     r = harness.call(app, 'a()')

@@ -917,6 +917,7 @@ def test_dirty_memory_static_array(harness):
     app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_static_array.sol", via_yul_behavior=True)
     assert not harness.call(app, "f()").reverted
 
+@pytest.mark.xfail(reason="manufactures dirty high bits via inline assembly `mstore(add(s,64), 257)` into a memory uint8[] element, then checks a typed uint8 read masks to 0x01. The AVM has no untyped 32-byte memory word to dirty — ARC4/biguint values are width-exact and always clean — so the dirt can't be produced and the masking isn't observable. EVM-fundamental.", strict=False)
 def test_dirty_memory_struct(harness):
     """viaYul/contracts/dirty_memory_struct.sol — see dirty_memory_dynamic_array."""
     app = harness.compile_and_deploy("viaYul/contracts/dirty_memory_struct.sol", via_yul_behavior=True)
