@@ -50,10 +50,7 @@ private:
 	/// preserving this builder's Solidity type info.
 	std::unique_ptr<SolIntegerBuilder> wrap(std::shared_ptr<awst::Expression> _expr) const;
 
-	/// Promote a uint64 expression to biguint.
-	static std::shared_ptr<awst::Expression> promoteToBigUInt(
-		std::shared_ptr<awst::Expression> _expr,
-		awst::SourceLocation const& _loc);
+	// Biguint promotion is the shared eb::promoteToBiguint (BigUIntMathHelpers).
 
 	/// Emit overflow check for narrow integer types.
 	/// Adds assert(result <= max) to prePendingStatements.

@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/checked_panic_semantics.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 5
+    intcblock 1 0 32 5
     bytecblock 0x151f7c75 0x01 0x 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
-    intc_0 // 0
+    intc_1 // 0
     dupn 2
     pushint 4096
     bzero
@@ -26,7 +26,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -44,7 +44,7 @@ main_modZero_route@12:
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -53,7 +53,7 @@ main_ternary_merge@19:
     assert // not payable
     intc_3 // 5
     itob
-    intc_0 // 0
+    intc_1 // 0
     itob
     b%
     dup
@@ -68,18 +68,18 @@ main_ternary_merge@19:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@18:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@19
 
 main_divZero_route@11:
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -88,10 +88,8 @@ main_ternary_merge@24:
     assert // not payable
     intc_3 // 5
     itob
-    intc_0 // 0
+    intc_1 // 0
     itob
-    intc_0 // 0
-    assert // division by zero
     b/
     dup
     len
@@ -105,40 +103,40 @@ main_ternary_merge@24:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@23:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@24
 
 main_uUnder_route@10:
     txn GroupIndex
     bz main_ternary_false@34
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@35:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     assert // underflow
     pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@34:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@35
 
 main_expOver_route@9:
     txn GroupIndex
     bz main_ternary_false@39
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -199,97 +197,97 @@ main_after_while@46:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@39:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@40
 
 main_i8Over_route@8:
     txn GroupIndex
     bz main_ternary_false@54
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@55:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     assert // signed arithmetic overflow
     pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@54:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@55
 
 main_minSub1_route@7:
     txn GroupIndex
     bz main_ternary_false@61
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@62:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     assert // signed arithmetic overflow
     pushbytes 0x151f7c757fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@61:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@62
 
 main_negMin_route@6:
     txn GroupIndex
     bz main_ternary_false@67
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@68:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     assert // signed negation overflow
     bytec_3 // 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@67:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@68
 
 main_minDiv_route@5:
     txn GroupIndex
     bz main_ternary_false@72
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@73:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     assert // signed division overflow
     bytec_3 // 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@72:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@73

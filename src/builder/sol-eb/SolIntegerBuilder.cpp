@@ -32,39 +32,6 @@ std::unique_ptr<SolIntegerBuilder> SolIntegerBuilder::wrap(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Promotion helpers
-// ─────────────────────────────────────────────────────────────────────
-
-std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
-	std::shared_ptr<awst::Expression> _expr,
-	awst::SourceLocation const& _loc)
-{
-	if (_expr->wtype == awst::WType::biguintType())
-		return _expr;
-
-	// Integer constants: biguint constant directly (avoids itob(0)=8 zero bytes).
-	if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
-	{
-		auto bigConst = awst::makeIntegerConstant(intConst->value, _loc, awst::WType::biguintType());
-		return bigConst;
-	}
-
-	// account/bytes: reinterpret directly; itob is uint64-only and truncates >8 bytes.
-	// Mirrors AssemblyBuilder::ensureBiguint (`01332f363`).
-	if (_expr->wtype == awst::WType::accountType()
-		|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes))
-	{
-		auto bytesExpr = _expr->wtype == awst::WType::accountType()
-			? awst::makeAsBytes(std::move(_expr), _loc)
-			: std::move(_expr);
-		return awst::makeAsBiguint(std::move(bytesExpr), _loc);
-	}
-
-	auto itob = awst::makeItob(std::move(_expr), _loc);
-	return awst::makeAsBiguint(std::move(itob), _loc);
-}
-
-// ─────────────────────────────────────────────────────────────────────
 // binary_op
 // ─────────────────────────────────────────────────────────────────────
 
@@ -114,7 +81,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	// ── BigUInt path ──
 	if (needsBigUInt)
 	{
-		lhs = promoteToBigUInt(std::move(lhs), _loc);
+		lhs = promoteToBiguint(std::move(lhs), _loc);
 
 		// Shift amount stays uint64 (don't promote).
 		if (_op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift)
@@ -153,7 +120,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			return wrap(std::move(result));
 		}
 
-		rhs = promoteToBigUInt(std::move(rhs), _loc);
+		rhs = promoteToBiguint(std::move(rhs), _loc);
 
 		if (_op == BuilderBinaryOp::Sub)
 		{
@@ -190,60 +157,20 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 		if (m_signed && (_op == BuilderBinaryOp::Mod || _op == BuilderBinaryOp::FloorDiv))
 		{
-			// buildSignedModDiv reads sign from `value >= 2^255`, so it needs canonical
-			// 256-bit two's complement. promoteToBigUInt above ZERO-extends, so a narrower
-			// signed operand (e.g. int16 -32768 -> 2^64-32768) reads as a huge POSITIVE
-			// number -> wrong abs/sign (int128/int16 div returned 0). Sign-extend each from
-			// its own width (idempotent for already-canonical int128/int256 operands).
+			// buildSignedModDiv needs canonical 256-bit two's complement (it reads sign from
+			// `value >= 2^255`). promoteToBiguint above ZERO-extends, so a narrower signed
+			// operand (e.g. int16 -32768 -> 2^64-32768) would read as a huge POSITIVE number
+			// -> wrong abs/sign. Sign-extend each from its own width (idempotent for canonical
+			// int128/int256). The div-overflow guard + result narrowing now live INSIDE the
+			// shared helper (same path as direct `a/b` — see BigUIntMathHelpers).
 			unsigned lhsBits = _reverse ? otherInt->numBits() : m_bits;
 			unsigned rhsBits = _reverse ? m_bits : otherInt->numBits();
 			if (lhsBits < 256)
 				lhs = TypeCoercion::signExtendToUint256(std::move(lhs), lhsBits, _loc);
 			if (rhsBits < 256)
 				rhs = TypeCoercion::signExtendToUint256(std::move(rhs), rhsBits, _loc);
-
-			// Signed division overflow: intN.min / -1 = +2^(N-1) doesn't fit intN, EVM reverts.
-			// buildSignedModDiv just wraps it back to intN.min silently, so guard it here — the
-			// plain `a/b` path does the same in SolBinaryOperation::buildSignedDivMod, but the
-			// compound `x/=b` path reaches binary_op and skipped it. Operands are 256-bit
-			// sign-extended, so intMin = 2^256-2^(lhsBits-1) and -1 = 2^256-1. Pin operands to
-			// comma-lets (referenced by both the guard and the divide). Found by the differential fuzzer.
-			if (_op == BuilderBinaryOp::FloorDiv && !m_scope.isUnchecked())
-			{
-				auto* biguintW = awst::WType::biguintType();
-				static int s_sdoCounter = 0;
-				int sdoId = s_sdoCounter++;
-				std::string lN = "__sdo_l_" + std::to_string(sdoId);
-				std::string rN = "__sdo_r_" + std::to_string(sdoId);
-				auto bindL = awst::makeAssignmentExpression(
-					awst::makeVarExpression(lN, biguintW, _loc), std::move(lhs), _loc, biguintW);
-				auto bindR = awst::makeAssignmentExpression(
-					awst::makeVarExpression(rN, biguintW, _loc), std::move(rhs), _loc, biguintW);
-				std::string minStr = (solidity::u256(0) - (solidity::u256(1) << (lhsBits - 1))).str();
-				std::string negOneStr = (solidity::u256(0) - 1).str();
-				auto xIsMin = awst::makeNumericCompare(
-					awst::makeVarExpression(lN, biguintW, _loc), awst::NumericComparison::Eq,
-					awst::makeIntegerConstant(minStr, _loc, biguintW), _loc);
-				auto yIsNeg1 = awst::makeNumericCompare(
-					awst::makeVarExpression(rN, biguintW, _loc), awst::NumericComparison::Eq,
-					awst::makeIntegerConstant(negOneStr, _loc, biguintW), _loc);
-				auto bothTrue = awst::makeBoolBinOp(
-					std::move(xIsMin), awst::BinaryBooleanOperator::And, std::move(yIsNeg1), _loc);
-				auto assertExpr = awst::makeAssert(
-					awst::makeNot(std::move(bothTrue), _loc), _loc, "signed division overflow");
-				auto divResult = buildSignedModDiv(
-					awst::makeVarExpression(lN, biguintW, _loc),
-					awst::makeVarExpression(rN, biguintW, _loc), _op, _loc);
-				auto* rwtype = divResult->wtype;
-				auto comma = awst::makeCommaExpression(rwtype, _loc);
-				comma->expressions.push_back(std::move(bindL));
-				comma->expressions.push_back(std::move(bindR));
-				comma->expressions.push_back(std::move(assertExpr));
-				comma->expressions.push_back(std::move(divResult));
-				return wrap(std::move(comma));
-			}
-			auto result = buildSignedModDiv(std::move(lhs), std::move(rhs), _op, _loc);
-			return wrap(std::move(result));
+			return wrap(buildSignedModDiv(
+				std::move(lhs), std::move(rhs), _op, m_bits, !m_scope.isUnchecked(), _loc));
 		}
 
 		awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;
@@ -294,8 +221,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	if (m_scope.isUnchecked() && !m_signed && m_bits == 64
 		&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
 	{
-		auto lb = promoteToBigUInt(std::move(e->left), _loc);
-		auto rb = promoteToBigUInt(std::move(e->right), _loc);
+		auto lb = promoteToBiguint(std::move(e->left), _loc);
+		auto rb = promoteToBiguint(std::move(e->right), _loc);
 		auto big = awst::makeBigUIntBinOp(std::move(lb),
 			_op == BuilderBinaryOp::Add ? awst::BigUIntBinaryOperator::Add
 				: awst::BigUIntBinaryOperator::Mult,
@@ -424,8 +351,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 
 	if (needsBigUInt)
 	{
-		lhs = promoteToBigUInt(std::move(lhs), _loc);
-		rhs = promoteToBigUInt(std::move(rhs), _loc);
+		lhs = promoteToBiguint(std::move(lhs), _loc);
+		rhs = promoteToBiguint(std::move(rhs), _loc);
 	}
 
 	bool isOrderingOp = (_op == BuilderComparisonOp::Lt || _op == BuilderComparisonOp::Lte
@@ -465,9 +392,9 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 	if (lhs->wtype != rhs->wtype)
 	{
 		if (lhs->wtype == awst::WType::uint64Type() && rhs->wtype == awst::WType::biguintType())
-			lhs = promoteToBigUInt(std::move(lhs), _loc);
+			lhs = promoteToBiguint(std::move(lhs), _loc);
 		else if (rhs->wtype == awst::WType::uint64Type() && lhs->wtype == awst::WType::biguintType())
-			rhs = promoteToBigUInt(std::move(rhs), _loc);
+			rhs = promoteToBiguint(std::move(rhs), _loc);
 	}
 
 	awst::NumericComparison cmpOp = awst::NumericComparison::Eq;

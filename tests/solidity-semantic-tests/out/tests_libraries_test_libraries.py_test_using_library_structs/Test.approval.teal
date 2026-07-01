@@ -141,7 +141,16 @@ Lib.set_while_top@1:
     pushint 20
     itob
     b<
-    bz Lib.set_after_while@3
+    bz Lib.set_after_while@5
+    frame_dig -1
+    box_len
+    bury 1
+    bnz Lib.set_after_if_else@4
+    frame_dig -1
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    box_put
+
+Lib.set_after_if_else@4:
     frame_dig -1
     pushint 34
     intc_3 // 2
@@ -175,16 +184,16 @@ Lib.set_while_top@1:
     box_splice
     b Lib.set_while_top@1
 
-Lib.set_after_while@3:
+Lib.set_after_while@5:
     frame_dig -1
     box_len
     bury 1
-    bnz Lib.set_after_if_else@5
+    bnz Lib.set_after_if_else@7
     frame_dig -1
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     box_put
 
-Lib.set_after_if_else@5:
+Lib.set_after_if_else@7:
     frame_dig -1
     pushint 644
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008

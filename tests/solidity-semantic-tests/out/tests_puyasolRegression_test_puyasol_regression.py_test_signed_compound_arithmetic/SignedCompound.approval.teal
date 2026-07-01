@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_compound.sol.SignedCompound.approval_program() -> uint64:
 main:
     intcblock 1 0 32 16
-    bytecblock 0x80000000000000000000000000000000 0x0100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 "acc" 0x151f7c75
+    bytecblock 0x80000000000000000000000000000000 0x0100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 "acc"
     intc_1 // 0
-    dupn 7
+    dupn 8
     pushbytes ""
-    dup
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -28,7 +28,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "acc"
+    bytec 5 // "acc"
     pushbytes 0x
     app_global_put
     intc_0 // 1
@@ -48,14 +48,14 @@ main_after_if_else@2:
 main_uncheckedAdd_route@9:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 13
     len
     intc_3 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 12
     len
     intc_3 // 16
     ==
@@ -70,7 +70,7 @@ main_uncheckedAdd_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dig 9
+    dig 11
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -79,10 +79,10 @@ main_ternary_merge@16:
     bz main_ternary_false@18
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
+    bury 10
 
 main_ternary_merge@19:
-    dig 8
+    dig 10
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -93,7 +93,7 @@ main_ternary_merge@19:
     b+
 
 main_ternary_merge@22:
-    dig 8
+    dig 10
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     swap
@@ -120,10 +120,10 @@ main_ternary_merge@25:
     bz main_ternary_false@27
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 7
+    bury 9
 
 main_ternary_merge@28:
-    dig 6
+    dig 8
     dup
     len
     intc_2 // 32
@@ -132,7 +132,7 @@ main_ternary_merge@28:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -140,7 +140,7 @@ main_ternary_merge@28:
     return
 
 main_ternary_false@27:
-    bury 7
+    bury 9
     b main_ternary_merge@28
 
 main_ternary_false@24:
@@ -150,7 +150,7 @@ main_ternary_false@21:
     b main_ternary_merge@22
 
 main_ternary_false@18:
-    bury 8
+    bury 10
     b main_ternary_merge@19
 
 main_ternary_false@15:
@@ -160,7 +160,7 @@ main_ternary_false@15:
 main_stateAdd_route@8:
     txna ApplicationArgs 1
     dup
-    bury 10
+    bury 12
     len
     intc_3 // 16
     ==
@@ -175,7 +175,7 @@ main_stateAdd_route@8:
 main_ternary_merge@33:
     !
     assert // not payable
-    dig 8
+    dig 10
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -187,42 +187,37 @@ main_ternary_merge@33:
 
 main_ternary_merge@36:
     intc_1 // 0
-    bytec 4 // "acc"
+    bytec 5 // "acc"
     app_global_get_ex
     assert // check acc exists
     bytec_1 // 0x0100000000000000000000000000000000
     b%
+    dup
+    bury 6
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
+    dup
+    bury 5
     swap
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 7
+    bury 9
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     !=
     bnz main_bool_true@38
-    intc_1 // 0
-    bytec 4 // "acc"
-    app_global_get_ex
-    assert // check acc exists
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dup
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    swap
-    dig 6
+    dig 3
+    dig 7
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
+    dig 3
     ==
     bz main_bool_false@39
 
@@ -231,13 +226,8 @@ main_bool_true@38:
 
 main_bool_merge@40:
     assert // signed arithmetic overflow
-    intc_1 // 0
-    bytec 4 // "acc"
-    app_global_get_ex
-    assert // check acc exists
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dig 5
+    dig 3
+    dig 7
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -251,7 +241,7 @@ main_bool_merge@40:
     b+
 
 main_ternary_merge@43:
-    bytec 4 // "acc"
+    bytec 5 // "acc"
     dig 1
     app_global_put
     bytec_2 // 0xffffffffffffffffffffffffffffffff
@@ -272,7 +262,7 @@ main_ternary_merge@46:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -299,14 +289,14 @@ main_ternary_false@32:
 main_mul_route@7:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 13
     len
     intc_3 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 12
     len
     intc_3 // 16
     ==
@@ -321,7 +311,7 @@ main_mul_route@7:
 main_ternary_merge@51:
     !
     assert // not payable
-    dig 9
+    dig 11
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -330,10 +320,10 @@ main_ternary_merge@51:
     bz main_ternary_false@53
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
+    bury 10
 
 main_ternary_merge@54:
-    dig 8
+    dig 10
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -347,20 +337,20 @@ main_ternary_merge@57:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 6
+    bury 8
     pushbytes 0x
     b==
     bnz main_bool_true@74
-    dig 7
+    dig 9
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 5
+    bury 7
     bytec_0 // 0x80000000000000000000000000000000
     b<
     dup
     !
-    dig 6
+    dig 8
     bytec_0 // 0x80000000000000000000000000000000
     b<
     dup
@@ -370,19 +360,19 @@ main_ternary_merge@57:
     bz main_ternary_false@66
     bnz main_ternary_false@61
     bytec_1 // 0x0100000000000000000000000000000000
-    dig 4
+    dig 6
     b-
-    bury 7
+    bury 9
 
 main_ternary_merge@62:
     dup
     bnz main_ternary_false@64
     bytec_1 // 0x0100000000000000000000000000000000
-    dig 5
+    dig 7
     b-
 
 main_ternary_merge@65:
-    dig 7
+    dig 9
     b*
     bytec_0 // 0x80000000000000000000000000000000
     b<
@@ -395,10 +385,10 @@ main_bool_true@74:
 
 main_bool_merge@76:
     assert // signed arithmetic overflow
-    dig 7
+    dig 9
     bytec_1 // 0x0100000000000000000000000000000000
     b%
-    dig 5
+    dig 7
     b*
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -430,7 +420,7 @@ main_ternary_merge@82:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -448,30 +438,30 @@ main_bool_false@75:
     b main_bool_merge@76
 
 main_ternary_false@64:
-    dig 4
+    dig 6
     b main_ternary_merge@65
 
 main_ternary_false@61:
-    dig 3
-    bury 7
+    dig 5
+    bury 9
     b main_ternary_merge@62
 
 main_ternary_false@66:
     bnz main_ternary_false@68
     bytec_1 // 0x0100000000000000000000000000000000
-    dig 4
+    dig 6
     b-
-    bury 6
+    bury 8
 
 main_ternary_merge@69:
     dup
     bnz main_ternary_false@71
     bytec_1 // 0x0100000000000000000000000000000000
-    dig 5
+    dig 7
     b-
 
 main_ternary_merge@72:
-    dig 6
+    dig 8
     b*
     bytec_0 // 0x80000000000000000000000000000000
     b>
@@ -479,19 +469,19 @@ main_ternary_merge@72:
     b main_ternary_merge@73
 
 main_ternary_false@71:
-    dig 4
+    dig 6
     b main_ternary_merge@72
 
 main_ternary_false@68:
-    dig 3
-    bury 6
+    dig 5
+    bury 8
     b main_ternary_merge@69
 
 main_ternary_false@56:
     b main_ternary_merge@57
 
 main_ternary_false@53:
-    bury 8
+    bury 10
     b main_ternary_merge@54
 
 main_ternary_false@50:
@@ -501,14 +491,14 @@ main_ternary_false@50:
 main_sub_route@6:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 13
     len
     intc_3 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 12
     len
     intc_3 // 16
     ==
@@ -523,7 +513,7 @@ main_sub_route@6:
 main_ternary_merge@87:
     !
     assert // not payable
-    dig 9
+    dig 11
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -532,10 +522,10 @@ main_ternary_merge@87:
     bz main_ternary_false@89
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
+    bury 10
 
 main_ternary_merge@90:
-    dig 8
+    dig 10
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -546,11 +536,11 @@ main_ternary_merge@90:
     b+
 
 main_ternary_merge@93:
-    dig 8
+    dig 10
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 7
+    bury 9
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
@@ -560,16 +550,16 @@ main_ternary_merge@93:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 5
+    bury 7
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     ==
     bnz main_bool_true@95
-    dig 4
+    dig 6
     bytec_1 // 0x0100000000000000000000000000000000
     b+
-    dig 3
+    dig 5
     b-
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -585,10 +575,10 @@ main_bool_true@95:
 
 main_bool_merge@97:
     assert // signed arithmetic overflow
-    dig 4
+    dig 6
     bytec_1 // 0x0100000000000000000000000000000000
     b+
-    dig 3
+    dig 5
     b-
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -610,10 +600,10 @@ main_ternary_merge@100:
     bz main_ternary_false@102
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 7
+    bury 9
 
 main_ternary_merge@103:
-    dig 6
+    dig 8
     dup
     len
     intc_2 // 32
@@ -622,7 +612,7 @@ main_ternary_merge@103:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -630,7 +620,7 @@ main_ternary_merge@103:
     return
 
 main_ternary_false@102:
-    bury 7
+    bury 9
     b main_ternary_merge@103
 
 main_ternary_false@99:
@@ -644,7 +634,7 @@ main_ternary_false@92:
     b main_ternary_merge@93
 
 main_ternary_false@89:
-    bury 8
+    bury 10
     b main_ternary_merge@90
 
 main_ternary_false@86:
@@ -654,14 +644,14 @@ main_ternary_false@86:
 main_add_route@5:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 13
     len
     intc_3 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 12
     len
     intc_3 // 16
     ==
@@ -676,7 +666,7 @@ main_add_route@5:
 main_ternary_merge@108:
     !
     assert // not payable
-    dig 9
+    dig 11
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -685,10 +675,10 @@ main_ternary_merge@108:
     bz main_ternary_false@110
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
+    bury 10
 
 main_ternary_merge@111:
-    dig 8
+    dig 10
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -699,11 +689,11 @@ main_ternary_merge@111:
     b+
 
 main_ternary_merge@114:
-    dig 8
+    dig 10
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 7
+    bury 9
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
@@ -713,14 +703,14 @@ main_ternary_merge@114:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    bury 5
+    bury 7
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     !=
     bnz main_bool_true@116
-    dig 4
-    dig 3
+    dig 6
+    dig 5
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -736,8 +726,8 @@ main_bool_true@116:
 
 main_bool_merge@118:
     assert // signed arithmetic overflow
-    dig 4
-    dig 3
+    dig 6
+    dig 5
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -759,10 +749,10 @@ main_ternary_merge@121:
     bz main_ternary_false@123
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 7
+    bury 9
 
 main_ternary_merge@124:
-    dig 6
+    dig 8
     dup
     len
     intc_2 // 32
@@ -771,7 +761,7 @@ main_ternary_merge@124:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -779,7 +769,7 @@ main_ternary_merge@124:
     return
 
 main_ternary_false@123:
-    bury 7
+    bury 9
     b main_ternary_merge@124
 
 main_ternary_false@120:
@@ -793,7 +783,7 @@ main_ternary_false@113:
     b main_ternary_merge@114
 
 main_ternary_false@110:
-    bury 8
+    bury 10
     b main_ternary_merge@111
 
 main_ternary_false@107:

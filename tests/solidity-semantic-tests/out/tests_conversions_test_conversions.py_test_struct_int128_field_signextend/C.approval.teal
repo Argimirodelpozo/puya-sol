@@ -6,7 +6,7 @@ main:
     intcblock 16 1 0 32
     bytecblock 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
-    dupn 4
+    dupn 3
     pushbytes ""
     pushint 4096
     bzero
@@ -44,7 +44,7 @@ main_after_if_else@2:
 main_unsignedOk_route@8:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 6
     len
     intc_0 // 16
     ==
@@ -62,7 +62,7 @@ main_ternary_merge@15:
     intc_0 // 16
     bzero
     dup
-    dig 7
+    dig 6
     dup
     cover 3
     concat
@@ -98,7 +98,7 @@ main_ternary_false@14:
 main_arith_route@7:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 6
     len
     intc_0 // 16
     ==
@@ -113,7 +113,7 @@ main_arith_route@7:
 main_ternary_merge@20:
     !
     assert // not payable
-    dig 5
+    dig 4
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -155,21 +155,18 @@ main_ternary_merge@23:
     bz main_ternary_false@25
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 5
+    bury 4
 
 main_ternary_merge@26:
-    dig 4
+    dig 3
     bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
     bury 2
-    intc_1 // 1
-    itob
-    bury 4
     bz main_bool_true@28
-    dig 4
     dig 3
+    pushbytes 0x01
     b+
     bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -185,8 +182,8 @@ main_bool_true@28:
 
 main_bool_merge@30:
     assert // signed arithmetic overflow
-    dig 4
     dig 3
+    pushbytes 0x01
     b+
     bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -210,7 +207,7 @@ main_bool_false@29:
     b main_bool_merge@30
 
 main_ternary_false@25:
-    bury 5
+    bury 4
     b main_ternary_merge@26
 
 main_ternary_false@22:
@@ -224,7 +221,7 @@ main_ternary_false@19:
 main_widen_route@6:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 6
     len
     intc_0 // 16
     ==
@@ -239,7 +236,7 @@ main_widen_route@6:
 main_ternary_merge@35:
     !
     assert // not payable
-    dig 5
+    dig 4
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -281,10 +278,10 @@ main_ternary_merge@38:
     bz main_ternary_false@40
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 5
+    bury 4
 
 main_ternary_merge@41:
-    dig 4
+    dig 3
     dup
     len
     intc_3 // 32
@@ -301,7 +298,7 @@ main_ternary_merge@41:
     return
 
 main_ternary_false@40:
-    bury 5
+    bury 4
     b main_ternary_merge@41
 
 main_ternary_false@37:
@@ -315,7 +312,7 @@ main_ternary_false@34:
 main_eq_route@5:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 6
     len
     intc_0 // 16
     ==
@@ -330,7 +327,7 @@ main_eq_route@5:
 main_ternary_merge@46:
     !
     assert // not payable
-    dig 5
+    dig 4
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -372,10 +369,10 @@ main_ternary_merge@49:
     bz main_ternary_false@51
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 5
+    bury 4
 
 main_ternary_merge@52:
-    dig 4
+    dig 3
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -384,7 +381,7 @@ main_ternary_merge@52:
     bz main_ternary_false@54
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 4
+    bury 3
 
 main_ternary_merge@55:
     dig 1
@@ -398,7 +395,7 @@ main_ternary_merge@55:
     b+
 
 main_ternary_merge@58:
-    dig 4
+    dig 3
     b==
     pushbytes 0x00
     intc_2 // 0
@@ -415,11 +412,11 @@ main_ternary_false@57:
     b main_ternary_merge@58
 
 main_ternary_false@54:
-    bury 4
+    bury 3
     b main_ternary_merge@55
 
 main_ternary_false@51:
-    bury 5
+    bury 4
     b main_ternary_merge@52
 
 main_ternary_false@48:

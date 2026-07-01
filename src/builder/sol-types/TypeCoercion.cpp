@@ -851,12 +851,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 			// widening). Sign-extend at byte level (prepend 0xFF/0x00 pad
 			// based on bit-7 of each element's first byte), concat into
 			// body bytes, prepend uint16 length header.
-			bool const srcSigned =
-				srcArc4 && srcArc4->arc4Alias().size() >= 3
-				&& srcArc4->arc4Alias().substr(0, 3) == "int";
-			bool const tgtSigned =
-				tgtArc4 && tgtArc4->arc4Alias().size() >= 3
-				&& tgtArc4->arc4Alias().substr(0, 3) == "int";
+			bool const srcSigned = srcArc4 && srcArc4->isSigned();
+			bool const tgtSigned = tgtArc4 && tgtArc4->isSigned();
 			if (newArr && srcArc4 && tgtArc4
 				&& srcArc4->n() < tgtArc4->n()
 				&& srcArc4->n() % 8 == 0 && tgtArc4->n() % 8 == 0
@@ -972,12 +968,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 			// build the wider element bytes directly per slot: for each
 			// element, prepend (N-M)/8 sign bytes (0xFF or 0x00) to the
 			// source byte slice. Final concat → reinterpret as target.
-			bool const srcSigned =
-				srcArc4 && srcArc4->arc4Alias().size() >= 3
-				&& srcArc4->arc4Alias().substr(0, 3) == "int";
-			bool const tgtSigned =
-				tgtArc4 && tgtArc4->arc4Alias().size() >= 3
-				&& tgtArc4->arc4Alias().substr(0, 3) == "int";
+			bool const srcSigned = srcArc4 && srcArc4->isSigned();
+			bool const tgtSigned = tgtArc4 && tgtArc4->isSigned();
 			if (newArr && srcArc4 && tgtArc4
 				&& srcStat->arraySize() == targetStat->arraySize()
 				&& srcArc4->n() < tgtArc4->n()

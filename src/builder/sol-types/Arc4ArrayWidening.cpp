@@ -1,4 +1,5 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
+#include "builder/sol-types/SolIntType.h"
 
 #include <string>
 #include <vector>
@@ -34,20 +35,18 @@ std::shared_ptr<awst::Expression> tryWidenArc4StaticArrayInt(
 	auto const* tgtArr = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
 	if (!srcArr || !tgtArr) return nullptr;
 	if (srcArr->arraySize() != tgtArr->arraySize()) return nullptr;
-	auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(srcArr->elementType());
-	auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(tgtArr->elementType());
-	if (!srcInt || !tgtInt) return nullptr;
-	int const srcBits = srcInt->n();
-	int const tgtBits = tgtInt->n();
+	// Element type descriptors {bits, isSigned} (nullopt for non-int elements).
+	auto const src = SolIntType::fromArc4(srcArr->elementType());
+	auto const tgt = SolIntType::fromArc4(tgtArr->elementType());
+	if (!src || !tgt) return nullptr;
+	int const srcBits = static_cast<int>(src->bits);
+	int const tgtBits = static_cast<int>(tgt->bits);
 	if (srcBits >= tgtBits || srcBits % 8 != 0 || tgtBits % 8 != 0) return nullptr;
 	int const srcBytes = srcBits / 8;
 	int const tgtBytes = tgtBits / 8;
 	int const padBytes = tgtBytes - srcBytes;
 	int const count = static_cast<int>(srcArr->arraySize());
-
-	// Sign-ness: "intN" alias → signed; "uintN" alias → unsigned.
-	bool const isSigned =
-		srcInt->arc4Alias().size() >= 3 && srcInt->arc4Alias().substr(0, 3) == "int";
+	bool const isSigned = src->isSigned;
 
 	std::shared_ptr<awst::Expression> result;
 	for (int i = 0; i < count; ++i)
@@ -110,17 +109,15 @@ std::shared_ptr<awst::Expression> tryWidenArc4DynamicArrayInt(
 	auto const* srcArr = dynamic_cast<awst::ARC4DynamicArray const*>(_sourceType);
 	auto const* tgtArr = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType);
 	if (!srcArr || !tgtArr) return nullptr;
-	auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(srcArr->elementType());
-	auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(tgtArr->elementType());
-	if (!srcInt || !tgtInt) return nullptr;
-	int const srcBits = srcInt->n();
-	int const tgtBits = tgtInt->n();
+	auto const src = SolIntType::fromArc4(srcArr->elementType());
+	auto const tgt = SolIntType::fromArc4(tgtArr->elementType());
+	if (!src || !tgt) return nullptr;
+	int const srcBits = static_cast<int>(src->bits);
+	int const tgtBits = static_cast<int>(tgt->bits);
 	if (srcBits >= tgtBits || srcBits % 8 != 0 || tgtBits % 8 != 0) return nullptr;
 	int const srcBytes = srcBits / 8;
 	int const padBytes = (tgtBits - srcBits) / 8;
-
-	bool const isSigned =
-		srcInt->arc4Alias().size() >= 3 && srcInt->arc4Alias().substr(0, 3) == "int";
+	bool const isSigned = src->isSigned;
 
 	static int s_dwCounter = 0;
 	int const n = s_dwCounter++;

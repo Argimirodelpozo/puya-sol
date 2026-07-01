@@ -21,6 +21,17 @@ std::shared_ptr<awst::Expression> wrapMod256(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc);
 
+/// Promote a scalar expression to biguint — THE canonical value-domain promotion
+/// (was copy-pasted 3x: SolIntegerBuilder, SolBinaryOperation, and here).
+/// Integer constants become biguint constants directly (avoids itob chains);
+/// account/bytes reinterpret through bytes→biguint (itob is uint64-only and
+/// would truncate >8 bytes); uint64 goes itob→biguint. Already-biguint returns
+/// unchanged. NB: AssemblyBuilder::ensureBiguint stays SEPARATE by design — it
+/// carries strict-assembly aggregate-pointer semantics on top of this.
+std::shared_ptr<awst::Expression> promoteToBiguint(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::SourceLocation const& _loc);
+
 /// Build biguint shift: `value * 2^n` (left) or `value / 2^n` (right),
 /// using the setbit(bzero(32), 255-n, 1) trick for the power.
 std::shared_ptr<awst::Expression> buildBigUIntShift(
@@ -54,12 +65,25 @@ std::shared_ptr<awst::Expression> buildWrappingSubtract(
 	std::shared_ptr<awst::Expression> _right,
 	awst::SourceLocation const& _loc);
 
-/// Signed biguint mod/div: abs-value arithmetic then re-apply sign
-/// (dividend sign for mod, XOR of signs for div).
+/// Signed intN div/mod — the SINGLE implementation shared by direct `a/b`
+/// (SolBinaryOperation) and compound `x/=b` (SolIntegerBuilder). Computes on the
+/// absolute values then re-applies the sign (dividend sign for mod, XOR of signs
+/// for div), emits the `intN.min / -1` overflow guard (div + checked only), and
+/// narrows the result to the result type's native width. Self-contained: the
+/// guard rides in a comma expression, so it composes anywhere (no prePending).
+///
+/// PRECONDITION: `_left` / `_right` are canonical 256-bit two's-complement biguint
+/// values — callers sign-extend each operand from ITS OWN width first
+/// (`TypeCoercion::signExtendToUint256`). `_resultBits` is the result type width
+/// (the guard's INT_MIN boundary + the final narrow: <=64 → uint64, else biguint).
+/// `_checked` gates the div-overflow guard (division by zero always traps in the
+/// biguint FloorDiv/Mod opcode, matching EVM, so it needs no explicit assert).
 std::shared_ptr<awst::Expression> buildSignedModDiv(
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right,
 	BuilderBinaryOp _op,
+	unsigned _resultBits,
+	bool _checked,
 	awst::SourceLocation const& _loc);
 
 /// Signed integer add/sub/mul (_op ∈ {Add,Sub,Mult}): mod-2^N two's-complement result +

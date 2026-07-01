@@ -107,6 +107,13 @@ public:
 	int n() const { return m_n; }
 	std::string const& arc4Alias() const { return m_arc4Alias; }
 
+	/// Whether this ARC4 integer is SIGNED. Signedness is encoded in the alias:
+	/// signed types carry `"int" + bits` (e.g. `int128`), unsigned types have an
+	/// empty alias (the name is derived as `arc4.uint<n>`). This is the single
+	/// typed accessor for that fact — callers must NOT re-derive it by string
+	/// slicing `arc4Alias()` (was `substr(0,3) == "int"` at ~6 sites).
+	bool isSigned() const { return m_arc4Alias.rfind("int", 0) == 0; }
+
 private:
 	int m_n;
 	std::string m_arc4Alias;

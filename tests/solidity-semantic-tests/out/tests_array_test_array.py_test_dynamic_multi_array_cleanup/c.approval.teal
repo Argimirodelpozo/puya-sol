@@ -125,7 +125,17 @@ main_while_top@25:
     pushint 4
     itob
     b<
-    bz main_while_top@27
+    bz main_while_top@29
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@28
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@28:
     bytec_0 // "data"
     box_get
     assert // box exists
@@ -162,7 +172,7 @@ main_while_top@25:
     box_put
     b main_while_top@25
 
-main_while_top@27:
+main_while_top@29:
     bytec_0 // "data"
     intc_3 // 6
     intc_0 // 2
@@ -198,17 +208,17 @@ main_while_top@27:
     pushint 5
     itob
     b<
-    bz main_after_while@31
+    bz main_after_while@33
     bytec_0 // "data"
     box_len
     bury 1
-    bnz main_after_if_else@30
+    bnz main_after_if_else@32
     bytec_0 // "data"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@30:
+main_after_if_else@32:
     bytec_0 // "data"
     box_get
     assert // box exists
@@ -289,19 +299,19 @@ main_after_if_else@30:
     bytec_0 // "data"
     swap
     box_put
-    b main_while_top@27
+    b main_while_top@29
 
-main_after_while@31:
+main_after_while@33:
     bytec_0 // "data"
     box_len
     bury 1
-    bnz main_after_if_else@33
+    bnz main_after_if_else@35
     bytec_0 // "data"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@33:
+main_after_if_else@35:
     bytec_0 // "data"
     intc_3 // 6
     intc_0 // 2

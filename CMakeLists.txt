@@ -81,6 +81,7 @@ set(SOURCES
 	# Type coercion utilities
 	src/builder/sol-types/Arc4ArrayWidening.cpp
 	src/builder/sol-types/Arc4Defaults.cpp
+	src/builder/sol-types/SolIntType.cpp
 	src/builder/sol-types/TypeCoercion.cpp
 
 	# Storage, type, and intrinsic mappers

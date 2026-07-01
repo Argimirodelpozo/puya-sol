@@ -15,31 +15,6 @@
 namespace puyasol::builder::sol_ast
 {
 
-namespace
-{
-// Promote a signed-arith operand to biguint. `itob` is uint64-only; account
-// and bytes types are already big-endian buffers, so reinterpret through bytes→biguint.
-// Same fix as AssemblyBuilder::ensureBiguint (01332f363), but that helper carries
-// strict-assembly aggregate-pointer semantics and must stay separate.
-// Shared by buildSignedArithmetic and buildSignedDivMod.
-std::shared_ptr<awst::Expression> promoteSignedOperandToBiguint(
-	std::shared_ptr<awst::Expression> expr, awst::SourceLocation const& loc)
-{
-	if (expr->wtype == awst::WType::biguintType())
-		return expr;
-	if (expr->wtype == awst::WType::accountType()
-		|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
-	{
-		auto bytesExpr = expr->wtype == awst::WType::accountType()
-			? awst::makeAsBytes(std::move(expr), loc)
-			: std::move(expr);
-		return awst::makeAsBiguint(std::move(bytesExpr), loc);
-	}
-	auto itob = awst::makeItob(std::move(expr), loc);
-	return awst::makeAsBiguint(std::move(itob), loc);
-}
-} // anonymous namespace
-
 
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
@@ -329,18 +304,28 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			if (op == Token::Div || op == Token::AssignDiv
 				|| op == Token::Mod || op == Token::AssignMod)
 			{
-				// buildSignedDivMod masks both operands to N (commonType) bits and reads
-				// sign from `>= 2^(N-1)`, so each must be canonical at the common width. A
-				// narrower signed divisor (int16 -32768) arrives sign-extended only in its
-				// own 64-bit slot (2^64-32768) and masks to a huge POSITIVE N-bit value ->
-				// wrong abs (int128/int16 div/mod returned 0 / the dividend). Sign-extend
-				// each from its own width to canonical commonType first.
+				// Route through the SHARED signed div/mod helper — the same path the
+				// compound `x/=b` uses (BigUIntMathHelpers::buildSignedModDiv), which owns
+				// the abs-value arithmetic, the intN.min/-1 overflow guard, and the result
+				// narrowing. It needs canonical 256-bit two's-complement operands: coerce
+				// each to commonType (canonical at the common width — handles a narrower
+				// signed divisor like int16 -32768, and literals), then lift to 256-bit.
+				// (Was a second, near-identical inline impl, SolBinaryOperation::buildSignedDivMod.)
+				unsigned bits = intType->numBits();
 				auto* commonW = m_ctx.typeMapper.map(commonType);
 				left = builder::TypeCoercion::coerceToCommonInt(
 					std::move(left), m_binOp.leftExpression().annotation().type, commonW, m_loc);
 				right = builder::TypeCoercion::coerceToCommonInt(
 					std::move(right), m_binOp.rightExpression().annotation().type, commonW, m_loc);
-				return buildSignedDivMod(op, std::move(left), std::move(right), intType);
+				if (bits < 256)
+				{
+					left = builder::TypeCoercion::signExtendToUint256(std::move(left), bits, m_loc);
+					right = builder::TypeCoercion::signExtendToUint256(std::move(right), bits, m_loc);
+				}
+				auto builderOp = (op == Token::Mod || op == Token::AssignMod)
+					? eb::BuilderBinaryOp::Mod : eb::BuilderBinaryOp::FloorDiv;
+				return eb::buildSignedModDiv(std::move(left), std::move(right),
+					builderOp, bits, !m_scope.isUnchecked(), m_loc);
 			}
 			if (op == Token::Exp)
 			{
@@ -525,119 +510,6 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		return builder::TypeCoercion::implicitNumericCast(
 			std::move(result), awst::WType::uint64Type(), m_loc);
 	return result;
-}
-
-std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
-	Token _op,
-	std::shared_ptr<awst::Expression> _left,
-	std::shared_ptr<awst::Expression> _right,
-	IntegerType const* _intType)
-{
-	unsigned bits = _intType->numBits();
-	bool isDiv = (_op == Token::Div || _op == Token::AssignDiv);
-
-	auto [pow2NStr, halfNStr] = builder::TypeCoercion::pow2NAndHalf(bits);
-
-	auto makeBiguintConst = [&](std::string const& val) {
-		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
-		return c;
-	};
-
-	_left = promoteSignedOperandToBiguint(std::move(_left), m_loc);
-	_right = promoteSignedOperandToBiguint(std::move(_right), m_loc);
-
-	// Mask to N bits
-	if (bits < 256)
-	{
-		auto maskOp = [&](std::shared_ptr<awst::Expression> val) {
-			auto mod = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-			return mod;
-		};
-		_left = maskOp(std::move(_left));
-		_right = maskOp(std::move(_right));
-	}
-
-	// isNeg: val >= half
-	auto isNeg = [&](std::shared_ptr<awst::Expression> const& val)
-		-> std::shared_ptr<awst::Expression> {
-		auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, makeBiguintConst(halfNStr), m_loc);
-		auto notExpr = awst::makeNot(std::move(cmp), m_loc);
-		return notExpr;
-	};
-
-	// abs(val) = val < half ? val : (pow2N - val)
-	auto absVal = [&](std::shared_ptr<awst::Expression> const& val) {
-		auto neg = isNeg(val);
-		auto negated = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, val, m_loc);
-		return awst::makeConditional(
-			std::move(neg), std::move(negated), val,
-			awst::WType::biguintType(), m_loc);
-	};
-
-	// assert(y != 0)
-	{
-		auto bZero = awst::makeNumericCompare(_right, awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
-
-		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(bZero), m_loc, "division by zero"), m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
-	}
-
-	// assert NOT (x == INT_MIN && y == -1) — div overflow; minVal=half, -1=pow2N-1
-	if (isDiv && !m_scope.isUnchecked())
-	{
-		std::ostringstream minusOneOss;
-		if (bits == 256)
-			minusOneOss << "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-		else
-		{
-			solidity::u256 minusOne = (solidity::u256(1) << bits) - 1;
-			minusOneOss << minusOne;
-		}
-
-		auto xIsMin = awst::makeNumericCompare(_left, awst::NumericComparison::Eq, makeBiguintConst(halfNStr), m_loc);
-
-		auto yIsNeg1 = awst::makeNumericCompare(_right, awst::NumericComparison::Eq, makeBiguintConst(minusOneOss.str()), m_loc);
-
-		auto bothTrue = awst::makeBoolBinOp(std::move(xIsMin), awst::BinaryBooleanOperator::And, std::move(yIsNeg1), m_loc);
-
-		auto notBoth = awst::makeNot(std::move(bothTrue), m_loc);
-
-		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(notBoth), m_loc, "signed division overflow"), m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
-	}
-
-	auto absA = absVal(_left);
-	auto absB = absVal(_right);
-
-	// Unsigned div/mod on absolute values, then sign-correct.
-	// div: negate when signs differ; mod: negate when a is negative.
-	auto unsignedResult = awst::makeBigUIntBinOp(std::move(absA), isDiv ? awst::BigUIntBinaryOperator::FloorDiv
-	                           : awst::BigUIntBinaryOperator::Mod, std::move(absB), m_loc);
-
-	std::shared_ptr<awst::Expression> shouldNegate;
-	if (isDiv)
-	{
-		auto differ = awst::makeNumericCompare(isNeg(_left), awst::NumericComparison::Ne, isNeg(_right), m_loc);
-		shouldNegate = std::move(differ);
-	}
-	else
-		shouldNegate = isNeg(_left);
-
-	// (pow2N - result) mod pow2N, but don't negate 0
-	auto negResult = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, unsignedResult, m_loc);
-	auto negMod = awst::makeBigUIntBinOp(std::move(negResult), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-
-	auto resultIsZero = awst::makeNumericCompare(unsignedResult, awst::NumericComparison::Eq, makeBiguintConst("0"), m_loc);
-	auto needNeg = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And,
-		awst::makeNot(std::move(resultIsZero), m_loc), m_loc);
-
-	auto finalResult = awst::makeConditional(
-		std::move(needNeg), std::move(negMod), std::move(unsignedResult),
-		awst::WType::biguintType(), m_loc);
-
-	if (bits <= 64)
-		return awst::makeBiguintToUInt64(std::move(finalResult), m_loc);
-	return finalResult;
 }
 
 } // namespace puyasol::builder::sol_ast

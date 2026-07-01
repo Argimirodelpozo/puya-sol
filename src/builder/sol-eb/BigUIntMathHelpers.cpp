@@ -19,6 +19,31 @@ std::shared_ptr<awst::Expression> wrapMod256(
 	return mod;
 }
 
+std::shared_ptr<awst::Expression> promoteToBiguint(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::SourceLocation const& _loc)
+{
+	if (_expr->wtype == awst::WType::biguintType())
+		return _expr;
+
+	// Integer constants: biguint constant directly (avoids itob(0) = 8 zero bytes).
+	if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
+		return awst::makeIntegerConstant(intConst->value, _loc, awst::WType::biguintType());
+
+	// account/bytes: reinterpret directly; itob is uint64-only and truncates >8 bytes.
+	if (_expr->wtype == awst::WType::accountType()
+		|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes))
+	{
+		auto bytesExpr = _expr->wtype == awst::WType::accountType()
+			? awst::makeAsBytes(std::move(_expr), _loc)
+			: std::move(_expr);
+		return awst::makeAsBiguint(std::move(bytesExpr), _loc);
+	}
+
+	auto itob = awst::makeItob(std::move(_expr), _loc);
+	return awst::makeAsBiguint(std::move(itob), _loc);
+}
+
 std::shared_ptr<awst::Expression> buildBigUIntShift(
 	std::shared_ptr<awst::Expression> _value,
 	std::shared_ptr<awst::Expression> _shiftAmt,
@@ -245,12 +270,17 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right,
 	BuilderBinaryOp _op,
+	unsigned _resultBits,
+	bool _checked,
 	awst::SourceLocation const& _loc)
 {
-	// Each operand is referenced 3x (sign test, negation, else-branch). Pin via
-	// comma let-binding (not SingleEvaluation): for DIV the first _right ref sits
-	// inside the short-circuit RHS of Or(isLeftNeg, isRightNeg) — an SE temp
-	// defined there doesn't dominate later uses (puya: "used but never defined").
+	bool const isDiv = (_op != BuilderBinaryOp::Mod);
+
+	// Each operand is referenced 3x (sign test, negation, else-branch) — and again
+	// by the overflow guard below. Pin via comma let-binding (not SingleEvaluation):
+	// for DIV the first _right ref sits inside the short-circuit RHS of
+	// Or(isLeftNeg, isRightNeg) — an SE temp defined there doesn't dominate later
+	// uses (puya: "used but never defined").
 	auto* biguintW = awst::WType::biguintType();
 	static int s_smdTemp = 0;
 	int smdId = s_smdTemp++;
@@ -267,6 +297,28 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 		auto c = awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());
 		return c;
 	};
+
+	// Signed-division overflow: intN.min / -1 = +2^(N-1) doesn't fit intN → EVM reverts,
+	// but the abs-value arithmetic below just wraps it back to intN.min. Guard it (div +
+	// checked only; mod never overflows). Operands are canonical 256-bit two's complement,
+	// so intN.min reads as 2^256 - 2^(resultBits-1) and -1 as 2^256-1 (both computed via
+	// u256's mod-2^256 wrap). Pushed into the comma before the divide so it runs first.
+	std::shared_ptr<awst::Expression> overflowAssert;
+	if (isDiv && _checked)
+	{
+		std::string minStr = (solidity::u256(0) - (solidity::u256(1) << (_resultBits - 1))).str();
+		std::string negOneStr = (solidity::u256(0) - 1).str();
+		auto xIsMin = awst::makeNumericCompare(
+			awst::makeVarExpression(lName, biguintW, _loc), awst::NumericComparison::Eq,
+			awst::makeIntegerConstant(minStr, _loc, biguintW), _loc);
+		auto yIsNeg1 = awst::makeNumericCompare(
+			awst::makeVarExpression(rName, biguintW, _loc), awst::NumericComparison::Eq,
+			awst::makeIntegerConstant(negOneStr, _loc, biguintW), _loc);
+		auto bothTrue = awst::makeBoolBinOp(
+			std::move(xIsMin), awst::BinaryBooleanOperator::And, std::move(yIsNeg1), _loc);
+		overflowAssert = awst::makeAssert(
+			awst::makeNot(std::move(bothTrue), _loc), _loc, "signed division overflow");
+	}
 
 	// isLeftNeg = left >= 2^255
 	auto isLeftNeg = TypeCoercion::isNegativeSigned(_left, 256, _loc);
@@ -325,36 +377,25 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 
 	auto shouldNegateAndNonZero = awst::makeBoolBinOp(std::move(shouldNegate), awst::BinaryBooleanOperator::And, std::move(notZero), _loc);
 
-	auto finalCond = awst::makeConditional(
+	std::shared_ptr<awst::Expression> result = awst::makeConditional(
 		std::move(shouldNegateAndNonZero), std::move(negResult),
 		std::move(absResult), awst::WType::biguintType(), _loc);
-	auto comma = awst::makeCommaExpression(awst::WType::biguintType(), _loc);
+
+	// Narrow the 256-bit two's-complement result to the result type's native width:
+	// <=64-bit → uint64 (low 64-bit TC, so a sub-word result composes with surrounding
+	// uint64 ops); >64-bit stays canonical 256-bit biguint (already sign-extended).
+	if (_resultBits <= 64)
+		result = awst::makeBiguintToUInt64(std::move(result), _loc);
+
+	auto* rwtype = result->wtype;
+	auto comma = awst::makeCommaExpression(rwtype, _loc);
 	comma->expressions.push_back(std::move(bindL));
 	comma->expressions.push_back(std::move(bindR));
-	comma->expressions.push_back(std::move(finalCond));
+	if (overflowAssert)
+		comma->expressions.push_back(std::move(overflowAssert));
+	comma->expressions.push_back(std::move(result));
 	return comma;
 }
-
-namespace
-{
-// Promote a signed-arith operand to biguint (ported from SolBinaryOperation's file-local helper).
-std::shared_ptr<awst::Expression> promoteSignedToBiguint(
-	std::shared_ptr<awst::Expression> expr, awst::SourceLocation const& loc)
-{
-	if (expr->wtype == awst::WType::biguintType())
-		return expr;
-	if (expr->wtype == awst::WType::accountType()
-		|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
-	{
-		auto bytesExpr = expr->wtype == awst::WType::accountType()
-			? awst::makeAsBytes(std::move(expr), loc)
-			: std::move(expr);
-		return awst::makeAsBiguint(std::move(bytesExpr), loc);
-	}
-	auto itob = awst::makeItob(std::move(expr), loc);
-	return awst::makeAsBiguint(std::move(itob), loc);
-}
-} // anonymous namespace
 
 std::shared_ptr<awst::Expression> buildSignedArithmetic(
 	ContractContext& _ctx,
@@ -376,8 +417,15 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 		return awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());
 	};
 
-	_left = promoteSignedToBiguint(std::move(_left), _loc);
-	_right = promoteSignedToBiguint(std::move(_right), _loc);
+	// Pin operands: the checked overflow assert below references each again, so a
+	// side-effecting operand (`x += f()`) must evaluate exactly once. Self-contained
+	// here (idempotent — the plain `a+b` caller already passes SE-wrapped operands;
+	// the compound path via SolIntegerBuilder::binary_op previously relied on it).
+	_left = awst::makeEvalOnce(std::move(_left), _loc);
+	_right = awst::makeEvalOnce(std::move(_right), _loc);
+
+	_left = promoteToBiguint(std::move(_left), _loc);
+	_right = promoteToBiguint(std::move(_right), _loc);
 
 	// Mask to N bits (uint64 two's-comp may exceed 2^N, e.g. int8(-2)=2^64-2).
 	if (_bits < 256)
@@ -409,7 +457,7 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 	if (!_isUnchecked)
 	{
 		auto isNeg = [&](std::shared_ptr<awst::Expression> const& val) {
-			auto cmp = awst::makeNumericCompare(promoteSignedToBiguint(val, _loc), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), _loc);
+			auto cmp = awst::makeNumericCompare(promoteToBiguint(val, _loc), awst::NumericComparison::Lt, makeBiguintConst(halfNStr), _loc);
 			return awst::makeNot(std::move(cmp), _loc);
 		};
 		std::shared_ptr<awst::Expression> overflowCond;
