@@ -420,6 +420,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				auto* arrWType = baseAwst->wtype
 					? baseAwst->wtype : m_ctx.typeMapper.map(maType);
 
+				// Chained mapping-entry push (`m[k].arr.push()`): the lazy per-entry
+				// STRUCT box holding the dyn-array field must be materialised (with a
+				// valid default struct encoding) before ArrayExtend's box_extract, else
+				// "no such box". Same prologue as the m[k].push() branch above.
+				if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
+						m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
+					m_ctx.queuePrePending(std::move(stmt));
+
 				if (memberName == "push" && !m_call.arguments().empty())
 				{
 					auto val = buildExpr(*m_call.arguments()[0]);

@@ -1498,3 +1498,25 @@ def test_multidim_fixed_array_box_size(harness):
     assert s256(harness.call(app, "getGrid(uint256,uint256)", 1, 0)) == -(1 << 255)
     assert s256(harness.call(app, "getGrid(uint256,uint256)", 1, 1)) == -7
 
+
+def test_mapping_struct_dynarray_push(harness):
+    """puyasolRegression/contracts/mapping_struct_dynarray_push.sol — NOT an o.g. semantic test.
+
+    Found by the dynamic-struct fuzz axis. `m[k].arr.push(v)` where arr is a dyn-array FIELD of a
+    struct stored in a mapping entry: baseExpr is a MemberAccess (m[k].arr), so it fell into the
+    chained-storage push path in SolArrayMethod which built ArrayExtend WITHOUT first materialising
+    the lazy per-entry struct box -> box_extract hit "no such box". Fixed by calling
+    StorageMapper::makeEnsureRootBoxForWrite (isResize) there too, matching the m[k].push() branch.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/mapping_struct_dynarray_push.sol")
+
+    harness.call(app, "pushM(uint256,uint64)", 7, 111)
+    harness.call(app, "pushM(uint256,uint64)", 7, 222)
+    harness.call(app, "pushM(uint256,uint64)", 9, 333)   # distinct entry -> its own lazy box
+    assert as_int(harness.call(app, "lenM(uint256)", 7).abi_return) == 2
+    assert as_int(harness.call(app, "lenM(uint256)", 9).abi_return) == 1
+    assert as_int(harness.call(app, "getM(uint256,uint256)", 7, 0).abi_return) == 111
+    assert as_int(harness.call(app, "getM(uint256,uint256)", 7, 1).abi_return) == 222
+    assert as_int(harness.call(app, "getM(uint256,uint256)", 9, 0).abi_return) == 333
+
