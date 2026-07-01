@@ -2,6 +2,7 @@
 /// Top-level assignment translator (try*/apply* pipeline).
 /// Shape-specific handlers live in sibling SolAssignment*.cpp.
 
+#include <algorithm>
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
@@ -504,6 +505,68 @@ SolAssignment::applyArc4EncodeIfNeeded(
 void SolAssignment::maybePrePopulateBox(
 	std::shared_ptr<awst::Expression> const& _target)
 {
+	// STATE-VAR box, first write is a PARTIAL write (element/field, via box_replace at an offset).
+	// A plain state-var box is only created by a FULL write (`st = S(...)`, or `st.x = v` which COW-
+	// rebuilds and box_puts). A fixed-array-element write `st.inner[i] = v` does a partial box_replace
+	// and needs the box to already exist — so `st.inner[i] = v` BEFORE any full write hits "no such box"
+	// (EVM auto-zero-inits storage; the AVM box must exist). Emit an idempotent `if !box_exists:
+	// box_put(default)` so the partial write finds a valid default-encoded box. (Mapping-derived boxes
+	// are handled by the block below, gated on isMappingDerivedKey.)
+	{
+		awst::Expression const* cur = _target.get();
+		bool hasIndex = false;   // require an array-ELEMENT write (box_replace at an offset), not a pure
+		                         // field write — `st.x = v` already COW-box_puts (creates) its own box,
+		                         // so firing there is redundant AND regresses struct/fn-pointer paths.
+		awst::BoxValueExpression const* root = nullptr;
+		while (cur)
+		{
+			if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(cur))
+			{ hasIndex = true; cur = idx->base.get(); }
+			else if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(cur))
+			{ cur = fe->base.get(); }
+			else if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(cur))
+			{ root = bv; break; }
+			else
+				break;
+		}
+		if (root && hasIndex && root->key
+			&& !builder::StorageMapper::isMappingDerivedKey(root->key.get()))
+		{
+			if (auto enc = arc4DefaultEncoding(root->wtype))
+			{
+				uint64_t const encSize = enc->size();
+				// A ZEROED box is a valid ARC4 default for STATIC-element types (uintN, static arrays,
+				// structs of static fields) — use box_create (size only, NO bytes constant on the stack).
+				// Only a DYNAMIC-element default has non-zero head offsets and needs box_put — and that
+				// constant must fit the AVM stack limit (a large all-zeros box_put constant "exceeds stack
+				// size limits", e.g. fixed uint256[N]). A large dynamic default (>4096) can't be
+				// pre-populated here → skip (rare; a dynamic-element first partial write only).
+				bool const allZeros = std::all_of(enc->begin(), enc->end(),
+					[](uint8_t b) { return b == 0; });
+				std::shared_ptr<awst::Expression> createStmt;
+				if (encSize > 0 && encSize <= 32768 && allZeros)
+					createStmt = awst::makeBoxCreate(
+						root->key, awst::makeIntegerConstant(encSize, m_loc), m_loc);
+				else if (encSize > 0 && encSize <= 4096)
+					createStmt = awst::makeBoxPut(
+						root->key, awst::makeBytesConstant(std::move(*enc), m_loc), m_loc);
+				if (createStmt)
+				{
+					auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+						m_ctx.typeMapper, root->key, m_loc);
+					auto exists = awst::makeTupleItem(
+						std::move(boxLen), 1, awst::WType::boolType(), m_loc);
+					auto notExists = awst::makeNot(std::move(exists), m_loc);
+					auto thenBlock = awst::makeBlock(m_loc);
+					thenBlock->body.push_back(awst::makeExpressionStatement(std::move(createStmt), m_loc));
+					m_ctx.queuePrePending(awst::makeIfElse(
+						std::move(notExists), std::move(thenBlock), nullptr, m_loc));
+					return;
+				}
+			}
+		}
+	}
+
 	// Mapping-entry partial write: `m[k][i] = v` where m is `mapping(K => T[N])`
 	// or `mapping(K => bytes[N])`. The per-entry box is lazy; emit box_create
 	// as a pre-statement so box_replace finds it. Idempotent on same size.

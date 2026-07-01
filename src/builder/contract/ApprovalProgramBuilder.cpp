@@ -960,6 +960,12 @@ void ContractBuilder::emitBoxCreateForStateVars(
 							if (bw && bw->length().has_value())
 								elemSize = *bw->length();
 						}
+						else if (dynamic_cast<awst::ARC4StaticArray const*>(elemT))
+							// Nested static array (e.g. int256[2][2], element = int256[2]): the element's
+							// byte size is the FULL inner array. The old switch missed this, defaulting to
+							// 32 → under-sized box (64 B for int256[2][2] not 128) → grid[1][j] hit
+							// "replacement end beyond original length". Recurses correctly.
+							elemSize = StorageMapper::arc4StaticArrayTotalBytes(elemT);
 					}
 					// AVM box cap = 32768 B; oversized → multi-box below.
 					// Record per-box size here.

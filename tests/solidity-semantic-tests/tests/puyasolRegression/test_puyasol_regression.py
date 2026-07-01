@@ -1442,3 +1442,58 @@ def test_modifier_multiple_placeholder(harness):
     assert as_int(harness.call(app, "getCtr()").abi_return) == 2
     # value-returning body under twice -> returns v (last `_;` wins)
     assert as_int(harness.call(app, "ret(uint256)", 7).abi_return) == 7
+
+
+def test_struct_fixed_array_first_write(harness):
+    """puyasolRegression/contracts/struct_fixed_array_first_write.sol — NOT an o.g. semantic test.
+
+    Found by the fixed-size-array fuzz axis. `st.inner[i] = v` (fixed array inside a struct state var)
+    is a PARTIAL write via box_replace; a plain state-var box is only created by a FULL write, so a
+    FIRST partial write (before any `st = ...` / `st.x = ...`) hit "no such box" and reverted (EVM
+    auto-zero-inits storage). Fixed by an idempotent box_put(default) prologue for state-var boxes
+    reached by a partial write. This test makes setStInner the VERY FIRST call (fresh box).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/struct_fixed_array_first_write.sol")
+
+    def s128(r):
+        # int128 getter publishes as a 256-bit two's-complement uint; decode at 256-bit.
+        v = as_int(r.abi_return); return v - (1 << 256) if v >= (1 << 255) else v
+
+    # FIRST call is a partial write to a never-created box — must create it, not revert.
+    harness.call(app, "setStInner(uint256,int128)", 0, -5)
+    assert s128(harness.call(app, "getStInner(uint256)", 0)) == -5
+    # int128.min (the sign-boundary that stressed the encode) into the other element.
+    harness.call(app, "setStInner(uint256,int128)", 1, -(1 << 127))
+    assert s128(harness.call(app, "getStInner(uint256)", 1)) == -(1 << 127)
+    # sibling untouched; the other struct field still writable + independent.
+    assert s128(harness.call(app, "getStInner(uint256)", 0)) == -5
+    harness.call(app, "setStX(uint64)", 42)
+    assert as_int(harness.call(app, "getStX()").abi_return) == 42
+    assert s128(harness.call(app, "getStInner(uint256)", 1)) == -(1 << 127)
+
+
+def test_multidim_fixed_array_box_size(harness):
+    """puyasolRegression/contracts/multidim_fixed_array_box_size.sol — NOT an o.g. semantic test.
+
+    Found by the fixed-size-array fuzz axis. A multi-dim fixed array `int256[2][2]` is one 128-byte
+    box, but the deploy-time box_create sized it at 64 (the manual elementType() switch handled only
+    ARC4UIntN/Bytes; a nested-static-array element fell to the default elemSize=32 -> 32*2=64). So
+    writing grid[1][j] (offset >= 64) reverted "replacement end beyond original length". Fixed by
+    sizing from StorageMapper::arc4StaticArrayTotalBytes (recursive element size => 128).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/multidim_fixed_array_box_size.sol")
+
+    def s256(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v >= (1 << 255) else v
+
+    # write every cell — grid[1][*] is the one that used to revert (offset >= 64 in a 64B box)
+    harness.call(app, "setGrid(uint256,uint256,int256)", 0, 0, 11)
+    harness.call(app, "setGrid(uint256,uint256,int256)", 0, 1, 22)
+    harness.call(app, "setGrid(uint256,uint256,int256)", 1, 0, -(1 << 255))   # int256.min at [1][0]
+    harness.call(app, "setGrid(uint256,uint256,int256)", 1, 1, -7)
+    assert s256(harness.call(app, "getGrid(uint256,uint256)", 0, 0)) == 11
+    assert s256(harness.call(app, "getGrid(uint256,uint256)", 0, 1)) == 22
+    assert s256(harness.call(app, "getGrid(uint256,uint256)", 1, 0)) == -(1 << 255)
+    assert s256(harness.call(app, "getGrid(uint256,uint256)", 1, 1)) == -7
