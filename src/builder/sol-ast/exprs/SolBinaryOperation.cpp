@@ -63,7 +63,12 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryUserDefinedOp()
 std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 {
 	// Solc folded the whole op → emit its value (the canonical constant path).
-	return builder::SolcConstFold::foldAnnotated(m_binOp, m_ctx.typeMapper, m_loc);
+	if (auto folded = builder::SolcConstFold::foldAnnotated(m_binOp, m_ctx.typeMapper, m_loc))
+		return folded;
+	// intN-typed constant expression (arithmetic over constant variables) —
+	// folds only under foldTyped's every-node-in-range guard, so intermediate
+	// overflow/wrap semantics are never swallowed.
+	return builder::SolcConstFold::foldTyped(m_binOp, m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()

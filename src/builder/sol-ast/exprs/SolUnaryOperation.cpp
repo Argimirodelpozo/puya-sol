@@ -732,6 +732,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 	// take the full checked paths below.
 	if (auto folded = builder::SolcConstFold::foldAnnotated(m_unaryOp, m_ctx.typeMapper, m_loc))
 		return folded;
+	// intN-typed constant expression (e.g. `-M` over a constant variable) —
+	// foldTyped's in-range guard keeps `-intN.min` on the checked path.
+	if (auto folded = builder::SolcConstFold::foldTyped(m_unaryOp, m_loc))
+		return folded;
 
 	auto operand = buildExpr(m_unaryOp.subExpression());
 

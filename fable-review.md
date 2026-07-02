@@ -22,12 +22,17 @@ ongoing discussion. Codebase size for scale: ~54.6k lines of C++ under `src/`.
 
 ### ✅ AGREED START — 1. Adopt solc's `ConstantEvaluator` as the *only* constant folder
 
-> **STATUS: first slice LANDED** — SolcConstFold.{h,cpp} (foldAnnotated + hoisted constantVarEvmWord),
+> **STATUS: COMPLETE** — slice 1: SolcConstFold.{h,cpp} (foldAnnotated + hoisted constantVarEvmWord),
 > unary/binary sol-ast folding unified, the eb negate fast-path DELETED (its removal exposed a
 > latent uint64/biguint wtype mismatch on constant operands of biguint-backed intN, now fixed with
-> a promote at the path entry — caught by constantEvaluator::test_rounding). Remaining: case-(b)
-> folding of const-var expressions typed intN via ConstantEvaluator::tryEvaluate WITH the in-range
-> guard (out-of-range must fall to the runtime checked path — the -M int8 trap).
+> a promote at the path entry — caught by constantEvaluator::test_rounding). Slice 2: case-(b)
+> foldTyped — intN-typed const-var expressions fold via ConstantEvaluator::tryEvaluate under an
+> EVERY-NODE-in-range guard (walker over a strict node whitelist; conversions/calls never fold).
+> Guard test_const_var_fold; AWST-verified: happy paths emit bare constants, the traps (`-M`,
+> `(P<<1)>>1`, unchecked `P*3`) correctly take the runtime chains. EMPIRICAL CORRECTION to the
+> risk note below: solc hard-errors CHECKED BINARY constant overflow at compile time, but lets
+> UNARY negation overflow and SHIFT/unchecked-mul truncation through to runtime — the in-range
+> guard IS load-bearing there; "do not re-check" was wrong.
 
 **Goal:** our builders never fold constants themselves; they ask solc for the value first and
 only lower the non-constant residue. Deletes code, deletes a bug class solc already solved.
@@ -67,9 +72,11 @@ only lower the non-constant residue. Deletes code, deletes a bug class solc alre
 - solc's rational arithmetic is arbitrary-precision; conversion to the declared type is where
   the semantics live (truncation/sign). Keep that conversion in ONE place (the helper),
   expressed via `SolIntType`.
-- solc already hard-errors on constant expressions that overflow their type — so a
-  successful `tryConstantValue` at a declared type is by definition in range. Document and
-  rely on this; do not re-check.
+- ~~solc already hard-errors on constant expressions that overflow their type — rely on
+  this; do not re-check~~ **DISPROVEN by probe (2026-07-02):** solc hard-errors only CHECKED
+  BINARY constant overflow (`(P+P)-P` rejects, even under unchecked); unary negation
+  (`-M` with M=int8.min) and truncating ops (`P<<1`, unchecked `P*3`) compile and carry
+  runtime semantics. foldTyped therefore range-checks EVERY integer-typed node itself.
 
 **Expected wins:** retire the C1/C2-adjacent fold bugs permanently; delete ~4 bespoke fold
 sites; constants arrive earlier so downstream code (e.g. shift-amount clamps, budget) sees

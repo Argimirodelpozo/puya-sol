@@ -1638,3 +1638,31 @@ def test_dce_reverting_subexpr_literal_folds(harness):
     ]:
         r = harness.call(app, sig, *args, expect_revert=True)
         assert getattr(r, "reverted", False), f"{sig}{args} must revert (divide/mod by zero)"
+
+
+def test_const_var_fold(harness):
+    """puyasolRegression/contracts/const_var_fold.sol — NOT an o.g. semantic test.
+
+    Guard for SolcConstFold::foldTyped (fable-review item 1, case (b)): intN-typed
+    constant-variable expressions fold via solc's ConstantEvaluator ONLY under the
+    every-node-in-range guard. Negative cases (shapes solc lets through to runtime):
+    `-M` with M = type(int8).min must REVERT (128 out of int8 range -> checked path);
+    `(P<<1)>>1` must compute on the TRUNCATED intermediate (-28, not the rational 100);
+    unchecked `P*3` must WRAP (44, not 300).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/const_var_fold.sol")
+
+    def w(v, bits=256):
+        return v - (1 << bits) if v > (1 << (bits - 1)) else v
+
+    r = harness.call(app, "negMin()", expect_revert=True)
+    assert getattr(r, "reverted", False), "-type(int8).min via const var must revert"
+    # out-of-range intermediates must reach the runtime lowering (solc rejects the
+    # CHECKED binary-overflow shapes at compile time; shifts and unchecked mul get through)
+    assert w(as_int(harness.call(app, "shiftTrunc()").abi_return)) == -28
+    assert w(as_int(harness.call(app, "mulWrapUnchecked()").abi_return)) == 44
+    assert w(as_int(harness.call(app, "divTrunc()").abi_return)) == -2
+    assert w(as_int(harness.call(app, "modSign()").abi_return)) == -1
+    assert w(as_int(harness.call(app, "arith()").abi_return)) == 88
+    assert w(as_int(harness.call(app, "wide()").abi_return)) == 12345678901234567890
+    assert as_int(harness.call(app, "big()").abi_return) == (1 << 199) + 1
