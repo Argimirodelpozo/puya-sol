@@ -8,6 +8,7 @@ main:
     intc_0 // 0
     dupn 4
     pushbytes ""
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -95,63 +96,49 @@ main_ternary_merge@20:
     swap
     app_global_put
     callsub a
-    bury 1
+    bury 3
     callsub b
     itob
-    dup
-    bury 4
     bytec_0 // 0x0100
     b%
+    dup
+    bury 5
     pushbytes 0x
     b==
     bnz main_bool_true@37
-    dup
+    dig 2
     itob
+    bytec_0 // 0x0100
+    b%
     dup
-    bury 3
-    bytec_0 // 0x0100
-    b%
+    bury 7
     bytec_1 // 0x80
     b<
+    dup
     !
-    dig 3
-    bytec_0 // 0x0100
-    b%
+    dig 5
     bytec_1 // 0x80
     b<
+    dup
+    bury 5
     !
     ==
     bz main_ternary_false@29
-    dig 1
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
     bnz main_ternary_false@24
-    dig 1
     bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    swap
+    dig 6
     b-
-    bury 6
+    bury 8
 
 main_ternary_merge@25:
-    dig 2
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
+    dig 1
     bnz main_ternary_false@27
-    dig 2
     bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    swap
+    dig 4
     b-
 
 main_ternary_merge@28:
-    dig 6
+    dig 8
     b*
     bytec_1 // 0x80
     b<
@@ -166,34 +153,16 @@ main_bool_merge@39:
     assert // signed arithmetic overflow
     intc_3 // 8
     bzero
-    dig 1
+    dig 3
     itob
-    dup
     bytec_0 // 0x0100
     b%
     dig 5
+    b*
+    bytec_0 // 0x0100
+    b%
+    concat
     dup
-    cover 4
-    bytec_0 // 0x0100
-    b%
-    b*
-    bytec_0 // 0x0100
-    b%
-    dig 2
-    swap
-    concat
-    swap
-    bytec_0 // 0x0100
-    b%
-    uncover 3
-    bytec_0 // 0x0100
-    b%
-    b*
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_3 // 8
     -
@@ -246,49 +215,30 @@ main_bool_false@38:
     b main_bool_merge@39
 
 main_ternary_false@27:
-    dig 2
-    bytec_0 // 0x0100
-    b%
+    dig 3
     b main_ternary_merge@28
 
 main_ternary_false@24:
-    dig 1
-    bytec_0 // 0x0100
-    b%
-    bury 6
+    dig 5
+    bury 8
     b main_ternary_merge@25
 
 main_ternary_false@29:
-    dig 1
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
     bnz main_ternary_false@31
-    dig 1
     bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    swap
+    dig 6
     b-
-    bury 5
+    bury 7
 
 main_ternary_merge@32:
-    dig 2
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
+    dig 1
     bnz main_ternary_false@34
-    dig 2
     bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    swap
+    dig 4
     b-
 
 main_ternary_merge@35:
-    dig 5
+    dig 7
     b*
     bytec_1 // 0x80
     b>
@@ -296,16 +246,12 @@ main_ternary_merge@35:
     b main_ternary_merge@36
 
 main_ternary_false@34:
-    dig 2
-    bytec_0 // 0x0100
-    b%
+    dig 3
     b main_ternary_merge@35
 
 main_ternary_false@31:
-    dig 1
-    bytec_0 // 0x0100
-    b%
-    bury 5
+    dig 5
+    bury 7
     b main_ternary_merge@32
 
 main_ternary_false@19:
@@ -330,45 +276,37 @@ main_ternary_merge@47:
     app_global_put
     callsub b
     itob
-    dup
-    bury 4
     bytec_0 // 0x0100
     b%
+    dup
+    bury 5
     bytec_1 // 0x80
     b<
     !
+    dup
+    bury 2
     callsub a
     itob
-    dup
-    bury 6
     bytec_0 // 0x0100
     b%
+    dup
+    bury 7
     bytec_1 // 0x80
     b<
     !
     ==
     bnz main_bool_true@49
-    dig 2
-    dup
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
-    !
-    swap
-    bytec_0 // 0x0100
-    b%
+    dig 3
     bytec_0 // 0x0100
     b+
     dig 5
-    bytec_0 // 0x0100
-    b%
     b-
     bytec_0 // 0x0100
     b%
     bytec_1 // 0x80
     b<
     !
+    dig 1
     ==
     bz main_bool_false@50
 
@@ -379,38 +317,15 @@ main_bool_merge@51:
     assert // signed arithmetic overflow
     intc_3 // 8
     bzero
-    dig 3
-    dup
-    cover 2
-    bytec_0 // 0x0100
-    b%
+    dig 4
     bytec_0 // 0x0100
     b+
     dig 6
+    b-
+    bytec_0 // 0x0100
+    b%
+    concat
     dup
-    cover 4
-    bytec_0 // 0x0100
-    b%
-    b-
-    bytec_0 // 0x0100
-    b%
-    dig 1
-    swap
-    concat
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    b+
-    uncover 3
-    bytec_0 // 0x0100
-    b%
-    b-
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_3 // 8
     -
@@ -484,43 +399,35 @@ main_ternary_merge@59:
     app_global_put
     callsub a
     itob
-    dup
-    bury 4
     bytec_0 // 0x0100
     b%
+    dup
+    bury 5
     bytec_1 // 0x80
     b<
     !
+    dup
+    bury 2
     callsub b
     itob
-    dup
-    bury 6
     bytec_0 // 0x0100
     b%
+    dup
+    bury 7
     bytec_1 // 0x80
     b<
     !
     !=
     bnz main_bool_true@61
-    dig 2
-    dup
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
-    !
-    swap
-    bytec_0 // 0x0100
-    b%
+    dig 3
     dig 5
-    bytec_0 // 0x0100
-    b%
     b+
     bytec_0 // 0x0100
     b%
     bytec_1 // 0x80
     b<
     !
+    dig 1
     ==
     bz main_bool_false@62
 
@@ -531,34 +438,13 @@ main_bool_merge@63:
     assert // signed arithmetic overflow
     intc_3 // 8
     bzero
-    dig 3
-    dup
-    cover 2
-    bytec_0 // 0x0100
-    b%
+    dig 4
     dig 6
+    b+
+    bytec_0 // 0x0100
+    b%
+    concat
     dup
-    cover 4
-    bytec_0 // 0x0100
-    b%
-    b+
-    bytec_0 // 0x0100
-    b%
-    dig 1
-    swap
-    concat
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    uncover 3
-    bytec_0 // 0x0100
-    b%
-    b+
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_3 // 8
     -

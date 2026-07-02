@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/exp_cleanup_direct.sol.C.approval_program() -> uint64:
 main:
     intcblock 8 0 1
-    bytecblock 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x0100
+    bytecblock 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x02 0x0100
     intc_1 // 0
     dupn 6
     pushint 4096
@@ -80,7 +80,7 @@ main_while_top@10:
 
 main_after_if_else@13:
     dig 4
-    pushbytes 0x02
+    bytec_3 // 0x02
     b/
     bury 5
     dig 6
@@ -102,19 +102,10 @@ main_after_while@14:
     dup
     bury 2
     dig 3
+    bytec 4 // 0x0100
+    b%
+    concat
     dup
-    cover 2
-    bytec_3 // 0x0100
-    b%
-    dig 1
-    swap
-    concat
-    uncover 2
-    bytec_3 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_0 // 8
     -
@@ -142,7 +133,7 @@ main_while_top@15:
 
 main_after_if_else@18:
     dig 3
-    pushbytes 0x02
+    bytec_3 // 0x02
     b/
     bury 4
     dig 5
@@ -155,20 +146,12 @@ main_after_if_else@18:
 
 main_after_while@19:
     dig 1
-    dup
-    bytec_3 // 0x0100
+    bytec 4 // 0x0100
     b%
-    dig 2
-    dup
-    cover 3
+    dig 1
     swap
     concat
-    swap
-    bytec_3 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
+    dup
     len
     intc_0 // 8
     -

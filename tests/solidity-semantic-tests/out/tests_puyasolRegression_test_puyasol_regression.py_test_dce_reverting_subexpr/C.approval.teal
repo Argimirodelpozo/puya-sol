@@ -4,9 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 256
-    bytecblock 0x 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x 0x151f7c75 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
-    dupn 8
+    dupn 7
     bytec_0 // ""
     pushint 4096
     bzero
@@ -43,15 +43,11 @@ main_after_if_else@2:
 
 main_mulZero_route@10:
     txna ApplicationArgs 1
-    dup
-    bury 11
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -63,33 +59,29 @@ main_mulZero_route@10:
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@54:
     !
     assert // not payable
-    dig 9
-    dig 9
-    b/
-    pop
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
 
 main_ternary_false@16:
     intc_2 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@54
 
 main_expZero_route@9:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 9
     len
     intc_0 // 32
     ==
@@ -104,10 +96,10 @@ main_expZero_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     bury 3
-    dig 9
-    dig 9
+    dig 8
+    dig 8
     b%
     bury 5
     intc_2 // 0
@@ -120,7 +112,7 @@ main_while_top@23:
     b>
     bz main_after_while@27
     dig 3
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -128,7 +120,7 @@ main_while_top@23:
     dig 2
     dig 5
     b*
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 3
 
@@ -140,7 +132,7 @@ main_after_if_else@26:
     dig 4
     dup
     b*
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 5
     b main_while_top@23
@@ -155,7 +147,7 @@ main_after_while@27:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -168,15 +160,13 @@ main_ternary_false@21:
 
 main_ternFold_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 11
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 9
+    bury 8
     len
     intc_0 // 32
     ==
@@ -191,14 +181,8 @@ main_ternFold_route@8:
 main_ternary_merge@32:
     !
     assert // not payable
-    dig 9
-    dig 8
-    dup
-    cover 2
-    b%
-    pop
-    bytec_2 // 0x151f7c75
-    swap
+    bytec_1 // 0x151f7c75
+    dig 7
     concat
     log
     intc_1 // 1
@@ -211,14 +195,14 @@ main_ternary_false@31:
 main_modShrRt_route@7:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 9
     len
     intc_0 // 32
     ==
@@ -240,8 +224,8 @@ main_modShrRt_route@7:
 main_ternary_merge@37:
     !
     assert // not payable
-    dig 9
-    dig 9
+    dig 8
+    dig 8
     b%
     bury 2
     dig 5
@@ -287,7 +271,7 @@ main_ternary_merge@43:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -309,15 +293,11 @@ main_ternary_false@36:
 
 main_modShl_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 11
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
-    dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -328,27 +308,14 @@ main_modShl_route@6:
     intc_1 // 1
     -
     gtxns Amount
-
-main_ternary_merge@48:
-    !
-    assert // not payable
-    dig 9
-    dig 9
-    b%
-    pop
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_1 // 1
-    return
+    b main_ternary_merge@54
 
 main_ternary_false@47:
     intc_2 // 0
-    b main_ternary_merge@48
+    b main_ternary_merge@54
 
 main_divdivShl_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 8
     len
     intc_0 // 32
     ==
@@ -359,18 +326,7 @@ main_divdivShl_route@5:
     intc_1 // 1
     -
     gtxns Amount
-
-main_ternary_merge@54:
-    !
-    assert // not payable
-    dig 6
-    dup
-    b/
-    pop
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_1 // 1
-    return
+    b main_ternary_merge@54
 
 main_ternary_false@53:
     intc_2 // 0

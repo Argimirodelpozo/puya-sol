@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 8 0 32
-    bytecblock 0x0100 0x80 0xff 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x01
+    bytecblock 0x80 0x0100 0xff 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     pushint 4096
     bzero
     dup
@@ -101,7 +101,7 @@ main_ternary_merge@21:
     bytec_2 // 0xff
     b&
     dup
-    bytec_1 // 0x80
+    bytec_0 // 0x80
     b>=
     bz main_ternary_false@23
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -135,6 +135,7 @@ main_ternary_false@20:
 g:
     proto 0 0
     intc_2 // 0
+    pushbytes ""
     txn GroupIndex
     bz g_ternary_false@2
     txn GroupIndex
@@ -149,32 +150,27 @@ g_ternary_merge@3:
     pushint 31
     getbyte
     itob
+    bytec_1 // 0x0100
+    b%
     dup
     frame_bury 0
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
+    bytec_0 // 0x80
     b<
+    dup
+    !
+    frame_bury 1
     bnz g_bool_true@5
     frame_dig 0
-    dup
-    bytec_0 // 0x0100
-    b%
-    bytec_1 // 0x80
-    b<
-    !
-    swap
-    bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
+    bytec_1 // 0x0100
     b+
-    bytec 5 // 0x01
+    pushbytes 0x01
     b-
-    bytec_0 // 0x0100
+    bytec_1 // 0x0100
     b%
-    bytec_1 // 0x80
+    bytec_0 // 0x80
     b<
     !
+    frame_dig 1
     ==
     bz g_bool_false@6
 
@@ -187,31 +183,14 @@ g_bool_merge@7:
     intc_1 // 8
     bzero
     frame_dig 0
+    bytec_1 // 0x0100
+    b+
+    pushbytes 0x01
+    b-
+    bytec_1 // 0x0100
+    b%
+    concat
     dup
-    cover 2
-    bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    b+
-    bytec 5 // 0x01
-    b-
-    bytec_0 // 0x0100
-    b%
-    dig 1
-    swap
-    concat
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    b+
-    bytec 5 // 0x01
-    b-
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_1 // 8
     -
@@ -257,7 +236,7 @@ h_ternary_merge@3:
     bytec_2 // 0xff
     b&
     dup
-    bytec_1 // 0x80
+    bytec_0 // 0x80
     b>=
     bz h_ternary_false@5
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -301,7 +280,7 @@ x_ternary_merge@3:
     bytec_2 // 0xff
     b&
     dup
-    bytec_1 // 0x80
+    bytec_0 // 0x80
     b>=
     bz x_ternary_false@5
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00

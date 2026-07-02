@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_incdec.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 8 0 16 255
-    bytecblock "st" 0x0100 0x151f7c75 0x0000000000000000000000000000000000000000000000000000 "o" 0x010000000000000000 0x01 0x00000000000000000000000000000000000000000000000000000000 0xffffffffffffffff 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x8000000000000000
+    bytecblock "st" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000 "o" 0x0100 0x00000000000000000000000000000000000000000000000000000000 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xffffffffffffffff 0x8000000000000000 0x010000000000000000
     intc_2 // 0
     dupn 2
     pushbytes ""
@@ -73,9 +73,9 @@ main_getNY_route@17:
 main_ternary_merge@30:
     !
     assert // not payable
-    bytec 4 // "o"
+    bytec_3 // "o"
     box_get
-    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 0 12
@@ -110,7 +110,7 @@ main_ternary_merge@36:
     pushint 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -138,14 +138,14 @@ main_getNX_route@16:
 main_ternary_merge@41:
     !
     assert // not payable
-    bytec 4 // "o"
+    bytec_3 // "o"
     box_get
-    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 0 12
     extract 0 8
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -167,9 +167,9 @@ main_incNX_route@15:
 main_ternary_merge@46:
     !
     assert // not payable
-    bytec 4 // "o"
+    bytec_3 // "o"
     box_get
-    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x00000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -188,10 +188,10 @@ main_ternary_merge@46:
     uncover 2
     extract 12 16
     concat
-    bytec 4 // "o"
+    bytec_3 // "o"
     swap
     box_put
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -290,7 +290,7 @@ main_bool_merge@55:
     assert // overflow
     b|
     concat
-    bytec 4 // "o"
+    bytec_3 // "o"
     swap
     box_put
     intc_0 // 1
@@ -317,7 +317,7 @@ main_ternary_merge@60:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     pushint 25
@@ -325,7 +325,7 @@ main_ternary_merge@60:
     intc 4 // 255
     &
     itob
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -349,14 +349,14 @@ main_ternary_merge@65:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 17 8
-    bytec 8 // 0xffffffffffffffff
+    bytec 9 // 0xffffffffffffffff
     b&
     dup
-    bytec 12 // 0x8000000000000000
+    bytec 10 // 0x8000000000000000
     b>=
     bz main_ternary_false@67
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
@@ -371,7 +371,7 @@ main_ternary_merge@68:
     pushint 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -400,7 +400,7 @@ main_ternary_merge@73:
     bzero
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 1 16
@@ -419,7 +419,7 @@ main_ternary_merge@73:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -443,7 +443,7 @@ main_ternary_merge@78:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     intc_2 // 0
@@ -459,13 +459,13 @@ main_ternary_merge@78:
 
 main_ternary_merge@81:
     itob
-    bytec 9 // 0xff
+    bytec 6 // 0xff
     b&
     dup
-    bytec 10 // 0x80
+    bytec 7 // 0x80
     b>=
     bz main_ternary_false@83
-    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@84:
@@ -477,7 +477,7 @@ main_ternary_merge@84:
     pushint 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -507,7 +507,7 @@ main_ternary_merge@89:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -563,15 +563,15 @@ main_ternary_merge@94:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
     extract 17 8
-    dup
-    bytec 5 // 0x010000000000000000
+    bytec 11 // 0x010000000000000000
     b%
-    bytec 12 // 0x8000000000000000
+    dup
+    bytec 10 // 0x8000000000000000
     b!=
     assert // signed inc/dec overflow
     dig 1
@@ -580,26 +580,15 @@ main_ternary_merge@94:
     extract 1 16
     intc_1 // 8
     bzero
-    dig 3
-    bytec 5 // 0x010000000000000000
-    b%
-    bytec 8 // 0xffffffffffffffff
+    uncover 3
+    bytec 9 // 0xffffffffffffffff
     b+
-    bytec 5 // 0x010000000000000000
+    bytec 11 // 0x010000000000000000
     b%
     dig 1
     swap
     concat
-    uncover 4
-    bytec 5 // 0x010000000000000000
-    b%
-    bytec 8 // 0xffffffffffffffff
-    b+
-    bytec 5 // 0x010000000000000000
-    b%
-    dig 2
-    swap
-    concat
+    dup
     len
     intc_1 // 8
     -
@@ -652,41 +641,28 @@ main_ternary_merge@99:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
     intc_2 // 0
     getbyte
     itob
-    dup
-    bytec_1 // 0x0100
+    bytec 4 // 0x0100
     b%
+    dup
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
     intc_1 // 8
     bzero
-    dig 1
-    bytec_1 // 0x0100
-    b%
-    bytec 6 // 0x01
-    b+
-    bytec_1 // 0x0100
-    b%
-    dig 1
     swap
-    concat
-    uncover 2
-    bytec_1 // 0x0100
-    b%
-    bytec 6 // 0x01
+    pushbytes 0x01
     b+
-    bytec_1 // 0x0100
+    bytec 4 // 0x0100
     b%
-    uncover 2
-    swap
     concat
+    dup
     len
     intc_1 // 8
     -
@@ -729,13 +705,13 @@ main_ternary_merge@99:
     bytec_0 // "st"
     swap
     box_put
-    bytec 9 // 0xff
+    bytec 6 // 0xff
     b&
     dup
-    bytec 10 // 0x80
+    bytec 7 // 0x80
     b>=
     bz main_ternary_false@101
-    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@102:
@@ -747,7 +723,7 @@ main_ternary_merge@102:
     pushint 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -774,7 +750,7 @@ main_ternary_merge@107:
     assert // not payable
     bytec_0 // "st"
     box_get
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -782,8 +758,9 @@ main_ternary_merge@107:
     getbyte
     itob
     dup
-    bytec_1 // 0x0100
+    bytec 4 // 0x0100
     b%
+    dup
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
@@ -791,26 +768,13 @@ main_ternary_merge@107:
     bzero
     intc_1 // 8
     bzero
-    dig 2
-    bytec_1 // 0x0100
-    b%
-    bytec 6 // 0x01
-    b+
-    bytec_1 // 0x0100
-    b%
-    dig 1
-    swap
-    concat
-    dig 3
-    bytec_1 // 0x0100
-    b%
-    bytec 6 // 0x01
-    b+
-    bytec_1 // 0x0100
-    b%
     uncover 2
-    swap
+    pushbytes 0x01
+    b+
+    bytec 4 // 0x0100
+    b%
     concat
+    dup
     len
     intc_1 // 8
     -
@@ -848,13 +812,13 @@ main_ternary_merge@107:
     bytec_0 // "st"
     swap
     box_put
-    bytec 9 // 0xff
+    bytec 6 // 0xff
     b&
     dup
-    bytec 10 // 0x80
+    bytec 7 // 0x80
     b>=
     bz main_ternary_false@109
-    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@110:
@@ -866,7 +830,7 @@ main_ternary_merge@110:
     pushint 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

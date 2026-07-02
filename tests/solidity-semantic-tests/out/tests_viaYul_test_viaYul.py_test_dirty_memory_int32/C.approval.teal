@@ -7,6 +7,7 @@ main:
     bytecblock 0x00000000000000000000000000000000000000000000000000deadbeef15dead
     intc_1 // 0
     pushbytes ""
+    dupn 2
     intc_0 // 4096
     bzero
     dup
@@ -55,7 +56,7 @@ main_ternary_merge@9:
     pushint 88
     extract_uint64
     dup
-    bury 2
+    bury 4
     load 0
     pushint 24
     bzero
@@ -80,7 +81,7 @@ main_ternary_merge@9:
     <
     bz main_else_body@11
     load 0
-    dig 1
+    dig 3
     bytec_0 // 0x00000000000000000000000000000000000000000000000000deadbeef15dead
     replace3
     store 0
@@ -90,14 +91,18 @@ main_after_if_else@12:
     store 0
     pushint 8
     bzero
-    dig 1
+    dig 3
     dup
     intc_0 // 4096
     /
+    dup
+    bury 5
     loads
     swap
     intc_0 // 4096
     %
+    dup
+    bury 4
     intc_3 // 32
     extract3
     concat
@@ -121,23 +126,19 @@ main_ternary_merge@15:
     load 0
     store 0
     itob
-    bury 2
+    bury 4
     load 0
     store 0
-    dupn 2
-    intc_0 // 4096
-    /
+    dig 1
     loads
-    swap
-    intc_0 // 4096
-    %
+    dig 1
     intc_3 // 32
     extract3
     pushint 62678480396345005
     itob
     b==
     bz main_bool_false@18
-    dig 1
+    dig 3
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffef15dead
     b==
     bz main_bool_false@18
@@ -163,7 +164,8 @@ main_ternary_false@14:
     b main_ternary_merge@15
 
 main_else_body@11:
-    dupn 2
+    dig 2
+    dup
     intc_0 // 4096
     /
     dup

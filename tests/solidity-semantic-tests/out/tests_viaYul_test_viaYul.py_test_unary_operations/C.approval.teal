@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/unary_operations.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8 255 18446744073709551488
-    bytecblock 0x0100 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x8000 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x80 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x8000 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     dupn 11
     pushbytes ""
@@ -127,7 +127,7 @@ main_ternary_merge@40:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -186,7 +186,7 @@ main_bool_merge@49:
     intc 4 // 255
     &
     itob
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b!=
     assert // signed negation overflow
     intc_3 // 8
@@ -218,10 +218,10 @@ main_ternary_merge@52:
     bytec_2 // 0xff
     b&
     dup
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     bz main_ternary_false@54
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@55:
@@ -233,7 +233,7 @@ main_ternary_merge@55:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -299,7 +299,7 @@ main_ternary_merge@60:
     <=
     assert // overflow
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -381,7 +381,7 @@ main_ternary_merge@70:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -428,7 +428,7 @@ main_ternary_merge@75:
     <=
     assert // overflow
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -469,7 +469,7 @@ main_ternary_merge@80:
     intc_2 // 0
     uncover 2
     setbit
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -515,7 +515,7 @@ main_ternary_merge@85:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -561,7 +561,7 @@ main_ternary_merge@90:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -611,7 +611,7 @@ main_ternary_merge@95:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -661,7 +661,7 @@ main_ternary_merge@100:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -708,32 +708,22 @@ main_bool_merge@109:
     dig 3
     itob
     dup
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
-    bytec_3 // 0x80
+    dup
+    bytec_1 // 0x80
     b!=
     assert // signed inc/dec overflow
     intc_3 // 8
     bzero
-    dig 1
-    bytec_0 // 0x0100
-    b%
-    bytec_2 // 0xff
-    b+
-    bytec_0 // 0x0100
-    b%
-    dig 1
     swap
-    concat
-    bury 7
-    dig 1
-    bytec_0 // 0x0100
-    b%
     bytec_2 // 0xff
     b+
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
     concat
+    dup
+    bury 7
     len
     intc_3 // 8
     -
@@ -741,10 +731,10 @@ main_bool_merge@109:
     bytec_2 // 0xff
     b&
     dup
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     bz main_ternary_false@111
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@112:
@@ -766,10 +756,10 @@ main_ternary_merge@112:
     bytec_2 // 0xff
     b&
     dup
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     bz main_ternary_false@114
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@115:
@@ -783,7 +773,7 @@ main_ternary_merge@115:
     dig 10
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -839,34 +829,21 @@ main_bool_merge@124:
     assert // ABI validation
     dig 3
     itob
-    dup
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
-    bytec_3 // 0x80
+    dup
+    bytec_1 // 0x80
     b!=
     assert // signed inc/dec overflow
     intc_3 // 8
     bzero
-    dig 1
-    bytec_0 // 0x0100
-    b%
+    swap
     bytec_2 // 0xff
     b+
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
-    dig 1
-    swap
     concat
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    bytec_2 // 0xff
-    b+
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
+    dup
     len
     intc_3 // 8
     -
@@ -876,13 +853,13 @@ main_bool_merge@124:
     b&
     dup
     bury 15
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     dup
     bury 2
     bz main_ternary_false@126
     dig 13
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@127:
@@ -900,7 +877,7 @@ main_ternary_merge@127:
     dup
     bz main_ternary_false@129
     dig 13
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@130:
@@ -914,7 +891,7 @@ main_ternary_merge@130:
     dig 11
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -973,32 +950,22 @@ main_bool_merge@139:
     dig 3
     itob
     dup
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
+    dup
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
     intc_3 // 8
     bzero
-    dig 1
-    bytec_0 // 0x0100
-    b%
-    bytec 5 // 0x01
-    b+
-    bytec_0 // 0x0100
-    b%
-    dig 1
     swap
-    concat
-    bury 7
-    dig 1
-    bytec_0 // 0x0100
-    b%
     bytec 5 // 0x01
     b+
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
     concat
+    dup
+    bury 7
     len
     intc_3 // 8
     -
@@ -1006,10 +973,10 @@ main_bool_merge@139:
     bytec_2 // 0xff
     b&
     dup
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     bz main_ternary_false@141
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@142:
@@ -1031,10 +998,10 @@ main_ternary_merge@142:
     bytec_2 // 0xff
     b&
     dup
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     bz main_ternary_false@144
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@145:
@@ -1048,7 +1015,7 @@ main_ternary_merge@145:
     dig 12
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1104,34 +1071,21 @@ main_bool_merge@154:
     assert // ABI validation
     dig 3
     itob
-    dup
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
+    dup
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
     intc_3 // 8
     bzero
-    dig 1
-    bytec_0 // 0x0100
-    b%
+    swap
     bytec 5 // 0x01
     b+
-    bytec_0 // 0x0100
+    bytec 4 // 0x0100
     b%
-    dig 1
-    swap
     concat
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    bytec 5 // 0x01
-    b+
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
+    dup
     len
     intc_3 // 8
     -
@@ -1141,13 +1095,13 @@ main_bool_merge@154:
     b&
     dup
     bury 16
-    bytec_3 // 0x80
+    bytec_1 // 0x80
     b>=
     dup
     bury 2
     bz main_ternary_false@156
     dig 14
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@157:
@@ -1165,7 +1119,7 @@ main_ternary_merge@157:
     dup
     bz main_ternary_false@159
     dig 14
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@160:
@@ -1179,7 +1133,7 @@ main_ternary_merge@160:
     dig 13
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1239,7 +1193,7 @@ main_ternary_merge@165:
     intc 4 // 255
     &
     itob
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1287,7 +1241,7 @@ main_ternary_merge@170:
     intc 4 // 255
     &
     itob
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1339,7 +1293,7 @@ main_ternary_merge@175:
     intc 4 // 255
     &
     itob
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1391,7 +1345,7 @@ main_ternary_merge@180:
     intc 4 // 255
     &
     itob
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/exp_cleanup.sol.C.approval_program() -> uint64:
 main:
     intcblock 8 0 1 32
-    bytecblock 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x02 0x0100
+    bytecblock 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x02
     intc_1 // 0
     dupn 5
     pushint 4096
@@ -95,19 +95,10 @@ main_after_while@14:
     intc_0 // 8
     bzero
     dig 2
+    pushbytes 0x0100
+    b%
+    concat
     dup
-    cover 2
-    bytec 4 // 0x0100
-    b%
-    dig 1
-    swap
-    concat
-    uncover 2
-    bytec 4 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_0 // 8
     -

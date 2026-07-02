@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol.C.approval_program() -> uint64:
 main:
     intcblock 4096 1 8 0 20480
-    bytecblock 0x000000000000000000000000000000000000000000000000000000000000002a 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x000000000000000000000000000000000000000000000000000000000000002a
     intc_3 // 0
     dup
     intc_0 // 4096
@@ -87,20 +87,12 @@ main_after_if_else@12:
     dig 1
     pushbytes 0x20
     b+
-    dup
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 2
-    dup
-    cover 3
+    dig 1
     swap
     concat
-    swap
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 2
-    swap
-    concat
+    dup
     len
     intc_2 // 8
     -

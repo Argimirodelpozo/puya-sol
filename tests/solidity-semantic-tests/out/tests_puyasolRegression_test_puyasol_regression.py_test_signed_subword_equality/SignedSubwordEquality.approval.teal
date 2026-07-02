@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_subword_equality.sol.SignedSubwordEquality.approval_program() -> uint64:
 main:
     intcblock 0 1 8 256 128 18446744073709551360 18446744073709551488 32767 18446744073709518848 18446744073709551615
-    bytecblock 0x0100 0x010000 0x00 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000
+    bytecblock 0x0100 0x00 0x151f7c75 0x 0x010000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000
     intc_0 // 0
-    dupn 4
-    pushbytes ""
+    dupn 3
+    bytec_3 // ""
     dupn 6
     pushint 4096
     bzero
@@ -157,11 +157,11 @@ main_ternary_merge@43:
     dig 3
     dig 3
     ==
-    bytec_2 // 0x00
+    bytec_1 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -247,33 +247,17 @@ main_bool_merge@56:
     bzero
     dig 2
     itob
-    dup
-    bytec_1 // 0x010000
+    bytec 4 // 0x010000
     b%
-    dig 3
+    dig 2
     itob
+    bytec 4 // 0x010000
+    b%
+    b+
+    bytec 4 // 0x010000
+    b%
+    concat
     dup
-    bytec_1 // 0x010000
-    b%
-    uncover 2
-    b+
-    bytec_1 // 0x010000
-    b%
-    dig 3
-    swap
-    concat
-    uncover 2
-    bytec_1 // 0x010000
-    b%
-    uncover 2
-    bytec_1 // 0x010000
-    b%
-    b+
-    bytec_1 // 0x010000
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_2 // 8
     -
@@ -292,11 +276,11 @@ main_ternary_merge@59:
     dig 3
     intc 9 // 18446744073709551615
     !=
-    bytec_2 // 0x00
+    bytec_1 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -380,38 +364,19 @@ main_bool_merge@76:
     bury 9
     dig 2
     itob
-    dup
     bytec_0 // 0x0100
     b%
     bytec_0 // 0x0100
     b+
-    dig 3
+    dig 2
     itob
+    bytec_0 // 0x0100
+    b%
+    b-
+    bytec_0 // 0x0100
+    b%
+    concat
     dup
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    b-
-    bytec_0 // 0x0100
-    b%
-    dig 3
-    swap
-    concat
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    bytec_0 // 0x0100
-    b+
-    uncover 2
-    bytec_0 // 0x0100
-    b%
-    b-
-    bytec_0 // 0x0100
-    b%
-    uncover 2
-    swap
-    concat
     len
     intc_2 // 8
     -
@@ -419,57 +384,53 @@ main_bool_merge@76:
     dup
     bury 7
     pushbytes 0x01
-    bury 11
-    itob
-    dup
     bury 10
+    itob
     bytec_0 // 0x0100
     b%
+    dup
     pushbytes 0x80
     b<
     bnz main_ternary_false@78
-    dig 8
-    bytec_0 // 0x0100
-    b%
     bytec_0 // 0x0100
     swap
     b-
-    bury 12
+    bury 11
 
 main_ternary_merge@79:
     intc_0 // 0
     itob
-    bury 11
-
-main_while_top@80:
-    dig 10
-    pushbytes 0x
-    b>
-    bz main_after_while@84
-    dig 10
-    pushbytes 0x01
-    b&
-    pushbytes 0x
-    b!=
-    bz main_after_if_else@83
-    dig 9
-    dig 12
-    b*
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     bury 10
 
+main_while_top@80:
+    dig 9
+    bytec_3 // 0x
+    b>
+    bz main_after_while@84
+    dig 9
+    pushbytes 0x01
+    b&
+    bytec_3 // 0x
+    b!=
+    bz main_after_if_else@83
+    dig 8
+    dig 11
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 9
+
 main_after_if_else@83:
-    dig 10
+    dig 9
     pushbytes 0x02
     b/
-    bury 11
-    dig 11
+    bury 10
+    dig 10
     dup
     b*
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 12
+    bury 11
     b main_while_top@80
 
 main_after_while@84:
@@ -488,10 +449,6 @@ main_ternary_merge@87:
     dig 8
     bytec_0 // 0x0100
     b%
-    pop
-    dig 9
-    bytec_0 // 0x0100
-    b%
     dig 8
     dup
     uncover 2
@@ -502,10 +459,10 @@ main_ternary_merge@87:
     -
     intc_2 // 8
     extract3
-    bytec 5 // 0x010000000000000000
+    bytec 6 // 0x010000000000000000
     swap
     b-
-    bytec 5 // 0x010000000000000000
+    bytec 6 // 0x010000000000000000
     b%
     concat
     dup
@@ -535,11 +492,11 @@ main_ternary_merge@93:
 main_ternary_merge@96:
     dig 3
     ==
-    bytec_2 // 0x00
+    bytec_1 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -557,10 +514,7 @@ main_ternary_false@86:
     b main_ternary_merge@87
 
 main_ternary_false@78:
-    dig 8
-    bytec_0 // 0x0100
-    b%
-    bury 12
+    bury 11
     b main_ternary_merge@79
 
 main_bool_false@75:
@@ -623,11 +577,11 @@ main_ternary_merge@108:
     dig 3
     intc 9 // 18446744073709551615
     ==
-    bytec_2 // 0x00
+    bytec_1 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

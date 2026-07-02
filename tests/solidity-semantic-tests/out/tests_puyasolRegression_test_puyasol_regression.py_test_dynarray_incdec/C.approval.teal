@@ -329,32 +329,20 @@ main_ternary_merge@46:
     box_extract // on error: index out of bounds
     btoi
     itob
-    dup
     bytec_0 // 0x010000000000000000
     b%
+    dup
     pushbytes 0x7fffffffffffffff
     b!=
     assert // signed inc/dec overflow
+    bytec 5 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000
+    b%
+    dig 2
+    swap
+    concat
     dup
-    bytec_0 // 0x010000000000000000
-    b%
-    bytec 5 // 0x01
-    b+
-    bytec_0 // 0x010000000000000000
-    b%
-    dig 3
-    swap
-    concat
-    swap
-    bytec_0 // 0x010000000000000000
-    b%
-    bytec 5 // 0x01
-    b+
-    bytec_0 // 0x010000000000000000
-    b%
-    dig 3
-    swap
-    concat
     len
     intc_1 // 8
     -
