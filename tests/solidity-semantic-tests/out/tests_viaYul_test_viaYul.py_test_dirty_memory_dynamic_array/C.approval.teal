@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_dynamic_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 4096 8 0 1
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000102
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000102
     intc_2 // 0
     dup
     pushbytes ""
@@ -67,10 +67,18 @@ main_ternary_merge@9:
     itob
     pushbytes 0x20
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    concat
     dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    concat
     len
     intc_1 // 8
     -
@@ -86,7 +94,7 @@ main_ternary_merge@9:
     bz main_else_body@11
     load 0
     swap
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000102
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000102
     replace3
     store 0
 
@@ -96,16 +104,13 @@ main_after_if_else@12:
     dupn 2
     intc_0 // 4096
     /
-    dup
     loads
-    uncover 2
+    dig 1
     intc_0 // 4096
     %
-    swap
-    dig 1
     pushint 32
     extract3
-    dig 4
+    dig 3
     dup
     cover 3
     swap
@@ -116,14 +121,18 @@ main_after_if_else@12:
     -
     intc_1 // 8
     extract3
-    bury 6
+    bury 5
     load 0
     store 0
     load 0
     store 0
-    uncover 2
+    dup
+    intc_0 // 4096
+    /
     loads
     swap
+    intc_0 // 4096
+    %
     pushint 32
     extract3
     concat
@@ -167,7 +176,7 @@ main_else_body@11:
     uncover 2
     intc_0 // 4096
     %
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000102
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000102
     replace3
     stores
     b main_after_if_else@12

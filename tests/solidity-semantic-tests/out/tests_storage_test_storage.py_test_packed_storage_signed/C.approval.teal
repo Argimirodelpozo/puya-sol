@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_signed.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 8 1 32
-    bytecblock "a" 0x0100 "b" "c" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytecblock 0x0100 "a" "b" "c" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     intc_0 // 0
     dup
     pushint 4096
@@ -26,7 +26,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "a"
+    bytec_1 // "a"
     intc_0 // 0
     app_global_put
     bytec_2 // "b"
@@ -65,40 +65,62 @@ main_ternary_merge@9:
     assert // not payable
     intc_1 // 8
     bzero
-    bytec_0 // "a"
+    bytec_1 // "a"
     pushint 18446744073709551614
     app_global_put
     bytec_2 // "b"
     pushint 4
     app_global_put
     intc_0 // 0
-    bytec_0 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     itob
-    bytec_1 // 0x0100
+    dup
+    bytec_0 // 0x0100
     b%
     pushbytes 0x78
     b*
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b%
-    dig 1
+    dig 2
     swap
     concat
-    dup
+    swap
+    bytec_0 // 0x0100
+    b%
+    pushbytes 0x78
+    b*
+    bytec_0 // 0x0100
+    b%
+    dig 2
+    swap
+    concat
     len
     intc_1 // 8
     -
     intc_1 // 8
     extract3
-    bytec_1 // 0x0100
+    dup
+    bytec_0 // 0x0100
     b%
     pushbytes 0x79
     b*
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b%
+    dig 2
+    swap
     concat
-    dup
+    swap
+    bytec_0 // 0x0100
+    b%
+    pushbytes 0x79
+    b*
+    bytec_0 // 0x0100
+    b%
+    uncover 2
+    swap
+    concat
     len
     intc_1 // 8
     -
@@ -107,7 +129,7 @@ main_ternary_merge@9:
     swap
     app_global_put
     intc_0 // 0
-    bytec_0 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     itob

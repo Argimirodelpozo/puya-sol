@@ -4,10 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/exp_literals.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x01 0x02 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0x 0x02 0x01 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
     dupn 24
-    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -44,7 +43,7 @@ main_after_if_else@2:
 main_exp_minus_256_route@12:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -59,64 +58,66 @@ main_exp_minus_256_route@12:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 2
+    bytec_2 // 0x01
+    bury 1
     pushbytes 0x0100
-    bury 18
-    dig 25
-    bury 10
+    bury 17
+    dig 24
+    bury 9
 
 main_while_top@21:
-    dig 9
+    dig 8
     bytec_0 // 0x
     b>
     bz main_after_while@25
-    dig 9
-    bytec_1 // 0x01
+    dig 8
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@24
-    dig 1
-    dig 18
+    dup
+    dig 17
     b*
-    bury 2
+    bury 1
 
 main_after_if_else@24:
-    dig 9
-    bytec_2 // 0x02
+    dig 8
+    bytec_1 // 0x02
     b/
-    bury 10
-    dig 17
+    bury 9
+    dig 16
     dup
     b*
-    bury 18
+    bury 17
     b main_while_top@21
 
 main_after_while@25:
-    dig 25
-    bytec_2 // 0x02
+    dig 24
+    bytec_1 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    dup
-    bury 2
     bz main_ternary_false@27
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    dig 2
+    dig 1
     b<
     !
 
 main_ternary_merge@28:
     assert // signed exp overflow
-    dup
+    dig 24
+    bytec_1 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
     bz main_ternary_false@31
-    dig 1
+    dup
     bytec_0 // 0x
     b==
     bnz main_ternary_false@31
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 2
+    dig 1
     b-
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -138,11 +139,11 @@ main_ternary_merge@32:
     return
 
 main_ternary_false@31:
-    dig 1
+    dup
     b main_ternary_merge@32
 
 main_ternary_false@27:
-    dig 1
+    dup
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     b main_ternary_merge@28
@@ -154,7 +155,7 @@ main_ternary_false@18:
 main_exp_256_route@11:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -169,43 +170,43 @@ main_exp_256_route@11:
 main_ternary_merge@37:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 3
+    bytec_2 // 0x01
+    bury 2
     pushint 256
     itob
-    bury 19
-    dig 25
-    bury 11
+    bury 18
+    dig 24
+    bury 10
 
 main_while_top@38:
-    dig 10
+    dig 9
     bytec_0 // 0x
     b>
     bz main_after_while@42
-    dig 10
-    bytec_1 // 0x01
+    dig 9
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@41
-    dig 2
-    dig 19
+    dig 1
+    dig 18
     b*
-    bury 3
+    bury 2
 
 main_after_if_else@41:
-    dig 10
-    bytec_2 // 0x02
+    dig 9
+    bytec_1 // 0x02
     b/
-    bury 11
-    dig 18
+    bury 10
+    dig 17
     dup
     b*
-    bury 19
+    bury 18
     b main_while_top@38
 
 main_after_while@42:
-    dig 2
+    dig 1
     dup
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -232,7 +233,7 @@ main_ternary_false@36:
 main_exp_minus_5_route@10:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -247,64 +248,66 @@ main_exp_minus_5_route@10:
 main_ternary_merge@47:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 4
+    bytec_2 // 0x01
+    bury 3
     pushbytes 0x05
-    bury 20
-    dig 25
-    bury 12
+    bury 19
+    dig 24
+    bury 11
 
 main_while_top@49:
-    dig 11
+    dig 10
     bytec_0 // 0x
     b>
     bz main_after_while@53
-    dig 11
-    bytec_1 // 0x01
+    dig 10
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@52
-    dig 3
-    dig 20
+    dig 2
+    dig 19
     b*
-    bury 4
+    bury 3
 
 main_after_if_else@52:
-    dig 11
-    bytec_2 // 0x02
+    dig 10
+    bytec_1 // 0x02
     b/
-    bury 12
-    dig 19
+    bury 11
+    dig 18
     dup
     b*
-    bury 20
+    bury 19
     b main_while_top@49
 
 main_after_while@53:
-    dig 25
-    bytec_2 // 0x02
+    dig 24
+    bytec_1 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    dup
-    bury 2
     bz main_ternary_false@55
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    dig 3
     b<
     !
 
 main_ternary_merge@56:
     assert // signed exp overflow
-    dup
+    dig 24
+    bytec_1 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
     bz main_ternary_false@59
-    dig 3
+    dig 2
     bytec_0 // 0x
     b==
     bnz main_ternary_false@59
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    dig 3
     b-
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -326,11 +329,11 @@ main_ternary_merge@60:
     return
 
 main_ternary_false@59:
-    dig 3
+    dig 2
     b main_ternary_merge@60
 
 main_ternary_false@55:
-    dig 3
+    dig 2
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     b main_ternary_merge@56
@@ -342,7 +345,7 @@ main_ternary_false@46:
 main_exp_5_route@9:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -357,43 +360,43 @@ main_exp_5_route@9:
 main_ternary_merge@65:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 5
+    bytec_2 // 0x01
+    bury 4
     pushint 5
     itob
-    bury 21
-    dig 25
-    bury 13
+    bury 20
+    dig 24
+    bury 12
 
 main_while_top@66:
-    dig 12
+    dig 11
     bytec_0 // 0x
     b>
     bz main_after_while@70
-    dig 12
-    bytec_1 // 0x01
+    dig 11
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@69
-    dig 4
-    dig 21
+    dig 3
+    dig 20
     b*
-    bury 5
+    bury 4
 
 main_after_if_else@69:
-    dig 12
-    bytec_2 // 0x02
+    dig 11
+    bytec_1 // 0x02
     b/
-    bury 13
-    dig 20
+    bury 12
+    dig 19
     dup
     b*
-    bury 21
+    bury 20
     b main_while_top@66
 
 main_after_while@70:
-    dig 4
+    dig 3
     dup
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -420,7 +423,7 @@ main_ternary_false@64:
 main_exp_int_max_route@8:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -435,64 +438,66 @@ main_exp_int_max_route@8:
 main_ternary_merge@75:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 6
+    bytec_2 // 0x01
+    bury 5
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    bury 22
-    dig 25
-    bury 14
+    bury 21
+    dig 24
+    bury 13
 
 main_while_top@77:
-    dig 13
+    dig 12
     bytec_0 // 0x
     b>
     bz main_after_while@81
-    dig 13
-    bytec_1 // 0x01
+    dig 12
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@80
-    dig 5
-    dig 22
+    dig 4
+    dig 21
     b*
-    bury 6
+    bury 5
 
 main_after_if_else@80:
-    dig 13
-    bytec_2 // 0x02
+    dig 12
+    bytec_1 // 0x02
     b/
-    bury 14
-    dig 21
+    bury 13
+    dig 20
     dup
     b*
-    bury 22
+    bury 21
     b main_while_top@77
 
 main_after_while@81:
-    dig 25
-    bytec_2 // 0x02
+    dig 24
+    bytec_1 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    dup
-    bury 2
     bz main_ternary_false@83
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    dig 6
+    dig 5
     b<
     !
 
 main_ternary_merge@84:
     assert // signed exp overflow
-    dup
+    dig 24
+    bytec_1 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
     bz main_ternary_false@87
-    dig 5
+    dig 4
     bytec_0 // 0x
     b==
     bnz main_ternary_false@87
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 6
+    dig 5
     b-
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -514,11 +519,11 @@ main_ternary_merge@88:
     return
 
 main_ternary_false@87:
-    dig 5
+    dig 4
     b main_ternary_merge@88
 
 main_ternary_false@83:
-    dig 5
+    dig 4
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     b main_ternary_merge@84
@@ -530,7 +535,7 @@ main_ternary_false@74:
 main_exp_uint_max_route@7:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -545,42 +550,42 @@ main_exp_uint_max_route@7:
 main_ternary_merge@93:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 7
+    bytec_2 // 0x01
+    bury 6
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    bury 23
-    dig 25
-    bury 15
+    bury 22
+    dig 24
+    bury 14
 
 main_while_top@94:
-    dig 14
+    dig 13
     bytec_0 // 0x
     b>
     bz main_after_while@98
-    dig 14
-    bytec_1 // 0x01
+    dig 13
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@97
-    dig 6
-    dig 23
+    dig 5
+    dig 22
     b*
-    bury 7
+    bury 6
 
 main_after_if_else@97:
-    dig 14
-    bytec_2 // 0x02
+    dig 13
+    bytec_1 // 0x02
     b/
-    bury 15
-    dig 22
+    bury 14
+    dig 21
     dup
     b*
-    bury 23
+    bury 22
     b main_while_top@94
 
 main_after_while@98:
-    dig 6
+    dig 5
     dup
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -607,7 +612,7 @@ main_ternary_false@92:
 main_exp_minus_2_route@6:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -622,64 +627,66 @@ main_exp_minus_2_route@6:
 main_ternary_merge@103:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 8
-    bytec_2 // 0x02
-    bury 24
-    dig 25
-    bury 16
+    bytec_2 // 0x01
+    bury 7
+    bytec_1 // 0x02
+    bury 23
+    dig 24
+    bury 15
 
 main_while_top@105:
-    dig 15
+    dig 14
     bytec_0 // 0x
     b>
     bz main_after_while@109
-    dig 15
-    bytec_1 // 0x01
+    dig 14
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@108
-    dig 7
-    dig 24
+    dig 6
+    dig 23
     b*
-    bury 8
+    bury 7
 
 main_after_if_else@108:
-    dig 15
-    bytec_2 // 0x02
+    dig 14
+    bytec_1 // 0x02
     b/
-    bury 16
-    dig 23
+    bury 15
+    dig 22
     dup
     b*
-    bury 24
+    bury 23
     b main_while_top@105
 
 main_after_while@109:
-    dig 25
-    bytec_2 // 0x02
+    dig 24
+    bytec_1 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    dup
-    bury 2
     bz main_ternary_false@111
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    dig 8
+    dig 7
     b<
     !
 
 main_ternary_merge@112:
     assert // signed exp overflow
-    dup
+    dig 24
+    bytec_1 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
     bz main_ternary_false@115
-    dig 7
+    dig 6
     bytec_0 // 0x
     b==
     bnz main_ternary_false@115
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 8
+    dig 7
     b-
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -701,11 +708,11 @@ main_ternary_merge@116:
     return
 
 main_ternary_false@115:
-    dig 7
+    dig 6
     b main_ternary_merge@116
 
 main_ternary_false@111:
-    dig 7
+    dig 6
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     b main_ternary_merge@112
@@ -717,7 +724,7 @@ main_ternary_false@102:
 main_exp_2_route@5:
     txna ApplicationArgs 1
     dup
-    bury 27
+    bury 26
     len
     intc_0 // 32
     ==
@@ -732,43 +739,43 @@ main_exp_2_route@5:
 main_ternary_merge@121:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 9
+    bytec_2 // 0x01
+    bury 8
     pushint 2
     itob
-    bury 25
-    dig 25
-    bury 17
+    bury 24
+    dig 24
+    bury 16
 
 main_while_top@122:
-    dig 16
+    dig 15
     bytec_0 // 0x
     b>
     bz main_after_while@126
-    dig 16
-    bytec_1 // 0x01
+    dig 15
+    bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@125
-    dig 8
-    dig 25
+    dig 7
+    dig 24
     b*
-    bury 9
+    bury 8
 
 main_after_if_else@125:
-    dig 16
-    bytec_2 // 0x02
+    dig 15
+    bytec_1 // 0x02
     b/
-    bury 17
-    dig 24
+    bury 16
+    dig 23
     dup
     b*
-    bury 25
+    bury 24
     b main_while_top@122
 
 main_after_while@126:
-    dig 8
+    dig 7
     dup
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=

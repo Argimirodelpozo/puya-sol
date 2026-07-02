@@ -511,11 +511,18 @@ main_ternary_merge@50:
     bzero
     dup
     bury 16
-    swap
+    dig 1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dig 1
+    swap
     concat
-    dup
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    concat
     len
     intc_3 // 8
     -

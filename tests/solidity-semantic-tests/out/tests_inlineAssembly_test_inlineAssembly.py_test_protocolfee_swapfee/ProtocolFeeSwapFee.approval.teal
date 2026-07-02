@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/protocolfee_swapfee.sol.ProtocolFeeSwapFee.approval_program() -> uint64:
 main:
     intcblock 8 1 16777215 65535
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffff
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffff 0x0f4240
     pushbytes ""
     dup
     pushint 4096
@@ -123,20 +123,38 @@ main_ternary_merge@9:
     b%
     cover 2
     b+
+    dup
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    swap
-    pushbytes 0x0f4240
+    dig 2
+    bytec_2 // 0x0f4240
     b/
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_1 // 0xffffff
     b&
+    dig 3
+    swap
     concat
-    dup
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    bytec_2 // 0x0f4240
+    b/
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0xffffff
+    b&
+    uncover 2
+    swap
+    concat
     len
     intc_0 // 8
     -

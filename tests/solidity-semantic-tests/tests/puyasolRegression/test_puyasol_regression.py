@@ -1590,3 +1590,38 @@ def test_bytesn_op_narrowing(harness):
     assert as_int(harness.call(app, "narrowXor(uint256,uint256)", X, M).abi_return) == 0x11223344 ^ 0xFFFFFFFF
     # the lowering's own docstring example: bytes6(0x616263646566) << 24 == 0x646566000000
     assert as_int(harness.call(app, "shiftB6(uint48,uint8)", 0x616263646566, 24).abi_return) == 0x646566000000
+
+
+def test_dce_reverting_subexpr(harness):
+    """puyasolRegression/contracts/dce_reverting_subexpr.sol — NOT an o.g. semantic test.
+
+    A pure-but-REVERTING div/mod under a folding consumer lost its revert (missing-revert
+    soundness class): frontend lazy shift-saturation branch skipped the value at runtime
+    (fixed: eager comma-expr binding in buildBigUIntShift), and puya's DCE dropped unused
+    divisions whose panic IS the EVM divide-by-zero revert (fixed in the fork: "/", "%",
+    "b/", "b%" removed from SIDE_EFFECT_FREE_AVM_OPS). Found by the overnight generative
+    campaign (seeds 21008/f7, 22000/f18); also closes the older
+    backend-dce-drops-reverting-subexpr shapes ((a%c<=5)?c:c, (a%b)<<256).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/dce_reverting_subexpr.sol")
+
+    # zero divisor -> MUST revert even though every consumer folds the result away
+    for sig, args in [
+        ("divdivShl(uint256)", (0,)),
+        ("modShl(uint256,uint256)", (7, 0)),
+        ("modShrRt(uint256,uint256,uint256)", (7, 0, 300)),
+        ("ternFold(uint256,uint256)", (7, 0)),
+        ("expZero(uint256,uint256)", (7, 0)),
+        ("mulZero(uint256,uint256)", (7, 0)),
+    ]:
+        r = harness.call(app, sig, *args, expect_revert=True)
+        assert getattr(r, "reverted", False), f"{sig}{args} must revert (divide/mod by zero)"
+
+    # nonzero divisors -> folded values, no revert
+    assert as_int(harness.call(app, "divdivShl(uint256)", 5).abi_return) == 0
+    assert as_int(harness.call(app, "modShl(uint256,uint256)", 7, 3).abi_return) == 0
+    assert as_int(harness.call(app, "modShrRt(uint256,uint256,uint256)", 7, 3, 300).abi_return) == 0
+    assert as_int(harness.call(app, "modShrRt(uint256,uint256,uint256)", 7, 3, 0).abi_return) == 1
+    assert as_int(harness.call(app, "ternFold(uint256,uint256)", 7, 3).abi_return) == 3
+    assert as_int(harness.call(app, "expZero(uint256,uint256)", 7, 3).abi_return) == 1
+    assert as_int(harness.call(app, "mulZero(uint256,uint256)", 7, 3).abi_return) == 0

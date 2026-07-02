@@ -78,7 +78,19 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	// indexes bit 255-shift, which underflows for shift >= 256 and panics on the AVM,
 	// so clamp the index with `mod 256` AND select 0 for shift >= 256. Mirrors the
 	// assembly handleShl/handleShr and the signed-SAR guard below.
-	// SE: shift feeds both the index and the <256 guard (so `x << f()` runs f() once).
+	//
+	// The VALUE is pinned to a temp EAGERLY (comma-expr, like the SAR helper): the
+	// saturation conditional evaluates branches LAZILY, but Solidity requires the
+	// shifted operand to evaluate even when the shift saturates — `(d/d) << 256`
+	// with d=0 must REVERT, not fold to 0 (fuzzer find: evm=REVERT avm=0).
+	static int s_shiftTemp = 0;
+	std::string vName = "__shift_v_" + std::to_string(s_shiftTemp++);
+	auto vRead = [&]() { return awst::makeVarExpression(vName, biguint, _loc); };
+	auto bindV = awst::makeAssignmentExpression(
+		awst::makeVarExpression(vName, biguint, _loc), std::move(_value), _loc, biguint);
+
+	// SE: shift feeds both the index and the <256 guard (so `x << f()` runs f() once);
+	// the guard evaluates unconditionally, so the amount is effectively eager too.
 	auto shift = awst::makeSingleEvaluation(
 		std::move(_shiftAmt), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
 
@@ -92,7 +104,7 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 		awst::makeSetbit(awst::makeBzero(32, _loc), std::move(bitIdx), awst::makeOne(_loc), _loc),
 		_loc);
 
-	std::shared_ptr<awst::Expression> result = awst::makeBigUIntBinOp(std::move(_value),
+	std::shared_ptr<awst::Expression> result = awst::makeBigUIntBinOp(vRead(),
 		_isLeftShift ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv,
 		std::move(castPow), _loc);
 
@@ -103,8 +115,13 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	// shift >= 256 → 0.
 	auto lt256 = awst::makeNumericCompare(shift, awst::NumericComparison::Lt,
 		awst::makeIntegerConstant("256", _loc, awst::WType::uint64Type()), _loc);
-	return awst::makeConditional(std::move(lt256), std::move(result),
+	auto cond = awst::makeConditional(std::move(lt256), std::move(result),
 		awst::makeIntegerConstant("0", _loc, biguint), biguint, _loc);
+
+	auto comma = awst::makeCommaExpression(biguint, _loc);
+	comma->expressions.push_back(std::move(bindV));
+	comma->expressions.push_back(std::move(cond));
+	return comma;
 }
 
 std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(

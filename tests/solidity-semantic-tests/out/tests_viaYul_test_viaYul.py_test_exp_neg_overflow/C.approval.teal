@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/exp_neg_overflow.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x 0x02 0x01 0x0100 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x 0x0100 0x02 0x80 0x01 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     intc_2 // 0
-    dupn 8
+    dupn 9
     bytec_0 // ""
-    dupn 2
+    dup
     pushint 4096
     bzero
     dup
@@ -67,7 +67,7 @@ main_g_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     bury 5
     dig 11
     bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -90,7 +90,7 @@ main_while_top@17:
     b>
     bz main_after_while@21
     dig 6
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -102,7 +102,7 @@ main_while_top@17:
 
 main_after_if_else@20:
     dig 6
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b/
     bury 7
     dig 8
@@ -115,7 +115,7 @@ main_after_while@21:
     dig 1
     bnz main_ternary_false@24
     dig 10
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -130,7 +130,7 @@ main_ternary_merge@25:
     dig 1
     bnz main_ternary_false@29
     dig 10
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -220,19 +220,21 @@ main_bool_true@37:
 
 main_bool_merge@39:
     assert // ABI validation
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     bury 6
     dup
     itob
-    bytec_3 // 0x0100
+    dup
+    bury 4
+    bytec_1 // 0x0100
     b%
-    dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b<
-    dup
-    bury 5
     bnz main_ternary_false@41
-    bytec_3 // 0x0100
+    dig 2
+    bytec_1 // 0x0100
+    b%
+    bytec_1 // 0x0100
     swap
     b-
     bury 10
@@ -247,7 +249,7 @@ main_while_top@43:
     b>
     bz main_after_while@47
     dig 7
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -259,7 +261,7 @@ main_while_top@43:
 
 main_after_if_else@46:
     dig 7
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b/
     bury 8
     dig 9
@@ -270,14 +272,18 @@ main_after_if_else@46:
 
 main_after_while@47:
     dig 2
+    bytec_1 // 0x0100
+    b%
+    bytec_3 // 0x80
+    b<
     bnz main_ternary_false@50
     dig 10
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
     bz main_ternary_false@50
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     dig 6
     b<
     !
@@ -288,9 +294,13 @@ main_ternary_merge@51:
     bzero
     bury 4
     dig 2
+    bytec_1 // 0x0100
+    b%
+    bytec_3 // 0x80
+    b<
     bnz main_ternary_false@55
     dig 10
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -299,10 +309,10 @@ main_ternary_merge@51:
     bytec_0 // 0x
     b==
     bnz main_ternary_false@55
-    bytec_3 // 0x0100
+    bytec_1 // 0x0100
     dig 6
     b-
-    bytec_3 // 0x0100
+    bytec_1 // 0x0100
     b%
 
 main_ternary_merge@56:
@@ -318,7 +328,7 @@ main_ternary_merge@56:
     pushbytes 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     bz main_ternary_false@58
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -349,11 +359,14 @@ main_ternary_false@55:
 
 main_ternary_false@50:
     dig 5
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b<
     b main_ternary_merge@51
 
 main_ternary_false@41:
+    dig 2
+    bytec_1 // 0x0100
+    b%
     bury 10
     b main_ternary_merge@42
 

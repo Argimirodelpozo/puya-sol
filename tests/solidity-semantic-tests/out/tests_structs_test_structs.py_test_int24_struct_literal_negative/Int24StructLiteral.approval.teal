@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/int24_struct_literal.sol.Int24StructLiteral.approval_program() -> uint64:
 main:
     intcblock 16 3 1 0 16777216 8388608 18446744073692774400 16777215
-    bytecblock 0x80000000000000000000000000000000 0x0100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffff 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x151f7c75
+    bytecblock 0x0100000000000000000000000000000000 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffff 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x151f7c75
     intc_3 // 0
     dupn 5
     pushbytes ""
@@ -278,7 +278,7 @@ main_ternary_merge@28:
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b>=
     bz main_ternary_false@30
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
@@ -315,7 +315,7 @@ main_ternary_merge@31:
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b>=
     bz main_ternary_false@33
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
@@ -370,18 +370,18 @@ Lib.sconsume:
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b>=
     bz Lib.sconsume_ternary_false@2
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
+    frame_bury 0
 
 Lib.sconsume_ternary_merge@3:
-    bytec_1 // 0x0100000000000000000000000000000000
+    frame_dig 0
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dup
-    frame_bury 1
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
     frame_bury 7
@@ -407,27 +407,37 @@ Lib.sconsume_ternary_merge@6:
     bz Lib.sconsume_ternary_false@8
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
+    frame_bury 1
 
 Lib.sconsume_ternary_merge@9:
-    bytec_1 // 0x0100000000000000000000000000000000
+    frame_dig 1
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dup
-    frame_bury 0
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
     frame_dig 7
     !=
     bnz Lib.sconsume_bool_true@11
-    frame_dig 1
     frame_dig 0
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
+    dup
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 7
+    swap
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    frame_dig 1
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    bytec_1 // 0x80000000000000000000000000000000
+    b<
+    !
     ==
     bz Lib.sconsume_bool_false@12
 
@@ -436,26 +446,30 @@ Lib.sconsume_bool_true@11:
 
 Lib.sconsume_bool_merge@13:
     assert // signed arithmetic overflow
-    frame_dig 1
     frame_dig 0
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    frame_dig 1
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
     b+
-    bytec_1 // 0x0100000000000000000000000000000000
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b>=
     bz Lib.sconsume_ternary_false@15
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
+    frame_bury 2
 
 Lib.sconsume_ternary_merge@16:
-    bytec_1 // 0x0100000000000000000000000000000000
+    frame_dig 2
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dup
-    frame_bury 2
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
     frame_bury 6
@@ -481,27 +495,37 @@ Lib.sconsume_ternary_merge@19:
     bz Lib.sconsume_ternary_false@21
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
+    frame_bury 3
 
 Lib.sconsume_ternary_merge@22:
-    bytec_1 // 0x0100000000000000000000000000000000
+    frame_dig 3
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dup
-    frame_bury 3
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
     frame_dig 6
     !=
     bnz Lib.sconsume_bool_true@24
     frame_dig 2
-    frame_dig 3
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
+    dup
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 6
+    swap
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    frame_dig 3
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    bytec_1 // 0x80000000000000000000000000000000
+    b<
+    !
     ==
     bz Lib.sconsume_bool_false@25
 
@@ -511,25 +535,29 @@ Lib.sconsume_bool_true@24:
 Lib.sconsume_bool_merge@26:
     assert // signed arithmetic overflow
     frame_dig 2
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
     frame_dig 3
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
     b+
-    bytec_1 // 0x0100000000000000000000000000000000
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b>=
     bz Lib.sconsume_ternary_false@28
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
+    frame_bury 4
 
 Lib.sconsume_ternary_merge@29:
-    bytec_1 // 0x0100000000000000000000000000000000
+    frame_dig 4
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dup
-    frame_bury 4
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
     frame_bury 8
@@ -555,27 +583,37 @@ Lib.sconsume_ternary_merge@32:
     bz Lib.sconsume_ternary_false@34
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
+    frame_bury 5
 
 Lib.sconsume_ternary_merge@35:
-    bytec_1 // 0x0100000000000000000000000000000000
+    frame_dig 5
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dup
-    frame_bury 5
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
     frame_dig 8
     !=
     bnz Lib.sconsume_bool_true@37
     frame_dig 4
-    frame_dig 5
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
+    dup
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 8
+    swap
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    frame_dig 5
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
+    bytec_1 // 0x80000000000000000000000000000000
+    b<
+    !
     ==
     bz Lib.sconsume_bool_false@38
 
@@ -585,14 +623,18 @@ Lib.sconsume_bool_true@37:
 Lib.sconsume_bool_merge@39:
     assert // signed arithmetic overflow
     frame_dig 4
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
     frame_dig 5
+    bytec_0 // 0x0100000000000000000000000000000000
+    b%
     b+
-    bytec_1 // 0x0100000000000000000000000000000000
+    bytec_0 // 0x0100000000000000000000000000000000
     b%
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_0 // 0x80000000000000000000000000000000
+    bytec_1 // 0x80000000000000000000000000000000
     b>=
     bz Lib.sconsume_ternary_false@41
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
@@ -612,12 +654,14 @@ Lib.sconsume_bool_false@38:
     b Lib.sconsume_bool_merge@39
 
 Lib.sconsume_ternary_false@34:
+    frame_bury 5
     b Lib.sconsume_ternary_merge@35
 
 Lib.sconsume_ternary_false@31:
     b Lib.sconsume_ternary_merge@32
 
 Lib.sconsume_ternary_false@28:
+    frame_bury 4
     b Lib.sconsume_ternary_merge@29
 
 Lib.sconsume_bool_false@25:
@@ -625,12 +669,14 @@ Lib.sconsume_bool_false@25:
     b Lib.sconsume_bool_merge@26
 
 Lib.sconsume_ternary_false@21:
+    frame_bury 3
     b Lib.sconsume_ternary_merge@22
 
 Lib.sconsume_ternary_false@18:
     b Lib.sconsume_ternary_merge@19
 
 Lib.sconsume_ternary_false@15:
+    frame_bury 2
     b Lib.sconsume_ternary_merge@16
 
 Lib.sconsume_bool_false@12:
@@ -638,12 +684,14 @@ Lib.sconsume_bool_false@12:
     b Lib.sconsume_bool_merge@13
 
 Lib.sconsume_ternary_false@8:
+    frame_bury 1
     b Lib.sconsume_ternary_merge@9
 
 Lib.sconsume_ternary_false@5:
     b Lib.sconsume_ternary_merge@6
 
 Lib.sconsume_ternary_false@2:
+    frame_bury 0
     b Lib.sconsume_ternary_merge@3
 
 
