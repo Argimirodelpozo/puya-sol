@@ -1559,3 +1559,34 @@ def test_shift_amount_huge(harness):
     assert s256(harness.call(app, "sar(int256,uint256)", -8, 2)) == -2
     assert as_int(harness.call(app, "shl(uint256,uint256)", 1, 255).abi_return) == 1 << 255
     assert as_int(harness.call(app, "shr(uint256,uint256)", 1 << 255, 254).abi_return) == 2
+
+
+def test_bytesn_op_narrowing(harness):
+    """puyasolRegression/contracts/bytesn_op_narrowing.sol — NOT an o.g. semantic test.
+
+    A bytesN SHIFT or BITWISE binop result (SolFixedBytesBuilder) carried an UNSIZED `bytes`
+    wtype, so a subsequent bytesN(M->N) narrowing couldn't see the source length and no-op'd:
+    `uint32(bytes4(bytes32(x) << n))` btoi'd 32 bytes -> reverted on every input;
+    `bytes4(a & b)` silently kept all 32 bytes. Fixed by retagging results with the sized
+    bytes[N] wtype (+ the shift branch's own huge-amount truncation routed through
+    shiftAmountToUint64). Found by the differential fuzzer (fixedbytes_probe::truncShift).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/bytesn_op_narrowing.sol")
+
+    X = 0x1122334455 << 216                     # bytes32 = 0x1122334455 00..00 (left-aligned)
+    assert as_int(harness.call(app, "truncShift(uint256,uint8)", X, 0).abi_return) == 0x11223344
+    assert as_int(harness.call(app, "truncShift(uint256,uint8)", X, 8).abi_return) == 0x22334455
+    assert as_int(harness.call(app, "truncShift(uint256,uint8)", X, 255).abi_return) == 0
+    # right-aligned value: top 4 bytes are zero before AND after a small shift
+    assert as_int(harness.call(app, "truncShift(uint256,uint8)", 0x1122334455, 8).abi_return) == 0
+    # huge shift amounts saturate through the bytesN path too
+    assert as_int(harness.call(app, "truncShiftHuge(uint256,uint256)", X, 1 << 128).abi_return) == 0
+    assert as_int(harness.call(app, "truncShiftHuge(uint256,uint256)", X, (1 << 128) + 8).abi_return) == 0
+    assert as_int(harness.call(app, "truncShiftHuge(uint256,uint256)", X, 8).abi_return) == 0x22334455
+    # bitwise results narrow correctly
+    M = (1 << 256) - 1
+    assert as_int(harness.call(app, "narrowAnd(uint256,uint256)", X, M).abi_return) == 0x11223344
+    assert as_int(harness.call(app, "narrowOr(uint256,uint256)", 0, X).abi_return) == 0x11223344
+    assert as_int(harness.call(app, "narrowXor(uint256,uint256)", X, M).abi_return) == 0x11223344 ^ 0xFFFFFFFF
+    # the lowering's own docstring example: bytes6(0x616263646566) << 24 == 0x646566000000
+    assert as_int(harness.call(app, "shiftB6(uint48,uint8)", 0x616263646566, 24).abi_return) == 0x646566000000

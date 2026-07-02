@@ -27,19 +27,26 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	// truncating the result to N bytes. Lower via biguint — (asBiguint(b) shifted) then keep the LOW N
 	// bytes — instead of the generic integer path, which coerces bytes->uint64->bytes (puya rejects the
 	// uint64->bytes cast, and uint64 can't hold bytes>8 anyway). buildBigUIntShift already saturates a
-	// shift >= 256 to 0; makeLeftPadToN does the mod-2^(8N) truncation (drops the high bytes).
+	// shift >= 256 to 0 (shiftAmountToUint64 clamps a biguint amount so huge >=2^64 amounts saturate
+	// too, instead of shifting by amount mod 2^64); makeLeftPadToN does the mod-2^(8N) truncation
+	// (drops the high bytes).
 	if (_op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift)
 	{
 		if (_reverse)
 			return nullptr;                                 // a uint shifted BY a bytesN is invalid Solidity
 		int n = static_cast<int>(m_bytesType->numBytes());
 		auto value = awst::makeAsBiguint(resolve(), _loc);
-		auto shiftAmt = TypeCoercion::implicitNumericCast(
-			_other.resolve(), awst::WType::uint64Type(), _loc);
+		auto shiftAmt = shiftAmountToUint64(_other.resolve(), _loc);
 		auto shifted = buildBigUIntShift(std::move(value), std::move(shiftAmt),
 			_op == BuilderBinaryOp::LShift, _loc);
 		auto trimmed = awst::makeLeftPadToN(awst::makeAsBytes(std::move(shifted), _loc), n, _loc);
-		return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(trimmed));
+		// Retag with the SIZED bytes[N] wtype: the expression otherwise carries plain
+		// unsized `bytes`, and bytesN(M→N) NARROWING of it (convertToFixedBytes) can't
+		// see the source length → degenerated to a reinterpret no-op, so
+		// `uint32(bytes4(b32 << k))` btoi'd all 32 bytes and reverted.
+		auto* sized = m_ctx.typeMapper.createType<awst::BytesWType>(n);
+		auto retagged = awst::makeReinterpretCast(std::move(trimmed), sized, _loc);
+		return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(retagged));
 	}
 
 	bool isBitwiseOp = (_op == BuilderBinaryOp::BitOr
@@ -67,7 +74,13 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	default: break;
 	}
 	auto e = awst::makeBytesBinOp(std::move(lhs), bytesOp, std::move(rhs), _loc);
-	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
+	// Retag with the sized bytes[N] wtype (same reason as the shift branch above:
+	// `bytes4(a & b)` narrowing no-op'd on the unsized result). Solidity requires
+	// identical bytesN operand types for & | ^, so the runtime length is exactly N.
+	auto* sized = m_ctx.typeMapper.createType<awst::BytesWType>(
+		static_cast<int>(m_bytesType->numBytes()));
+	auto retagged = awst::makeReinterpretCast(std::move(e), sized, _loc);
+	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(retagged));
 }
 
 std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
