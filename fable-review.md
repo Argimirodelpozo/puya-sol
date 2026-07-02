@@ -224,6 +224,16 @@ counting parameters. Small-medium; directly de-risks that workstream's known fai
 
 ### 11. `resolveVirtual` / `VirtualLookup` for super & override resolution (standalone, LOC-negative)
 
+> **STATUS: LANDED** (net −89 src lines). The three hand-rolled paths (name-keyed MRO chains — which
+> mixed overloads into one chain — an AST-id fallback, and a separate explicit-base pass) are ONE
+> solc-native resolution: `requiredLookup` discriminates the site, `resolveVirtual(mostDerived,
+> searchStart)` resolves it. Emission is now deduped per TARGET (`f__impl_<targetId>`) instead of one
+> copy per caller. ⚠️ API GOTCHA recorded the hard way: `resolveVirtual`'s `_searchStart` is
+> INCLUSIVE — super resolution must pass the scope contract's SUCCESSOR via
+> `ContractDefinition::superContract(mostDerived)`, exactly as solc's own codegen does; passing the
+> scope itself resolves `super.f()` to the caller's own `f` (caught by test_super_in_constructor's
+> diamond).
+
 We use solc's `resolveVirtual` ZERO times and instead maintain our own
 `contract/SuperCallResolution.cpp` (+ override handling in ContractBuilder /
 ApprovalProgramBuilder). solc's resolver — `FunctionDefinition::resolveVirtual(mostDerived,
