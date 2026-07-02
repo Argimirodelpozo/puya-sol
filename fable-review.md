@@ -202,3 +202,49 @@ plus the relevant differential-fuzz axes (arithmetic/casts for item 1; the side-
 + generative A/B phases for item 2). Policy constraints observed throughout: no puya-fork
 changes (backend-rooted residuals go to puyabug.md); open bugs stay regular fails, xfail only
 for by-design divergences.
+
+---
+
+## Part IV — round-2 solc-integration candidates (2026-07-02 sweep)
+
+A follow-up sweep for solc facilities we still re-derive, grounded in the code. Two
+already-integrated findings first (no action): `annotation().commonType` is consumed
+(SolBinaryOperation:140) and `FunctionCallKind` has 17 uses — the binop/conversion dispatch
+already trusts solc there.
+
+### 10. EVM-ABI shape oracles for the calldata/asm surface (rides with the calldata cluster)
+
+`SyntheticCalldataOps.cpp:213` computes `headWords = _params.size()` by hand — the EXACT shape
+of the recorded calldata-pointer failure ("blob/offset-map built from AUGMENTED params →
+inflated headWords → off-end extract3", see the calldata-pointer-asm-model plan). solc owns the
+authoritative EVM-ABI geometry: `Type::calldataEncodedSize()`, `calldataHeadSize()`,
+`isDynamicallyEncoded()`, and `FunctionType` parameter layouts. When the calldata cluster
+(~4-5 canonical tests) is attacked, the head/tail/offset math should come from these, not from
+counting parameters. Small-medium; directly de-risks that workstream's known failure mode.
+
+### 11. `resolveVirtual` / `VirtualLookup` for super & override resolution (standalone, LOC-negative)
+
+We use solc's `resolveVirtual` ZERO times and instead maintain our own
+`contract/SuperCallResolution.cpp` (+ override handling in ContractBuilder /
+ApprovalProgramBuilder). solc's resolver — `FunctionDefinition::resolveVirtual(mostDerived,
+super)` with the `annotation().requiredLookup` (Static/Virtual/Super) discriminator — IS the
+language definition of C3-linearized dispatch. Ours currently agrees (inheritance suite green),
+but it is duplicated semantic logic of exactly the class this review targets, and the
+replacement should DELETE more than it adds. Medium effort; gate with the inheritance +
+modifiers + super categories and the cross-contract fuzz axis.
+
+### 12. solc `CallGraph` for reachability (when the splitter work resumes)
+
+Reachability closures are hand-rolled today (assembly UserFunctionOps + the splitter's
+force-inline closure logic; see also rust-honk's "needs reachability analysis" note). solc
+builds creation/deployed `CallGraph`s per contract (`ContractDefinitionAnnotation::
+creationCallGraph` / `deployedCallGraph`) with external/internal call edges resolved through
+virtual dispatch. When the uros-IR-port / splitter workstream resumes, consuming these instead
+of re-walking the AST removes a whole analysis; also useful for pruning dead helpers before
+size-capped chunking. Medium; belongs to that workstream, not standalone.
+
+### Not worth it (reviewed, rejected)
+
+solc's CFG analyses (uninitialized-return checking — solc already enforces), `GasMeter`
+(gas ≠ AVM budget), NatSpec/metadata, SMTChecker. Event/error selector derivation is already
+covered by item 3's `externalSignature()` spine.
