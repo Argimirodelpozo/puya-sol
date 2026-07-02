@@ -206,13 +206,13 @@ main_ternary_false@61:
 
 main_uncheckedMin_route@12:
     txn GroupIndex
-    bz main_ternary_false@67
+    bz main_ternary_false@70
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@68:
+main_ternary_merge@71:
     !
     assert // not payable
     bytec_3 // 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
@@ -220,19 +220,19 @@ main_ternary_merge@68:
     intc_0 // 1
     return
 
-main_ternary_false@67:
+main_ternary_false@70:
     intc_1 // 0
-    b main_ternary_merge@68
+    b main_ternary_merge@71
 
 main_tildeMin_route@11:
     txn GroupIndex
-    bz main_ternary_false@73
+    bz main_ternary_false@79
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@74:
+main_ternary_merge@80:
     !
     assert // not payable
     intc_1 // 0
@@ -242,13 +242,79 @@ main_ternary_merge@74:
     intc_0 // 1
     return
 
-main_ternary_false@73:
+main_ternary_false@79:
     intc_1 // 0
-    b main_ternary_merge@74
+    b main_ternary_merge@80
 
 main_nested_route@10:
     txn GroupIndex
-    bz main_ternary_false@82
+    bz main_ternary_false@88
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@124:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    bytec_3 // 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@88:
+    intc_1 // 0
+    b main_ternary_merge@124
+
+main_negMin256_route@9:
+    txn GroupIndex
+    bz main_ternary_false@103
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@104:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@103:
+    intc_1 // 0
+    b main_ternary_merge@104
+
+main_negMin128_route@8:
+    txn GroupIndex
+    bz main_ternary_false@108
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@109:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffff80000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@108:
+    intc_1 // 0
+    b main_ternary_merge@109
+
+main_negMin64_route@7:
+    txn GroupIndex
+    bz main_ternary_false@117
     txn GroupIndex
     intc_0 // 1
     -
@@ -259,103 +325,37 @@ main_ternary_merge@118:
     assert // not payable
     intc_1 // 0
     assert // signed negation overflow
-    bytec_3 // 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@82:
-    intc_1 // 0
-    b main_ternary_merge@118
-
-main_negMin256_route@9:
-    txn GroupIndex
-    bz main_ternary_false@97
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@98:
-    !
-    assert // not payable
-    intc_1 // 0
-    assert // signed negation overflow
-    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@97:
-    intc_1 // 0
-    b main_ternary_merge@98
-
-main_negMin128_route@8:
-    txn GroupIndex
-    bz main_ternary_false@102
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@103:
-    !
-    assert // not payable
-    intc_1 // 0
-    assert // signed negation overflow
-    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffff80000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@102:
-    intc_1 // 0
-    b main_ternary_merge@103
-
-main_negMin64_route@7:
-    txn GroupIndex
-    bz main_ternary_false@111
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@112:
-    !
-    assert // not payable
-    intc_1 // 0
-    assert // signed negation overflow
     pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffff8000000000000000
     log
     intc_0 // 1
     return
 
-main_ternary_false@111:
-    intc_1 // 0
-    b main_ternary_merge@112
-
-main_negMin16_route@6:
-    txn GroupIndex
-    bz main_ternary_false@117
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@118
-
 main_ternary_false@117:
     intc_1 // 0
     b main_ternary_merge@118
 
+main_negMin16_route@6:
+    txn GroupIndex
+    bz main_ternary_false@123
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@124
+
+main_ternary_false@123:
+    intc_1 // 0
+    b main_ternary_merge@124
+
 main_negMin8_route@5:
     txn GroupIndex
-    bz main_ternary_false@126
+    bz main_ternary_false@132
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@127:
+main_ternary_merge@133:
     !
     assert // not payable
     intc_1 // 0
@@ -365,6 +365,6 @@ main_ternary_merge@127:
     intc_0 // 1
     return
 
-main_ternary_false@126:
+main_ternary_false@132:
     intc_1 // 0
-    b main_ternary_merge@127
+    b main_ternary_merge@133

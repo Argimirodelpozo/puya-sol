@@ -22,6 +22,13 @@ ongoing discussion. Codebase size for scale: ~54.6k lines of C++ under `src/`.
 
 ### ✅ AGREED START — 1. Adopt solc's `ConstantEvaluator` as the *only* constant folder
 
+> **STATUS: first slice LANDED** — SolcConstFold.{h,cpp} (foldAnnotated + hoisted constantVarEvmWord),
+> unary/binary sol-ast folding unified, the eb negate fast-path DELETED (its removal exposed a
+> latent uint64/biguint wtype mismatch on constant operands of biguint-backed intN, now fixed with
+> a promote at the path entry — caught by constantEvaluator::test_rounding). Remaining: case-(b)
+> folding of const-var expressions typed intN via ConstantEvaluator::tryEvaluate WITH the in-range
+> guard (out-of-range must fall to the runtime checked path — the -M int8 trap).
+
 **Goal:** our builders never fold constants themselves; they ask solc for the value first and
 only lower the non-constant residue. Deletes code, deletes a bug class solc already solved.
 
@@ -71,6 +78,13 @@ literals it can lower cheaply.
 ---
 
 ### ✅ AGREED START — 2. Consume solc's effect annotations (`isPure`, mutability) for sequencing decisions
+
+> **STATUS: helper + first adoption LANDED** — SolcConstFold::isEffectFree (duplication-only license
+> documented at the API; deliberately no canElide()). First site: require/assert skips the EvalOnce
+> wrapper for pure leaf-var conditions. FINDING from the site audit: most existing SE/EvalOnce sites
+> wrap for REUSE (compute-once is beneficial regardless of purity), so purity alone changes fewer
+> decisions than the raw ~57-site count suggests — the broader win is coupled to item 7's
+> OperandPlan, where isEffectFree becomes the materialization gate.
 
 **Goal:** stop guessing whether an operand can have effects. solc's TypeChecker already
 computed `annotation().isPure` (also `isLValue`, `willBeWrittenTo` —

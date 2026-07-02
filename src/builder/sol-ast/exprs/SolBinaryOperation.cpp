@@ -1,5 +1,6 @@
 /// @file SolBinaryOperation.cpp — migrated from BinaryOperationBuilder.cpp.
 
+#include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolBinaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
@@ -61,17 +62,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryUserDefinedOp()
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 {
-	if (auto const* ratType = dynamic_cast<RationalNumberType const*>(
-			m_binOp.annotation().type))
-	{
-		if (!ratType->isFractional())
-			// Solc folded the whole op to a non-fractional rational; emit its value via
-			// the shared helper (promotes uint64->biguint when the magnitude overflows).
-			return builder::TypeCoercion::rationalIntConstant(
-				ratType->literalValue(nullptr),
-				m_ctx.typeMapper.map(m_binOp.annotation().type), m_loc);
-	}
-	return nullptr;
+	// Solc folded the whole op → emit its value (the canonical constant path).
+	return builder::SolcConstFold::foldAnnotated(m_binOp, m_ctx.typeMapper, m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()

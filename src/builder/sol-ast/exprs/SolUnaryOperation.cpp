@@ -1,5 +1,6 @@
 /// @file SolUnaryOperation.cpp — unary operation translation.
 
+#include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
@@ -724,6 +725,14 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 
 std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 {
+	// The canonical constant path (fable-review item 1): solc folded the WHOLE
+	// expression (non-fractional rational annotation, e.g. `-2`, `~5`) → emit
+	// its value directly; never fold built AWST downstream. Runtime-typed
+	// expressions (incl. AWST-constant operands like a lowered type(intN).min)
+	// take the full checked paths below.
+	if (auto folded = builder::SolcConstFold::foldAnnotated(m_unaryOp, m_ctx.typeMapper, m_loc))
+		return folded;
+
 	auto operand = buildExpr(m_unaryOp.subExpression());
 
 	// Try sol-eb builder dispatch for Not/Sub/BitNot

@@ -428,34 +428,20 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 	case BuilderUnaryOp::Negative:
 	{
 		auto operand = resolve();
-		auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(operand.get());
-		if (intConst && !intConst->value.empty() && intConst->value != "0")
-		{
-			try
-			{
-				unsigned long long val = std::stoull(intConst->value);
-				// `-intN.min` (constant, <=64-bit) overflows intN; solc REVERTS. Skip this folding
-				// fast-path for intN.min so it falls through to the checked overflow path below (which
-				// reverts) instead of folding to the wrapped value. minVal = intN.min's uint64 two's
-				// complement (0 - 2^(N-1) mod 2^64). Found by the differential fuzzer.
-				bool isCheckedMin = m_int.isSigned && !m_scope.isUnchecked() && !m_int.biguintBacked()
-					&& val == (0ULL - (1ULL << (m_int.bits - 1)));
-				if (val > 0 && !isCheckedMin)
-				{
-					if (m_int.biguintBacked())
-					{
-						solidity::u256 mod256 = solidity::u256(1) << 256;
-						solidity::u256 result = mod256 - solidity::u256(val);
-						auto e = awst::makeIntegerConstant(result.str(), _loc, awst::WType::biguintType());
-						return wrap(std::move(e));
-					}
-					unsigned long long result = (UINT64_MAX - val) + 1ULL;
-					auto e = awst::makeIntegerConstant(result, _loc);
-					return wrap(std::move(e));
-				}
-			}
-			catch (...) {} // fall through
-		}
+		// NO AWST-level constant folding here (fable-review item 1): true solc
+		// constants are folded at the sol-ast layer via SolcConstFold BEFORE
+		// reaching this builder; an AWST-constant operand of RUNTIME type (e.g.
+		// a lowered type(intN).min) must take the full checked path below so
+		// `-intN.min` reverts. The old fold fast-path here produced exactly
+		// that bug (guard test_const_negate_typemin); the backend folds the
+		// checked chain's arithmetic on constants anyway.
+		//
+		// A small CONSTANT lowers as a uint64-wtype'd IntegerConstant even for
+		// a biguint-backed intN (rationalIntConstant promotes only past-uint64
+		// magnitudes) — promote it so the biguint compare/negate below
+		// type-check. (The deleted fast-path used to mask this mismatch.)
+		if (m_int.biguintBacked() && operand->wtype == awst::WType::uint64Type())
+			operand = promoteToBiguint(std::move(operand), _loc);
 		// Checked signed: -INT_MIN overflows. INT_MIN's TC pattern is 2^(N-1) in the
 		// low N bits; as a 256-bit sign-extended value it reads as 2^256 - 2^(N-1).
 		if (m_int.isSigned && !m_scope.isUnchecked())

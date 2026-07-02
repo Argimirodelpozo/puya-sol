@@ -1,6 +1,7 @@
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/RevertBlob.h"
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/sol-types/SolcConstFold.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -140,7 +141,17 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 			failNode->isExplicit = false;
 			return failNode;
 		}
-		condition = awst::makeEvalOnce(std::move(condition), m_loc);
+		// The condition is referenced twice below (the !cond gate + the assert).
+		// Skip the EvalOnce wrapper when solc marked the condition PURE and it
+		// lowered to a leaf var — re-reading a variable twice is cheaper than
+		// the SE scratch traffic, and purity makes the duplication sound
+		// (fable-review item 2; isPure licenses DUPLICATION only, never
+		// elision — see SolcConstFold::isEffectFree).
+		bool pureLeafCond = !args.empty()
+			&& builder::SolcConstFold::isEffectFree(*args[0])
+			&& dynamic_cast<awst::VarExpression const*>(condition.get()) != nullptr;
+		if (!pureLeafCond)
+			condition = awst::makeEvalOnce(std::move(condition), m_loc);
 		auto logBlock = awst::makeBlock(m_loc);
 		logBlock->body.push_back(makeRevertLogStmt(std::move(revertBlob), m_loc));
 		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
