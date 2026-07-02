@@ -1520,3 +1520,42 @@ def test_mapping_struct_dynarray_push(harness):
     assert as_int(harness.call(app, "getM(uint256,uint256)", 7, 1).abi_return) == 222
     assert as_int(harness.call(app, "getM(uint256,uint256)", 9, 0).abi_return) == 333
 
+
+
+def test_shift_amount_huge(harness):
+    """puyasolRegression/contracts/shift_amount_huge.sol — NOT an o.g. semantic test.
+
+    A runtime shift AMOUNT >= 2^64 (biguint-typed uint256) was low-64-truncated by the
+    biguint->uint64 coercion BEFORE the >=256 saturation guards ran: `x >> 2^128` shifted by
+    (2^128 mod 2^64) = 0 and returned x unchanged, `x >> (2^128+5)` shifted by 5 — the EVM
+    saturates for ANY amount >= 256 (shl/shr -> 0, sar -> 0/-1, EIP-145). Fixed by
+    eb::shiftAmountToUint64 (clamp at the biguint level: >= 256 -> 256, which the shift
+    builders saturate on). Found by the differential fuzzer (codec_probe/arith_edge).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/shift_amount_huge.sol")
+
+    def w(v):                                                    # wrap raw uint → signed-256
+        return v - (1 << 256) if v > (1 << 255) else v
+
+    def s256(r):
+        return w(as_int(r.abi_return))
+
+    IMIN = -(1 << 255)
+    HUGE = 1 << 128
+    # signed sar: saturates to -1 (negative) / 0 (non-negative) for any amount >= 256
+    assert s256(harness.call(app, "sar(int256,uint256)", IMIN, HUGE)) == -1        # was: unchanged
+    assert s256(harness.call(app, "sar(int256,uint256)", IMIN, HUGE + 5)) == -1    # was: shift by 5
+    assert s256(harness.call(app, "sar(int256,uint256)", 12345, 1 << 200)) == 0
+    # sub-word signed (canonicalized to 256-bit TC first)
+    assert s256(harness.call(app, "sar8(int8,uint256)", -1, HUGE)) == -1
+    assert s256(harness.call(app, "sar8(int8,uint256)", 7, HUGE + 3)) == 0
+    # unsigned shr/shl: 0 for any amount >= 256, huge or not
+    assert as_int(harness.call(app, "shr(uint256,uint256)", (1 << 256) - 1, HUGE).abi_return) == 0
+    assert as_int(harness.call(app, "shl(uint256,uint256)", 1, HUGE + 7).abi_return) == 0
+    # boundary 256 (in-uint64-range saturation — the pre-existing guard, still intact)
+    assert s256(harness.call(app, "sar(int256,uint256)", IMIN, 256)) == -1
+    assert as_int(harness.call(app, "shl(uint256,uint256)", 1, 256).abi_return) == 0
+    # in-range amounts unchanged
+    assert s256(harness.call(app, "sar(int256,uint256)", -8, 2)) == -2
+    assert as_int(harness.call(app, "shl(uint256,uint256)", 1, 255).abi_return) == 1 << 255
+    assert as_int(harness.call(app, "shr(uint256,uint256)", 1 << 255, 254).abi_return) == 2

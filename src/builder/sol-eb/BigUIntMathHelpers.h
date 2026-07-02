@@ -32,6 +32,18 @@ std::shared_ptr<awst::Expression> promoteToBiguint(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc);
 
+/// Coerce a SHIFT AMOUNT to uint64 without truncating huge biguint amounts.
+/// implicitNumericCast(biguint→uint64) extracts the LOW 64 BITS — safe for
+/// values known < 2^64, but a shift amount is user data: `x >> 2^128` took
+/// amount mod 2^64 = 0 and shifted by nothing, where EVM saturates for ANY
+/// amount >= 256 (shl/shr → 0, sar → 0/-1). Clamp at the biguint level:
+/// amount >= 256 → 256, which every downstream shift helper saturates on;
+/// amount < 256 → the low-64 extract is exact. uint64-typed amounts pass
+/// through unchanged (downstream >=256 guards already handle them).
+std::shared_ptr<awst::Expression> shiftAmountToUint64(
+	std::shared_ptr<awst::Expression> _amount,
+	awst::SourceLocation const& _loc);
+
 /// Build biguint shift: `value * 2^n` (left) or `value / 2^n` (right),
 /// using the setbit(bzero(32), 255-n, 1) trick for the power.
 std::shared_ptr<awst::Expression> buildBigUIntShift(

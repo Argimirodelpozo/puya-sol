@@ -44,6 +44,27 @@ std::shared_ptr<awst::Expression> promoteToBiguint(
 	return awst::makeAsBiguint(std::move(itob), _loc);
 }
 
+std::shared_ptr<awst::Expression> shiftAmountToUint64(
+	std::shared_ptr<awst::Expression> _amount,
+	awst::SourceLocation const& _loc)
+{
+	auto* u64 = awst::WType::uint64Type();
+	if (_amount->wtype != awst::WType::biguintType())
+		return TypeCoercion::implicitNumericCast(std::move(_amount), u64, _loc);
+
+	// SE: the amount feeds both the <256 guard and the low-64 extract, so a
+	// side-effecting amount expression (`x >> f()`) still runs f() once.
+	auto amt = awst::makeSingleEvaluation(
+		std::move(_amount), awst::WType::biguintType(), awst::nextSingleEvalId(), _loc);
+	auto lt256 = awst::makeNumericCompare(amt, awst::NumericComparison::Lt,
+		awst::makeIntegerConstant("256", _loc, awst::WType::biguintType()), _loc);
+	// amount < 256 → the low-64 extract is the exact value; else clamp to 256,
+	// which the downstream shift builders saturate on (0 / sign-fill).
+	auto low64 = TypeCoercion::implicitNumericCast(amt, u64, _loc);
+	return awst::makeConditional(std::move(lt256), std::move(low64),
+		awst::makeIntegerConstant("256", _loc, u64), u64, _loc);
+}
+
 std::shared_ptr<awst::Expression> buildBigUIntShift(
 	std::shared_ptr<awst::Expression> _value,
 	std::shared_ptr<awst::Expression> _shiftAmt,

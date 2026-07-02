@@ -1317,7 +1317,7 @@
                         "immutable": true
                       },
                       "source": {
-                        "_type": "IntrinsicCall",
+                        "_type": "ConditionalExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                           "line": 761,
@@ -1331,11 +1331,23 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "op_code": "btoi",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                            "line": 761,
+                            "end_line": 767,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                               "line": 761,
@@ -1345,32 +1357,88 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "op_code": "extract3",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "SingleEvaluation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                  "line": 761,
-                                  "end_line": 767,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "source": {
-                                  "_type": "IntrinsicCall",
+                            "source": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                "line": 766,
+                                "end_line": 767,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "s"
+                            },
+                            "_id": 1048577
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                              "line": 761,
+                              "end_line": 767,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": 256,
+                            "teal_alias": null
+                          }
+                        },
+                        "true_expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                            "line": 761,
+                            "end_line": 767,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "btoi",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                "line": 761,
+                                "end_line": 767,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "extract3",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                     "line": 761,
@@ -1385,136 +1453,26 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                        "line": 761,
-                                        "end_line": 767,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                            "line": 761,
-                                            "end_line": 767,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 8,
-                                          "teal_alias": null
-                                        }
-                                      ]
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 761,
+                                      "end_line": 767,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
                                     },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                        "line": 761,
-                                        "end_line": 767,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                          "line": 766,
-                                          "end_line": 767,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "s"
-                                      }
-                                    }
-                                  ]
-                                },
-                                "_id": 1048577
-                              },
-                              {
-                                "_type": "UInt64BinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                  "line": 761,
-                                  "end_line": 767,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "left": {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                    "line": 761,
-                                    "end_line": 767,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "op_code": "len",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "SingleEvaluation",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                        "line": 761,
-                                        "end_line": 767,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "source": {
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
                                         "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -1530,11 +1488,11 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "op_code": "concat",
+                                        "op_code": "bzero",
                                         "immediates": [],
                                         "stack_args": [
                                           {
-                                            "_type": "IntrinsicCall",
+                                            "_type": "IntegerConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                               "line": 761,
@@ -1544,16 +1502,195 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
                                             },
-                                            "op_code": "bzero",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntegerConstant",
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 761,
+                                          "end_line": 767,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "SingleEvaluation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                            "line": 761,
+                                            "end_line": 767,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "source": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                              "line": 766,
+                                              "end_line": 767,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "s"
+                                          },
+                                          "_id": 1048577
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "_id": 1048578
+                                },
+                                {
+                                  "_type": "UInt64BinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                    "line": 761,
+                                    "end_line": 767,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 761,
+                                      "end_line": 767,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "op_code": "len",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 761,
+                                          "end_line": 767,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "source": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                            "line": 761,
+                                            "end_line": 767,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "concat",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 761,
+                                                "end_line": 767,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "bzero",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                    "line": 761,
+                                                    "end_line": 767,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 8,
+                                                  "teal_alias": null
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 761,
+                                                "end_line": 767,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "SingleEvaluation",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                   "line": 761,
@@ -1564,56 +1701,56 @@
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "uint64",
+                                                  "name": "biguint",
                                                   "immutable": true
                                                 },
-                                                "value": 8,
-                                                "teal_alias": null
+                                                "source": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                    "line": 766,
+                                                    "end_line": 767,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "name": "s"
+                                                },
+                                                "_id": 1048577
                                               }
-                                            ]
-                                          },
-                                          {
-                                            "_type": "ReinterpretCast",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                              "line": 761,
-                                              "end_line": 767,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "expr": {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                "line": 766,
-                                                "end_line": 767,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "name": "s"
                                             }
-                                          }
-                                        ]
-                                      },
-                                      "_id": 1048577
-                                    }
-                                  ]
+                                          ]
+                                        },
+                                        "_id": 1048578
+                                      }
+                                    ]
+                                  },
+                                  "op": "-",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 761,
+                                      "end_line": 767,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 8,
+                                    "teal_alias": null
+                                  }
                                 },
-                                "op": "-",
-                                "right": {
+                                {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -1631,30 +1768,30 @@
                                   "value": 8,
                                   "teal_alias": null
                                 }
-                              },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                  "line": 761,
-                                  "end_line": 767,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
-                            ]
-                          }
-                        ]
+                              ]
+                            }
+                          ]
+                        },
+                        "false_expr": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                            "line": 761,
+                            "end_line": 767,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 256,
+                          "teal_alias": null
+                        }
                       },
-                      "_id": 1048578
+                      "_id": 1048579
                     },
                     "operator": "<",
                     "rhs": {
@@ -1862,7 +1999,7 @@
                                     "immutable": true
                                   },
                                   "source": {
-                                    "_type": "IntrinsicCall",
+                                    "_type": "ConditionalExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                       "line": 761,
@@ -1876,11 +2013,23 @@
                                       "name": "uint64",
                                       "immutable": true
                                     },
-                                    "op_code": "btoi",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntrinsicCall",
+                                    "condition": {
+                                      "_type": "NumericComparisonExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                        "line": 761,
+                                        "end_line": 767,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      },
+                                      "lhs": {
+                                        "_type": "SingleEvaluation",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                           "line": 761,
@@ -1890,32 +2039,88 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
                                         },
-                                        "op_code": "extract3",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "SingleEvaluation",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                              "line": 761,
-                                              "end_line": 767,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "source": {
-                                              "_type": "IntrinsicCall",
+                                        "source": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                            "line": 766,
+                                            "end_line": 767,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "s"
+                                        },
+                                        "_id": 1048577
+                                      },
+                                      "operator": "<",
+                                      "rhs": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 761,
+                                          "end_line": 767,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": 256,
+                                        "teal_alias": null
+                                      }
+                                    },
+                                    "true_expr": {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                        "line": 761,
+                                        "end_line": 767,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "btoi",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                            "line": 761,
+                                            "end_line": 767,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "extract3",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "SingleEvaluation",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                 "line": 761,
@@ -1930,136 +2135,26 @@
                                                 "immutable": true,
                                                 "length": null
                                               },
-                                              "op_code": "concat",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntrinsicCall",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                    "line": 761,
-                                                    "end_line": 767,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "op_code": "bzero",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "IntegerConstant",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                        "line": 761,
-                                                        "end_line": 767,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "uint64",
-                                                        "immutable": true
-                                                      },
-                                                      "value": 8,
-                                                      "teal_alias": null
-                                                    }
-                                                  ]
+                                              "source": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                  "line": 761,
+                                                  "end_line": 767,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
                                                 },
-                                                {
-                                                  "_type": "ReinterpretCast",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                    "line": 761,
-                                                    "end_line": 767,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "expr": {
-                                                    "_type": "VarExpression",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                      "line": 766,
-                                                      "end_line": 767,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "biguint",
-                                                      "immutable": true
-                                                    },
-                                                    "name": "s"
-                                                  }
-                                                }
-                                              ]
-                                            },
-                                            "_id": 1048577
-                                          },
-                                          {
-                                            "_type": "UInt64BinaryOperation",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                              "line": 761,
-                                              "end_line": 767,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "left": {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                "line": 761,
-                                                "end_line": 767,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "op_code": "len",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "SingleEvaluation",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                    "line": 761,
-                                                    "end_line": 767,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "source": {
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "concat",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
                                                     "_type": "IntrinsicCall",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -2075,11 +2170,11 @@
                                                       "immutable": true,
                                                       "length": null
                                                     },
-                                                    "op_code": "concat",
+                                                    "op_code": "bzero",
                                                     "immediates": [],
                                                     "stack_args": [
                                                       {
-                                                        "_type": "IntrinsicCall",
+                                                        "_type": "IntegerConstant",
                                                         "source_location": {
                                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                           "line": 761,
@@ -2089,16 +2184,195 @@
                                                           "end_column": null
                                                         },
                                                         "wtype": {
-                                                          "_type": "BytesWType",
-                                                          "name": "bytes",
-                                                          "immutable": true,
-                                                          "length": null
+                                                          "_type": "WType",
+                                                          "name": "uint64",
+                                                          "immutable": true
                                                         },
-                                                        "op_code": "bzero",
-                                                        "immediates": [],
-                                                        "stack_args": [
-                                                          {
-                                                            "_type": "IntegerConstant",
+                                                        "value": 8,
+                                                        "teal_alias": null
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_type": "ReinterpretCast",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                      "line": 761,
+                                                      "end_line": 767,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "expr": {
+                                                      "_type": "SingleEvaluation",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                        "line": 761,
+                                                        "end_line": 767,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "biguint",
+                                                        "immutable": true
+                                                      },
+                                                      "source": {
+                                                        "_type": "VarExpression",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                          "line": 766,
+                                                          "end_line": 767,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "WType",
+                                                          "name": "biguint",
+                                                          "immutable": true
+                                                        },
+                                                        "name": "s"
+                                                      },
+                                                      "_id": 1048577
+                                                    }
+                                                  }
+                                                ]
+                                              },
+                                              "_id": 1048578
+                                            },
+                                            {
+                                              "_type": "UInt64BinaryOperation",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 761,
+                                                "end_line": 767,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "left": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                  "line": 761,
+                                                  "end_line": 767,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "op_code": "len",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "SingleEvaluation",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                      "line": 761,
+                                                      "end_line": 767,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "source": {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                        "line": 761,
+                                                        "end_line": 767,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "op_code": "concat",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntrinsicCall",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                            "line": 761,
+                                                            "end_line": 767,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "op_code": "bzero",
+                                                          "immediates": [],
+                                                          "stack_args": [
+                                                            {
+                                                              "_type": "IntegerConstant",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                                "line": 761,
+                                                                "end_line": 767,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "WType",
+                                                                "name": "uint64",
+                                                                "immutable": true
+                                                              },
+                                                              "value": 8,
+                                                              "teal_alias": null
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "_type": "ReinterpretCast",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                            "line": 761,
+                                                            "end_line": 767,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "expr": {
+                                                            "_type": "SingleEvaluation",
                                                             "source_location": {
                                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                               "line": 761,
@@ -2109,56 +2383,56 @@
                                                             },
                                                             "wtype": {
                                                               "_type": "WType",
-                                                              "name": "uint64",
+                                                              "name": "biguint",
                                                               "immutable": true
                                                             },
-                                                            "value": 8,
-                                                            "teal_alias": null
+                                                            "source": {
+                                                              "_type": "VarExpression",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                                "line": 766,
+                                                                "end_line": 767,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "WType",
+                                                                "name": "biguint",
+                                                                "immutable": true
+                                                              },
+                                                              "name": "s"
+                                                            },
+                                                            "_id": 1048577
                                                           }
-                                                        ]
-                                                      },
-                                                      {
-                                                        "_type": "ReinterpretCast",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                          "line": 761,
-                                                          "end_line": 767,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "BytesWType",
-                                                          "name": "bytes",
-                                                          "immutable": true,
-                                                          "length": null
-                                                        },
-                                                        "expr": {
-                                                          "_type": "VarExpression",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                            "line": 766,
-                                                            "end_line": 767,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "biguint",
-                                                            "immutable": true
-                                                          },
-                                                          "name": "s"
                                                         }
-                                                      }
-                                                    ]
-                                                  },
-                                                  "_id": 1048577
-                                                }
-                                              ]
+                                                      ]
+                                                    },
+                                                    "_id": 1048578
+                                                  }
+                                                ]
+                                              },
+                                              "op": "-",
+                                              "right": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                  "line": 761,
+                                                  "end_line": 767,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 8,
+                                                "teal_alias": null
+                                              }
                                             },
-                                            "op": "-",
-                                            "right": {
+                                            {
                                               "_type": "IntegerConstant",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -2176,30 +2450,30 @@
                                               "value": 8,
                                               "teal_alias": null
                                             }
-                                          },
-                                          {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                              "line": 761,
-                                              "end_line": 767,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 8,
-                                            "teal_alias": null
-                                          }
-                                        ]
-                                      }
-                                    ]
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    "false_expr": {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                        "line": 761,
+                                        "end_line": 767,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 256,
+                                      "teal_alias": null
+                                    }
                                   },
-                                  "_id": 1048578
+                                  "_id": 1048579
                                 },
                                 "op": "%",
                                 "right": {
@@ -2829,7 +3103,7 @@
                         "immutable": true
                       },
                       "source": {
-                        "_type": "IntrinsicCall",
+                        "_type": "ConditionalExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                           "line": 851,
@@ -2843,11 +3117,23 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "op_code": "btoi",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                            "line": 851,
+                            "end_line": 857,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "SingleEvaluation",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                               "line": 851,
@@ -2857,32 +3143,88 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "op_code": "extract3",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "SingleEvaluation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                  "line": 851,
-                                  "end_line": 857,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "source": {
-                                  "_type": "IntrinsicCall",
+                            "source": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                "line": 856,
+                                "end_line": 857,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "s"
+                            },
+                            "_id": 1048580
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                              "line": 851,
+                              "end_line": 857,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": 256,
+                            "teal_alias": null
+                          }
+                        },
+                        "true_expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                            "line": 851,
+                            "end_line": 857,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "btoi",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                "line": 851,
+                                "end_line": 857,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "extract3",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "SingleEvaluation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                     "line": 851,
@@ -2897,136 +3239,26 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                        "line": 851,
-                                        "end_line": 857,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "bzero",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                            "line": 851,
-                                            "end_line": 857,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 8,
-                                          "teal_alias": null
-                                        }
-                                      ]
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 851,
+                                      "end_line": 857,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
                                     },
-                                    {
-                                      "_type": "ReinterpretCast",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                        "line": 851,
-                                        "end_line": 857,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "expr": {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                          "line": 856,
-                                          "end_line": 857,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "biguint",
-                                          "immutable": true
-                                        },
-                                        "name": "s"
-                                      }
-                                    }
-                                  ]
-                                },
-                                "_id": 1048579
-                              },
-                              {
-                                "_type": "UInt64BinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                  "line": 851,
-                                  "end_line": 857,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "left": {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                    "line": 851,
-                                    "end_line": 857,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "op_code": "len",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "SingleEvaluation",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                        "line": 851,
-                                        "end_line": 857,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "source": {
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
                                         "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -3042,11 +3274,11 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "op_code": "concat",
+                                        "op_code": "bzero",
                                         "immediates": [],
                                         "stack_args": [
                                           {
-                                            "_type": "IntrinsicCall",
+                                            "_type": "IntegerConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                               "line": 851,
@@ -3056,16 +3288,195 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
                                             },
-                                            "op_code": "bzero",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntegerConstant",
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 851,
+                                          "end_line": 857,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "SingleEvaluation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                            "line": 851,
+                                            "end_line": 857,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "source": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                              "line": 856,
+                                              "end_line": 857,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "s"
+                                          },
+                                          "_id": 1048580
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "_id": 1048581
+                                },
+                                {
+                                  "_type": "UInt64BinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                    "line": 851,
+                                    "end_line": 857,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 851,
+                                      "end_line": 857,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "op_code": "len",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 851,
+                                          "end_line": 857,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "source": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                            "line": 851,
+                                            "end_line": 857,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "concat",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 851,
+                                                "end_line": 857,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "bzero",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                    "line": 851,
+                                                    "end_line": 857,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 8,
+                                                  "teal_alias": null
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 851,
+                                                "end_line": 857,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "SingleEvaluation",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                   "line": 851,
@@ -3076,56 +3487,56 @@
                                                 },
                                                 "wtype": {
                                                   "_type": "WType",
-                                                  "name": "uint64",
+                                                  "name": "biguint",
                                                   "immutable": true
                                                 },
-                                                "value": 8,
-                                                "teal_alias": null
+                                                "source": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                    "line": 856,
+                                                    "end_line": 857,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "name": "s"
+                                                },
+                                                "_id": 1048580
                                               }
-                                            ]
-                                          },
-                                          {
-                                            "_type": "ReinterpretCast",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                              "line": 851,
-                                              "end_line": 857,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "expr": {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                "line": 856,
-                                                "end_line": 857,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "name": "s"
                                             }
-                                          }
-                                        ]
-                                      },
-                                      "_id": 1048579
-                                    }
-                                  ]
+                                          ]
+                                        },
+                                        "_id": 1048581
+                                      }
+                                    ]
+                                  },
+                                  "op": "-",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 851,
+                                      "end_line": 857,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 8,
+                                    "teal_alias": null
+                                  }
                                 },
-                                "op": "-",
-                                "right": {
+                                {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -3143,30 +3554,30 @@
                                   "value": 8,
                                   "teal_alias": null
                                 }
-                              },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                  "line": 851,
-                                  "end_line": 857,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
-                            ]
-                          }
-                        ]
+                              ]
+                            }
+                          ]
+                        },
+                        "false_expr": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                            "line": 851,
+                            "end_line": 857,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 256,
+                          "teal_alias": null
+                        }
                       },
-                      "_id": 1048580
+                      "_id": 1048582
                     },
                     "operator": "<",
                     "rhs": {
@@ -3359,7 +3770,7 @@
                                   "immutable": true
                                 },
                                 "source": {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "ConditionalExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                     "line": 851,
@@ -3373,11 +3784,23 @@
                                     "name": "uint64",
                                     "immutable": true
                                   },
-                                  "op_code": "btoi",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
+                                  "condition": {
+                                    "_type": "NumericComparisonExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 851,
+                                      "end_line": 857,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "bool",
+                                      "immutable": true
+                                    },
+                                    "lhs": {
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                         "line": 851,
@@ -3387,32 +3810,88 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
                                       },
-                                      "op_code": "extract3",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "SingleEvaluation",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                            "line": 851,
-                                            "end_line": 857,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "source": {
-                                            "_type": "IntrinsicCall",
+                                      "source": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 856,
+                                          "end_line": 857,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "s"
+                                      },
+                                      "_id": 1048580
+                                    },
+                                    "operator": "<",
+                                    "rhs": {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                        "line": 851,
+                                        "end_line": 857,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "biguint",
+                                        "immutable": true
+                                      },
+                                      "value": 256,
+                                      "teal_alias": null
+                                    }
+                                  },
+                                  "true_expr": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 851,
+                                      "end_line": 857,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "op_code": "btoi",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                          "line": 851,
+                                          "end_line": 857,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "extract3",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "SingleEvaluation",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                               "line": 851,
@@ -3427,136 +3906,26 @@
                                               "immutable": true,
                                               "length": null
                                             },
-                                            "op_code": "concat",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntrinsicCall",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                  "line": 851,
-                                                  "end_line": 857,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "op_code": "bzero",
-                                                "immediates": [],
-                                                "stack_args": [
-                                                  {
-                                                    "_type": "IntegerConstant",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                      "line": 851,
-                                                      "end_line": 857,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "uint64",
-                                                      "immutable": true
-                                                    },
-                                                    "value": 8,
-                                                    "teal_alias": null
-                                                  }
-                                                ]
+                                            "source": {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 851,
+                                                "end_line": 857,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
                                               },
-                                              {
-                                                "_type": "ReinterpretCast",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                  "line": 851,
-                                                  "end_line": 857,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "expr": {
-                                                  "_type": "VarExpression",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                    "line": 856,
-                                                    "end_line": 857,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "biguint",
-                                                    "immutable": true
-                                                  },
-                                                  "name": "s"
-                                                }
-                                              }
-                                            ]
-                                          },
-                                          "_id": 1048579
-                                        },
-                                        {
-                                          "_type": "UInt64BinaryOperation",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                            "line": 851,
-                                            "end_line": 857,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "left": {
-                                            "_type": "IntrinsicCall",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                              "line": 851,
-                                              "end_line": 857,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "op_code": "len",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "SingleEvaluation",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                  "line": 851,
-                                                  "end_line": 857,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "source": {
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "concat",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
                                                   "_type": "IntrinsicCall",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -3572,11 +3941,11 @@
                                                     "immutable": true,
                                                     "length": null
                                                   },
-                                                  "op_code": "concat",
+                                                  "op_code": "bzero",
                                                   "immediates": [],
                                                   "stack_args": [
                                                     {
-                                                      "_type": "IntrinsicCall",
+                                                      "_type": "IntegerConstant",
                                                       "source_location": {
                                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                         "line": 851,
@@ -3586,16 +3955,195 @@
                                                         "end_column": null
                                                       },
                                                       "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
                                                       },
-                                                      "op_code": "bzero",
-                                                      "immediates": [],
-                                                      "stack_args": [
-                                                        {
-                                                          "_type": "IntegerConstant",
+                                                      "value": 8,
+                                                      "teal_alias": null
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "_type": "ReinterpretCast",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                    "line": 851,
+                                                    "end_line": 857,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "expr": {
+                                                    "_type": "SingleEvaluation",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                      "line": 851,
+                                                      "end_line": 857,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "source": {
+                                                      "_type": "VarExpression",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                        "line": 856,
+                                                        "end_line": 857,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "biguint",
+                                                        "immutable": true
+                                                      },
+                                                      "name": "s"
+                                                    },
+                                                    "_id": 1048580
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            "_id": 1048581
+                                          },
+                                          {
+                                            "_type": "UInt64BinaryOperation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                              "line": 851,
+                                              "end_line": 857,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "left": {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 851,
+                                                "end_line": 857,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "op_code": "len",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "SingleEvaluation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                    "line": 851,
+                                                    "end_line": 857,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "source": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                      "line": 851,
+                                                      "end_line": 857,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "concat",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntrinsicCall",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                          "line": 851,
+                                                          "end_line": 857,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "op_code": "bzero",
+                                                        "immediates": [],
+                                                        "stack_args": [
+                                                          {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                              "line": 851,
+                                                              "end_line": 857,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 8,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "_type": "ReinterpretCast",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                          "line": 851,
+                                                          "end_line": 857,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "expr": {
+                                                          "_type": "SingleEvaluation",
                                                           "source_location": {
                                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
                                                             "line": 851,
@@ -3606,56 +4154,56 @@
                                                           },
                                                           "wtype": {
                                                             "_type": "WType",
-                                                            "name": "uint64",
+                                                            "name": "biguint",
                                                             "immutable": true
                                                           },
-                                                          "value": 8,
-                                                          "teal_alias": null
+                                                          "source": {
+                                                            "_type": "VarExpression",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                              "line": 856,
+                                                              "end_line": 857,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "biguint",
+                                                              "immutable": true
+                                                            },
+                                                            "name": "s"
+                                                          },
+                                                          "_id": 1048580
                                                         }
-                                                      ]
-                                                    },
-                                                    {
-                                                      "_type": "ReinterpretCast",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                        "line": 851,
-                                                        "end_line": 857,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "expr": {
-                                                        "_type": "VarExpression",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                                          "line": 856,
-                                                          "end_line": 857,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "WType",
-                                                          "name": "biguint",
-                                                          "immutable": true
-                                                        },
-                                                        "name": "s"
                                                       }
-                                                    }
-                                                  ]
-                                                },
-                                                "_id": 1048579
-                                              }
-                                            ]
+                                                    ]
+                                                  },
+                                                  "_id": 1048581
+                                                }
+                                              ]
+                                            },
+                                            "op": "-",
+                                            "right": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                                "line": 851,
+                                                "end_line": 857,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 8,
+                                              "teal_alias": null
+                                            }
                                           },
-                                          "op": "-",
-                                          "right": {
+                                          {
                                             "_type": "IntegerConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
@@ -3673,30 +4221,30 @@
                                             "value": 8,
                                             "teal_alias": null
                                           }
-                                        },
-                                        {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
-                                            "line": 851,
-                                            "end_line": 857,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 8,
-                                          "teal_alias": null
-                                        }
-                                      ]
-                                    }
-                                  ]
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "false_expr": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/shift_saturate.sol",
+                                      "line": 851,
+                                      "end_line": 857,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 256,
+                                    "teal_alias": null
+                                  }
                                 },
-                                "_id": 1048580
+                                "_id": 1048582
                               },
                               "op": "%",
                               "right": {

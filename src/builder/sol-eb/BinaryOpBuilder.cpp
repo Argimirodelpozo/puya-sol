@@ -187,26 +187,22 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 	{
 		promoteToBigUInt(_left);
 
-		// biguint has no shift opcode: x<<n = x*(2^n), x>>n = x/(2^n).
-		// 2^n via setbit(bzero(32),255-n,1). Shift amount stays uint64.
+		// biguint has no shift opcode — the shared buildBigUIntShift emits
+		// x*(2^n) / x/(2^n) WITH the EVM >=256 saturation (result 0; the old
+		// hand-rolled copy here underflowed 255-n and panicked) and the
+		// mod-2^256 left-shift wrap. shiftAmountToUint64 clamps a biguint
+		// amount first, so a huge (>=2^64) amount saturates instead of
+		// silently shifting by amount mod 2^64. NB this path is UNSIGNED
+		// (SAR maps to zero-fill FloorDiv) — signed SAR lives in
+		// SolIntegerBuilder via buildBigUIntArithmeticShiftRight.
 		if (_op == Token::SHL || _op == Token::AssignShl
 			|| _op == Token::SHR || _op == Token::AssignShr
 			|| _op == Token::SAR || _op == Token::AssignSar)
-		{
-			auto shiftAmt = TypeCoercion::implicitNumericCast(std::move(_right), awst::WType::uint64Type(), _loc);
-
-			auto bzero = awst::makeBzero(32, _loc);
-			auto twoFiftyFive = awst::makeIntegerConstant("255", _loc);
-			auto bitIdx = awst::makeUInt64BinOp(std::move(twoFiftyFive), awst::UInt64BinaryOperator::Sub, std::move(shiftAmt), _loc);
-			auto setbit = awst::makeSetbit(
-				std::move(bzero), std::move(bitIdx), awst::makeOne(_loc), _loc);
-			auto castToBigUInt = awst::makeAsBiguint(std::move(setbit), _loc);
-
-			auto shiftBigOp = (_op == Token::SHL || _op == Token::AssignShl)
-				? awst::BigUIntBinaryOperator::Mult
-				: awst::BigUIntBinaryOperator::FloorDiv;
-			return awst::makeBigUIntBinOp(std::move(_left), shiftBigOp, std::move(castToBigUInt), _loc);
-		}
+			return buildBigUIntShift(
+				std::move(_left),
+				shiftAmountToUint64(std::move(_right), _loc),
+				_op == Token::SHL || _op == Token::AssignShl,
+				_loc);
 
 		promoteToBigUInt(_right);
 

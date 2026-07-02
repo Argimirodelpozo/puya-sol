@@ -81,11 +81,13 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	{
 		lhs = promoteToBiguint(std::move(lhs), _loc);
 
-		// Shift amount stays uint64 (don't promote).
+		// Shift amount stays uint64 (don't promote) — but a biguint-typed amount
+		// must be CLAMPED, not low-64-truncated: `x >> 2^128` shifted by 0 where
+		// EVM saturates for any amount >= 256. shiftAmountToUint64 selects 256
+		// for huge amounts, which the shift builders below saturate on.
 		if (_op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift)
 		{
-			auto shiftAmt = TypeCoercion::implicitNumericCast(
-				std::move(rhs), awst::WType::uint64Type(), _loc);
+			auto shiftAmt = shiftAmountToUint64(std::move(rhs), _loc);
 			std::shared_ptr<awst::Expression> result;
 			// Signed >> = SAR (sign-filling); logical FloorDiv would zero-fill negatives.
 			if (m_int.isSigned && _op == BuilderBinaryOp::RShift)
