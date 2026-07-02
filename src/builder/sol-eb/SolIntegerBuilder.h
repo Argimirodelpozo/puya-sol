@@ -1,6 +1,7 @@
 #pragma once
 
 #include "builder/sol-eb/NodeBuilder.h"
+#include "builder/sol-types/SolIntType.h"
 
 #include <libsolidity/ast/Types.h>
 
@@ -11,7 +12,8 @@ namespace puyasol::builder::eb
 /// binary_op: uint64/biguint arithmetic; setbit-based shifts; square-and-multiply exp;
 ///   wrapping sub; unchecked wrapping. compare: XOR-sign-bit for signed ordering.
 ///   Overflow check for narrow types; mixed-width promotion.
-/// Fields: m_bits (8..256), m_signed, m_isBigUInt (bits>64).
+/// The integer descriptor is the SolIntType carrier (m_int); the biguint-backed
+/// question is DERIVED from it (bits>64), never stored separately.
 class SolIntegerBuilder: public InstanceBuilder
 {
 public:
@@ -36,15 +38,13 @@ public:
 	std::unique_ptr<InstanceBuilder> bool_eval(
 		awst::SourceLocation const& _loc, bool _negate = false) override;
 
-	unsigned bits() const { return m_bits; }
-	bool isSigned() const { return m_signed; }
-	bool isBigUInt() const { return m_isBigUInt; }
+	unsigned bits() const { return m_int.bits; }
+	bool isSigned() const { return m_int.isSigned; }
+	bool isBigUInt() const { return m_int.biguintBacked(); }
 
 private:
 	solidity::frontend::IntegerType const* m_intType;
-	unsigned m_bits;
-	bool m_signed;
-	bool m_isBigUInt;
+	SolIntType m_int;
 
 	/// Create a new SolIntegerBuilder wrapping the given expression,
 	/// preserving this builder's Solidity type info.

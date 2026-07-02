@@ -69,10 +69,7 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
-	/// Promote uint64 to biguint.
-	static std::shared_ptr<awst::Expression> promoteToBigUInt(
-		std::shared_ptr<awst::Expression> _expr,
-		awst::SourceLocation const& _loc);
+	// Biguint promotion is the shared eb::promoteToBiguint (BigUIntMathHelpers).
 };
 
 } // namespace puyasol::builder::eb

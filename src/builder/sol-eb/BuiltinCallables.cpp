@@ -2,6 +2,7 @@
 /// Solidity builtin function implementations via the builder pattern.
 
 #include "builder/sol-eb/BuiltinCallables.h"
+#include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/SolIntegerBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -71,17 +72,6 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSha256(
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(call));
 }
 
-std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
-	std::shared_ptr<awst::Expression> _expr,
-	awst::SourceLocation const& _loc)
-{
-	if (_expr->wtype == awst::WType::biguintType())
-		return _expr;
-
-	auto itob = awst::makeItob(std::move(_expr), _loc);
-	return awst::makeAsBiguint(std::move(itob), _loc);
-}
-
 static void emitModByZeroCheck(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> const& _modulus,
@@ -103,10 +93,10 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 {
 	if (_args.size() != 3) return nullptr;
 
-	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
-	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
+	auto x = promoteToBiguint(std::move(_args[0]), _loc);
+	auto y = promoteToBiguint(std::move(_args[1]), _loc);
 	// Modulus referenced twice (assert + mod); eval-once for side-effecting args.
-	auto z = awst::makeEvalOnce(promoteToBigUInt(std::move(_args[2]), _loc), _loc);
+	auto z = awst::makeEvalOnce(promoteToBiguint(std::move(_args[2]), _loc), _loc);
 	emitModByZeroCheck(_ctx, z, _loc);
 
 	auto mul = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Mult, std::move(y), _loc);
@@ -123,9 +113,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 {
 	if (_args.size() != 3) return nullptr;
 
-	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
-	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
-	auto z = awst::makeEvalOnce(promoteToBigUInt(std::move(_args[2]), _loc), _loc);
+	auto x = promoteToBiguint(std::move(_args[0]), _loc);
+	auto y = promoteToBiguint(std::move(_args[1]), _loc);
+	auto z = awst::makeEvalOnce(promoteToBiguint(std::move(_args[2]), _loc), _loc);
 	emitModByZeroCheck(_ctx, z, _loc);
 
 	auto add = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Add, std::move(y), _loc);

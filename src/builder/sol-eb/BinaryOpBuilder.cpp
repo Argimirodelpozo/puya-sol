@@ -63,19 +63,12 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		coerceBytesToUint(_right);
 
 	auto promoteToBigUInt = [&](std::shared_ptr<awst::Expression>& operand) {
+		// uint64-only, DELIBERATELY narrower than eb::promoteToBiguint's catch-all:
+		// bytes operands here either already went through coerceBytesToUint above or
+		// are legitimately compared as raw bytes — reinterpreting them to biguint
+		// would change those comparisons (and >64-byte values can't be biguint).
 		if (operand->wtype == awst::WType::uint64Type())
-		{
-			// Integer constants: use biguint constant directly (avoids itob(0)=8 zero bytes).
-			if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(operand.get()))
-			{
-				auto bigConst = awst::makeIntegerConstant(intConst->value, _loc, awst::WType::biguintType());
-				operand = std::move(bigConst);
-				return;
-			}
-
-			auto itob = awst::makeItob(std::move(operand), _loc);
-			operand = awst::makeAsBiguint(std::move(itob), _loc);
-		}
+			operand = promoteToBiguint(std::move(operand), _loc);
 	};
 
 	// Comparison operations
