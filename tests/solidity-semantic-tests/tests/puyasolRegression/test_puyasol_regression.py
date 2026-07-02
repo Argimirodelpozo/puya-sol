@@ -1617,16 +1617,17 @@ def test_dce_reverting_subexpr(harness):
     assert as_int(harness.call(app, "mulZero(uint256,uint256)", 7, 3).abi_return) == 0
 
 
-@pytest.mark.xfail(reason="OPEN backend half of the missing-revert-under-fold class "
-                   "(backend-dce-drops-reverting-subexpr): with a LITERAL fold (shift>=256, "
-                   "identical-branch ternary, **0, *0, &0) puya's DCE drops the unused div/mod "
-                   "whose zero-divisor panic carries the EVM revert ('/', '%', 'b/', 'b%' are in "
-                   "SIDE_EFFECT_FREE_AVM_OPS). A one-line fork fix exists and was validated "
-                   "(zero-reg, closes all shapes) but REVERTED by policy: no puya fork changes. "
-                   "See puyabug.md #9. Degenerate generated-code shapes; ~nil real-world impact.",
-                   strict=False)
 def test_dce_reverting_subexpr_literal_folds(harness):
-    """BACKEND half (open): literal-fold shapes where the divide-by-zero revert is DCE'd away."""
+    """BACKEND half — OPEN BUG, this test FAILS on purpose until it's fixed.
+
+    With a LITERAL fold (shift>=256, identical-branch ternary, **0, *0, &0) puya's DCE drops
+    the unused div/mod whose zero-divisor panic carries the EVM revert ('/', '%', 'b/', 'b%'
+    are in SIDE_EFFECT_FREE_AVM_OPS) -> AVM returns the folded value where solc+EVM revert.
+    A one-line fork fix exists and was validated (zero-reg, closes all shapes) but was
+    REVERTED by policy: no puya fork changes. Preserved as fork-remote 716e63e44; see
+    puyabug.md #9. Not xfailed: open bugs stay as honest failures (xfail is reserved for
+    by-design/purposely-unsupported behavior).
+    """
     app = harness.compile_and_deploy("puyasolRegression/contracts/dce_reverting_subexpr.sol")
     for sig, args in [
         ("divdivShl(uint256)", (0,)),
