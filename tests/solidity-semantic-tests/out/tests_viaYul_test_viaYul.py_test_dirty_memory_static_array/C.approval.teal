@@ -3,11 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_static_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 4096 0 8
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000101
-    intc_2 // 0
-    pushbytes ""
-    intc_1 // 4096
+    intcblock 1 0 8 4096
+    intc_1 // 0
+    intc_3 // 4096
     bzero
     dup
     store 5
@@ -54,8 +52,6 @@ main_ternary_merge@9:
     load 0
     pushint 88
     extract_uint64
-    dup
-    bury 2
     load 0
     pushint 24
     bzero
@@ -76,71 +72,68 @@ main_ternary_merge@9:
     pushint 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    intc_1 // 4096
-    <
-    bz main_else_body@11
-    load 0
-    dig 1
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000101
-    replace3
-    store 0
-
-main_after_if_else@12:
-    load 0
-    store 0
-    intc_3 // 8
-    bzero
-    dig 1
     dup
-    intc_1 // 4096
+    intc_3 // 4096
     /
     dup
     loads
     uncover 2
-    intc_1 // 4096
+    intc_3 // 4096
     %
     swap
     dig 1
-    pushint 32
-    extract3
-    dig 3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000101
+    replace3
+    dig 2
     swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    intc_3 // 8
-    extract3
-    bury 5
+    stores
     load 0
     store 0
-    load 0
-    store 0
-    swap
+    intc_2 // 8
+    bzero
+    dig 2
     loads
+    dig 2
+    pushint 32
+    extract3
+    dig 1
     swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    bury 4
+    load 0
+    store 0
+    load 0
+    store 0
+    uncover 2
+    loads
+    uncover 2
     pushint 32
     extract3
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 1
     ==
-    bz main_bool_false@15
+    bz main_bool_false@12
     intc_0 // 1
     itob
-    dig 2
+    dig 1
     b==
-    bz main_bool_false@15
+    bz main_bool_false@12
     intc_0 // 1
 
-main_bool_merge@16:
+main_bool_merge@13:
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -150,24 +143,10 @@ main_bool_merge@16:
     intc_0 // 1
     return
 
-main_bool_false@15:
-    intc_2 // 0
-    b main_bool_merge@16
-
-main_else_body@11:
-    dupn 2
-    intc_1 // 4096
-    /
-    dup
-    loads
-    uncover 2
-    intc_1 // 4096
-    %
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000101
-    replace3
-    stores
-    b main_after_if_else@12
+main_bool_false@12:
+    intc_1 // 0
+    b main_bool_merge@13
 
 main_ternary_false@8:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@9

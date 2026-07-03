@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_cleanup.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 4096 2
-    bytecblock 0x151f7c75 "__ctor_pending" "s" 0x000000000000000000000000000000000000000000000000000000000000000e
+    bytecblock 0x151f7c75 "__ctor_pending" "s"
     intc_1 // 0
     dup
     intc_2 // 4096
@@ -166,38 +166,20 @@ main_ternary_merge@31:
     pushint 8
     bzero
     dig 1
+    dup
+    cover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dupn 2
+    dup
     pushint 32
     +
     pushint 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    intc_2 // 4096
-    <
-    bz main_else_body@33
-    load 0
-    swap
-    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000e
-    replace3
-    store 0
-
-main_after_if_else@34:
-    load 0
-    store 0
-    bytec_0 // 0x151f7c75
-    dig 1
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_else_body@33:
     dup
     intc_2 // 4096
     /
@@ -206,10 +188,17 @@ main_else_body@33:
     uncover 2
     intc_2 // 4096
     %
-    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000e
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000e
     replace3
     stores
-    b main_after_if_else@34
+    load 0
+    store 0
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 main_ternary_false@30:
     intc_1 // 0

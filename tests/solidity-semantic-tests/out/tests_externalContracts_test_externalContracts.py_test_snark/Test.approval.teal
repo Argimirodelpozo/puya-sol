@@ -885,7 +885,6 @@ Pairing.pairing:
     proto 2 3
     intc_0 // 0
     dupn 4
-    pushbytes ""
     frame_dig -2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -923,11 +922,11 @@ Pairing.pairing:
     intc_0 // 0
 
 Pairing.pairing_while_top@1:
-    frame_dig 13
-    frame_dig 10
+    frame_dig 12
+    frame_dig 9
     <
     bz Pairing.pairing_after_while@3
-    frame_dig 12
+    frame_dig 11
     dup
     intc_0 // 0
     extract_uint16
@@ -938,27 +937,27 @@ Pairing.pairing_while_top@1:
     replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    frame_bury 12
-    frame_dig 13
+    frame_bury 11
+    frame_dig 12
     intc_2 // 1
     +
-    frame_bury 13
+    frame_bury 12
     b Pairing.pairing_while_top@1
 
 Pairing.pairing_after_while@3:
-    frame_dig 12
-    frame_bury 3
     frame_dig 11
+    frame_bury 3
+    frame_dig 10
     frame_bury 1
 
 Pairing.pairing_while_top@4:
     frame_dig 1
-    frame_dig 6
+    frame_dig 5
     b<
     bz Pairing.pairing_after_while@6
     frame_dig 1
     dup
-    frame_dig 7
+    frame_dig 6
     b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -972,7 +971,7 @@ Pairing.pairing_while_top@4:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    frame_dig 9
+    frame_dig 8
     dup
     cover 2
     dig 3
@@ -1177,13 +1176,13 @@ Pairing.pairing_after_while@6:
     itob
     dup
     frame_bury 4
-    frame_dig 8
+    frame_dig 7
     b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_dig 9
+    frame_dig 8
     swap
     concat
     dup
@@ -1193,14 +1192,14 @@ Pairing.pairing_after_while@6:
     extract_uint64
     bzero
     frame_bury 0
-    frame_dig 11
+    frame_dig 10
     frame_bury 2
 
 Pairing.pairing_while_top@7:
     frame_dig 2
-    frame_dig 8
+    frame_dig 7
     b<
-    bz Pairing.pairing_after_while@12
+    bz Pairing.pairing_after_while@9
     intc_2 // 1
     itob
     frame_dig 2
@@ -1221,10 +1220,10 @@ Pairing.pairing_while_top@7:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    frame_dig 9
+    frame_dig 8
     dup
     cover 2
-    uncover 3
+    dig 3
     concat
     dup
     len
@@ -1254,10 +1253,17 @@ Pairing.pairing_while_top@7:
     -
     extract_uint64
     dup
-    frame_bury 5
+    intc_1 // 32
+    +
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc 6 // 4096
+    /
     intc_1 // 32
     bzero
-    uncover 2
+    uncover 3
     concat
     dup
     len
@@ -1265,26 +1271,16 @@ Pairing.pairing_while_top@7:
     -
     intc_1 // 32
     extract3
-    swap
-    dup
-    intc_1 // 32
-    +
-    pushint 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dig 1
+    loads
+    uncover 3
     intc 6 // 4096
-    <
-    bz Pairing.pairing_else_body@10
-    load 0
-    frame_dig 5
+    %
     uncover 2
     replace3
-    store 0
-
-Pairing.pairing_after_if_else@11:
+    stores
     load 0
     store 0
-    frame_dig 2
     bytec 4 // 0x01
     b+
     dup
@@ -1294,22 +1290,7 @@ Pairing.pairing_after_if_else@11:
     frame_bury 2
     b Pairing.pairing_while_top@7
 
-Pairing.pairing_else_body@10:
-    frame_dig 5
-    dup
-    intc 6 // 4096
-    /
-    dup
-    loads
-    uncover 2
-    intc 6 // 4096
-    %
-    uncover 3
-    replace3
-    stores
-    b Pairing.pairing_after_if_else@11
-
-Pairing.pairing_after_while@12:
+Pairing.pairing_after_while@9:
     pushint 24
     bzero
     frame_dig 0

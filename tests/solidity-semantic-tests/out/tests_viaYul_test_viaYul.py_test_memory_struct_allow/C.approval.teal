@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/memory_struct_allow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 4096 1 8 0 20480
+    intcblock 4096 1 8 32 20480
     bytecblock 0x000000000000000000000000000000000000000000000000000000000000002a
-    intc_3 // 0
-    dup
     intc_0 // 4096
     bzero
     dup
@@ -55,64 +53,61 @@ main_ternary_merge@9:
     store 0
     load 0
     extract 64 32
-    dup
-    bury 3
     intc_2 // 8
     bzero
     dup
-    bury 3
-    swap
+    dig 2
     concat
     dup
     len
     intc_2 // 8
     -
     extract_uint64
-    dupn 2
-    pushint 32
+    dup
+    intc_3 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
     intc_0 // 4096
-    <
-    bz main_else_body@11
-    load 0
-    swap
+    /
+    dup
+    loads
+    uncover 2
+    intc_0 // 4096
+    %
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace3
-    store 0
-
-main_after_if_else@12:
-    dig 1
+    stores
+    swap
     pushbytes 0x20
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 1
-    swap
     concat
     dup
     len
     intc_2 // 8
     -
     extract_uint64
-    dupn 2
-    pushint 32
+    dup
+    intc_3 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
     intc_0 // 4096
-    <
-    bz main_else_body@14
-    load 0
-    swap
+    /
+    dup
+    loads
+    uncover 2
+    intc_0 // 4096
+    %
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000002a
     replace3
-    store 0
-
-main_after_if_else@15:
+    stores
     load 0
     store 0
     load 0
@@ -132,34 +127,6 @@ main_after_if_else@15:
     intc_1 // 1
     return
 
-main_else_body@14:
-    dup
-    intc_0 // 4096
-    /
-    dup
-    loads
-    uncover 2
-    intc_0 // 4096
-    %
-    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000002a
-    replace3
-    stores
-    b main_after_if_else@15
-
-main_else_body@11:
-    dup
-    intc_0 // 4096
-    /
-    dup
-    loads
-    uncover 2
-    intc_0 // 4096
-    %
-    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000002a
-    replace3
-    stores
-    b main_after_if_else@12
-
 main_ternary_false@8:
-    intc_3 // 0
+    pushint 0
     b main_ternary_merge@9

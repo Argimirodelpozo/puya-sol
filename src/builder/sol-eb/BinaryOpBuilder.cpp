@@ -3,6 +3,7 @@
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "Logger.h"
 
 namespace puyasol::builder::eb
 {
@@ -145,146 +146,66 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		return awst::makeNumericCompare(std::move(_left), cmpOp, std::move(_right), _loc);
 	}
 
-	// Boolean operations
-	case Token::And:
-	{
-		auto e = awst::makeBoolBinOp(std::move(_left), awst::BinaryBooleanOperator::And, std::move(_right), _loc);
-		return e;
-	}
-	case Token::Or:
-	{
-		auto e = awst::makeBoolBinOp(std::move(_left), awst::BinaryBooleanOperator::Or, std::move(_right), _loc);
-		return e;
-	}
+	// NB no And/Or here: SolBinaryOperation::trySolShortCircuit handles every
+	// `&&`/`||` (it is total for those tokens — single nullptr return is the
+	// not-And/Or early-out), so they can never reach this fallback.
 
 	default:
 		break;
 	}
 
-	// Bytes bitwise (b|, b&, b^) for bytes[N] types.
-	{
-		bool leftIsBytesKind = _left->wtype && _left->wtype->kind() == awst::WTypeKind::Bytes;
-		bool rightIsBytesKind = _right->wtype && _right->wtype->kind() == awst::WTypeKind::Bytes;
-		bool isBitwiseOp = (_op == Token::BitOr || _op == Token::AssignBitOr
-			|| _op == Token::BitXor || _op == Token::AssignBitXor
-			|| _op == Token::BitAnd || _op == Token::AssignBitAnd);
-
-		if ((leftIsBytesKind || rightIsBytesKind) && isBitwiseOp)
-		{
-			awst::BytesBinaryOperator bytesOp = awst::BytesBinaryOperator::BitOr;
-			switch (_op)
-			{
-			case Token::BitOr: case Token::AssignBitOr: bytesOp = awst::BytesBinaryOperator::BitOr; break;
-			case Token::BitXor: case Token::AssignBitXor: bytesOp = awst::BytesBinaryOperator::BitXor; break;
-			case Token::BitAnd: case Token::AssignBitAnd: bytesOp = awst::BytesBinaryOperator::BitAnd; break;
-			default: break;
-			}
-			return awst::makeBytesBinOp(std::move(_left), bytesOp, std::move(_right), _loc);
-		}
-	}
-
-	if (isBigUInt(_resultType) || isBigUInt(_left->wtype) || isBigUInt(_right->wtype))
+	// Literal-base `**` (e.g. `2 ** x`): the rational-typed base has no eb
+	// instance builder, so the exp lands here. Every other biguint arithmetic
+	// shape is owned by the eb builders now.
+	if (_op == Token::Exp
+		&& (isBigUInt(_resultType) || isBigUInt(_left->wtype) || isBigUInt(_right->wtype)))
 	{
 		promoteToBigUInt(_left);
-
-		// biguint has no shift opcode — the shared buildBigUIntShift emits
-		// x*(2^n) / x/(2^n) WITH the EVM >=256 saturation (result 0; the old
-		// hand-rolled copy here underflowed 255-n and panicked) and the
-		// mod-2^256 left-shift wrap. shiftAmountToUint64 clamps a biguint
-		// amount first, so a huge (>=2^64) amount saturates instead of
-		// silently shifting by amount mod 2^64. NB this path is UNSIGNED
-		// (SAR maps to zero-fill FloorDiv) — signed SAR lives in
-		// SolIntegerBuilder via buildBigUIntArithmeticShiftRight.
-		if (_op == Token::SHL || _op == Token::AssignShl
-			|| _op == Token::SHR || _op == Token::AssignShr
-			|| _op == Token::SAR || _op == Token::AssignSar)
-			return buildBigUIntShift(
-				std::move(_left),
-				shiftAmountToUint64(std::move(_right), _loc),
-				_op == Token::SHL || _op == Token::AssignShl,
-				_loc);
-
 		promoteToBigUInt(_right);
-
-		if (_op == Token::Sub || _op == Token::AssignSub)
-			// eval-once both operands so a checked `a - f()` doesn't double-eval f().
-			return buildWrappingSubtract(
-				_ctx, _scope.isUnchecked(), std::move(_left), std::move(_right), _loc);
-
-
 		// biguint ** : no AVM opcode; emit square-and-multiply loop (shared helper).
-		if (_op == Token::Exp)
-		{
-			return buildBigUIntExp(
-				_ctx, _scope.isUnchecked(), std::move(_left), std::move(_right), _loc);
-		}
-
-		awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;
-		switch (_op)
-		{
-		case Token::Add: case Token::AssignAdd: bigOp = awst::BigUIntBinaryOperator::Add; break;
-		case Token::Mul: case Token::AssignMul: bigOp = awst::BigUIntBinaryOperator::Mult; break;
-		case Token::Div: case Token::AssignDiv: bigOp = awst::BigUIntBinaryOperator::FloorDiv; break;
-		case Token::Mod: case Token::AssignMod: bigOp = awst::BigUIntBinaryOperator::Mod; break;
-		case Token::BitOr: case Token::AssignBitOr: bigOp = awst::BigUIntBinaryOperator::BitOr; break;
-		case Token::BitXor: case Token::AssignBitXor: bigOp = awst::BigUIntBinaryOperator::BitXor; break;
-		case Token::BitAnd: case Token::AssignBitAnd: bigOp = awst::BigUIntBinaryOperator::BitAnd; break;
-		default: break;
-		}
-		auto e = awst::makeBigUIntBinOp(std::move(_left), bigOp, std::move(_right), _loc);
-
-		// Unchecked: wrap mod 2^256 (AVM biguint is arbitrary-precision; >256-bit breaks EVM semantics).
-		if (_scope.isUnchecked()
-			&& (_op == Token::Add || _op == Token::AssignAdd
-				|| _op == Token::Sub || _op == Token::AssignSub
-				|| _op == Token::Mul || _op == Token::AssignMul))
-		{
-			auto pow256 = makePow256(_loc);
-
-			auto mod = awst::makeBigUIntBinOp(e, awst::BigUIntBinaryOperator::Mod, std::move(pow256), _loc);
-			return mod;
-		}
-
-		return e;
+		return buildBigUIntExp(
+			_ctx, _scope.isUnchecked(), std::move(_left), std::move(_right), _loc);
 	}
-	else
+
+	// uint64 bitwise: live via the bytes1-element compound path (`b[i] |= x` —
+	// the bytes operand was btoi'd to uint64 by the coercion preamble above).
+	switch (_op)
+	{
+	case Token::BitOr: case Token::AssignBitOr:
+	case Token::BitXor: case Token::AssignBitXor:
+	case Token::BitAnd: case Token::AssignBitAnd:
 	{
 		auto e = std::make_shared<awst::UInt64BinaryOperation>();
 		e->sourceLocation = _loc;
 		e->wtype = awst::WType::uint64Type();
 		e->left = std::move(_left);
 		e->right = std::move(_right);
-
-		switch (_op)
-		{
-		case Token::Add: case Token::AssignAdd: e->op = awst::UInt64BinaryOperator::Add; break;
-		case Token::Sub: case Token::AssignSub: e->op = awst::UInt64BinaryOperator::Sub; break;
-		case Token::Mul: case Token::AssignMul: e->op = awst::UInt64BinaryOperator::Mult; break;
-		case Token::Div: case Token::AssignDiv: e->op = awst::UInt64BinaryOperator::FloorDiv; break;
-		case Token::Mod: case Token::AssignMod: e->op = awst::UInt64BinaryOperator::Mod; break;
-		case Token::Exp:
-		{
-			// AVM `exp` asserts on 0^0; Solidity defines 0**0=1. Guard: y==0 ? 1 : x**y.
-			e->op = awst::UInt64BinaryOperator::Pow;
-
-			auto zero = awst::makeZero(_loc);
-
-			auto cond = awst::makeNumericCompare(e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
-
-			auto one = awst::makeOne(_loc);
-
-			return awst::makeConditional(
-				std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);
-		}
-		case Token::SHL: case Token::AssignShl: e->op = awst::UInt64BinaryOperator::LShift; break;
-		case Token::SHR: case Token::AssignShr: case Token::SAR: case Token::AssignSar: e->op = awst::UInt64BinaryOperator::RShift; break;
-		case Token::BitOr: case Token::AssignBitOr: e->op = awst::UInt64BinaryOperator::BitOr; break;
-		case Token::BitXor: case Token::AssignBitXor: e->op = awst::UInt64BinaryOperator::BitXor; break;
-		case Token::BitAnd: case Token::AssignBitAnd: e->op = awst::UInt64BinaryOperator::BitAnd; break;
-		default: e->op = awst::UInt64BinaryOperator::Add; break;
-		}
+		e->op = (_op == Token::BitOr || _op == Token::AssignBitOr)
+				? awst::UInt64BinaryOperator::BitOr
+			: (_op == Token::BitXor || _op == Token::AssignBitXor)
+				? awst::UInt64BinaryOperator::BitXor
+				: awst::UInt64BinaryOperator::BitAnd;
 		return e;
 	}
+	default:
+		break;
+	}
+
+	// RETIRED generic fallbacks (fable-review C3, corpus-audited 2026-07-03):
+	// arithmetic, shifts, exp-on-uint64, bytes-vs-bytes bitwise and &&/|| used
+	// to be lowered here with UNSIGNED/unchecked-blind semantics — every one
+	// of those shapes is owned by the eb builders (SolIntegerBuilder,
+	// SolFixedBytesBuilder) or trySolShortCircuit. A full-suite + generative-
+	// fuzz trace showed only Eq/Ne comparisons, literal-base biguint `**` and
+	// the bytes1-element bitwise compound reaching this fallback. Anything
+	// else arriving here means a dispatch gap — fail LOUD rather than lower
+	// with the wrong semantics (the old silent tail was exactly how signed
+	// compound ops once mis-lowered).
+	Logger::instance().error(
+		"internal: binary operator (token " + std::to_string(static_cast<int>(_op))
+			+ ") reached the retired generic fallback — an eb builder should own it",
+		_loc);
+	return _left;
 }
 
 } // namespace puyasol::builder::eb
