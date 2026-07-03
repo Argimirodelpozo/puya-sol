@@ -135,13 +135,27 @@ abstraction) by making effectfulness a queryable property instead of folklore.
 
 ---
 
-### 3. Derive EVM-canonical signatures from solc `externalSignature()` (proposed)
+### 3. Derive EVM-canonical signatures from solc `externalSignature()` (proposed — SCOPED 2026-07-02)
 
-The cross-contract selector-mismatch family (signed struct/array naming `7cc1dc7a7c`, uint512
-tuples `3c4dcf3bf4`) came from hand-building type-name strings in two conventions
-(`intSelectorName` vs `nestedArc4Name`). We call `externalSignature()` in only 5 places. Keep
-ARC4-specific naming ours, but derive the canonical Solidity type-name spine from solc instead
-of reconstructing it. Medium effort; kills a demonstrated bug family at the root.
+**Scoping answer to "can we do this without breaking the chosen encode schema": yes, because the
+schema has two regimes and only one of them may consume solc's string.**
+
+- **Regime A — "canonical Solidity name × sha512_256"** (custom errors, events, `.selector`,
+  interfaceId): the signature STRING already comes from solc's `externalSignature()` and only
+  the HASH is ours (MethodConstant/ARC-28) — the 5 existing call sites ARE this item's pattern,
+  already practiced. Remaining work: audit for stragglers that hand-build such strings.
+- **Regime B — "ARC4/backing-width names × sha512_256"** (method registration + cross-contract
+  and inner-call selector computation: `intSelectorName`/`nestedArc4Name`/`wtypeToABIName`):
+  these strings must match what puya's router registers (backing widths, e.g.
+  `packP(uint64,uint64)` for int64 params) — `externalSignature()`'s declared-width string
+  would BREAK routing outright and must never be used here. What solc can still supply is the
+  type-DECOMPOSITION skeleton (struct→tuple expansion, enum/UDVT/contract canonicalization)
+  under OUR leaf-name renderer; `7cc1dc7a7c` already canonicalized most paths onto
+  `nestedArc4Name`, so the residual value is modest.
+- **Migration protocol if/when regime B is consolidated:** equality-gated — compute the new
+  derivation alongside the old, hard-error on any mismatch, run the full suite (every arc56
+  method signature in the corpus is the oracle), then swap and delete. "Schema unbroken"
+  becomes a verified property, not a hope.
 
 ### 4. Consume solc's storage layout for the asm-visible surface (proposed)
 
