@@ -253,6 +253,16 @@ virtual dispatch. When the uros-IR-port / splitter workstream resumes, consuming
 of re-walking the AST removes a whole analysis; also useful for pruning dead helpers before
 size-capped chunking. Medium; belongs to that workstream, not standalone.
 
+**Scope boundary (asked & settled 2026-07-02): `SubroutineReachability` is NOT this item's
+target and should stay.** It is AWST-level output DCE — a 110-line transitive closure over the
+EMITTED SubroutineCallExpressions, i.e. ground truth after lowering. Builders synthesize calls
+with no source counterpart (ripemd160's shared body, funcptr dispatchers, asm user functions,
+inner-call shapes — 6+ files emit makeSubroutineCall), and lowering also eliminates source
+calls; solc's CallGraph sees neither direction. Swapping it in would prune unsoundly the moment
+a synthesized call targets an otherwise-source-unreachable root. Item 12 targets the
+SOURCE-level re-walks only (splitter force-inline closures, pre-chunk reachability) where the
+analysis input genuinely is the Solidity AST.
+
 ### Not worth it (reviewed, rejected)
 
 solc's CFG analyses (uninitialized-return checking — solc already enforces), `GasMeter`
