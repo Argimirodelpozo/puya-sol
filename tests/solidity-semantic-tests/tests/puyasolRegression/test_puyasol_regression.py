@@ -1666,3 +1666,38 @@ def test_const_var_fold(harness):
     assert w(as_int(harness.call(app, "arith()").abi_return)) == 88
     assert w(as_int(harness.call(app, "wide()").abi_return)) == 12345678901234567890
     assert as_int(harness.call(app, "big()").abi_return) == (1 << 199) + 1
+
+
+def test_this_contract_value(harness):
+    """puyasolRegression/contracts/this_contract_value.sol — NOT an o.g. semantic test.
+
+    Bare `this` (contract-typed) must carry the FAKE app-id address form like every other
+    contract-typed value (bzero(24)++itob(appId)) so an opaque consumer can recover the app id;
+    it used to lower to the REAL application address, making stored/forwarded `this` call-backs
+    target btoi(hash garbage). The deferred-callback (registry) pattern proves the fix:
+    Cer registers `this` inside Cee, a separate transaction makes Cee call back into Cer.
+    `address(this)` must still be the REAL application address.
+    """
+    import algosdk
+
+    arts = harness.compile("puyasolRegression/contracts/this_contract_value.sol")
+    cee = harness.deploy(arts, contract_name="Cee")
+    cer = harness.deploy(arts, contract_name="Cer")
+
+    cee_fake = algosdk.encoding.encode_address(bytes(24) + cee.app_id.to_bytes(8, "big"))
+    harness.call(cer, "enrollAt(address)", cee_fake)
+
+    # deferred call-back: Cee -> Cer in a fresh transaction (no re-entry)
+    assert as_int(harness.call(cee, "pokeStored(uint64)", 41).abi_return) == 42
+    assert as_int(harness.call(cer, "last()").abi_return) == 42
+
+    # the stored target is the FAKE form carrying Cer's app id
+    stored = harness.call(cee, "target()").abi_return
+    raw = algosdk.encoding.decode_address(stored) if isinstance(stored, str) else bytes(stored)
+    assert int.from_bytes(raw[24:], "big") == cer.app_id
+    assert raw[:24] == bytes(24)
+
+    # address(this) stays the REAL application address
+    real = harness.call(cer, "realAddr()").abi_return
+    real_s = real if isinstance(real, str) else algosdk.encoding.encode_address(bytes(real))
+    assert real_s == cer.app_addr

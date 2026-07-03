@@ -28,6 +28,18 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 
 	auto* targetType = m_ctx.typeMapper.map(m_call.annotation().type);
 
+	// `address(this)` / `payable(this)` must yield the REAL application
+	// address: bare `this` lowers to the contract-value FAKE form
+	// (bzero(24) ++ itob(appId), see SolIdentifier), which is an app-id
+	// carrier, not a payable/balance-bearing address.
+	if (dynamic_cast<solidity::frontend::AddressType const*>(m_call.annotation().type)
+		&& !m_call.arguments().empty())
+		if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(
+				m_call.arguments()[0].get());
+			ident && ident->name() == "this")
+			return awst::makeGlobal(
+				std::string("CurrentApplicationAddress"), awst::WType::accountType(), m_loc);
+
 	// Enum range check: EnumType(x) must assert x < numMembers
 	if (dynamic_cast<solidity::frontend::EnumType const*>(m_call.annotation().type))
 		return handleEnumConversion();

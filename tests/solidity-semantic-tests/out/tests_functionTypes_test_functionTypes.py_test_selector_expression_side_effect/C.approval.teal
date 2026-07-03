@@ -104,7 +104,11 @@ h_ternary_merge@3:
     bytec_0 // "x"
     swap
     app_global_put
-    global CurrentApplicationAddress
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
     retsub
 
 h_ternary_false@2:

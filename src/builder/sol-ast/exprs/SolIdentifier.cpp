@@ -26,11 +26,22 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 {
 	std::string name = m_ident.name();
 
-	// 'this' → global CurrentApplicationAddress
+	// Bare `this` is CONTRACT-typed (solc), and contract-typed values carry the
+	// FAKE app-id address form `bzero(24) ++ itob(appId)` everywhere else in
+	// this codebase (see TypeCoercion's application→account cast) — external
+	// calls recover the app id from the last 8 bytes. `this` used to lower to
+	// the REAL app address, so a contract-typed `this` flowing into an opaque
+	// context (e.g. `I i = this; i.f()` through a library param) made the
+	// inner-txn target `btoi(hash garbage)`. The value-consumers that need the
+	// REAL address (`address(this)`, `.balance`, external self-calls) all
+	// special-case the `this` identifier upstream and never see this lowering.
 	if (name == "this")
 	{
-		auto call = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::accountType(), m_loc);
-		return call;
+		auto appId = awst::makeGlobal(
+			std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
+		auto idBytes = awst::makeItob(std::move(appId), m_loc);
+		auto fake = awst::makeLeftPad(std::move(idBytes), 24, m_loc);
+		return awst::makeReinterpretCast(std::move(fake), awst::WType::accountType(), m_loc);
 	}
 
 	auto const* decl = m_ident.annotation().referencedDeclaration;
