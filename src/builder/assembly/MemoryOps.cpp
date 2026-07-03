@@ -65,10 +65,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 	int slot = static_cast<int>(_offset / SLOT_SIZE);
 	uint64_t sub = _offset % SLOT_SIZE;
 
-	if (slot == 0)
-		return awst::makeExtract3(memoryVar(_loc), awst::makeIntegerConstant(_offset, _loc),
-			awst::makeIntegerConstant("32", _loc), _loc);
-
+	// No slot-0 special case: slot 0 is plain scratch (no local cache), and
+	// the old fast path also SKIPPED the straddle stitch for offsets in
+	// [SLOT_SIZE-31, SLOT_SIZE) — the general paths below cover both.
 	if (slot > MEMORY_SLOT_LAST)
 		Logger::instance().error("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
@@ -92,14 +91,8 @@ void AssemblyBuilder::writeMemWordConst(
 	int slot = static_cast<int>(_offset / SLOT_SIZE);
 	uint64_t sub = _offset % SLOT_SIZE;
 
-	if (slot == 0)
-	{
-		auto rep = awst::makeReplace3(memoryVar(_loc), awst::makeIntegerConstant(_offset, _loc),
-			std::move(_value32), _loc);
-		assignMemoryVar(std::move(rep), _loc, _out);
-		return;
-	}
-
+	// No slot-0 special case (see readMemWordConst) — the general in-slot and
+	// straddle paths below cover slot 0 as plain scratch.
 	if (slot > MEMORY_SLOT_LAST)
 		Logger::instance().error("EVM memory write beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
@@ -136,74 +129,36 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto off = offsetToUint64(std::move(_offset), _loc);
-	// SE: offset appears in bounds-assert + slot-0 fast + slot/sub slow (~5 refs);
-	// a side-effecting mload(q) would otherwise re-run each time.
+	// SE: offset appears in the bounds-assert + slot/sub (~3 refs); a
+	// side-effecting mload(q) would otherwise re-run each time.
 	off = awst::makeSingleEvaluation(
 		std::move(off), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
 	m_pendingStatements.push_back(memBoundsAssert(off, _loc));
-	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
-
-	// off < SLOT_SIZE → slot-0 local; else extract3(loads(off/SLOT_SIZE), off%SLOT_SIZE, 32).
-	auto cmp = awst::makeNumericCompare(off, awst::NumericComparison::Lt, ss(), _loc);
-	auto fast = awst::makeExtract3(memoryVar(_loc), off, awst::makeIntegerConstant("32", _loc), _loc);
-
-	auto slot = awst::makeUInt64BinOp(off, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
-	auto sub = awst::makeUInt64BinOp(off, awst::UInt64BinaryOperator::Mod, ss(), _loc);
-	auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
-	loadsCall->stackArgs.push_back(std::move(slot));
-	auto slow = awst::makeExtract3(std::move(loadsCall), std::move(sub), awst::makeIntegerConstant("32", _loc), _loc);
-
-	return awst::makeConditional(std::move(cmp), std::move(fast), std::move(slow),
-		awst::WType::bytesType(), _loc);
+	// ONE path for every slot. Slot 0 is plain scratch since the __evm_memory
+	// cache removal, so the old `off < SLOT_SIZE ? slot-0-fast : slow`
+	// conditional selected between two IDENTICAL computations — paying an SE
+	// fan-out, a compare, a branch and a duplicated extract on every dynamic
+	// mload. Dyn is now Direct plus the bounds assert + eval-once wrapper.
+	return readMemWordDirect(std::move(off), _loc);
 }
 
 void AssemblyBuilder::writeMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
+	// ONE path for every slot (see readMemWordDyn): the old slot-0-fast /
+	// slow if/else duplicated the whole write for two identical outcomes.
+	// writeMemWordDirect materialises slot+value and bounds-asserts; only the
+	// offset needs pinning here so its side effects run once across the
+	// assert + slot + sub references.
 	static int s_ctr = 0;
-	int id = s_ctr++;
-	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
-
-	// Materialise offset + value once; bounds-assert reuses the offset temp too.
-	std::string offN = "__mem_dyn_off_" + std::to_string(id);
-	std::string valN = "__mem_dyn_val_" + std::to_string(id);
+	std::string offN = "__mem_dyn_off_" + std::to_string(s_ctr++);
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 		offsetToUint64(std::move(_offset), _loc), _loc));
-	_out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(valN, awst::WType::bytesType(), _loc),
-		std::move(_value32), _loc));
-	auto offR = [&]() { return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc); };
-	auto valR = [&]() { return awst::makeVarExpression(valN, awst::WType::bytesType(), _loc); };
-	_out.push_back(memBoundsAssert(offR(), _loc));
-
-	// Fast: slot 0 local; slow: stores(slot, replace3(loads(slot), sub, val)).
-	auto fastBlock = awst::makeBlock(_loc);
-	{
-		auto rep = awst::makeReplace3(memoryVar(_loc), offR(), valR(), _loc);
-		assignMemoryVar(std::move(rep), _loc, fastBlock->body);
-	}
-
-	auto slowBlock = awst::makeBlock(_loc);
-	{
-		std::string slotN = "__mem_dyn_slot_" + std::to_string(id);
-		slowBlock->body.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(slotN, awst::WType::uint64Type(), _loc),
-			awst::makeUInt64BinOp(offR(), awst::UInt64BinaryOperator::FloorDiv, ss(), _loc), _loc));
-		auto slotR = [&]() { return awst::makeVarExpression(slotN, awst::WType::uint64Type(), _loc); };
-		auto sub = awst::makeUInt64BinOp(offR(), awst::UInt64BinaryOperator::Mod, ss(), _loc);
-		auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
-		loadsCall->stackArgs.push_back(slotR());
-		auto rep = awst::makeReplace3(std::move(loadsCall), std::move(sub), valR(), _loc);
-		auto storesCall = awst::makeIntrinsicCall("stores", awst::WType::voidType(), _loc);
-		storesCall->stackArgs.push_back(slotR());
-		storesCall->stackArgs.push_back(std::move(rep));
-		slowBlock->body.push_back(awst::makeExpressionStatement(std::move(storesCall), _loc));
-	}
-
-	auto cmp = awst::makeNumericCompare(offR(), awst::NumericComparison::Lt, ss(), _loc);
-	_out.push_back(awst::makeIfElse(std::move(cmp), std::move(fastBlock), std::move(slowBlock), _loc));
+	writeMemWordDirect(
+		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
+		std::move(_value32), _loc, _out);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
