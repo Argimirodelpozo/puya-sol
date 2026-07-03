@@ -166,8 +166,16 @@ half of that problem; the full-width-only model question remains separate.
 
 ### 5. Retire twin paths; Yul consumption considered-and-rejected (proposed)
 
-Kill `ModifierBodyInliner` and standardize on the (viaIR-style) chain builder unconditionally —
-it was immune to both 2026-06 inliner bugs. Audit for remaining legacy/viaIR forks. The maximal
+~~Kill `ModifierBodyInliner` and standardize on the chain builder unconditionally~~ **PREMISE
+DISPROVEN by audit (2026-07-03): NOT a clean deletion.** `m_viaIR=false` by default, so
+`inlineModifiers` (ModifierBodyInliner) is the DEFAULT path every modifier-using contract
+compiles through; `buildModifierChain` is the opt-in `--via-yul-behavior` MINORITY path and
+covers only viaIR *method* modifiers (one call site). `inlineModifiers` is ALSO the sole path
+for constructor modifiers (both base + derived, ApprovalProgramBuilder) AND library/free-function
+modifiers — even under viaIR. So retiring it means making the chain builder the default AND
+extending it to constructors AND libraries: a codegen change for nearly every contract, high
+regression surface, multi-session — NOT a LOC-negative quick win. Deferred; the two June inliner
+bugs are already fixed, so there's no urgency. Audit for remaining legacy/viaIR forks. The maximal
 version — consuming solc's Yul IR wholesale — is explicitly rejected for the main pipeline:
 Yul arrives with semantics pre-lowered (attractive) but is irreducibly EVM-shaped (256-bit
 words/linear memory/slot storage) — adopting it forfeits uint64-native math, box storage and
