@@ -193,6 +193,17 @@ reverted `.slot` hard-error attempt: validate what was *emitted*, not what might
 
 ### 7. One effect-sequencing abstraction (proposed; builds on item 2)
 
+> **STATUS: v1 LANDED (first slice).** OperandPlan = two primitives on ContractContext (it owns
+> prePendingStatements): `buildScopedOperand(build, capturedOut)` runs a build callback and MOVES
+> any pre-statements it pushed out of the flat list into capturedOut (so the caller gates them
+> behind the operand's condition instead of flushing unconditionally — THE C1 invariant), and
+> `makeScopedResultBlock(preStmts, target, value)` wraps captured stmts + a result-assign into the
+> block both sites need. Retrofitted the ternary (SolConditional, 3 hand-rolled captures) and
+> short-circuit (trySolShortCircuit, 1) — the two paid-for C1 sites (cd9d91ccfa, 5a1f5810ad).
+> Behavior-preserving (AWST byte-identical modulo source-location). NEXT slices: the
+> materialize-once half (SE/EvalOnce sites gated by isEffectFree, where item 2's broader win
+> lands) + the binary-op/shift operand ordering.
+
 An `OperandPlan` / RAII `PrePendingScope` owning left-to-right order, exactly-once
 materialization (gated by item 2's `isEffectFree`), and branch-scoping of pre-statements.
 Retrofit binary-op/ternary/short-circuit/shift builders. Eliminates C1 as a class.

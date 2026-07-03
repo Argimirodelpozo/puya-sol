@@ -132,6 +132,58 @@ public:
 		prePendingStatements.push_back(std::move(stmt));
 	}
 
+	// ── OperandPlan: scoped effect sequencing (fable-review item 7) ──
+	// Pre-statements (overflow/zero asserts, `**` loops, box materializations,
+	// inner-txn side effects) are normally pushed to the flat prePendingStatements
+	// list and flushed UNCONDITIONALLY before the current statement. That is wrong
+	// for an operand that only executes CONDITIONALLY — a ternary branch, a
+	// short-circuit RHS — where its pre-statements must be gated behind the same
+	// condition. Every such site used to hand-roll a snapshot/extract/erase of the
+	// list (the C1 bug class: short-circuit RHS hoist 5a1f5810ad, ternary operand
+	// SE cd9d91ccfa). These two primitives own that invariant in one place.
+
+	/// Build an operand via `_build` (returns its expression, may push
+	/// pre-statements), then MOVE any pre-statements it pushed out of
+	/// prePendingStatements into `_capturedOut`. The caller gates those behind the
+	/// operand's execution condition instead of letting them run unconditionally.
+	/// `_capturedOut` is left empty when the operand pushed nothing (the common,
+	/// effect-free case — the caller can then skip all gating).
+	template <class BuildFn>
+	auto buildScopedOperand(
+		BuildFn&& _build,
+		std::vector<std::shared_ptr<awst::Statement>>& _capturedOut)
+		-> decltype(_build())
+	{
+		auto before = prePendingStatements.size();
+		auto value = _build();
+		if (prePendingStatements.size() > before)
+		{
+			_capturedOut.assign(
+				std::make_move_iterator(prePendingStatements.begin() + before),
+				std::make_move_iterator(prePendingStatements.end()));
+			prePendingStatements.erase(
+				prePendingStatements.begin() + before, prePendingStatements.end());
+		}
+		return value;
+	}
+
+	/// A block that runs `_preStmts` (the operand's captured pre-statements) then
+	/// assigns `_value` to `_resultTarget` — the shape both the ternary branches
+	/// and the short-circuit RHS wrap their gated operand in.
+	static std::shared_ptr<awst::Block> makeScopedResultBlock(
+		std::vector<std::shared_ptr<awst::Statement>> _preStmts,
+		std::shared_ptr<awst::Expression> _resultTarget,
+		std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc)
+	{
+		auto block = awst::makeBlock(_loc);
+		for (auto& s: _preStmts)
+			block->body.push_back(std::move(s));
+		block->body.push_back(
+			awst::makeAssignmentStatement(std::move(_resultTarget), std::move(_value), _loc));
+		return block;
+	}
+
 	// ── Per-translation scope state (owned) ──
 
 	/// Innermost active scope; null before the first pushScopeRaii.

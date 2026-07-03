@@ -32,39 +32,18 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		m_ctx.prePendingStatements.push_back(std::move(stmt));
 	}
 
-	// Snapshot prePending size before each branch to detect branch-local side
-	// effects (e.g. `**` square-and-multiply loop, `new C()` inner txns,
-	// `arr.push() = x`). Branch side effects must not escape unconditionally;
-	// we gate them in if/else blocks below.
-	auto preBeforeTrue = m_ctx.prePendingStatements.size();
-	e->trueExpr = buildExpr(m_conditional.trueExpression());
+	// Each branch only executes conditionally, so its pre-statements (a `**`
+	// square-and-multiply loop, `new C()` inner txns, `arr.push()=x`, checked-op
+	// asserts) must be gated behind the condition, not flushed unconditionally.
+	// buildScopedOperand captures them out of the flat list (OperandPlan,
+	// fable-review item 7); gated into if/else blocks below.
 	std::vector<std::shared_ptr<awst::Statement>> trueSideEffects;
-	if (m_ctx.prePendingStatements.size() > preBeforeTrue)
-	{
-		trueSideEffects.assign(
-			std::make_move_iterator(m_ctx.prePendingStatements.begin() + preBeforeTrue),
-			std::make_move_iterator(m_ctx.prePendingStatements.end())
-		);
-		m_ctx.prePendingStatements.erase(
-			m_ctx.prePendingStatements.begin() + preBeforeTrue,
-			m_ctx.prePendingStatements.end()
-		);
-	}
+	e->trueExpr = m_ctx.buildScopedOperand(
+		[&] { return buildExpr(m_conditional.trueExpression()); }, trueSideEffects);
 
-	auto preBeforeFalse = m_ctx.prePendingStatements.size();
-	e->falseExpr = buildExpr(m_conditional.falseExpression());
 	std::vector<std::shared_ptr<awst::Statement>> falseSideEffects;
-	if (m_ctx.prePendingStatements.size() > preBeforeFalse)
-	{
-		falseSideEffects.assign(
-			std::make_move_iterator(m_ctx.prePendingStatements.begin() + preBeforeFalse),
-			std::make_move_iterator(m_ctx.prePendingStatements.end())
-		);
-		m_ctx.prePendingStatements.erase(
-			m_ctx.prePendingStatements.begin() + preBeforeFalse,
-			m_ctx.prePendingStatements.end()
-		);
-	}
+	e->falseExpr = m_ctx.buildScopedOperand(
+		[&] { return buildExpr(m_conditional.falseExpression()); }, falseSideEffects);
 
 	e->wtype = m_ctx.typeMapper.map(m_conditional.annotation().type);
 
@@ -98,29 +77,17 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		static int s_counter = 0;
 		std::string tempName = "__cond_" + std::to_string(s_counter++);
 		auto resultType = e->wtype ? e->wtype : awst::WType::biguintType();
+		auto tempVar = [&] { return awst::makeVarExpression(tempName, resultType, m_loc); };
 
-		auto trueBlock = awst::makeBlock(m_loc);
-		for (auto& s: trueSideEffects)
-			trueBlock->body.push_back(std::move(s));
-		{
-			auto target = awst::makeVarExpression(tempName, resultType, m_loc);
-			trueBlock->body.push_back(
-				awst::makeAssignmentStatement(target, e->trueExpr, m_loc));
-		}
-
-		auto falseBlock = awst::makeBlock(m_loc);
-		for (auto& s: falseSideEffects)
-			falseBlock->body.push_back(std::move(s));
-		{
-			auto target = awst::makeVarExpression(tempName, resultType, m_loc);
-			falseBlock->body.push_back(
-				awst::makeAssignmentStatement(target, e->falseExpr, m_loc));
-		}
+		auto trueBlock = eb::ContractContext::makeScopedResultBlock(
+			std::move(trueSideEffects), tempVar(), e->trueExpr, m_loc);
+		auto falseBlock = eb::ContractContext::makeScopedResultBlock(
+			std::move(falseSideEffects), tempVar(), e->falseExpr, m_loc);
 
 		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
 			e->condition, std::move(trueBlock), std::move(falseBlock), m_loc));
 
-		return awst::makeVarExpression(tempName, resultType, m_loc);
+		return tempVar();
 	}
 
 	return e;
