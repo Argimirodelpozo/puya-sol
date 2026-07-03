@@ -200,9 +200,17 @@ reverted `.slot` hard-error attempt: validate what was *emitted*, not what might
 > `makeScopedResultBlock(preStmts, target, value)` wraps captured stmts + a result-assign into the
 > block both sites need. Retrofitted the ternary (SolConditional, 3 hand-rolled captures) and
 > short-circuit (trySolShortCircuit, 1) — the two paid-for C1 sites (cd9d91ccfa, 5a1f5810ad).
-> Behavior-preserving (AWST byte-identical modulo source-location). NEXT slices: the
-> materialize-once half (SE/EvalOnce sites gated by isEffectFree, where item 2's broader win
-> lands) + the binary-op/shift operand ordering.
+> Behavior-preserving (AWST byte-identical modulo source-location).
+>
+> **Slice 2 LANDED d10296365b (materialize-once half):** FINDING — the primitive already EXISTED
+> as `makeEvalOnce` (Node.h), which centralizes "skip trivially-duplicable leaf (var/constant/
+> already-SE), else SingleEvaluation". Documented it as OperandPlan's materialize-once primitive
+> and consolidated the 5 shift/amount raw `makeSingleEvaluation` sites (BigUIntMathHelpers x2,
+> BitwiseShiftOps x3) onto it — byte-identical for non-trivial operands, safe SE-skip on constant
+> amounts. isEffectFree gating (item 2) has limited reach at these AWST-level sites (no solc expr
+> in scope); makeEvalOnce's AWST-shape leaf check is the right tool there — confirms item 2's
+> "broad isPure win is narrower than the site count suggests". NEXT: migrate the remaining ~6 raw
+> SE sites onto makeEvalOnce + binary-op operand ordering.
 
 An `OperandPlan` / RAII `PrePendingScope` owning left-to-right order, exactly-once
 materialization (gated by item 2's `isEffectFree`), and branch-scoping of pre-statements.
