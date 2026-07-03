@@ -516,6 +516,156 @@ def _build_atc(
     return atc
 
 
+# ── EVM ABI decoder for the isoltest raw-words calling convention ──────────
+# Upstream isoltest fixtures spell a call as the raw EVM calldata tail — N
+# 32-byte words — e.g. `f(uint256,bytes,uint256): 7, 0x60, 8, 2, 0`. The EVM
+# receives those bytes and ABI-DECODES them into typed params; our AVM contract
+# likewise receives the decoded params (which puya re-encodes canonically). So
+# to call the AVM faithfully we must EVM-decode the words into Python values and
+# hand THOSE to algosdk (which ARC4-encodes them for the app). algosdk's own
+# decoder is ARC4, not EVM ABI (dynamic layouts differ), so we decode here.
+
+def _parse_abi_type(s: str):
+    """Parse an ABI type string into a small tree. Tuples: (uint256,bytes).
+    algosdk normalizes Solidity `bytes`→`byte[]` and `bytesN`→`byte[N]`."""
+    s = s.strip()
+    if s == "byte[]":
+        return ("bytes",)
+    if s in ("byte", "byte[1]"):
+        return ("bytesN", 1)
+    if s.startswith("byte[") and s.endswith("]") and s[5:-1].isdigit():
+        return ("bytesN", int(s[5:-1]))
+    if s.endswith("]"):
+        i = s.rindex("[")
+        inner, dim = s[:i], s[i + 1 : -1]
+        elem = _parse_abi_type(inner)
+        return ("sarray", elem, int(dim)) if dim else ("darray", elem)
+    if s.startswith("(") and s.endswith(")"):
+        return ("tuple", _split_tuple(s[1:-1]))
+    if s in ("bytes", "byte[]"):
+        return ("bytes",)
+    if s == "string":
+        return ("string",)
+    if s == "bool":
+        return ("bool",)
+    if s == "address":
+        return ("uint", 160)
+    if s.startswith("uint") or s.startswith("int"):
+        return ("uint" if s.startswith("uint") else "sint", int(s[s.index("t") + 1 :] or 256))
+    if s.startswith("bytes"):
+        return ("bytesN", int(s[5:]))
+    raise ValueError(f"unhandled ABI type {s!r}")
+
+
+def _split_tuple(s: str) -> list:
+    """Split a tuple body on top-level commas (respecting nested parens)."""
+    out, depth, cur = [], 0, ""
+    for ch in s:
+        if ch == "," and depth == 0:
+            out.append(_parse_abi_type(cur)); cur = ""; continue
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth -= 1
+        cur += ch
+    if cur.strip():
+        out.append(_parse_abi_type(cur))
+    return out
+
+
+def _evm_is_dynamic(t) -> bool:
+    k = t[0]
+    if k in ("bytes", "string", "darray"):
+        return True
+    if k == "sarray":
+        return _evm_is_dynamic(t[1])
+    if k == "tuple":
+        return any(_evm_is_dynamic(c) for c in t[1])
+    return False
+
+
+def _evm_head_words(t) -> int:
+    """32-byte words this type occupies in the head (1 pointer if dynamic)."""
+    if _evm_is_dynamic(t):
+        return 1
+    if t[0] == "sarray":
+        return t[2] * _evm_head_words(t[1])
+    if t[0] == "tuple":
+        return sum(_evm_head_words(c) for c in t[1])
+    return 1
+
+
+def _evm_decode(t, blob: bytes, base: int):
+    """Decode a value of type t whose head starts at blob[base:]."""
+    k = t[0]
+    if k in ("uint", "sint"):
+        v = int.from_bytes(blob[base : base + 32], "big")
+        if k == "sint" and v >= 1 << (t[1] - 1):
+            v -= 1 << t[1]
+        return v
+    if k == "bool":
+        return bool(int.from_bytes(blob[base : base + 32], "big"))
+    if k == "bytesN":
+        return list(blob[base : base + t[1]])
+    if k == "tuple":
+        vals, cur = [], base
+        for c in t[1]:
+            if _evm_is_dynamic(c):
+                off = int.from_bytes(blob[cur : cur + 32], "big")
+                vals.append(_evm_decode(c, blob[base:], off))
+            else:
+                vals.append(_evm_decode(c, blob, cur))
+            cur += 32 * _evm_head_words(c)
+        return vals
+    if k == "sarray":
+        elem, n = t[1], t[2]
+        vals, cur = [], base
+        for _ in range(n):
+            if _evm_is_dynamic(elem):
+                off = int.from_bytes(blob[cur : cur + 32], "big")
+                vals.append(_evm_decode(elem, blob[base:], off))
+            else:
+                vals.append(_evm_decode(elem, blob, cur))
+            cur += 32 * _evm_head_words(elem)
+        return vals
+    # dynamic: length word then payload, all relative to `base`
+    ln = int.from_bytes(blob[base : base + 32], "big")
+    body = base + 32
+    if k in ("bytes", "string"):
+        raw = blob[body : body + ln]
+        return raw.decode() if k == "string" else list(raw)
+    if k == "darray":
+        elem = t[1]
+        vals, cur = [], body
+        for _ in range(ln):
+            if _evm_is_dynamic(elem):
+                off = int.from_bytes(blob[cur : cur + 32], "big")
+                vals.append(_evm_decode(elem, blob[body:], off))
+            else:
+                vals.append(_evm_decode(elem, blob, cur))
+            cur += 32 * _evm_head_words(elem)
+        return vals
+    raise ValueError(f"unhandled decode {t}")
+
+
+def _looks_like_raw_words(abi_method, args) -> bool:
+    """True when args are the isoltest raw EVM calldata words rather than typed
+    values: all bare ints, and the signature isn't a plain list of single-word
+    scalars matched 1:1 (which is an ordinary typed call)."""
+    if not args or not all(isinstance(a, int) and not isinstance(a, bool) for a in args):
+        return False
+    types = [_parse_abi_type(str(a.type)) for a in abi_method.args]
+    all_scalar = all(not _evm_is_dynamic(t) and _evm_head_words(t) == 1 for t in types)
+    return not (all_scalar and len(args) == len(types))
+
+
+def _decode_raw_words(abi_method, args) -> list:
+    """EVM-decode raw calldata words into per-param Python values for algosdk."""
+    blob = b"".join(int(a).to_bytes(32, "big") for a in args)
+    tup = ("tuple", [_parse_abi_type(str(a.type)) for a in abi_method.args])
+    return _evm_decode(tup, blob, 0)
+
+
 def _encode_args(abi_method, args: tuple) -> list:
     """Forward args verbatim. One algosdk quirk: byte arrays must come in
     as `list[int]`, not `bytes`. Convert that one shape; everything else
@@ -529,6 +679,9 @@ def _encode_args(abi_method, args: tuple) -> list:
     word, then strip the EVM head ([offset][length]) the same way the
     EVM decoder would — the function receives only the payload bytes.
     Falls back to the raw concatenation when the head doesn't parse.
+
+    The general case (multi-param, structs, arrays) goes through the full
+    EVM ABI decoder above (_decode_raw_words).
     """
     if (
         len(abi_method.args) == 1
@@ -544,6 +697,13 @@ def _encode_args(abi_method, args: tuple) -> list:
                 if off + 32 + ln <= len(blob):
                     return [list(blob[off + 32 : off + 32 + ln])]
         return [list(blob)]
+
+    # General isoltest raw-words convention: multi-param, structs, arrays.
+    if _looks_like_raw_words(abi_method, args):
+        try:
+            return _decode_raw_words(abi_method, args)
+        except Exception:
+            pass  # not raw words after all — fall through to verbatim forward
 
     out: list = []
     for spec, val in zip(abi_method.args, args):
