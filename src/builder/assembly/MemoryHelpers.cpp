@@ -107,13 +107,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 			awst::makeIntegerConstant(_startSlot * 0x20, _loc),
 			_loc))
 		: base;
-	// SE guard: EC-precompile free-pointer base otherwise re-read _count times.
+	// Materialize once: EC-precompile free-pointer base otherwise re-read _count
+	// times (makeEvalOnce = OperandPlan primitive; skipped entirely for a single
+	// reference).
 	if (_count > 1)
-	{
-		offsetExpr = awst::makeSingleEvaluation(
-			std::move(offsetExpr), awst::WType::uint64Type(),
-			awst::nextSingleEvalId(), _loc);
-	}
+		offsetExpr = awst::makeEvalOnce(std::move(offsetExpr), _loc);
 
 	// readMemWordDyn: slot-0 vs scratch conditional needed because EC precompile inputs
 	// live at the runtime FMP; in a split piece slot-0 is in local while slot 1+ is in

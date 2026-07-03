@@ -1501,7 +1501,10 @@ inline int nextSingleEvalId()
 // makeSingleEvaluation for the "reference N times" intent: it centralizes the
 // skip-trivial-leaf decision and skips a pointless SE on a constant/var operand.
 // (Licenses DUPLICATION only — it never makes evaluation conditional; scope a
-// CONDITIONAL operand with ContractContext::buildScopedOperand instead.)
+// CONDITIONAL operand with ContractContext::buildScopedOperand instead. And it
+// is NOT for IDENTITY-FORCING: a site that wraps to stop two attrs-equal exprs
+// from merging (itxn call caching) needs an unconditional raw
+// makeSingleEvaluation — the skip-leaf shortcut would defeat it.)
 inline std::shared_ptr<Expression> makeEvalOnce(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {

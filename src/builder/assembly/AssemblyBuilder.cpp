@@ -701,11 +701,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 )
 {
 	// EVM div/mod by zero returns 0; AVM panics. Emit: right != 0 ? left op right : 0.
-	// Wrap divisor in SingleEvaluation — it appears in both the guard and the op;
-	// shared-pointer reuse re-ran non-trivial expressions twice.
-	auto right = awst::makeSingleEvaluation(
-		ensureBiguint(std::move(_right), _loc), awst::WType::biguintType(),
-		awst::nextSingleEvalId(), _loc);
+	// Materialize the divisor once — it appears in both the guard and the op;
+	// shared-pointer reuse re-ran non-trivial expressions twice (makeEvalOnce =
+	// OperandPlan primitive; skips SE on a constant/var divisor).
+	auto right = awst::makeEvalOnce(ensureBiguint(std::move(_right), _loc), _loc);
 
 	auto cond = awst::makeNumericCompare(
 		right, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);

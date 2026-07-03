@@ -282,8 +282,10 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	// Tuple/struct returns
 	if (auto const* tupleType = dynamic_cast<awst::WTuple const*>(_returnType))
 	{
-		// Unique id: without it, two identical calls compare attrs-equal
-		// and merge — second call's itxn never submits.
+		// Intentionally RAW makeSingleEvaluation, not makeEvalOnce: the fresh id is
+		// IDENTITY-FORCING — without it two identical calls compare attrs-equal and
+		// merge, so the second call's itxn never submits. The wrap must be
+		// unconditional; makeEvalOnce's skip-leaf contract must never apply here.
 		auto singleBytes = awst::makeSingleEvaluation(
 			std::move(stripPrefix), awst::WType::bytesType(),
 			awst::nextSingleEvalId(), m_loc);

@@ -544,7 +544,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								tupleTypeOwned, _loc);
 							for (auto const& a : resolvedArgs)
 								awst::pushCallArg(call->args, _ctx.buildExpr(*a));
-							// nextSingleEvalId() prevents identical calls from merging (see sol-ast-audit).
+							// Intentionally RAW makeSingleEvaluation, not makeEvalOnce: the fresh
+							// SE id is IDENTITY-FORCING — it prevents two attrs-equal calls from
+							// merging (see sol-ast-audit) — so the wrap must be unconditional;
+							// makeEvalOnce's skip-leaf contract must never apply here.
 							auto cachedCall = awst::makeSingleEvaluation(
 								std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
 

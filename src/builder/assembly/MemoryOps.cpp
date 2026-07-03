@@ -129,10 +129,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto off = offsetToUint64(std::move(_offset), _loc);
-	// SE: offset appears in the bounds-assert + slot/sub (~3 refs); a
-	// side-effecting mload(q) would otherwise re-run each time.
-	off = awst::makeSingleEvaluation(
-		std::move(off), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
+	// Materialize once: offset appears in the bounds-assert + slot/sub (~3 refs);
+	// a side-effecting mload(q) would otherwise re-run each time (makeEvalOnce =
+	// OperandPlan primitive; a var/constant offset is duplicated as-is).
+	off = awst::makeEvalOnce(std::move(off), _loc);
 	m_pendingStatements.push_back(memBoundsAssert(off, _loc));
 	// ONE path for every slot. Slot 0 is plain scratch since the __evm_memory
 	// cache removal, so the old `off < SLOT_SIZE ? slot-0-fast : slow`
