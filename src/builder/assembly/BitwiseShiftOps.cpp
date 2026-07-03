@@ -100,10 +100,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 	// Arg order is (shift, value) — reversed vs. C/AVM.
 	if (!checkArity(_args, 2, "shl", _loc))
 		return nullptr;
-	// SE guard: shift feeds both buildPowerOf2 and the <256 conditional.
-	auto shift = awst::makeSingleEvaluation(
-		ensureBiguint(_args[0], _loc), awst::WType::biguintType(),
-		awst::nextSingleEvalId(), _loc);
+	// Materialize once: shift feeds both buildPowerOf2 and the <256 conditional
+	// (makeEvalOnce = OperandPlan primitive; skips SE on a constant amount).
+	auto shift = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
 	// Reduce value mod 2^256 before multiplying. Negative int128 decoded as
 	// arc4.uint512 yields a 512-bit biguint; (512-bit * 2^s) overflows AVM's
 	// 64-byte bigint limit before the trailing mod can reduce it (V4 Pool.updateTick
@@ -135,10 +134,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 	// (see AAVE PositionStatusMap.sol:223). AVM b>> has no such clamping.
 	if (!checkArity(_args, 2, "shr", _loc))
 		return nullptr;
-	// SE guard: shift feeds both buildPowerOf2 and the <256 conditional.
-	auto shift = awst::makeSingleEvaluation(
-		ensureBiguint(_args[0], _loc), awst::WType::biguintType(),
-		awst::nextSingleEvalId(), _loc);
+	// Materialize once: shift feeds both buildPowerOf2 and the <256 conditional
+	// (makeEvalOnce = OperandPlan primitive; skips SE on a constant amount).
+	auto shift = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
 	auto value = _args[1];
 	auto power = buildPowerOf2(shift, _loc);
 	auto divResult = makeBigUIntBinOp(
@@ -172,8 +170,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 	// n >= 32: EVM byte() returns 0 (out of range); the AVM extract3 at offset n would revert. Guard
 	// with `n < 32 ? byte : 0` — the conditional only evaluates the extract on the taken branch. n is
 	// used by both the bound check and the extract, so single-evaluate it.
-	auto nSE = awst::makeSingleEvaluation(
-		std::move(nExpr), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
+	auto nSE = awst::makeEvalOnce(std::move(nExpr), _loc);
 	auto inRange = awst::makeNumericCompare(
 		nSE, awst::NumericComparison::Lt, awst::makeIntegerConstant("32", _loc), _loc);
 	auto extracted = awst::makeAsBiguint(

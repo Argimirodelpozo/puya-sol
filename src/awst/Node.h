@@ -1493,6 +1493,15 @@ inline int nextSingleEvalId()
 }
 
 
+// OperandPlan's MATERIALIZE-ONCE primitive (fable-review item 7): given an
+// expression referenced MORE THAN ONCE, ensure it evaluates exactly once.
+// A trivially-duplicable LEAF (var / constant / already-SingleEvaluation) is
+// returned as-is — duplicating it is unobservable and cheaper than a temp;
+// everything else is wrapped in SingleEvaluation. Prefer this over a raw
+// makeSingleEvaluation for the "reference N times" intent: it centralizes the
+// skip-trivial-leaf decision and skips a pointless SE on a constant/var operand.
+// (Licenses DUPLICATION only — it never makes evaluation conditional; scope a
+// CONDITIONAL operand with ContractContext::buildScopedOperand instead.)
 inline std::shared_ptr<Expression> makeEvalOnce(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {

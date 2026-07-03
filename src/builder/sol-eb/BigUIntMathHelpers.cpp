@@ -52,10 +52,12 @@ std::shared_ptr<awst::Expression> shiftAmountToUint64(
 	if (_amount->wtype != awst::WType::biguintType())
 		return TypeCoercion::implicitNumericCast(std::move(_amount), u64, _loc);
 
-	// SE: the amount feeds both the <256 guard and the low-64 extract, so a
-	// side-effecting amount expression (`x >> f()`) still runs f() once.
-	auto amt = awst::makeSingleEvaluation(
-		std::move(_amount), awst::WType::biguintType(), awst::nextSingleEvalId(), _loc);
+	// Materialize once — the amount feeds both the <256 guard and the low-64
+	// extract, so a side-effecting amount (`x >> f()`) still runs f() once.
+	// makeEvalOnce is OperandPlan's materialize-once primitive: it single-
+	// evaluates a non-trivial expression but returns a leaf (var/constant/
+	// already-SE) as-is, skipping a pointless SE on a constant amount.
+	auto amt = awst::makeEvalOnce(std::move(_amount), _loc);
 	auto lt256 = awst::makeNumericCompare(amt, awst::NumericComparison::Lt,
 		awst::makeIntegerConstant("256", _loc, awst::WType::biguintType()), _loc);
 	// amount < 256 → the low-64 extract is the exact value; else clamp to 256,
@@ -89,10 +91,10 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	auto bindV = awst::makeAssignmentExpression(
 		awst::makeVarExpression(vName, biguint, _loc), std::move(_value), _loc, biguint);
 
-	// SE: shift feeds both the index and the <256 guard (so `x << f()` runs f() once);
-	// the guard evaluates unconditionally, so the amount is effectively eager too.
-	auto shift = awst::makeSingleEvaluation(
-		std::move(_shiftAmt), awst::WType::uint64Type(), awst::nextSingleEvalId(), _loc);
+	// Materialize once — shift feeds both the index and the <256 guard (so
+	// `x << f()` runs f() once); the guard evaluates unconditionally, so the
+	// amount is effectively eager too. makeEvalOnce = OperandPlan primitive.
+	auto shift = awst::makeEvalOnce(std::move(_shiftAmt), _loc);
 
 	// 2^(shift mod 256) via setbit(bzero(32), 255 - (shift mod 256), 1): index in [0,255].
 	auto clampedShift = awst::makeUInt64BinOp(
