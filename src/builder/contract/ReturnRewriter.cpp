@@ -1,5 +1,6 @@
 #include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -139,12 +140,9 @@ void rewriteARC4Returns(
 				auto const* elemType = tupleType->types()[ri];
 				if (elemType == awst::WType::biguintType())
 				{
-					auto const* retSolType = returnParams[ri]->type();
-					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
-						retSolType = &udvt->underlyingType();
 					unsigned bits = 256;
-					if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
-						bits = intType->numBits();
+					if (auto it = builder::SolIntType::fromSol(returnParams[ri]->type()))
+						bits = it->bits;
 					arc4Types.push_back(m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits)));
 				}
 				else
@@ -283,11 +281,8 @@ void rewriteARC4Returns(
 					unsigned bits = 256;
 					if (i < returnParams.size())
 					{
-						auto const* st = returnParams[i]->type();
-						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(st))
-							st = &udvt->underlyingType();
-						if (auto const* it = dynamic_cast<solidity::frontend::IntegerType const*>(st))
-							bits = it->numBits();
+						if (auto it = builder::SolIntType::fromSol(returnParams[i]->type()))
+							bits = it->bits;
 					}
 					elemTypes.push_back(m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits)));
 				}

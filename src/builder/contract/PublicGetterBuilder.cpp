@@ -4,6 +4,7 @@
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -168,15 +169,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			if (solReturnTypes.size() == 1)
 			{
 				getter.returnType = m_typeMapper.map(solReturnTypes[0]);
-				auto const* solType = solReturnTypes[0];
-				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-					solType = &udvt->underlyingType();
-				if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
+				if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]))
 				{
-					if (intType->isSigned() && intType->numBits() <= 64)
+					if (intInfo->isSigned && intInfo->bits <= 64)
 					{
 						getter.returnType = awst::WType::biguintType();
-						signedGetterBits = intType->numBits();
+						signedGetterBits = intInfo->bits;
 					}
 				}
 			}
@@ -615,16 +613,11 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			if (getter.returnType == awst::WType::biguintType()
 				&& solReturnTypes.size() == 1)
 			{
-				auto const* retSolType = solReturnTypes[0];
-				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
-					retSolType = &udvt->underlyingType();
-				if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
+				if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]);
+					intInfo && !intInfo->isSigned)
 				{
-					if (!intType->isSigned())
-					{
-						isUnsignedIntReturn = true;
-						retBits = intType->numBits();
-					}
+					isUnsignedIntReturn = true;
+					retBits = intInfo->bits;
 				}
 			}
 			if (isUnsignedIntReturn)

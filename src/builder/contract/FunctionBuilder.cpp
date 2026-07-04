@@ -10,6 +10,7 @@
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -485,18 +486,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// breaking ABI selectors. Skipped for asm bodies (would break Yul refs).
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
 			{
-				auto const* solType = solParams[pi]->annotation().type;
-				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
-				if (!intType && solType)
-					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-				unsigned bits = intType ? intType->numBits() : 256;
+				auto intInfo = builder::SolIntType::fromSol(solParams[pi]->annotation().type);
+				unsigned bits = intInfo ? intInfo->bits : 256;
 				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
 				// Signed sub-256 (64<N<256) decodes to N-bit two's complement; sign-extend
 				// to 256-bit so downstream ops (compare, negate) see the correct sign.
 				// int256 is already canonical; ≤64-bit is uint64-backed (buildABIEntryChecks).
 				unsigned signedBits =
-					(intType && intType->isSigned() && bits > 64 && bits < 256) ? bits : 0;
+					(intInfo && intInfo->isSigned && bits > 64 && bits < 256) ? bits : 0;
 				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation, 0, signedBits});
 				// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
 				// body builds against the native biguint type (set in the decode rename loop below).
@@ -543,23 +540,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// Collect sub-64-bit widths from function params and return params
 			for (auto const& p: _func.parameters())
 			{
-				auto const* solType = p->annotation().type;
-				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
-				if (!intType && solType)
-					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-				if (intType && intType->numBits() < 64)
-					bitWidths[p->name()] = intType->numBits();
+				if (auto it = builder::SolIntType::fromSol(p->annotation().type);
+					it && it->bits < 64)
+					bitWidths[p->name()] = it->bits;
 			}
 			for (auto const& rp: _func.returnParameters())
 			{
-				auto const* solType = rp->annotation().type;
-				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
-				if (!intType && solType)
-					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-				if (intType && intType->numBits() < 64)
-					bitWidths[rp->name()] = intType->numBits();
+				if (auto it = builder::SolIntType::fromSol(rp->annotation().type);
+					it && it->bits < 64)
+					bitWidths[rp->name()] = it->bits;
 			}
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}

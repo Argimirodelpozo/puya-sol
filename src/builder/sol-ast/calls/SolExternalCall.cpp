@@ -5,6 +5,7 @@
 #include "builder/sol-ast/calls/SolExternalCall.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -25,12 +26,8 @@ static constexpr int TxnTypeAppl = 6;
 /// ("btoi arg too long"). int128/int256 (biguint WType) already decode 32 bytes correctly.
 static bool isSignedIntReturn(solidity::frontend::Type const* _t)
 {
-	if (!_t)
-		return false;
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_t))
-		_t = &udvt->underlyingType();
-	auto const* intT = dynamic_cast<IntegerType const*>(_t);
-	return intT && intT->isSigned();
+	auto it = builder::SolIntType::fromSol(_t);
+	return it && it->isSigned;
 }
 
 
@@ -314,10 +311,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 				if (!isSignedIntReturn(solField))
 				{
 					Type const* st = solField;
-					if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(st))
-						st = &udvt->underlyingType();
-					if (auto const* it = dynamic_cast<IntegerType const*>(st))
-						fieldSize = static_cast<int>(it->numBits() / 8);
+					if (auto it = builder::SolIntType::fromSol(st))
+						fieldSize = static_cast<int>(it->bits / 8);
 				}
 			}
 			else if (fieldType == awst::WType::uint64Type())
