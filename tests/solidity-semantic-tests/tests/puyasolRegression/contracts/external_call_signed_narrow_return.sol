@@ -30,6 +30,15 @@ contract Cee {
     function unpackP(Pair memory p) external pure returns (int64) { unchecked { return p.px + p.py; } }
     function mkArr(int64 a) external pure returns (int64[] memory) { int64[] memory r = new int64[](2); r[0]=a; r[1]=a; return r; }
     function sumArr(int64[] memory xs) external pure returns (int64) { int64 s; unchecked { for(uint i;i<xs.length;i++) s+=xs[i]; } return s; }
+    // BOOL-tuple returns: ARC4 packs CONSECUTIVE bools into bits of one byte, so `(bool,bool)`
+    // is 1 byte on the wire, not 2. The caller's tuple decode used a flat 1-byte-per-bool offset
+    // → misread the 2nd bool + extract3'd off the end → `(bool,bool)` reverted unconditionally,
+    // `(bool,bool,uint256)` gave a wrong 2nd bool and reverted on the uint256. (Found by the
+    // cross-contract differential fuzzer.)
+    function bb(int256 a0, int256 a1) external pure returns (bool, bool) { return ((a0 % 2 == 0), (a1 % 2 == 0)); }
+    function b3(int256 a0, int256 a1, int256 a2) external pure returns (bool, bool, bool) { return ((a0 % 2 == 0), (a1 % 2 == 0), (a2 % 2 == 0)); }
+    function bbu(int256 a0, int256 a1, int256 a2) external pure returns (bool, bool, uint256) { return ((a0 % 2 == 0), (a1 % 2 == 0), uint256(a2)); }
+    function bub(int256 a0, uint64 a1, int256 a2) external pure returns (bool, uint64, bool) { return ((a0 % 2 == 0), a1, (a2 % 2 == 0)); } // bool run broken by a non-bool
 }
 contract Caller {
     Cee c;
@@ -64,5 +73,22 @@ contract Caller {
     // array return then array arg re-passed.
     function gArr(int64 a) external returns (int256) {
         return int256(c.sumArr(c.mkArr(a))) + 1000;
+    }
+    // bool-tuple forwards: each bool weighted distinctly so a mis-decoded bit is observable.
+    function gbb(int256 a0, int256 a1) external returns (uint256) {
+        (bool x0, bool x1) = c.bb(a0, a1);
+        return (x0 ? 2 : 0) + (x1 ? 1 : 0);
+    }
+    function gb3(int256 a0, int256 a1, int256 a2) external returns (uint256) {
+        (bool x0, bool x1, bool x2) = c.b3(a0, a1, a2);
+        return (x0 ? 4 : 0) + (x1 ? 2 : 0) + (x2 ? 1 : 0);
+    }
+    function gbbu(int256 a0, int256 a1, int256 a2) external returns (int256) {
+        (bool x0, bool x1, uint256 x2) = c.bbu(a0, a1, a2);
+        return (x0 ? int256(2) : int256(0)) + (x1 ? int256(1) : int256(0)) + int256(uint256(x2));
+    }
+    function gbub(int256 a0, uint64 a1, int256 a2) external returns (uint256) {
+        (bool x0, uint64 x1, bool x2) = c.bub(a0, a1, a2);
+        return (x0 ? 100 : 0) + uint256(x1) + (x2 ? 1 : 0);
     }
 }

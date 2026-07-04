@@ -294,9 +294,33 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		auto const* solTuple = dynamic_cast<TupleType const*>(_solReturnType);
 
 		int offset = 0;
+		// ARC4 packs CONSECUTIVE bool fields into the bits of a shared byte (bool j
+		// of a run at bit j, MSB-first), so a `(bool,bool)` return is ONE byte, not
+		// two. Track the active packed-bool byte; a non-bool field ends the run and
+		// the next bool starts a fresh byte. (Without this, a flat 1-byte-per-bool
+		// decode misreads the second bool and extract3's off the end of the shorter
+		// wire tuple — every multi-bool cross-contract return reverted. Found by the
+		// differential fuzzer: `(bool,bool)` reverted unconditionally.)
+		int boolBit = 8;       // >=8 => the next bool needs a fresh byte
+		int boolByteOff = 0;
 		for (size_t i = 0; i < tupleType->types().size(); ++i)
 		{
 			auto const* fieldType = tupleType->types()[i];
+			if (fieldType == awst::WType::boolType())
+			{
+				if (boolBit >= 8) { boolByteOff = offset; offset += 1; boolBit = 0; }
+				auto bbyte = awst::makeExtract3(singleBytes,
+					awst::makeIntegerConstant(boolByteOff, m_loc),
+					awst::makeIntegerConstant(1, m_loc), m_loc);
+				auto bit = awst::makeGetbit(std::move(bbyte),
+					awst::makeIntegerConstant(boolBit, m_loc), m_loc);
+				tuple->items.push_back(awst::makeNumericCompare(
+					std::move(bit), awst::NumericComparison::Ne,
+					awst::makeIntegerConstant("0", m_loc), m_loc));
+				boolBit += 1;
+				continue;
+			}
+			boolBit = 8;   // a non-bool field ends the packed-bool run
 			Type const* solField = (solTuple && i < solTuple->components().size())
 				? solTuple->components()[i] : nullptr;
 			bool signedNarrow = (fieldType == awst::WType::uint64Type()) && isSignedIntReturn(solField);
@@ -317,8 +341,6 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			}
 			else if (fieldType == awst::WType::uint64Type())
 				fieldSize = signedNarrow ? 32 : 8;   // signed int8/16/32/64 arrive as a 32-byte uint256
-			else if (fieldType == awst::WType::boolType())
-				fieldSize = 1;
 			else if (fieldType == awst::WType::accountType())
 				fieldSize = 32;
 			else if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(fieldType))
@@ -351,14 +373,6 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 				}
 				else
 					decoded = awst::makeBtoi(std::move(extract), m_loc);
-			}
-			else if (fieldType == awst::WType::boolType())
-			{
-				auto getbit = awst::makeGetbit(
-					std::move(extract), awst::makeZero(m_loc), m_loc);
-
-				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, awst::makeIntegerConstant("0", m_loc), m_loc);
-				decoded = std::move(cmp);
 			}
 			else if (fieldType == awst::WType::accountType())
 			{

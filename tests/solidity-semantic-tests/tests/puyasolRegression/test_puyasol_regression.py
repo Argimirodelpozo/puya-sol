@@ -1399,6 +1399,24 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "gStruct(int64,int64)", -5, -9).abi_return) == 986     # -14 + 1000
     assert as_int(harness.call(app, "gArr(int64)", 5).abi_return) == 1010                  # 5+5 + 1000
     assert as_int(harness.call(app, "gArr(int64)", -3).abi_return) == 994                  # -3+-3 + 1000
+    # BOOL-tuple returns: ARC4 packs consecutive bools into one byte's bits. The caller's flat
+    # 1-byte-per-bool decode reverted on `(bool,bool)` and mis-decoded `(bool,bool,uint256)`.
+    # (even arg -> parity true.) Each bool is distinctly weighted so a bit misread is observable.
+    assert as_int(harness.call(app, "gbb(int256,int256)", 2, 4).abi_return) == 3     # true,true
+    assert as_int(harness.call(app, "gbb(int256,int256)", 2, 3).abi_return) == 2     # true,false
+    assert as_int(harness.call(app, "gbb(int256,int256)", 3, 4).abi_return) == 1     # false,true
+    assert as_int(harness.call(app, "gbb(int256,int256)", 3, 3).abi_return) == 0     # false,false
+    assert as_int(harness.call(app, "gb3(int256,int256,int256)", 2, 4, 6).abi_return) == 7   # all true
+    assert as_int(harness.call(app, "gb3(int256,int256,int256)", 2, 3, 6).abi_return) == 5   # t,f,t
+    assert as_int(harness.call(app, "gb3(int256,int256,int256)", 3, 3, 3).abi_return) == 0   # all false
+    # (bool,bool,uint256): 2nd bool must not read the uint256's first byte; the uint256 (incl.
+    # high-bit values) must decode without running off the end.
+    assert as_int(harness.call(app, "gbbu(int256,int256,int256)", 2, 4, 7).abi_return) == 10   # 2+1+7
+    assert as_int(harness.call(app, "gbbu(int256,int256,int256)", 3, 3, 5).abi_return) == 5    # 0+0+5
+    assert as_int(harness.call(app, "gbbu(int256,int256,int256)", 2, 4, -2).abi_return) == 1   # 2+1+int256(2^256-2)=-2
+    # bool run BROKEN by a non-bool field, then another bool: offsets must realign after the uint64.
+    assert as_int(harness.call(app, "gbub(int256,uint64,int256)", 2, 50, 6).abi_return) == 151  # 100+50+1
+    assert as_int(harness.call(app, "gbub(int256,uint64,int256)", 3, 7, 3).abi_return) == 7     # 0+7+0
 
 
 def test_modifier_stack_conditional(harness):
