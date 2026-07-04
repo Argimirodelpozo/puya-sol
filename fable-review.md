@@ -234,12 +234,19 @@ Retrofit binary-op/ternary/short-circuit/shift builders. Eliminates C1 as a clas
 > shape of lesson as item 5: a plausible doc premise, disproven by probe.)
 >
 > **Part (b) — trend the ~88 `dynamic_cast<IntegerType>` sites onto `SolIntType`: LANDING.**
-> Slice 1: TypeCoercion.cpp — all 5 sites migrated to `SolIntType::fromSol` (which already does
-> the UDVT-unwrap + IntegerType-cast + {bits,isSigned}). Removed 5 hand-rolled unwrap+cast blocks
-> incl. an `asInt` lambda that was `fromSol` reimplemented. Behavior-preserving (fromSol is
-> identical logic); full suite baseline. NEXT: the other high-count files (FunctionBuilder 10,
-> SolUnaryOperation 7, SolTypeConversion 7), then the `expr->wtype == map(solType)` DEBUG-assert
-> as a `#ifndef NDEBUG` check (not a production hard-error) if still wanted.
+> Slice 1 (b8e7e0e56a): TypeCoercion.cpp — all 5 sites → `SolIntType::fromSol` (which already does
+> the UDVT-unwrap + IntegerType-cast + {bits,isSigned}); removed 5 hand-rolled blocks incl. an
+> `asInt` lambda that was `fromSol` reimplemented. Slice 2 (b25f321269): SolUnaryOperation.cpp —
+> negation/bitwise-not mask-width sites → fromSol + `intInfo->pow2NAndHalf()`; the
+> signedBits/unsignedBits site deduped 3 casts→1 but kept a RAW cast (that path historically does
+> not unwrap UDVTs, so fromSol would change behavior). Both behavior-preserving, full suite baseline.
+>
+> **KEY RULE discovered:** migrate a site to `fromSol` ONLY when it already unwraps UDVT; a site
+> that raw-casts without unwrapping must stay raw (or it silently gains UDVT handling — a behavior
+> change, not a refactor). This gates the remaining files: SolTypeConversion (7) and the conversion
+> paths mostly raw-cast without unwrap → NOT clean fromSol targets (leave, or hoist repeated casts
+> as pure dedup). NEXT clean targets: audit FunctionBuilder (10) / SolExternalCall / ReturnRewriter
+> for the unwrapping subset. The `expr->wtype == map(solType)` assert is retired (part a).
 
 Push `SolIntType` outward: helpers taking `{bits,isSigned}` pairs, the `paramBitWidths` side
 channel. Target: the 88 `dynamic_cast<IntegerType>` sites trend toward the carrier. (The
