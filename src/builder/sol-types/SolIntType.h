@@ -55,6 +55,12 @@ struct SolIntType
 	/// callers can fall through to their own handling.
 	static std::optional<SolIntType> fromSol(solidity::frontend::Type const* _type);
 
+	/// Like `fromSol`, but also treats an ENUM as its ABI encoding integer type
+	/// (`enum` → its `encodingType()`, an unsigned `uintN`). For the ABI-boundary
+	/// sites that need "integer OR enum-as-integer"; kept separate from `fromSol`
+	/// so callers relying on `fromSol` returning nullopt for enums are unaffected.
+	static std::optional<SolIntType> fromSolOrEnum(solidity::frontend::Type const* _type);
+
 	/// Build from an ARC4 integer WType — reads signedness from `ARC4UIntN::isSigned()`
 	/// (NOT by string-slicing the alias). Returns nullopt for a null / non-int WType.
 	static std::optional<SolIntType> fromArc4(awst::WType const* _type);

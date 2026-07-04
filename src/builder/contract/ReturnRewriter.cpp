@@ -93,15 +93,8 @@ void rewriteARC4Returns(
 		unsigned retBits = 256;
 		if (returnParams.size() == 1)
 		{
-			auto const* retSolType = returnParams[0]->type();
-			if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
-				retSolType = &udvt->underlyingType();
-			if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
-				retBits = intType->numBits();
-			else if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
-				if (auto const* encType = dynamic_cast<solidity::frontend::IntegerType const*>(
-					enumType->encodingType()))
-					retBits = encType->numBits();
+			if (auto it = builder::SolIntType::fromSolOrEnum(returnParams[0]->type()))
+				retBits = it->bits;
 		}
 		auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
 

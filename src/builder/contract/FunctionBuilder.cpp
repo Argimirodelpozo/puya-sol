@@ -367,28 +367,21 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				? awst::WType::bytesType()
 				: awst::WType::uint64Type();
 		// Signed ≤64-bit returns → biguint for proper 256-bit two's complement ARC4 encoding.
-		auto const* retSolType = returnParams[0]->type();
-		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
-			retSolType = &udvt->underlyingType();
-		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
-		if (!intType) // enums = uint8 in ABI
-			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
-				intType = dynamic_cast<solidity::frontend::IntegerType const*>(
-					enumType->encodingType());
+		auto intInfo = builder::SolIntType::fromSolOrEnum(returnParams[0]->type());
 		// Biguint promotion only at ABI boundary; private/internal keep uint64
 		// so `return IntegerConstant(uint64,…)` matches declared type.
 		bool isAbiBoundary = _func.isPartOfExternalInterface();
-		if (intType && intType->isSigned())
+		if (intInfo && intInfo->isSigned)
 		{
-			if (intType->numBits() <= 64 && isAbiBoundary)
+			if (intInfo->bits <= 64 && isAbiBoundary)
 				method.returnType = awst::WType::biguintType();
 			if (isAbiBoundary)
-				signedReturns.push_back({intType->numBits(), 0});
+				signedReturns.push_back({intInfo->bits, 0});
 		}
-		else if (intType && !intType->isSigned() && intType->numBits() < 64)
+		else if (intInfo && !intInfo->isSigned && intInfo->bits < 64)
 		{
 			if (isAbiBoundary)
-				unsignedMasks.push_back({intType->numBits(), 0});
+				unsignedMasks.push_back({intInfo->bits, 0});
 		}
 	}
 	else
@@ -401,28 +394,21 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			auto const& rp = returnParams[ri];
 			auto* mappedType = m_typeMapper.map(rp->type());
-			auto const* retSolType = rp->type();
-			if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
-				retSolType = &udvt->underlyingType();
-			auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
-			if (!intType) // enums = uint8 in ABI
-				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
-					intType = dynamic_cast<solidity::frontend::IntegerType const*>(
-						enumType->encodingType());
+			auto intInfo = builder::SolIntType::fromSolOrEnum(rp->type());
 			bool isAbiBoundary = _func.isPartOfExternalInterface();
-			if (intType)
+			if (intInfo)
 			{
-				if (intType->isSigned())
+				if (intInfo->isSigned)
 				{
-					if (intType->numBits() <= 64 && isAbiBoundary)
+					if (intInfo->bits <= 64 && isAbiBoundary)
 						mappedType = awst::WType::biguintType();
 					if (isAbiBoundary)
-						signedReturns.push_back({intType->numBits(), ri});
+						signedReturns.push_back({intInfo->bits, ri});
 				}
-				else if (!intType->isSigned() && intType->numBits() < 64)
+				else if (!intInfo->isSigned && intInfo->bits < 64)
 				{
 					if (isAbiBoundary)
-						unsignedMasks.push_back({intType->numBits(), ri});
+						unsignedMasks.push_back({intInfo->bits, ri});
 				}
 			}
 			types.push_back(mappedType);

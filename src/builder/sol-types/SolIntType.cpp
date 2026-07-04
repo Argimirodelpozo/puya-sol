@@ -23,6 +23,18 @@ std::optional<SolIntType> SolIntType::fromSol(solidity::frontend::Type const* _t
 	return std::nullopt;
 }
 
+std::optional<SolIntType> SolIntType::fromSolOrEnum(solidity::frontend::Type const* _type)
+{
+	using namespace solidity::frontend;
+	if (!_type)
+		return std::nullopt;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
+		_type = &udvt->underlyingType();
+	if (auto const* enumType = dynamic_cast<EnumType const*>(_type))
+		_type = enumType->encodingType();
+	return fromSol(_type);
+}
+
 std::optional<SolIntType> SolIntType::fromArc4(awst::WType const* _type)
 {
 	auto const* arc4 = dynamic_cast<awst::ARC4UIntN const*>(_type);
