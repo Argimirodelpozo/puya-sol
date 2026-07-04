@@ -218,10 +218,32 @@ Retrofit binary-op/ternary/short-circuit/shift builders. Eliminates C1 as a clas
 
 ### 8. Finish the type-carrier consolidation (proposed; continues 3461ceee38/aceadac8aa)
 
+> **STATUS: IN PROGRESS.** The assertion half is PREMISE-DISPROVEN; the carrier-migration half
+> is landing incrementally.
+>
+> **Part (a) — the `expr->wtype == typeMapper.map(solType)` assertion at the eb builder seam:
+> ABANDONED (premise doesn't hold, empirically).** Prototyped a fail-loud net in
+> `BuilderRegistry::tryBuildInstance`. A blanket scalar check false-positives on CONVERSIONS
+> (`address(uint160)` carries biguint, `bytesN(uint)` carries uint64 — the builder legitimately
+> wraps the source expr to convert it). Narrowing to "FixedBytes wrapping UNSIZED `bytes`" (the
+> exact de2b25aa38 signature) still fires on GREEN tests: `abi.encodeWithSignature` builds
+> `bytes32` head/tail WORDS from unsized `bytes` internally, which is correct because that path
+> never narrows. So unsized-bytes-into-bytesN is a LEGITIMATE internal shape, not a bug per se —
+> the de2b25aa38 bug was specifically the narrowing no-op, already guarded by the
+> `SolFixedBytesBuilder` retag. A construction-seam hard error only adds false positives. (Same
+> shape of lesson as item 5: a plausible doc premise, disproven by probe.)
+>
+> **Part (b) — trend the ~88 `dynamic_cast<IntegerType>` sites onto `SolIntType`: LANDING.**
+> Slice 1: TypeCoercion.cpp — all 5 sites migrated to `SolIntType::fromSol` (which already does
+> the UDVT-unwrap + IntegerType-cast + {bits,isSigned}). Removed 5 hand-rolled unwrap+cast blocks
+> incl. an `asInt` lambda that was `fromSol` reimplemented. Behavior-preserving (fromSol is
+> identical logic); full suite baseline. NEXT: the other high-count files (FunctionBuilder 10,
+> SolUnaryOperation 7, SolTypeConversion 7), then the `expr->wtype == map(solType)` DEBUG-assert
+> as a `#ifndef NDEBUG` check (not a production hard-error) if still wanted.
+
 Push `SolIntType` outward: helpers taking `{bits,isSigned}` pairs, the `paramBitWidths` side
-channel, and eb builder constructors asserting `expr->wtype == typeMapper.map(solType)` (which
-would have made the bytesN unsized bug a compile-time impossibility). Target: the 88
-`dynamic_cast<IntegerType>` sites trend toward the carrier.
+channel. Target: the 88 `dynamic_cast<IntegerType>` sites trend toward the carrier. (The
+constructor-assertion idea is retired — see STATUS above.)
 
 ### 9. Promote the fuzzing oracle out of WIP (proposed)
 

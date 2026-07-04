@@ -2,6 +2,7 @@
 /// Centralised type coercion / conversion utilities for AWST expressions.
 
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -279,13 +280,10 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceToCommonInt(
 	// 2. sign-extend a SIGNED operand from its OWN source width so the value is canonical
 	//    at the common width. Unsigned operands carry no sign (zero-extend is right); a
 	//    literal (RationalNumberType, not an IntegerType) is already canonical post-cast.
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_srcSol))
-		_srcSol = &udvt->underlyingType();
-	if (auto const* srcInt = dynamic_cast<IntegerType const*>(_srcSol))
-		if (srcInt->isSigned())
-			v = (_commonW == awst::WType::biguintType())
-				? signExtendToUint256(std::move(v), srcInt->numBits(), _loc)
-				: signExtendToUint64(std::move(v), srcInt->numBits(), _loc);
+	if (auto srcInt = SolIntType::fromSol(_srcSol); srcInt && srcInt->isSigned)
+		v = (_commonW == awst::WType::biguintType())
+			? signExtendToUint256(std::move(v), srcInt->bits, _loc)
+			: signExtendToUint64(std::move(v), srcInt->bits, _loc);
 	return v;
 }
 
@@ -327,14 +325,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
 )
 {
 	using namespace solidity::frontend;
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_solElemType))
-		_solElemType = &udvt->underlyingType();
 	// Only biguint-backed signed elements (64 < N < 256) need extension. int256
 	// is already canonical two's complement; <=64-bit elements are uint64-backed
 	// and carry their own sign handling (a 256-bit extension would mis-type them).
-	if (auto const* intType = dynamic_cast<IntegerType const*>(_solElemType))
-		if (intType->isSigned() && intType->numBits() > 64 && intType->numBits() < 256)
-			return signExtendToUint256(std::move(_value), intType->numBits(), _loc);
+	if (auto it = SolIntType::fromSol(_solElemType);
+		it && it->isSigned && it->bits > 64 && it->bits < 256)
+		return signExtendToUint256(std::move(_value), it->bits, _loc);
 	return _value;
 }
 
@@ -373,25 +369,19 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedWiden(
 	awst::SourceLocation const& _loc
 )
 {
-	using namespace solidity::frontend;
 	// Widening a SIGNED intN to a wider SIGNED intM drops the sign in our value model: sub-word
 	// ints are uint64-backed (so int8->int16 is a uint64->uint64 no-op) and the registry/cast
 	// zero-extends. Re-extend from the SOURCE width. Covers both target tiers (≤64 uint64-backed,
 	// >64 biguint-backed). No-op for unsigned, narrowing, same-width, or non-int operands.
-	auto asInt = [](Type const* t) -> IntegerType const* {
-		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(t))
-			t = &udvt->underlyingType();
-		return dynamic_cast<IntegerType const*>(t);
-	};
-	auto const* srcInt = _srcSolType ? asInt(_srcSolType) : nullptr;
-	auto const* tgtInt = _tgtSolType ? asInt(_tgtSolType) : nullptr;
+	auto srcInt = SolIntType::fromSol(_srcSolType);
+	auto tgtInt = SolIntType::fromSol(_tgtSolType);
 	if (!_value || !srcInt || !tgtInt) return _value;
-	if (!srcInt->isSigned() || !tgtInt->isSigned()) return _value;
-	if (srcInt->numBits() >= tgtInt->numBits()) return _value;
-	if (tgtInt->numBits() > 64 && _value->wtype == awst::WType::biguintType())
-		return signExtendToUint256(std::move(_value), srcInt->numBits(), _loc);
+	if (!srcInt->isSigned || !tgtInt->isSigned) return _value;
+	if (srcInt->bits >= tgtInt->bits) return _value;
+	if (tgtInt->bits > 64 && _value->wtype == awst::WType::biguintType())
+		return signExtendToUint256(std::move(_value), srcInt->bits, _loc);
 	if (_value->wtype == awst::WType::uint64Type())
-		return signExtendToUint64(std::move(_value), srcInt->numBits(), _loc);
+		return signExtendToUint64(std::move(_value), srcInt->bits, _loc);
 	return _value;
 }
 
@@ -507,26 +497,19 @@ std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
 std::optional<std::string> TypeCoercion::intSelectorName(
 	solidity::frontend::Type const* _type)
 {
-	using namespace solidity::frontend;
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
-		_type = &udvt->underlyingType();
-	if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
-	{
-		unsigned bits = intT->numBits();
-		// <=64-bit collapses to uint64; >64-bit keeps its exact width. Signedness
-		// is always dropped (the callee names int128 as "uint128").
-		return bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(bits));
-	}
-	return std::nullopt;
+	auto it = SolIntType::fromSol(_type);
+	if (!it)
+		return std::nullopt;
+	// <=64-bit collapses to uint64; >64-bit keeps its exact width. Signedness
+	// is always dropped (the callee names int128 as "uint128").
+	return it->bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(it->bits));
 }
 
 std::optional<std::string> TypeCoercion::intSelectorReturnName(
 	solidity::frontend::Type const* _type)
 {
-	using namespace solidity::frontend;
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
-		_type = &udvt->underlyingType();
-	if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
+	auto it = SolIntType::fromSol(_type);
+	if (it)
 	{
 		// A SIGNED integer RETURN is encoded as the full 256-bit two's complement
 		// (sign-extended), so the callee names it "uint256" regardless of width
@@ -534,10 +517,9 @@ std::optional<std::string> TypeCoercion::intSelectorReturnName(
 		// Unsigned returns use the same exact-width rule as params. The param vs
 		// return asymmetry for signed ints is why this is separate from
 		// intSelectorName.
-		if (intT->isSigned())
+		if (it->isSigned)
 			return std::string("uint256");
-		unsigned bits = intT->numBits();
-		return bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(bits));
+		return it->bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(it->bits));
 	}
 	return std::nullopt;
 }
