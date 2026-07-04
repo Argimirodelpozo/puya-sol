@@ -1417,6 +1417,11 @@ def test_external_call_signed_narrow_return(harness):
     # bool run BROKEN by a non-bool field, then another bool: offsets must realign after the uint64.
     assert as_int(harness.call(app, "gbub(int256,uint64,int256)", 2, 50, 6).abi_return) == 151  # 100+50+1
     assert as_int(harness.call(app, "gbub(int256,uint64,int256)", 3, 7, 3).abi_return) == 7     # 0+7+0
+    # bytesN field in a tuple return: sized `bytes[N]` decode; used to fail to COMPILE.
+    assert as_int(harness.call(app, "gtb4(uint256)", 7).abi_return) == 7 * (1 << 64) + 7
+    assert as_int(harness.call(app, "gtb4(uint256)", 0x100000001).abi_return) == 1 * (1 << 64) + 0x100000001
+    assert as_int(harness.call(app, "gtbb(uint256)", 4).abi_return) == 1000004    # even → true, bytes4(4)
+    assert as_int(harness.call(app, "gtbb(uint256)", 5).abi_return) == 5          # odd → false, bytes4(5)
 
 
 def test_modifier_stack_conditional(harness):

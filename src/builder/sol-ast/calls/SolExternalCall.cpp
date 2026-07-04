@@ -379,6 +379,15 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 				auto cast = awst::makeAsAccount(std::move(extract), m_loc);
 				decoded = std::move(cast);
 			}
+			else if (dynamic_cast<awst::BytesWType const*>(fieldType))
+			{
+				// A `bytesN` field: extract3 yields the generic `bytes` WType, but the
+				// tuple element is sized `bytes[N]` — retag so the value's type matches
+				// the field type (else puya rejects the destructuring assignment with
+				// "assignment target type differs"). Found by the cross-contract fuzzer:
+				// a `(bytes4, uint64)` return failed to compile.
+				decoded = awst::makeReinterpretCast(std::move(extract), fieldType, m_loc);
+			}
 			else
 			{
 				decoded = std::move(extract);

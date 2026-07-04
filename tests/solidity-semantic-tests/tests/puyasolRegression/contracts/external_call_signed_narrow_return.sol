@@ -39,6 +39,11 @@ contract Cee {
     function b3(int256 a0, int256 a1, int256 a2) external pure returns (bool, bool, bool) { return ((a0 % 2 == 0), (a1 % 2 == 0), (a2 % 2 == 0)); }
     function bbu(int256 a0, int256 a1, int256 a2) external pure returns (bool, bool, uint256) { return ((a0 % 2 == 0), (a1 % 2 == 0), uint256(a2)); }
     function bub(int256 a0, uint64 a1, int256 a2) external pure returns (bool, uint64, bool) { return ((a0 % 2 == 0), a1, (a2 % 2 == 0)); } // bool run broken by a non-bool
+    // bytesN field in a tuple return: extract3 yields generic `bytes`, but the field is sized
+    // `bytes[N]` -> the destructuring assignment failed to COMPILE ("assignment target type
+    // differs") until the decode retags to the sized type. (Found by the cross-contract fuzzer.)
+    function tb4(uint256 a) external pure returns (bytes4, uint64) { return (bytes4(uint32(a)), uint64(a)); }
+    function tbb(uint256 a) external pure returns (bool, bytes4) { return ((a % 2 == 0), bytes4(uint32(a))); } // bool then bytesN
 }
 contract Caller {
     Cee c;
@@ -90,5 +95,13 @@ contract Caller {
     function gbub(int256 a0, uint64 a1, int256 a2) external returns (uint256) {
         (bool x0, uint64 x1, bool x2) = c.bub(a0, a1, a2);
         return (x0 ? 100 : 0) + uint256(x1) + (x2 ? 1 : 0);
+    }
+    function gtb4(uint256 a) external returns (uint256) {
+        (bytes4 x0, uint64 x1) = c.tb4(a);
+        return uint256(uint32(x0)) * (1 << 64) + uint256(x1);
+    }
+    function gtbb(uint256 a) external returns (uint256) {
+        (bool x0, bytes4 x1) = c.tbb(a);
+        return uint256(uint32(x1)) + (x0 ? 1000000 : 0);
     }
 }
