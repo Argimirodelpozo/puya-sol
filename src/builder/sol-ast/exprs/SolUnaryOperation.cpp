@@ -1,6 +1,7 @@
 /// @file SolUnaryOperation.cpp — unary operation translation.
 
 #include "builder/sol-types/SolcConstFold.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
@@ -60,25 +61,20 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 {
 	// For constant expressions like `-2`, operand type is RationalNumberType;
 	// fall through to check result type for signed intN.
-	auto const* solType = m_unaryOp.subExpression().annotation().type;
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
-		solType = &udvt->underlyingType();
-	auto const* intType = dynamic_cast<IntegerType const*>(solType);
-	if (!intType || !intType->isSigned())
+	auto intInfo = SolIntType::fromSol(m_unaryOp.subExpression().annotation().type);
+	if (!intInfo || !intInfo->isSigned)
 	{
-		auto const* resultType = m_unaryOp.annotation().type;
-		if (auto const* udvt2 = dynamic_cast<UserDefinedValueType const*>(resultType))
-			resultType = &udvt2->underlyingType();
-		auto const* resultIntType = dynamic_cast<IntegerType const*>(resultType);
-		if (resultIntType && resultIntType->isSigned())
-			intType = resultIntType;
+		// constant `-2`: operand is RationalNumberType, not intN — use the result type.
+		if (auto resultInfo = SolIntType::fromSol(m_unaryOp.annotation().type);
+			resultInfo && resultInfo->isSigned)
+			intInfo = resultInfo;
 	}
 
-	if (intType && intType->isSigned())
+	if (intInfo && intInfo->isSigned)
 	{
-		unsigned bits = intType->numBits();
+		unsigned bits = intInfo->bits;
 		// -x = (2^N - x) mod 2^N; overflow: x == 2^(N-1) i.e. INT_MIN
-		auto [pow2NStr, halfNStr] = builder::TypeCoercion::pow2NAndHalf(bits);
+		auto [pow2NStr, halfNStr] = intInfo->pow2NAndHalf();
 
 		auto makeBiguintConst = [&](std::string const& val) {
 			auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
@@ -205,11 +201,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
 		unsigned maskBits = 64;
-		auto const* solType = m_unaryOp.subExpression().annotation().type;
-		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
-			solType = &udvt->underlyingType();
-		if (auto const* intType = dynamic_cast<IntegerType const*>(solType))
-			maskBits = intType->numBits();
+		if (auto it = SolIntType::fromSol(m_unaryOp.subExpression().annotation().type))
+			maskBits = it->bits;
 
 		solidity::u256 mask = (maskBits >= 64)
 			? solidity::u256("18446744073709551615")
@@ -228,11 +221,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	if (expr->wtype == awst::WType::biguintType())
 	{
 		unsigned maskBits = 0;
-		auto const* solType = m_unaryOp.subExpression().annotation().type;
-		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
-			solType = &udvt->underlyingType();
-		if (auto const* intType = dynamic_cast<IntegerType const*>(solType))
-			maskBits = intType->numBits();
+		if (auto it = SolIntType::fromSol(m_unaryOp.subExpression().annotation().type))
+			maskBits = it->bits;
 		if (maskBits > 0 && maskBits < 256)
 		{
 			solidity::u256 mask = (solidity::u256(1) << maskBits) - 1;
@@ -307,10 +297,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 	}
 
-	bool isSigned = false;
-	if (auto const* intType = dynamic_cast<IntegerType const*>(
-			m_unaryOp.subExpression().annotation().type))
-		isSigned = intType->isSigned();
+	// NB: raw cast, NOT SolIntType::fromSol — this path historically does not unwrap
+	// UDVTs here; a UDVT operand is treated as non-int (isSigned=false). Hoisted once
+	// and reused for signedBits/unsignedBits below.
+	auto const* opInt = dynamic_cast<IntegerType const*>(
+		m_unaryOp.subExpression().annotation().type);
+	bool isSigned = opInt && opInt->isSigned();
 
 	if (dynamic_cast<awst::BoxValueExpression const*>(_operand.get()))
 		_operand = builder::StorageMapper::makeStateGetWithDefault(_operand, _operand->wtype, m_loc);
@@ -327,21 +319,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	static const std::string pow256Minus1 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-	unsigned signedBits = 0;
-	if (isSigned)
-	{
-		if (auto const* it = dynamic_cast<IntegerType const*>(
-				m_unaryOp.subExpression().annotation().type))
-			signedBits = it->numBits();
-	}
-
-	unsigned unsignedBits = 0;
-	if (!isSigned)
-	{
-		if (auto const* it = dynamic_cast<IntegerType const*>(
-				m_unaryOp.subExpression().annotation().type))
-			unsignedBits = it->numBits();
-	}
+	unsigned signedBits = (opInt && isSigned) ? opInt->numBits() : 0;
+	unsigned unsignedBits = (opInt && !isSigned) ? opInt->numBits() : 0;
 
 	// Checked unsigned `++` overflow guard. The signed path (below) and `x += 1` both check, but the
 	// unsigned inc just computes base+1: native uint64 add reverts on its own, but a sub-word
