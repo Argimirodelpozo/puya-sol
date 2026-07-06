@@ -12,6 +12,7 @@ struct Pair { int64 px; int64 py; }
 // btoi when the Solidity return type is signed. (Found by the cross-contract differential fuzzer.)
 // Forwards widen+offset so the observable is a clean positive int; a broken decode reverts instead.
 contract Cee {
+    enum E { A, B, C }
     function r8(int256 a)  external pure returns (int8)  { return int8(a); }
     function r16(int256 a) external pure returns (int16) { return int16(a); }
     function r32(int256 a) external pure returns (int32) { return int32(a); }
@@ -44,6 +45,20 @@ contract Cee {
     // differs") until the decode retags to the sized type. (Found by the cross-contract fuzzer.)
     function tb4(uint256 a) external pure returns (bytes4, uint64) { return (bytes4(uint32(a)), uint64(a)); }
     function tbb(uint256 a) external pure returns (bool, bytes4) { return ((a % 2 == 0), bytes4(uint32(a))); } // bool then bytesN
+    // The manual per-field decoder couldn't decode these tuple field kinds; the ARC4Decode-based
+    // rewrite (delegating head/tail/dynamic layout to puya) closes them all: (Found by the fuzzer.)
+    //  - enum: named "uint8" by the caller (nestedArc4Name) vs "uint64" by the callee → selector err
+    //  - address: right-padded 32B static field the manual decoder mis-handled
+    //  - dynamic bytes/string/array in a tuple: head is a 32B tail-offset pointer, not inline data
+    function ea(uint256 a) external pure returns (E, uint64) { return (E(a % 3), uint64(a)); }
+    function ad(uint256 a) external pure returns (address, uint64) { return (address(uint160(a)), uint64(a)); }
+    function dyn(uint256 a) external pure returns (uint64, bytes memory) {
+        bytes memory b = new bytes(3); b[0] = 0x11; b[1] = 0x22; b[2] = 0x33; return (uint64(a), b);
+    }
+    function dstr(uint256 a) external pure returns (string memory, uint64) { return ("hi", uint64(a)); }
+    function arr(uint256 a) external pure returns (uint64, uint32[] memory) {
+        uint32[] memory r = new uint32[](2); r[0] = uint32(a); r[1] = uint32(a) + 1; return (uint64(a), r);
+    }
 }
 contract Caller {
     Cee c;
@@ -104,4 +119,10 @@ contract Caller {
         (bool x0, bytes4 x1) = c.tbb(a);
         return uint256(uint32(x1)) + (x0 ? 1000000 : 0);
     }
+    // enum / address / dynamic-field tuple forwards (closed by the ARC4Decode rewrite).
+    function gea(uint256 a) external returns (uint256) { (Cee.E e, uint64 x) = c.ea(a); return uint256(uint8(e)) * 1000 + x; }
+    function gad(uint256 a) external returns (uint256) { (address ad, uint64 x) = c.ad(a); return uint256(uint160(ad)) + x; }
+    function gdyn(uint256 a) external returns (uint256) { (uint64 x, bytes memory b) = c.dyn(a); return uint256(uint8(b[0])) + b.length * 1000 + x; }
+    function gdstr(uint256 a) external returns (uint256) { (string memory s, uint64 x) = c.dstr(a); return bytes(s).length + x; }
+    function garr(uint256 a) external returns (uint256) { (uint64 x, uint32[] memory r) = c.arr(a); return uint256(r[0]) + uint256(r[1]) * 1000 + x; }
 }

@@ -41,6 +41,12 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 		auto* rawType = m_ctx.typeMapper.map(_type);
 		if (rawType == awst::WType::accountType())
 			return "address";
+		// A top-level enum maps to uint64Type on the child side, which puya publishes
+		// as "uint64" (see solTypeToARC4Impl). nestedArc4Name would name it "uint8"
+		// (its encodingType width) → selector mismatch → router err on a cross-contract
+		// call returning/taking an enum. (Found by the tuple-return fuzzer.)
+		if (dynamic_cast<EnumType const*>(_type))
+			return "uint64";
 		// Fixed-size Solidity `bytesN` stays as BytesWType(length=N) on the
 		// child side, which puya names `byte[N]`. Match that here rather than
 		// routing through ARC4StaticArray (which would produce `uint8[N]`).
@@ -287,121 +293,97 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			std::move(stripPrefix), awst::WType::bytesType(),
 			awst::nextSingleEvalId(), m_loc);
 
-		auto tuple = awst::makeTupleExpression(_returnType, m_loc);
-
-		// Per-field Solidity types — a signed int field is 32 bytes on the wire (callee names it
-		// uint256), so its uint64-backed WType needs a 32→low-8 decode, not a bare 8-byte btoi.
+		// Wire ARC4 tuple type: the callee (ReturnRewriter) ARC4-encodes the return
+		// tuple, so the raw log bytes ARE an ARC4 tuple. Reinterpret to that type and
+		// hand the head/tail/bool-packing/dynamic-field layout to puya's ARC4Decode
+		// rather than walking byte offsets by hand. The one convention puya's generic
+		// map doesn't capture is the signed-int wire width: a SIGNED intN return is
+		// sign-extended to uint256 (32B) by ReturnRewriter Pass 4 — and when ANY signed
+		// element is present, unsigned biguint elements in the same tuple are widened to
+		// uint256 too. Unsigned biguints in an all-unsigned tuple keep their natural
+		// N/8-byte width (Pass 3). Build the wire element types to match exactly.
 		auto const* solTuple = dynamic_cast<TupleType const*>(_solReturnType);
+		bool anySigned = false;
+		if (solTuple)
+			for (auto const* c: solTuple->components())
+				if (isSignedIntReturn(c)) { anySigned = true; break; }
 
-		int offset = 0;
-		// ARC4 packs CONSECUTIVE bool fields into the bits of a shared byte (bool j
-		// of a run at bit j, MSB-first), so a `(bool,bool)` return is ONE byte, not
-		// two. Track the active packed-bool byte; a non-bool field ends the run and
-		// the next bool starts a fresh byte. (Without this, a flat 1-byte-per-bool
-		// decode misreads the second bool and extract3's off the end of the shorter
-		// wire tuple — every multi-bool cross-contract return reverted. Found by the
-		// differential fuzzer: `(bool,bool)` reverted unconditionally.)
-		int boolBit = 8;       // >=8 => the next bool needs a fresh byte
-		int boolByteOff = 0;
-		for (size_t i = 0; i < tupleType->types().size(); ++i)
+		size_t const n = tupleType->types().size();
+		std::vector<awst::WType const*> wireElems;   // arc4 element types (the wire)
+		std::vector<awst::WType const*> decodeElems; // native decode target per element
+		std::vector<bool> narrowIdx(n, false);       // signed-narrow slots to reconcile
+		bool anyNarrow = false;
+		wireElems.reserve(n);
+		decodeElems.reserve(n);
+		for (size_t i = 0; i < n; ++i)
 		{
-			auto const* fieldType = tupleType->types()[i];
-			if (fieldType == awst::WType::boolType())
-			{
-				if (boolBit >= 8) { boolByteOff = offset; offset += 1; boolBit = 0; }
-				auto bbyte = awst::makeExtract3(singleBytes,
-					awst::makeIntegerConstant(boolByteOff, m_loc),
-					awst::makeIntegerConstant(1, m_loc), m_loc);
-				auto bit = awst::makeGetbit(std::move(bbyte),
-					awst::makeIntegerConstant(boolBit, m_loc), m_loc);
-				tuple->items.push_back(awst::makeNumericCompare(
-					std::move(bit), awst::NumericComparison::Ne,
-					awst::makeIntegerConstant("0", m_loc), m_loc));
-				boolBit += 1;
-				continue;
-			}
-			boolBit = 8;   // a non-bool field ends the packed-bool run
+			auto const* nat = tupleType->types()[i];
 			Type const* solField = (solTuple && i < solTuple->components().size())
 				? solTuple->components()[i] : nullptr;
-			bool signedNarrow = (fieldType == awst::WType::uint64Type()) && isSignedIntReturn(solField);
-			int fieldSize = 0;
-
-			if (fieldType == awst::WType::biguintType())
+			auto si = solField ? builder::SolIntType::fromSolOrEnum(solField) : std::nullopt;
+			awst::WType const* arc4 = nullptr;
+			awst::WType const* dec = nat;   // default: puya decodes to the native return type
+			if (si && isSignedIntReturn(solField))
 			{
-				// The callee encodes an UNSIGNED uintN (64<N<=256) at its NATURAL N/8-byte ARC4 width
-				// (uint128 -> 16B), not 32. Signed (int128/256) and uint256 are 32B. Match it so the
-				// tuple offsets line up; makeAsBiguint below is length-agnostic.
-				fieldSize = 32;
-				if (!isSignedIntReturn(solField))
+				// SIGNED intN: wire is a 32-byte sign-extended uint256 (Pass 4). puya's
+				// ARC4Decode of arc4.uint256 yields a BIGUINT holding that 256-bit value;
+				// int128/256 want biguint directly, but a signed int8..64 wants a 64-bit
+				// native — decoding straight to uint64 REVERTS on negatives (2^256-|x| ≫
+				// 2^64). So decode to biguint here and narrow to uint64 in the rebuild.
+				arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(256);
+				if (nat == awst::WType::uint64Type())
 				{
-					Type const* st = solField;
-					if (auto it = builder::SolIntType::fromSol(st))
-						fieldSize = static_cast<int>(it->bits / 8);
+					dec = awst::WType::biguintType();
+					narrowIdx[i] = true;
+					anyNarrow = true;
 				}
 			}
-			else if (fieldType == awst::WType::uint64Type())
-				fieldSize = signedNarrow ? 32 : 8;   // signed int8/16/32/64 arrive as a 32-byte uint256
-			else if (fieldType == awst::WType::accountType())
-				fieldSize = 32;
-			else if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(fieldType))
+			else if (si)
 			{
-				if (bwt->length().has_value())
-					fieldSize = static_cast<int>(bwt->length().value());
-			}
-
-			if (fieldSize == 0)
-			{
-				tuple->items.push_back(singleBytes);
-				break;
-			}
-
-			auto extract = awst::makeExtract3(singleBytes, awst::makeIntegerConstant(offset, m_loc), awst::makeIntegerConstant(fieldSize, m_loc), m_loc);
-			std::shared_ptr<awst::Expression> decoded;
-			if (fieldType == awst::WType::biguintType())
-			{
-				auto cast = awst::makeAsBiguint(std::move(extract), m_loc);
-				decoded = std::move(cast);
-			}
-			else if (fieldType == awst::WType::uint64Type())
-			{
-				// signedNarrow: extract is the 32-byte uint256; its low 8 bytes are the canonical
-				// uint64-backed two's-complement form. Unsigned uint64: extract is already 8 bytes.
-				if (signedNarrow)
-				{
-					auto low8 = awst::makeExtract(std::move(extract), 24, 8, m_loc);
-					decoded = awst::makeBtoi(std::move(low8), m_loc);
-				}
+				if (si->bits <= 64)
+					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(64);   // uint8..64 / enum → 8B
+				else if (anySigned)
+					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(256);  // Pass 4 retype
 				else
-					decoded = awst::makeBtoi(std::move(extract), m_loc);
-			}
-			else if (fieldType == awst::WType::accountType())
-			{
-				auto cast = awst::makeAsAccount(std::move(extract), m_loc);
-				decoded = std::move(cast);
-			}
-			else if (dynamic_cast<awst::BytesWType const*>(fieldType))
-			{
-				// A `bytesN` field: extract3 yields the generic `bytes` WType, but the
-				// tuple element is sized `bytes[N]` — retag so the value's type matches
-				// the field type (else puya rejects the destructuring assignment with
-				// "assignment target type differs"). Found by the cross-contract fuzzer:
-				// a `(bytes4, uint64)` return failed to compile.
-				decoded = awst::makeReinterpretCast(std::move(extract), fieldType, m_loc);
+					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(si->bits));
 			}
 			else
-			{
-				decoded = std::move(extract);
-			}
+				arc4 = m_ctx.typeMapper.mapToARC4Type(nat);   // bool/address/bytesN/dynamic/nested
 
-			tuple->items.push_back(std::move(decoded));
-			offset += fieldSize;
+			wireElems.push_back(arc4);
+			decodeElems.push_back(dec);
 		}
+		auto const* arc4TupleType =
+			m_ctx.typeMapper.createType<awst::ARC4Tuple>(std::move(wireElems));
 
-		std::vector<awst::WType const*> itemTypes;
-		for (auto const& item: tuple->items)
-			itemTypes.push_back(item->wtype);
-		tuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(std::move(itemTypes), std::nullopt);
-		return tuple;
+		// The native tuple puya's ARC4Decode produces — identical to _returnType except
+		// signed-narrow slots are biguint (reconciled below).
+		awst::WType const* decodeTarget = anyNarrow
+			? m_ctx.typeMapper.createType<awst::WTuple>(decodeElems, std::nullopt)
+			: _returnType;
+
+		auto arc4Val = awst::makeReinterpretCast(std::move(singleBytes), arc4TupleType, m_loc);
+		auto decoded = awst::makeARC4Decode(std::move(arc4Val), decodeTarget, m_loc);
+		if (!anyNarrow)
+			return decoded;
+
+		// Rebuild to _returnType: index each element out of the decoded tuple and
+		// narrow the signed-narrow biguint slots to their 64-bit two's-complement form
+		// (implicitNumericCast biguint→uint64 = pad→low-8-bytes→btoi).
+		auto decodedSE = awst::makeSingleEvaluation(
+			std::move(decoded), decodeTarget, awst::nextSingleEvalId(), m_loc);
+		auto result = awst::makeTupleExpression(_returnType, m_loc);
+		for (size_t i = 0; i < n; ++i)
+		{
+			std::shared_ptr<awst::Expression> item = awst::makeTupleItem(
+				decodedSE, static_cast<int>(i), decodeElems[i], m_loc);
+			if (narrowIdx[i])
+				item = builder::TypeCoercion::implicitNumericCast(
+					std::move(item), awst::WType::uint64Type(), m_loc);
+			result->items.push_back(std::move(item));
+		}
+		result->wtype = _returnType;
+		return result;
 	}
 
 	// ARC4 aggregate return types — reinterpret the raw bytes

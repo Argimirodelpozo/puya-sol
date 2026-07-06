@@ -1422,6 +1422,14 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "gtb4(uint256)", 0x100000001).abi_return) == 1 * (1 << 64) + 0x100000001
     assert as_int(harness.call(app, "gtbb(uint256)", 4).abi_return) == 1000004    # even → true, bytes4(4)
     assert as_int(harness.call(app, "gtbb(uint256)", 5).abi_return) == 5          # odd → false, bytes4(5)
+    # enum / address / dynamic-field tuple returns — closed by the ARC4Decode-based decode rewrite
+    # (dynamic head/tail + address padding) plus the top-level-enum selector-name fix (uint8→uint64).
+    assert as_int(harness.call(app, "gea(uint256)", 2).abi_return) == 2002         # E(2), x=2
+    assert as_int(harness.call(app, "gea(uint256)", 257).abi_return) == 2257       # 257%3=2 → E(2), x=257
+    assert as_int(harness.call(app, "gad(uint256)", 12345).abi_return) == 12345 + 12345   # addr(12345)+x
+    assert as_int(harness.call(app, "gdyn(uint256)", 9).abi_return) == 0x11 + 3 * 1000 + 9  # b[0]+len*1000+x
+    assert as_int(harness.call(app, "gdstr(uint256)", 20).abi_return) == 2 + 20     # len("hi")+x
+    assert as_int(harness.call(app, "garr(uint256)", 6).abi_return) == 6 + 7 * 1000 + 6    # r[0]+r[1]*1000+x
 
 
 def test_modifier_stack_conditional(harness):
