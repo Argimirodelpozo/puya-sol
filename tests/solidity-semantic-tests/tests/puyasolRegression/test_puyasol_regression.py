@@ -1422,6 +1422,10 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "gtb4(uint256)", 0x100000001).abi_return) == 1 * (1 << 64) + 0x100000001
     assert as_int(harness.call(app, "gtbb(uint256)", 4).abi_return) == 1000004    # even → true, bytes4(4)
     assert as_int(harness.call(app, "gtbb(uint256)", 5).abi_return) == 5          # odd → false, bytes4(5)
+    # signed + unsigned-biguint mixed tuple: the uint128 stays 16B (natural), only the signed
+    # element widens to uint256 — guards against re-widening the unsigned biguint to 32B.
+    assert as_int(harness.call(app, "gsbig(int256,uint128)", -5, 100).abi_return) == 95     # -5 + 100
+    assert as_int(harness.call(app, "gsbig(int256,uint128)", 3, 2 ** 70).abi_return) == 3 + 2 ** 70
     # enum / address / dynamic-field tuple returns — closed by the ARC4Decode-based decode rewrite
     # (dynamic head/tail + address padding) plus the top-level-enum selector-name fix (uint8→uint64).
     assert as_int(harness.call(app, "gea(uint256)", 2).abi_return) == 2002         # E(2), x=2

@@ -298,15 +298,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		// hand the head/tail/bool-packing/dynamic-field layout to puya's ARC4Decode
 		// rather than walking byte offsets by hand. The one convention puya's generic
 		// map doesn't capture is the signed-int wire width: a SIGNED intN return is
-		// sign-extended to uint256 (32B) by ReturnRewriter Pass 4 — and when ANY signed
-		// element is present, unsigned biguint elements in the same tuple are widened to
-		// uint256 too. Unsigned biguints in an all-unsigned tuple keep their natural
-		// N/8-byte width (Pass 3). Build the wire element types to match exactly.
+		// sign-extended to uint256 (32B) by ReturnRewriter Pass 4, regardless of width.
+		// UNSIGNED biguints keep their NATURAL declared width (uint128 → 16B) in every
+		// case — Pass 3 (all-unsigned) and Pass 4 (signed-containing, ReturnRewriter.cpp
+		// line 272-281) both encode them at uintN, never widened. Build the wire element
+		// types to match exactly.
 		auto const* solTuple = dynamic_cast<TupleType const*>(_solReturnType);
-		bool anySigned = false;
-		if (solTuple)
-			for (auto const* c: solTuple->components())
-				if (isSignedIntReturn(c)) { anySigned = true; break; }
 
 		size_t const n = tupleType->types().size();
 		std::vector<awst::WType const*> wireElems;   // arc4 element types (the wire)
@@ -340,10 +337,10 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			}
 			else if (si)
 			{
+				// Unsigned: uint8..64 / enum → 8B (arc4.uint64); uint65..256 at its
+				// natural declared width (uint128 → 16B, uint256 → 32B).
 				if (si->bits <= 64)
-					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(64);   // uint8..64 / enum → 8B
-				else if (anySigned)
-					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(256);  // Pass 4 retype
+					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(64);
 				else
 					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(si->bits));
 			}

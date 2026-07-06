@@ -26,6 +26,10 @@ contract Cee {
     // uint128), but the caller's tuple decode used a fixed 32B field -> wrong offsets -> revert.
     function p128(uint128 a, uint128 b) external pure returns (uint128, uint128) { return (a, b); }
     function pmix(uint128 a, uint64 b) external pure returns (uint128, uint64) { return (a, b); }
+    // SIGNED + unsigned-biguint mixed tuple: the unsigned uint128 stays at its NATURAL 16B width
+    // even though a signed element is present (Pass 4 widens only the SIGNED element to uint256).
+    // A decoder that widened the unsigned biguint to 32B here read the wrong bytes → revert. (fuzzer)
+    function sbig(int256 a, uint128 b) external pure returns (int256, uint128) { return (a, b); }
     // signed STRUCT-field / ARRAY-element returns + args (callee names them int64 vs caller's old uint64).
     function packP(int64 a, int64 b) external pure returns (Pair memory) { return Pair(a, b); }
     function unpackP(Pair memory p) external pure returns (int64) { unchecked { return p.px + p.py; } }
@@ -84,6 +88,10 @@ contract Caller {
     function gpmix(uint128 a, uint64 b) external returns (uint256) {
         (uint128 x, uint64 y) = c.pmix(a, b);
         return uint256(x) + uint256(y);
+    }
+    function gsbig(int256 a, uint128 b) external returns (int256) {
+        (int256 x, uint128 y) = c.sbig(a, b);
+        return x + int256(uint256(y));
     }
     // struct return then struct arg re-passed; widen+offset for a clean positive observable.
     function gStruct(int64 a, int64 b) external returns (int256) {
