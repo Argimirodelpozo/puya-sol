@@ -114,18 +114,28 @@ void rewriteARC4Returns(
 		&& signedReturns.empty() && _func.modifiers().empty())
 	{
 		auto const* tupleType = static_cast<awst::WTuple const*>(method.returnType);
-		// Only wrap all-scalar tuples; mixed (arrays/structs/strings) need different handling.
-		bool allScalar = true;
+		// Wrap tuples whose every element is STATIC (fixed-width): uint64/bool/biguint plus
+		// address and fixed byte[N]. A biguint element in such a tuple must be re-typed to its
+		// natural uintN — else puya names it "uint512" → cross-contract selector mismatch →
+		// revert (found by the fuzzer: `(bytes4,uint128)` reverted unconditionally). DYNAMIC
+		// elements (bytes/string/array/struct) still need the untouched opaque/head-tail path.
+		bool allStatic = true;
 		bool hasBiguintElement = false;
 		for (auto const* t : tupleType->types())
 		{
 			if (t == awst::WType::biguintType())
 				hasBiguintElement = true;
-			else if (t != awst::WType::uint64Type() && t != awst::WType::boolType())
-				allScalar = false;
+			else if (t == awst::WType::uint64Type() || t == awst::WType::boolType()
+				|| t == awst::WType::accountType())
+				continue;
+			else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(t);
+				bw && bw->length().has_value())
+				continue;   // fixed byte[N] — static
+			else
+				allStatic = false;
 		}
 
-		if (hasBiguintElement && allScalar)
+		if (hasBiguintElement && allStatic)
 		{
 			std::vector<awst::WType const*> arc4Types;
 			for (size_t ri = 0; ri < returnParams.size() && ri < tupleType->types().size(); ++ri)

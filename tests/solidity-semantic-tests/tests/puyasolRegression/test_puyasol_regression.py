@@ -1426,6 +1426,12 @@ def test_external_call_signed_narrow_return(harness):
     # element widens to uint256 — guards against re-widening the unsigned biguint to 32B.
     assert as_int(harness.call(app, "gsbig(int256,uint128)", -5, 100).abi_return) == 95     # -5 + 100
     assert as_int(harness.call(app, "gsbig(int256,uint128)", 3, 2 ** 70).abi_return) == 3 + 2 ** 70
+    # biguint + bytesN in a tuple return (both orders + uint256) — was an UNCONDITIONAL revert
+    # (Pass 3 allScalar guard → uint512 selector mismatch); fixed by whole-tuple ARC4Encode.
+    for a in (5, 2 ** 32, 2 ** 100 + 9):
+        assert as_int(harness.call(app, "gbu128(uint256)", a).abi_return) == (a % 2 ** 32) + (a % 2 ** 128)
+        assert as_int(harness.call(app, "gu128b(uint256)", a).abi_return) == (a % 2 ** 128) + (a % 2 ** 32)
+        assert as_int(harness.call(app, "gbu256(uint256)", a).abi_return) == (a % 2 ** 32) + a
     # enum / address / dynamic-field tuple returns — closed by the ARC4Decode-based decode rewrite
     # (dynamic head/tail + address padding) plus the top-level-enum selector-name fix (uint8→uint64).
     assert as_int(harness.call(app, "gea(uint256)", 2).abi_return) == 2002         # E(2), x=2

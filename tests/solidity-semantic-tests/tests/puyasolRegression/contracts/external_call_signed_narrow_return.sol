@@ -30,6 +30,13 @@ contract Cee {
     // even though a signed element is present (Pass 4 widens only the SIGNED element to uint256).
     // A decoder that widened the unsigned biguint to 32B here read the wrong bytes → revert. (fuzzer)
     function sbig(int256 a, uint128 b) external pure returns (int256, uint128) { return (a, b); }
+    // biguint (uint128/uint256) mixed with a NON-scalar field (bytesN) in a tuple return: the callee's
+    // ReturnRewriter Pass 3 only wrapped biguint elements when the tuple was all-scalar, so the bytesN
+    // field left the biguint unwrapped → puya named it "uint512" → cross-contract selector mismatch →
+    // UNCONDITIONAL revert (any value). Fixed by whole-tuple ARC4Encode. Both field orders + uint256.
+    function bu128(uint256 a) external pure returns (bytes4, uint128) { return (bytes4(uint32(a)), uint128(a)); }
+    function u128b(uint256 a) external pure returns (uint128, bytes4) { return (uint128(a), bytes4(uint32(a))); }
+    function bu256(uint256 a) external pure returns (bytes4, uint256) { return (bytes4(uint32(a)), a); }
     // signed STRUCT-field / ARRAY-element returns + args (callee names them int64 vs caller's old uint64).
     function packP(int64 a, int64 b) external pure returns (Pair memory) { return Pair(a, b); }
     function unpackP(Pair memory p) external pure returns (int64) { unchecked { return p.px + p.py; } }
@@ -93,6 +100,9 @@ contract Caller {
         (int256 x, uint128 y) = c.sbig(a, b);
         return x + int256(uint256(y));
     }
+    function gbu128(uint256 a) external returns (uint256) { (bytes4 x, uint128 y) = c.bu128(a); return uint256(uint32(x)) + uint256(y); }
+    function gu128b(uint256 a) external returns (uint256) { (uint128 x, bytes4 y) = c.u128b(a); return uint256(x) + uint256(uint32(y)); }
+    function gbu256(uint256 a) external returns (uint256) { (bytes4 x, uint256 y) = c.bu256(a); return uint256(uint32(x)) + y; }
     // struct return then struct arg re-passed; widen+offset for a clean positive observable.
     function gStruct(int64 a, int64 b) external returns (int256) {
         Pair memory p = c.packP(a, b);
