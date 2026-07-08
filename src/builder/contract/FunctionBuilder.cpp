@@ -821,7 +821,19 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		if (!_func.modifiers().empty())
 		{
 			if (m_viaIR)
-				buildModifierChain(_func, method, _contractName);
+			{
+				// buildModifierChain splits the function into `__mod{i}_N` + `__body_N`
+				// subroutines that each RECEIVE the still-ARC4-encoded `__arc4_*` params
+				// and pass them along. Any of those subs that USES a param (the body's
+				// arithmetic, or a modifier's arg like `mArg(a % 5)`) needs the native
+				// DECODE — otherwise it operates on the undecoded value (e.g. `a % 7`
+				// → runtime "b% wanted bigint but got uint64"). Hand the decodes to
+				// buildModifierChain so it prepends a clone into every emitted sub. The
+				// outer method just dispatches into the chain, so its own decode below is
+				// suppressed. (Legacy inlines everything into one body → decodes at 829.)
+				buildModifierChain(_func, method, _contractName, deferredDecodes);
+				deferredDecodes.clear();   // consumed by the chain; skip the outer insert below
+			}
 			else
 				inlineModifiers(_func, method.body);
 		}

@@ -2104,3 +2104,18 @@ def test_super_modifier_chain(harness):
     app2 = harness.compile_and_deploy(
         "viaYul/contracts/super_modifier_chain.sol", contract_name="B", via_yul_behavior=True)
     assert as_int(harness.call(app2, "fPre()").abi_return) == 11331122
+
+
+def test_modifier_param_decode(harness):
+    """viaYul/contracts/modifier_param_decode.sol — a modifier'd fn doing biguint arithmetic
+    on a uint256 param used to revert under viaIR ("b% wanted bigint but got uint64"): the
+    chain's __body_N / __modN subs got the still-encoded param, never decoded. Fixed by
+    prepending the decodes into every chain sub. Fresh deploy per method (log starts 0).
+    (Found by fuzz_dispatch.)"""
+    def call1(sig, arg):
+        app = harness.compile_and_deploy(
+            "viaYul/contracts/modifier_param_decode.sol", contract_name="P", via_yul_behavior=True)
+        return as_int(harness.call(app, sig, arg).abi_return)
+    assert call1("body1(uint256)", 3) == 1125          # mPre(11) + body(22 + 3%7=3) = 1125
+    assert call1("body2(uint256)", 3) == 152525        # mTwice(15) + body twice (each 22+3)
+    assert call1("arg1(uint256)", 8) == 7322           # mArg(8%5=3 -> 70+3) + body(22)

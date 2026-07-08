@@ -11,6 +11,7 @@
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/Clone.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -30,7 +31,8 @@ void ContractBuilder::inlineModifiers(
 void ContractBuilder::buildModifierChain(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::ContractMethod& _method,
-	std::string const& _contractName
+	std::string const& _contractName,
+	std::vector<std::shared_ptr<awst::Statement>> const& _paramDecodes
 )
 {
 	static int modChainCounter = 0;
@@ -43,6 +45,22 @@ void ContractBuilder::buildModifierChain(
 	std::string baseName = _func.name();
 	std::string cref = m_sourceFile + "." + _contractName;
 
+	// Every emitted sub receives the still-ARC4-encoded `__arc4_*` params. Prepend a
+	// FRESH clone of the ABI param decodes to any sub that uses them (the body's
+	// arithmetic, a modifier's arg expr), so it works on native values. Clone per sub
+	// (fresh SingleEvaluation ids) — sharing the same statement nodes across subs aliases
+	// them. Decoding in each sub is redundant but idempotent + correct.
+	auto prependDecodes = [&](std::shared_ptr<awst::Block> const& _blk) {
+		if (_paramDecodes.empty() || !_blk) return;
+		std::vector<std::shared_ptr<awst::Statement>> clones;
+		clones.reserve(_paramDecodes.size());
+		for (auto const& s: _paramDecodes)
+			clones.push_back(awst::cloneStmt(s));
+		_blk->body.insert(_blk->body.begin(),
+			std::make_move_iterator(clones.begin()),
+			std::make_move_iterator(clones.end()));
+	};
+
 	// Innermost subroutine = original function body.
 	std::string bodySubName = baseName + "__body_" + std::to_string(chainId);
 	{
@@ -53,6 +71,7 @@ void ContractBuilder::buildModifierChain(
 		bodySub.returnType = _method.returnType;
 		bodySub.args = _method.args; // same params as outer function
 		bodySub.body = _method.body; // move the original function body here
+		prependDecodes(bodySub.body);
 		bodySub.arc4MethodConfig = std::nullopt; // internal, not ABI-routable
 		bodySub.pure = _method.pure;
 		m_modifierSubroutines.push_back(std::move(bodySub));
@@ -102,6 +121,9 @@ void ContractBuilder::buildModifierChain(
 		modSub.pure = _method.pure;
 
 		auto modBody = awst::makeBlock(modSub.sourceLocation);
+
+		// Decode params first so a modifier arg expr (`mArg(a % 5)`) sees native values.
+		prependDecodes(modBody);
 
 		auto const* args = modInvocation->arguments();
 		auto const& params = modDef->parameters();
