@@ -1,6 +1,9 @@
 /// @file ModifierBodyInliner.cpp
-/// Textual _ expansion for modifier bodies. The subroutine-chain path
-/// (via-IR mode) lives in ModifierInliner.cpp::buildModifierChain.
+/// Textual `_` expansion for modifier bodies. Used for CONSTRUCTORS and
+/// library / free functions (bodies inlined in place, no callable method).
+/// Contract METHODS use the solc-aligned subroutine chain instead — the
+/// default since the modifier-lowering consolidation — in
+/// ModifierInliner.cpp::buildModifierChain.
 
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StateVarWalker.h"
