@@ -33,6 +33,13 @@ from algosdk.v2client.models import (
 
 from .revert import classify_revert, Reverted, ErrorString, Panic, RawRevert
 
+# App ids that proved to need populate_app_call_resources (box-backed storage,
+# inner app calls). First call on an app is submitted optimistically without
+# the populate SIMULATE; if it fails and the populated retry succeeds, the app
+# lands here so subsequent calls populate up front. Session-lifetime is fine:
+# app ids are unique per localnet session.
+_needs_populate: set[int] = set()
+
 
 @dataclass
 class Result:
@@ -252,10 +259,19 @@ def call(
     if expect_revert:
         return _simulate_for_revert(algod, atc)
 
-    try:
-        atc = au.populate_app_call_resources(atc, algod)
-    except Exception:
-        pass
+    # populate_app_call_resources costs a full SIMULATE round-trip per call, and
+    # most calls need no extra resources. Populate only when the caller passed
+    # explicit resources or this app previously proved to need auto-discovery
+    # (box-backed storage, inner app calls); otherwise submit optimistically and
+    # retry once WITH population on failure — a rejected txn commits nothing, so
+    # the retry is safe, and success adds the app to the memo so later calls on
+    # it skip the failed probe.
+    populated = bool(boxes or extra_apps or extra_accounts) or app.app_id in _needs_populate
+    if populated:
+        try:
+            atc = au.populate_app_call_resources(atc, algod)
+        except Exception:
+            pass
 
     try:
         resp = atc.execute(algod, wait_rounds=4)
@@ -263,6 +279,33 @@ def call(
         logs = _collect_logs(resp)
         return Result(abi_return=abi_return, logs=logs, raw_response=resp)
     except Exception as e:
+        if not populated:
+            retry_atc = _build_atc(
+                algod=algod,
+                app=app,
+                sender=sender,
+                signer=signer,
+                abi_method=abi_method,
+                encoded_args=encoded_args,
+                payment_wei=payment_wei,
+                extra_fee=extra_fee,
+                extra_apps=extra_apps,
+                extra_accounts=extra_accounts,
+                boxes=boxes,
+            )
+            try:
+                retry_atc = au.populate_app_call_resources(retry_atc, algod)
+            except Exception:
+                pass
+            try:
+                resp = retry_atc.execute(algod, wait_rounds=4)
+                _needs_populate.add(app.app_id)
+                abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
+                logs = _collect_logs(resp)
+                return Result(abi_return=abi_return, logs=logs, raw_response=resp)
+            except Exception as e2:
+                e = e2  # genuine failure — flow into budget/revert handling below
+
         # Budget-exhausted? Retry with a pool of dummy helper-app calls in
         # the same group (each contributes 700 opcodes via fee pooling).
         if _is_budget_error(e):
@@ -338,7 +381,7 @@ def _retry_with_budget_pool(
         sp_pay.fee = 1000
         atc.add_transaction(
             TransactionWithSigner(
-                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei), signer
+                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei, note=os.urandom(8)), signer
             )
         )
 
@@ -434,7 +477,7 @@ def _raw_call_inner(
         sp_pay.fee = 1000
         txns.append(
             TransactionWithSigner(
-                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei), signer
+                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei, note=os.urandom(8)), signer
             )
         )
     app_txn = ApplicationCallTxn(
@@ -455,17 +498,28 @@ def _raw_call_inner(
 
     if expect_revert:
         return _simulate_for_revert(algod, _new_atc())
+    # Same optimistic-populate strategy as the ABI path: skip the per-call
+    # populate SIMULATE unless this app is known to need resource discovery;
+    # on failure retry once populated (fallback contracts with boxes).
+    populated = app.app_id in _needs_populate
     try:
         atc = _new_atc()
-        # Populate box refs / foreign apps via simulate, matching the
-        # ABI-call path so fallback contracts with boxes work.
-        try:
-            atc = au.populate_app_call_resources(atc, algod)
-        except Exception:
-            pass
+        if populated:
+            try:
+                atc = au.populate_app_call_resources(atc, algod)
+            except Exception:
+                pass
         atc.execute(algod, wait_rounds=4)
         return Result()
     except Exception as e:
+        if not populated:
+            try:
+                retry_atc = au.populate_app_call_resources(_new_atc(), algod)
+                retry_atc.execute(algod, wait_rounds=4)
+                _needs_populate.add(app.app_id)
+                return Result()
+            except Exception as e2:
+                e = e2
         sim_result = _simulate_for_revert(algod, _new_atc())
         sim_result.raw_response = str(e)
         return sim_result
@@ -492,7 +546,7 @@ def _build_atc(
         sp_pay.fee = 1000
         atc.add_transaction(
             TransactionWithSigner(
-                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei), signer
+                PaymentTxn(sender, sp_pay, app.app_addr, payment_wei, note=os.urandom(8)), signer
             )
         )
     sp_call = algod.suggested_params()

@@ -21,7 +21,13 @@ class LocalNet:
             au.ClientManager.get_default_localnet_config("kmd")
         )
         self.client = au.AlgorandClient(au.AlgoSdkClients(algod=algod, kmd=kmd))
-        self.client.set_suggested_params_cache_timeout(0)
+        # Cache suggested params for 60s: every fee field is overridden manually
+        # (flat_fee + explicit fee at all call/deploy sites) and the validity
+        # window is ~1000 rounds, so a 60s-stale first-round is harmless. At 0
+        # the suite made ~10k redundant GET /params round-trips (6-8 per test).
+        # Duplicate-txid collisions from identical cached params are prevented
+        # by random notes on every txn (payments got theirs with this change).
+        self.client.set_suggested_params_cache_timeout(60)
         self.account = self.client.account.localnet_dispenser()
         self.client.account.set_signer_from_account(self.account)
         self._budget_helper_id: int | None = None

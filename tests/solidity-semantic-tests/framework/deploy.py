@@ -1,6 +1,7 @@
 """Deploy a compiled ARC56 contract to localnet."""
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -161,7 +162,7 @@ def deploy(
     total_fund = min_balance + fund_wei + extra_funding_microalgos
     sp2 = algod.suggested_params()
     pay = PaymentTxn(
-        localnet.account.address, sp2, app_addr, total_fund
+        localnet.account.address, sp2, app_addr, total_fund, note=os.urandom(8)
     )
     wait_for_confirmation(
         algod, algod.send_transaction(pay.sign(localnet.account.private_key)), 4
