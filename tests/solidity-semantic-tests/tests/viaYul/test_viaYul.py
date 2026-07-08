@@ -2089,3 +2089,18 @@ def test_virtual_functions(harness):
     # g() -> 3
     r = harness.call(app, "g()")
     assert as_int(r.abi_return) == 3
+
+
+def test_super_modifier_chain(harness):
+    """viaYul/contracts/super_modifier_chain.sol — `super.f()` into a base function that
+    carries a modifier. Used to fail viaIR compile ("unable to resolve function reference
+    f__mod0_N") because emitSuperSubroutines didn't flush the base's modifier-chain
+    subroutines. Fresh deploy per method so `log` starts at 0. (Found by fuzz_dispatch.)"""
+    # override with NO modifier → super target A.fBoth has the chain: B(+33) → mBoth(13,post14) + body(22)
+    app = harness.compile_and_deploy(
+        "viaYul/contracts/super_modifier_chain.sol", contract_name="B", via_yul_behavior=True)
+    assert as_int(harness.call(app, "fBoth()").abi_return) == 331322
+    # override WITH a modifier → both override and super target have chains
+    app2 = harness.compile_and_deploy(
+        "viaYul/contracts/super_modifier_chain.sol", contract_name="B", via_yul_behavior=True)
+    assert as_int(harness.call(app2, "fPre()").abi_return) == 11331122

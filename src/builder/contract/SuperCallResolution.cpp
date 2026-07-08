@@ -188,6 +188,15 @@ void ContractBuilder::emitSuperSubroutines(
 		auto method = buildFunction(*func, _contractName, superImplName(*func));
 		method.arc4MethodConfig.reset();
 		_contractNode.methods.push_back(std::move(method));
+		// A super TARGET with modifiers builds its viaIR modifier chain
+		// (`f__mod{i}_N` subroutines) into m_modifierSubroutines; flush them into the
+		// contract like every other function-emission site (ContractBuilder.cpp:426 etc.).
+		// Without this the super copy's body references an unemitted `f__mod0_N` →
+		// puya "unable to resolve function reference" (viaIR only; legacy inlines
+		// modifiers in-body so m_modifierSubroutines stays empty). (Found by fuzz_dispatch.)
+		for (auto& sub: m_modifierSubroutines)
+			_contractNode.methods.push_back(std::move(sub));
+		m_modifierSubroutines.clear();
 	}
 }
 
