@@ -588,11 +588,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		// Zero-init named return vars (Solidity implicit init); bump free-memory pointer
 		// for every memory-typed return (EVM allocates at entry; tests probe FMP movement).
+		// For a CHAIN-lowered modifier'd function the return params are THREADED in/out as
+		// call args (buildModifierChain), so the OUTER method zero-inits them once — doing it
+		// again in the body would reset the value on every repeated `_;` (no accumulation).
+		// Skip the VALUE zero-inits there (keep the memory FMP bumps).
+		bool const chainLowered = !_func.modifiers().empty();
 		{
 			auto const& retParams = _func.returnParameters();
 			std::vector<std::shared_ptr<awst::Statement>> inits;
 			for (auto const& rp: retParams)
 			{
+				if (chainLowered) break;   // value zero-init handled by the chain's outer method
 				if (rp->name().empty())
 					continue;
 				// Box-keyed storage-ref named returns hold a bytes box-key, not a struct — skip zero-init.
@@ -817,25 +823,20 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Transient blob init is in the approval-program preamble (TRANSIENT_SLOT);
 		// per-method init would reset it mid-dispatch, clobbering earlier writes.
 
-		// Legacy: textual _ expansion; via IR: separate subroutines per modifier.
+		// Modifiers → a per-modifier SUBROUTINE CHAIN (mirrors solc's IR modifier lowering,
+		// `IRGenerator::generateModifier`): `__mod{i}_N` + `__body_N` subs, each threading the
+		// return params in/out and passing the still-ARC4-encoded `__arc4_*` params along. This
+		// replaced the old textual `_`-expansion inliner as the default — the textual path
+		// mis-CSE'd a multiple-`_;` modifier whose body contained a call, and the chain handles
+		// it correctly (one lowering instead of two divergent ones). The textual inliner
+		// (ModifierBodyInliner via ContractBuilder::inlineModifiers) is retained for constructors
+		// / library / free functions. Any sub that USES a param needs the native decode, so hand
+		// the decodes to buildModifierChain (it clones them into every sub); the outer method
+		// just dispatches, so its own decode below is suppressed.
 		if (!_func.modifiers().empty())
 		{
-			if (m_viaIR)
-			{
-				// buildModifierChain splits the function into `__mod{i}_N` + `__body_N`
-				// subroutines that each RECEIVE the still-ARC4-encoded `__arc4_*` params
-				// and pass them along. Any of those subs that USES a param (the body's
-				// arithmetic, or a modifier's arg like `mArg(a % 5)`) needs the native
-				// DECODE — otherwise it operates on the undecoded value (e.g. `a % 7`
-				// → runtime "b% wanted bigint but got uint64"). Hand the decodes to
-				// buildModifierChain so it prepends a clone into every emitted sub. The
-				// outer method just dispatches into the chain, so its own decode below is
-				// suppressed. (Legacy inlines everything into one body → decodes at 829.)
-				buildModifierChain(_func, method, _contractName, deferredDecodes);
-				deferredDecodes.clear();   // consumed by the chain; skip the outer insert below
-			}
-			else
-				inlineModifiers(_func, method.body);
+			buildModifierChain(_func, method, _contractName, deferredDecodes);
+			deferredDecodes.clear();   // consumed by the chain; the outer insert below is a no-op
 		}
 
 		// Insert deferred ARC4 decodes at top of the now-modifier-wrapped body.

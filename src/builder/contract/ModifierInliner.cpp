@@ -12,6 +12,7 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "awst/Clone.h"
+#include "awst/Termination.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -45,6 +46,72 @@ void ContractBuilder::buildModifierChain(
 	std::string baseName = _func.name();
 	std::string cref = m_sourceFile + "." + _contractName;
 
+	// Return-parameter THREADING (mirrors solc IR). A modifier arg or the body may
+	// READ/WRITE the named return vars — `mod2(r)`, `m1(x = 2)`, or `r += 1` accumulating
+	// across a repeated/looped `_;`. So thread the return params as LEADING in-args through
+	// every chain sub and capture them back out at each `_`, letting mutations propagate.
+	// (rewriteARC4Returns Pass 2/3 skip modifier'd functions, so these stay NATIVE — no
+	// ARC4 mismatch.) Found by the dispatch fuzzer + the chain-as-default experiment.
+	struct RetInfo { std::string name; awst::WType const* type; };
+	std::vector<RetInfo> retInfos;
+	for (size_t ri = 0; ri < _func.returnParameters().size(); ++ri)
+	{
+		auto const& rp = _func.returnParameters()[ri];
+		std::string nm = rp->name().empty()
+			? "__ret_" + std::to_string(chainId) + "_" + std::to_string(ri)
+			: rp->name();
+		retInfos.push_back({nm, m_typeMapper.map(rp->type())});
+	}
+	bool const hasRet = (_method.returnType != awst::WType::voidType());
+	// Leading return-param args, prepended to every chain sub's signature.
+	std::vector<awst::SubroutineArgument> retArgs;
+	for (auto const& r: retInfos)
+		retArgs.push_back(awst::SubroutineArgument{r.name, _method.sourceLocation, r.type});
+	// Prepend retArgs to a sub's args (returns a fresh combined vector).
+	auto withRetArgs = [&](std::vector<awst::SubroutineArgument> const& _fnArgs) {
+		std::vector<awst::SubroutineArgument> out = retArgs;
+		out.insert(out.end(), _fnArgs.begin(), _fnArgs.end());
+		return out;
+	};
+	// Push the current return-param vars, then the function params, as call args.
+	auto pushThreadedArgs = [&](std::shared_ptr<awst::SubroutineCallExpression> const& _call,
+		awst::SourceLocation const& _loc) {
+		for (auto const& r: retInfos)
+			awst::pushCallArg(_call->args, r.name, awst::makeVarExpression(r.name, r.type, _loc));
+		for (auto const& arg: _method.args)
+			awst::pushCallArg(_call->args, arg.name,
+				awst::makeVarExpression(arg.name, arg.wtype, _loc));
+	};
+	// Capture a chain call's return into the return-param var(s): `r = call` (one) or
+	// `(r1,…,rN) = call` (many). Appends the assignment to `_dst`.
+	auto captureReturn = [&](std::shared_ptr<awst::Block> const& _dst,
+		std::shared_ptr<awst::Expression> _call, awst::SourceLocation const& _loc) {
+		if (!hasRet) { _dst->body.push_back(awst::makeExpressionStatement(std::move(_call), _loc)); return; }
+		if (retInfos.size() == 1)
+		{
+			auto tgt = awst::makeVarExpression(retInfos[0].name, retInfos[0].type, _loc);
+			_dst->body.push_back(awst::makeAssignmentStatement(std::move(tgt), std::move(_call), _loc));
+		}
+		else
+		{
+			auto tup = awst::makeTupleExpression(_method.returnType, _loc);
+			for (auto const& r: retInfos)
+				tup->items.push_back(awst::makeVarExpression(r.name, r.type, _loc));
+			_dst->body.push_back(awst::makeAssignmentStatement(std::move(tup), std::move(_call), _loc));
+		}
+	};
+	// Return the threaded return-param(s): `return r` / `return (r1,…,rN)` / bare `return`.
+	auto makeThreadedReturn = [&](awst::SourceLocation const& _loc) -> std::shared_ptr<awst::Statement> {
+		if (!hasRet) return awst::makeReturnStatement(nullptr, _loc);
+		if (retInfos.size() == 1)
+			return awst::makeReturnStatement(
+				awst::makeVarExpression(retInfos[0].name, retInfos[0].type, _loc), _loc);
+		auto tup = awst::makeTupleExpression(_method.returnType, _loc);
+		for (auto const& r: retInfos)
+			tup->items.push_back(awst::makeVarExpression(r.name, r.type, _loc));
+		return awst::makeReturnStatement(std::move(tup), _loc);
+	};
+
 	// Every emitted sub receives the still-ARC4-encoded `__arc4_*` params. Prepend a
 	// FRESH clone of the ABI param decodes to any sub that uses them (the body's
 	// arithmetic, a modifier's arg expr), so it works on native values. Clone per sub
@@ -69,9 +136,13 @@ void ContractBuilder::buildModifierChain(
 		bodySub.cref = cref;
 		bodySub.memberName = bodySubName;
 		bodySub.returnType = _method.returnType;
-		bodySub.args = _method.args; // same params as outer function
+		bodySub.args = withRetArgs(_method.args); // return params (in/out) + function params
 		bodySub.body = _method.body; // move the original function body here
 		prependDecodes(bodySub.body);
+		// A named-return body (`{ r += 1; }`) sets the return-param vars but may fall off
+		// the end without a `return` — append one that threads them back out.
+		if (bodySub.body && !awst::blockAlwaysTerminates(*bodySub.body))
+			bodySub.body->body.push_back(makeThreadedReturn(bodySub.sourceLocation));
 		bodySub.arc4MethodConfig = std::nullopt; // internal, not ABI-routable
 		bodySub.pure = _method.pure;
 		m_modifierSubroutines.push_back(std::move(bodySub));
@@ -116,7 +187,7 @@ void ContractBuilder::buildModifierChain(
 		modSub.cref = cref;
 		modSub.memberName = modSubName;
 		modSub.returnType = _method.returnType;
-		modSub.args = _method.args; // receives same params
+		modSub.args = withRetArgs(_method.args); // return params (in/out) + function params
 		modSub.arc4MethodConfig = std::nullopt; // internal
 		modSub.pure = _method.pure;
 
@@ -153,44 +224,14 @@ void ContractBuilder::buildModifierChain(
 			}
 		}
 
-		// At `_`: call nextSubName and capture return value.
+		// At `_`: thread the return-param(s) in, call nextSubName, capture them back out
+		// so a repeated/looped `_;` accumulates and a modifier arg's writes propagate.
 		auto placeholderBlock = awst::makeBlock(modSub.sourceLocation);
-		std::string retVarName;
-		auto const& retParams = _func.returnParameters();
-		if (_method.returnType != awst::WType::voidType())
 		{
-			if (retParams.size() == 1 && !retParams[0]->name().empty())
-				retVarName = retParams[0]->name();
-			else
-				retVarName = "__retval_" + std::to_string(chainId) + "_" + std::to_string(i);
-		}
-
-		{
-			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{nextSubName}, _method.returnType, modSub.sourceLocation);
-			for (auto const& arg: _method.args)
-				awst::pushCallArg(call->args, arg.name,
-					awst::makeVarExpression(arg.name, arg.wtype, modSub.sourceLocation));
-
-			if (!retVarName.empty())
-			{
-				auto retTarget = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
-
-				auto assign = awst::makeAssignmentStatement(std::move(retTarget), std::move(call), modSub.sourceLocation);
-				placeholderBlock->body.push_back(std::move(assign));
-			}
-			else
-			{
-				auto stmt = awst::makeExpressionStatement(std::move(call), modSub.sourceLocation);
-				placeholderBlock->body.push_back(std::move(stmt));
-			}
-		}
-
-		if (!retVarName.empty()) // zero-init return variable
-		{
-			auto target = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
-			auto zeroVal = StorageMapper::makeDefaultValue(_method.returnType, modSub.sourceLocation);
-			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), modSub.sourceLocation);
-			modBody->body.push_back(std::move(assign));
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{nextSubName}, _method.returnType, modSub.sourceLocation);
+			pushThreadedArgs(call, modSub.sourceLocation);
+			captureReturn(placeholderBlock, std::move(call), modSub.sourceLocation);
 		}
 
 		setPlaceholderBody(placeholderBlock);
@@ -199,9 +240,9 @@ void ContractBuilder::buildModifierChain(
 
 		if (translatedBody)
 		{
-			if (!retVarName.empty())
+			// A bare `return;` in a modifier body exits it with the current return-params.
+			if (hasRet)
 			{
-				// Rewrite bare `return;` in modifier body to `return __retval;`.
 				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> fixReturns;
 				fixReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 				{
@@ -210,19 +251,16 @@ void ContractBuilder::buildModifierChain(
 						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
 						{
 							if (!ret->value)
-							{
-								auto var = awst::makeVarExpression(retVarName, _method.returnType, ret->sourceLocation);
-								ret->value = std::move(var);
-							}
+								stmt = makeThreadedReturn(ret->sourceLocation);
 						}
-						if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
 						{
 							if (ifElse->ifBranch) fixReturns(ifElse->ifBranch->body);
 							if (ifElse->elseBranch) fixReturns(ifElse->elseBranch->body);
 						}
-						if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+						else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
 							fixReturns(block->body);
-						if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+						else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
 							if (loop->loopBody) fixReturns(loop->loopBody->body);
 					}
 				};
@@ -233,15 +271,8 @@ void ContractBuilder::buildModifierChain(
 				modBody->body.push_back(std::move(stmt));
 		}
 
-		{
-			auto retStmt = awst::makeReturnStatement(nullptr, modSub.sourceLocation);
-			if (!retVarName.empty())
-			{
-				auto var = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
-				retStmt->value = std::move(var);
-			}
-			modBody->body.push_back(std::move(retStmt));
-		}
+		// Modifier falls off the end → return the threaded return-param values.
+		modBody->body.push_back(makeThreadedReturn(modSub.sourceLocation));
 
 		for (auto declId: remappedDeclIds)
 			m_tr->eraseParamRemap(declId);
@@ -251,35 +282,30 @@ void ContractBuilder::buildModifierChain(
 		nextSubName = modSubName;
 	}
 
-	// Rewrite _method.body to call the outermost modifier subroutine.
+	// Rewrite _method.body to zero-init the return-param vars, call the outermost modifier
+	// (threading the return params in), capture them back, and return them.
 	auto entryBody = awst::makeBlock(_method.sourceLocation);
 
-	for (auto const& rp: _func.returnParameters()) // zero-init named return vars
+	for (auto const& r: retInfos) // zero-init the return-param vars before the call
 	{
-		if (rp->name().empty()) continue;
-		auto* rpType = m_typeMapper.map(rp->type());
-		auto target = awst::makeVarExpression(rp->name(), rpType, _method.sourceLocation);
-
-		auto zeroVal = StorageMapper::makeDefaultValue(rpType, _method.sourceLocation);
-		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), _method.sourceLocation);
-		entryBody->body.push_back(std::move(assign));
+		auto target = awst::makeVarExpression(r.name, r.type, _method.sourceLocation);
+		auto zeroVal = StorageMapper::makeDefaultValue(r.type, _method.sourceLocation);
+		entryBody->body.push_back(awst::makeAssignmentStatement(
+			std::move(target), std::move(zeroVal), _method.sourceLocation));
 	}
 
-	auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{nextSubName}, _method.returnType, _method.sourceLocation);
-	for (auto const& arg: _method.args)
-		awst::pushCallArg(call->args, arg.name,
-			awst::makeVarExpression(arg.name, arg.wtype, _method.sourceLocation));
+	auto call = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{nextSubName}, _method.returnType, _method.sourceLocation);
+	pushThreadedArgs(call, _method.sourceLocation);
 
-	if (_method.returnType != awst::WType::voidType())
+	if (hasRet)
 	{
-		auto retStmt = awst::makeReturnStatement(std::move(call), _method.sourceLocation);
-		entryBody->body.push_back(std::move(retStmt));
+		captureReturn(entryBody, std::move(call), _method.sourceLocation);
+		entryBody->body.push_back(makeThreadedReturn(_method.sourceLocation));
 	}
 	else
-	{
-		auto stmt = awst::makeExpressionStatement(std::move(call), _method.sourceLocation);
-		entryBody->body.push_back(std::move(stmt));
-	}
+		entryBody->body.push_back(
+			awst::makeExpressionStatement(std::move(call), _method.sourceLocation));
 
 	_method.body = entryBody;
 }
