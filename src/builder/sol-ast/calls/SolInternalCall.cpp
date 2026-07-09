@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
@@ -531,8 +532,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				: m_ctx.typeMapper.createType<awst::WTuple>(std::move(tupleTypes));
 		call->wtype = callTupleType;
 
-		static int storageWriteBackCounter = 0;
-		std::string tempName = "__storage_wb_" + std::to_string(storageWriteBackCounter++);
+		std::string tempName = "__storage_wb_" + std::to_string(awst::NameGen::next("SolInternalCall.storageWriteBackCounter"));
 
 		auto tempVar = awst::makeVarExpression(tempName, callTupleType, m_loc);
 

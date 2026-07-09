@@ -1,4 +1,5 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 
 #include <string>
@@ -119,8 +120,7 @@ std::shared_ptr<awst::Expression> tryWidenArc4DynamicArrayInt(
 	int const padBytes = (tgtBits - srcBits) / 8;
 	bool const isSigned = src->isSigned;
 
-	static int s_dwCounter = 0;
-	int const n = s_dwCounter++;
+	int const n = awst::NameGen::next("Arc4ArrayWidening.s_dwCounter");
 	auto u64 = awst::WType::uint64Type();
 	auto bytesT = awst::WType::bytesType();
 	std::string const lenN = "__dwiden_len_" + std::to_string(n);

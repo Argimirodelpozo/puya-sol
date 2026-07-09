@@ -2,6 +2,7 @@
 /// toAwst dispatchers remain in SolIndexAccess.cpp.
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
+#include "awst/NameGen.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -163,8 +164,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 			if (dynamic_cast<awst::AssignmentExpression const*>(translated.get()))
 			{
-				static int idxTempCounter = 0;
-				std::string tempName = "__sol_idx_" + std::to_string(idxTempCounter++);
+				std::string tempName = "__sol_idx_" + std::to_string(awst::NameGen::next("SolIndexAccessHandlers.idxTempCounter"));
 				auto tempVar = awst::makeVarExpression(tempName, translated->wtype, m_loc);
 				auto saveStmt = awst::makeAssignmentStatement(
 					tempVar, std::move(translated), m_loc);
@@ -493,8 +493,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 		m_ctx.prePendingStatements, std::move(_idxExpr), m_loc);
 
 	// Pin idx to a temp local so we can reference it twice (page + offset).
-	static int s_mbCounter = 0;
-	std::string idxVarName = "__mb_idx_" + std::to_string(s_mbCounter++);
+	std::string idxVarName = "__mb_idx_" + std::to_string(awst::NameGen::next("SolIndexAccessHandlers.s_mbCounter"));
 	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
 	m_ctx.prePendingStatements.push_back(
 		awst::makeAssignmentStatement(idxVar, std::move(_idxExpr), m_loc));

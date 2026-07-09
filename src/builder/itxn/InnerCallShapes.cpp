@@ -5,6 +5,7 @@
 ///   - handleStaticCallPrecompile (0x01..0x09 precompiles)
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "awst/NameGen.h"
 #include "builder/itxn/InnerCallInternal.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -255,8 +256,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 		"the target method takes a single static 32-byte argument (or raw "
 		"bytes); multi-argument and dynamic-argument targets cannot be "
 		"reconstructed from an EVM-shaped blob at runtime.", _loc);
-	static int s_rawCallTmpCounter = 0;
-	std::string tmpName = "__rawcall_data_" + std::to_string(++s_rawCallTmpCounter);
+	std::string tmpName = "__rawcall_data_" + std::to_string((awst::NameGen::next("InnerCallShapes.s_rawCallTmpCounter") + 1));
 	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 	auto tmpAssign = awst::makeAssignmentStatement(tmpTarget, std::move(_dataBytes), _loc);
 	_ctx.prePendingStatements.push_back(std::move(tmpAssign));
@@ -369,8 +369,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		ecdsaRecover->stackArgs.push_back(std::move(r));
 		ecdsaRecover->stackArgs.push_back(std::move(s));
 
-		static int s_ecRecoverTmpCounter = 0;
-		std::string tupleVar = "__ecrecover_result_" + std::to_string(++s_ecRecoverTmpCounter);
+		std::string tupleVar = "__ecrecover_result_" + std::to_string((awst::NameGen::next("InnerCallShapes.s_ecRecoverTmpCounter") + 1));
 		auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 		auto assignTuple = awst::makeAssignmentStatement(tupleTarget, std::move(ecdsaRecover), _loc);
 		_ctx.prePendingStatements.push_back(std::move(assignTuple));

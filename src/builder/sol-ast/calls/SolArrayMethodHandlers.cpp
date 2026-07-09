@@ -6,6 +6,7 @@
 /// routes each array shape to the corresponding handler below.
 
 #include "builder/sol-ast/calls/SolArrayMethod.h"
+#include "awst/NameGen.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -72,8 +73,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		varName, structWType, kind, loc);
 
 	// tmp = structRead
-	static int structPushCounter = 0;
-	std::string tmpName = "__struct_arr_tmp_" + std::to_string(structPushCounter++);
+	std::string tmpName = "__struct_arr_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethodHandlers.structPushCounter"));
 	auto tmpTarget = awst::makeVarExpression(tmpName, structWType, loc);
 	m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(structRead), loc));
 

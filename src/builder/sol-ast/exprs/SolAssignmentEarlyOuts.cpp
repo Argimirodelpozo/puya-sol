@@ -2,6 +2,7 @@
 ///   tryHandleTransientStateWrite, tryHandleStoragePointerReassign,
 ///   tryHandleMultiBoxArrayWrite
 #include "builder/sol-ast/exprs/SolAssignment.h"
+#include "awst/NameGen.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageBackend.h"
@@ -139,8 +140,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	// Pin idx to a temp so page and offset can reference it without re-evaluating side effects.
 	auto idxExpr = builder::TypeCoercion::checkedIndexToUint64(
 		m_ctx.prePendingStatements, buildExpr(*lhsIdx->indexExpression()), m_loc);
-	static int s_mbWCounter = 0;
-	std::string idxVarName = "__mb_widx_" + std::to_string(s_mbWCounter++);
+	std::string idxVarName = "__mb_widx_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbWCounter"));
 	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
 	m_ctx.prePendingStatements.push_back(
 		awst::makeAssignmentStatement(idxVar, std::move(idxExpr), m_loc));
@@ -175,8 +175,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 		std::move(rhs), expectedNative, m_loc);
 
 	// Pin rhs to a temp so we can encode it for box_replace and also return it as the result.
-	static int s_mbVCounter = 0;
-	std::string valVarName = "__mb_val_" + std::to_string(s_mbVCounter++);
+	std::string valVarName = "__mb_val_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbVCounter"));
 	auto valVar = awst::makeVarExpression(valVarName, rhs->wtype, m_loc);
 	m_ctx.prePendingStatements.push_back(
 		awst::makeAssignmentStatement(valVar, std::move(rhs), m_loc));

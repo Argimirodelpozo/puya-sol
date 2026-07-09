@@ -3,6 +3,7 @@
 /// Migrated from MemberAccessBuilder.cpp lines 582-655.
 
 #include "builder/sol-ast/members/SolAddressProperty.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -78,9 +79,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		// Counter makes the name unique: two `.code` reads in one expression
 		// would both read the second call's temp if they shared a name
 		// (all prepends run before the returned expression is consumed).
-		static int s_appProgramTmpCounter = 0;
 		std::string tmpName =
-			"__app_program_result_" + std::to_string(++s_appProgramTmpCounter);
+			"__app_program_result_" + std::to_string((awst::NameGen::next("SolAddressProperty.s_appProgramTmpCounter") + 1));
 		auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, m_loc);
 		auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(appParamsGet), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assign));
@@ -143,9 +143,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 					// Counter-guarded so two `address(c).balance` in one expression
 					// don't alias the same temp (second app_params_get would clobber).
-					static int s_appBalanceTmpCounter = 0;
 					std::string addrTmp =
-						"__app_balance_addr_" + std::to_string(++s_appBalanceTmpCounter);
+						"__app_balance_addr_" + std::to_string((awst::NameGen::next("SolAddressProperty.s_appBalanceTmpCounter") + 1));
 					auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 					auto addrAssign = awst::makeAssignmentStatement(
 						addrTmpTarget, std::move(appParamsGet), m_loc);

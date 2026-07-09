@@ -3,6 +3,7 @@
 /// inner app calls for external.
 
 #include "builder/itxn/FunctionPointerBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/itxn/FunctionPointerDispatchTypes.h"
 #include "builder/sol-types/FunctionPointerKind.h"
@@ -341,8 +342,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		}
 
 		// Non-void: spill both branches' result into a shared temp.
-		static int s_tmpCounter = 0;
-		std::string tmpName = "__fnptr_res_" + std::to_string(++s_tmpCounter);
+		std::string tmpName = "__fnptr_res_" + std::to_string((awst::NameGen::next("FunctionPointerBuilder.s_tmpCounter") + 1));
 		auto writeTmp = [&](std::shared_ptr<awst::Expression> _val) {
 			auto target = awst::makeVarExpression(tmpName, retType, _loc);
 			return awst::makeAssignmentStatement(std::move(target), std::move(_val), _loc);

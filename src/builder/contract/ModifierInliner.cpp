@@ -8,6 +8,7 @@
 /// share the same implementation.
 
 #include "builder/contract/ContractBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -36,8 +37,7 @@ void ContractBuilder::buildModifierChain(
 	std::vector<std::shared_ptr<awst::Statement>> const& _paramDecodes
 )
 {
-	static int modChainCounter = 0;
-	int chainId = modChainCounter++;
+	int chainId = awst::NameGen::next("ModifierInliner.modChainCounter");
 
 	auto const& modifiers = _func.modifiers();
 	if (modifiers.empty())
@@ -199,7 +199,6 @@ void ContractBuilder::buildModifierChain(
 		auto const* args = modInvocation->arguments();
 		auto const& params = modDef->parameters();
 		std::vector<int64_t> remappedDeclIds;
-		static int modArgCounter = 0;
 
 		if (args && !args->empty())
 		{
@@ -207,7 +206,7 @@ void ContractBuilder::buildModifierChain(
 			for (size_t pi = 0; pi < args->size() && pi < params.size(); ++pi)
 			{
 				auto const& param = params[pi];
-				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(modArgCounter++);
+				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(awst::NameGen::next("ModifierInliner.modArgCounter"));
 				auto* paramType = m_typeMapper.map(param->type());
 
 				auto argExpr = m_exprBuilder->build(*(*args)[pi]);

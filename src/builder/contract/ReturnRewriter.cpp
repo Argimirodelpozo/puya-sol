@@ -1,4 +1,5 @@
 #include "builder/contract/ReturnRewriter.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -34,6 +35,29 @@ void forEachReturnStatement(
 	}
 }
 
+/// ── THE WIRE-RETURN-TYPE SPEC (D2 characterization, 2026-07-09) ──────────────
+/// What the SIX passes below jointly compute, as a table (oracle fixture:
+/// tests/WIP/return-wire-oracle/return_matrix.sol + oracle.txt — regenerate and
+/// diff before/after ANY change to this file):
+///   unsigned intN, N<=64           → native uint64            (pass 5 masks sub-word)
+///   unsigned intN, 64<N<=256       → arc4.uintN               (pass 2 single / pass 3 tuple elem)
+///   SIGNED intN, any width         → arc4.uint256             (pass 4; sign-extended two's complement)
+///   bool / address / byte[N]       → native                   (untouched)
+///   dynamic bytes / string         → native bytes/string      (untouched)
+///   T[] (ReferenceArray)           → arc4 array               (pass 1)
+///   static tuple                   → per-element by the rules above (pass 3, allStatic guard;
+///                                    pass 4 when any element is signed)
+///   tuple with a DYNAMIC element   → biguint elements stay UNWRAPPED (allStatic=false) —
+///                                    KNOWN residual: (uint128, bytes) publishes uint512 vs a
+///                                    caller's uint128 (same class as the fixed (bytes4,uint128))
+///   MODIFIER'D fn (chain-lowered)  → returnType stays NATIVE (biguint → puya publishes
+///                                    "uint512") — KNOWN residual: cross-contract callers name
+///                                    the declared width; crosscall fuzzer doesn't generate
+///                                    modifier'd callees yet
+///   asm-bodied biguint return      → arc4.uintN with `% 2^N` wrap (Yul is unchecked)
+/// Passes 2/3/4 each RE-derive parts of this table with mutually-aware skip
+/// guards (the redesign target: compute the plan once, walk once — fable-review-2
+/// D2). Pass 6 additionally coerces assignments into a modifier's named-return var.
 void rewriteARC4Returns(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -169,7 +193,6 @@ void rewriteARC4Returns(
 					std::vector<awst::WType const*>(arc4Types));
 			};
 
-			static int retTmpCounter = 0;
 			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapTupleReturns;
 			wrapTupleReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 			{
@@ -199,7 +222,7 @@ void rewriteARC4Returns(
 								if (t == awst::WType::biguintType()) { needsWrap = true; break; }
 							if (!needsWrap) continue;
 
-							std::string tmpName = "__ret_tmp_" + std::to_string(retTmpCounter++);
+							std::string tmpName = "__ret_tmp_" + std::to_string(awst::NameGen::next("ReturnRewriter.retTmpCounter"));
 							auto tmpVar = awst::makeVarExpression(tmpName, ret->value->wtype, ret->sourceLocation);
 
 							auto assign = awst::makeAssignmentStatement(tmpVar, std::move(ret->value), ret->sourceLocation);
@@ -357,9 +380,8 @@ void rewriteARC4Returns(
 				// slot and puya rejected the subroutine (invalid return type).
 				if (auto const* nativeTuple = dynamic_cast<awst::WTuple const*>(ret.value->wtype))
 				{
-					static int s_retTupleId = 0;
 					auto const* tupleWType = ret.value->wtype;
-					std::string tn = "__rettuple_" + std::to_string(++s_retTupleId);
+					std::string tn = "__rettuple_" + std::to_string((awst::NameGen::next("ReturnRewriter.s_retTupleId") + 1));
 					auto bind = awst::makeAssignmentExpression(
 						awst::makeVarExpression(tn, tupleWType, srcLoc),
 						std::move(ret.value), srcLoc, tupleWType);
@@ -450,9 +472,7 @@ void rewriteARC4Returns(
 		&& (method.returnType == awst::WType::uint64Type()
 			|| method.returnType == awst::WType::biguintType()))
 	{
-		auto isNativeInt = [](awst::WType const* t) {
-			return t == awst::WType::uint64Type() || t == awst::WType::biguintType();
-		};
+		auto isNativeInt = [](awst::WType const* t) { return awst::isNumericWType(t); };
 		// Name of the single named-return var, if any. A modifier moves the
 		// return value into this var (so the body ends with `<name> = <value>`
 		// instead of `return <value>`); we must coerce that assignment too.

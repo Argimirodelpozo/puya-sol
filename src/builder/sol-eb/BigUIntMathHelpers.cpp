@@ -1,4 +1,5 @@
 #include "builder/sol-eb/BigUIntMathHelpers.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolutil/Numeric.h>
@@ -202,8 +203,7 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 	_base = TypeCoercion::implicitNumericCast(std::move(_base), awst::WType::biguintType(), _loc);
 	_exp = TypeCoercion::implicitNumericCast(std::move(_exp), awst::WType::biguintType(), _loc);
 
-	static int expCounter = 0;
-	int id = expCounter++;
+	int id = awst::NameGen::next("BigUIntMathHelpers.expCounter");
 	std::string resultVar = "__biguint_exp_result_" + std::to_string(id);
 	std::string baseVar = "__biguint_exp_base_" + std::to_string(id);
 	std::string expVar = "__biguint_exp_exp_" + std::to_string(id);

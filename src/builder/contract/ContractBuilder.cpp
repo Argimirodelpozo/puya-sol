@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/NatSpecTags.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
@@ -268,6 +269,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_currentContract = &_contract;
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
+
+	// Reset the generated-name counters: a contract's temp/subroutine names
+	// (`__mod_retval_N`, `f__mod0_N`, …) must depend only on its own content,
+	// not on how many contracts compiled before it in the batch (deterministic
+	// multi-contract output; prerequisite for parallel per-contract compiles).
+	awst::NameGen::resetAll();
 
 	// Reset Yul subroutine sink (drained below).
 	AssemblyBuilder::resetPendingSubroutines();

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include "builder/sol-ast/exprs/SolAssignment.h"
+#include "awst/NameGen.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -450,8 +451,7 @@ SolAssignment::applyArc4EncodeIfNeeded(
 		|| _target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
 	if (sourceIsArc4Array && targetIsArc4Array)
 	{
-		static int s_widCounter = 0;
-		std::string tmpName = "__widen_src_" + std::to_string(s_widCounter++);
+		std::string tmpName = "__widen_src_" + std::to_string(awst::NameGen::next("SolAssignment.s_widCounter"));
 		auto srcAsBytes = awst::makeAsBytes(_value, m_loc);
 		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc);
 		m_ctx.prePendingStatements.push_back(

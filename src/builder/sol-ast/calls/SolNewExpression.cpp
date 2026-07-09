@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 2144-2304.
 
 #include "builder/sol-ast/calls/SolNewExpression.h"
+#include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -111,8 +112,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 				// Too large: fall through to runtime loop with literal size N.
 				e->values.clear();
 				auto fakeSizeExpr = awst::makeIntegerConstant(std::to_string(n), m_loc);
-				static int rtArrayCounter = 0;
-				int tc = rtArrayCounter++;
+				int tc = awst::NameGen::next("SolNewExpression.rtArrayCounter");
 				std::string arrName = "__rt_arr_" + std::to_string(tc);
 				std::string idxName = "__rt_idx_" + std::to_string(tc);
 
@@ -149,8 +149,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 		else
 		{
 			// Runtime-sized: loop pattern
-			static int rtArrayCounter = 0;
-			int tc = rtArrayCounter++;
+			int tc = awst::NameGen::next("SolNewExpression.rtArrayCounter");
 			std::string arrName = "__rt_arr_" + std::to_string(tc);
 			std::string idxName = "__rt_idx_" + std::to_string(tc);
 
@@ -439,8 +438,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			auto createdAppIdCall = awst::makeItxn(
 				"CreatedApplicationID", awst::WType::uint64Type(), m_loc);
 
-			static int newAppIdCounter = 0;
-			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppIdCounter++);
+			int newAppId = awst::NameGen::next("SolNewExpression.newAppIdCounter");
+			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppId);
 			auto newAppIdTarget = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 			auto newAppIdAssign = awst::makeAssignmentStatement(newAppIdTarget, std::move(createdAppIdCall), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(newAppIdAssign));
@@ -563,7 +562,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 					awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc),
 					addrTupleType, m_loc);
 
-				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppIdCounter);
+				// (was a bare read of the post-incremented static → id + 1)
+				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppId + 1);
 				auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 				auto addrAssign = awst::makeAssignmentStatement(addrTmpTarget, std::move(postAddrCall), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(addrAssign));

@@ -2,6 +2,7 @@
 /// See header for design overview.
 
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/NameGen.h"
 #include "splitter/PureHelperExtractor.h"
 #include "splitter/AwstWalker.h"
 #include "splitter/FunctionSplitter.h"
@@ -175,9 +176,8 @@ std::shared_ptr<awst::Expression> decodeArgFromBytes(
 	{
 		// Wrap in SingleEvaluation so multi-field decode doesn't re-evaluate
 		// the source (e.g. `extract` of `itxn LastLog` must fire once).
-		static int seCounter = 0;
 		auto se = awst::makeSingleEvaluation(
-			std::move(_bytes), awst::WType::bytesType(), ++seCounter, _loc);
+			std::move(_bytes), awst::WType::bytesType(), (awst::NameGen::next("PureHelperExtractor.seCounter") + 1), _loc);
 
 		auto out = awst::makeTupleExpression(_t, _loc);
 		int offset = 0;
@@ -233,9 +233,8 @@ std::shared_ptr<awst::Expression> encodeValueToBytes(
 	{
 		// Concat per-field encoded bytes. SingleEvaluation guards
 		// per-field TupleItemExpression reads from re-triggering side effects.
-		static int seCounter = 1000;
 		auto se = awst::makeSingleEvaluation(
-			std::move(_value), _t, ++seCounter, _loc);
+			std::move(_value), _t, (awst::NameGen::next("PureHelperExtractor.seCounter") + 1), _loc);
 
 		std::shared_ptr<awst::Expression> acc;
 		for (size_t i = 0; i < tup->types().size(); ++i)

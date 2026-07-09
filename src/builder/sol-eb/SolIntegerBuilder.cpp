@@ -3,6 +3,7 @@
 /// Solidity semantics including overflow checking, signed comparison, wrapping.
 
 #include "builder/sol-eb/SolIntegerBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-types/TypeCoercion.h"
 
@@ -633,8 +634,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	if (m_int.bits >= maxBits && !m_int.biguintBacked())
 		return _result;
 
-	static int checkedCounter = 0;
-	std::string tmpName = "__checked_" + std::to_string(checkedCounter++);
+	std::string tmpName = "__checked_" + std::to_string(awst::NameGen::next("SolIntegerBuilder.checkedCounter"));
 	auto* resType = _result->wtype;
 
 	std::string maxValStr;

@@ -2,6 +2,7 @@
 /// Solidity builtin function implementations via the builder pattern.
 
 #include "builder/sol-eb/BuiltinCallables.h"
+#include "awst/NameGen.h"
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/SolIntegerBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -220,8 +221,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// Names must be unique per call: all prePending statements flush before any
 	// reads lower, so `ecrecover(a)==ecrecover(b)` with a shared name would have
 	// both sides read the SECOND call's v/result.
-	static int s_ecrecoverTmpCounter = 0;
-	int ecTmpId = ++s_ecrecoverTmpCounter;
+	int ecTmpId = (awst::NameGen::next("BuiltinCallables.s_ecrecoverTmpCounter") + 1);
 	std::string vTmpName = "__ecrecover_v_" + std::to_string(ecTmpId);
 	auto vTmpTarget = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
 	auto vAssign = awst::makeAssignmentStatement(vTmpTarget, std::move(vUint), _loc);

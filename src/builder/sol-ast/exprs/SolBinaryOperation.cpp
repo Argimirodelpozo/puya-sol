@@ -1,6 +1,7 @@
 /// @file SolBinaryOperation.cpp — migrated from BinaryOperationBuilder.cpp.
 
 #include "builder/sol-types/SolcConstFold.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolBinaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
@@ -95,8 +96,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	// RHS has side effects -> gate them behind the condition (mirror the ternary, SolConditional):
 	//   a && b  ==  a ? b : false   (b runs iff a is true)
 	//   a || b  ==  a ? true : b    (b runs iff a is false)
-	static int s_counter = 0;
-	std::string tempName = "__sc_" + std::to_string(s_counter++);
+	std::string tempName = "__sc_" + std::to_string(awst::NameGen::next("SolBinaryOperation.s_counter"));
 	auto* boolType = awst::WType::boolType();
 	auto tempVar = [&] { return awst::makeVarExpression(tempName, boolType, m_loc); };
 
@@ -347,8 +347,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 
 			// Pad left to ≥N bytes, then extract last N (concat(bzero(N),b) ensures len≥N).
 			auto padded = awst::makeLeftPad(asBytes, n, m_loc);
-			static int shCounter = 0;
-			std::string varName = "__bytes_shift_" + std::to_string(shCounter++);
+			std::string varName = "__bytes_shift_" + std::to_string(awst::NameGen::next("SolBinaryOperation.shCounter"));
 			auto var = awst::makeVarExpression(varName, bytesT, m_loc);
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(var, std::move(padded), m_loc));

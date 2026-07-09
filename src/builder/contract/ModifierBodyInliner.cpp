@@ -6,6 +6,7 @@
 /// ModifierInliner.cpp::buildModifierChain.
 
 #include "builder/contract/ContractBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -134,8 +135,6 @@ void inlineModifiers(
 		return buildBlock(_ctx, b, __placeholder);
 	};
 
-	static int modCounter = 0;
-	static int modRetvalCounter = 0;
 
 	// Hoist named-return zero-inits before modifier arg evaluation.
 	std::set<std::string> returnParamNames;
@@ -151,7 +150,7 @@ void inlineModifiers(
 		if (!rp->name().empty()) { allUnnamed = false; break; }
 	if (returnParamNames.empty() && allUnnamed)
 	{
-		int baseId = modRetvalCounter++;
+		int baseId = awst::NameGen::next("ModifierBodyInliner.modRetvalCounter");
 		for (size_t i = 0; i < _func.returnParameters().size(); ++i)
 		{
 			auto* t = m_typeMapper.map(_func.returnParameters()[i]->type());
@@ -289,7 +288,7 @@ void inlineModifiers(
 					continue;
 				}
 
-				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(modCounter++);
+				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(awst::NameGen::next("ModifierBodyInliner.modCounter"));
 				auto* paramType = m_typeMapper.map(param->type());
 
 				argExpr = TypeCoercion::implicitNumericCast(
@@ -315,7 +314,7 @@ void inlineModifiers(
 				for (auto const* localDecl: localCollector.decls)
 				{
 					std::string uniqueName
-						= "__mod_local_" + localDecl->name() + "_" + std::to_string(modCounter++);
+						= "__mod_local_" + localDecl->name() + "_" + std::to_string(awst::NameGen::next("ModifierBodyInliner.modCounter"));
 					auto* localType = m_typeMapper.map(localDecl->type());
 					m_tr.setParamRemap(localDecl->id(), sol_ast::ParamRemap{uniqueName, localType});
 					remappedDeclIds.push_back(localDecl->id());
@@ -422,8 +421,7 @@ void inlineModifiers(
 
 		if (translatedModBody)
 		{
-			static int modExitCounter = 0;
-			std::string flagName = "__mod_exit_" + std::to_string(modExitCounter++);
+			std::string flagName = "__mod_exit_" + std::to_string(awst::NameGen::next("ModifierBodyInliner.modExitCounter"));
 			auto flagLoc = translatedModBody->sourceLocation;
 
 			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {

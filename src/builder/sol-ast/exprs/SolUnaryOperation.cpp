@@ -1,6 +1,7 @@
 /// @file SolUnaryOperation.cpp — unary operation translation.
 
 #include "builder/sol-types/SolcConstFold.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
@@ -332,8 +333,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		-> std::shared_ptr<awst::Expression>
 	{
 		auto* wt = bin->wtype;
-		static int s_uincCounter = 0;
-		std::string tmpName = "__uinc_" + std::to_string(s_uincCounter++);
+		std::string tmpName = "__uinc_" + std::to_string(awst::NameGen::next("SolUnaryOperation.s_uincCounter"));
 		solidity::u256 maxV = (bits >= 256) ? (solidity::u256(0) - 1)
 		                                     : ((solidity::u256(1) << bits) - 1);
 		std::ostringstream oss; oss << maxV;
@@ -536,8 +536,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		auto writeTarget = makeWriteTarget(_operand);
 		if (auto const* structType = structFieldTypeOf(writeTarget))
 		{
-			static int sfPreCounter = 0;
-			std::string pName = "__sfpre_" + std::to_string(sfPreCounter++);
+			std::string pName = "__sfpre_" + std::to_string(awst::NameGen::next("SolUnaryOperation.sfPreCounter"));
 			auto nv = makeNewValue(_operand);
 			auto* nvType = nv->wtype;
 			auto nvVar = awst::makeVarExpression(pName, nvType, m_loc);
@@ -554,8 +553,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	{
 		// Post-inc: save old value, emit write as prePending (not pending) so
 		// `a++ + a` reads updated `a`; pending only fires at statement end.
-		static int postIncCounter = 0;
-		std::string tempName = "__postinc_" + std::to_string(postIncCounter++);
+		std::string tempName = "__postinc_" + std::to_string(awst::NameGen::next("SolUnaryOperation.postIncCounter"));
 
 		auto tempVar = awst::makeVarExpression(tempName, _operand->wtype, m_loc);
 

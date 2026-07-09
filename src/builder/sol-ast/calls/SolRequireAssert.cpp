@@ -1,4 +1,5 @@
 #include "builder/sol-ast/calls/SolRequireAssert.h"
+#include "awst/NameGen.h"
 #include "builder/sol-ast/calls/RevertBlob.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-types/SolcConstFold.h"
@@ -73,9 +74,8 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 								m_ctx, errorCall->arguments(),
 								errorDef->functionType(true)->parameterTypes(), m_loc),
 							m_loc);
-					static int s_reqErrBlobCounter = 0;
 					std::string tmpName = "__require_err_blob_"
-						+ std::to_string(++s_reqErrBlobCounter);
+						+ std::to_string((awst::NameGen::next("SolRequireAssert.s_reqErrBlobCounter") + 1));
 					m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc),
 						std::move(blob), m_loc));

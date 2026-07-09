@@ -1,5 +1,6 @@
 /// @file SolAssignmentTuple.cpp — handleTupleAssignment + buildTupleWithUpdatedField
 #include "builder/sol-ast/exprs/SolAssignment.h"
+#include "awst/NameGen.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -56,8 +57,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	{
 		if (dynamic_cast<awst::WTuple const*>(_value->wtype))
 		{
-			static int s_callTupleCounter = 0;
-			std::string tmpName = "__call_tuple_tmp_" + std::to_string(s_callTupleCounter++);
+			std::string tmpName = "__call_tuple_tmp_" + std::to_string(awst::NameGen::next("SolAssignmentTuple.s_callTupleCounter"));
 			awst::WType const* tupleWtype = _value->wtype;
 			auto srcLoc = _value->sourceLocation;
 			auto tmpVar = awst::makeVarExpression(tmpName, tupleWtype, srcLoc);
@@ -317,8 +317,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					|| assignTarget->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
 				if (sourceIsArc4Array && targetIsArc4Array)
 				{
-					static int s_widCounter = 0;
-					std::string tmpName = "__widen_src_h_" + std::to_string(s_widCounter++);
+					std::string tmpName = "__widen_src_h_" + std::to_string(awst::NameGen::next("SolAssignmentTuple.s_widCounter"));
 					auto srcAsBytes = awst::makeAsBytes(assignValue, m_loc);
 					auto tmpVar = awst::makeVarExpression(
 						tmpName, awst::WType::bytesType(), m_loc);

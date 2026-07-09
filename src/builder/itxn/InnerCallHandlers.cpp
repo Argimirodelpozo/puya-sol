@@ -3,6 +3,7 @@
 /// and precompile routing.
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/InnerCallInternal.h"
@@ -714,8 +715,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			// Spill bytes-returning fallback result to a temp.
 			if (fallbackReturnsBytes)
 			{
-				static int s_tmpCounter = 0;
-				std::string tmpName = "__fallback_ret_" + std::to_string(++s_tmpCounter);
+				std::string tmpName = "__fallback_ret_" + std::to_string((awst::NameGen::next("InnerCallHandlers.s_tmpCounter") + 1));
 				auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 				auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(call), _loc);
 				_ctx.prePendingStatements.push_back(std::move(assign));

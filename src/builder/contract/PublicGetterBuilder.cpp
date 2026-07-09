@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/contract/ParamABIValidator.h"
@@ -438,8 +439,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						{
 							// Dynamic: length in first 2 bytes of box (ARC4 header).
 							// Materialise prefix so bounds-check + next-layer hash don't re-emit.
-							static int s_boundsCounter = 0;
-							std::string tempName = "__bounds_prefix_" + std::to_string(s_boundsCounter++);
+							std::string tempName = "__bounds_prefix_" + std::to_string(awst::NameGen::next("PublicGetterBuilder.s_boundsCounter"));
 							auto tempVar = awst::makeVarExpression(tempName, awst::WType::boxKeyType(), loc);
 							auto saveStmt = awst::makeAssignmentStatement(tempVar, std::move(currentPrefix), loc);
 							body->body.push_back(std::move(saveStmt));

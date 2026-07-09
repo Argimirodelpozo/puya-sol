@@ -3,6 +3,7 @@
 /// asaTotalSupply / asaTransfer` calls into ASA-native AWST.
 
 #include "builder/itxn/AsaIntrinsics.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 
@@ -283,8 +284,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	auto createdAsaCall = awst::makeItxn(
 		"CreatedAssetID", awst::WType::uint64Type(), _loc);
 
-	static int s_counter = 0;
-	std::string tmpName = "__new_asa_id_" + std::to_string(s_counter++);
+	std::string tmpName = "__new_asa_id_" + std::to_string(awst::NameGen::next("AsaIntrinsics.s_counter"));
 	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 	auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(createdAsaCall), _loc);
 	_ctx.prePendingStatements.push_back(std::move(assign));

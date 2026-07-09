@@ -2,6 +2,7 @@
 /// Migrated from ConditionalBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolConditional.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 
@@ -74,8 +75,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	// and gate the side effects behind the branch condition.
 	if (!trueSideEffects.empty() || !falseSideEffects.empty())
 	{
-		static int s_counter = 0;
-		std::string tempName = "__cond_" + std::to_string(s_counter++);
+		std::string tempName = "__cond_" + std::to_string(awst::NameGen::next("SolConditional.s_counter"));
 		auto resultType = e->wtype ? e->wtype : awst::WType::biguintType();
 		auto tempVar = [&] { return awst::makeVarExpression(tempName, resultType, m_loc); };
 

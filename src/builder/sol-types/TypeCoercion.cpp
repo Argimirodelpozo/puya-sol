@@ -2,6 +2,7 @@
 /// Centralised type coercion / conversion utilities for AWST expressions.
 
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
 
@@ -136,8 +137,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	//
 	// CommaExpression wraps the (assign-then-conditional) sequence so this
 	// remains an Expression (signExtendToUint256's return contract).
-	static int s_signExtTempId = 0;
-	std::string tempName = "__signext_tmp_" + std::to_string(++s_signExtTempId);
+	std::string tempName = "__signext_tmp_" + std::to_string((awst::NameGen::next("TypeCoercion.s_signExtTempId") + 1));
 	auto tempVar = awst::makeVarExpression(tempName, awst::WType::biguintType(), _loc);
 	auto bind = awst::makeAssignmentExpression(
 		tempVar, std::move(promoted), _loc, awst::WType::biguintType());
@@ -194,8 +194,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 	// (`mod 2^bits`) so this is correct whether the source is the minimal sub-word
 	// form OR already sign-extended to 64 bits (e.g. an ABI-decoded int8 param):
 	// the add below assumes value ∈ [0, 2^bits), which only holds post-mask.
-	static int s_signExt64TempId = 0;
-	std::string tempName = "__signext64_tmp_" + std::to_string(++s_signExt64TempId);
+	std::string tempName = "__signext64_tmp_" + std::to_string((awst::NameGen::next("TypeCoercion.s_signExt64TempId") + 1));
 	auto masked = awst::makeUInt64BinOp(
 		std::move(_value), awst::UInt64BinaryOperator::Mod,
 		awst::makeIntegerConstant(std::uint64_t(1) << _bits, _loc), _loc);

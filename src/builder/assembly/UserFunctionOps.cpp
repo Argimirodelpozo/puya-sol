@@ -2,6 +2,7 @@
 /// User-defined Yul function inlining + recursive-subroutine dispatch.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 
 #include <functional>
@@ -63,8 +64,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		for (auto const& a: _args)
 			awst::pushCallArg(call->args, ensureBiguint(a, _loc));
 
-		static int s_yulCallId = 0;
-		int callId = ++s_yulCallId;
+		int callId = (awst::NameGen::next("UserFunctionOps.s_yulCallId") + 1);
 
 		if (nRet == 0)
 		{
@@ -134,8 +134,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	// __yul_<uid>_<name> so sibling (sq(a)+cube(b)) and nested (cube calls sq) calls don't
 	// clobber the same runtime vars. resolveVarRef applies m_yulInlineRenames to the body;
 	// saved/restored per frame so an outer/sibling frame's renames are unaffected.
-	static int s_yulInlineUid = 0;
-	int uid = ++s_yulInlineUid;
+	int uid = (awst::NameGen::next("UserFunctionOps.s_yulInlineUid") + 1);
 	auto uniqueName = [&](std::string const& n) { return "__yul_" + std::to_string(uid) + "_" + n; };
 	std::vector<std::tuple<std::string, bool, std::string>> savedRenames;
 	auto pushRename = [&](std::string const& bare, std::string const& unique) {

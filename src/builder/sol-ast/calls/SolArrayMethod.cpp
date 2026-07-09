@@ -3,6 +3,7 @@
 /// Box-backed arrays read/write from box storage; memory arrays use AWST nodes directly.
 
 #include "builder/sol-ast/calls/SolArrayMethod.h"
+#include "awst/NameGen.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -265,8 +266,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (kind == awst::AppStorageKind::Box)
 					{
 						// Box: shrunk→temp, box_del, box_put.
-						static int popTmpCounter = 0;
-						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(popTmpCounter++);
+						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethod.popTmpCounter"));
 
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc));
@@ -343,8 +343,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (kind == awst::AppStorageKind::Box)
 					{
 						// Box: concat→temp, box_del, box_put (exact-size match required).
-						static int tmpCounter = 0;
-						std::string tmpName = "__bytes_push_tmp_" + std::to_string(tmpCounter++);
+						std::string tmpName = "__bytes_push_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethod.tmpCounter"));
 
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc));

@@ -2,6 +2,7 @@
 /// Solidity typed array builder — handles index access and .length.
 
 #include "builder/sol-eb/SolArrayBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -71,8 +72,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 			m_arrayType->baseType()))
 	{
 		unsigned numMembers = enumType->numberOfMembers();
-		static int enumCheckCounter = 0;
-		std::string tmpName = "__enum_idx_" + std::to_string(enumCheckCounter++);
+		std::string tmpName = "__enum_idx_" + std::to_string(awst::NameGen::next("SolArrayBuilder.enumCheckCounter"));
 
 		auto tmpVar = awst::makeVarExpression(tmpName, result->wtype, _loc);
 
