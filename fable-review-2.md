@@ -80,7 +80,7 @@ seam in the ledger. Do first.**
 | # | Improvement | Sites | Risk |
 |---|---|---|---|
 | T1 | **WType-side numeric-tier predicate** — the largest un-carried concept. **187 lines** across **48 files** hand-compare `== uint64Type() / biguintType()`; only 19 use `biguintBacked()/nativeWType()`. Most operate on an expression's *wtype* (no Sol type in scope), so the missing API is `awst`-side: `isBiguintBacked(WType const*)` / `numericTier()`. Stage per-file, start with the ~30 three-way (bool-including) compares | 187 | Med (mechanical, wide) |
-| T2 | Delete the **6 verbatim UDVT-unwrap copies** of `fromSol`'s body (AWSTBuilder ×2, ApprovalProgramBuilder, ParamABIValidator, SolInlineAssembly, SolNewExpression) + migrate the ~6 enum-recast sites to the under-adopted `fromSolOrEnum` | ~12 | **Low — do first** |
+| T2 ✅ | Delete the **6 verbatim UDVT-unwrap copies** of `fromSol`'s body (AWSTBuilder ×2, ApprovalProgramBuilder, ParamABIValidator, SolInlineAssembly, SolNewExpression) + migrate the ~6 enum-recast sites to the under-adopted `fromSolOrEnum` | ~12 | **Low — do first** |
 | T3 | Migrate the remaining ~22 clean `fromSol` candidates (pairs-of-int conversion sites etc.); leaves only ~8 definitional/predicate casts (TypeMapper's own `map()`, SolcConstFold) which SHOULD stay raw | ~22 | Low |
 | T4 | **`SolBytesType{optional<int> length}` carrier** with guarded `fromWType`: ~10 inline `dynamic_cast<BytesWType>(...)->length()` sites, **2 of them unguarded null-derefs waiting** (`StorageMapper.cpp:101`, `ApprovalProgramBuilder.cpp:220`); also centralizes the sized-vs-dynamic naming decision R1 needs | ~10 | Low-Med |
 | T5 | `TypeCoercion` split (see R6) — unblocks R1 and breaks the header cycle that already forced `SolIntType::pow2NAndHalf` out-of-line | — | Low |
@@ -115,15 +115,20 @@ already excellent. The levers, ranked:
 
 | # | Change | Impact | Effort |
 |---|---|---|---|
-| P1 | **Reset the localnet before full runs.** Root cause of the 2.4× variance FOUND: the running localnet has accumulated 316k rounds / **2.1 GB ledger** over days; everything (esp. simulate) slows as it grows. The reset hook already exists (`conftest.py`, `PUYASOL_LOCALNET_RESET=1`) — make it the default for full runs | kills the 419→1013s drift | **Trivial** |
-| P2 | **Gate `populate_app_call_resources`**: today a full SIMULATE precedes *every* execute (~4,600 extra program runs against the growing ledger). Only needed when boxes/extra-apps/accounts are passed: `if boxes or extra_apps or extra_accounts:` | est. **25–40%** | Low |
-| P3 | Re-enable suggested-params caching (`set_suggested_params_cache_timeout(0)` at localnet.py:24 forces ~10k fresh `GET /params`; fees are overridden manually anyway → 30–60s TTL is safe) | est. 5–15% | Trivial |
+| P1 ✅ | **Reset the localnet before full runs.** Root cause of the 2.4× variance FOUND: the running localnet has accumulated 316k rounds / **2.1 GB ledger** over days; everything (esp. simulate) slows as it grows. The reset hook already exists (`conftest.py`, `PUYASOL_LOCALNET_RESET=1`) — make it the default for full runs | kills the 419→1013s drift | **Trivial** |
+| P2 ✅ | **Gate `populate_app_call_resources`**: today a full SIMULATE precedes *every* execute (~4,600 extra program runs against the growing ledger). Only needed when boxes/extra-apps/accounts are passed: `if boxes or extra_apps or extra_accounts:` | est. **25–40%** | Low |
+| P3 ✅ | Re-enable suggested-params caching (`set_suggested_params_cache_timeout(0)` at localnet.py:24 forces ~10k fresh `GET /params`; fees are overridden manually anyway → 30–60s TTL is safe) | est. 5–15% | Trivial |
 | P4 | Deploy from the already-emitted `.bin` instead of 2× `algod.compile` per deploy (keep the algod path only when `TMPL_` substitution is needed) | ~2,900 RT | Med |
 | P5 | Atomic-group create+fund (one submit+confirm instead of two); devmode-aware confirm (skip the redundant `status()` per `wait_for_confirmation`) | ~3-4 RT/test | Low-Med |
 | P6 | xdist beyond -n2: give each worker its own funded account (all workers currently sign with the SAME dispenser account — the -n>2 crash source). Potential 2–4×, but devmode's one-block-per-txn is a real ceiling — validate before investing | 2–4× ceiling-capped | High |
 
-Do P1+P2+P3 first: independent, near-free, and should put a fresh-localnet full run well under
-the current 419s floor.
+Do P1+P2+P3 first: independent, near-free. **LANDED 2026-07-08 (4542b9495d + conditional-reset
+refinement); measured outcome:** variance COLLAPSED (637/643s back-to-back with reset; the 1013s
+worst case is gone). A/B showed the reset itself costs ~100s (docker restart), so the auto-reset
+became CONDITIONAL on ledger age (round >= 50k, ~6-7 runs of accumulation; REST probe, no docker
+dep) — young-localnet full runs take the ~537s path, aged ones pay ~100s once to escape the drift.
+Honest note: P2+P3's isolated gain vs the old best-case (419s) is not separable from OS-cache
+noise at this scale; the durable wins are the variance kill + the bounded worst case.
 
 ---
 
