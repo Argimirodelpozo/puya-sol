@@ -115,12 +115,22 @@ private:
 		std::shared_ptr<awst::Expression> _receiver,
 		awst::SourceLocation const& _loc);
 
-	/// Coerce an argument to bytes for ApplicationArgs.
+public:
+	/// Encode one call argument to its ApplicationArgs bytes. THE single ARC4
+	/// arg encoder for BOTH the typed `c.f(...)` path (SolExternalCall) and the
+	/// `.call(abi.encodeCall/encodeWith*)` inner-call shapes. `_paramSolType`
+	/// is the callee's DECLARED param type when known (drives exact biguint
+	/// width, uint64 pad-to-width, dynamic-bytes length header); nullptr for
+	/// type-less shapes (encodeWithSelector/Signature), which fall back to
+	/// backing-width encoding. The two paths used to carry separate copies that
+	/// DRIFTED (inner: biguint always 32B, bare itob, no array/struct encode) —
+	/// a latent revert class on inner calls with sub-256 uintN/array args.
 	static std::shared_ptr<awst::Expression> encodeArgToBytes(
+		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _arg,
+		solidity::frontend::Type const* _paramSolType,
 		awst::SourceLocation const& _loc);
 
-public:
 	/// Canonical ARC4 selector string from a FunctionDefinition
 	/// (routers dispatch on this; fn-pointer slots and f.selector expose it).
 	static std::string buildMethodSelector(
@@ -148,5 +158,17 @@ public:
 /// puya's emitted `method "..."` signatures — reuse anywhere a cross-contract selector must match the
 /// callee's published ABI (e.g. SolExternalCall typed calls + the .call() path).
 std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const* _type);
+
+/// Canonical ARC4 ABI type name for a TOP-LEVEL param position (selector computation): scalars
+/// collapse to "uint64"/"uintN" (signedness dropped, matching what puya registers), enums →
+/// "uint64", aggregates recurse via nestedArc4Name, exotics (fn pointers, contracts) fall back to
+/// the ARC4-type mapping the callee publishes. THE single param namer — SolExternalCall's typed
+/// `c.f(...)` path and the `.call(abi.encodeCall(...))` inner-call path both use it; keeping two
+/// copies in lockstep by hand is where the enum uint8-vs-uint64 selector bug came from.
+std::string solTypeToArc4ParamName(ContractContext& _ctx, solidity::frontend::Type const* _type);
+
+/// Return-position variant: SIGNED integer returns are named "uint256" (full two's complement,
+/// see intSelectorReturnName); everything else as solTypeToArc4ParamName.
+std::string solTypeToArc4ReturnName(ContractContext& _ctx, solidity::frontend::Type const* _type);
 
 } // namespace puyasol::builder::eb

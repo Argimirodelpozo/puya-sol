@@ -129,10 +129,20 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	else
 		callArgs.push_back(_encodeCallExpr.arguments()[1]);
 
-	for (auto const& arg : callArgs)
+	for (size_t ai = 0; ai < callArgs.size(); ++ai)
 	{
-		auto argExpr = _ctx.buildExpr(*arg);
-		argsTuple->items.push_back(encodeArgToBytes(std::move(argExpr), _loc));
+		auto argExpr = _ctx.buildExpr(*callArgs[ai]);
+		// abi.encodeCall is TYPED: solc checks the args against the target's params,
+		// so encode at each param's DECLARED type (exact biguint width, pad-to-width,
+		// dynamic-bytes header) exactly like the typed `c.f(...)` path — the previous
+		// type-less encoding padded every biguint to 32B, so a uint128 param's callee
+		// decode (16B len-assert) reverted.
+		solidity::frontend::Type const* paramType =
+			ai < targetFuncDef->parameters().size()
+				? targetFuncDef->parameters()[ai]->type()
+				: nullptr;
+		argsTuple->items.push_back(
+			encodeArgToBytes(_ctx, std::move(argExpr), paramType, _loc));
 	}
 
 	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
@@ -214,8 +224,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 	argsTuple->items.push_back(std::move(selector));
 	for (size_t i = 1; i < args.size(); ++i)
+		// encodeWithSelector/Signature is TYPE-LESS (no declared params); the shared
+		// encoder's nullptr path keeps backing-width encoding (biguint→32B, bare itob).
 		argsTuple->items.push_back(
-			encodeArgToBytes(_ctx.buildExpr(*args[i]), _loc));
+			encodeArgToBytes(_ctx, _ctx.buildExpr(*args[i]), nullptr, _loc));
 
 	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
 }

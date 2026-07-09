@@ -33,165 +33,24 @@ static bool isSignedIntReturn(solidity::frontend::Type const* _t)
 
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
-	auto solTypeToARC4Name = [this](Type const* _type) -> std::string {
-		// Integers: <=64-bit → "uint64", >64-bit → "uintN" (exact width), signedness
-		// dropped. map()→biguint would collapse all >64-bit to "uint256" (wrong).
-		if (auto name = builder::TypeCoercion::intSelectorName(_type))
-			return *name;
-		auto* rawType = m_ctx.typeMapper.map(_type);
-		if (rawType == awst::WType::accountType())
-			return "address";
-		// A top-level enum maps to uint64Type on the child side, which puya publishes
-		// as "uint64" (see solTypeToARC4Impl). nestedArc4Name would name it "uint8"
-		// (its encodingType width) → selector mismatch → router err on a cross-contract
-		// call returning/taking an enum. (Found by the tuple-return fuzzer.)
-		if (dynamic_cast<EnumType const*>(_type))
-			return "uint64";
-		// Fixed-size Solidity `bytesN` stays as BytesWType(length=N) on the
-		// child side, which puya names `byte[N]`. Match that here rather than
-		// routing through ARC4StaticArray (which would produce `uint8[N]`).
-		if (rawType->kind() == awst::WTypeKind::Bytes)
-		{
-			auto const* bw = static_cast<awst::BytesWType const*>(rawType);
-			if (bw->length().has_value())
-				return "byte[" + std::to_string(*bw->length()) + "]";
-		}
-		// Aggregates (struct/array): use the canonical nested namer, which PRESERVES signedness for
-		// elements (struct field int64 = "int64", not "uint64") to match the callee's published ABI /
-		// puya's emitted signature. wtypeToABIName drops the ARC4UIntN sign alias → selector mismatch
-		// → router err on cross-contract calls with signed struct/array elements. (Found by the fuzzer.)
-		return eb::nestedArc4Name(m_ctx, _type);
-	};
-	// Signed int returns → "uint256" (full 256-bit two's complement);
-	// non-int types identical to params.
-	auto solTypeToARC4Ret = [&](Type const* _type) -> std::string {
-		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
-			return *name;
-		return solTypeToARC4Name(_type);
-	};
-
+	// One canonical namer family (eb::solTypeToArc4ParamName/ReturnName, shared with the
+	// `.call(abi.encodeCall(...))` inner-call path). This method used to carry its own
+	// lambda copy of the same ladder; the two drifted (enum uint8-vs-uint64 selector bug,
+	// fuzzer-found) — exactly the divergence a single namer makes impossible.
 	auto const* extRefDecl = _memberAccess.annotation().referencedDeclaration;
 	std::vector<std::string> paramNames, retNames;
 	if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(extRefDecl))
 	{
 		for (auto const& param: funcDef->parameters())
-			paramNames.push_back(solTypeToARC4Name(param->type()));
+			paramNames.push_back(eb::solTypeToArc4ParamName(m_ctx, param->type()));
 		for (auto const& retParam: funcDef->returnParameters())
-			retNames.push_back(solTypeToARC4Ret(retParam->type()));
+			retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, retParam->type()));
 	}
 	else if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extRefDecl))
-		retNames.push_back(solTypeToARC4Ret(varDecl->type()));
+		retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, varDecl->type()));
 	// else: no params/returns -> "name()void"
 
 	return builder::TypeCoercion::buildArc4Selector(_memberAccess.memberName(), paramNames, retNames);
-}
-
-std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
-	std::shared_ptr<awst::Expression> _argExpr,
-	Type const* _paramSolType)
-{
-	bool isDynamicBytes = false;
-	if (_paramSolType)
-	{
-		auto cat = _paramSolType->category();
-		isDynamicBytes = (cat == Type::Category::Array
-			&& dynamic_cast<ArrayType const*>(_paramSolType)
-			&& dynamic_cast<ArrayType const*>(_paramSolType)->isByteArrayOrString());
-	}
-
-	if (_argExpr->wtype == awst::WType::bytesType()
-		|| _argExpr->wtype->kind() == awst::WTypeKind::Bytes)
-	{
-		if (isDynamicBytes)
-		{
-			// ARC4 byte[]: uint16(len)++raw. makeEvalOnce for side-effecting args.
-			_argExpr = awst::makeEvalOnce(std::move(_argExpr), m_loc);
-			auto lenExpr = awst::makeLen(_argExpr, m_loc);
-			auto itobLen = awst::makeItob(std::move(lenExpr), m_loc);
-			auto header = awst::makeExtract(std::move(itobLen), 6, 2, m_loc);
-
-			return awst::makeConcat(std::move(header), std::move(_argExpr), m_loc);
-		}
-		return _argExpr;
-	}
-	else if (_argExpr->wtype == awst::WType::uint64Type())
-	{
-		// itob → 8 bytes; left-pad if param is wider (callee's arc4 len check).
-		unsigned widthBytes = 8;
-		if (_paramSolType)
-		{
-			if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
-				widthBytes = intType->numBits() / 8;
-			else if (auto const* addr = dynamic_cast<AddressType const*>(_paramSolType))
-				(void)addr, widthBytes = 20;
-		}
-		auto itob = awst::makeItob(std::move(_argExpr), m_loc);
-		if (widthBytes <= 8)
-			return itob;
-		// pad = bzero(widthBytes - 8)  ++  itob(value)
-		return awst::makeLeftPad(std::move(itob), widthBytes - 8, m_loc);
-	}
-	else if (_argExpr->wtype == awst::WType::biguintType())
-	{
-		// Encode to the param's exact ARC4 width (N/8 bytes); callee arc4 decode
-		// asserts len==N/8, so a 32-byte arg reverts. makeARC4Encode trims to low
-		// N/8 bytes. int256/uint256 stays 32 bytes.
-		auto const* solT = _paramSolType;
-		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solT))
-			solT = &udvt->underlyingType();
-		if (dynamic_cast<IntegerType const*>(solT))
-		{
-			auto* arc4Type = m_ctx.typeMapper.mapSolTypeToARC4(_paramSolType);
-			auto enc = awst::makeARC4Encode(std::move(_argExpr), arc4Type, m_loc);
-			return awst::makeAsBytes(std::move(enc), m_loc);
-		}
-		// Non-integer biguint (rare): keep the 32-byte left-pad.
-		auto cast = awst::makeAsBytes(std::move(_argExpr), m_loc);
-		return awst::makeLeftPadToN(std::move(cast), 32, m_loc);
-	}
-	else if (_argExpr->wtype == awst::WType::boolType())
-	{
-		// bool → ARC4 bool = setbit(0x00, 0, boolValue)
-		return awst::makeSetbit(
-			awst::makeBytesConstant({0x00}, m_loc),
-			awst::makeZero(m_loc),
-			std::move(_argExpr), m_loc);
-	}
-	else if (_argExpr->wtype->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		// ReferenceArray → ARC4 encode
-		auto* refArr = dynamic_cast<awst::ReferenceArray const*>(_argExpr->wtype);
-		auto* elemType = refArr ? refArr->elementType() : nullptr;
-		auto* arc4ElemType = elemType ? m_ctx.typeMapper.mapToARC4Type(elemType) : nullptr;
-
-		awst::WType const* arc4ArrayType = nullptr;
-		if (arc4ElemType && refArr && refArr->arraySize())
-			arc4ArrayType = m_ctx.typeMapper.createType<awst::ARC4StaticArray>(
-				arc4ElemType, *refArr->arraySize());
-		else if (arc4ElemType)
-			arc4ArrayType = m_ctx.typeMapper.createType<awst::ARC4DynamicArray>(arc4ElemType);
-
-		if (arc4ArrayType)
-		{
-			auto encode = awst::makeARC4Encode(std::move(_argExpr), arc4ArrayType, m_loc);
-
-			auto rcast = awst::makeAsBytes(std::move(encode), m_loc);
-			return rcast;
-		}
-	}
-	else if (_argExpr->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Struct
-		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Tuple)
-	{
-		auto rcast = awst::makeAsBytes(std::move(_argExpr), m_loc);
-		return rcast;
-	}
-	else
-	{
-		auto rcast = awst::makeAsBytes(std::move(_argExpr), m_loc);
-		return rcast;
-	}
 }
 
 std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
@@ -517,7 +376,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		}
 
 		auto argExpr = buildExpr(*arg);
-		argsTuple->items.push_back(encodeArgToBytes(std::move(argExpr), paramType));
+		argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(m_ctx, std::move(argExpr), paramType, m_loc));
 	}
 
 	// Build WTuple type for args

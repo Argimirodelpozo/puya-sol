@@ -109,40 +109,114 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 }
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
-	std::shared_ptr<awst::Expression> _arg, awst::SourceLocation const& _loc)
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _argExpr,
+	solidity::frontend::Type const* _paramSolType,
+	awst::SourceLocation const& _loc)
 {
-	auto* wtype = _arg->wtype;
-	if (wtype == awst::WType::bytesType() || (wtype && wtype->kind() == awst::WTypeKind::Bytes))
-		return _arg;
-
-	if (wtype == awst::WType::uint64Type())
-		return awst::makeItob(std::move(_arg), _loc);
-
-	if (wtype == awst::WType::biguintType())
+	using namespace solidity::frontend;
+	bool isDynamicBytes = false;
+	if (_paramSolType)
 	{
-		// biguint is minimal big-endian; ABI uint256 is exactly 32 bytes.
-		auto cast = awst::makeAsBytes(std::move(_arg), _loc);
+		auto cat = _paramSolType->category();
+		isDynamicBytes = (cat == Type::Category::Array
+			&& dynamic_cast<ArrayType const*>(_paramSolType)
+			&& dynamic_cast<ArrayType const*>(_paramSolType)->isByteArrayOrString());
+	}
+
+	if (_argExpr->wtype == awst::WType::bytesType()
+		|| _argExpr->wtype->kind() == awst::WTypeKind::Bytes)
+	{
+		if (isDynamicBytes)
+		{
+			// ARC4 byte[]: uint16(len)++raw. makeEvalOnce for side-effecting args.
+			_argExpr = awst::makeEvalOnce(std::move(_argExpr), _loc);
+			auto lenExpr = awst::makeLen(_argExpr, _loc);
+			auto itobLen = awst::makeItob(std::move(lenExpr), _loc);
+			auto header = awst::makeExtract(std::move(itobLen), 6, 2, _loc);
+
+			return awst::makeConcat(std::move(header), std::move(_argExpr), _loc);
+		}
+		return _argExpr;
+	}
+	else if (_argExpr->wtype == awst::WType::uint64Type())
+	{
+		// itob → 8 bytes; left-pad if param is wider (callee's arc4 len check).
+		unsigned widthBytes = 8;
+		if (_paramSolType)
+		{
+			if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
+				widthBytes = intType->numBits() / 8;
+			else if (auto const* addr = dynamic_cast<AddressType const*>(_paramSolType))
+				(void)addr, widthBytes = 20;
+		}
+		auto itob = awst::makeItob(std::move(_argExpr), _loc);
+		if (widthBytes <= 8)
+			return itob;
+		// pad = bzero(widthBytes - 8)  ++  itob(value)
+		return awst::makeLeftPad(std::move(itob), widthBytes - 8, _loc);
+	}
+	else if (_argExpr->wtype == awst::WType::biguintType())
+	{
+		// Encode to the param's exact ARC4 width (N/8 bytes); callee arc4 decode
+		// asserts len==N/8, so a 32-byte arg reverts. makeARC4Encode trims to low
+		// N/8 bytes. int256/uint256 stays 32 bytes.
+		auto const* solT = _paramSolType;
+		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solT))
+			solT = &udvt->underlyingType();
+		if (dynamic_cast<IntegerType const*>(solT))
+		{
+			auto* arc4Type = _ctx.typeMapper.mapSolTypeToARC4(_paramSolType);
+			auto enc = awst::makeARC4Encode(std::move(_argExpr), arc4Type, _loc);
+			return awst::makeAsBytes(std::move(enc), _loc);
+		}
+		// Non-integer biguint (rare): keep the 32-byte left-pad.
+		auto cast = awst::makeAsBytes(std::move(_argExpr), _loc);
 		return awst::makeLeftPadToN(std::move(cast), 32, _loc);
 	}
-
-	if (wtype == awst::WType::boolType())
+	else if (_argExpr->wtype == awst::WType::boolType())
 	{
-		auto setbit = awst::makeSetbit(
+		// bool → ARC4 bool = setbit(0x00, 0, boolValue)
+		return awst::makeSetbit(
 			awst::makeBytesConstant({0x00}, _loc),
 			awst::makeZero(_loc),
-			std::move(_arg), _loc);
-		return setbit;
+			std::move(_argExpr), _loc);
 	}
-
-	if (wtype == awst::WType::accountType())
+	else if (_argExpr->wtype->kind() == awst::WTypeKind::ReferenceArray)
 	{
-		auto cast = awst::makeAsBytes(std::move(_arg), _loc);
-		return cast;
-	}
+		// ReferenceArray → ARC4 encode
+		auto* refArr = dynamic_cast<awst::ReferenceArray const*>(_argExpr->wtype);
+		auto* elemType = refArr ? refArr->elementType() : nullptr;
+		auto* arc4ElemType = elemType ? _ctx.typeMapper.mapToARC4Type(elemType) : nullptr;
 
-	// Fallback: reinterpret as bytes
-	auto cast = awst::makeAsBytes(std::move(_arg), _loc);
-	return cast;
+		awst::WType const* arc4ArrayType = nullptr;
+		if (arc4ElemType && refArr && refArr->arraySize())
+			arc4ArrayType = _ctx.typeMapper.createType<awst::ARC4StaticArray>(
+				arc4ElemType, *refArr->arraySize());
+		else if (arc4ElemType)
+			arc4ArrayType = _ctx.typeMapper.createType<awst::ARC4DynamicArray>(arc4ElemType);
+
+		if (arc4ArrayType)
+		{
+			auto encode = awst::makeARC4Encode(std::move(_argExpr), arc4ArrayType, _loc);
+
+			auto rcast = awst::makeAsBytes(std::move(encode), _loc);
+			return rcast;
+		}
+	}
+	else if (_argExpr->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
+		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Struct
+		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Tuple)
+	{
+		auto rcast = awst::makeAsBytes(std::move(_argExpr), _loc);
+		return rcast;
+	}
+	else
+	{
+		auto rcast = awst::makeAsBytes(std::move(_argExpr), _loc);
+		return rcast;
+	}
 }
 
 // Nested ARC4 type name (struct-field / array-element position).
@@ -188,13 +262,10 @@ std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const
 	return TypeCoercion::wtypeToABIName(_ctx.typeMapper.mapToARC4Type(_ctx.typeMapper.map(_type)));
 }
 
-namespace
-{
-
 // Top-level param name: scalars collapse to "uint64"/"uintN" (signedness dropped);
 // enums → "uint64"; aggregates expand via nestedArc4Name to match puya's tuple form.
 // (A plain struct emitted "struct P" previously, silently breaking dispatch.)
-std::string solTypeToARC4Impl(
+std::string solTypeToArc4ParamName(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
 	if (auto name = builder::TypeCoercion::intSelectorName(_type))
@@ -206,28 +277,24 @@ std::string solTypeToARC4Impl(
 	if (wtype == awst::WType::accountType()) return "address";
 	if (wtype == awst::WType::bytesType()) return "byte[]";
 	if (wtype == awst::WType::stringType()) return "string";
+	if (auto len = awst::fixedBytesLength(wtype))
+		return "byte[" + std::to_string(*len) + "]";
 	if (wtype->kind() == awst::WTypeKind::Bytes)
-	{
-		auto const* bw = static_cast<awst::BytesWType const*>(wtype);
-		if (bw->length().has_value())
-			return "byte[" + std::to_string(bw->length().value()) + "]";
 		return "byte[]";
-	}
-	if (dynamic_cast<solidity::frontend::StructType const*>(_type)
-		|| dynamic_cast<solidity::frontend::ArrayType const*>(_type))
-		return nestedArc4Name(_ctx, _type);
-	return _type->toString(true);
+	// Aggregates AND exotics (fn pointers, contracts): nestedArc4Name recurses the
+	// former and falls back to the callee-published ARC4 mapping for the latter —
+	// `toString(true)` here produced "function () external" where puya registers
+	// "byte[12]", an unroutable selector.
+	return nestedArc4Name(_ctx, _type);
 }
 
-std::string solTypeToARC4RetImpl(
+std::string solTypeToArc4ReturnName(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
 	if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
 		return *name;
-	return solTypeToARC4Impl(_ctx, _type);
+	return solTypeToArc4ParamName(_ctx, _type);
 }
-
-} // namespace
 
 std::string InnerCallHandlers::buildMethodSelector(
 	ContractContext& _ctx,
@@ -236,9 +303,9 @@ std::string InnerCallHandlers::buildMethodSelector(
 {
 	std::vector<std::string> paramNames, retNames;
 	for (auto const& paramType : _funcType.parameterTypes())
-		paramNames.push_back(solTypeToARC4Impl(_ctx, paramType));
+		paramNames.push_back(solTypeToArc4ParamName(_ctx, paramType));
 	for (auto const& retType : _funcType.returnParameterTypes())
-		retNames.push_back(solTypeToARC4RetImpl(_ctx, retType));
+		retNames.push_back(solTypeToArc4ReturnName(_ctx, retType));
 	return builder::TypeCoercion::buildArc4Selector(_name, paramNames, retNames);
 }
 
@@ -248,9 +315,9 @@ std::string InnerCallHandlers::buildMethodSelector(
 {
 	std::vector<std::string> paramNames, retNames;
 	for (auto const& param : _func->parameters())
-		paramNames.push_back(solTypeToARC4Impl(_ctx, param->type()));
+		paramNames.push_back(solTypeToArc4ParamName(_ctx, param->type()));
 	for (auto const& retParam : _func->returnParameters())
-		retNames.push_back(solTypeToARC4RetImpl(_ctx, retParam->type()));
+		retNames.push_back(solTypeToArc4ReturnName(_ctx, retParam->type()));
 	return builder::TypeCoercion::buildArc4Selector(_func->name(), paramNames, retNames);
 }
 

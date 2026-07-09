@@ -18,11 +18,6 @@ private:
 	std::string buildMethodSelector(
 		solidity::frontend::MemberAccess const& _memberAccess);
 
-	/// Encode a single argument to bytes for ApplicationArgs.
-	std::shared_ptr<awst::Expression> encodeArgToBytes(
-		std::shared_ptr<awst::Expression> _argExpr,
-		solidity::frontend::Type const* _paramSolType);
-
 	/// Convert an address/account expression to an application ID.
 	std::shared_ptr<awst::Expression> addressToAppId(
 		std::shared_ptr<awst::Expression> _addrExpr);

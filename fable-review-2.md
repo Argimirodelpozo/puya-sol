@@ -59,6 +59,18 @@ Also fold `PureHelperExtractor::staticEncodedSize` into the existing shared
 `computeEncodedElementSize`. **Est. −250–400 LOC and retires the single most productive bug
 seam in the ledger. Do first.**
 
+> **PROGRESS (2026-07-08, slices A+B landed):** (A) ONE sol-type→selector-name family —
+> `eb::solTypeToArc4ParamName/ReturnName`; SolExternalCall's 35-line lambda copy deleted, all 3
+> `buildMethodSelector` wrappers now share it; the inner path's `toString(true)` exotic fallback
+> aligned on `nestedArc4Name`'s callee-published mapping. (B) the two DRIFTED `encodeArgToBytes`
+> twins are ONE param-type-aware encoder (`InnerCallHandlers::encodeArgToBytes(ctx,arg,solType,loc)`);
+> the fused `.call(abi.encodeCall(...))` shape now encodes at the target's DECLARED param types
+> (fixes the latent biguint-32B-vs-uint128-16B inner-call revert + raw-asBytes arrays), the
+> type-less `encodeWith*` shape passes nullptr (backing-width behavior preserved branch-for-branch).
+> Equality-verified: typed path AWST byte-identical (10+ fixtures); full suite at baseline.
+> REMAINING for R1/D1: the WType-side name family (`wtypeToABIName` / splitter `abiTypeName` /
+> `arc4TypeName` + 2 lambdas) and the `AbiEncoderBuilder`/`ReturnRewriter` encode entry points.
+
 ---
 
 ## Part II — by axis
