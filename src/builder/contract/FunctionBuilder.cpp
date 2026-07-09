@@ -837,6 +837,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			buildModifierChain(_func, method, _contractName, deferredDecodes);
 			deferredDecodes.clear();   // consumed by the chain; the outer insert below is a no-op
+			// The chain threads NATIVE return values; encode the outer dispatch
+			// return to its ABI wire type (biguint would otherwise publish as
+			// "uint512" while callers name the declared width → selector mismatch).
+			encodeChainDispatchReturn(method, _func, m_typeMapper);
 		}
 
 		// Insert deferred ARC4 decodes at top of the now-modifier-wrapped body.

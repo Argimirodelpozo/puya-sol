@@ -54,13 +54,25 @@ void ContractBuilder::buildModifierChain(
 	// ARC4 mismatch.) Found by the dispatch fuzzer + the chain-as-default experiment.
 	struct RetInfo { std::string name; awst::WType const* type; };
 	std::vector<RetInfo> retInfos;
+	// Thread the SAME types _method.returnType declares — that is what the body sub
+	// returns after rewriteARC4Returns (which promotes signed sub-64 and wide-uint
+	// return elements to biguint at the ABI boundary). Re-mapping from the Solidity
+	// type instead would give `int64` → uint64, so capturing the body's biguint into
+	// a uint64 threading slot fails puya with "Tuple type mismatch". For a tuple the
+	// element types come from the WTuple; for a scalar, the whole returnType.
+	auto const* retTuple = (_method.returnType
+		&& _method.returnType->kind() == awst::WTypeKind::WTuple)
+		? static_cast<awst::WTuple const*>(_method.returnType) : nullptr;
 	for (size_t ri = 0; ri < _func.returnParameters().size(); ++ri)
 	{
 		auto const& rp = _func.returnParameters()[ri];
 		std::string nm = rp->name().empty()
 			? "__ret_" + std::to_string(chainId) + "_" + std::to_string(ri)
 			: rp->name();
-		retInfos.push_back({nm, m_typeMapper.map(rp->type())});
+		awst::WType const* rt =
+			(retTuple && ri < retTuple->types().size()) ? retTuple->types()[ri]
+			: (!retTuple ? _method.returnType : m_typeMapper.map(rp->type()));
+		retInfos.push_back({nm, rt});
 	}
 	bool const hasRet = (_method.returnType != awst::WType::voidType());
 	// Leading return-param args, prepended to every chain sub's signature.

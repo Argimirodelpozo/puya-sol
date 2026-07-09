@@ -49,4 +49,18 @@ void rewriteARC4Returns(
 	std::vector<UnsignedMaskInfo> const& _unsignedMasks,
 	bool _funcHasInlineAssembly);
 
+/// Encode the OUTER dispatch return of a CHAIN-LOWERED (modifier'd) function to its
+/// ABI wire type. buildModifierChain threads NATIVE values through its subs and the
+/// outer method ends with `return r` / `return (r1..rN)` — without this, a biguint
+/// return publishes as puya's bare-biguint "uint512" while cross-contract callers
+/// name the declared width ("uint128"/"uint256") → selector mismatch → unconditional
+/// revert (oracle-found; the crosscall fuzzer had no modifier'd callees). Wire rule
+/// per element: signed → arc4.uint256 (value already sign-extended by pass 4 inside
+/// the body sub); unsigned biguint → arc4.uintN(declared); everything else native.
+/// Call AFTER buildModifierChain; no-op when nothing needs encoding.
+void encodeChainDispatchReturn(
+	awst::ContractMethod& method,
+	solidity::frontend::FunctionDefinition const& _func,
+	TypeMapper& m_typeMapper);
+
 } // namespace puyasol::builder

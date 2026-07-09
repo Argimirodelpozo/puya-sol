@@ -1442,6 +1442,36 @@ def test_external_call_signed_narrow_return(harness):
     assert as_int(harness.call(app, "garr(uint256)", 6).abi_return) == 6 + 7 * 1000 + 6    # r[0]+r[1]*1000+x
 
 
+def test_modifier_dyntuple_return(harness):
+    """puyasolRegression/contracts/modifier_dyntuple_return.sol — NOT an o.g. semantic test.
+
+    Two cross-contract-return wire-type classes found by the differential fuzzer, fixed in
+    ReturnRewriter (fable-review-2 D2). A separate small fixture: puya-sol embeds the callee's
+    bytecode into the caller, so bolting these onto the big external_call_signed_narrow_return
+    fixture blew the deploy page budget.
+
+    (a) A biguint element in a DYNAMIC-element tuple `(uint128, bytes)` — Pass 3's old `allStatic`
+        guard left it "uint512" vs the caller's "uint128" → unconditional revert. Now wrapped in
+        any tuple.
+    (b) MODIFIER'D (chain-lowered) returns — the outer dispatch return published the bare biguint
+        as "uint512" while callers name the declared width. Fixed by encodeChainDispatchReturn +
+        threading the promoted returnType (a fresh map() gives int64→uint64 → "Tuple type mismatch").
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_dyntuple_return.sol", contract_name="Caller")
+    # (a) biguint in a dynamic-element tuple. 0xaa=170, len 2.
+    assert as_int(harness.call(app, "gdbig(uint256)", 5).abi_return) == 5 + 170 + 2
+    assert as_int(harness.call(app, "gdbig(uint256)", 2 ** 100 + 9).abi_return) == (2 ** 100 + 9) % 2 ** 128 + 170 + 2
+    # (b) modifier'd returns: single unsigned-wide, single signed sub-word, unsigned tuple, signed tuple.
+    assert as_int(harness.call(app, "gmu128(uint256)", 77).abi_return) == 77
+    assert as_int(harness.call(app, "gmu128(uint256)", 2 ** 127).abi_return) == 2 ** 127
+    assert as_int(harness.call(app, "gmi64(int256)", -5).abi_return) == 995      # signed sub-word, negative
+    assert as_int(harness.call(app, "gmi64(int256)", 9).abi_return) == 1009
+    assert as_int(harness.call(app, "gmtup(uint256)", 6).abi_return) == 12       # 6 + 6, unsigned tuple
+    assert as_int(harness.call(app, "gmstup(int256)", -4).abi_return) == 992     # -4 + -4 + 1000, signed tuple
+    assert as_int(harness.call(app, "gmstup(int256)", 30).abi_return) == 1060    # 30 + 30 + 1000
+
+
 def test_modifier_stack_conditional(harness):
     """puyasolRegression/contracts/modifier_stack_conditional.sol — NOT an o.g. semantic test.
 
