@@ -16,19 +16,10 @@
 #include <libsolutil/Numeric.h>
 
 #include <algorithm>
+#include "builder/sol-types/SolIntType.h"
 
 namespace
 {
-solidity::frontend::IntegerType const* resolveIntegerType(solidity::frontend::Type const* _type)
-{
-	if (!_type) return nullptr;
-	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_type))
-		return intType;
-	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(_type))
-		return dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-	return nullptr;
-}
-
 // Constant-variable resolution HOISTED to the shared
 // builder::SolcConstFold::constantVarEvmWord (fable-review.md item 1: one
 // canonical constant-folding home) — this file now just consumes it.
@@ -337,11 +328,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			augmentedParams.emplace_back(name, type);
 		}
 
-		if (auto const* intType = resolveIntegerType(varDecl->annotation().type))
-		{
-			if (intType->numBits() < 64)
-				paramBitWidths[name] = intType->numBits();
-		}
+		if (auto it = builder::SolIntType::fromSol(varDecl->annotation().type); it && it->bits < 64)
+			paramBitWidths[name] = it->bits;
 	}
 	for (auto const& [n, bw]: m_blk.fn.paramBitWidths)
 		paramBitWidths.emplace(n, bw);

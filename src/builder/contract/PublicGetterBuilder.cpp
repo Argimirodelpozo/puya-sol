@@ -27,9 +27,8 @@ solidity::frontend::Type const* unwrapUDVT(solidity::frontend::Type const* t)
 // signExtendToUint256 projectStructFields applies to the VALUE. Everything else maps natively.
 awst::WType const* getterElementWType(TypeMapper& tm, solidity::frontend::Type const* solType)
 {
-	if (auto const* it = dynamic_cast<solidity::frontend::IntegerType const*>(unwrapUDVT(solType)))
-		if (it->isSigned() && it->numBits() < 256)
-			return awst::WType::biguintType();
+	if (auto it = builder::SolIntType::fromSol(solType); it && it->isSigned && it->bits < 256)
+		return awst::WType::biguintType();
 	return tm.map(solType);
 }
 

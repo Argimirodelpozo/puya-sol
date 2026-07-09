@@ -7,6 +7,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 
@@ -354,12 +355,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 					if (argVal->wtype == awst::WType::biguintType())
 					{
 						unsigned bits = 256;
-						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
-						if (!intT)
-							if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(paramSolType))
-								intT = dynamic_cast<IntegerType const*>(&udvt->underlyingType());
-						if (intT && !intT->isSigned())
-							bits = intT->numBits();
+						if (auto it = builder::SolIntType::fromSol(paramSolType); it && !it->isSigned)
+							bits = it->bits;
 						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
 						auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
 						argVal = std::move(encode);

@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -67,14 +68,8 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 	bool isAbiBoundary = _funcDef->isPartOfExternalInterface();
 	auto mapReturnType = [&](solidity::frontend::Type const* solType) -> awst::WType const* {
 		auto* mapped = m_ctx.typeMapper.map(solType);
-		auto const* t = solType;
-		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(t))
-			t = &udvt->underlyingType();
-		auto const* intType = dynamic_cast<IntegerType const*>(t);
-		if (!intType)
-			if (auto const* enumType = dynamic_cast<EnumType const*>(t))
-				intType = dynamic_cast<IntegerType const*>(enumType->encodingType());
-		if (intType && intType->isSigned() && intType->numBits() <= 64 && isAbiBoundary)
+		auto intInfo = builder::SolIntType::fromSolOrEnum(solType);
+		if (intInfo && intInfo->isSigned && intInfo->bits <= 64 && isAbiBoundary)
 			return awst::WType::biguintType();
 		return mapped;
 	};

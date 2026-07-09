@@ -1,5 +1,6 @@
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/contract/ContractBuilder.h"
+#include "builder/sol-types/SolIntType.h"
 
 namespace puyasol::builder
 {
@@ -13,21 +14,15 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 
 	for (auto const& d : _params)
 	{
-		auto const* solType = d.solType;
-		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-			solType = &udvt->underlyingType();
-		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
-		if (!intType) // enums → uint8 ABI encoding
-			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType))
-				intType = dynamic_cast<solidity::frontend::IntegerType const*>(
-					enumType->encodingType());
-		if (!intType || intType->numBits() >= 64)
+		// int, or enum-as-its-encoding-int (uint8 ABI encoding); UDVTs unwrap.
+		auto intInfo = builder::SolIntType::fromSolOrEnum(d.solType);
+		if (!intInfo || intInfo->bits >= 64)
 			continue;
 
-		unsigned bits = intType->numBits();
+		unsigned bits = intInfo->bits;
 		auto loc = d.loc;
 
-		if (intType->isSigned())
+		if (intInfo->isSigned)
 		{
 			// Signed sub-64: v2 assert param≤maxPos || param≥minNeg; no masking.
 			if (_useABICoderV2)

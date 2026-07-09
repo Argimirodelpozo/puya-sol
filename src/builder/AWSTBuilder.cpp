@@ -1,4 +1,5 @@
 #include "builder/AWSTBuilder.h"
+#include "builder/sol-types/SolIntType.h"
 #include "awst/Termination.h"
 #include "builder/FunctionIdRegistry.h"
 #include "builder/SubroutineReachability.h"
@@ -513,25 +514,13 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				: blobAggParams.count(pi) ? awst::WType::uint64Type()
 				: m_typeMapper.map(param->type());
 			paramContext.emplace_back(pname, ptype);
-			if (auto const* solType = param->annotation().type)
-			{
-				auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
-				if (!intType)
-					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-				if (intType && intType->numBits() < 64)
-					bitWidths[pname] = intType->numBits();
-			}
+			if (auto it = builder::SolIntType::fromSol(param->annotation().type); it && it->bits < 64)
+				bitWidths[pname] = it->bits;
 		}
 		for (auto const& rp: _func.returnParameters())
 		{
-			auto const* solType = rp->annotation().type;
-			auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
-			if (!intType && solType)
-				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-					intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-			if (intType && intType->numBits() < 64)
-				bitWidths[rp->name()] = intType->numBits();
+			if (auto it = builder::SolIntType::fromSol(rp->annotation().type); it && it->bits < 64)
+				bitWidths[rp->name()] = it->bits;
 		}
 		fnCtx.params = paramContext;
 		fnCtx.returnType = sub->returnType;

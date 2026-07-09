@@ -3,6 +3,7 @@
 /// and precompile routing.
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/InnerCallInternal.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
@@ -152,14 +153,10 @@ std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const
 {
 	using namespace solidity::frontend;
 	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
-		_type = &udvt->underlyingType();
-	if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
-		return (intT->isSigned() ? "int" : "uint") + std::to_string(intT->numBits());
-	if (auto const* enumT = dynamic_cast<EnumType const*>(_type))
-	{
-		auto const* enc = dynamic_cast<IntegerType const*>(enumT->encodingType());
-		return "uint" + std::to_string(enc ? enc->numBits() : 8u);
-	}
+		_type = &udvt->underlyingType();   // also lets UDVT-wrapped bool/address/bytesN hit their branches below
+	// int (sign-preserving) or enum → its unsigned encoding width — one carrier lookup.
+	if (auto it = builder::SolIntType::fromSolOrEnum(_type))
+		return (it->isSigned ? "int" : "uint") + std::to_string(it->bits);
 	if (dynamic_cast<BoolType const*>(_type)) return "bool";
 	if (dynamic_cast<AddressType const*>(_type)) return "address";
 	if (auto const* fb = dynamic_cast<FixedBytesType const*>(_type))

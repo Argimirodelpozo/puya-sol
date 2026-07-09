@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/PostInitTriggers.h"
 #include "builder/contract/SelectorRouter.h"
@@ -432,14 +433,11 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					&& pi < constructor->parameters().size())
 				{
 					auto const* solType = constructor->parameters()[pi]->annotation().type;
-					auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
-					if (!intType && solType)
-						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-							intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+					auto intInfo = builder::SolIntType::fromSol(solType);
 					// Signed stays as biguint (two's-complement); ARC4UIntN would reject it.
-					if (intType && !intType->isSigned())
+					if (intInfo && !intInfo->isSigned)
 					{
-						unsigned bits = intType->numBits();
+						unsigned bits = intInfo->bits;
 						auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
 						std::string origName = arg.name;
 						std::string arc4Name = "__arc4_" + origName;
