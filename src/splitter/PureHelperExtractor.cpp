@@ -1,6 +1,7 @@
 /// @file PureHelperExtractor.cpp
 /// See header for design overview.
 
+#include "builder/sol-types/TypeCoercion.h"
 #include "splitter/PureHelperExtractor.h"
 #include "splitter/AwstWalker.h"
 #include "splitter/FunctionSplitter.h"
@@ -21,33 +22,14 @@ constexpr int TxnTypeAppl = 6;
 /// (puya hashes to the 4-byte selector at compile time).
 std::string arc4TypeName(awst::WType const* _t)
 {
-	if (!_t || _t == awst::WType::voidType()) return "void";
-	if (_t == awst::WType::biguintType()) return "uint256";
-	if (_t == awst::WType::uint64Type()) return "uint64";
-	if (_t == awst::WType::boolType()) return "bool";
-	if (_t == awst::WType::accountType()) return "address";
-	if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(_t))
-	{
-		if (bwt->length().has_value())
-			return "byte[" + std::to_string(*bwt->length()) + "]";
-		return "byte[]";
-	}
-	if (auto const* tup = dynamic_cast<awst::WTuple const*>(_t))
-	{
-		std::string s = "(";
-		bool first = true;
-		for (auto const* ft : tup->types())
-		{
-			if (!first) s += ",";
-			s += arc4TypeName(ft);
-			first = false;
-		}
-		s += ")";
-		return s;
-	}
-	// Fallback covers ARC4Struct, ARC4StaticArray, ARC4DynamicArray, etc.
-	if (_t) return _t->name();
-	return "?";
+	// Delegates to THE canonical WType namer. Uint256 = the ABI-selector collapse
+	// this extractor has always used for bare biguint. NOTE the deliberate
+	// difference from SimpleSplitter's chunk sigs (Uint512, puya's bare-biguint
+	// router name) — now an explicit parameter instead of two silently-divergent
+	// per-file copies. Aggregate handling improves: ARC4 structs/arrays render as
+	// proper "(...)"/elem-suffix forms instead of the wtype's internal name().
+	return builder::TypeCoercion::wtypeToABIName(
+		_t, builder::TypeCoercion::BareBiguintName::Uint256);
 }
 
 /// Static ABI-encoded byte size of a return wtype (0 = dynamic/unknown).

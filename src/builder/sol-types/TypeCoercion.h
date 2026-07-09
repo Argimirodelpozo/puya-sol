@@ -226,8 +226,23 @@ public:
 
 	// ── ARC4 / ABI ───────────────────────────────────────────────
 
-	/// Canonical ABI type name for selector computation.
-	static std::string wtypeToABIName(awst::WType const* _type);
+	/// How a BARE (native) biguint wtype is named in a signature. The two answers
+	/// are both load-bearing: puya's router publishes a bare-biguint subroutine arg
+	/// as "uint512" (its 64-byte stack width — what the SPLITTER chunk sigs must
+	/// match), while the ABI-selector convention collapses it to "uint256". Callers
+	/// choose explicitly; keeping the choice implicit in per-file copies is how the
+	/// splitter namers silently disagreed.
+	enum class BareBiguintName { Uint512, Uint256 };
+
+	/// THE canonical WType→ABI-signature type name (selector computation, splitter
+	/// chunk sigs, helper method sigs). Handles native wtypes (void/bool/uint64/
+	/// biguint/account/string/bytes), all ARC4 kinds (alias-aware: "byte", "string",
+	/// "byte[]", "address" pass through exactly as puya publishes them), WTuple and
+	/// ReferenceArray. Replaces the three per-file copies (this fn, the splitter's
+	/// abiTypeName, PureHelperExtractor's arc4TypeName) that had drifted.
+	static std::string wtypeToABIName(
+		awst::WType const* _type,
+		BareBiguintName _biguint = BareBiguintName::Uint256);
 
 	/// Canonical ARC4 method-selector type name for a Solidity INTEGER type,
 	/// matching exactly what the callee's on-chain router emits (verified via the

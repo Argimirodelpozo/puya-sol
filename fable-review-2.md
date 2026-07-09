@@ -68,8 +68,16 @@ seam in the ledger. Do first.**
 > (fixes the latent biguint-32B-vs-uint128-16B inner-call revert + raw-asBytes arrays), the
 > type-less `encodeWith*` shape passes nullptr (backing-width behavior preserved branch-for-branch).
 > Equality-verified: typed path AWST byte-identical (10+ fixtures); full suite at baseline.
-> REMAINING for R1/D1: the WType-side name family (`wtypeToABIName` / splitter `abiTypeName` /
-> `arc4TypeName` + 2 lambdas) and the `AbiEncoderBuilder`/`ReturnRewriter` encode entry points.
+> **Slice C (2026-07-09): WType-side family DONE.** One canonical
+> `TypeCoercion::wtypeToABIName(WType*, BareBiguintName)` — the splitters' silent
+> uint512-vs-uint256 bare-biguint disagreement is now an explicit parameter; SimpleSplitter's
+> `abiTypeName` (−90 lines) and PureHelperExtractor's `arc4TypeName` (−25) are one-line delegates.
+> Equality-proven beyond the suite (splitter paths aren't suite-covered): full PoolManager uros
+> split (44 MB AWST, 263 selector constants) + --deploy-pure-helpers run, both byte-identical.
+> The SolEmitStatement event namer is documented DIFFERENT-BY-DESIGN (events collapse biguint-backed
+> ints to "uint256" to match puya's ARC-28 registration) — not merged.
+> REMAINING for R1/D1: the `AbiEncoderBuilder` sol-type lambda (coupled to the abi.* backing-width
+> conventions) and the `AbiEncoderBuilder`/`ReturnRewriter` encode entry points.
 
 ---
 

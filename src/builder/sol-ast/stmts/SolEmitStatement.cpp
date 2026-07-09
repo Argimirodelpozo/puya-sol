@@ -28,6 +28,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		ASTNode::referencedDeclaration(eventCall.expression()));
 	std::string eventName = eventDef ? eventDef->name() : "Event";
 
+	// EVENT-signature namer (ARC-28 topic hash). Deliberately NOT the method-selector
+	// family (eb::solTypeToArc4ParamName): events collapse EVERY biguint-backed int to
+	// "uint256" (no intSelectorName exact-width rule — an int128 event param is
+	// "uint256" here but "uint128" in a method selector) because the topic must match
+	// puya's ARC-28 registration, which derives from the mapped ARC4 wtype. Do not
+	// "unify" this into the selector namer without changing puya's event registration.
 	auto arc4SigName = [this](Type const* _type) -> std::string {
 		auto* wtype = m_blk.typeMapper().map(_type);
 		if (wtype == awst::WType::biguintType()) return "uint256";

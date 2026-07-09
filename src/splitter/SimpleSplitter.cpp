@@ -2,6 +2,7 @@
 /// Static "extract-named-subroutines" splitter — see SimpleSplitter.h.
 
 #include "splitter/SimpleSplitter.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 #include "awst/WType.h"
 
@@ -22,99 +23,13 @@ constexpr int TxnTypeAppl = 6;
 // helper's method signature so sha512_256("name(args)return")[:4] aligns.
 std::string abiTypeName(awst::WType const* t)
 {
-	if (!t) return "void";
-	if (t == awst::WType::voidType()) return "void";
-	if (t == awst::WType::boolType()) return "bool";
-	if (t == awst::WType::uint64Type()) return "uint64";
-	if (t == awst::WType::biguintType()) return "uint512";
-	if (t == awst::WType::accountType()) return "address";
-	if (t == awst::WType::stringType()) return "string";
-	if (t->kind() == awst::WTypeKind::Bytes)
-	{
-		auto const* bw = dynamic_cast<awst::BytesWType const*>(t);
-		if (bw && bw->length()) return "byte[" + std::to_string(*bw->length()) + "]";
-		return "byte[]";
-	}
-	if (t->kind() == awst::WTypeKind::ARC4UIntN)
-	{
-		auto const* a = dynamic_cast<awst::ARC4UIntN const*>(t);
-		if (a)
-		{
-			if (a->arc4Alias() == "byte") return "byte";
-			return "uint" + std::to_string(a->n());
-		}
-	}
-	if (t->kind() == awst::WTypeKind::ARC4StaticArray)
-	{
-		auto const* a = dynamic_cast<awst::ARC4StaticArray const*>(t);
-		if (a) return abiTypeName(a->elementType()) + "[" + std::to_string(a->arraySize()) + "]";
-	}
-	if (t->kind() == awst::WTypeKind::ARC4DynamicArray)
-	{
-		auto const* a = dynamic_cast<awst::ARC4DynamicArray const*>(t);
-		if (a)
-		{
-			// puya treats "string" / "byte[]" / "address" aliases as the
-			// canonical ABI typename. Match that exactly so the selector
-			// hashes line up with the helper's emitted method signature.
-			auto const& alias = a->arc4Alias();
-			// puya's canonical aliases must match exactly so selector hashes align.
-			if (alias == "string" || alias == "byte[]" || alias == "address") return alias;
-			return abiTypeName(a->elementType()) + "[]";
-		}
-	}
-	if (t->kind() == awst::WTypeKind::ARC4Struct)
-	{
-		auto const* s = dynamic_cast<awst::ARC4Struct const*>(t);
-		if (s)
-		{
-			std::string out = "(";
-			bool first = true;
-			for (auto const& f : s->fields())
-			{
-				if (!first) out += ",";
-				out += abiTypeName(f.second);
-				first = false;
-			}
-			out += ")";
-			return out;
-		}
-	}
-	if (t->kind() == awst::WTypeKind::ARC4Tuple)
-	{
-		auto const* tup = dynamic_cast<awst::ARC4Tuple const*>(t);
-		if (tup)
-		{
-			std::string out = "(";
-			bool first = true;
-			for (auto const* el : tup->types())
-			{
-				if (!first) out += ",";
-				out += abiTypeName(el);
-				first = false;
-			}
-			out += ")";
-			return out;
-		}
-	}
-	if (t->kind() == awst::WTypeKind::WTuple)
-	{
-		auto const* tup = dynamic_cast<awst::WTuple const*>(t);
-		if (tup)
-		{
-			std::string out = "(";
-			bool first = true;
-			for (auto const* el : tup->types())
-			{
-				if (!first) out += ",";
-				out += abiTypeName(el);
-				first = false;
-			}
-			out += ")";
-			return out;
-		}
-	}
-	return "byte[]";  // fallthrough; puya may reject
+	// Delegates to THE canonical WType namer. Uint512: puya's router publishes a
+	// bare-biguint subroutine arg as "uint512" (64-byte stack width) — chunk sigs
+	// must match its emitted `method "..."` exactly. (Was a full local copy of the
+	// ladder; three per-file copies had drifted, incl. this one naming biguint
+	// "uint512" while PureHelperExtractor's said "uint256".)
+	return builder::TypeCoercion::wtypeToABIName(
+		t, builder::TypeCoercion::BareBiguintName::Uint512);
 }
 
 std::string buildMethodSig(std::string const& name, awst::Subroutine const& sub)

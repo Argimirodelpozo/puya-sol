@@ -435,31 +435,55 @@ std::shared_ptr<awst::Expression> TypeCoercion::stringToBytes(
 
 // ── ARC4 / ABI ───────────────────────────────────────────────────
 
-std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
+std::string TypeCoercion::wtypeToABIName(awst::WType const* _type, BareBiguintName _biguint)
 {
-	if (_type == awst::WType::arc4BoolType())
+	// ── native wtypes (reachable from the splitter/helper sig builders; the
+	// selector-computation callers pre-map through mapToARC4Type) ──
+	if (!_type || _type == awst::WType::voidType())
+		return "void";
+	if (_type == awst::WType::boolType() || _type == awst::WType::arc4BoolType())
 		return "bool";
+	if (_type == awst::WType::uint64Type())
+		return "uint64";
+	if (_type == awst::WType::biguintType())
+		return _biguint == BareBiguintName::Uint512 ? "uint512" : "uint256";
+	if (_type == awst::WType::accountType())
+		return "address";
+	if (_type == awst::WType::stringType())
+		return "string";
+	if (auto len = awst::fixedBytesLength(_type))
+		return "byte[" + std::to_string(*len) + "]";
+	if (_type->kind() == awst::WTypeKind::Bytes)
+		return "byte[]";
 
 	switch (_type->kind())
 	{
 	case awst::WTypeKind::ARC4UIntN:
 	{
 		auto const* uintN = static_cast<awst::ARC4UIntN const*>(_type);
+		// puya's canonical name for the 8-bit byte element is "byte", not "uint8"
+		// (selector hashes must match its emitted `method "..."` exactly).
+		if (uintN->arc4Alias() == "byte")
+			return "byte";
 		return "uint" + std::to_string(uintN->n());
 	}
 	case awst::WTypeKind::ARC4StaticArray:
 	{
 		auto const* sa = static_cast<awst::ARC4StaticArray const*>(_type);
-		if (!sa->arc4Alias().empty())
-			return sa->arc4Alias();
-		return wtypeToABIName(sa->elementType()) + "[" + std::to_string(sa->arraySize()) + "]";
+		// Honor only puya's CANONICAL aliases ("address", "byte[N]"); an internal
+		// alias (e.g. debug tags) must not leak into a signature.
+		auto const& alias = sa->arc4Alias();
+		if (alias == "address" || alias.rfind("byte[", 0) == 0)
+			return alias;
+		return wtypeToABIName(sa->elementType(), _biguint) + "[" + std::to_string(sa->arraySize()) + "]";
 	}
 	case awst::WTypeKind::ARC4DynamicArray:
 	{
 		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_type);
-		if (!da->arc4Alias().empty())
-			return da->arc4Alias();
-		return wtypeToABIName(da->elementType()) + "[]";
+		auto const& alias = da->arc4Alias();
+		if (alias == "string" || alias == "byte[]" || alias == "address")
+			return alias;
+		return wtypeToABIName(da->elementType(), _biguint) + "[]";
 	}
 	case awst::WTypeKind::ARC4Struct:
 	{
@@ -469,7 +493,7 @@ std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
 		for (auto const& [name, fieldType]: st->fields())
 		{
 			if (!first) result += ",";
-			result += wtypeToABIName(fieldType);
+			result += wtypeToABIName(fieldType, _biguint);
 			first = false;
 		}
 		result += ")";
@@ -483,12 +507,30 @@ std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
 		for (auto const* elemType: tp->types())
 		{
 			if (!first) result += ",";
-			result += wtypeToABIName(elemType);
+			result += wtypeToABIName(elemType, _biguint);
 			first = false;
 		}
 		result += ")";
 		return result;
 	}
+	case awst::WTypeKind::WTuple:
+	{
+		auto const* tp = static_cast<awst::WTuple const*>(_type);
+		std::string result = "(";
+		bool first = true;
+		for (auto const* elemType: tp->types())
+		{
+			if (!first) result += ",";
+			result += wtypeToABIName(elemType, _biguint);
+			first = false;
+		}
+		result += ")";
+		return result;
+	}
+	case awst::WTypeKind::ReferenceArray:
+		// Splitter chunk sigs encode reference arrays as raw bytes (pre-existing
+		// splitter convention; the selector paths never see one — they pre-map).
+		return "byte[]";
 	default:
 		return _type->name();
 	}
