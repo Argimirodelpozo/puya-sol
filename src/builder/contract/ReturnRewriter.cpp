@@ -35,6 +35,59 @@ void forEachReturnStatement(
 	}
 }
 
+namespace
+{
+
+/// Per-return-element wire plan — THE single source of the "what ABI type does this
+/// return element become" decision (see the SPEC below). Only biguint-backed elements
+/// change type: a SIGNED biguint (sign-extended two's complement) publishes as
+/// arc4.uint256, an UNSIGNED biguint as arc4.uintN(declared width). Everything else
+/// (native uint64 incl. sub-word-masked unsigned, bool, address, bytesN, dynamic
+/// bytes/string, arc4 aggregates) is already its own wire type.
+struct ElemPlan
+{
+	awst::WType const* nativeType = nullptr;   // element type in method.returnType (post FunctionBuilder promotion)
+	awst::WType const* wireType = nullptr;     // ABI wire type
+	bool isSigned = false;                     // needs signExtendToUint256 prep before encode
+	unsigned bits = 0;                         // declared width (wireType width + asm mod-wrap)
+	bool encoded = false;                      // wireType != nativeType (a biguint element)
+};
+
+/// Compute the wire plan for every return element. Reads element native types from
+/// `_returnType` (the promoted method.returnType: signed sub-64 and >64-bit ints are
+/// already biguint there) — NOT a fresh map() of the Solidity type, which would give
+/// int64→uint64 and miss the promotion. Solidity types supply signedness + declared bits.
+std::vector<ElemPlan> computeReturnPlan(
+	solidity::frontend::FunctionDefinition const& _func,
+	awst::WType const* _returnType,
+	TypeMapper& _tm)
+{
+	auto const& returnParams = _func.returnParameters();
+	auto const* retTuple = (_returnType && _returnType->kind() == awst::WTypeKind::WTuple)
+		? static_cast<awst::WTuple const*>(_returnType) : nullptr;
+	std::vector<ElemPlan> plan;
+	for (size_t i = 0; i < returnParams.size(); ++i)
+	{
+		ElemPlan p;
+		p.nativeType = retTuple
+			? (i < retTuple->types().size() ? retTuple->types()[i] : nullptr)
+			: _returnType;
+		p.wireType = p.nativeType;
+		if (p.nativeType == awst::WType::biguintType())
+		{
+			auto si = SolIntType::fromSolOrEnum(returnParams[i]->type());
+			p.isSigned = si && si->isSigned;
+			p.bits = p.isSigned ? 256u : (si ? si->bits : 256u);
+			p.wireType = _tm.createType<awst::ARC4UIntN>(static_cast<int>(p.bits));
+			p.encoded = true;
+		}
+		plan.push_back(p);
+	}
+	return plan;
+}
+
+} // namespace
+
 /// ── THE WIRE-RETURN-TYPE SPEC (D2 characterization, 2026-07-09) ──────────────
 /// What the SIX passes below jointly compute, as a table (oracle fixture:
 /// tests/WIP/return-wire-oracle/return_matrix.sol + oracle.txt — regenerate and
@@ -58,9 +111,17 @@ void forEachReturnStatement(
 ///                                    which gives int64→uint64 and mismatches the promoted
 ///                                    biguint body → "Tuple type mismatch").
 ///   asm-bodied biguint return      → arc4.uintN with `% 2^N` wrap (Yul is unchecked)
-/// Passes 2/3/4 each RE-derive parts of this table with mutually-aware skip
-/// guards (the redesign target: compute the plan once, walk once — fable-review-2
-/// D2). Pass 6 additionally coerces assignments into a modifier's named-return var.
+///
+/// The per-element WIRE TYPE (which arc4.uintN a biguint element becomes) is computed
+/// ONCE by computeReturnPlan and read by passes 2/3/4 AND encodeChainDispatchReturn — the
+/// "pass 4 re-derives pass 3's biguint→uintN" copy-paste is gone (fable-review-2 D2). What
+/// remains per-pass is the VALUE transform + the return-expression SHAPE walk: pass 2 scalar
+/// biguint, pass 3 unsigned tuple (literal/ternary/opaque-spill), pass 4 signed (sign-extend
+/// + the signed-tuple shapes), pass 5 sub-word mask, pass 6 named-return-var coercion. The
+/// walks keep two intentional quirks that are output-load-bearing (a byte-identity gate holds
+/// them): the opaque-tuple spill temp is `__ret_tmp_N` in the unsigned path (pass 3) but
+/// `__rettuple_N` in the signed path (pass 4), and ternary-of-tuples is rewritten only in the
+/// unsigned path. Merging the walks would change those names — deferred, low value.
 void rewriteARC4Returns(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -91,6 +152,11 @@ void rewriteARC4Returns(
 		}
 	}
 
+	// THE per-element wire plan (shared with encodeChainDispatchReturn). Passes 2/3/4
+	// below no longer each re-derive "biguint → which arc4.uintN" — they read it here.
+	// Computed after Pass 1 so a ReferenceArray element already carries its arc4 type.
+	auto const plan = computeReturnPlan(_func, method.returnType, m_typeMapper);
+
 	// Assembly bodies are UNCHECKED (EVM Yul wraps mod 2^256); AVM biguint
 	// does NOT wrap. Wrap (val % 2^N) before ARC4Encode for asm functions
 	// to match EVM semantics. Non-asm leaves bare ARC4Encode so overflow REVERTS.
@@ -116,14 +182,9 @@ void rewriteARC4Returns(
 	if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
 		&& signedReturns.empty() && _func.modifiers().empty())
 	{
-		// Get original Solidity bit width for the return type
-		unsigned retBits = 256;
-		if (returnParams.size() == 1)
-		{
-			if (auto it = builder::SolIntType::fromSolOrEnum(returnParams[0]->type()))
-				retBits = it->bits;
-		}
-		auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
+		// Wire type + declared width from the shared plan (single biguint element).
+		unsigned retBits = plan[0].bits;
+		auto const* arc4RetType = plan[0].wireType;
 
 		forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
 			if (ret.value && ret.value->wtype == awst::WType::biguintType())
@@ -149,25 +210,15 @@ void rewriteARC4Returns(
 		// element (uint64/bool/address/bytesN/dynamic bytes/string/arrays) stays
 		// native; puya encodes mixed native+arc4 tuples fine.
 		bool hasBiguintElement = false;
-		for (auto const* t : tupleType->types())
-			if (t == awst::WType::biguintType()) { hasBiguintElement = true; break; }
+		for (auto const& p : plan)
+			if (p.encoded) { hasBiguintElement = true; break; }
 
 		if (hasBiguintElement)
 		{
+			// Per-element wire types from the shared plan (biguint → arc4.uintN, else native).
 			std::vector<awst::WType const*> arc4Types;
-			for (size_t ri = 0; ri < returnParams.size() && ri < tupleType->types().size(); ++ri)
-			{
-				auto const* elemType = tupleType->types()[ri];
-				if (elemType == awst::WType::biguintType())
-				{
-					unsigned bits = 256;
-					if (auto it = builder::SolIntType::fromSol(returnParams[ri]->type()))
-						bits = it->bits;
-					arc4Types.push_back(m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits)));
-				}
-				else
-					arc4Types.push_back(elemType);
-			}
+			for (auto const& p : plan)
+				arc4Types.push_back(p.wireType);
 
 			auto wrapTupleItems = [&](awst::TupleExpression* tuple)
 			{
@@ -294,27 +345,13 @@ void rewriteARC4Returns(
 		if (!chainLowered && returnParams.size() > 1 && method.returnType
 			&& method.returnType->kind() == awst::WTypeKind::WTuple)
 		{
-			auto const* origT = static_cast<awst::WTuple const*>(method.returnType);
-			std::vector<awst::WType const*> elemTypes;
-			for (size_t i = 0; i < origT->types().size(); ++i)
-			{
-				if (signedIdxSet.count(i))
-					elemTypes.push_back(arc4SignedType);
-				else if (origT->types()[i] == awst::WType::biguintType())
-				{
-					unsigned bits = 256;
-					if (i < returnParams.size())
-					{
-						if (auto it = builder::SolIntType::fromSol(returnParams[i]->type()))
-							bits = it->bits;
-					}
-					elemTypes.push_back(m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits)));
-				}
-				else
-					elemTypes.push_back(origT->types()[i]);
-			}
-			signedTupleElems = elemTypes;
-			signedTupleRetType = new awst::WTuple(std::move(elemTypes));   // mirror Pass 3's raw new
+			// Per-element wire types from the shared plan (signed → arc4.uint256, unsigned
+			// biguint → arc4.uintN, else native) — the same table Pass 3 uses, no longer
+			// re-derived here ("Pass 4 re-does Pass 3" is gone).
+			for (auto const& p : plan)
+				signedTupleElems.push_back(p.wireType);
+			signedTupleRetType = new awst::WTuple(
+				std::vector<awst::WType const*>(signedTupleElems));   // mirror Pass 3's raw new
 		}
 
 		bool wrapSingleReturn = (signedReturns.size() == 1
@@ -536,35 +573,13 @@ void encodeChainDispatchReturn(
 	if (returnParams.empty())
 		return;
 
-	// Wire type per element. Read the BODY's return element types from
-	// method.returnType (post-rewriteARC4Returns) — NOT a fresh map() of the
-	// Solidity type, which would give `int64` → uint64 and miss the biguint the
-	// ABI-boundary promotion already installed. Only biguint slots change:
-	// signed → arc4.uint256 (value already sign-extended in the body by Pass 4),
-	// unsigned wide → arc4.uintN(declared). Everything else (native uint64 incl.
-	// Pass-5-masked sub-word unsigned, bool, address, bytesN, arc4 aggregates)
-	// is already its own wire type.
-	auto const* retTuple = (method.returnType
-		&& method.returnType->kind() == awst::WTypeKind::WTuple)
-		? static_cast<awst::WTuple const*>(method.returnType) : nullptr;
-	struct Elem { awst::WType const* native; awst::WType const* wire; };
-	std::vector<Elem> elems;
+	// The chain threaded NATIVE values (biguint) through its subs and Pass 4
+	// already sign-extended signed elements in the body; here we ARC4-encode the
+	// OUTER dispatch return to the shared wire plan. (signed→arc4.uint256,
+	// unsigned biguint→arc4.uintN; everything else is already its wire type.)
+	auto const plan = computeReturnPlan(_func, method.returnType, m_typeMapper);
 	bool anyEncode = false;
-	for (size_t i = 0; i < returnParams.size(); ++i)
-	{
-		auto const* native =
-			retTuple ? (i < retTuple->types().size() ? retTuple->types()[i] : nullptr)
-			: method.returnType;
-		awst::WType const* wire = native;
-		if (native == awst::WType::biguintType())
-		{
-			auto si = SolIntType::fromSolOrEnum(returnParams[i]->type());
-			unsigned bits = si ? (si->isSigned ? 256u : si->bits) : 256u;
-			wire = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-			anyEncode = true;
-		}
-		elems.push_back({native, wire});
-	}
+	for (auto const& p: plan) if (p.encoded) { anyEncode = true; break; }
 	if (!anyEncode)
 		return;
 
@@ -573,34 +588,34 @@ void encodeChainDispatchReturn(
 		if (!ret.value)
 			return;
 		auto loc = ret.value->sourceLocation;
-		if (elems.size() == 1)
+		if (plan.size() == 1)
 		{
 			if (ret.value->wtype == awst::WType::biguintType())
-				ret.value = awst::makeARC4Encode(std::move(ret.value), elems[0].wire, loc);
+				ret.value = awst::makeARC4Encode(std::move(ret.value), plan[0].wireType, loc);
 		}
 		else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
 		{
 			std::vector<awst::WType const*> wireTypes;
-			for (size_t i = 0; i < tuple->items.size() && i < elems.size(); ++i)
+			for (size_t i = 0; i < tuple->items.size() && i < plan.size(); ++i)
 			{
-				if (elems[i].wire != elems[i].native
+				if (plan[i].encoded
 					&& tuple->items[i]->wtype == awst::WType::biguintType())
 					tuple->items[i] = awst::makeARC4Encode(
-						std::move(tuple->items[i]), elems[i].wire, loc);
+						std::move(tuple->items[i]), plan[i].wireType, loc);
 			}
-			for (auto const& e: elems)
-				wireTypes.push_back(e.wire);
+			for (auto const& p: plan)
+				wireTypes.push_back(p.wireType);
 			tuple->wtype = new awst::WTuple(std::move(wireTypes));   // fresh instance (Pass 3/4 convention)
 		}
 	});
 
-	if (elems.size() == 1)
-		method.returnType = elems[0].wire;
+	if (plan.size() == 1)
+		method.returnType = plan[0].wireType;
 	else
 	{
 		std::vector<awst::WType const*> wireTypes;
-		for (auto const& e: elems)
-			wireTypes.push_back(e.wire);
+		for (auto const& p: plan)
+			wireTypes.push_back(p.wireType);
 		method.returnType = new awst::WTuple(std::move(wireTypes));
 	}
 }
