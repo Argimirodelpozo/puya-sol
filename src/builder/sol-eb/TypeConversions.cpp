@@ -166,7 +166,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 	std::shared_ptr<awst::Expression> _arg,
 	awst::SourceLocation const& _loc)
 {
-	if (_arg->wtype == awst::WType::uint64Type() || _arg->wtype == awst::WType::biguintType())
+	if (awst::isNumericWType(_arg->wtype))
 	{
 		auto zero = awst::makeZero(_loc, _arg->wtype);
 
@@ -198,7 +198,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(_arg));
 
 	// Integer → left-pad to 32 bytes → account.
-	if (srcWType == awst::WType::uint64Type() || srcWType == awst::WType::biguintType())
+	if (awst::isNumericWType(srcWType))
 	{
 		auto promoted = TypeCoercion::implicitNumericCast(
 			std::move(_arg), awst::WType::biguintType(), _loc);

@@ -117,6 +117,15 @@ inline bool isDynamicBytes(WType const* _t)
 	return bw && !bw->length().has_value();
 }
 
+/// True iff _t is one of the two NATIVE integer tiers (uint64-backed N<=64 or
+/// biguint-backed N>64). The per-tier singleton compares (`== uint64Type()`,
+/// `== biguintType()`) remain the idiomatic single-tier checks — this exists
+/// for the "is it an integer at all" question so the pair isn't re-spelled.
+inline bool isNumericWType(WType const* _t)
+{
+	return _t == WType::uint64Type() || _t == WType::biguintType();
+}
+
 class ARC4UIntN: public WType
 {
 public:

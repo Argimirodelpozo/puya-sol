@@ -145,7 +145,7 @@ public:
 		Logger::instance().warning(
 			"unsupported member access '." + _n.memberName() + "'", loc);
 		auto* wtype = m_ctx.typeMapper.map(_n.annotation().type);
-		if (wtype == awst::WType::uint64Type() || wtype == awst::WType::biguintType())
+		if (awst::isNumericWType(wtype))
 			return awst::makeZero(loc, wtype);
 		if (wtype == awst::WType::boolType())
 			return awst::makeBoolConstant(false, loc, wtype);
