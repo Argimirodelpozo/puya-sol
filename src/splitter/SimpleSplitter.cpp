@@ -255,9 +255,7 @@ awst::WType const* mapToArc4(awst::WType const* w)
 		static awst::ARC4DynamicArray s_arc4String(&s_arc4Byte, "string");
 		return &s_arc4String;
 	}
-	if (w->kind() == awst::WTypeKind::Bytes
-		&& dynamic_cast<awst::BytesWType const*>(w)
-		&& !dynamic_cast<awst::BytesWType const*>(w)->length())
+	if (awst::isDynamicBytes(w))
 	{
 		static awst::ARC4UIntN s_arc4Byte(8, "byte");
 		static awst::ARC4DynamicArray s_dynBytes(&s_arc4Byte, "arc4.dynamic_bytes");

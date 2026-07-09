@@ -88,6 +88,35 @@ private:
 	std::optional<int> m_length;
 };
 
+/// Guarded bytes-view helpers. INVARIANT: BytesWType is the ONLY class with
+/// kind()==Bytes (bytesType() itself is a BytesWType{nullopt} singleton), so a
+/// kind check and a dynamic_cast agree — but sites used to mix them, including
+/// `kind==Bytes && dynamic_cast<...>(t)->length()` combos that deref the cast
+/// unguarded. Route through these instead of hand-rolling the cast.
+
+/// Typed bytes view of _t, or nullptr when _t isn't a bytes wtype.
+inline BytesWType const* asBytesWType(WType const* _t)
+{
+	return dynamic_cast<BytesWType const*>(_t);
+}
+
+/// Engaged with N iff _t is a SIZED `bytes[N]`; nullopt for dynamic `bytes`
+/// and for non-bytes wtypes alike.
+inline std::optional<int> fixedBytesLength(WType const* _t)
+{
+	if (auto const* bw = asBytesWType(_t))
+		return bw->length();
+	return std::nullopt;
+}
+
+/// True iff _t is the DYNAMIC bytes wtype (kind Bytes, no length) — covers the
+/// bytesType() singleton and any other unsized BytesWType instance.
+inline bool isDynamicBytes(WType const* _t)
+{
+	auto const* bw = asBytesWType(_t);
+	return bw && !bw->length().has_value();
+}
+
 class ARC4UIntN: public WType
 {
 public:

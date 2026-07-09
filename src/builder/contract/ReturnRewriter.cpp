@@ -128,8 +128,7 @@ void rewriteARC4Returns(
 			else if (t == awst::WType::uint64Type() || t == awst::WType::boolType()
 				|| t == awst::WType::accountType())
 				continue;
-			else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(t);
-				bw && bw->length().has_value())
+			else if (awst::fixedBytesLength(t).has_value())
 				continue;   // fixed byte[N] — static
 			else
 				allStatic = false;

@@ -216,9 +216,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				bool isBoxType = wtype->kind() == awst::WTypeKind::ReferenceArray
 					|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 					|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
-					|| wtype == awst::WType::bytesType()
-					|| (wtype->kind() == awst::WTypeKind::Bytes
-						&& !dynamic_cast<awst::BytesWType const*>(wtype)->length().has_value());
+					|| awst::isDynamicBytes(wtype);   // covers the bytesType() singleton too
 				if (!isBoxType)
 					return;
 
@@ -334,9 +332,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
-				else if (paramType->kind() == awst::WTypeKind::Bytes
-					&& dynamic_cast<awst::BytesWType const*>(paramType)
-					&& dynamic_cast<awst::BytesWType const*>(paramType)->length().has_value())
+				else if (awst::fixedBytesLength(paramType).has_value())
 				{
 					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);

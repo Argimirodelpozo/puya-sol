@@ -97,8 +97,7 @@ bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
 	bool dynamicSized =
 		kind == awst::WTypeKind::ARC4DynamicArray
 		|| kind == awst::WTypeKind::ReferenceArray
-		|| (kind == awst::WTypeKind::Bytes
-			&& !dynamic_cast<awst::BytesWType const*>(_box->wtype)->length().has_value());
+		|| awst::isDynamicBytes(_box->wtype);
 	if (!dynamicSized) return false;
 	// Top-level = key is a BytesConstant; mapping values use runtime concat/hash.
 	return _box->key
