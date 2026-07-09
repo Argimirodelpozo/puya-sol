@@ -204,53 +204,6 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	return bytesExpr;
 }
 
-// ── buildARC4MethodSelector ──
-
-std::string AbiEncoderBuilder::buildARC4MethodSelector(
-	ContractContext& _ctx,
-	solidity::frontend::FunctionDefinition const* _funcDef)
-{
-	using namespace solidity::frontend;
-	auto solTypeToARC4 = [&](Type const* _type) -> std::string {
-		// Integers: match the callee router's exact naming (<=64 → "uint64",
-		// >64 → "uintN", signedness dropped). The biguint→"uint256" fallback
-		// below would wrongly collapse every >64-bit width to uint256.
-		if (auto name = builder::TypeCoercion::intSelectorName(_type))
-			return *name;
-		auto* wtype = _ctx.typeMapper.map(_type);
-		if (wtype == awst::WType::biguintType()) return "uint256";
-		if (wtype == awst::WType::uint64Type()) return "uint64";
-		if (wtype == awst::WType::boolType()) return "bool";
-		if (wtype == awst::WType::accountType()) return "address";
-		if (wtype == awst::WType::bytesType()) return "byte[]";
-		if (wtype == awst::WType::stringType()) return "string";
-		if (wtype->kind() == awst::WTypeKind::Bytes)
-		{
-			auto const* bw = static_cast<awst::BytesWType const*>(wtype);
-			if (bw->length().has_value())
-				return "byte[" + std::to_string(bw->length().value()) + "]";
-			return "byte[]";
-		}
-		if (auto const* structType = dynamic_cast<StructType const*>(_type))
-			return "struct " + structType->structDefinition().name();
-		return _type->toString(true);
-	};
-	// Return-position names differ from params for SIGNED ints (signed return =
-	// full 256-bit two's complement → "uint256").
-	auto solTypeToARC4Ret = [&](Type const* _type) -> std::string {
-		if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
-			return *name;
-		return solTypeToARC4(_type);
-	};
-
-	std::vector<std::string> paramNames, retNames;
-	for (auto const& param : _funcDef->parameters())
-		paramNames.push_back(solTypeToARC4(param->type()));
-	for (auto const& r : _funcDef->returnParameters())
-		retNames.push_back(solTypeToARC4Ret(r->type()));
-	return builder::TypeCoercion::buildArc4Selector(_funcDef->name(), paramNames, retNames);
-}
-
 // ── encodePacked / encode ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
@@ -428,6 +381,23 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 // Shared ARC4 arg encoder for abi.encode + abi.encodeWith{Selector,Signature}.
 // Internal repr is ARC4, so this is a thin wrapper over puya's codec (no EVM
 // head/tail layout): 0 args → empty bytes, 1 → its ARC4 bytes, N → an ARC4 tuple.
+//
+// ── THE ENCODE-CONVENTION MAP (do not add a fifth copy) ──
+// Four ARC4-encode entry points exist ON PURPOSE, one per width convention:
+//   1. arc4EncodeValues (here, + the encodeArgsAsArc4 / arc4EncodeArgsAtParamTypes
+//      wrappers): the abi.* BYTES family — encodes at the value's BACKING width
+//      (uint16 arg → arc4.uint64/8B). Documented, test-guarded EVM_DIVERGENCE;
+//      custom-error payloads ride arc4EncodeArgsAtParamTypes deliberately.
+//   2. InnerCallHandlers::encodeArgToBytes: ApplicationArgs for real calls —
+//      encodes at the callee's DECLARED param type when known (exact biguint
+//      width, pad-to-width, dynamic-bytes header), nullptr → backing width.
+//   3. ReturnRewriter's return-wire encoding: ABI return slots (signed →
+//      sign-extended uint256, unsigned biguint → natural uintN, asm bodies
+//      wrapped mod 2^N). Feeds the method's arc4 return type.
+//   4. SolEmitStatement's event encoding: ARC-28 (biguint-backed ints collapse
+//      to uint256 to match puya's event registration).
+// A value encoded under one convention will NOT decode under another — that
+// asymmetry is load-bearing (see custom-error-payload-width / encoding-model).
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeValues(
 	ContractContext& _ctx,

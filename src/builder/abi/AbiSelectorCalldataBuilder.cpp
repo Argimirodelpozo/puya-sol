@@ -2,6 +2,7 @@
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/itxn/InnerCallHandlers.h"
 
 namespace puyasol::builder::eb
 {
@@ -30,7 +31,7 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 	if (targetFuncDef)
 	{
 		selector = awst::makeMethodConstant(
-			AbiEncoderBuilder::buildARC4MethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
+			InnerCallHandlers::buildMethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
 	}
 	else if (fnType && fnType->kind() == FunctionType::Kind::External)
 	{

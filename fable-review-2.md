@@ -76,8 +76,15 @@ seam in the ledger. Do first.**
 > split (44 MB AWST, 263 selector constants) + --deploy-pure-helpers run, both byte-identical.
 > The SolEmitStatement event namer is documented DIFFERENT-BY-DESIGN (events collapse biguint-backed
 > ints to "uint256" to match puya's ARC-28 registration) — not merged.
-> REMAINING for R1/D1: the `AbiEncoderBuilder` sol-type lambda (coupled to the abi.* backing-width
-> conventions) and the `AbiEncoderBuilder`/`ReturnRewriter` encode entry points.
+> **Slice D (2026-07-09): R1/D1 COMPLETE.** `AbiEncoderBuilder::buildARC4MethodSelector` (the
+> FOURTH selector wrapper, with the dispatch-breaking "struct Name"/toString ladder) DELETED —
+> its 4 callers (fn-pointer dispatch tables, `.selector`) use the canonical
+> `InnerCallHandlers::buildMethodSelector`; all 37 fn-pointer fixtures byte-identical (the
+> divergent branch was corpus-unreachable). The encode entry points resolved by DOCUMENTATION,
+> not merging — the probe found they are already one-per-convention BY DESIGN (abi.* backing
+> widths / ApplicationArgs declared widths / return-wire / ARC-28 events); the missing artifact
+> was the map, now written at arc4EncodeValues as "THE ENCODE-CONVENTION MAP (do not add a fifth
+> copy)". Final state: every name ladder unified or convention-anchored; ~-300 lines total.
 
 ---
 
@@ -87,7 +94,7 @@ seam in the ledger. Do first.**
 
 | # | Refactor | Est. | Risk |
 |---|---|---|---|
-| R1 | The `AbiCodec` consolidation (Part I) | −250–400 | Med (selector bytes load-bearing; equality-gate) |
+| R1 ✅ | The `AbiCodec` consolidation (Part I) — slices A-D landed, see Part I progress notes | ~−300 | done |
 | R2 | **Generic AWST statement walker.** ~9 hand-rolled recursive walkers over Block/IfElse/WhileLoop (Termination ×3, Clone, ReturnRewriter::forEachReturnStatement, ModifierInliner::fixReturns, ModifierBodyInliner ×2, FunctionBuilder::SubroutineCallVisitor, AWSTBuilder ×2). A generic walker **already exists** (`splitter/AwstWalker.h`) but only serves the splitters — extend it with statement callbacks + in-place mutation support and point the rest at it | −150–250 | Med (two walkers mutate during traversal) |
 | R3 | Splitter cross-dedup: shared `Arc4Sig` + router primitives across SimpleSplitter/FunctionSplitter/PureHelperExtractor (all three ARE live, behind separate CLI flags — none is dead) | −100–150 | Low |
 | R4 ❌ | ~~`__arc4_` param-decode shim~~ **PREMISE DISPROVEN by probe (2026-07-08):** the "copies" share only the `__arc4_<name>` NAMING convention; the decode strategies genuinely diverge (FunctionBuilder: ConvertArray for dynamic arrays + sign-extension + deferred wtype for asm; PublicGetterBuilder: biguint-only via arc4UintCodec; ApprovalProgramBuilder: postInit-specific). A shared helper would need ~5 callbacks — not a simplification | 0 | — |
@@ -109,7 +116,7 @@ seam in the ledger. Do first.**
 
 | # | Improvement | Evidence | Risk |
 |---|---|---|---|
-| D1 | `AbiCodec` (Part I) | — | Med |
+| D1 ✅ | `AbiCodec` (Part I) — slices A-D landed | — | done |
 | D2 | **`ReturnRewriter` redesign: compute the wire return type ONCE.** Now **6 passes / 507 lines** (not 4); passes 2/3/4 each recompute the wire type with mutually-aware skip-guards and copy-pasted biguint→uintN encode; pass 4 re-does pass 3 "because pass 3 was skipped". Nearly every comment is a fuzzer-regression annotation — this is where wire-type bugs concentrate. Replace with `mapReturnToArc4(...)` up front + ONE body walk | ReturnRewriter.cpp | **High** — the ABI output contract; gate with differential fuzzer + full suite |
 | D3 | **One injected `NameGen`** replacing ~50 function-local `static int` temp-name counters across ~35 files. Today: output is compile-order-dependent (unstable TEAL across multi-contract batches) and parallel compilation is impossible (statics race) | grep `static int.*Counter` | Low (wide, mechanical) |
 | D4 | Collapse `ContractBuilder`'s nine `m_current*` scratch members into an owned `FunctionTranslationCtx` (RAII-swapped per function) — the struct already exists and is snapshot-copied field-by-field by `makeFunctionCtx()`; adding per-function state currently means editing 3 places | ContractBuilder.h:45-76 vs 150-158 | Low-Med |

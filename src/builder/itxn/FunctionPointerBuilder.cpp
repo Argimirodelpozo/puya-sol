@@ -9,6 +9,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
+#include "builder/itxn/InnerCallHandlers.h"
 
 namespace puyasol::builder::eb
 {
@@ -191,7 +192,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 			// selector slot: used as ApplicationArgs[0] for cross-contract calls.
 			auto selectorConst = awst::makeMethodConstant(
-				AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef),
+				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef),
 				awst::WType::bytesType(), _loc);
 			selectorBytes = std::move(selectorConst);
 		}
@@ -212,7 +213,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				std::string("CurrentApplicationID"), awst::WType::uint64Type(), _loc);
 			appIdBytes = awst::makeItob(std::move(curApp), _loc);
 			auto selectorConst = awst::makeMethodConstant(
-				AbiEncoderBuilder::buildARC4MethodSelector(_ctx, _funcDef),
+				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef),
 				awst::WType::bytesType(), _loc);
 			selectorBytes = std::move(selectorConst);
 		}
@@ -645,7 +646,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				if (!entry->funcDef) continue;
 				// MethodConstant = sha512_256(sig)[:4] — same as puya's router and fn-ptr slot.
 				auto methodConst = awst::makeMethodConstant(
-					AbiEncoderBuilder::buildARC4MethodSelector(_ctx, entry->funcDef),
+					InnerCallHandlers::buildMethodSelector(_ctx, entry->funcDef),
 					awst::WType::bytesType(), _loc);
 
 				auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);

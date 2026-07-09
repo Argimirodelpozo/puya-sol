@@ -41,11 +41,6 @@ public:
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
-	/// Build ARC4 method selector from a FunctionDefinition.
-	/// Exposed for fn-pointer dispatch (cross-contract inner txn).
-	static std::string buildARC4MethodSelector(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionDefinition const* _funcDef);
 
 	/// Concatenate a list of byte expressions using concat intrinsics.
 	/// Public because the selector+calldata handler TU calls it directly.
