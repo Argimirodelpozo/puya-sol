@@ -790,7 +790,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 		else
-			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks, funcHasInlineAssembly);
+			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks);
 
 		// Asm bodies handle param data directly via calldataload; skip ARC4 decode.
 		bool hasInlineAssembly = false;

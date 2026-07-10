@@ -56,8 +56,7 @@ void rewriteARC4Returns(
 	solidity::frontend::FunctionDefinition const& _func,
 	TypeMapper& _typeMapper,
 	std::vector<SignedReturnInfo> const& _signedReturns,
-	std::vector<UnsignedMaskInfo> const& _unsignedMasks,
-	bool _funcHasInlineAssembly);
+	std::vector<UnsignedMaskInfo> const& _unsignedMasks);
 
 /// Encode the OUTER dispatch return of a CHAIN-LOWERED (modifier'd) function to its
 /// ABI wire type. buildModifierChain threads NATIVE values through its subs and the

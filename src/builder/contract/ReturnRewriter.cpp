@@ -4,8 +4,6 @@
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeMapper.h"
 
-#include <boost/multiprecision/cpp_int.hpp>
-
 #include <functional>
 #include <set>
 #include <string>
@@ -122,8 +120,7 @@ void rewriteARC4Returns(
 	solidity::frontend::FunctionDefinition const& _func,
 	TypeMapper& m_typeMapper,
 	std::vector<SignedReturnInfo> const& signedReturns,
-	std::vector<UnsignedMaskInfo> const& unsignedMasks,
-	bool funcHasInlineAssembly)
+	std::vector<UnsignedMaskInfo> const& unsignedMasks)
 {
 	auto const& returnParams = _func.returnParameters();
 
@@ -147,87 +144,25 @@ void rewriteARC4Returns(
 		}
 	}
 
-	// THE per-element wire plan (shared with encodeChainDispatchReturn). Passes 2/3/4
-	// below no longer each re-derive "biguint → which arc4.uintN" — they read it here.
-	// Computed after Pass 1 so a ReferenceArray element already carries its arc4 type.
-	auto const plan = computeReturnPlan(_func, method.returnType, m_typeMapper);
-
-	// Assembly bodies are UNCHECKED (EVM Yul wraps mod 2^256); AVM biguint
-	// does NOT wrap. Wrap (val % 2^N) before ARC4Encode for asm functions
-	// to match EVM semantics. Non-asm leaves bare ARC4Encode so overflow REVERTS.
-	auto pow2Str = [](unsigned bits) -> std::string {
-		boost::multiprecision::cpp_int v = 1;
-		v <<= bits;
-		return v.str();
-	};
-	auto encodeRet = [&](std::shared_ptr<awst::Expression> val, unsigned bits,
-		awst::WType const* arc4Ty, awst::SourceLocation const& loc)
-		-> std::shared_ptr<awst::Expression>
-	{
-		if (funcHasInlineAssembly)
-		{
-			auto mod = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod,
-				awst::makeIntegerConstant(pow2Str(bits), loc, awst::WType::biguintType()), loc);
-			return awst::makeARC4Encode(std::move(mod), arc4Ty, loc);
-		}
-		return awst::makeARC4Encode(std::move(val), arc4Ty, loc);
-	};
-
 	// Passes 2 & 3 (non-chain scalar/tuple biguint encoding) were DELETED — that
 	// encoding now happens at BUILD TIME (SolReturnStatement / FunctionBuilder via
 	// TypeCoercion::encodeReturnValue, fable-review-2 D2). A non-modifier ABI method
 	// never reaches this post-pass (FunctionBuilder skips it); what remains below runs
 	// only for CHAIN-lowered (modifier'd) functions + the array/mask/coerce passes.
 
-	// Pass 4: signed returns → signExtendToUint256; wrap in ARC4UIntN(256)
-	// so ABI output is uint256 (32 bytes) not puya's default biguint→uint512.
-	// For CHAIN-LOWERED (modifier'd) functions only the VALUE transform applies here:
-	// the chain threads native return values through its subs, so per-item ARC4Encode
-	// and the tuple retype would mismatch the subs' native slots ("Tuple type
-	// mismatch"); encodeChainDispatchReturn encodes the OUTER dispatch return instead.
-	bool const chainLowered = !_func.modifiers().empty();
+	// Pass 4 (CHAIN-ONLY): sign-extend signed return elements to 256-bit two's
+	// complement IN THE BODY, so they thread through the modifier chain's subs as
+	// biguint (the subs' return slots are the promoted native types). The ABI
+	// encoding of the outer dispatch return is done afterwards by
+	// encodeChainDispatchReturn — so NO ARC4Encode / retype here (that would make a
+	// sub return arc4 where it's declared native). Non-chain signed returns are
+	// encoded at build time (SolReturnStatement), so this pass isn't reached for them.
 	if (!signedReturns.empty() && method.arc4MethodConfig.has_value())
 	{
-		// All signed returns are wrapped to 256 bits by signExtendToUint256,
-		// so the ABI element is uint256 in every case.
-		auto const* arc4SignedType =
-			m_typeMapper.createType<awst::ARC4UIntN>(256);
-
-		auto wrapArc4 = [&](std::shared_ptr<awst::Expression> val,
-			awst::SourceLocation const& loc) -> std::shared_ptr<awst::Expression> {
-			if (val->wtype != awst::WType::biguintType())
-				return val;
-			auto encode = awst::makeARC4Encode(std::move(val), arc4SignedType, loc);
-			return encode;
+		auto signExt = [&](std::shared_ptr<awst::Expression> _v, unsigned _bits,
+			awst::SourceLocation const& _loc) {
+			return TypeCoercion::signExtendToUint256(std::move(_v), _bits, _loc);
 		};
-
-		// For a signed-containing TUPLE return, Pass 2/3 are skipped, so the ARC4 element types are
-		// never set — the signed (and any unsigned biguint) elements stay bare biguint and puya names
-		// them "uint512", disagreeing with a caller's intSelectorReturnName (uint256 / uintN) → router
-		// selector mismatch on cross-contract calls. Retype: signed → uint256; unsigned biguint →
-		// uintN(declared); uint64/bool unchanged. (Found by the cross-contract differential fuzzer.)
-		std::set<size_t> signedIdxSet;
-		for (auto const& sr: signedReturns) signedIdxSet.insert(sr.index);
-		awst::WType const* signedTupleRetType = nullptr;
-		std::vector<awst::WType const*> signedTupleElems;   // for fresh `new WTuple` per assignment site
-		if (!chainLowered && returnParams.size() > 1 && method.returnType
-			&& method.returnType->kind() == awst::WTypeKind::WTuple)
-		{
-			// Per-element wire types from the shared plan (signed → arc4.uint256, unsigned
-			// biguint → arc4.uintN, else native) — the same table Pass 3 uses, no longer
-			// re-derived here ("Pass 4 re-does Pass 3" is gone).
-			for (auto const& p : plan)
-				signedTupleElems.push_back(p.wireType);
-			signedTupleRetType = new awst::WTuple(
-				std::vector<awst::WType const*>(signedTupleElems));   // mirror Pass 3's raw new
-		}
-
-		bool wrapSingleReturn = (signedReturns.size() == 1
-			&& signedReturns[0].index == 0
-			&& returnParams.size() == 1
-			&& method.returnType == awst::WType::biguintType()
-			&& _func.modifiers().empty()
-			&& !funcHasInlineAssembly);
 
 		forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
 			if (!ret.value) return;
@@ -236,59 +171,26 @@ void rewriteARC4Returns(
 			if (signedReturns.size() == 1 && signedReturns[0].index == 0
 				&& returnParams.size() == 1)
 			{
-				ret.value = TypeCoercion::signExtendToUint256(
-					std::move(ret.value), signedReturns[0].bits, srcLoc);
-				if (wrapSingleReturn)
-					ret.value = wrapArc4(std::move(ret.value), srcLoc);
+				ret.value = signExt(std::move(ret.value), signedReturns[0].bits, srcLoc);
 			}
 			else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
 			{
 				for (auto const& sr: signedReturns)
-				{
 					if (sr.index < tuple->items.size())
-					{
-						auto ext = TypeCoercion::signExtendToUint256(
+						tuple->items[sr.index] = signExt(
 							std::move(tuple->items[sr.index]), sr.bits, srcLoc);
-						// Non-chain: ARC4-encode to uint256 to match signedTupleRetType.
-						// Chain-lowered: keep the NATIVE sign-extended biguint (the chain
-						// threads native slots; the outer dispatch return gets encoded).
-						if (!chainLowered)
-							ext = awst::makeARC4Encode(std::move(ext), arc4SignedType, srcLoc);
-						tuple->items[sr.index] = std::move(ext);
-					}
-				}
-				if (signedTupleRetType)
-				{
-					// Wrap any unsigned biguint elements too (Pass 3 was skipped) so they ARC4-encode
-					// to uintN rather than staying bare biguint (→ uint512).
-					auto const* newT = static_cast<awst::WTuple const*>(signedTupleRetType);
-					for (size_t i = 0; i < tuple->items.size() && i < newT->types().size(); ++i)
-						if (!signedIdxSet.count(i)
-							&& tuple->items[i]->wtype == awst::WType::biguintType()
-							&& newT->types()[i]->kind() == awst::WTypeKind::ARC4UIntN)
-						{
-							unsigned bits = static_cast<unsigned>(
-								static_cast<awst::ARC4UIntN const*>(newT->types()[i])->n());
-							tuple->items[i] = encodeRet(
-								std::move(tuple->items[i]), bits, newT->types()[i], srcLoc);
-						}
-					tuple->wtype = new awst::WTuple(std::vector<awst::WType const*>(signedTupleElems));
-				}
-				else
-					tuple->wtype = method.returnType;
+				tuple->wtype = method.returnType;
 			}
 			else if (returnParams.size() > 1)
 			{
-				// Opaque tuple-producing return value (abi.decode, an internal call returning a tuple)
-				// is NOT a tuple literal, so the per-item widening above can't reach its elements. Bind
-				// it to a temp (eval once: the value may be a side-effecting call), then rebuild as a
-				// tuple whose signed sub-64 elements are sign-extended to biguint to match the declared
-				// ABI return type. Without this the decoded uint64 element mismatched the biguint return
-				// slot and puya rejected the subroutine (invalid return type).
+				// Opaque tuple value (`return f()`): can't reach elements in place, so
+				// spill to a temp (eval once — the value may be a side-effecting call)
+				// and rebuild, sign-extending the signed elements.
 				if (auto const* nativeTuple = dynamic_cast<awst::WTuple const*>(ret.value->wtype))
 				{
 					auto const* tupleWType = ret.value->wtype;
-					std::string tn = "__rettuple_" + std::to_string((awst::NameGen::next("ReturnRewriter.s_retTupleId") + 1));
+					std::string tn = "__rettuple_" + std::to_string(
+						(awst::NameGen::next("ReturnRewriter.s_retTupleId") + 1));
 					auto bind = awst::makeAssignmentExpression(
 						awst::makeVarExpression(tn, tupleWType, srcLoc),
 						std::move(ret.value), srcLoc, tupleWType);
@@ -298,43 +200,22 @@ void rewriteARC4Returns(
 						std::shared_ptr<awst::Expression> item = awst::makeTupleItem(
 							awst::makeVarExpression(tn, tupleWType, srcLoc),
 							static_cast<int>(i), nativeTuple->types()[i], srcLoc);
-						bool didSigned = false;
 						for (auto const& sr: signedReturns)
 							if (sr.index == i)
 							{
-								{ auto ext = TypeCoercion::signExtendToUint256(
-									std::move(item), sr.bits, srcLoc);
-								item = awst::makeARC4Encode(std::move(ext), arc4SignedType, srcLoc); }
-								didSigned = true;
+								item = signExt(std::move(item), sr.bits, srcLoc);
 								break;
 							}
-						// Unsigned biguint element: ARC4Encode to its retyped uintN slot too (else stays bare
-						// biguint, mismatching signedTupleRetType -> Tuple type mismatch).
-						if (!didSigned && signedTupleRetType && i < signedTupleElems.size()
-							&& item->wtype == awst::WType::biguintType()
-							&& signedTupleElems[i]->kind() == awst::WTypeKind::ARC4UIntN)
-						{
-							unsigned bits = static_cast<unsigned>(
-								static_cast<awst::ARC4UIntN const*>(signedTupleElems[i])->n());
-							item = encodeRet(std::move(item), bits, signedTupleElems[i], srcLoc);
-						}
 						rebuilt->items.push_back(std::move(item));
 					}
-					awst::WType const* rebuiltType = signedTupleRetType
-						? new awst::WTuple(std::vector<awst::WType const*>(signedTupleElems)) : method.returnType;
-					rebuilt->wtype = rebuiltType;
-					auto comma = awst::makeCommaExpression(rebuiltType, srcLoc);
+					rebuilt->wtype = method.returnType;
+					auto comma = awst::makeCommaExpression(method.returnType, srcLoc);
 					comma->expressions.push_back(std::move(bind));
 					comma->expressions.push_back(std::move(rebuilt));
 					ret.value = std::move(comma);
 				}
 			}
 		});
-
-		if (wrapSingleReturn)
-			method.returnType = arc4SignedType;
-		else if (signedTupleRetType)
-			method.returnType = new awst::WTuple(std::vector<awst::WType const*>(signedTupleElems));
 	}
 
 	// Pass 5: unsigned sub-word returns → mask to declared width (AVM preserves full uint64).
