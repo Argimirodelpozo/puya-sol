@@ -10,6 +10,7 @@
 /// signedReturns/unsignedMasks carry bit-width + tuple index.
 
 #include "awst/Node.h"
+#include "builder/ReturnWirePlan.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -22,6 +23,15 @@ namespace puyasol::builder
 {
 
 class TypeMapper;
+
+/// Per-return-element ABI wire plan (biguint element → signed?arc4.uint256 : arc4.uintN;
+/// everything else native). THE single source of the wire-type decision — read by the
+/// build-time encoder (SolReturnStatement), the chain-dispatch encoder, and the
+/// remaining post-passes. See ReturnWirePlan.h.
+std::vector<ReturnWireElem> computeReturnPlan(
+	solidity::frontend::FunctionDefinition const& _func,
+	awst::WType const* _returnType,
+	TypeMapper& _typeMapper);
 
 struct SignedReturnInfo
 {

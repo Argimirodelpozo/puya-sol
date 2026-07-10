@@ -118,6 +118,9 @@ std::shared_ptr<awst::Block> buildBlock(
 	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
 	fn.inConstructor = _ctx.inConstructor;
 	fn.frameIsProgram = _ctx.frameIsProgram;
+	fn.encodeReturnsAtBuildTime = _ctx.encodeReturnsAtBuildTime;
+	fn.returnAsmWrap = _ctx.returnAsmWrap;
+	fn.returnWirePlan = _ctx.returnWirePlan;
 	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
@@ -198,6 +201,9 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 	};
 	ctx.inConstructor = m_currentInConstructor;
 	ctx.frameIsProgram = m_currentFrameIsProgram;
+	ctx.encodeReturnsAtBuildTime = m_currentEncodeReturnsAtBuildTime;
+	ctx.returnAsmWrap = m_currentReturnAsmWrap;
+	ctx.returnWirePlan = m_currentReturnWirePlan;
 	return ctx;
 }
 
@@ -216,6 +222,12 @@ void ContractBuilder::setFunctionContext(
 	m_currentParams = _params;
 	m_currentReturnType = _returnType;
 	m_currentBitWidths = _bitWidths;
+	// Per-function reset: build-time return encoding is opt-in per function
+	// (setReturnWirePlan). Clear here so a function that does NOT opt in never
+	// inherits the previous function's plan.
+	m_currentEncodeReturnsAtBuildTime = false;
+	m_currentReturnAsmWrap = false;
+	m_currentReturnWirePlan.clear();
 }
 
 void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)

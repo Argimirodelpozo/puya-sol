@@ -73,6 +73,11 @@ struct FunctionTranslationCtx
 	// assembly return() halts the program). Appended at struct end like
 	// inConstructor — mid-struct insertion breaks aggregate init.
 	bool frameIsProgram = false;
+	// Build-time ABI return encoding (D2) — mirror FunctionContext's fields.
+	// Appended (assigned explicitly, not positional) like inConstructor/frameIsProgram.
+	bool encodeReturnsAtBuildTime = false;
+	bool returnAsmWrap = false;
+	std::vector<ReturnWireElem> returnWirePlan;
 };
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
@@ -156,6 +161,11 @@ private:
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentNamedReturns;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentMappingKeyParams;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentBlobAggParams;
+	// Build-time ABI return encoding (D2): plan + flags flow into FunctionContext so
+	// SolReturnStatement encodes each return value as it builds it.
+	bool m_currentEncodeReturnsAtBuildTime = false;
+	bool m_currentReturnAsmWrap = false;
+	std::vector<ReturnWireElem> m_currentReturnWirePlan;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
@@ -183,6 +193,17 @@ private:
 	)
 	{
 		m_currentNamedReturns = _namedReturns;
+	}
+
+	/// Enable build-time ABI return encoding for the current function (D2).
+	/// `buildBlock` forwards the plan to the FunctionContext; SolReturnStatement
+	/// then ARC4-encodes each return value in place instead of the ReturnRewriter
+	/// post-pass. Cleared per function by resetFunctionContext.
+	void setReturnWirePlan(std::vector<ReturnWireElem> _plan, bool _asmWrap)
+	{
+		m_currentReturnWirePlan = std::move(_plan);
+		m_currentReturnAsmWrap = _asmWrap;
+		m_currentEncodeReturnsAtBuildTime = true;
 	}
 
 	/// Set the mapping-storage-ref param decls for the current function.

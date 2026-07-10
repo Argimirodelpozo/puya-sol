@@ -539,6 +539,23 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
+		// D2 build-time ABI return encoding. Instead of the ReturnRewriter post-pass
+		// walking the finished body to convert each return value to its wire type,
+		// SolReturnStatement encodes it as it builds the `return`. A1 scope: non-chain,
+		// ABI-boundary, non-asm functions with a SINGLE encoded scalar return (biguint /
+		// signed). Tuples, sub-word masks, arrays, asm, and modifier'd (chain) returns
+		// still go through the post-pass / encodeChainDispatchReturn for now.
+		std::vector<ReturnWireElem> returnPlan =
+			computeReturnPlan(_func, method.returnType, m_typeMapper);
+		bool const encodeReturnsAtBuildTime =
+			method.arc4MethodConfig.has_value()
+			&& _func.modifiers().empty()
+			&& !funcHasInlineAssembly
+			&& returnPlan.size() == 1
+			&& returnPlan[0].encoded;
+		if (encodeReturnsAtBuildTime)
+			setReturnWirePlan(returnPlan, /*asmWrap=*/false);
+
 		// Stash named-return decls for buildBlock (registers >4KB memory returns as blob-backed).
 		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnDecls;
 		for (auto const& rp: returnParams)
@@ -719,6 +736,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				retStmt->value = StorageMapper::makeDefaultValue(method.returnType, method.sourceLocation);
 			}
 
+			// Build-time encoding: the synthesized implicit return is the SECOND return
+			// construction site (SolReturnStatement is the first, for explicit returns);
+			// encode it here too so it matches the wire method.returnType set below. A1
+			// scalar: single element, retStmt->value is the named var or default.
+			if (encodeReturnsAtBuildTime && retStmt->value && returnPlan.size() == 1)
+				retStmt->value = TypeCoercion::encodeReturnElement(
+					std::move(retStmt->value), returnPlan[0], method.sourceLocation);
+
 			// Enum range check on implicit named-return.
 			if (hasNamedReturns && retParams.size() == 1)
 			{
@@ -737,7 +762,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.body->body.push_back(std::move(retStmt));
 		}
 
-		rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks, funcHasInlineAssembly);
+		// Build-time encoding path: all return values were encoded in place (explicit
+		// returns in SolReturnStatement, the implicit one above); promote the method's
+		// declared type to the wire type and skip the post-pass. The body was translated
+		// with the NATIVE returnType so named-return assignments still typecheck.
+		if (encodeReturnsAtBuildTime)
+			method.returnType = returnPlan[0].wireType;
+		else
+			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks, funcHasInlineAssembly);
 
 		// Asm bodies handle param data directly via calldataload; skip ARC4 decode.
 		bool hasInlineAssembly = false;

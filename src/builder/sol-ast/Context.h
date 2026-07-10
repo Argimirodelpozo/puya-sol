@@ -12,6 +12,7 @@
 /// Context caches a ScopeState* so every level reaches the same flat state.
 
 #include "awst/Node.h"
+#include "builder/ReturnWirePlan.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -19,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <unordered_set>
 #include <vector>
 
@@ -379,6 +381,16 @@ struct FunctionContext: Context
 	/// Internal/private function: assembly `return(o,s)` exits the whole program.
 	/// Public/external functions are their own frame (AssemblyBuilder::setFrameIsProgram).
 	bool frameIsProgram = false;
+
+	/// Build-time ABI return encoding (fable-review-2 D2). When set, SolReturnStatement
+	/// encodes each `return` value to its ABI wire type as it builds the statement —
+	/// instead of the ReturnRewriter post-pass walking the finished body to do it. The
+	/// function builder populates these for non-modifier ABI-boundary methods before
+	/// translating the body; `returnWirePlan` is per return element (see ReturnWirePlan.h),
+	/// `returnAsmWrap` requests the `% 2^N` wrap asm bodies need (Yul is unchecked).
+	bool encodeReturnsAtBuildTime = false;
+	bool returnAsmWrap = false;
+	std::vector<ReturnWireElem> returnWirePlan;
 
 	FunctionContext(
 		TranslationContext& _tr,

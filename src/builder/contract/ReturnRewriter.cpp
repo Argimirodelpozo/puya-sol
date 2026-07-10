@@ -35,29 +35,13 @@ void forEachReturnStatement(
 	}
 }
 
-namespace
-{
-
-/// Per-return-element wire plan — THE single source of the "what ABI type does this
-/// return element become" decision (see the SPEC below). Only biguint-backed elements
-/// change type: a SIGNED biguint (sign-extended two's complement) publishes as
-/// arc4.uint256, an UNSIGNED biguint as arc4.uintN(declared width). Everything else
-/// (native uint64 incl. sub-word-masked unsigned, bool, address, bytesN, dynamic
-/// bytes/string, arc4 aggregates) is already its own wire type.
-struct ElemPlan
-{
-	awst::WType const* nativeType = nullptr;   // element type in method.returnType (post FunctionBuilder promotion)
-	awst::WType const* wireType = nullptr;     // ABI wire type
-	bool isSigned = false;                     // needs signExtendToUint256 prep before encode
-	unsigned bits = 0;                         // declared width (wireType width + asm mod-wrap)
-	bool encoded = false;                      // wireType != nativeType (a biguint element)
-};
-
-/// Compute the wire plan for every return element. Reads element native types from
-/// `_returnType` (the promoted method.returnType: signed sub-64 and >64-bit ints are
-/// already biguint there) — NOT a fresh map() of the Solidity type, which would give
-/// int64→uint64 and miss the promotion. Solidity types supply signedness + declared bits.
-std::vector<ElemPlan> computeReturnPlan(
+/// Compute the wire plan for every return element (declared in ReturnRewriter.h;
+/// shared with the build-time encoder in SolReturnStatement). Reads element native
+/// types from `_returnType` (the promoted method.returnType: signed sub-64 and
+/// >64-bit ints are already biguint there) — NOT a fresh map() of the Solidity type,
+/// which would give int64→uint64 and miss the promotion. Solidity types supply
+/// signedness + declared bits.
+std::vector<ReturnWireElem> computeReturnPlan(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::WType const* _returnType,
 	TypeMapper& _tm)
@@ -65,10 +49,10 @@ std::vector<ElemPlan> computeReturnPlan(
 	auto const& returnParams = _func.returnParameters();
 	auto const* retTuple = (_returnType && _returnType->kind() == awst::WTypeKind::WTuple)
 		? static_cast<awst::WTuple const*>(_returnType) : nullptr;
-	std::vector<ElemPlan> plan;
+	std::vector<ReturnWireElem> plan;
 	for (size_t i = 0; i < returnParams.size(); ++i)
 	{
-		ElemPlan p;
+		ReturnWireElem p;
 		p.nativeType = retTuple
 			? (i < retTuple->types().size() ? retTuple->types()[i] : nullptr)
 			: _returnType;
@@ -77,16 +61,18 @@ std::vector<ElemPlan> computeReturnPlan(
 		{
 			auto si = SolIntType::fromSolOrEnum(returnParams[i]->type());
 			p.isSigned = si && si->isSigned;
-			p.bits = p.isSigned ? 256u : (si ? si->bits : 256u);
-			p.wireType = _tm.createType<awst::ARC4UIntN>(static_cast<int>(p.bits));
+			// bits = DECLARED width (drives sign-extension, sub-word mask, asm mod-wrap);
+			// the WIRE width is 256 for signed (full two's complement) else the declared
+			// width. Keep these distinct — the sign-extension needs the declared 64, not 256.
+			p.bits = si ? si->bits : 256u;
+			unsigned wireWidth = p.isSigned ? 256u : p.bits;
+			p.wireType = _tm.createType<awst::ARC4UIntN>(static_cast<int>(wireWidth));
 			p.encoded = true;
 		}
 		plan.push_back(p);
 	}
 	return plan;
 }
-
-} // namespace
 
 /// ── THE WIRE-RETURN-TYPE SPEC (D2 characterization, 2026-07-09) ──────────────
 /// What the SIX passes below jointly compute, as a table (oracle fixture:

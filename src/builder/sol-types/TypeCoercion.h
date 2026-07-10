@@ -9,6 +9,7 @@
 /// logic in every visitor.
 
 #include "awst/Node.h"
+#include "builder/ReturnWirePlan.h"
 
 #include <libsolutil/Numeric.h>
 
@@ -66,6 +67,18 @@ public:
 	static std::shared_ptr<awst::Expression> signExtendToUint256(
 		std::shared_ptr<awst::Expression> _value,
 		unsigned _bits,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Encode ONE return value to its ABI wire form per its ReturnWireElem plan
+	/// (build-time return encoding, fable-review-2 D2). Signed → signExtendToUint256
+	/// then ARC4Encode(arc4.uint256); unsigned biguint → ARC4Encode(arc4.uintN) when
+	/// the value is biguint (matches the post-pass guard); non-encoded elements pass
+	/// through unchanged. Mirrors ReturnRewriter passes 2 (unsigned) + 4-single
+	/// (signed) at the point the return is built. (asm `% 2^N` wrap: A-later.)
+	static std::shared_ptr<awst::Expression> encodeReturnElement(
+		std::shared_ptr<awst::Expression> _value,
+		ReturnWireElem const& _plan,
 		awst::SourceLocation const& _loc
 	);
 

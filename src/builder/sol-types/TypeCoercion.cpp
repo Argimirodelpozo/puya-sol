@@ -102,6 +102,28 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	return _expr;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
+	std::shared_ptr<awst::Expression> _value,
+	ReturnWireElem const& _plan,
+	awst::SourceLocation const& _loc
+)
+{
+	if (!_plan.encoded || !_value)
+		return _value;
+	if (_plan.isSigned)
+	{
+		// Signed: sign-extend the (uint64-held) value to 256-bit two's complement,
+		// then ARC4-encode to arc4.uint256 (mirrors ReturnRewriter Pass 4-single).
+		_value = signExtendToUint256(std::move(_value), _plan.bits, _loc);
+		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
+	}
+	// Unsigned biguint: ARC4-encode to arc4.uintN, guarded on biguint like Pass 2
+	// (the expectedType coercion at the return site makes it biguint in practice).
+	if (_value->wtype == awst::WType::biguintType())
+		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
+	return _value;
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	std::shared_ptr<awst::Expression> _value,
 	unsigned _bits,

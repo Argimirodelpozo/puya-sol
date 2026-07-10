@@ -448,6 +448,22 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		}
 	}
 
+	// D2 build-time ABI return encoding: wrap the (already value-coerced) return
+	// value in its ABI wire type right here, instead of the ReturnRewriter post-pass
+	// walking the finished body. A1 scope: single encoded scalar (biguint / signed);
+	// non-encoded elements pass through untouched. Both the `return expr` and bare
+	// `return;`→named-var paths funnel through stmt->value, so one call covers both.
+	// (tuples / sub-word mask / asm / modifier'd returns still use the post-pass.)
+	if (m_blk.fn.encodeReturnsAtBuildTime && stmt->value
+		&& m_blk.fn.returnWirePlan.size() == 1)
+	{
+		// Stamp the encode nodes with the return VALUE's location (matching the
+		// old post-pass exactly), not the `return` keyword's.
+		auto valLoc = stmt->value->sourceLocation;
+		stmt->value = builder::TypeCoercion::encodeReturnElement(
+			std::move(stmt->value), m_blk.fn.returnWirePlan[0], valLoc);
+	}
+
 	result.push_back(stmt);
 	return result;
 }
