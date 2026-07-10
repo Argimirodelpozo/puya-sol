@@ -69,45 +69,54 @@ std::vector<ReturnWireElem> computeReturnPlan(
 			p.wireType = _tm.createType<awst::ARC4UIntN>(static_cast<int>(wireWidth));
 			p.encoded = true;
 		}
+		else if (auto si = SolIntType::fromSolOrEnum(returnParams[i]->type());
+			si && !si->isSigned && si->bits < 64)
+		{
+			// Unsigned sub-64 (native uint64): mask to the declared width — the wire
+			// type stays uint64. Same condition FunctionBuilder uses for unsignedMasks
+			// (Pass 5); consumed only by the build-time encoder (chain still uses Pass 5).
+			p.masked = true;
+			p.bits = si->bits;
+		}
+		else if (p.nativeType
+			&& p.nativeType->kind() == awst::WTypeKind::ReferenceArray)
+		{
+			// Dynamic-array return → its ARC4 array type + ARC4Encode (Pass 1).
+			auto const* arc4 = _tm.mapToARC4Type(p.nativeType);
+			if (arc4 != p.nativeType)
+			{
+				p.wireType = arc4;
+				p.encoded = true;
+			}
+		}
 		plan.push_back(p);
 	}
 	return plan;
 }
 
-/// ── THE WIRE-RETURN-TYPE SPEC (D2 characterization, 2026-07-09) ──────────────
-/// What the SIX passes below jointly compute, as a table (oracle fixture:
-/// tests/WIP/return-wire-oracle/return_matrix.sol + oracle.txt — regenerate and
-/// diff before/after ANY change to this file):
-///   unsigned intN, N<=64           → native uint64            (pass 5 masks sub-word)
-///   unsigned intN, 64<N<=256       → arc4.uintN               (pass 2 single / pass 3 tuple elem)
-///   SIGNED intN, any width         → arc4.uint256             (pass 4; sign-extended two's complement)
-///   bool / address / byte[N]       → native                   (untouched)
-///   dynamic bytes / string         → native bytes/string      (untouched)
-///   T[] (ReferenceArray)           → arc4 array               (pass 1)
-///   tuple (static OR dynamic elem) → per-element by the rules above. Pass 3 wraps
-///                                    biguint elements in ANY tuple (the old allStatic
-///                                    guard that left (uint128,bytes) unwrapped is gone);
-///                                    pass 4 handles signed elements.
-///   MODIFIER'D fn (chain-lowered)  → the CHAIN threads NATIVE (biguint) values through
-///                                    its subs; encodeChainDispatchReturn (called AFTER
-///                                    buildModifierChain) encodes the OUTER dispatch return
-///                                    to the wire type — signed→arc4.uint256, unsigned
-///                                    biguint→arc4.uintN. buildModifierChain threads the
-///                                    types method.returnType declares (NOT a fresh map(),
-///                                    which gives int64→uint64 and mismatches the promoted
-///                                    biguint body → "Tuple type mismatch").
-///   asm-bodied biguint return      → arc4.uintN with `% 2^N` wrap (Yul is unchecked)
+/// ── THE WIRE-RETURN-TYPE SPEC (D2, 2026-07-10) ───────────────────────────────
+/// Per-return-element ABI wire type (oracle fixture: tests/WIP/return-wire-oracle/
+/// return_matrix.sol + oracle.txt — regenerate and diff before/after ANY change):
+///   unsigned intN, N<=64           → native uint64 (sub-word masked to N)
+///   unsigned intN, 64<N<=256       → arc4.uintN
+///   SIGNED intN, any width         → arc4.uint256 (sign-extended two's complement)
+///   bool / address / byte[N]       → native (untouched)
+///   dynamic bytes / string         → native bytes/string (untouched)
+///   T[] (ReferenceArray)           → arc4 array
+///   tuple (static OR dynamic elem) → per-element by the rules above
+///   asm-bodied biguint             → arc4.uintN with `% 2^N` wrap (Yul is unchecked)
 ///
-/// The per-element WIRE TYPE (which arc4.uintN a biguint element becomes) is computed
-/// ONCE by computeReturnPlan and read by passes 2/3/4 AND encodeChainDispatchReturn — the
-/// "pass 4 re-derives pass 3's biguint→uintN" copy-paste is gone (fable-review-2 D2). What
-/// remains per-pass is the VALUE transform + the return-expression SHAPE walk: pass 2 scalar
-/// biguint, pass 3 unsigned tuple (literal/ternary/opaque-spill), pass 4 signed (sign-extend
-/// + the signed-tuple shapes), pass 5 sub-word mask, pass 6 named-return-var coercion. The
-/// walks keep two intentional quirks that are output-load-bearing (a byte-identity gate holds
-/// them): the opaque-tuple spill temp is `__ret_tmp_N` in the unsigned path (pass 3) but
-/// `__rettuple_N` in the signed path (pass 4), and ternary-of-tuples is rewritten only in the
-/// unsigned path. Merging the walks would change those names — deferred, low value.
+/// WHERE the encoding happens (fable-review-2 D2 build-time-return-encoding):
+///  - NON-MODIFIER (non-chain) methods: encoded AT CONSTRUCTION — SolReturnStatement
+///    and FunctionBuilder's synthesized return call TypeCoercion::encodeReturnValue with
+///    the plan from computeReturnPlan (stashed in FunctionContext). FunctionBuilder then
+///    SKIPS this post-pass entirely. (Old passes 2 & 3 — scalar/tuple biguint — are gone.)
+///  - MODIFIER'D (chain-lowered) methods: the chain threads NATIVE values through its
+///    subs, so encoding is deferred to encodeChainDispatchReturn (called AFTER
+///    buildModifierChain — a legitimately later phase). The passes BELOW therefore run
+///    ONLY for chain-lowered functions: Pass 1 (array), Pass 4 (signed sign-extend into
+///    the body), Pass 5 (sub-word mask), Pass 6 (coerce a modifier's named-return var).
+/// computeReturnPlan is the ONE per-element wire-type decision, shared by both paths.
 void rewriteARC4Returns(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -164,138 +173,11 @@ void rewriteARC4Returns(
 		return awst::makeARC4Encode(std::move(val), arc4Ty, loc);
 	};
 
-	// Pass 2: biguint returns → ARC4Encode(ARC4UIntN(N)); skipped for signed + modifier fns.
-	if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
-		&& signedReturns.empty() && _func.modifiers().empty())
-	{
-		// Wire type + declared width from the shared plan (single biguint element).
-		unsigned retBits = plan[0].bits;
-		auto const* arc4RetType = plan[0].wireType;
-
-		forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
-			if (ret.value && ret.value->wtype == awst::WType::biguintType())
-			{
-				auto loc = ret.value->sourceLocation;
-				ret.value = encodeRet(std::move(ret.value), retBits, arc4RetType, loc);
-			}
-		});
-		method.returnType = arc4RetType;
-	}
-
-	// Pass 3: tuple returns with biguint elements → per-element ARC4Encode.
-	if (method.arc4MethodConfig.has_value() && method.returnType
-		&& method.returnType->kind() == awst::WTypeKind::WTuple
-		&& signedReturns.empty() && _func.modifiers().empty())
-	{
-		auto const* tupleType = static_cast<awst::WTuple const*>(method.returnType);
-		// A biguint element in a tuple must be re-typed to its natural arc4.uintN —
-		// else puya names it "uint512" → cross-contract selector mismatch → revert
-		// (fuzzer: `(bytes4,uint128)` reverted unconditionally; then the oracle showed
-		// the same for tuples with a DYNAMIC element, `(uint128,bytes)` — the old
-		// allStatic guard excluded those, leaving the biguint unwrapped). Every other
-		// element (uint64/bool/address/bytesN/dynamic bytes/string/arrays) stays
-		// native; puya encodes mixed native+arc4 tuples fine.
-		bool hasBiguintElement = false;
-		for (auto const& p : plan)
-			if (p.encoded) { hasBiguintElement = true; break; }
-
-		if (hasBiguintElement)
-		{
-			// Per-element wire types from the shared plan (biguint → arc4.uintN, else native).
-			std::vector<awst::WType const*> arc4Types;
-			for (auto const& p : plan)
-				arc4Types.push_back(p.wireType);
-
-			auto wrapTupleItems = [&](awst::TupleExpression* tuple)
-			{
-				if (!tuple) return;
-				for (size_t i = 0; i < tuple->items.size() && i < arc4Types.size(); ++i)
-				{
-					if (tuple->items[i]->wtype == awst::WType::biguintType()
-						&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
-					{
-						unsigned bits = static_cast<unsigned>(
-							static_cast<awst::ARC4UIntN const*>(arc4Types[i])->n());
-						auto loc = tuple->items[i]->sourceLocation;
-						tuple->items[i] = encodeRet(std::move(tuple->items[i]), bits, arc4Types[i], loc);
-					}
-				}
-				tuple->wtype = new awst::WTuple(
-					std::vector<awst::WType const*>(arc4Types));
-			};
-
-			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapTupleReturns;
-			wrapTupleReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-			{
-				for (size_t si = 0; si < stmts.size(); ++si)
-				{
-					auto& stmt = stmts[si];
-					if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-					{
-						if (!ret->value) continue;
-						if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
-							wrapTupleItems(tuple);
-						else if (auto* cond = dynamic_cast<awst::ConditionalExpression*>(ret->value.get()))
-						{
-							wrapTupleItems(dynamic_cast<awst::TupleExpression*>(cond->trueExpr.get()));
-							wrapTupleItems(dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get()));
-							cond->wtype = new awst::WTuple(
-								std::vector<awst::WType const*>(arc4Types));
-						}
-						else if (ret->value->wtype
-							&& ret->value->wtype->kind() == awst::WTypeKind::WTuple)
-						{
-							// Non-literal tuple (e.g. `return fu()`): spill to local,
-							// then rebuild as TupleExpression of ARC4-encoded items.
-							auto const* subTupleType = static_cast<awst::WTuple const*>(ret->value->wtype);
-							bool needsWrap = false;
-							for (auto const* t : subTupleType->types())
-								if (t == awst::WType::biguintType()) { needsWrap = true; break; }
-							if (!needsWrap) continue;
-
-							std::string tmpName = "__ret_tmp_" + std::to_string(awst::NameGen::next("ReturnRewriter.retTmpCounter"));
-							auto tmpVar = awst::makeVarExpression(tmpName, ret->value->wtype, ret->sourceLocation);
-
-							auto assign = awst::makeAssignmentStatement(tmpVar, std::move(ret->value), ret->sourceLocation);
-
-							auto newTuple = awst::makeTupleExpression(nullptr, assign->sourceLocation);
-							for (size_t i = 0; i < arc4Types.size() && i < subTupleType->types().size(); ++i)
-							{
-								auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTupleType->types()[i], assign->sourceLocation);
-								if (subTupleType->types()[i] == awst::WType::biguintType()
-									&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
-								{
-									unsigned bits = static_cast<unsigned>(
-										static_cast<awst::ARC4UIntN const*>(arc4Types[i])->n());
-									newTuple->items.push_back(
-										encodeRet(std::move(item), bits, arc4Types[i], assign->sourceLocation));
-								}
-								else
-									newTuple->items.push_back(std::move(item));
-							}
-							newTuple->wtype = new awst::WTuple(
-								std::vector<awst::WType const*>(arc4Types));
-							ret->value = std::move(newTuple);
-
-							stmts.insert(stmts.begin() + si, std::move(assign));
-							++si; // skip the newly-inserted assign
-						}
-					}
-					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-					{
-						if (ifElse->ifBranch) wrapTupleReturns(ifElse->ifBranch->body);
-						if (ifElse->elseBranch) wrapTupleReturns(ifElse->elseBranch->body);
-					}
-					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-						wrapTupleReturns(block->body);
-					else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-						if (loop->loopBody) wrapTupleReturns(loop->loopBody->body);
-				}
-			};
-			wrapTupleReturns(method.body->body);
-			method.returnType = new awst::WTuple(std::vector<awst::WType const*>(arc4Types));
-		}
-	}
+	// Passes 2 & 3 (non-chain scalar/tuple biguint encoding) were DELETED — that
+	// encoding now happens at BUILD TIME (SolReturnStatement / FunctionBuilder via
+	// TypeCoercion::encodeReturnValue, fable-review-2 D2). A non-modifier ABI method
+	// never reaches this post-pass (FunctionBuilder skips it); what remains below runs
+	// only for CHAIN-lowered (modifier'd) functions + the array/mask/coerce passes.
 
 	// Pass 4: signed returns → signExtendToUint256; wrap in ARC4UIntN(256)
 	// so ABI output is uint256 (32 bytes) not puya's default biguint→uint512.

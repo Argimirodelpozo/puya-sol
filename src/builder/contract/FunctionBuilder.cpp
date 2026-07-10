@@ -548,25 +548,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// / encodeChainDispatchReturn for now.
 		std::vector<ReturnWireElem> returnPlan =
 			computeReturnPlan(_func, method.returnType, m_typeMapper);
-		bool anyEncoded = false;
+		bool anyWork = false;
 		for (auto const& p: returnPlan)
-			if (p.encoded) { anyEncoded = true; break; }
-		// Only take the build-time path when the post-pass would have done EXACTLY
-		// this and nothing else — i.e. no sub-word mask element in the plan (Pass 5
-		// still owns those). A masked element is an unsigned sub-64 return.
-		bool anyMask = false;
-		for (auto const& rp: _func.returnParameters())
-			if (auto it = builder::SolIntType::fromSolOrEnum(rp->type());
-				it && !it->isSigned && it->bits < 64)
-				{ anyMask = true; break; }
+			if (p.encoded || p.masked) { anyWork = true; break; }
 		bool const encodeReturnsAtBuildTime =
 			method.arc4MethodConfig.has_value()
 			&& _func.modifiers().empty()
-			&& !funcHasInlineAssembly
-			&& anyEncoded
-			&& !anyMask;
+			&& anyWork;
 		if (encodeReturnsAtBuildTime)
-			setReturnWirePlan(returnPlan, /*asmWrap=*/false);
+			// Asm bodies are unchecked (Yul wraps mod 2^256): the encoder wraps
+			// `value % 2^N` before encoding for these (Pass 2/3 encodeRet).
+			setReturnWirePlan(returnPlan, /*asmWrap=*/funcHasInlineAssembly);
 
 		// Stash named-return decls for buildBlock (registers >4KB memory returns as blob-backed).
 		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnDecls;
@@ -757,7 +749,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				std::vector<std::shared_ptr<awst::Statement>> prepend;
 				retStmt->value = TypeCoercion::encodeReturnValue(
-					std::move(retStmt->value), returnPlan, method.sourceLocation, prepend);
+					std::move(retStmt->value), returnPlan, method.sourceLocation, prepend,
+					/*asmWrap=*/funcHasInlineAssembly);
 				for (auto& s: prepend)
 					method.body->body.push_back(std::move(s));
 			}

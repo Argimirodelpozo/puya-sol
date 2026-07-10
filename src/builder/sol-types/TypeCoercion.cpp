@@ -105,10 +105,20 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 	std::shared_ptr<awst::Expression> _value,
 	ReturnWireElem const& _plan,
-	awst::SourceLocation const& _loc
+	awst::SourceLocation const& _loc,
+	bool _asmWrap
 )
 {
-	if (!_plan.encoded || !_value)
+	if (!_value)
+		return _value;
+	if (_plan.masked)
+	{
+		// Unsigned sub-word: mask the native uint64 to the declared width (Pass 5).
+		uint64_t mask = (uint64_t(1) << _plan.bits) - 1;
+		return awst::makeUInt64BinOp(std::move(_value), awst::UInt64BinaryOperator::BitAnd,
+			awst::makeIntegerConstant(mask, _loc), _loc);
+	}
+	if (!_plan.encoded)
 		return _value;
 	if (_plan.isSigned)
 	{
@@ -120,6 +130,22 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 	// Unsigned biguint: ARC4-encode to arc4.uintN, guarded on biguint like Pass 2
 	// (the expectedType coercion at the return site makes it biguint in practice).
 	if (_value->wtype == awst::WType::biguintType())
+	{
+		if (_asmWrap)
+		{
+			// Asm bodies are UNCHECKED (Yul wraps mod 2^256); AVM biguint does not.
+			// Wrap `value % 2^bits` before encoding so overflow matches EVM (Pass 2/3
+			// encodeRet for asm functions).
+			boost::multiprecision::cpp_int mod = 1;
+			mod <<= _plan.bits;
+			_value = awst::makeBigUIntBinOp(std::move(_value), awst::BigUIntBinaryOperator::Mod,
+				awst::makeIntegerConstant(mod.str(), _loc, awst::WType::biguintType()), _loc);
+		}
+		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
+	}
+	// Dynamic array (ReferenceArray) → its ARC4 array type (Pass 1).
+	if (_plan.nativeType
+		&& _plan.nativeType->kind() == awst::WTypeKind::ReferenceArray)
 		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
 	return _value;
 }
@@ -128,18 +154,19 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	std::shared_ptr<awst::Expression> _value,
 	std::vector<ReturnWireElem> const& _plan,
 	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _prepend
+	std::vector<std::shared_ptr<awst::Statement>>& _prepend,
+	bool _asmWrap
 )
 {
 	if (_plan.empty() || !_value)
 		return _value;
 	if (_plan.size() == 1)
-		return encodeReturnElement(std::move(_value), _plan[0], _loc);
+		return encodeReturnElement(std::move(_value), _plan[0], _loc, _asmWrap);
 
-	bool anyEncode = false;
+	bool anyWork = false;
 	for (auto const& p: _plan)
-		if (p.encoded) { anyEncode = true; break; }
-	if (!anyEncode)
+		if (p.encoded || p.masked) { anyWork = true; break; }
+	if (!anyWork)
 		return _value;
 
 	std::vector<awst::WType const*> wireTypes;
@@ -155,7 +182,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 		for (size_t i = 0; i < _t->items.size() && i < _plan.size(); ++i)
 		{
 			auto elemLoc = _t->items[i]->sourceLocation;
-			_t->items[i] = encodeReturnElement(std::move(_t->items[i]), _plan[i], elemLoc);
+			_t->items[i] = encodeReturnElement(std::move(_t->items[i]), _plan[i], elemLoc, _asmWrap);
 		}
 		_t->wtype = makeWireTuple();
 	};
@@ -187,7 +214,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 		for (size_t i = 0; i < _plan.size() && i < subTuple->types().size(); ++i)
 		{
 			auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTuple->types()[i], _loc);
-			newTuple->items.push_back(encodeReturnElement(std::move(item), _plan[i], _loc));
+			newTuple->items.push_back(encodeReturnElement(std::move(item), _plan[i], _loc, _asmWrap));
 		}
 		newTuple->wtype = makeWireTuple();
 		return newTuple;

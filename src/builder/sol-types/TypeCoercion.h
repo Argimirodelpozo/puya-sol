@@ -71,15 +71,16 @@ public:
 	);
 
 	/// Encode ONE return value to its ABI wire form per its ReturnWireElem plan
-	/// (build-time return encoding, fable-review-2 D2). Signed → signExtendToUint256
-	/// then ARC4Encode(arc4.uint256); unsigned biguint → ARC4Encode(arc4.uintN) when
-	/// the value is biguint (matches the post-pass guard); non-encoded elements pass
-	/// through unchanged. Mirrors ReturnRewriter passes 2 (unsigned) + 4-single
-	/// (signed) at the point the return is built. (asm `% 2^N` wrap: A-later.)
+	/// (build-time return encoding, fable-review-2 D2). masked → bitAnd to width;
+	/// signed → signExtendToUint256 then ARC4Encode(arc4.uint256); unsigned biguint →
+	/// ARC4Encode(arc4.uintN) (with `% 2^N` first when `_asmWrap`, since Yul is
+	/// unchecked); array → ARC4Encode(arc4 array); everything else passes through.
+	/// The build-time replacement for the old ReturnRewriter non-chain passes 1-5.
 	static std::shared_ptr<awst::Expression> encodeReturnElement(
 		std::shared_ptr<awst::Expression> _value,
 		ReturnWireElem const& _plan,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc,
+		bool _asmWrap = false
 	);
 
 	/// Encode a whole return VALUE (scalar or tuple) to its ABI wire form per the
@@ -91,7 +92,8 @@ public:
 		std::shared_ptr<awst::Expression> _value,
 		std::vector<ReturnWireElem> const& _plan,
 		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _prepend
+		std::vector<std::shared_ptr<awst::Statement>>& _prepend,
+		bool _asmWrap = false
 	);
 
 	/// Sign-extend an N-bit (N<64) signed value held in a uint64 to the 64-bit

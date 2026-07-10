@@ -459,7 +459,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		auto valLoc = stmt->value->sourceLocation;
 		std::vector<std::shared_ptr<awst::Statement>> prepend;
 		stmt->value = builder::TypeCoercion::encodeReturnValue(
-			std::move(stmt->value), m_blk.fn.returnWirePlan, valLoc, prepend);
+			std::move(stmt->value), m_blk.fn.returnWirePlan, valLoc, prepend,
+			m_blk.fn.returnAsmWrap);
 		// Opaque-tuple spill assignment(s) go before the return.
 		for (auto& s: prepend)
 			result.push_back(std::move(s));
