@@ -121,6 +121,9 @@ std::shared_ptr<awst::Block> buildBlock(
 	fn.encodeReturnsAtBuildTime = _ctx.encodeReturnsAtBuildTime;
 	fn.returnAsmWrap = _ctx.returnAsmWrap;
 	fn.returnWirePlan = _ctx.returnWirePlan;
+	if (_ctx.seededCalldataPointers)
+		fn.seededCalldataPointers = _ctx.seededCalldataPointers;
+	fn.evmSelector = _ctx.evmSelector;
 	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
@@ -204,6 +207,8 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 	ctx.encodeReturnsAtBuildTime = m_currentEncodeReturnsAtBuildTime;
 	ctx.returnAsmWrap = m_currentReturnAsmWrap;
 	ctx.returnWirePlan = m_currentReturnWirePlan;
+	ctx.seededCalldataPointers = &m_currentSeededCalldataPointers;
+	ctx.evmSelector = m_currentEvmSelector;
 	return ctx;
 }
 
@@ -228,6 +233,8 @@ void ContractBuilder::setFunctionContext(
 	m_currentEncodeReturnsAtBuildTime = false;
 	m_currentReturnAsmWrap = false;
 	m_currentReturnWirePlan.clear();
+	m_currentSeededCalldataPointers.clear();
+	m_currentEvmSelector.clear();
 }
 
 void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)

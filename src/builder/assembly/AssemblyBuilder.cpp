@@ -406,10 +406,15 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// __free_memory_ptr is the initial value; mstore(0x40,...) may change it at runtime.
 	m_localConstants["__free_memory_ptr"] = 0x80;
 
-	// Build __cd_blob (selector + head + tail) for dynamic-offset calldataload/calldatasize.
+	// Build __cd_blob (selector + head + tail) for dynamic-offset calldataload/calldatasize,
+	// then seed the mutable (__cd_off_x, __cd_len_x) pointer locals from it. The seeding MUST
+	// be inside the guard: without the blob the seeds read an unassigned __cd_blob (was a
+	// missing-braces bug, latent only because re-seeding made the bad seeds dead stores).
 	if (m_useSyntheticCalldata)
+	{
 		buildSyntheticCalldataBlob(m_calldataParams, _out, loc);
 		initCalldataPointerLocals(_out, loc);
+	}
 
 	// Write array param elements into blob at 0x80 + i*0x20
 	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)

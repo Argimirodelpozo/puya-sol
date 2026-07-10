@@ -539,6 +539,18 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
+		// 4-byte EVM keccak selector for the synthetic calldata blob: asm reads of
+		// bytes 0-3 (calldataload(0), a repointed `x.offset := 0`) then match EVM.
+		if (_func.isPartOfExternalInterface())
+		{
+			solidity::frontend::FunctionType fnType(_func);
+			auto selWord = fnType.externalIdentifier();   // u256 holding the 4-byte id
+			uint32_t sel = static_cast<uint32_t>(selWord);
+			m_currentEvmSelector = {
+				static_cast<uint8_t>(sel >> 24), static_cast<uint8_t>(sel >> 16),
+				static_cast<uint8_t>(sel >> 8), static_cast<uint8_t>(sel)};
+		}
+
 		// D2 build-time ABI return encoding. Instead of the ReturnRewriter post-pass
 		// walking the finished body to convert each return value to its wire type,
 		// SolReturnStatement encodes it as it builds the `return`. Scope (A1+A2):
@@ -720,8 +732,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				if (retParams.size() == 1)
 				{
-					auto var = awst::makeVarExpression(retParams[0]->name(), m_typeMapper.map(retParams[0]->type()), method.sourceLocation);
-					retStmt->value = std::move(var);
+					// A named CALLDATA return whose pointer locals are live (an asm
+					// block wrote x.offset/x.length — calldata_assign_from_nowhere)
+					// reads through the pointer, not the (zero-init) local.
+					if (m_currentSeededCalldataPointers.count(retParams[0]->name()))
+						retStmt->value = TypeCoercion::calldataPointerValueRead(
+							retParams[0]->name(), method.sourceLocation);
+					else
+						retStmt->value = awst::makeVarExpression(
+							retParams[0]->name(), m_typeMapper.map(retParams[0]->type()), method.sourceLocation);
 				}
 				else
 				{

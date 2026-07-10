@@ -68,17 +68,31 @@ def test_calldata_array_read(harness):  # currently fails
     r = harness.call(app, 'f(uint256[2][])', 0x20, 2, 1, 2, 3, 4)
     assert tuple(as_int(x) for x in r.abi_return) == (0x44, 2, 0x84,)
 
-def test_calldata_assign(harness):  # currently fails
-    """inlineAssembly/contracts/calldata_assign.sol"""
+def test_calldata_assign(harness):
+    """inlineAssembly/contracts/calldata_assign.sol
+
+    `assembly { x.offset := 1 x.length := 3 } return x;` — the repointed calldata
+    pointer must read bytes 1-3 of the calldata, i.e. the low 3 bytes of the REAL
+    EVM keccak selector of f(bytes) (0xd45754f8 → 0x5754f8). The isoltest
+    expectation `0x20, 3, 0x5754f8...` is the raw EVM return-word framing (head
+    ptr + length word + right-padded data); the AVM returns the bytes value
+    itself, so assert the semantic content: the 3 selector bytes.
+    """
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_assign.sol')
     r = harness.call(app, 'f(bytes)', 0x20, 0, 0)
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 3, 0x5754f80000000000000000000000000000000000000000000000000000000000,)
+    assert bytes(r.abi_return) == bytes.fromhex('5754f8')
 
-def test_calldata_assign_from_nowhere(harness):  # currently fails
-    """inlineAssembly/contracts/calldata_assign_from_nowhere.sol"""
+def test_calldata_assign_from_nowhere(harness):
+    """inlineAssembly/contracts/calldata_assign_from_nowhere.sol
+
+    A `bytes calldata` RETURN var repointed from asm (`x.offset := 0,
+    x.length := 4`) must read the first 4 calldata bytes = the REAL EVM keccak
+    selector of f() (0x26121ff0). Assert the semantic bytes (see
+    test_calldata_assign for the EVM return-word-framing note).
+    """
     app = harness.compile_and_deploy('inlineAssembly/contracts/calldata_assign_from_nowhere.sol')
     r = harness.call(app, 'f()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 4, 0x26121ff000000000000000000000000000000000000000000000000000000000,)
+    assert bytes(r.abi_return) == bytes.fromhex('26121ff0')
 
 def test_calldata_length_read(harness):
     """inlineAssembly/contracts/calldata_length_read.sol"""

@@ -137,6 +137,29 @@ public:
 	/// Get the set of scratch slots to reserve on the Contract node.
 	static std::vector<int> reservedScratchSlots();
 
+	/// Share the enclosing FUNCTION's seeded-calldata-pointer set across this
+	/// function's per-block AssemblyBuilders (each block constructs a fresh
+	/// builder). initCalldataPointerLocals seeds each dynamic calldata param's
+	/// (__cd_off_x, __cd_len_x) locals only if the param is not yet in the set —
+	/// so a pointer write from an earlier block survives into later blocks.
+	/// Mirrors setFrameIsProgram. Nullable (freestanding uses seed every block).
+	void setSeededCalldataPointers(std::set<std::string>* _seeded)
+	{
+		m_seededCalldataPointers = _seeded;
+	}
+
+	/// The enclosing function's 4-byte EVM keccak selector; the synthetic calldata
+	/// blob embeds it (asm reads of bytes 0-3 then match EVM). Empty → bzero(4).
+	void setEvmSelector(std::vector<uint8_t> _sel) { m_evmSelector = std::move(_sel); }
+
+	/// Base names of dynamic-CALLDATA pointer vars referenced by this block
+	/// (from the refs' declarations — covers calldata return vars / locals whose
+	/// suffixed refs register under the dotted name so m_locals misses the base).
+	void setCalldataPointerNames(std::set<std::string> _names)
+	{
+		m_calldataPointerNames = std::move(_names);
+	}
+
 	/// Advance the FMP (scratch-slot 0, offset 0x40) by `_size` bytes.
 	/// Mirrors EVM allocation semantics for `T memory t;` locals so mload(0x40) is correct.
 	/// `_uniqueId` namespaces the temporary blob-handle local.
@@ -771,6 +794,9 @@ private:
 
 	/// True when dynamic calldataload/copy/size detected; materialise __cd_blob.
 	bool m_useSyntheticCalldata = false;
+	std::set<std::string>* m_seededCalldataPointers = nullptr;
+	std::vector<uint8_t> m_evmSelector;
+	std::set<std::string> m_calldataPointerNames;
 	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;
 	static constexpr char const* CD_BLOB_VAR = "__cd_blob";
 

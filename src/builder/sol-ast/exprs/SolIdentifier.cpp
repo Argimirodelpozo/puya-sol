@@ -179,6 +179,17 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		// Otherwise: function used as call target, fall through.
 	}
 
+	// Dynamic CALLDATA param with LIVE pointer locals (an assembly block seeded or
+	// repointed __cd_off_<name>/__cd_len_<name>): the param's VALUE is the byte
+	// range the pointer designates inside __cd_blob — `assembly { x.offset := 1 }
+	// return x;` must honour the repoint (EVM calldata-pointer semantics), not
+	// return the originally-decoded param.
+	if (auto const* vd = dynamic_cast<VariableDeclaration const*>(decl))
+		if (vd->referenceLocation() == solidity::frontend::VariableDeclaration::Location::CallData)
+			if (auto* live = m_ctx.currentScope ? m_ctx.currentScope->liveCalldataPointers() : nullptr)
+				if (live->count(name))
+					return builder::TypeCoercion::calldataPointerValueRead(name, m_loc);
+
 	// Regular local variable
 	auto e = std::make_shared<awst::VarExpression>();
 	e->sourceLocation = m_loc;

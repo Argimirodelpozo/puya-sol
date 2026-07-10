@@ -31,8 +31,10 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 				std::string suffix = n.substr(dot + 1);
 				if (suffix == "offset" || suffix == "length")
 				{
-					auto it = m_locals.find(n.substr(0, dot));
-					if (it != m_locals.end() && isDynamicCalldataType(it->second))
+					std::string base = n.substr(0, dot);
+					auto it = m_locals.find(base);
+					if ((it != m_locals.end() && isDynamicCalldataType(it->second))
+						|| m_calldataPointerNames.count(base))
 						found = true;
 				}
 			}
@@ -93,7 +95,31 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 			else if (auto const* es = std::get_if<solidity::yul::ExpressionStatement>(&s))
 				scanExpr(es->expression);
 			else if (auto const* assign = std::get_if<solidity::yul::Assignment>(&s))
+			{
+				// A pointer WRITE (`x.offset := V` / `x.length := L`) also needs the
+				// blob + seeded pointer locals stood up: without this, a write-only
+				// block skipped the synthetic-calldata path entirely, so the write
+				// landed in a dead generic local AND the (indent-bug) seeds read a
+				// never-built __cd_blob — the "load 0 type error" of 2026-07-03.
+				for (auto const& tgt: assign->variableNames)
+				{
+					std::string n = tgt.name.str();
+					auto dot = n.rfind('.');
+					if (dot != std::string::npos)
+					{
+						std::string suffix = n.substr(dot + 1);
+						if (suffix == "offset" || suffix == "length")
+						{
+							std::string base = n.substr(0, dot);
+							auto it = m_locals.find(base);
+							if ((it != m_locals.end() && isDynamicCalldataType(it->second))
+								|| m_calldataPointerNames.count(base))
+								found = true;
+						}
+					}
+				}
 				scanExpr(*assign->value);
+			}
 			else if (auto const* var = std::get_if<solidity::yul::VariableDeclaration>(&s))
 				if (var->value)
 					scanExpr(*var->value);
@@ -172,6 +198,13 @@ void AssemblyBuilder::initCalldataPointerLocals(
 		if (!isDynamicCalldataType(type)) continue;
 		auto cdIt = m_localConstants.find(name);
 		if (cdIt == m_localConstants.end()) continue;
+		// Seed ONCE per function: a later block must see a pointer mutated by an
+		// earlier block (x.offset := V), not a fresh canonical re-seed.
+		if (m_seededCalldataPointers)
+		{
+			if (m_seededCalldataPointers->count(name)) continue;
+			m_seededCalldataPointers->insert(name);
+		}
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), _loc),
 			calldataDynOffset(cdIt->second, _loc), _loc));
@@ -212,9 +245,18 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	// __cd_tail_off = running tail offset (relative to args start = 0x04); starts at N*32.
 	uint64_t headWords = _params.size();
 
-	// __cd_blob = bzero(4)  — selector slot
+	// __cd_blob selector slot: the REAL 4-byte EVM keccak selector when known
+	// (so asm reads of bytes 0-3 — calldataload(0), a repointed x.offset := 0 —
+	// see what EVM would show); bzero(4) otherwise (internal fns, constructors).
+	std::shared_ptr<awst::Expression> selectorBytes;
+	if (m_evmSelector.size() == 4)
+		selectorBytes = awst::makeBytesConstant(
+			std::vector<unsigned char>(m_evmSelector.begin(), m_evmSelector.end()),
+			_loc, awst::BytesEncoding::Base16, awst::WType::bytesType());
+	else
+		selectorBytes = bzeroOf(u64Const(4));
 	_out.push_back(awst::makeAssignmentStatement(
-		bytesVar(CD_BLOB_VAR), bzeroOf(u64Const(4)), _loc));
+		bytesVar(CD_BLOB_VAR), std::move(selectorBytes), _loc));
 
 	// __cd_tail_off = headWords * 32  — running offset of next tail entry
 	_out.push_back(awst::makeAssignmentStatement(

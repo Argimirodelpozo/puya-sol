@@ -17,6 +17,7 @@
 #include <libsolidity/ast/AST.h>
 
 #include <map>
+#include <set>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -156,6 +157,14 @@ public:
 	virtual bool isInConstructor() const
 	{
 		return m_parent && m_parent->isInConstructor();
+	}
+
+	/// The enclosing function's live-calldata-pointer set (see FunctionContext::
+	/// seededCalldataPointers); nullptr outside a function scope. Parent-chain walk
+	/// like isInConstructor so eb-level builders (SolIdentifier) can reach it.
+	virtual std::set<std::string>* liveCalldataPointers() const
+	{
+		return m_parent ? m_parent->liveCalldataPointers() : nullptr;
 	}
 
 	// ── Decl-id-keyed lookups (O(1) flat) ───────────────────────────
@@ -392,6 +401,24 @@ struct FunctionContext: Context
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
 
+	/// Calldata params whose mutable (__cd_off_x, __cd_len_x) pointer locals are
+	/// LIVE — seeded at an assembly block's entry or written via `x.offset := V`.
+	/// Shared across the function's per-block AssemblyBuilders (else every block
+	/// would re-seed from the canonical blob, clobbering an earlier block's write —
+	/// calldata_offset_read_write) AND consulted by value reads of the param
+	/// (SolIdentifier / the implicit-return synth read `extract3(__cd_blob, off,
+	/// len)` instead of the decoded param). Points at ContractBuilder's per-function
+	/// scratch so it OUTLIVES buildBlock (the implicit-return synth runs after);
+	/// falls back to the owned set on freestanding paths.
+	std::set<std::string>* seededCalldataPointers = &ownSeededCalldataPointers;
+	std::set<std::string> ownSeededCalldataPointers;
+
+	/// This function's 4-byte EVM keccak selector (empty when not an external-
+	/// interface function). The synthetic calldata blob embeds it so asm reads of
+	/// the selector region (calldataload(0), repointed `x.offset := 0`) see the
+	/// REAL selector bytes like on EVM, not bzero(4).
+	std::vector<uint8_t> evmSelector;
+
 	FunctionContext(
 		TranslationContext& _tr,
 		std::vector<std::pair<std::string, awst::WType const*>> _params,
@@ -406,6 +433,7 @@ struct FunctionContext: Context
 	{}
 
 	bool isInConstructor() const override { return inConstructor; }
+	std::set<std::string>* liveCalldataPointers() const override { return seededCalldataPointers; }
 };
 
 /// Control-flow targets for continue inside a loop.

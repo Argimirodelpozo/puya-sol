@@ -216,14 +216,20 @@ void AssemblyBuilder::buildAssignment(
 			if ((suffix == "offset" || suffix == "length") && _assign.value)
 			{
 				auto typeIt = m_locals.find(baseName);
-				if (m_useSyntheticCalldata && typeIt != m_locals.end()
-					&& isDynamicCalldataType(typeIt->second))
+				bool isCdPtr = (typeIt != m_locals.end() && isDynamicCalldataType(typeIt->second))
+					|| m_calldataPointerNames.count(baseName);
+				if (m_useSyntheticCalldata && isCdPtr)
 				{
 					auto rhs = buildExpression(*_assign.value);
 					drainPendingStatements(_out);
 					if (!rhs)
 						return;
 					std::string local = (suffix == "offset" ? "__cd_off_" : "__cd_len_") + baseName;
+					// Mark the pointer locals LIVE: later blocks must not re-seed over
+					// this write, and value reads of the param (return x) now go
+					// through extract3(__cd_blob, off, len).
+					if (m_seededCalldataPointers)
+						m_seededCalldataPointers->insert(baseName);
 					_out.push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(local, awst::WType::biguintType(), loc),
 						std::move(rhs), loc));

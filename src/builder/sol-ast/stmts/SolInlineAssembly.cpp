@@ -306,6 +306,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// Blob-backed memory aggregates referenced in assembly resolve to their
 	// uint64 memory-pointer offset (not the aggregate value).
 	std::map<std::string, std::string> blobOffsetVars;
+	// Base names of external refs that are DYNAMIC CALLDATA pointers (params,
+	// locals, or calldata return vars). Suffixed refs (`x.offset := 0`) register
+	// under the dotted name ("x.offset"), so m_locals-based detection misses the
+	// base — this set carries the authoritative answer from the decl's
+	// referenceLocation (calldata_assign_from_nowhere: a `bytes calldata` RETURN
+	// var repointed in asm, never a real input param).
+	std::set<std::string> calldataPointerNames;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
 		if (!extInfo.declaration) continue;
@@ -317,6 +324,22 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		// .selector/.address, bare for .slot/.offset/.length + state vars.
 		std::string name = AssemblyBuilder::externalRefAwstName(
 			extInfo, yulId->name.str(), declNameFn);
+		if (varDecl->referenceLocation()
+				== solidity::frontend::VariableDeclaration::Location::CallData)
+		{
+			std::string base = name;
+			if (auto dot = base.rfind('.'); dot != std::string::npos)
+			{
+				std::string sfx = base.substr(dot + 1);
+				if (sfx == "offset" || sfx == "length")
+					base = base.substr(0, dot);
+			}
+			auto const* t = m_blk.typeMapper().map(varDecl->type());
+			if (t == awst::WType::bytesType() || t == awst::WType::stringType()
+				|| t->kind() == awst::WTypeKind::ARC4DynamicArray
+				|| t->kind() == awst::WTypeKind::ReferenceArray)
+				calldataPointerNames.insert(base);
+		}
 		if (auto blobOff = m_blk.findBlobAggregate(varDecl->id()); !blobOff.empty())
 			blobOffsetVars[name] = blobOff;
 		bool found = false;
@@ -336,6 +359,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
 	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
+	asmTranslator.setSeededCalldataPointers(m_blk.fn.seededCalldataPointers);
+	asmTranslator.setEvmSelector(m_blk.fn.evmSelector);
+	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,

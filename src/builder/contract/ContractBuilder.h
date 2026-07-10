@@ -78,6 +78,10 @@ struct FunctionTranslationCtx
 	bool encodeReturnsAtBuildTime = false;
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
+	// Live-calldata-pointer set (see FunctionContext::seededCalldataPointers) +
+	// the function's 4-byte EVM keccak selector for the synthetic calldata blob.
+	std::set<std::string>* seededCalldataPointers = nullptr;
+	std::vector<uint8_t> evmSelector;
 };
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
@@ -166,6 +170,11 @@ private:
 	bool m_currentEncodeReturnsAtBuildTime = false;
 	bool m_currentReturnAsmWrap = false;
 	std::vector<ReturnWireElem> m_currentReturnWirePlan;
+	// Live-calldata-pointer set: OUTLIVES buildBlock (the implicit-return synth in
+	// FunctionBuilder consults it after body translation) — hence scratch here, with
+	// FunctionContext holding a pointer.
+	std::set<std::string> m_currentSeededCalldataPointers;
+	std::vector<uint8_t> m_currentEvmSelector;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
