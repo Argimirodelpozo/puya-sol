@@ -124,6 +124,77 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 	return _value;
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<ReturnWireElem> const& _plan,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _prepend
+)
+{
+	if (_plan.empty() || !_value)
+		return _value;
+	if (_plan.size() == 1)
+		return encodeReturnElement(std::move(_value), _plan[0], _loc);
+
+	bool anyEncode = false;
+	for (auto const& p: _plan)
+		if (p.encoded) { anyEncode = true; break; }
+	if (!anyEncode)
+		return _value;
+
+	std::vector<awst::WType const*> wireTypes;
+	for (auto const& p: _plan)
+		wireTypes.push_back(p.wireType);
+	auto makeWireTuple = [&]() {
+		return new awst::WTuple(std::vector<awst::WType const*>(wireTypes));
+	};
+	// Encode each item of a literal tuple in place (uses the item's own location,
+	// matching the post-pass); retype the tuple to the wire tuple.
+	auto wrapItems = [&](awst::TupleExpression* _t) {
+		if (!_t) return;
+		for (size_t i = 0; i < _t->items.size() && i < _plan.size(); ++i)
+		{
+			auto elemLoc = _t->items[i]->sourceLocation;
+			_t->items[i] = encodeReturnElement(std::move(_t->items[i]), _plan[i], elemLoc);
+		}
+		_t->wtype = makeWireTuple();
+	};
+
+	if (auto* tuple = dynamic_cast<awst::TupleExpression*>(_value.get()))
+	{
+		wrapItems(tuple);
+		return _value;
+	}
+	if (auto* cond = dynamic_cast<awst::ConditionalExpression*>(_value.get()))
+	{
+		wrapItems(dynamic_cast<awst::TupleExpression*>(cond->trueExpr.get()));
+		wrapItems(dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get()));
+		cond->wtype = makeWireTuple();
+		return _value;
+	}
+	// Opaque tuple value (e.g. `return f()`): spill to a temp, then rebuild as a
+	// literal tuple of encoded items. (Post-pass used per-signedness temp names;
+	// here it's one convention — internal names, non-semantic.)
+	if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::WTuple)
+	{
+		auto const* subTuple = static_cast<awst::WTuple const*>(_value->wtype);
+		std::string tmpName = "__ret_tmp_"
+			+ std::to_string(awst::NameGen::next("ReturnRewriter.retTmpCounter"));
+		auto tmpVar = awst::makeVarExpression(tmpName, _value->wtype, _loc);
+		_prepend.push_back(awst::makeAssignmentStatement(tmpVar, std::move(_value), _loc));
+
+		auto newTuple = awst::makeTupleExpression(nullptr, _loc);
+		for (size_t i = 0; i < _plan.size() && i < subTuple->types().size(); ++i)
+		{
+			auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTuple->types()[i], _loc);
+			newTuple->items.push_back(encodeReturnElement(std::move(item), _plan[i], _loc));
+		}
+		newTuple->wtype = makeWireTuple();
+		return newTuple;
+	}
+	return _value;
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	std::shared_ptr<awst::Expression> _value,
 	unsigned _bits,

@@ -82,6 +82,18 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Encode a whole return VALUE (scalar or tuple) to its ABI wire form per the
+	/// per-element plan — the build-time counterpart to ReturnRewriter passes 2/3/4.
+	/// Handles a scalar, a literal tuple, a ternary-of-tuples, and an opaque tuple
+	/// value (`return f()`) which spills to a temp appended to `_prepend`. Returns
+	/// the (possibly new) value; the caller inserts `_prepend` before the return.
+	static std::shared_ptr<awst::Expression> encodeReturnValue(
+		std::shared_ptr<awst::Expression> _value,
+		std::vector<ReturnWireElem> const& _plan,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _prepend
+	);
+
 	/// Sign-extend an N-bit (N<64) signed value held in a uint64 to the 64-bit
 	/// two's-complement form. Input must be in [0, 2^N-1] (e.g. the raw result
 	/// of decoding a packed arc4.intN field). If the N-bit sign bit is set, adds

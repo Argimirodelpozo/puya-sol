@@ -541,18 +541,30 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		// D2 build-time ABI return encoding. Instead of the ReturnRewriter post-pass
 		// walking the finished body to convert each return value to its wire type,
-		// SolReturnStatement encodes it as it builds the `return`. A1 scope: non-chain,
-		// ABI-boundary, non-asm functions with a SINGLE encoded scalar return (biguint /
-		// signed). Tuples, sub-word masks, arrays, asm, and modifier'd (chain) returns
-		// still go through the post-pass / encodeChainDispatchReturn for now.
+		// SolReturnStatement encodes it as it builds the `return`. Scope (A1+A2):
+		// non-chain, ABI-boundary, non-asm functions with any ENCODED return element
+		// (biguint / signed, scalar or tuple). Sub-word masks (Pass 5), arrays
+		// (Pass 1), asm, and modifier'd (chain) returns still go through the post-pass
+		// / encodeChainDispatchReturn for now.
 		std::vector<ReturnWireElem> returnPlan =
 			computeReturnPlan(_func, method.returnType, m_typeMapper);
+		bool anyEncoded = false;
+		for (auto const& p: returnPlan)
+			if (p.encoded) { anyEncoded = true; break; }
+		// Only take the build-time path when the post-pass would have done EXACTLY
+		// this and nothing else — i.e. no sub-word mask element in the plan (Pass 5
+		// still owns those). A masked element is an unsigned sub-64 return.
+		bool anyMask = false;
+		for (auto const& rp: _func.returnParameters())
+			if (auto it = builder::SolIntType::fromSolOrEnum(rp->type());
+				it && !it->isSigned && it->bits < 64)
+				{ anyMask = true; break; }
 		bool const encodeReturnsAtBuildTime =
 			method.arc4MethodConfig.has_value()
 			&& _func.modifiers().empty()
 			&& !funcHasInlineAssembly
-			&& returnPlan.size() == 1
-			&& returnPlan[0].encoded;
+			&& anyEncoded
+			&& !anyMask;
 		if (encodeReturnsAtBuildTime)
 			setReturnWirePlan(returnPlan, /*asmWrap=*/false);
 
@@ -738,11 +750,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 			// Build-time encoding: the synthesized implicit return is the SECOND return
 			// construction site (SolReturnStatement is the first, for explicit returns);
-			// encode it here too so it matches the wire method.returnType set below. A1
-			// scalar: single element, retStmt->value is the named var or default.
-			if (encodeReturnsAtBuildTime && retStmt->value && returnPlan.size() == 1)
-				retStmt->value = TypeCoercion::encodeReturnElement(
-					std::move(retStmt->value), returnPlan[0], method.sourceLocation);
+			// encode it here too so it matches the wire method.returnType set below. The
+			// value is a named var (scalar) or a literal tuple of named vars — never an
+			// opaque call, so the spill vector stays empty.
+			if (encodeReturnsAtBuildTime && retStmt->value)
+			{
+				std::vector<std::shared_ptr<awst::Statement>> prepend;
+				retStmt->value = TypeCoercion::encodeReturnValue(
+					std::move(retStmt->value), returnPlan, method.sourceLocation, prepend);
+				for (auto& s: prepend)
+					method.body->body.push_back(std::move(s));
+			}
 
 			// Enum range check on implicit named-return.
 			if (hasNamedReturns && retParams.size() == 1)
@@ -767,7 +785,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// declared type to the wire type and skip the post-pass. The body was translated
 		// with the NATIVE returnType so named-return assignments still typecheck.
 		if (encodeReturnsAtBuildTime)
-			method.returnType = returnPlan[0].wireType;
+		{
+			if (returnPlan.size() == 1)
+				method.returnType = returnPlan[0].wireType;
+			else
+			{
+				std::vector<awst::WType const*> wireTypes;
+				for (auto const& p: returnPlan)
+					wireTypes.push_back(p.wireType);
+				method.returnType = new awst::WTuple(std::move(wireTypes));
+			}
+		}
 		else
 			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks, funcHasInlineAssembly);
 
