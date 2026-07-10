@@ -1,7 +1,7 @@
 /// @file SimpleSplitter.cpp
 /// Static "extract-named-subroutines" splitter — see SimpleSplitter.h.
 
-#include "splitter/SimpleSplitter.h"
+#include "experimental/splitter/SimpleSplitter.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 #include "awst/WType.h"

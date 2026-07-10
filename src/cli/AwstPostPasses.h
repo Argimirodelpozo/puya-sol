@@ -7,7 +7,7 @@
 
 #include "awst/Node.h"
 #include "cli/CliOptions.h"
-#include "splitter/PureHelperExtractor.h"
+#include "experimental/splitter/PureHelperExtractor.h"
 
 #include <memory>
 #include <optional>

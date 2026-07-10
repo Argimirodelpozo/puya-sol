@@ -3,9 +3,9 @@
 
 #include "builder/sol-types/TypeCoercion.h"
 #include "awst/NameGen.h"
-#include "splitter/PureHelperExtractor.h"
-#include "splitter/AwstWalker.h"
-#include "splitter/FunctionSplitter.h"
+#include "experimental/splitter/PureHelperExtractor.h"
+#include "experimental/splitter/AwstWalker.h"
+#include "experimental/splitter/FunctionSplitter.h"
 #include "Logger.h"
 
 #include <algorithm>

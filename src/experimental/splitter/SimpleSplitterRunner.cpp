@@ -1,6 +1,6 @@
-#include "splitter/SimpleSplitterRunner.h"
+#include "experimental/splitter/SimpleSplitterRunner.h"
 
-#include "splitter/SimpleSplitter.h"
+#include "experimental/splitter/SimpleSplitter.h"
 
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"

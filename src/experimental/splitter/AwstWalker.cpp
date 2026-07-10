@@ -2,7 +2,7 @@
 /// See AwstWalker.h. Recursion is hand-written per subclass via
 /// dynamic_cast — awst::Node has no virtual visit().
 
-#include "splitter/AwstWalker.h"
+#include "experimental/splitter/AwstWalker.h"
 
 #include "Logger.h"
 

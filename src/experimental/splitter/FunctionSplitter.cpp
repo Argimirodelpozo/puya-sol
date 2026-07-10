@@ -1,7 +1,7 @@
 /// @file FunctionSplitter.cpp
 /// See FunctionSplitter.h for design.
 
-#include "splitter/FunctionSplitter.h"
+#include "experimental/splitter/FunctionSplitter.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"

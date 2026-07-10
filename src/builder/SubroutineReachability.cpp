@@ -1,5 +1,5 @@
 #include "builder/SubroutineReachability.h"
-#include "splitter/AwstWalker.h"
+#include "experimental/splitter/AwstWalker.h"
 
 #include <queue>
 #include <set>

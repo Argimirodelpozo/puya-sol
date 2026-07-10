@@ -1,8 +1,8 @@
 #include "cli/AwstPostPasses.h"
 #include "Logger.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
-#include "splitter/FunctionSplitter.h"
-#include "splitter/SimpleSplitterRunner.h"
+#include "experimental/splitter/FunctionSplitter.h"
+#include "experimental/splitter/SimpleSplitterRunner.h"
 
 #include <boost/filesystem.hpp>
 
