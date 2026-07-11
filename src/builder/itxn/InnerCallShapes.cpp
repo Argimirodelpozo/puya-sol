@@ -180,7 +180,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
+	// Capture THIS submit's log (see captureLastLog: tuple-of-calls clobbering).
+	auto readLog = captureLastLog(_ctx, _loc);
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc); // len=0 = to end
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
@@ -315,7 +316,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
+	// Capture THIS submit's log (see captureLastLog: tuple-of-calls clobbering).
+	auto readLog = captureLastLog(_ctx, _loc);
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(readLog), _loc));

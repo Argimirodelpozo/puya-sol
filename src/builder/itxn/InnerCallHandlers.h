@@ -131,6 +131,16 @@ public:
 		solidity::frontend::Type const* _paramSolType,
 		awst::SourceLocation const& _loc);
 
+	/// Submit-then-CAPTURE: push `__itxn_log_N = itxn LastLog` into prePending
+	/// right after a submit and return the temp var. Result reads MUST go through
+	/// this, never a live `itxn LastLog` — the itxn context is a single register,
+	/// so several inner calls built inside ONE statement (a tuple of calls,
+	/// nested call args) all flush their submits first and live reads would all
+	/// see the LAST call's log. (Same capture discipline as CreatedApplicationID
+	/// in SolNewExpression.)
+	static std::shared_ptr<awst::Expression> captureLastLog(
+		ContractContext& _ctx, awst::SourceLocation const& _loc);
+
 	/// Canonical ARC4 selector string from a FunctionDefinition
 	/// (routers dispatch on this; fn-pointer slots and f.selector expose it).
 	static std::string buildMethodSelector(

@@ -101,11 +101,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	if (!_returnType || _returnType == awst::WType::voidType())
 		return submit;
 
-	// Submit as pre-pending statement, then extract from LastLog
+	// Submit as pre-pending statement, then CAPTURE this call's log immediately
+	// (a later inner txn built in the same statement — tuple of calls — clobbers
+	// the itxn context; a live LastLog read would see the LAST submit's log).
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
 	m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), m_loc);
+	auto readLog = eb::InnerCallHandlers::captureLastLog(m_ctx, m_loc);
 
 	// Strip 4-byte ARC4 return prefix
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, m_loc);

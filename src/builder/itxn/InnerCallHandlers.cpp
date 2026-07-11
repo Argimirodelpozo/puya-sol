@@ -109,6 +109,17 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	return awst::makeAsApplication(std::move(btoi), _loc);
 }
 
+std::shared_ptr<awst::Expression> InnerCallHandlers::captureLastLog(
+	ContractContext& _ctx, awst::SourceLocation const& _loc)
+{
+	std::string tmp = "__itxn_log_"
+		+ std::to_string(awst::NameGen::next("InnerCallHandlers.itxnLogCounter"));
+	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc),
+		awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc));
+	return awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc);
+}
+
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _argExpr,

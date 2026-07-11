@@ -1472,6 +1472,26 @@ def test_modifier_dyntuple_return(harness):
     assert as_int(harness.call(app, "gmstup(int256)", 30).abi_return) == 1060    # 30 + 30 + 1000
 
 
+def test_inner_call_tuple_results(harness):
+    """puyasolRegression/contracts/inner_call_tuple_results.sol — NOT an o.g. semantic test.
+
+    Multiple inner calls built inside ONE expression must each capture their own
+    result. The AVM itxn context is a single register: expression building
+    flushes every call's submit to pre-pending BEFORE the containing expression
+    evaluates, so a live `itxn LastLog` read in each result slot returned the
+    LAST call's value for every slot (`return (s.a(), s.b(), s.c())` gave
+    (33,33,33)). Fixed by capture-after-submit
+    (InnerCallHandlers::captureLastLog); found while probing the constructor
+    fixes, pre-existing.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/inner_call_tuple_results.sol", contract_name="Caller")
+    r = harness.call(app, "tup()", extra_fee=10000)
+    assert tuple(as_int(x) for x in r.abi_return) == (11, 22, 33)
+    # two inner calls as ARGS of one internal call — same clobbering shape
+    assert as_int(harness.call(app, "nested()", extra_fee=10000).abi_return) == 44
+
+
 def test_modifier_stack_conditional(harness):
     """puyasolRegression/contracts/modifier_stack_conditional.sol — NOT an o.g. semantic test.
 
