@@ -148,9 +148,6 @@ public:
 		m_seededCalldataPointers = _seeded;
 	}
 
-	/// The enclosing function's 4-byte EVM keccak selector; the synthetic calldata
-	/// blob embeds it (asm reads of bytes 0-3 then match EVM). Empty → bzero(4).
-	void setEvmSelector(std::vector<uint8_t> _sel) { m_evmSelector = std::move(_sel); }
 
 	/// Base names of dynamic-CALLDATA pointer vars referenced by this block
 	/// (from the refs' declarations — covers calldata return vars / locals whose
@@ -803,7 +800,6 @@ private:
 	/// True when dynamic calldataload/copy/size detected; materialise __cd_blob.
 	bool m_useSyntheticCalldata = false;
 	std::set<std::string>* m_seededCalldataPointers = nullptr;
-	std::vector<uint8_t> m_evmSelector;
 	std::set<std::string> m_calldataPointerNames;
 	std::set<std::string> m_calldataStaticPtrNames;
 	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;

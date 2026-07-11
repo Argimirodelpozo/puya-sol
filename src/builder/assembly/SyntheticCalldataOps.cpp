@@ -270,16 +270,20 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	// __cd_tail_off = running tail offset (relative to args start = 0x04); starts at N*32.
 	uint64_t headWords = _params.size();
 
-	// __cd_blob selector slot: the REAL 4-byte EVM keccak selector when known
-	// (so asm reads of bytes 0-3 — calldataload(0), a repointed x.offset := 0 —
-	// see what EVM would show); bzero(4) otherwise (internal fns, constructors).
-	std::shared_ptr<awst::Expression> selectorBytes;
-	if (m_evmSelector.size() == 4)
-		selectorBytes = awst::makeBytesConstant(
-			std::vector<unsigned char>(m_evmSelector.begin(), m_evmSelector.end()),
-			_loc, awst::BytesEncoding::Base16, awst::WType::bytesType());
-	else
-		selectorBytes = bzeroOf(u64Const(4));
+	// __cd_blob selector slot: the RUNTIME selector that routed this call —
+	// txna ApplicationArgs 0, the 4-byte sha512_256-based ARC-4 selector. AVM
+	// selectors are sha512_256 BY DESIGN project-wide (router dispatch, encodeCall,
+	// MethodConstant, ARC-28 events; accepted design divergence from EVM keccak —
+	// only the Error/Panic revert magics stay EVM-literal), so asm reads of
+	// calldata bytes 0-3 must see the SAME selector the router matched, not a
+	// keccak value nothing else in the system uses. Guarded by NumAppArgs > 0
+	// (bzero(4) during construction / bare calls where no args exist).
+	auto numArgs = awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), _loc);
+	auto hasArgs = awst::makeNumericCompare(
+		std::move(numArgs), awst::NumericComparison::Gt, u64Const(0), _loc);
+	auto selectorBytes = awst::makeConditional(
+		std::move(hasArgs), awst::makeAppArg(0, _loc), bzeroOf(u64Const(4)),
+		awst::WType::bytesType(), _loc);
 	_out.push_back(awst::makeAssignmentStatement(
 		bytesVar(CD_BLOB_VAR), std::move(selectorBytes), _loc));
 

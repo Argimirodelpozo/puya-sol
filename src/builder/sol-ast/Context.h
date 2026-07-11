@@ -413,11 +413,6 @@ struct FunctionContext: Context
 	std::set<std::string>* seededCalldataPointers = &ownSeededCalldataPointers;
 	std::set<std::string> ownSeededCalldataPointers;
 
-	/// This function's 4-byte EVM keccak selector (empty when not an external-
-	/// interface function). The synthetic calldata blob embeds it so asm reads of
-	/// the selector region (calldataload(0), repointed `x.offset := 0`) see the
-	/// REAL selector bytes like on EVM, not bzero(4).
-	std::vector<uint8_t> evmSelector;
 
 	FunctionContext(
 		TranslationContext& _tr,

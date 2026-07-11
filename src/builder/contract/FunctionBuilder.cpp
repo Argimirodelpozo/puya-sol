@@ -539,17 +539,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
-		// 4-byte EVM keccak selector for the synthetic calldata blob: asm reads of
-		// bytes 0-3 (calldataload(0), a repointed `x.offset := 0`) then match EVM.
-		if (_func.isPartOfExternalInterface())
-		{
-			solidity::frontend::FunctionType fnType(_func);
-			auto selWord = fnType.externalIdentifier();   // u256 holding the 4-byte id
-			uint32_t sel = static_cast<uint32_t>(selWord);
-			m_currentEvmSelector = {
-				static_cast<uint8_t>(sel >> 24), static_cast<uint8_t>(sel >> 16),
-				static_cast<uint8_t>(sel >> 8), static_cast<uint8_t>(sel)};
-		}
 
 		// D2 build-time ABI return encoding. Instead of the ReturnRewriter post-pass
 		// walking the finished body to convert each return value to its wire type,
