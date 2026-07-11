@@ -11,8 +11,60 @@ namespace puyasol::builder::sol_ast
 
 std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 {
-	auto base = buildExpr(baseExpression());
 	std::string member = memberName();
+
+	// Field read through a LIVE static calldata pointer: `assembly { s := s2 }
+	// r = s.x;` must read the word the (repointed) pointer designates inside
+	// __cd_blob — solc's calldataOffsetOfMember gives the field's byte offset
+	// within the struct's calldata encoding. Only for rvalue reads of int-mapped
+	// fields; anything else falls through to the decoded-value path.
+	if (!m_memberAccess.annotation().willBeWrittenTo)
+		if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpression()))
+			if (auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+					baseId->annotation().referencedDeclaration))
+				if (vd->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::CallData)
+					if (auto* live = m_ctx.currentScope
+							? m_ctx.currentScope->liveCalldataPointers() : nullptr)
+						if (live->count(vd->name()))
+							if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(
+									vd->type()))
+							{
+								auto const* fieldW =
+									m_ctx.typeMapper.map(m_memberAccess.annotation().type);
+								if (fieldW == awst::WType::biguintType()
+									|| fieldW == awst::WType::uint64Type())
+								{
+									unsigned fieldOff = st->calldataOffsetOfMember(member);
+									auto off64 = builder::TypeCoercion::implicitNumericCast(
+										awst::makeVarExpression("__cd_off_" + vd->name(),
+											awst::WType::biguintType(), m_loc),
+										awst::WType::uint64Type(), m_loc);
+									auto pos = awst::makeUInt64BinOp(std::move(off64),
+										awst::UInt64BinaryOperator::Add,
+										awst::makeIntegerConstant(
+											static_cast<uint64_t>(fieldOff), m_loc), m_loc);
+									if (fieldW == awst::WType::uint64Type())
+									{
+										// low 8 bytes of the 32-byte word
+										auto pos8 = awst::makeUInt64BinOp(std::move(pos),
+											awst::UInt64BinaryOperator::Add,
+											awst::makeIntegerConstant(uint64_t(24), m_loc), m_loc);
+										return awst::makeBtoi(awst::makeExtract3(
+											awst::makeVarExpression("__cd_blob",
+												awst::WType::bytesType(), m_loc),
+											std::move(pos8),
+											awst::makeIntegerConstant(uint64_t(8), m_loc), m_loc), m_loc);
+									}
+									return awst::makeAsBiguint(awst::makeExtract3(
+										awst::makeVarExpression("__cd_blob",
+											awst::WType::bytesType(), m_loc),
+										std::move(pos),
+										awst::makeIntegerConstant(uint64_t(32), m_loc), m_loc), m_loc);
+								}
+							}
+
+	auto base = buildExpr(baseExpression());
 
 	if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4Struct)
 	{

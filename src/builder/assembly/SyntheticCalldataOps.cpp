@@ -24,7 +24,13 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 		{
 			// A dynamic calldata param's `.offset`/`.length` is read at runtime from __cd_blob, so it
 			// needs the blob stood up even when there is no calldataload/copy/size in the block.
-			std::string n = id->name.str();
+			// Resolve to the canonical AWST name FIRST (outer locals are mangled, e.g. t__20 —
+			// the pointer-name sets are keyed by the mangled form).
+			std::string n = resolveVarRef(*id);
+			// Bare STATIC calldata pointer (`s := s2` RHS, `s := t`): reads __cd_off_<n>,
+			// which needs the blob + seeds stood up.
+			if (m_calldataStaticPtrNames.count(n))
+				found = true;
 			auto dot = n.rfind('.');
 			if (dot != std::string::npos)
 			{
@@ -103,7 +109,9 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 				// never-built __cd_blob — the "load 0 type error" of 2026-07-03.
 				for (auto const& tgt: assign->variableNames)
 				{
-					std::string n = tgt.name.str();
+					std::string n = resolveVarRef(tgt);
+					if (m_calldataStaticPtrNames.count(n))
+						found = true;
 					auto dot = n.rfind('.');
 					if (dot != std::string::npos)
 					{
@@ -195,7 +203,24 @@ void AssemblyBuilder::initCalldataPointerLocals(
 {
 	for (auto const& [name, type]: m_calldataParams)
 	{
-		if (!isDynamicCalldataType(type)) continue;
+		// STATIC calldata pointer param (struct / fixed array) referenced as a bare
+		// pointer in this block: seed __cd_off_<name> with its constant data offset
+		// (statics live inline in the head area — m_localConstants holds the byte pos).
+		if (!isDynamicCalldataType(type))
+		{
+			if (!m_calldataStaticPtrNames.count(name)) continue;
+			auto cdIt = m_localConstants.find(name);
+			if (cdIt == m_localConstants.end()) continue;
+			if (m_seededCalldataPointers)
+			{
+				if (m_seededCalldataPointers->count(name)) continue;
+				m_seededCalldataPointers->insert(name);
+			}
+			_out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), _loc),
+				awst::makeIntegerConstant(cdIt->second, _loc, awst::WType::biguintType()), _loc));
+			continue;
+		}
 		auto cdIt = m_localConstants.find(name);
 		if (cdIt == m_localConstants.end()) continue;
 		// Seed ONCE per function: a later block must see a pointer mutated by an
@@ -324,7 +349,17 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		if (!isDynamicCalldataType(type)) continue;
 
 		auto var = awst::makeVarExpression(name, type, _loc);
-		auto lenExpr = lenOf(var);
+		// EVM length word: BYTE length for bytes/string, ELEMENT COUNT for arrays.
+		// An ARC4 dynamic array carries its element count in its 2-byte header —
+		// read that (universal for any element size) instead of len(bytes), which
+		// gave the byte length (2 + n*elemSize) and broke `l := x.length` on
+		// `uint[2][] calldata` (130 instead of 2).
+		std::shared_ptr<awst::Expression> lenExpr;
+		if (type == awst::WType::bytesType() || type == awst::WType::stringType())
+			lenExpr = lenOf(std::move(var));
+		else
+			lenExpr = awst::makeBtoi(awst::makeExtract3(
+				awst::makeAsBytes(std::move(var), _loc), u64Const(0), u64Const(2), _loc), _loc);
 		_out.push_back(awst::makeAssignmentStatement(
 			bytesVar(CD_BLOB_VAR),
 			concatBytes(bytesVar(CD_BLOB_VAR), pad32BE(std::move(lenExpr), _loc)),

@@ -160,6 +160,14 @@ public:
 		m_calldataPointerNames = std::move(_names);
 	}
 
+	/// STATIC calldata pointers (structs / fixed arrays) referenced by this block:
+	/// their bare Yul name reads/writes __cd_off_<name> (the byte offset of their
+	/// data in __cd_blob) — `s := s2` / `s := 0x24` / `s := t` semantics.
+	void setCalldataStaticPtrNames(std::set<std::string> _names)
+	{
+		m_calldataStaticPtrNames = std::move(_names);
+	}
+
 	/// Advance the FMP (scratch-slot 0, offset 0x40) by `_size` bytes.
 	/// Mirrors EVM allocation semantics for `T memory t;` locals so mload(0x40) is correct.
 	/// `_uniqueId` namespaces the temporary blob-handle local.
@@ -797,6 +805,7 @@ private:
 	std::set<std::string>* m_seededCalldataPointers = nullptr;
 	std::vector<uint8_t> m_evmSelector;
 	std::set<std::string> m_calldataPointerNames;
+	std::set<std::string> m_calldataStaticPtrNames;
 	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;
 	static constexpr char const* CD_BLOB_VAR = "__cd_blob";
 

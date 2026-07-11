@@ -203,6 +203,23 @@ void AssemblyBuilder::buildAssignment(
 
 	std::string name = resolveVarRef(_assign.variableNames[0]);
 
+	// Bare STATIC calldata pointer write (`s := s2`, `s2 := 4`): repoint —
+	// assign the mutable __cd_off_<name> local; later reads (asm or Solidity
+	// member access through the live pointer) follow the new offset.
+	if (m_useSyntheticCalldata && m_calldataStaticPtrNames.count(name) && _assign.value)
+	{
+		auto rhs = buildExpression(*_assign.value);
+		drainPendingStatements(_out);
+		if (!rhs)
+			return;
+		if (m_seededCalldataPointers)
+			m_seededCalldataPointers->insert(name);
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc),
+			std::move(rhs), loc));
+		return;
+	}
+
 	// fn-ptr writes: fp.selector := expr / fp.address := expr
 	// → replace3 the 4- or 8-byte slice of the 12-byte fn-ptr local.
 	{

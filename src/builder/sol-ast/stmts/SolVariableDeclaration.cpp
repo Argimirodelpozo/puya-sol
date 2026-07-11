@@ -37,6 +37,54 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 		auto target = awst::makeVarExpression(m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
 
+		// CALLDATA slice binding through a LIVE pointer: `uint[2] calldata t = x[1]`
+		// where x's mutable pointer locals exist (an asm block touched x.offset/
+		// .length). Bind t's own pointer local `__cd_off_t = __cd_off_x + i*stride`
+		// (solc's calldataStride = the element's calldata head size) and mark t
+		// live, so a later asm `s := t` reads t's byte offset in __cd_blob —
+		// 0x44 + 1*64 = 0x84 in calldata_array_read. The regular value binding
+		// below still runs (non-asm uses of t read the decoded value).
+		if (decl.referenceLocation() == VariableDeclaration::Location::CallData && initialValue)
+			if (auto const* idx = dynamic_cast<IndexAccess const*>(initialValue))
+				if (auto const* baseId = dynamic_cast<Identifier const*>(&idx->baseExpression()))
+					if (auto const* baseVd = dynamic_cast<VariableDeclaration const*>(
+							baseId->annotation().referencedDeclaration))
+						if (auto* live = m_blk.fn.liveCalldataPointers();
+							live && live->count(baseVd->name()) && idx->indexExpression())
+							if (auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(
+									baseVd->type()))
+							{
+								auto loc = m_blk.makeLoc(decl.location());
+								auto idxVal = builder::TypeCoercion::implicitNumericCast(
+									m_blk.builderCtx().build(*idx->indexExpression()),
+									awst::WType::biguintType(), loc);
+								auto scaled = awst::makeBigUIntBinOp(std::move(idxVal),
+									awst::BigUIntBinaryOperator::Mult,
+									awst::makeIntegerConstant(
+										std::to_string(arrT->calldataStride()), loc,
+										awst::WType::biguintType()), loc);
+								auto off = awst::makeBigUIntBinOp(
+									awst::makeVarExpression("__cd_off_" + baseVd->name(),
+										awst::WType::biguintType(), loc),
+									awst::BigUIntBinaryOperator::Add, std::move(scaled), loc);
+								// Name via awstVarName: assembly resolves the bare local
+								// through externalRefAwstName (= awstVarName mangling), so
+								// the __cd_off_ local + live-set entry must match it.
+								std::string tName = m_blk.awstVarName(decl);
+								result.push_back(awst::makeAssignmentStatement(
+									awst::makeVarExpression("__cd_off_" + tName,
+										awst::WType::biguintType(), loc),
+									std::move(off), loc));
+								live->insert(tName);
+								// The POINTER is the binding for a calldata slice: skip the
+								// value copy (a ReferenceArray local from an arc4 element is
+								// a type mismatch puya rejects, and EVM semantics are the
+								// pointer anyway). A value use of the slice would hit an
+								// undefined local — loud, not silently wrong.
+								m_blk.builderCtx().appendPendingTo(result);
+								return result;
+							}
+
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
 		{

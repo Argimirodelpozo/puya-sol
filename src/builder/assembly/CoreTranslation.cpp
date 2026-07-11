@@ -279,6 +279,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		return node;
 	}
 
+	// Bare STATIC calldata pointer (struct / fixed array): its Yul value is the
+	// byte offset of its data in __cd_blob — the mutable __cd_off_<name> local
+	// (seeded from the constant head position, reassignable via `s := V`).
+	if (m_useSyntheticCalldata && m_calldataStaticPtrNames.count(name))
+		return awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc);
+
 	// Blob-backed memory aggregate: a bare reference is its Yul memory pointer
 	// (the uint64 base offset into the multi-slot blob), NOT the aggregate value.
 	auto boIt = m_blobOffsetVars.find(name);

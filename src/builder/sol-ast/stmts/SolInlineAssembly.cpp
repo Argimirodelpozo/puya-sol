@@ -313,6 +313,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// referenceLocation (calldata_assign_from_nowhere: a `bytes calldata` RETURN
 	// var repointed in asm, never a real input param).
 	std::set<std::string> calldataPointerNames;
+	// STATIC calldata pointers (structs / fixed arrays): their bare Yul name is the
+	// byte OFFSET of their data (`s := s2`, `s := t` read/write it). Kept separate
+	// from the dynamic set — statics have only __cd_off_<name>, no length local.
+	std::set<std::string> calldataStaticPtrNames;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
 		if (!extInfo.declaration) continue;
@@ -339,6 +343,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				|| t->kind() == awst::WTypeKind::ARC4DynamicArray
 				|| t->kind() == awst::WTypeKind::ReferenceArray)
 				calldataPointerNames.insert(base);
+			else if (t->kind() == awst::WTypeKind::ARC4Struct
+				|| t->kind() == awst::WTypeKind::ARC4StaticArray
+				// sized ReferenceArray (`uint[2] calldata`) — the unsized case
+				// already matched the dynamic branch above
+				|| t->kind() == awst::WTypeKind::ReferenceArray)
+				calldataStaticPtrNames.insert(base);
 		}
 		if (auto blobOff = m_blk.findBlobAggregate(varDecl->id()); !blobOff.empty())
 			blobOffsetVars[name] = blobOff;
@@ -362,6 +372,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setSeededCalldataPointers(m_blk.fn.seededCalldataPointers);
 	asmTranslator.setEvmSelector(m_blk.fn.evmSelector);
 	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
+	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,
