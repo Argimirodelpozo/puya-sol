@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/modifer_recursive.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 0 32 2
     bytecblock "called" 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -36,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x67b0912f 0xaf9cc236 // method "f(uint256)uint512", method "called()uint256"
+    pushbytess 0x1928cd24 0xaf9cc236 // method "f(uint256)uint256", method "called()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_called_route@6
     err
@@ -83,14 +83,6 @@ main_f_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub f
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
     bytec 4 // 0x151f7c75
     swap
     concat
@@ -131,15 +123,23 @@ f_ternary_merge@3:
     itob
     frame_dig -1
     b==
-    bz f_else_body@7
-    pushint 2
+    bz f_else_body@6
+    intc_3 // 2
     itob
 
-f_after_if_else@13:
+f_after_if_else@12:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     frame_bury 0
     retsub
 
-f_else_body@7:
+f_else_body@6:
     intc_0 // 1
     itob
     frame_dig -1
@@ -161,27 +161,27 @@ f_else_body@7:
     assert // overflow
     callsub f
     frame_bury 0
-    pushint 2
+    intc_3 // 2
     itob
     frame_bury 1
 
-f_while_top@8:
+f_while_top@7:
     frame_dig 1
     bytec_1 // 0x
     b>
-    bz f_after_while@12
+    bz f_after_while@11
     frame_dig 1
     bytec_2 // 0x01
     b&
     bytec_1 // 0x
     b!=
-    bz f_after_if_else@11
+    bz f_after_if_else@10
     frame_dig 2
     frame_dig 0
     b*
     frame_bury 2
 
-f_after_if_else@11:
+f_after_if_else@10:
     frame_dig 1
     pushbytes 0x02
     b/
@@ -190,15 +190,15 @@ f_after_if_else@11:
     dup
     b*
     frame_bury 0
-    b f_while_top@8
+    b f_while_top@7
 
-f_after_while@12:
+f_after_while@11:
     frame_dig 2
     dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b f_after_if_else@13
+    b f_after_if_else@12
 
 f_ternary_false@2:
     intc_1 // 0

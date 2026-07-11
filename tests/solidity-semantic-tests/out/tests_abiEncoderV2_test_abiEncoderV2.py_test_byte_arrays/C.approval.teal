@@ -3,12 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/byte_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 0 1 32
+    intcblock 32 0 1 2
     bytecblock 0x151f7c75
     intc_1 // 0
     dupn 3
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -37,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5bde53d0 0x47dbfdda // method "f(uint256,byte[],uint256)(uint512,uint512,byte[1],uint512)", method "f_external(uint256,byte[],uint256)(uint512,uint512,byte[1],uint512)"
+    pushbytess 0x450e6a34 0x78d8baa7 // method "f(uint256,byte[],uint256)(uint256,uint256,byte[1],uint256)", method "f_external(uint256,byte[],uint256)(uint256,uint256,byte[1],uint256)"
     txna ApplicationArgs 0
     match main_f_route@5 main_f_external_route@6
     err
@@ -45,34 +43,30 @@ main_after_if_else@2:
 main_f_external_route@6:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 5
     len
-    dup
-    bury 3
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
+    bury 2
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
+    bury 2
     txna ApplicationArgs 3
     dup
-    bury 6
+    bury 4
     len
-    dup
-    bury 2
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -85,33 +79,20 @@ main_f_external_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dig 3
+    dig 1
     len
     itob
-    dig 3
-    extract 5 1
-    dig 3
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
-    dig 8
+    b|
     dig 1
-    b|
-    uncover 3
-    dig 2
-    b|
-    concat
+    extract 5 1
+    dig 5
     uncover 2
     concat
-    dig 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    dig 6
-    uncover 2
-    b|
+    swap
+    concat
+    dig 3
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -127,34 +108,30 @@ main_ternary_false@12:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 5
     len
-    dup
-    bury 3
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
+    bury 2
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
+    bury 2
     txna ApplicationArgs 3
     dup
-    bury 6
+    bury 4
     len
-    dup
-    bury 2
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -167,33 +144,20 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
-    dig 3
+    dig 1
     len
     itob
-    dig 3
-    extract 5 1
-    dig 3
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
-    dig 8
+    b|
     dig 1
-    b|
-    uncover 3
-    dig 2
-    b|
-    concat
+    extract 5 1
+    dig 5
     uncover 2
     concat
-    dig 2
-    intc_0 // 64
-    <=
-    assert // overflow
-    dig 6
-    uncover 2
-    b|
+    swap
+    concat
+    dig 3
     concat
     bytec_0 // 0x151f7c75
     swap

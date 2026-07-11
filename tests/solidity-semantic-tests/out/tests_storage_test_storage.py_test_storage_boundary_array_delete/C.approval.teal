@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1 32 0
-    bytecblock 0x "__dyn_storage" 0x01
-    intc_3 // 0
+    intcblock 32 1 0
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "s:" 0x01
+    intc_2 // 0
     dup
     pushint 4096
     bzero
@@ -64,22 +64,27 @@ main_ternary_merge@14:
     replace2 64
     store 0
     callsub getArray
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_0 // 32
+    bzero
+    swap
+    concat
     dup
     len
-    intc_0 // 8
+    intc_0 // 32
     -
-    extract_uint64
-    bytec_1 // "__dyn_storage"
-    pushint 8192
+    intc_0 // 32
+    extract3
+    bytec_2 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
     box_create
     pop
-    pushint 256
-    %
-    intc_2 // 32
-    *
-    bytec_1 // "__dyn_storage"
-    swap
-    intc_2 // 32
+    intc_2 // 0
+    intc_0 // 32
     box_extract
     pushbytes 0x151f7c75
     swap
@@ -89,7 +94,7 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@14
 
 main_clearArray_route@6:
@@ -104,130 +109,58 @@ main_ternary_merge@19:
     !
     assert // not payable
     callsub getArray
-    intc_0 // 8
-    bzero
     dup
-    dig 2
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
-    bytec_2 // 0x01
+    dup
+    bytec_3 // 0x01
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x02
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x03
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x04
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x05
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x06
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x07
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    dig 1
+    dup
     pushbytes 0x08
     b+
-    dig 1
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
-    swap
     pushbytes 0x09
     b+
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     bytec_0 // 0x
     callsub __storage_write
     intc_1 // 1
     return
 
 main_ternary_false@18:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main_fillArray_route@5:
@@ -253,22 +186,13 @@ main_while_top@25:
     dig 1
     b>
     bz main_after_while@27
-    intc_0 // 8
-    bzero
-    dig 2
-    dig 2
+    dup2
     dup
-    cover 3
+    cover 2
     b+
-    b|
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
     dig 1
     callsub __storage_write
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -282,34 +206,46 @@ main_after_while@27:
     return
 
 main_ternary_false@23:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@24
 
 
-// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
-    bytec_1 // "__dyn_storage"
-    pushint 8192
+    frame_dig -2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
     box_create
     pop
-    frame_dig -2
-    pushint 256
-    %
-    intc_2 // 32
-    *
-    intc_2 // 32
-    bzero
+    swap
     frame_dig -1
     concat
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     -
-    intc_2 // 32
+    intc_0 // 32
     extract3
-    bytec_1 // "__dyn_storage"
-    cover 2
+    intc_2 // 0
+    swap
     box_replace
     retsub
 

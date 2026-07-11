@@ -95,7 +95,9 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Convert a biguint slot expression to a uint64 via btoi(extract3(reinterpret(slot), len-8, 8)).
+	/// Slot argument for __storage_read/write: the FULL-WIDTH (biguint) slot.
+	/// (Historically truncated to the low 8 bytes — only sound under the
+	/// mod-256 fallback, removed with the box-per-slot store.)
 	static std::shared_ptr<awst::Expression> biguintSlotToBtoi(
 		std::shared_ptr<awst::Expression> const& _slotExpr,
 		awst::SourceLocation const& _loc

@@ -91,12 +91,12 @@ main_ternary_merge@18:
     itob
     bury 1
 
-main_while_top@19:
+main_while_top@20:
     pushint 10
     itob
     dig 1
     b>
-    bz main_after_while@22
+    bz main_after_while@23
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -115,7 +115,7 @@ main_while_top@19:
     app_global_put
     dig 1
     b==
-    bnz main_after_while@22
+    bnz main_after_while@23
     dup
     pushbytes 0x01
     b+
@@ -124,9 +124,9 @@ main_while_top@19:
     b<=
     assert // overflow
     bury 1
-    b main_while_top@19
+    b main_while_top@20
 
-main_after_while@22:
+main_after_while@23:
     intc_1 // 1
     return
 

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/balancedelta_int128.sol.BalanceDeltaInt128.approval_program() -> uint64:
 main:
-    intcblock 1 16 64 0
+    intcblock 1 16 32 0
     bytecblock 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     intc_3 // 0
     dupn 2
@@ -35,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7a6b4736 0x9554c3f5 // method "amount0(uint128,uint128)uint512", method "amount1(uint128,uint128)uint512"
+    pushbytess 0xd0d26451 0xb02f9f48 // method "amount0(uint128,uint128)uint256", method "amount1(uint128,uint128)uint256"
     txna ApplicationArgs 0
     match main_amount0_route@5 main_amount1_route@6
     err
@@ -123,10 +123,10 @@ main_ternary_merge@28:
 main_ternary_merge@31:
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -232,10 +232,10 @@ main_ternary_merge@48:
 main_ternary_merge@51:
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75

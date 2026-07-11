@@ -4,11 +4,206 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"
+#include "awst/NameGen.h"
+
+#include <boost/multiprecision/cpp_int.hpp>
 
 #include <sstream>
 
 namespace puyasol::builder
 {
+
+
+namespace
+{
+/// Box-length tuple pieces for a named array box: (count, exists) where
+/// count = (box_len - 2) / 32 (ARC4 dynamic array: 2-byte header + 32B elems).
+struct BoxCount
+{
+	std::shared_ptr<awst::Expression> count;   // uint64 (guard with exists!)
+	std::shared_ptr<awst::Expression> exists;  // bool
+};
+BoxCount makeArrayBoxCount(std::string const& _name, awst::SourceLocation const& _loc)
+{
+	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+	static awst::WTuple s_boxLenTupleType(std::vector<awst::WType const*>{
+		awst::WType::uint64Type(), awst::WType::boolType()});
+	auto lenTuple = awst::makeBoxLen(
+		awst::makeUtf8BytesConstant(_name, _loc), &s_boxLenTupleType, _loc);
+	auto len64 = awst::makeTupleItem(lenTuple, 0, awst::WType::uint64Type(), _loc);
+	auto exists = awst::makeTupleItem(lenTuple, 1, awst::WType::boolType(), _loc);
+	// (len - 2) / 32 — only meaningful when exists (guarded by callers).
+	auto count = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(std::move(len64), awst::UInt64BinaryOperator::Sub, u64c(2), _loc),
+		awst::UInt64BinaryOperator::FloorDiv, u64c(32), _loc);
+	return {std::move(count), std::move(exists)};
+}
+} // namespace
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
+	std::shared_ptr<awst::Expression> const& _slot,
+	awst::SourceLocation const& _loc)
+{
+	auto const* ic = dynamic_cast<awst::IntegerConstant const*>(_slot.get());
+	if (!ic)
+		return nullptr;
+	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+
+	auto it = m_slotRoutes.find(ic->value);
+	if (it != m_slotRoutes.end())
+	{
+		auto const& r = it->second;
+		if (r.kind == SlotRoute::Kind::Scalar)
+		{
+			// The var's app-global, padded/truncated to the 32-byte slot word.
+			auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), _loc);
+			get->stackArgs.push_back(awst::makeUtf8BytesConstant(r.varName, _loc));
+			return awst::makeAsBiguint(awst::makeExtractLastN(
+				awst::makeLeftPad(std::move(get), 32, _loc), 32, _loc), _loc);
+		}
+		if (r.kind == SlotRoute::Kind::ArrayRoot)
+		{
+			// EVM: a dynamic array's root slot holds its LENGTH.
+			auto bc = makeArrayBoxCount(r.varName, _loc);
+			auto lenOrZero = awst::makeConditional(
+				std::move(bc.exists), std::move(bc.count), u64c(0),
+				awst::WType::uint64Type(), _loc);
+			return awst::makeAsBiguint(awst::makeItob(std::move(lenOrZero), _loc), _loc);
+		}
+	}
+
+	// Data regions: slot in [K, K + 2^32) reads element (slot - K).
+	boost::multiprecision::cpp_int slot(ic->value);
+	for (auto const& reg: m_slotDataRegions)
+	{
+		boost::multiprecision::cpp_int base(reg.dataBase);
+		if (slot < base || slot - base >= (boost::multiprecision::cpp_int(1) << 32))
+			continue;
+		uint64_t idx = static_cast<uint64_t>(slot - base);
+		auto bc = makeArrayBoxCount(reg.varName, _loc);
+		// exists && idx < count → element bytes; else 0 (EVM: popped/beyond-length
+		// slots read zero — pop clears, and our box physically shrinks).
+		auto inRange = awst::makeBoolBinOp(
+			std::move(bc.exists), awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(u64c(idx), awst::NumericComparison::Lt,
+				std::move(bc.count), _loc), _loc);
+		auto elem = awst::makeAsBiguint(awst::makeBoxExtract(
+			awst::makeUtf8BytesConstant(reg.varName, _loc),
+			u64c(2 + idx * 32), u64c(32), _loc), _loc);
+		return awst::makeConditional(std::move(inRange), std::move(elem),
+			awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);
+	}
+	return nullptr;
+}
+
+bool AssemblyBuilder::tryRouteConstSlotStore(
+	std::shared_ptr<awst::Expression> const& _slot,
+	std::shared_ptr<awst::Expression> const& _value,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	auto const* ic = dynamic_cast<awst::IntegerConstant const*>(_slot.get());
+	if (!ic)
+		return false;
+	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+	auto nameBytes = [&](std::string const& n) { return awst::makeUtf8BytesConstant(n, _loc); };
+
+	auto it = m_slotRoutes.find(ic->value);
+	if (it != m_slotRoutes.end())
+	{
+		auto const& r = it->second;
+		if (r.kind == SlotRoute::Kind::Scalar)
+		{
+			auto key = awst::makeUtf8BytesConstant(r.varName, _loc, awst::WType::stateKeyType());
+			auto target = awst::makeAppStateExpression(std::move(key), r.wtype, _loc);
+			auto assign = awst::makeAssignmentExpression(
+				std::move(target), ensureBiguint(_value, _loc), _loc, r.wtype);
+			_out.push_back(awst::makeExpressionStatement(std::move(assign), _loc));
+			return true;
+		}
+		if (r.kind == SlotRoute::Kind::ArrayRoot)
+		{
+			// sstore(root, L) = SET LENGTH: resize the backing box to 2 + L*32
+			// (box_resize zero-fills growth — matching push()-style zeroing) and
+			// stamp the 2-byte ARC4 count header. box_create when absent
+			// (box_create errors if a box exists at a different size).
+			auto newLen = safeBtoi(ensureBiguint(_value, _loc), _loc);
+			// bind once: used in size math + header stamp
+			std::string tmp = "__sslot_len_" + std::to_string(awst::NameGen::next("AssemblyBuilder.sslotLen"));
+			_out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc),
+				std::move(newLen), _loc));
+			auto lenVar = [&]() { return awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc); };
+			auto newSize = [&]() {
+				return awst::makeUInt64BinOp(u64c(2), awst::UInt64BinaryOperator::Add,
+					awst::makeUInt64BinOp(lenVar(), awst::UInt64BinaryOperator::Mult, u64c(32), _loc), _loc);
+			};
+
+			auto bc = makeArrayBoxCount(r.varName, _loc);
+			auto resizeBlk = awst::makeBlock(_loc);
+			{
+				auto resize = awst::makeIntrinsicCall("box_resize", awst::WType::voidType(), _loc);
+				resize->stackArgs.push_back(nameBytes(r.varName));
+				resize->stackArgs.push_back(newSize());
+				resizeBlk->body.push_back(awst::makeExpressionStatement(std::move(resize), _loc));
+			}
+			auto createBlk = awst::makeBlock(_loc);
+			{
+				auto create = awst::makeBoxCreate(nameBytes(r.varName), newSize(), _loc);
+				createBlk->body.push_back(awst::makeExpressionStatement(std::move(create), _loc));
+			}
+			_out.push_back(awst::makeIfElse(
+				std::move(bc.exists), std::move(resizeBlk), std::move(createBlk), _loc));
+
+			// header = 2-byte BE count
+			auto hdr = awst::makeExtract3(
+				awst::makeItob(lenVar(), _loc), u64c(6), u64c(2), _loc);
+			auto put = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), _loc);
+			put->stackArgs.push_back(nameBytes(r.varName));
+			put->stackArgs.push_back(u64c(0));
+			put->stackArgs.push_back(std::move(hdr));
+			_out.push_back(awst::makeExpressionStatement(std::move(put), _loc));
+			return true;
+		}
+	}
+
+	boost::multiprecision::cpp_int slot(ic->value);
+	for (auto const& reg: m_slotDataRegions)
+	{
+		boost::multiprecision::cpp_int base(reg.dataBase);
+		if (slot < base || slot - base >= (boost::multiprecision::cpp_int(1) << 32))
+			continue;
+		uint64_t idx = static_cast<uint64_t>(slot - base);
+		auto bc = makeArrayBoxCount(reg.varName, _loc);
+		auto inRange = awst::makeBoolBinOp(
+			std::move(bc.exists), awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(u64c(idx), awst::NumericComparison::Lt,
+				std::move(bc.count), _loc), _loc);
+		auto thenBlk = awst::makeBlock(_loc);
+		{
+			auto put = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), _loc);
+			put->stackArgs.push_back(nameBytes(reg.varName));
+			put->stackArgs.push_back(u64c(2 + idx * 32));
+			put->stackArgs.push_back(awst::makeLeftPadToN(
+				awst::makeAsBytes(ensureBiguint(_value, _loc), _loc), 32, _loc));
+			thenBlk->body.push_back(awst::makeExpressionStatement(std::move(put), _loc));
+		}
+		auto elseBlk = awst::makeBlock(_loc);
+		{
+			// Beyond current length: EVM keeps the raw write invisible until a
+			// length-grow — the box-per-slot fallback preserves the bits.
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), _loc);
+			awst::pushCallArg(call->args, "__slot", ensureBiguint(_slot, _loc));
+			awst::pushCallArg(call->args, "__value", ensureBiguint(_value, _loc));
+			elseBlk->body.push_back(awst::makeExpressionStatement(std::move(call), _loc));
+		}
+		_out.push_back(awst::makeIfElse(
+			std::move(inRange), std::move(thenBlk), std::move(elseBlk), _loc));
+		return true;
+	}
+	return false;
+}
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
@@ -18,9 +213,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	if (!checkArity(_args, 1, "sload", _loc))
 		return nullptr;
 
-	auto slotArg = _args[0];
-	if (slotArg->wtype == awst::WType::biguintType())
-		slotArg = safeBtoi(std::move(slotArg), _loc);
+	// CONSTANT slot → route directly to the named variable's storage (scalar
+	// global / array length / array element). See SlotRoute.
+	if (auto routed = tryRouteConstSlotLoad(_args[0], _loc))
+		return routed;
+
+	// Full-width slot: __storage_read takes the 256-bit slot (no truncation).
+	auto slotArg = ensureBiguintSlotArg(_args[0], _loc);
 
 	auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), _loc);
 

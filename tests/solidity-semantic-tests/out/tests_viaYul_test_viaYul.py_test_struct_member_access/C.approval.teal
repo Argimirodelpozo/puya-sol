@@ -40,7 +40,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x25c3572e 0x2ed6f14f 0x51bbc7bb 0xe147205e // method "__postInit()void", method "f((uint256,uint256[],uint256))(uint512,uint256[],uint512)", method "g((uint256,uint256[],uint256))(uint256,uint256,uint256,uint256,uint256,uint256)", method "g2((uint256,uint256[],uint256),(uint256,uint256[],uint256))(uint256,uint256,uint256,uint256,uint256,uint256)", method "h()(uint256,uint256,uint256,uint256,uint256,uint256)"
+    pushbytess 0xbacc49e3 0x7c223319 0x2ed6f14f 0x51bbc7bb 0xe147205e // method "__postInit()void", method "f((uint256,uint256[],uint256))(uint256,uint256[],uint256)", method "g((uint256,uint256[],uint256))(uint256,uint256,uint256,uint256,uint256,uint256)", method "g2((uint256,uint256[],uint256),(uint256,uint256[],uint256))(uint256,uint256,uint256,uint256,uint256,uint256)", method "h()(uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_f_route@6 main_g_route@7 main_g2_route@8 main_h_route@9
     err
@@ -330,25 +330,10 @@ main_ternary_merge@31:
     extract 0 32
     swap
     extract 34 32
-    dig 1
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    uncover 2
-    dig 1
-    b|
-    pushbytes 0x0082
+    swap
+    pushbytes 0x0042
     concat
-    dig 2
-    len
-    pushint 64
-    <=
-    assert // overflow
-    cover 2
-    b|
+    swap
     concat
     dig 4
     concat

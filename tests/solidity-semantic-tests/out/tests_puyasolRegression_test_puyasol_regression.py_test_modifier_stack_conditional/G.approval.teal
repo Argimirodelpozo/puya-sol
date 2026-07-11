@@ -94,7 +94,7 @@ main_ternary_merge@19:
     bytec_1 // "gate"
     app_global_get_ex
     assert // check gate exists
-    bz main_after_if_else@21
+    bz main_after_if_else@27
     intc_1 // 0
     bytec_0 // "ctr"
     app_global_get_ex
@@ -115,7 +115,7 @@ main_ternary_merge@19:
     swap
     app_global_put
 
-main_after_if_else@21:
+main_after_if_else@27:
     intc_0 // 1
     return
 
@@ -134,13 +134,13 @@ main_setGate_route@5:
     getbit
     bury 1
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@24:
     !
     assert // not payable
     dupn 2
@@ -153,6 +153,6 @@ main_ternary_merge@26:
     intc_0 // 1
     return
 
-main_ternary_false@25:
+main_ternary_false@23:
     intc_1 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@24

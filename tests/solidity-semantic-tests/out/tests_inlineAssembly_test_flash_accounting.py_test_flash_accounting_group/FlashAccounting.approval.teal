@@ -131,11 +131,11 @@ main_ternary_merge@27:
     cover 2
     bury 4
     assert // check unlocked exists
-    bnz main_after_if_else@29
+    bnz main_after_if_else@51
     bytec 4 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@29:
+main_after_if_else@51:
     dig 1
     assert // LOCKED
     callsub _settleIfLast
@@ -155,13 +155,13 @@ main_settle_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@31
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@32:
     !
     assert // not payable
     intc_0 // 0
@@ -172,11 +172,11 @@ main_ternary_merge@34:
     cover 2
     bury 4
     assert // check unlocked exists
-    bnz main_after_if_else@36
+    bnz main_after_if_else@55
     bytec 4 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@36:
+main_after_if_else@55:
     dig 1
     assert // LOCKED
     intc_0 // 0
@@ -197,7 +197,7 @@ main_after_if_else@36:
     b<
     !
     ==
-    bnz main_bool_true@38
+    bnz main_bool_true@57
     dig 5
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -210,12 +210,12 @@ main_after_if_else@36:
     !
     dig 1
     ==
-    bz main_bool_false@39
+    bz main_bool_false@58
 
-main_bool_true@38:
+main_bool_true@57:
     intc_1 // 1
 
-main_bool_merge@40:
+main_bool_merge@59:
     assert // signed arithmetic overflow
     dig 5
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -231,13 +231,13 @@ main_bool_merge@40:
     intc_1 // 1
     return
 
-main_bool_false@39:
+main_bool_false@58:
     intc_0 // 0
-    b main_bool_merge@40
+    b main_bool_merge@59
 
-main_ternary_false@33:
+main_ternary_false@31:
     intc_0 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@32
 
 main_op_route@6:
     txna ApplicationArgs 1
@@ -248,13 +248,13 @@ main_op_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@44
+    bz main_ternary_false@36
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@45:
+main_ternary_merge@37:
     !
     assert // not payable
     intc_0 // 0
@@ -265,11 +265,11 @@ main_ternary_merge@45:
     cover 2
     bury 4
     assert // check unlocked exists
-    bnz main_after_if_else@47
+    bnz main_after_if_else@63
     bytec 4 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@47:
+main_after_if_else@63:
     dig 1
     assert // LOCKED
     intc_0 // 0
@@ -290,7 +290,7 @@ main_after_if_else@47:
     b<
     !
     !=
-    bnz main_bool_true@49
+    bnz main_bool_true@65
     dig 5
     dig 7
     b+
@@ -301,12 +301,12 @@ main_after_if_else@47:
     !
     dig 1
     ==
-    bz main_bool_false@50
+    bz main_bool_false@66
 
-main_bool_true@49:
+main_bool_true@65:
     intc_1 // 1
 
-main_bool_merge@51:
+main_bool_merge@67:
     assert // signed arithmetic overflow
     dig 5
     dig 7
@@ -320,23 +320,23 @@ main_bool_merge@51:
     intc_1 // 1
     return
 
-main_bool_false@50:
+main_bool_false@66:
     intc_0 // 0
-    b main_bool_merge@51
+    b main_bool_merge@67
 
-main_ternary_false@44:
+main_ternary_false@36:
     intc_0 // 0
-    b main_ternary_merge@45
+    b main_ternary_merge@37
 
 main_unlock_route@5:
     txn GroupIndex
-    bz main_ternary_false@55
+    bz main_ternary_false@41
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@56:
+main_ternary_merge@42:
     !
     assert // not payable
     intc_0 // 0
@@ -346,11 +346,11 @@ main_ternary_merge@56:
     dup
     !
     bury 6
-    bz main_after_if_else@58
+    bz main_after_if_else@44
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010414c52454144595f554e4c4f434b454400000000000000000000000000000000
     log
 
-main_after_if_else@58:
+main_after_if_else@44:
     dig 4
     assert // ALREADY_UNLOCKED
     intc_0 // 0
@@ -362,11 +362,11 @@ main_after_if_else@58:
     b==
     dup
     bury 5
-    bnz main_after_if_else@60
+    bnz main_after_if_else@46
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b44495254595f5354415254000000000000000000000000000000000000000000
     log
 
-main_after_if_else@60:
+main_after_if_else@46:
     dig 3
     assert // DIRTY_START
     global GroupSize
@@ -377,11 +377,11 @@ main_after_if_else@60:
     ==
     dup
     bury 4
-    bnz main_after_if_else@62
+    bnz main_after_if_else@48
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d4c4153545f4e4f545f53454c4600000000000000000000000000000000000000
     log
 
-main_after_if_else@62:
+main_after_if_else@48:
     dig 2
     assert // LAST_NOT_SELF
     bytec_0 // "unlocked"
@@ -391,9 +391,9 @@ main_after_if_else@62:
     intc_1 // 1
     return
 
-main_ternary_false@55:
+main_ternary_false@41:
     intc_0 // 0
-    b main_ternary_merge@56
+    b main_ternary_merge@42
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting._settleIfLast() -> void:

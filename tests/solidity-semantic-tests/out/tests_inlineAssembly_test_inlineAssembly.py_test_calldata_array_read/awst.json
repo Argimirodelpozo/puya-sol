@@ -1355,7 +1355,7 @@
                 "name": "__cd_blob"
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "ConditionalExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
                   "line": 1,
@@ -1370,10 +1370,44 @@
                   "immutable": true,
                   "length": null
                 },
-                "op_code": "bzero",
-                "immediates": [],
-                "stack_args": [
-                  {
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "op_code": "txn",
+                    "immediates": [
+                      "NumAppArgs"
+                    ],
+                    "stack_args": []
+                  },
+                  "operator": ">",
+                  "rhs": {
                     "_type": "IntegerConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
@@ -1388,10 +1422,72 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "value": 4,
+                    "value": 0,
                     "teal_alias": null
                   }
-                ]
+                },
+                "true_expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "txna",
+                  "immediates": [
+                    "ApplicationArgs",
+                    0
+                  ],
+                  "stack_args": []
+                },
+                "false_expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "bzero",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                        "line": 1,
+                        "end_line": 1,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 4,
+                      "teal_alias": null
+                    }
+                  ]
+                }
               }
             },
             {
@@ -1763,11 +1859,11 @@
                               "name": "uint64",
                               "immutable": true
                             },
-                            "op_code": "len",
+                            "op_code": "btoi",
                             "immediates": [],
                             "stack_args": [
                               {
-                                "_type": "VarExpression",
+                                "_type": "IntrinsicCall",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
                                   "line": 1,
@@ -1777,29 +1873,103 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "ARC4DynamicArray",
-                                  "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint256, 2>",
-                                    "immutable": false,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint256",
-                                      "immutable": true,
-                                      "n": 256,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 2,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
                                 },
-                                "name": "x"
+                                "op_code": "extract3",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "ARC4DynamicArray",
+                                        "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint256, 2>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint256",
+                                            "immutable": true,
+                                            "n": 256,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 2,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "name": "x"
+                                    }
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 0,
+                                    "teal_alias": null
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 2,
+                                    "teal_alias": null
+                                  }
+                                ]
                               }
                             ]
                           }
@@ -3387,7 +3557,7 @@
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
                 "line": 149,
-                "end_line": 174,
+                "end_line": 167,
                 "comment_lines": 0,
                 "column": null,
                 "end_column": null
@@ -3403,101 +3573,134 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4StaticArray",
-                  "name": "arc4.static_array<arc4.uint256, 2>",
-                  "immutable": false,
-                  "element_type": {
-                    "_type": "ARC4UIntN",
-                    "name": "arc4.uint256",
-                    "immutable": true,
-                    "n": 256,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "array_size": 2,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "name": "t__20"
+                "name": "__cd_off_t__20"
               },
               "value": {
-                "_type": "IndexExpression",
+                "_type": "BigUIntBinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                  "line": 170,
-                  "end_line": 174,
+                  "line": 149,
+                  "end_line": 167,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4StaticArray",
-                  "name": "arc4.static_array<arc4.uint256, 2>",
-                  "immutable": false,
-                  "element_type": {
-                    "_type": "ARC4UIntN",
-                    "name": "arc4.uint256",
-                    "immutable": true,
-                    "n": 256,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "array_size": 2,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "base": {
+                "left": {
                   "_type": "VarExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                    "line": 170,
-                    "end_line": 171,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4DynamicArray",
-                    "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
-                    "immutable": false,
-                    "element_type": {
-                      "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint256, 2>",
-                      "immutable": false,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint256",
-                        "immutable": true,
-                        "n": 256,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "array_size": 2,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "name": "x"
-                },
-                "index": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                    "line": 172,
-                    "end_line": 173,
+                    "line": 149,
+                    "end_line": 167,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "uint64",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "value": 1,
-                  "teal_alias": null
+                  "name": "__cd_off_x"
+                },
+                "op": "+",
+                "right": {
+                  "_type": "BigUIntBinaryOperation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 149,
+                    "end_line": 167,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "left": {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 149,
+                      "end_line": 167,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                        "line": 149,
+                        "end_line": 167,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                            "line": 172,
+                            "end_line": 173,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  "op": "*",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 149,
+                      "end_line": 167,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 64,
+                    "teal_alias": null
+                  }
                 }
               }
             },
@@ -3577,14 +3780,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
                 },
-                "name": "__cd_off_x"
+                "name": "__cd_blob"
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ConditionalExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
                   "line": 1,
@@ -3594,11 +3798,68 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
                 },
-                "expr": {
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "op_code": "txn",
+                    "immediates": [
+                      "NumAppArgs"
+                    ],
+                    "stack_args": []
+                  },
+                  "operator": ">",
+                  "rhs": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
+                },
+                "true_expr": {
                   "_type": "IntrinsicCall",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
@@ -3614,11 +3875,34 @@
                     "immutable": true,
                     "length": null
                   },
-                  "op_code": "itob",
+                  "op_code": "txna",
+                  "immediates": [
+                    "ApplicationArgs",
+                    0
+                  ],
+                  "stack_args": []
+                },
+                "false_expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "bzero",
                   "immediates": [],
                   "stack_args": [
                     {
-                      "_type": "UInt64BinaryOperation",
+                      "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
                         "line": 1,
@@ -3632,120 +3916,8 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "left": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                          "line": 1,
-                          "end_line": 1,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "btoi",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                              "line": 1,
-                              "end_line": 1,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "extract3",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                  "line": 1,
-                                  "end_line": 1,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__cd_blob"
-                              },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                  "line": 1,
-                                  "end_line": 1,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 28,
-                                "teal_alias": null
-                              },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                  "line": 1,
-                                  "end_line": 1,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      "op": "+",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                          "line": 1,
-                          "end_line": 1,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 36,
-                        "teal_alias": null
-                      }
+                      "value": 4,
+                      "teal_alias": null
                     }
                   ]
                 }
@@ -3773,13 +3945,13 @@
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "biguint",
+                  "name": "uint64",
                   "immutable": true
                 },
-                "name": "__cd_len_x"
+                "name": "__cd_tail_off"
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "IntegerConstant",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
                   "line": 1,
@@ -3790,66 +3962,577 @@
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "biguint",
+                  "name": "uint64",
                   "immutable": true
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                    "line": 1,
-                    "end_line": 1,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
+                "value": 32,
+                "teal_alias": null
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                "line": 1,
+                "end_line": 1,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "name": "__cd_blob"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "concat",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "name": "__cd_blob"
                   },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                  {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "concat",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "bzero",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 24,
+                            "teal_alias": null
+                          }
+                        ]
+                      },
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "name": "__cd_tail_off"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                "line": 1,
+                "end_line": 1,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "name": "__cd_blob"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "concat",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "name": "__cd_blob"
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                        "line": 1,
-                        "end_line": 1,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
+                  {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "concat",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "bzero",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 24,
+                            "teal_alias": null
+                          }
+                        ]
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "btoi",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                            "line": 1,
-                            "end_line": 1,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "extract3",
-                          "immediates": [],
-                          "stack_args": [
-                            {
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "btoi",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "extract3",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "ARC4DynamicArray",
+                                        "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4StaticArray",
+                                          "name": "arc4.static_array<arc4.uint256, 2>",
+                                          "immutable": false,
+                                          "element_type": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint256",
+                                            "immutable": true,
+                                            "n": 256,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "array_size": 2,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "name": "x"
+                                    }
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 0,
+                                    "teal_alias": null
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 2,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                "line": 1,
+                "end_line": 1,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "name": "__cd_blob"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "concat",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "name": "__cd_blob"
+                  },
+                  {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "concat",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract3",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
                               "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
@@ -3860,14 +4543,193 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4StaticArray",
+                                  "name": "arc4.static_array<arc4.uint256, 2>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint256",
+                                    "immutable": true,
+                                    "n": 256,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "array_size": 2,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "arc4_alias": null,
+                                "source_location": null
                               },
-                              "name": "__cd_blob"
+                              "name": "x"
+                            }
+                          },
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
                             },
-                            {
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 2,
+                            "teal_alias": null
+                          },
+                          {
+                            "_type": "UInt64BinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                "line": 1,
+                                "end_line": 1,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "op_code": "len",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                    "line": 1,
+                                    "end_line": 1,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                      "line": 1,
+                                      "end_line": 1,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "ARC4DynamicArray",
+                                      "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4StaticArray",
+                                        "name": "arc4.static_array<arc4.uint256, 2>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint256",
+                                          "immutable": true,
+                                          "n": 256,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "array_size": 2,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "name": "x"
+                                  }
+                                }
+                              ]
+                            },
+                            "op": "-",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                "line": 1,
+                                "end_line": 1,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 2,
+                              "teal_alias": null
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "bzero",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "UInt64BinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "left": {
                               "_type": "UInt64BinaryOperation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
@@ -3883,102 +4745,6 @@
                                 "immutable": true
                               },
                               "left": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                  "line": 1,
-                                  "end_line": 1,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "extract3",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "VarExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                          "line": 1,
-                                          "end_line": 1,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "name": "__cd_blob"
-                                      },
-                                      {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                          "line": 1,
-                                          "end_line": 1,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "value": 28,
-                                        "teal_alias": null
-                                      },
-                                      {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                                          "line": 1,
-                                          "end_line": 1,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "value": 8,
-                                        "teal_alias": null
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "op": "+",
-                              "right": {
                                 "_type": "IntegerConstant",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
@@ -3993,11 +4759,266 @@
                                   "name": "uint64",
                                   "immutable": true
                                 },
-                                "value": 28,
+                                "value": 32,
                                 "teal_alias": null
+                              },
+                              "op": "-",
+                              "right": {
+                                "_type": "UInt64BinaryOperation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "left": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                    "line": 1,
+                                    "end_line": 1,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "extract3",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                            "line": 1,
+                                            "end_line": 1,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "expr": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4DynamicArray",
+                                              "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "arc4.static_array<arc4.uint256, 2>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint256",
+                                                  "immutable": true,
+                                                  "n": 256,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "array_size": 2,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "name": "x"
+                                          }
+                                        },
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                            "line": 1,
+                                            "end_line": 1,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 2,
+                                          "teal_alias": null
+                                        },
+                                        {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                            "line": 1,
+                                            "end_line": 1,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "op_code": "len",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "ReinterpretCast",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                                  "line": 1,
+                                                  "end_line": 1,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "expr": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "ARC4DynamicArray",
+                                                    "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                                    "immutable": false,
+                                                    "element_type": {
+                                                      "_type": "ARC4StaticArray",
+                                                      "name": "arc4.static_array<arc4.uint256, 2>",
+                                                      "immutable": false,
+                                                      "element_type": {
+                                                        "_type": "ARC4UIntN",
+                                                        "name": "arc4.uint256",
+                                                        "immutable": true,
+                                                        "n": 256,
+                                                        "arc4_alias": null,
+                                                        "source_location": null
+                                                      },
+                                                      "array_size": 2,
+                                                      "arc4_alias": null,
+                                                      "source_location": null
+                                                    },
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "name": "x"
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          "op": "-",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 2,
+                                            "teal_alias": null
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "op": "%",
+                                "right": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                    "line": 1,
+                                    "end_line": 1,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 32,
+                                  "teal_alias": null
+                                }
                               }
                             },
-                            {
+                            "op": "%",
+                            "right": {
                               "_type": "IntegerConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
@@ -4012,14 +5033,343 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "value": 8,
+                              "value": 32,
                               "teal_alias": null
                             }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                "line": 1,
+                "end_line": 1,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
+                },
+                "name": "__cd_tail_off"
+              },
+              "value": {
+                "_type": "UInt64BinaryOperation",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
+                },
+                "left": {
+                  "_type": "UInt64BinaryOperation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "left": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "name": "__cd_tail_off"
+                  },
+                  "op": "+",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 32,
+                    "teal_alias": null
+                  }
+                },
+                "op": "+",
+                "right": {
+                  "_type": "UInt64BinaryOperation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "left": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "op_code": "len",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4StaticArray",
+                            "name": "arc4.static_array<arc4.uint256, 2>",
+                            "immutable": false,
+                            "element_type": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "array_size": 2,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "name": "x"
+                      }
+                    ]
+                  },
+                  "op": "+",
+                  "right": {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                        "line": 1,
+                        "end_line": 1,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 32,
+                        "teal_alias": null
+                      },
+                      "op": "-",
+                      "right": {
+                        "_type": "UInt64BinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "left": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                            "line": 1,
+                            "end_line": 1,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "op_code": "len",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                                "line": 1,
+                                "end_line": 1,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4StaticArray",
+                                  "name": "arc4.static_array<arc4.uint256, 2>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint256",
+                                    "immutable": true,
+                                    "n": 256,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "array_size": 2,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "name": "x"
+                            }
                           ]
+                        },
+                        "op": "%",
+                        "right": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                            "line": 1,
+                            "end_line": 1,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 32,
+                          "teal_alias": null
                         }
-                      ]
+                      }
+                    },
+                    "op": "%",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
+                        "line": 1,
+                        "end_line": 1,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 32,
+                      "teal_alias": null
                     }
-                  ]
+                  }
                 }
               }
             },
@@ -4051,10 +5401,10 @@
                 "name": "s"
               },
               "value": {
-                "_type": "IntegerConstant",
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_array_read.sol",
-                  "line": 270,
+                  "line": 275,
                   "end_line": 276,
                   "comment_lines": 0,
                   "column": null,
@@ -4065,8 +5415,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "value": 0,
-                "teal_alias": null
+                "name": "__cd_off_t__20"
               }
             },
             {

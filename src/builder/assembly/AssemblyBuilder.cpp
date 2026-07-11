@@ -630,6 +630,25 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 	return awst::makeBiguintConstant("0", _loc);
 }
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguintSlotArg(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::SourceLocation const& _loc
+)
+{
+	if (!_expr || !_expr->wtype)
+		return _expr;
+	auto const* w = _expr->wtype;
+	bool scalar = w == awst::WType::biguintType()
+		|| w == awst::WType::boolType()
+		|| w == awst::WType::uint64Type()
+		|| w == awst::WType::accountType()
+		|| w->kind() == awst::WTypeKind::Bytes
+		|| w->kind() == awst::WTypeKind::ARC4UIntN;
+	if (scalar)
+		return ensureBiguint(std::move(_expr), _loc);
+	return _expr;
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc

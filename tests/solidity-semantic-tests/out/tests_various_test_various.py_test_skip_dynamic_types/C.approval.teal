@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/skip_dynamic_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 64 0
+    intcblock 1 32 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -33,7 +33,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa17f2645 0x595e23e2 // method "f()(uint512,uint256[],uint512)", method "g()(uint256,uint256)"
+    pushbytess 0x7a8bec3a 0x595e23e2 // method "f()(uint256,uint256[],uint256)", method "g()(uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6
     err
@@ -78,30 +78,15 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@13
 
 main_f_route@5:
     callsub f
-    dig 2
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    intc_2 // 64
-    bzero
-    uncover 3
-    dig 1
-    b|
-    pushbytes 0x0082
+    uncover 2
+    pushbytes 0x0042
     concat
-    dig 2
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    cover 2
-    b|
+    swap
     concat
     swap
     concat
@@ -125,14 +110,9 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
-    pushint 7
-    itob
-    pushint 8
-    itob
-    pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000007 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000008
     retsub
 
 f_ternary_false@2:
-    intc_3 // 0
+    intc_2 // 0
     b f_ternary_merge@3

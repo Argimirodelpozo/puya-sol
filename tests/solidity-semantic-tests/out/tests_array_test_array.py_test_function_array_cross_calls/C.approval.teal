@@ -171,17 +171,17 @@ main_ternary_merge@36:
     bury 4
     intc_0 // 0
     itob
-    bury 6
+    bury 5
 
 main_while_top@37:
     dig 3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 6
+    dig 5
     b>
     bz main_after_while@39
-    dig 5
+    dig 4
     dup
     pushbytes 0x010000000000000000
     b<
@@ -214,7 +214,7 @@ main_while_top@37:
     bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 6
+    bury 5
     b main_while_top@37
 
 main_after_while@39:
@@ -268,7 +268,7 @@ main_after_while@39:
     itxn_submit
     itxn LastLog
     dup
-    bury 6
+    bury 7
     extract 4 12
     dup
     intc_0 // 0
@@ -284,7 +284,7 @@ main_after_while@39:
     bury 8
 
 main_after_if_else@42:
-    dig 4
+    dig 5
     extract 16 12
     dup
     intc_0 // 0
@@ -300,7 +300,7 @@ main_after_if_else@42:
     bury 7
 
 main_after_if_else@45:
-    dig 4
+    dig 5
     extract 28 12
     dup
     intc_0 // 0

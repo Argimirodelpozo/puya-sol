@@ -85,9 +85,9 @@ main_ternary_merge@20:
     app_global_get_ex
     assert // check owner exists
     ==
-    bnz main_after_if_else@24
+    bnz main_after_if_else@30
     global CallerApplicationID
-    bz main_if_body@32
+    bz main_if_body@35
     intc_2 // 24
     bzero
     global CallerApplicationID
@@ -98,16 +98,16 @@ main_ternary_merge@20:
     app_global_get_ex
     assert // check owner exists
     ==
-    bz main_if_body@32
+    bz main_if_body@35
 
-main_after_if_else@24:
+main_after_if_else@30:
     bytec_0 // "owner"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
 
-main_if_body@32:
+main_if_body@35:
     pushbytes 0x7b9d8e89 // method "OnlyOwner()"
     log
     err // OnlyOwner
@@ -125,13 +125,13 @@ main_setOwner_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@25:
     !
     assert // not payable
     txn Sender
@@ -140,9 +140,9 @@ main_ternary_merge@29:
     app_global_get_ex
     assert // check owner exists
     ==
-    bnz main_after_if_else@33
+    bnz main_after_if_else@36
     global CallerApplicationID
-    bz main_if_body@32
+    bz main_if_body@35
     intc_2 // 24
     bzero
     global CallerApplicationID
@@ -153,10 +153,10 @@ main_ternary_merge@29:
     app_global_get_ex
     assert // check owner exists
     ==
-    bnz main_after_if_else@33
-    b main_if_body@32
+    bnz main_after_if_else@36
+    b main_if_body@35
 
-main_after_if_else@33:
+main_after_if_else@36:
     intc_0 // 0
     bytec_0 // "owner"
     app_global_get_ex
@@ -175,9 +175,9 @@ main_after_if_else@33:
     intc_1 // 1
     return
 
-main_ternary_false@28:
+main_ternary_false@24:
     intc_0 // 0
-    b main_ternary_merge@29
+    b main_ternary_merge@25
 
 main___postInit_route@5:
     bytec_1 // "__ctor_pending"

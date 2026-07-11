@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 2 0
+    intcblock 1 32 0 2
     bytecblock "a" "__ctor_pending" 0x151f7c75
-    intc_3 // 0
+    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -71,7 +71,7 @@ main_ternary_merge@14:
     extract_uint64
     intc_1 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "a"
     swap
@@ -85,7 +85,7 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@14
 
 main_f_route@6:
@@ -102,22 +102,32 @@ main_ternary_merge@19:
     load 0
     store 0
     bytec_0 // "a"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    app_global_put
+    box_len
+    bury 1
+    bz main_else_body@21
+    bytec_0 // "a"
+    pushint 226
+    box_resize
+
+main_after_if_else@22:
+    bytec_0 // "a"
+    intc_2 // 0
+    pushbytes 0x0007
+    box_replace
     load 0
     store 0
     bytec_0 // "a"
     box_len
     pop
-    intc_2 // 2
+    intc_3 // 2
     >=
-    bz main_ternary_false@22
+    bz main_ternary_false@25
     bytec_0 // "a"
     box_len
     pop
 
-main_ternary_merge@23:
-    intc_2 // 2
+main_ternary_merge@26:
+    intc_3 // 2
     -
     intc_1 // 32
     /
@@ -139,12 +149,19 @@ main_ternary_merge@23:
     intc_0 // 1
     return
 
-main_ternary_false@22:
-    intc_2 // 2
-    b main_ternary_merge@23
+main_ternary_false@25:
+    intc_3 // 2
+    b main_ternary_merge@26
+
+main_else_body@21:
+    bytec_0 // "a"
+    pushint 226
+    box_create
+    pop
+    b main_after_if_else@22
 
 main_ternary_false@18:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main___postInit_route@5:
@@ -152,10 +169,10 @@ main___postInit_route@5:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "a"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     intc_0 // 1

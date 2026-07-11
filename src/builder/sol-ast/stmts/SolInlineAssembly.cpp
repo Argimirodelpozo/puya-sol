@@ -7,6 +7,10 @@
 #include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/contract/StateVarWalker.h"
+#include "builder/storage/StorageMapper.h"
+
+#include <libsolutil/Keccak256.h>
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "Logger.h"
@@ -52,6 +56,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 	// Extract constant values from external references
 	std::map<std::string, std::string> constants;
+	std::map<std::string, AssemblyBuilder::SlotRoute> slotRoutes;
+	std::vector<AssemblyBuilder::SlotRoute> slotDataRegions;
 	auto const& annotation = m_node.annotation();
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
@@ -231,6 +237,53 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			StorageLayout layout;
 			layout.computeLayout(*contractDef, m_blk.typeMapper());
 
+			// Compile-time slot routes: connect CONSTANT-slot asm sload/sstore to the
+			// named vars' real storage (see AssemblyBuilder::SlotRoute). Scalars route
+			// to their app-global; a dynamic array's root slot is its LENGTH and its
+			// keccak256(root) data region maps slot K+i -> element i. The keccak runs
+			// HERE, in the compiler (zero opcodes) — routing is constant comparison.
+			forEachStateVar(*contractDef, [&](solidity::frontend::VariableDeclaration const* svDecl)
+			{
+				if (!svDecl || svDecl->isConstant() || svDecl->immutable()) return;
+				if (svDecl->referenceLocation() == VariableDeclaration::Location::Transient) return;
+				auto const* vi = layout.getVarInfo(svDecl->name());
+				if (!vi) return;
+				auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(svDecl->type());
+				if (arrT && arrT->isDynamicallySized() && !arrT->isByteArrayOrString()
+					&& builder::StorageMapper::shouldUseBoxStorage(*svDecl))
+				{
+					auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(arrT->baseType());
+					if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32)
+						return;   // tier-1: 32-byte elements only
+					AssemblyBuilder::SlotRoute root;
+					root.kind = AssemblyBuilder::SlotRoute::Kind::ArrayRoot;
+					root.varName = svDecl->name();
+					slotRoutes[std::to_string(vi->slot)] = root;
+
+					// K = keccak256(32-byte BE root slot) — compile-time.
+					solidity::bytes slotWord(32, 0);
+					uint64_t sl = vi->slot;
+					for (int i = 0; i < 8; ++i)
+						slotWord[31 - i] = static_cast<uint8_t>(sl >> (8 * i));
+					auto k = solidity::u256(solidity::util::keccak256(slotWord));
+					AssemblyBuilder::SlotRoute data;
+					data.kind = AssemblyBuilder::SlotRoute::Kind::ArrayData;
+					data.varName = svDecl->name();
+					data.dataBase = k.str();
+					slotDataRegions.push_back(std::move(data));
+				}
+				else if (vi->isFullSlot
+					&& svDecl->type()->isValueType()   // structs share the slot repr; route can't model them
+					&& !builder::StorageMapper::shouldUseBoxStorage(*svDecl))
+				{
+					AssemblyBuilder::SlotRoute r;
+					r.kind = AssemblyBuilder::SlotRoute::Kind::Scalar;
+					r.varName = svDecl->name();
+					r.wtype = vi->wtype;
+					slotRoutes[std::to_string(vi->slot)] = r;
+				}
+			});
+
 			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{
 				if (!extInfo.declaration) continue;
@@ -372,6 +425,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setSeededCalldataPointers(m_blk.fn.seededCalldataPointers);
 	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
+	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,

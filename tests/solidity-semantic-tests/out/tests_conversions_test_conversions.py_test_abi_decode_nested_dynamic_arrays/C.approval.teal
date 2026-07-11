@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/abi_nested_dyn_decode.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 2 32
-    bytecblock 0x151f7c75 0x00020004000600000000 0x00010000000000000000000000000000000000000000000000000000000000000000 0x0044 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x00020004000600000000 0x00010000000000000000000000000000000000000000000000000000000000000000 0x0024 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 0
     dupn 2
     pushbytes ""
@@ -36,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4d174b42 0x810156c7 0x2ccabbdc 0x5e685f4d 0x248dfe0e 0xf5ca9a19 0xc0f1f6b5 0x8b08b716 0x20ca5f13 0xa8588626 0xb7b82426 // method "rtStructArr()(uint512,string,uint512,string,uint512)", method "decStructArr(byte[])(uint256,uint256,uint256)", method "rtU256_2d()(uint256,uint256,uint256,uint256)", method "rtU256_3d()(uint256,uint256,uint256,uint256)", method "rtEmptyInner()(uint256,uint256,uint256)", method "decStrArr(byte[])(string,string,uint512)", method "decBytesArr(byte[])(uint512,uint512,uint512,byte[1])", method "reencStrArr(byte[])byte[]", method "reencBytesArr(byte[])byte[]", method "rtStrArr()(string,string,uint512)", method "rtBytesArr()(uint512,uint512,byte[1])"
+    pushbytess 0x982fb93f 0x810156c7 0x2ccabbdc 0x5e685f4d 0x248dfe0e 0xba2890b8 0x6d5b9db1 0x8b08b716 0x20ca5f13 0x97e64080 0x0e9e417a // method "rtStructArr()(uint256,string,uint256,string,uint256)", method "decStructArr(byte[])(uint256,uint256,uint256)", method "rtU256_2d()(uint256,uint256,uint256,uint256)", method "rtU256_3d()(uint256,uint256,uint256,uint256)", method "rtEmptyInner()(uint256,uint256,uint256)", method "decStrArr(byte[])(string,string,uint256)", method "decBytesArr(byte[])(uint256,uint256,uint256,byte[1])", method "reencStrArr(byte[])byte[]", method "reencBytesArr(byte[])byte[]", method "rtStrArr()(string,string,uint256)", method "rtBytesArr()(uint256,uint256,byte[1])"
     txna ApplicationArgs 0
     match main_rtStructArr_route@5 main_decStructArr_route@6 main_rtU256_2d_route@7 main_rtU256_3d_route@8 main_rtEmptyInner_route@9 main_decStrArr_route@10 main_decBytesArr_route@11 main_reencStrArr_route@12 main_reencBytesArr_route@13 main_rtStrArr_route@14 main_rtBytesArr_route@15
     err
@@ -76,27 +76,27 @@ main_ternary_merge@22:
     extract 2 0
     len
     itob
+    intc_3 // 32
+    bzero
+    swap
+    dig 1
+    b|
     intc_1 // 1
-    uncover 2
+    uncover 3
     <
     assert // index out of bounds
-    swap
+    uncover 2
     intc_1 // 1
     callsub dynamic_array_read_byte_length_element
     dup
     extract 2 0
     len
     itob
+    uncover 3
+    b|
     swap
     extract 4 1
-    pushint 64
-    bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 3
-    uncover 2
-    b|
+    cover 2
     concat
     swap
     concat
@@ -154,6 +154,9 @@ main_ternary_merge@27:
     extract 2 0
     uncover 2
     itob
+    intc_3 // 32
+    bzero
+    b|
     dig 2
     len
     itob
@@ -162,7 +165,7 @@ main_ternary_merge@27:
     concat
     dup
     len
-    pushint 68
+    pushint 36
     +
     dig 3
     len
@@ -173,13 +176,10 @@ main_ternary_merge@27:
     swap
     itob
     extract 6 2
-    bytec_3 // 0x0044
+    bytec_3 // 0x0024
     swap
     concat
-    pushint 64
-    bzero
-    uncover 4
-    b|
+    uncover 3
     concat
     uncover 2
     concat
@@ -284,39 +284,40 @@ main_ternary_merge@42:
     extract_uint16 // on error: invalid array length header
     dup
     itob
+    intc_3 // 32
+    bzero
+    swap
     dig 1
-    assert // index out of bounds
+    b|
     dig 2
+    assert // index out of bounds
+    dig 3
     intc_0 // 0
     callsub dynamic_array_read_byte_length_element
     extract 2 0
     len
     itob
+    dig 2
+    b|
     intc_1 // 1
-    uncover 3
+    uncover 4
     <
     assert // index out of bounds
-    uncover 2
+    uncover 3
     intc_1 // 1
     callsub dynamic_array_read_byte_length_element
     dup
     extract 2 0
     len
     itob
+    uncover 4
+    b|
     swap
     extract 2 1
-    pushint 64
-    bzero
-    uncover 4
-    dig 1
-    b|
-    uncover 4
-    dig 2
-    b|
-    concat
     uncover 3
+    uncover 3
+    concat
     uncover 2
-    b|
     concat
     swap
     concat
@@ -374,6 +375,9 @@ main_ternary_merge@47:
     extract 2 0
     uncover 2
     itob
+    intc_3 // 32
+    bzero
+    b|
     dig 2
     len
     itob
@@ -382,7 +386,7 @@ main_ternary_merge@47:
     concat
     dup
     len
-    pushint 68
+    pushint 36
     +
     dig 3
     len
@@ -393,13 +397,10 @@ main_ternary_merge@47:
     swap
     itob
     extract 6 2
-    bytec_3 // 0x0044
+    bytec_3 // 0x0024
     swap
     concat
-    pushint 64
-    bzero
-    uncover 4
-    b|
+    uncover 3
     concat
     uncover 2
     concat
@@ -1026,6 +1027,8 @@ main_rtStructArr_route@5:
 main_ternary_merge@75:
     !
     assert // not payable
+    intc_3 // 32
+    bzero
     pushbytess 0x000200040028000000000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000000000000220000 0x000000000000000000000000000000000000000000000000000000000000002a002200026869
     intc_0 // 0
     callsub dynamic_array_replace_dynamic_element
@@ -1064,45 +1067,29 @@ main_ternary_merge@75:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 4
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
     uncover 5
-    dig 1
     b|
-    dig 5
+    dig 3
     len
     itob
     extract 6 2
-    uncover 6
+    uncover 4
     concat
-    swap
-    pushbytes 0x00c4
+    uncover 4
+    pushbytes 0x0064
     concat
     dig 1
     len
-    pushint 196
+    pushint 100
     +
-    dig 6
-    len
-    pushint 64
-    <=
-    assert // overflow
-    uncover 6
+    swap
+    uncover 5
+    concat
     dig 4
-    b|
-    uncover 2
-    swap
-    concat
-    dig 5
     len
     itob
     extract 6 2
-    uncover 6
+    uncover 5
     concat
     uncover 2
     itob
@@ -1110,9 +1097,7 @@ main_ternary_merge@75:
     uncover 2
     swap
     concat
-    uncover 4
-    uncover 4
-    b|
+    uncover 3
     concat
     uncover 2
     concat

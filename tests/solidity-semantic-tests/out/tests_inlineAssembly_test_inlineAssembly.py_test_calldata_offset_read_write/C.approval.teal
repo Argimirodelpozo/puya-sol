@@ -3,10 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_offset_read_write.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 0
-    dupn 2
+    intcblock 1 32 0
     pushint 4096
     bzero
     dup
@@ -26,7 +23,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -42,35 +39,29 @@ main_f_route@4:
     &&
     assert
     txna ApplicationArgs 1
-    dup
-    bury 4
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bury 1
     txna ApplicationArgs 3
-    dup
-    bury 3
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_2 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -83,94 +74,13 @@ main_ternary_merge@9:
     store 0
     load 0
     store 0
-    pushint 4
-    bzero
-    intc_0 // 32
-    bzero
-    dig 4
-    dig 1
-    b|
-    uncover 2
-    swap
-    concat
-    pushint 24
-    bzero
-    swap
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000060
-    concat
-    dig 4
-    dig 3
-    b|
-    concat
-    dig 3
-    dup
-    cover 3
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    uncover 2
-    swap
-    concat
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    dup
-    pushint 60
-    extract_uint64
-    dup
-    pushint 36
-    +
-    itob
-    swap
-    pushint 28
-    +
-    uncover 2
-    swap
-    pushint 8
-    extract3
     load 0
     store 0
-    swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000014
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9

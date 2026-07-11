@@ -30,7 +30,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x209e0df9 // method "f(string[])(uint512,uint512,uint512,string)"
+    pushbytes 0xff59165a // method "f(string[])(uint256,uint256,uint256,string)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -123,33 +123,36 @@ main_ternary_merge@12:
     extract 2 0
     swap
     itob
+    pushint 32
+    bzero
+    swap
     dig 1
+    b|
+    dig 2
     len
     itob
-    dig 2
+    dup
+    dig 3
+    b|
+    dig 4
     intc_0 // 0
     getbyte
     pushint 255
     &
     itob
-    pushint 64
-    bzero
+    uncover 4
+    b|
     uncover 3
-    dig 1
-    b|
-    dig 3
-    dig 2
-    b|
+    uncover 2
     concat
-    cover 2
-    b|
+    swap
     concat
     swap
     extract 6 2
     uncover 2
     concat
     swap
-    pushbytes 0x00c2
+    pushbytes 0x0062
     concat
     swap
     concat

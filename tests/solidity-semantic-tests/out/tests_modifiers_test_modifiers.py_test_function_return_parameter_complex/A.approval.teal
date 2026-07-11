@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_return_parameter_complex.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 64
+    intcblock 0 1 32
     bytecblock "x" 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     intc_0 // 0
     pushbytes ""
@@ -40,7 +40,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcc388e13 0x6583651a 0x5ed33a7f 0x7c1072af // method "f()(uint512,uint512,uint512)", method "shouldFail(uint256)uint512", method "g()uint512", method "x()uint256"
+    pushbytess 0xb34b38c7 0x2aeef998 0x4b2c0376 0x7c1072af // method "f()(uint256,uint256,uint256)", method "shouldFail(uint256)uint256", method "g()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_shouldFail_route@6 main_g_route@7 main_x_route@8
     err
@@ -123,10 +123,10 @@ main_ternary_merge@20:
     app_global_put
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -149,13 +149,13 @@ main_shouldFail_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@32
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@33:
+main_ternary_merge@25:
     !
     assert // not payable
     intc_0 // 0
@@ -177,35 +177,35 @@ main_ternary_merge@33:
     b==
     dup
     bury 2
-    bnz main_after_if_else@35
+    bnz main_after_if_else@51
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d61206973206e6f74207a65726f00000000000000000000000000000000000000
     log
 
-main_after_if_else@35:
+main_after_if_else@51:
     dup
     assert // a is not zero
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d62206973206e6f74207a65726f00000000000000000000000000000000000000
     log
     intc_0 // 0
     assert // b is not zero
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
 
-main_ternary_false@32:
+main_ternary_false@24:
     intc_0 // 0
-    b main_ternary_merge@33
+    b main_ternary_merge@25
 
 main_f_route@5:
     txn GroupIndex
-    bz main_ternary_false@39
+    bz main_ternary_false@29
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@40:
+main_ternary_merge@30:
     !
     assert // not payable
     intc_0 // 0
@@ -221,11 +221,11 @@ main_ternary_merge@40:
     bytec_0 // "x"
     swap
     app_global_put
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040
     log
     intc_1 // 1
     return
 
-main_ternary_false@39:
+main_ternary_false@29:
     intc_0 // 0
-    b main_ternary_merge@40
+    b main_ternary_merge@30

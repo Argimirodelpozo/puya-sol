@@ -355,9 +355,9 @@ main_ternary_merge@47:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bnz main_if_body@50
+    bnz main_if_body@79
     global CallerApplicationID
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     pushint 24
     bzero
     global CallerApplicationID
@@ -375,9 +375,9 @@ main_ternary_merge@47:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bz main_after_if_else@95
+    bz main_after_if_else@75
 
-main_if_body@50:
+main_if_body@79:
     intc_1 // 0
     bytec_0 // "m_recordData"
     app_global_get_ex
@@ -438,7 +438,7 @@ main_if_body@50:
     concat
     log
 
-main_after_if_else@95:
+main_after_if_else@75:
     intc_2 // 1
     return
 
@@ -469,13 +469,13 @@ main_setSubRegistrar_route@9:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@55
+    bz main_ternary_false@51
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@56:
+main_ternary_merge@52:
     !
     assert // not payable
     txn Sender
@@ -491,9 +491,9 @@ main_ternary_merge@56:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bnz main_if_body@59
+    bnz main_if_body@85
     global CallerApplicationID
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     pushint 24
     bzero
     global CallerApplicationID
@@ -511,9 +511,9 @@ main_ternary_merge@56:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bz main_after_if_else@95
+    bz main_after_if_else@75
 
-main_if_body@59:
+main_if_body@85:
     intc_1 // 0
     bytec_0 // "m_recordData"
     app_global_get_ex
@@ -573,11 +573,11 @@ main_if_body@59:
     dig 2
     concat
     log
-    b main_after_if_else@95
+    b main_after_if_else@75
 
-main_ternary_false@55:
+main_ternary_false@51:
     intc_1 // 0
-    b main_ternary_merge@56
+    b main_ternary_merge@52
 
 main_setAddr_route@8:
     txna ApplicationArgs 1
@@ -602,13 +602,13 @@ main_setAddr_route@8:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@64
+    bz main_ternary_false@56
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@65:
+main_ternary_merge@57:
     !
     assert // not payable
     txn Sender
@@ -624,9 +624,9 @@ main_ternary_merge@65:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bnz main_if_body@68
+    bnz main_if_body@91
     global CallerApplicationID
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     pushint 24
     bzero
     global CallerApplicationID
@@ -644,9 +644,9 @@ main_ternary_merge@65:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bz main_after_if_else@95
+    bz main_after_if_else@75
 
-main_if_body@68:
+main_if_body@91:
     intc_1 // 0
     bytec_0 // "m_recordData"
     app_global_get_ex
@@ -706,11 +706,11 @@ main_if_body@68:
     dig 2
     concat
     log
-    b main_after_if_else@95
+    b main_after_if_else@75
 
-main_ternary_false@64:
+main_ternary_false@56:
     intc_1 // 0
-    b main_ternary_merge@65
+    b main_ternary_merge@57
 
 main_transfer_route@7:
     txna ApplicationArgs 1
@@ -735,13 +735,13 @@ main_transfer_route@7:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@73
+    bz main_ternary_false@61
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@74:
+main_ternary_merge@62:
     !
     assert // not payable
     txn Sender
@@ -757,9 +757,9 @@ main_ternary_merge@74:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bnz main_if_body@77
+    bnz main_if_body@97
     global CallerApplicationID
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     pushint 24
     bzero
     global CallerApplicationID
@@ -777,9 +777,9 @@ main_ternary_merge@74:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bz main_after_if_else@95
+    bz main_after_if_else@75
 
-main_if_body@77:
+main_if_body@97:
     intc_1 // 0
     bytec_0 // "m_recordData"
     app_global_get_ex
@@ -839,11 +839,11 @@ main_if_body@77:
     dig 2
     concat
     log
-    b main_after_if_else@95
+    b main_after_if_else@75
 
-main_ternary_false@73:
+main_ternary_false@61:
     intc_1 // 0
-    b main_ternary_merge@74
+    b main_ternary_merge@62
 
 main_disown_route@6:
     txna ApplicationArgs 1
@@ -868,13 +868,13 @@ main_disown_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@82
+    bz main_ternary_false@66
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@83:
+main_ternary_merge@67:
     !
     assert // not payable
     txn Sender
@@ -890,9 +890,9 @@ main_ternary_merge@83:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bnz main_if_body@86
+    bnz main_if_body@103
     global CallerApplicationID
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     pushint 24
     bzero
     global CallerApplicationID
@@ -910,9 +910,9 @@ main_ternary_merge@83:
     extract3 // on error: index access is out of bounds
     extract 96 32
     ==
-    bz main_after_if_else@95
+    bz main_after_if_else@75
 
-main_if_body@86:
+main_if_body@103:
     dig 3
     keccak256
     pushint 8
@@ -956,11 +956,11 @@ main_if_body@86:
     dig 2
     concat
     log
-    b main_after_if_else@95
+    b main_after_if_else@75
 
-main_ternary_false@82:
+main_ternary_false@66:
     intc_1 // 0
-    b main_ternary_merge@83
+    b main_ternary_merge@67
 
 main_reserve_route@5:
     txna ApplicationArgs 1
@@ -991,19 +991,19 @@ main_reserve_route@5:
     extract 96 32
     bytec_3 // 0x
     ==
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     txn GroupIndex
-    bz main_ternary_false@92
+    bz main_ternary_false@72
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@93:
+main_ternary_merge@73:
     itob
     pushbytes 0x03bd913e6c1df40000
     b>=
-    bz main_after_if_else@95
+    bz main_after_if_else@75
     intc_1 // 0
     bytec_0 // "m_recordData"
     app_global_get_ex
@@ -1064,11 +1064,11 @@ main_ternary_merge@93:
     dig 2
     concat
     log
-    b main_after_if_else@95
+    b main_after_if_else@75
 
-main_ternary_false@92:
+main_ternary_false@72:
     intc_1 // 0
-    b main_ternary_merge@93
+    b main_ternary_merge@73
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/FixedFeeRegistrar.sol.FixedFeeRegistrar.m_record(_name: bytes) -> uint64:

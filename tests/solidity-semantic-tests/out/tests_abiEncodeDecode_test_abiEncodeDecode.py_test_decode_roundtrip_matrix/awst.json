@@ -826,9 +826,12 @@
           "immutable": true,
           "types": [
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             },
             {
               "_type": "WType",
@@ -1650,9 +1653,12 @@
                   "immutable": true,
                   "types": [
                     {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     {
                       "_type": "WType",
@@ -1670,7 +1676,7 @@
                 },
                 "items": [
                   {
-                    "_type": "ARC4Decode",
+                    "_type": "ARC4Encode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
                       "line": 530,
@@ -1680,12 +1686,15 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     "value": {
-                      "_type": "FieldExpression",
+                      "_type": "ARC4Decode",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
                         "line": 530,
@@ -1695,80 +1704,97 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint256",
-                        "immutable": true,
-                        "n": 256,
-                        "arc4_alias": null,
-                        "source_location": null
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
                       },
-                      "base": {
-                        "_type": "VarExpression",
+                      "value": {
+                        "_type": "FieldExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
                           "line": 530,
-                          "end_line": 531,
+                          "end_line": 533,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "ARC4Struct",
-                          "name": "S",
-                          "immutable": false,
-                          "fields": [
-                            {
-                              "name": "a",
-                              "wtype": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "description": null
-                            },
-                            {
-                              "name": "s",
-                              "wtype": {
-                                "_type": "ARC4DynamicArray",
-                                "name": "string",
-                                "immutable": false,
-                                "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "base": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
+                            "line": 530,
+                            "end_line": 531,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ARC4Struct",
+                            "name": "S",
+                            "immutable": false,
+                            "fields": [
+                              {
+                                "name": "a",
+                                "wtype": {
                                   "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
+                                  "name": "arc4.uint256",
                                   "immutable": true,
-                                  "n": 8,
+                                  "n": 256,
                                   "arc4_alias": null,
                                   "source_location": null
                                 },
-                                "arc4_alias": "string",
-                                "source_location": null
+                                "description": null
                               },
-                              "description": null
-                            },
-                            {
-                              "name": "b",
-                              "wtype": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint16",
-                                "immutable": true,
-                                "n": 16,
-                                "arc4_alias": null,
-                                "source_location": null
+                              {
+                                "name": "s",
+                                "wtype": {
+                                  "_type": "ARC4DynamicArray",
+                                  "name": "string",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint8",
+                                    "immutable": true,
+                                    "n": 8,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "arc4_alias": "string",
+                                  "source_location": null
+                                },
+                                "description": null
                               },
-                              "description": null
-                            }
-                          ],
-                          "frozen": false,
-                          "arc4_alias": null,
-                          "source_location": null,
-                          "desc": null
+                              {
+                                "name": "b",
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint16",
+                                  "immutable": true,
+                                  "n": 16,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "description": null
+                              }
+                            ],
+                            "frozen": false,
+                            "arc4_alias": null,
+                            "source_location": null,
+                            "desc": null
+                          },
+                          "name": "t__35"
                         },
-                        "name": "t__35"
+                        "name": "a"
                       },
-                      "name": "a"
+                      "error_message": null
                     },
                     "error_message": null
                   },
@@ -1886,8 +1912,8 @@
                     "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
-                      "line": 529,
-                      "end_line": 544,
+                      "line": 540,
+                      "end_line": 543,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
@@ -2005,8 +2031,8 @@
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
-                        "line": 529,
-                        "end_line": 544,
+                        "line": 540,
+                        "end_line": 543,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -3209,8 +3235,8 @@
                     "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
-                      "line": 919,
-                      "end_line": 931,
+                      "line": 920,
+                      "end_line": 921,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
@@ -3242,8 +3268,8 @@
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
-                        "line": 919,
-                        "end_line": 931,
+                        "line": 920,
+                        "end_line": 921,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -3279,8 +3305,8 @@
                     "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
-                      "line": 919,
-                      "end_line": 931,
+                      "line": 926,
+                      "end_line": 927,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
@@ -3312,8 +3338,8 @@
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol",
-                        "line": 919,
-                        "end_line": 931,
+                        "line": 926,
+                        "end_line": 927,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null

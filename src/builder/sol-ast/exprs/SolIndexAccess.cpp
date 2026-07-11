@@ -20,16 +20,15 @@ using namespace solidity::frontend;
 
 namespace
 {
-// Truncate a biguint storage slot to its low 8 bytes and read it via
-// __puyasol___storage_read. Slots are full-width (sha256-derived), so last-8
-// matches both prior call sites (one used extractLastN, one extract(24,8)).
+// Read a FULL-WIDTH biguint storage slot via __puyasol___storage_read (the
+// box-per-slot store keys on all 32 bytes; the historical low-8 truncation was
+// only sound under the mod-256 fallback).
 std::shared_ptr<awst::Expression> readStorageSlotBiguint(
 	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
 {
-	auto last8 = awst::makeExtractLastN(awst::makeAsBytes(std::move(_slot), _loc), 8, _loc);
 	auto call = awst::makeSubroutineCall(
 		awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), _loc);
-	awst::pushCallArg(call->args, "__slot", awst::makeBtoi(std::move(last8), _loc));
+	awst::pushCallArg(call->args, "__slot", std::move(_slot));
 	return call;
 }
 } // namespace

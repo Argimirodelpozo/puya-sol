@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_loop.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 32
     bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     dupn 2
@@ -30,7 +30,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xe03b32a4 // method "f()uint512"
+    pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -60,11 +60,11 @@ main_ternary_merge@9:
     itob
     bury 2
 
-main_while_top@10:
+main_while_top@11:
     dig 1
     dig 3
     b<
-    bz main_after_while@12
+    bz main_after_while@13
     dup
     bytec_0 // 0x01
     b+
@@ -82,15 +82,15 @@ main_while_top@10:
     swap
     bury 2
     bury 2
-    b main_while_top@10
+    b main_while_top@11
 
-main_after_while@12:
+main_after_while@13:
     dupn 2
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

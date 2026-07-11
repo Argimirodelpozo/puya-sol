@@ -49,12 +49,31 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
+    txn NumAppArgs
+    bz main_ternary_false@11
+    txna ApplicationArgs 0
+
+main_ternary_merge@12:
     load 0
     store 0
-    pushbytes 0x151f7c750000
+    extract 0 4
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return
+
+main_ternary_false@11:
+    pushint 4
+    bzero
+    b main_ternary_merge@12
 
 main_ternary_false@8:
     pushint 0

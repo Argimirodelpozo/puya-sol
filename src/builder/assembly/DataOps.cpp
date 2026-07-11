@@ -3,6 +3,7 @@
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
+#include <libsolutil/Keccak256.h>
 
 #include <sstream>
 
@@ -224,6 +225,28 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	}
 
 	auto offset = resolveConstantOffset(_args[0]);
+
+	// COMPILE-TIME keccak over known memory content: `mstore(0, <const>);
+	// keccak256(0, 0x20)` is solc's slot-derivation idiom (array data slots).
+	// handleMstore records constant stores in m_localConstants["mem_0x.."];
+	// hash the known 32-byte word HERE (zero opcodes) so the derived slot
+	// becomes a constant the SlotRoute machinery routes — never a runtime
+	// keccak for storage routing (project hashing policy).
+	if (offset && length && *length == 32)
+	{
+		std::ostringstream memKey;
+		memKey << "mem_0x" << std::hex << *offset;
+		auto memIt = m_localConstants.find(memKey.str());
+		if (memIt != m_localConstants.end())
+		{
+			solidity::bytes word(32, 0);
+			uint64_t v = memIt->second;
+			for (int i = 0; i < 8; ++i)
+				word[31 - i] = static_cast<uint8_t>(v >> (8 * i));
+			auto k = solidity::u256(solidity::util::keccak256(word));
+			return awst::makeIntegerConstant(k.str(), _loc, awst::WType::biguintType());
+		}
+	}
 
 	if (!offset && length)
 	{

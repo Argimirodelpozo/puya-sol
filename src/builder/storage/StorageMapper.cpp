@@ -413,13 +413,14 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	awst::SourceLocation const& _loc
 )
 {
-	auto castToBytes = awst::makeAsBytes(_slotExpr, _loc);
-	// biguint strips leading zeros, so a small slot (e.g. base+2) may encode to
-	// <8 bytes — extractLastN(8) would underflow (AVM uint64 sub panics). Pad to
-	// >=8 bytes first (b|(bzero(8),v) = max(len,8)) before the low-8 truncation.
-	auto atLeast8 = awst::makeZeroExtendToN(std::move(castToBytes), 8, _loc);
-	auto last8 = awst::makeExtractLastN(std::move(atLeast8), 8, _loc);
-	return awst::makeBtoi(std::move(last8), _loc);
+	// FULL-WIDTH slots: __storage_read/write now take the 256-bit slot (the
+	// box-per-slot store keys on all 32 bytes). The old low-8 truncation was
+	// only sound under the mod-256 __dyn_storage fold (last byte survives
+	// either way); with per-slot boxes every caller must pass the same full
+	// value the asm side uses. (Name kept for diff locality; it no longer btois.)
+	if (_slotExpr->wtype == awst::WType::biguintType())
+		return _slotExpr;
+	return awst::makeAsBiguint(awst::makeItob(_slotExpr, _loc), _loc);
 }
 
 } // namespace puyasol::builder

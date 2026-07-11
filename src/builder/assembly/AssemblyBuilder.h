@@ -75,6 +75,34 @@ public:
 		awst::WType const* wtype = nullptr;
 	};
 
+	/// Compile-time route for a CONSTANT storage slot number: connects raw-slot
+	/// asm (sload/sstore at a folded constant) to the NAMED variable's real
+	/// storage. Kinds mirror the EVM layout rules:
+	///  - Scalar:    full-slot state var → its app-global.
+	///  - ArrayRoot: dynamic array's root slot holds its LENGTH (read = element
+	///               count; write = RESIZE the backing box).
+	///  - ArrayData: the keccak256(root-slot) data region — slot K+i is element i
+	///               (32-byte elements). The keccak is computed at COMPILE time
+	///               (util::keccak256 in the C++ compiler, zero opcodes); routing
+	///               is by constant comparison, never runtime hashing.
+	struct SlotRoute
+	{
+		enum class Kind { Scalar, ArrayRoot, ArrayData };
+		Kind kind = Kind::Scalar;
+		std::string varName;
+		awst::WType const* wtype = nullptr;   ///< Scalar: the var's wtype
+		std::string dataBase;                 ///< ArrayData: decimal K (region base)
+	};
+
+	/// Exact-slot routes (decimal slot string → route) + data regions
+	/// ([K, K+2^32) element windows). See SlotRoute.
+	void setSlotRoutes(
+		std::map<std::string, SlotRoute> _exact, std::vector<SlotRoute> _regions)
+	{
+		m_slotRoutes = std::move(_exact);
+		m_slotDataRegions = std::move(_regions);
+	}
+
 	/// True when the block emitted an unconditional halt at top level
 	/// (branch-local halts not counted — translateSwitch/If save+restore the flag).
 	bool haltEmitted() const { return m_haltEmitted; }
@@ -876,6 +904,20 @@ private:
 	/// Dotted yul name (`v.slot`) → scalar app-global state var, so sstore routes to
 	/// the var's own app-global storage (not __dyn_storage). Populated by SolInlineAssembly.
 	std::map<std::string, StateVarSlot> m_stateVarSlots;
+	std::map<std::string, SlotRoute> m_slotRoutes;
+	std::vector<SlotRoute> m_slotDataRegions;
+
+	/// Try to lower sload/sstore at a compile-time-CONSTANT slot directly to the
+	/// named variable's storage (see SlotRoute). Returns the read expression /
+	/// true when routed; nullptr / false to fall through to __storage_read/write.
+	std::shared_ptr<awst::Expression> tryRouteConstSlotLoad(
+		std::shared_ptr<awst::Expression> const& _slot,
+		awst::SourceLocation const& _loc);
+	bool tryRouteConstSlotStore(
+		std::shared_ptr<awst::Expression> const& _slot,
+		std::shared_ptr<awst::Expression> const& _value,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	/// Assembly name → uint64 offset-var name for blob-backed aggregates.
 	/// A reference resolves to the memory pointer (offset), not the value.
@@ -951,6 +993,15 @@ private:
 
 	/// Coerce to biguint (Yul: all values are uint256); no-op if already biguint.
 	std::shared_ptr<awst::Expression> ensureBiguint(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::SourceLocation const& _loc
+	);
+
+	/// sload/sstore slot args only: like ensureBiguint, but a non-scalar slot
+	/// expression (unmodeled `.slot` ref, e.g. a struct-member array alias)
+	/// passes through UNCHANGED instead of hard-erroring — historical dispatcher
+	/// behavior some fixtures rely on (struct_delete_storage_with_array).
+	std::shared_ptr<awst::Expression> ensureBiguintSlotArg(
 		std::shared_ptr<awst::Expression> _expr,
 		awst::SourceLocation const& _loc
 	);

@@ -841,13 +841,16 @@
         ],
         "return_type": {
           "_type": "WTuple",
-          "name": "fReturn",
+          "name": "tuple",
           "immutable": true,
           "types": [
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             },
             {
               "_type": "BytesWType",
@@ -856,10 +859,7 @@
               "length": null
             }
           ],
-          "names": [
-            "",
-            "r"
-          ],
+          "names": null,
           "source_location": null
         },
         "body": {
@@ -1155,14 +1155,46 @@
               }
             },
             {
-              "_type": "ReturnStatement",
+              "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
-                "line": 135,
+                "line": 142,
                 "end_line": 176,
                 "comment_lines": 0,
                 "column": null,
                 "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                  "line": 142,
+                  "end_line": 176,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WTuple",
+                  "name": "tuple",
+                  "immutable": true,
+                  "types": [
+                    {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    }
+                  ],
+                  "names": null,
+                  "source_location": null
+                },
+                "name": "__ret_tmp_0"
               },
               "value": {
                 "_type": "ARC4Decode",
@@ -1256,6 +1288,172 @@
                   }
                 },
                 "error_message": null
+              }
+            },
+            {
+              "_type": "ReturnStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                "line": 135,
+                "end_line": 176,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "value": {
+                "_type": "TupleExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                  "line": 142,
+                  "end_line": 176,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WTuple",
+                  "name": "tuple",
+                  "immutable": true,
+                  "types": [
+                    {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    }
+                  ],
+                  "names": null,
+                  "source_location": null
+                },
+                "items": [
+                  {
+                    "_type": "ARC4Encode",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                      "line": 142,
+                      "end_line": 176,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "value": {
+                      "_type": "TupleItemExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                        "line": 142,
+                        "end_line": 176,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "base": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                          "line": 142,
+                          "end_line": 176,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WTuple",
+                          "name": "tuple",
+                          "immutable": true,
+                          "types": [
+                            {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            }
+                          ],
+                          "names": null,
+                          "source_location": null
+                        },
+                        "name": "__ret_tmp_0"
+                      },
+                      "index": 0
+                    },
+                    "error_message": null
+                  },
+                  {
+                    "_type": "TupleItemExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                      "line": 142,
+                      "end_line": 176,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "base": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_calldata.sol",
+                        "line": 142,
+                        "end_line": 176,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
+                      },
+                      "name": "__ret_tmp_0"
+                    },
+                    "index": 1
+                  }
+                ]
               }
             }
           ],

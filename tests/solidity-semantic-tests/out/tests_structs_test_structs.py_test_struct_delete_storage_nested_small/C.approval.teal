@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_delete_storage_nested_small.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2
-    bytecblock "s" "__dyn_storage" 0x3fffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000060000 0x00020000000000060000
+    bytecblock "s" 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x3fffffffffffffffffffffffffffffffffffff 0x0000000000060000 0x00020000000000060000 "s:"
     intc_1 // 0
     dup
     pushint 4096
@@ -60,8 +60,8 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
-    intc_1 // 0
-    bytec_2 // 0x3fffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0x
+    bytec_3 // 0x3fffffffffffffffffffffffffffffffffffff
     callsub __storage_write
     load 0
     store 0
@@ -121,12 +121,12 @@ main_ternary_merge@9:
     store 0
     dig 1
     dup
-    bytec_2 // 0x3fffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0x3fffffffffffffffffffffffffffffffffffff
     callsub __storage_write
     dig 1
     dup
     cover 2
-    bytec_2 // 0x3fffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0x3fffffffffffffffffffffffffffffffffffff
     callsub __storage_write
     load 0
     store 0
@@ -140,7 +140,7 @@ main_ternary_merge@9:
     app_global_put
     load 0
     store 0
-    intc_1 // 0
+    bytec_1 // 0x
     callsub __storage_read
     swap
     callsub __storage_read
@@ -149,7 +149,7 @@ main_ternary_merge@9:
     load 0
     store 0
     uncover 2
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -162,7 +162,7 @@ main_ternary_merge@9:
     dig 1
     b|
     uncover 3
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -172,7 +172,7 @@ main_ternary_merge@9:
     dig 2
     b|
     uncover 3
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -200,7 +200,7 @@ main_ternary_false@8:
 // _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
 dynamic_array_concat_dynamic_element:
     proto 3 1
-    pushbytes ""
+    bytec_1 // ""
     frame_dig -3
     intc_1 // 0
     extract_uint16
@@ -292,11 +292,17 @@ dynamic_array_concat_dynamic_element_after_for@8:
     retsub
 
 
-// __puyasol___storage_read(__slot: uint64) -> bytes:
+// __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
     frame_dig -1
-    bnz __storage_read_else_body@2
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec_1 // 0x
+    b==
+    bz __storage_read_else_body@2
     intc_0 // 32
     bzero
     bytec_0 // "s"
@@ -311,27 +317,40 @@ __storage_read:
     retsub
 
 __storage_read_else_body@2:
-    bytec_1 // "__dyn_storage"
-    pushint 8192
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 6 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
     box_create
     pop
-    frame_dig -1
-    pushint 256
-    %
-    intc_0 // 32
-    *
-    bytec_1 // "__dyn_storage"
-    swap
+    intc_1 // 0
     intc_0 // 32
     box_extract
     retsub
 
 
-// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bnz __storage_write_else_body@2
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec_1 // 0x
+    b==
+    bz __storage_write_else_body@2
     intc_0 // 32
     bzero
     frame_dig -1
@@ -348,17 +367,25 @@ __storage_write:
     retsub
 
 __storage_write_else_body@2:
-    bytec_1 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    frame_dig -2
-    pushint 256
-    %
-    intc_0 // 32
-    *
     intc_0 // 32
     bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 6 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
     frame_dig -1
     concat
     dup
@@ -367,7 +394,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec_1 // "__dyn_storage"
-    cover 2
+    intc_1 // 0
+    swap
     box_replace
     retsub

@@ -276,9 +276,12 @@ void AssemblyBuilder::handleSstore(
 			return;
 		}
 
-	auto slotArg = _args[0];
-	if (slotArg->wtype == awst::WType::biguintType())
-		slotArg = safeBtoi(std::move(slotArg), _loc);
+	// CONSTANT slot → route directly to the named variable's storage.
+	if (tryRouteConstSlotStore(_args[0], _args[1], _loc, _out))
+		return;
+
+	// Full-width slot: __storage_write takes the 256-bit slot (no truncation).
+	auto slotArg = ensureBiguintSlotArg(_args[0], _loc);
 	auto valueArg = ensureBiguint(_args[1], _loc);
 
 	auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), _loc);

@@ -822,13 +822,16 @@
         "args": [],
         "return_type": {
           "_type": "WTuple",
-          "name": "fReturn",
+          "name": "tuple",
           "immutable": true,
           "types": [
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             },
             {
               "_type": "BytesWType",
@@ -837,10 +840,7 @@
               "length": 32
             }
           ],
-          "names": [
-            "r",
-            "r2"
-          ],
+          "names": null,
           "source_location": null
         },
         "body": {
@@ -1816,13 +1816,16 @@
                 },
                 "wtype": {
                   "_type": "WTuple",
-                  "name": "fReturn",
+                  "name": "tuple",
                   "immutable": true,
                   "types": [
                     {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     {
                       "_type": "BytesWType",
@@ -1831,15 +1834,12 @@
                       "length": 32
                     }
                   ],
-                  "names": [
-                    "r",
-                    "r2"
-                  ],
+                  "names": null,
                   "source_location": null
                 },
                 "items": [
                   {
-                    "_type": "VarExpression",
+                    "_type": "ARC4Encode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_write_to_stack.sol",
                       "line": 17,
@@ -1849,11 +1849,66 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "name": "r"
+                    "value": {
+                      "_type": "BigUIntBinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_write_to_stack.sol",
+                        "line": 17,
+                        "end_line": 151,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_write_to_stack.sol",
+                          "line": 17,
+                          "end_line": 151,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "r"
+                      },
+                      "op": "%",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_write_to_stack.sol",
+                          "line": 17,
+                          "end_line": 151,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                        "teal_alias": null
+                      }
+                    },
+                    "error_message": null
                   },
                   {
                     "_type": "VarExpression",
