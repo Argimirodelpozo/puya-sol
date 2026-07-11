@@ -603,7 +603,7 @@ def _parse_abi_type(s: str):
     if s == "bool":
         return ("bool",)
     if s == "address":
-        return ("uint", 160)
+        return ("address",)
     if s.startswith("uint") or s.startswith("int"):
         return ("uint" if s.startswith("uint") else "sint", int(s[s.index("t") + 1 :] or 256))
     if s.startswith("bytes"):
@@ -659,6 +659,12 @@ def _evm_decode(t, blob: bytes, base: int):
         return v
     if k == "bool":
         return bool(int.from_bytes(blob[base : base + 32], "big"))
+    if k == "address":
+        # AVM account = 32-byte public key; raw-word fixtures spell addresses as
+        # small ints (EVM word = uint160 right-aligned). Hand algosdk the 32-byte
+        # BE form (its address codec rejects bare ints) — matches the contract-side
+        # address(uint160(x)) convention used across the suite.
+        return blob[base : base + 32]
     if k == "bytesN":
         return list(blob[base : base + t[1]])
     if k == "tuple":

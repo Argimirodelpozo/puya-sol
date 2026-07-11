@@ -7,11 +7,25 @@ from framework import (
 )
 
 
-def test_arrays_in_constructors(harness):  # currently fails
-    """constructor/contracts/arrays_in_constructors.sol"""
+def test_arrays_in_constructors(harness):
+    """constructor/contracts/arrays_in_constructors.sol
+
+    `new Main(s, x)` with a dynamic-array ctor arg: the child's ctor writes a
+    box-stored array, so the child defers ALL init to __postInit; the caller
+    must make the SAME decision (computeNeedsPostInit — was a drifted local
+    msg.*-only copy) and ARC4-encode the aggregate arg. The future child's box
+    ref is auto-discovered by the harness's populate-on-retry (deterministic
+    app ids between simulate and submit). extra_fee: create+fund+pay+postInit
+    + two getter calls ≈ 7 txns of min-fee, above the default 5x headroom.
+    """
     app = harness.compile_and_deploy('constructor/contracts/arrays_in_constructors.sol')
-    r = harness.call(app, 'f(uint256,address[])', 7, 0x40, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-    assert tuple(as_int(x) for x in r.abi_return) == (7, 8,)
+    r = harness.call(app, 'f(uint256,address[])', 7, 0x40, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                     extra_fee=20000)
+    assert as_int(r.abi_return[0]) == 7
+    # ch = m_s[7] = address(8): AVM account form = 32-byte BE of 8 (algosdk
+    # returns the base32 address string; decode to the public key).
+    from algosdk.encoding import decode_address
+    assert int.from_bytes(decode_address(r.abi_return[1]), 'big') == 8
 
 def test_base_constructor_arguments(harness):
     """constructor/contracts/base_constructor_arguments.sol"""
@@ -64,10 +78,16 @@ def test_constructor_function_argument(harness):
     app = harness.compile_and_deploy("constructor/contracts/constructor_function_argument.sol", ctor_args=[0xfdd67305928fcac8d213d1e47bfa6165cd0b87b946644cd0000000000000000])
     # constructor-only test — deployment succeeding is the assertion
 
-def test_constructor_function_complex(harness):  # currently fails
+@pytest.mark.xfail(reason="ACCEPTED LIMIT (AVM re-entrancy prohibition): C.f() creates D, whose "
+    "ctor calls the fn-ptr `this.sixteen` — an inner app call BACK INTO C while C is still "
+    "executing. The AVM forbids re-entering an app already on the call stack ('attempt to "
+    "re-enter', protocol-level), by design — unlike EVM, where re-entrancy is allowed (and a "
+    "notorious exploit source). No compilation strategy can produce this call shape; a callback "
+    "into any OTHER contract works fine.", strict=False)
+def test_constructor_function_complex(harness):
     """constructor/contracts/constructor_function_complex.sol"""
     app = harness.compile_and_deploy("constructor/contracts/constructor_function_complex.sol", contract_name="C")
-    r = harness.call(app, "f()")
+    r = harness.call(app, "f()", extra_fee=20000)
     assert as_int(r.abi_return) == 16
 
 def test_constructor_static_array_argument(harness):

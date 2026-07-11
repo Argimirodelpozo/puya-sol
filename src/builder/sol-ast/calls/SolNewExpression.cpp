@@ -8,6 +8,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/contract/PostInitTriggers.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
@@ -303,39 +304,14 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// __postInit needed when ctor reads msg.value/sender/data (unavailable
 			// at AppCreate time where sender/value belong to the parent).
 			auto const* childCtor = contractType->contractDefinition().constructor();
-			bool childHasPostInit = false;
-			if (childCtor && childCtor->isImplemented())
-			{
-				struct MsgRefChecker: public solidity::frontend::ASTConstVisitor
-				{
-					bool found = false;
-					bool visit(solidity::frontend::MemberAccess const& _ma) override
-					{
-						// Resolve via solc's MagicVariableDeclaration so a
-						// user-defined local named `msg` doesn't trigger a
-						// false positive.
-						auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_ma.expression());
-						if (!id) return !found;
-						auto const* magic = dynamic_cast<solidity::frontend::MagicVariableDeclaration const*>(
-							id->annotation().referencedDeclaration);
-						if (magic && magic->name() == "msg"
-							&& (_ma.memberName() == "value"
-								|| _ma.memberName() == "sender"
-								|| _ma.memberName() == "data"))
-							found = true;
-						return !found;
-					}
-				};
-				MsgRefChecker checker;
-				childCtor->body().accept(checker);
-				builder::forEachStateVar(
-					contractType->contractDefinition(),
-					[&](auto const* var)
-					{
-						if (var->value()) var->value()->accept(checker);
-					});
-				childHasPostInit = checker.found;
-			}
+			// THE postInit decision — the SAME computeNeedsPostInit the child compiles
+			// with (PostInitTriggers: box writes, new C(), msg.*, AVM stdlib calls). This
+			// used to be a local msg.*-only re-derivation that DRIFTED from the child:
+			// a ctor writing a box-stored state var (dynamic array `s_ = s`) made the
+			// child defer ALL init to __postInit while the caller passed args at create
+			// and never called __postInit -> child deployed with NO state, failing only
+			// on the first read (arrays_in_constructors).
+			bool childHasPostInit = computeNeedsPostInit(contractType->contractDefinition());
 
 			// ARC4-encode ctor args once; reused for AppCreate or __postInit.
 			auto buildEncodedCtorArgs = [&]() {
@@ -376,6 +352,16 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 							"itob", awst::WType::bytesType(), m_loc);
 						itob->stackArgs.push_back(std::move(asU64));
 						argVal = std::move(itob);
+					}
+					else if (argVal->wtype
+						&& argVal->wtype->kind() == awst::WTypeKind::ReferenceArray)
+					{
+						// Aggregate ctor arg: the child's create/postInit reader expects the
+						// ARC4 wire form (2-byte count header + elements — it reinterprets to
+						// the arc4 type then ConvertArray's back). Encode the native array.
+						auto const* arc4T = m_ctx.typeMapper.mapToARC4Type(argVal->wtype);
+						if (arc4T != argVal->wtype)
+							argVal = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
 					}
 					out.push_back(std::move(argVal));
 				}
@@ -520,7 +506,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				std::string postInitSig = "__postInit(";
 				bool first = true;
-				for (auto const& p: childCtor->parameters())
+				// ctor-less child can still need __postInit (box state-var initializers).
+				std::vector<solidity::frontend::ASTPointer<solidity::frontend::VariableDeclaration>> const noParams;
+				for (auto const& p: childCtor ? childCtor->parameters() : noParams)
 				{
 					if (!first) postInitSig += ",";
 					postInitSig += solTypeToARC4Name(p->type());
