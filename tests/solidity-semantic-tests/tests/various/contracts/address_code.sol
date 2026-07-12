@@ -8,7 +8,9 @@ contract C {
     }
 
     // To avoid dependency on exact length.
-    function f() public view returns (bool) { return address(this).code.length > 380; }
+    // (solc's threshold was 380, calibrated to EVM codegen size; AVM bytecode is
+    // more compact — 100 keeps the "deployed code is non-trivial" semantics.)
+    function f() public view returns (bool) { return address(this).code.length > 100; }
     function g() public view returns (uint) { return address(0).code.length; }
     function h() public view returns (uint) { return address(1).code.length; }
 }

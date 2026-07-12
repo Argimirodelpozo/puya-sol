@@ -25,11 +25,12 @@ def test_xcall_selector_width(harness):
     assert as_int(harness.call(app, "callK(uint256)", 2 ** 200).abi_return) == 2 ** 200 + 1
 
 
-def test_address_code(harness):  # currently fails
+def test_address_code(harness):
     """various/contracts/address_code.sol"""
     app = harness.compile_and_deploy('various/contracts/address_code.sol')
     r = harness.call(app, 'initCode()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0,)
+    # empty byte[] (solc's (0x20, 0) is EVM ABI head/length framing for the same)
+    assert as_bytes(r.abi_return) == b''
     r = harness.call(app, 'f()')
     assert r.abi_return is True
     r = harness.call(app, 'g()')

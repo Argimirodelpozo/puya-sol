@@ -19,6 +19,12 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 	if (member == "code")
 	{
+		// EVM: extcodesize(this)==0 DURING construction (code isn't stored until
+		// initcode returns). The AVM app program exists at create time, so match
+		// EVM at compile time instead (same pattern as ctor msg.data → empty).
+		if (m_scope.isInConstructor())
+			return awst::makeBytesConstant({}, m_loc);
+
 		// address(N).code for literal N → empty bytes. Precompile/EOA
 		// addresses have no code; app_params_get panics on non-existent app ids.
 		{
