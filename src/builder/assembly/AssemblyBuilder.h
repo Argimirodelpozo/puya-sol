@@ -87,11 +87,12 @@ public:
 	///               is by constant comparison, never runtime hashing.
 	struct SlotRoute
 	{
-		enum class Kind { Scalar, ArrayRoot, ArrayData };
+		enum class Kind { Scalar, ArrayRoot, ArrayData, StructMemberArrayRoot };
 		Kind kind = Kind::Scalar;
 		std::string varName;
-		awst::WType const* wtype = nullptr;   ///< Scalar: the var's wtype
+		awst::WType const* wtype = nullptr;   ///< Scalar: var's wtype; StructMemberArrayRoot: the STRUCT's ARC4Struct
 		std::string dataBase;                 ///< ArrayData: decimal K (region base)
+		std::string fieldName;                ///< StructMemberArrayRoot: the dyn-array member
 	};
 
 	/// Exact-slot routes (decimal slot string → route) + data regions

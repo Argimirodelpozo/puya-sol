@@ -90,6 +90,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// keeps the initializer in the VariableDeclarationStatement, not in
 	// VariableDeclaration::value() — so walk the scope block for each .slot local.
 	std::map<std::string, VariableDeclaration const*> storageLocalAliases;
+	// Struct-MEMBER array aliases: `uint256[] storage x = s.x;` → (s decl, "x").
+	// These resolve to slot(struct) + memberOffset and route to the member's
+	// storage inside the struct box (SlotRoute::StructMemberArrayRoot).
+	std::map<std::string, std::pair<VariableDeclaration const*, std::string>> memberArrayAliases;
 	{
 		for (auto const& [yulId, extInfo]: annotation.externalReferences)
 		{
@@ -111,6 +115,17 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (!declaresVar) continue;
 
 				// Found the declaration statement. Extract the initialiser.
+				if (auto const* initMA = dynamic_cast<MemberAccess const*>(vds->initialValue()))
+				{
+					auto const* baseId = dynamic_cast<Identifier const*>(&initMA->expression());
+					auto const* baseVar = baseId
+						? dynamic_cast<VariableDeclaration const*>(baseId->annotation().referencedDeclaration)
+						: nullptr;
+					if (baseVar && baseVar->isStateVariable()
+						&& dynamic_cast<StructType const*>(baseVar->type()))
+						memberArrayAliases[varDecl->name()] = {baseVar, initMA->memberName()};
+					break;
+				}
 				auto const* initId = dynamic_cast<Identifier const*>(vds->initialValue());
 				if (!initId) break;
 				auto const* sv = dynamic_cast<VariableDeclaration const*>(
@@ -283,6 +298,52 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					slotRoutes[std::to_string(vi->slot)] = r;
 				}
 			});
+
+			// Struct-member array aliases: `uint256[] storage x = s.x; sstore(x.slot, L)`.
+			// Resolve x.slot to slot(s) + storageOffsetsOfMember(x) and route it to the
+			// member array INSIDE s's box (COW length write / count read). The constant
+			// is registered ONLY together with its route — a constant without a route
+			// would silently fall through to the box-per-slot cell, invisible to
+			// high-level reads of s.x (the exact silent-wrong-slot class the
+			// unmodeled-.slot hard error exists to stop).
+			for (auto const& [yulId, extInfo]: annotation.externalReferences)
+			{
+				if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
+				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+				if (!varDecl || !varDecl->isLocalVariable()) continue;
+				auto maIt = memberArrayAliases.find(varDecl->name());
+				if (maIt == memberArrayAliases.end()) continue;
+				auto const* structVar = maIt->second.first;
+				auto const& fieldName = maIt->second.second;
+
+				if (!builder::StorageMapper::shouldUseBoxStorage(*structVar)) continue;
+				auto const* structWType = dynamic_cast<awst::ARC4Struct const*>(
+					m_blk.typeMapper().map(structVar->type()));
+				auto const* structType = dynamic_cast<StructType const*>(structVar->type());
+				if (!structWType || !structType) continue;
+
+				// tier-1: dynamic arrays of 32-byte-encoded elements only
+				auto const* localArrT = dynamic_cast<ArrayType const*>(varDecl->type());
+				if (!localArrT || !localArrT->isDynamicallySized()
+					|| localArrT->isByteArrayOrString()) continue;
+				auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(localArrT->baseType());
+				if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32) continue;
+
+				auto const* vi = layout.getVarInfo(structVar->name());
+				if (!vi) continue;
+				auto memberOff = structType->storageOffsetsOfMember(fieldName);
+				if (memberOff.second != 0) continue;   // arrays always start a fresh slot
+				auto absSlot = solidity::u256(vi->slot) + memberOff.first;
+				std::string slotStr = absSlot.str();
+
+				AssemblyBuilder::SlotRoute r;
+				r.kind = AssemblyBuilder::SlotRoute::Kind::StructMemberArrayRoot;
+				r.varName = structVar->name();
+				r.fieldName = fieldName;
+				r.wtype = structWType;
+				slotRoutes[slotStr] = r;
+				constants[yulId->name.str()] = slotStr;
+			}
 
 			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{

@@ -3,6 +3,7 @@
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 #include "awst/NameGen.h"
 
@@ -69,6 +70,25 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 				std::move(bc.exists), std::move(bc.count), u64c(0),
 				awst::WType::uint64Type(), _loc);
 			return awst::makeAsBiguint(awst::makeItob(std::move(lenOrZero), _loc), _loc);
+		}
+		if (r.kind == SlotRoute::Kind::StructMemberArrayRoot)
+		{
+			// Root slot of a dyn array INSIDE a struct box: length = the ARC4
+			// dynamic array's uint16 count prefix within the struct's encoding.
+			auto const* st = dynamic_cast<awst::ARC4Struct const*>(r.wtype);
+			awst::WType const* fieldType = nullptr;
+			if (st)
+				for (auto const& [fname, ftype]: st->fields())
+					if (fname == r.fieldName) { fieldType = ftype; break; }
+			if (!fieldType)
+				return nullptr;
+			auto box = StorageMapper::makeTopLevelBoxExpr(r.varName, r.wtype, _loc);
+			auto readBase = StorageMapper::makeStateGetWithDefault(box, r.wtype, _loc);
+			auto field = awst::makeFieldExpression(readBase, r.fieldName, fieldType, _loc);
+			auto len16 = awst::makeIntrinsicCall("extract_uint16", awst::WType::uint64Type(), _loc);
+			len16->stackArgs.push_back(awst::makeAsBytes(std::move(field), _loc));
+			len16->stackArgs.push_back(u64c(0));
+			return awst::makeAsBiguint(awst::makeItob(std::move(len16), _loc), _loc);
 		}
 	}
 
@@ -163,6 +183,45 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 			put->stackArgs.push_back(u64c(0));
 			put->stackArgs.push_back(std::move(hdr));
 			_out.push_back(awst::makeExpressionStatement(std::move(put), _loc));
+			return true;
+		}
+		if (r.kind == SlotRoute::Kind::StructMemberArrayRoot)
+		{
+			// sstore(memberRoot, L) = SET LENGTH of a dyn array living INSIDE a
+			// struct box: COW-rebuild the struct with the member replaced by a
+			// zero-filled length-L array (2-byte BE count ++ L*32 zero bytes) —
+			// EVM length-grow exposes zeroed slots, so fresh zeros match.
+			auto const* st = dynamic_cast<awst::ARC4Struct const*>(r.wtype);
+			awst::WType const* fieldType = nullptr;
+			if (st)
+				for (auto const& [fname, ftype]: st->fields())
+					if (fname == r.fieldName) { fieldType = ftype; break; }
+			if (!fieldType)
+				return false;
+
+			auto newLen = safeBtoi(ensureBiguint(_value, _loc), _loc);
+			// bind once: used in header stamp + zero-fill size
+			std::string tmp = "__sslot_len_" + std::to_string(awst::NameGen::next("AssemblyBuilder.sslotLen"));
+			_out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc),
+				std::move(newLen), _loc));
+			auto lenVar = [&]() { return awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc); };
+
+			auto hdr = awst::makeExtract3(
+				awst::makeItob(lenVar(), _loc), u64c(6), u64c(2), _loc);
+			auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+			zeros->stackArgs.push_back(awst::makeUInt64BinOp(
+				lenVar(), awst::UInt64BinaryOperator::Mult, u64c(32), _loc));
+			auto fieldVal = awst::makeReinterpretCast(
+				awst::makeConcat(std::move(hdr), std::move(zeros), _loc), fieldType, _loc);
+
+			auto box = StorageMapper::makeTopLevelBoxExpr(r.varName, r.wtype, _loc);
+			auto readBase = StorageMapper::makeStateGetWithDefault(box, r.wtype, _loc);
+			auto newStruct = awst::makeStructWithReplacedField(
+				st, readBase, r.fieldName, std::move(fieldVal), _loc);
+			_out.push_back(awst::makeAssignmentStatement(
+				StorageMapper::makeTopLevelBoxExpr(r.varName, r.wtype, _loc),
+				std::move(newStruct), _loc));
 			return true;
 		}
 	}
