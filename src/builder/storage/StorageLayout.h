@@ -20,6 +20,7 @@ struct SlotVariable
 	unsigned byteOffset = 0;   ///< Byte offset within the 32-byte slot (EVM low-order)
 	unsigned byteSize = 0;     ///< Size in bytes (from Type::storageBytes())
 	awst::WType const* wtype = nullptr;  ///< AWST type
+	solidity::frontend::Type const* solType = nullptr;  ///< Solidity type (signedness etc.)
 	bool isFullSlot = false;   ///< True if this var occupies the entire slot alone
 	int64_t declId = 0;        ///< AST declaration ID
 };

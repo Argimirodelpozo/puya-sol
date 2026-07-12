@@ -1,9 +1,15 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
+
+#include <algorithm>
 
 namespace puyasol::builder
 {
@@ -67,6 +73,159 @@ void ContractBuilder::buildStorageDispatch(
 		return awst::makeAssignmentStatement(std::move(slotVar), std::move(wrapped), loc);
 	};
 
+	// ── Packed-slot codec ────────────────────────────────────────────────────
+	// EVM packs multiple sub-word vars into one 32-byte slot; our model stores
+	// each var in its OWN typed cell (uint64 global / canonical-TC biguint /
+	// bool / bytes[N] / account). sload must ASSEMBLE the EVM word from those
+	// cells, sstore must SPLIT the word back — through each var's native repr
+	// with exact inverse transforms (mirrors TransientStorage's blob codec).
+	// A var at low-order byteOffset o, size s occupies big-endian word bytes
+	// [32-o-s, 32-o).
+
+	// The var's packed field: s big-endian bytes of its EVM-slot content.
+	auto packedFieldBytes = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
+		unsigned sz = v->byteSize;
+		auto read = m_storageMapper.createStateRead(
+			v->name, v->wtype, awst::AppStorageKind::AppGlobal, loc);
+		if (v->wtype == awst::WType::uint64Type() || v->wtype == awst::WType::boolType())
+		{
+			// uint64-backed (incl. sub-64 signed: cell holds 64-bit TC, whose low
+			// s bytes ARE the packed TC). bool → 0/1.
+			std::shared_ptr<awst::Expression> u64 = std::move(read);
+			if (v->wtype == awst::WType::boolType())
+				u64 = awst::makeConditional(std::move(u64), makeUint64("1"), makeUint64("0"),
+					awst::WType::uint64Type(), loc);
+			auto itob = awst::makeItob(std::move(u64), loc);
+			if (sz == 8)
+				return itob;
+			if (sz > 8)
+				return awst::makeLeftPad(std::move(itob), sz - 8, loc);
+			return awst::makeExtract(std::move(itob), static_cast<int>(8 - sz), static_cast<int>(sz), loc);
+		}
+		if (v->wtype == awst::WType::biguintType())
+		{
+			// Canonical 256-bit TC (signed) / plain magnitude (unsigned): the
+			// trailing s bytes of the 32-byte form are the packed content.
+			auto padded = awst::makeZeroExtendToN(awst::makeAsBytes(std::move(read), loc), 32, loc);
+			return awst::makeExtract(std::move(padded), static_cast<int>(32 - sz), static_cast<int>(sz), loc);
+		}
+		if (v->wtype == awst::WType::accountType())
+		{
+			// AVM account = 32 bytes; EVM address = trailing 20 (transient-codec convention).
+			return awst::makeExtract(awst::makeAsBytes(std::move(read), loc),
+				static_cast<int>(32 - sz), static_cast<int>(sz), loc);
+		}
+		if (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)
+			return awst::makeAsBytes(std::move(read), loc);   // bytes[N]: raw N bytes
+		Logger::instance().error(
+			"packed storage slot " + std::to_string(v->slot) + " holds '" + v->name
+			+ "' of unsupported type for asm slot access", loc);
+		return awst::makeBytesConstant(std::vector<uint8_t>(sz, 0), loc);
+	};
+
+	// Assemble the full 32-byte word for a packed slot (gaps zero-filled).
+	auto packedWordBytes = [&](SlotInfo const& si) -> std::shared_ptr<awst::Expression> {
+		std::vector<SlotVariable const*> vars;
+		for (auto const* v: si.variables)
+			if (v && v->wtype && v->wtype != awst::WType::voidType())
+				vars.push_back(v);
+		std::sort(vars.begin(), vars.end(), [](auto const* a, auto const* b) {
+			return a->byteOffset > b->byteOffset;   // BE left→right
+		});
+		std::shared_ptr<awst::Expression> word;
+		auto append = [&](std::shared_ptr<awst::Expression> piece) {
+			word = word ? awst::makeConcat(std::move(word), std::move(piece), loc) : std::move(piece);
+		};
+		unsigned cursor = 0;
+		for (auto const* v: vars)
+		{
+			unsigned start = 32 - v->byteOffset - v->byteSize;
+			if (start > cursor)
+				append(awst::makeBytesConstant(std::vector<uint8_t>(start - cursor, 0), loc));
+			append(packedFieldBytes(v));
+			cursor = start + v->byteSize;
+		}
+		if (cursor < 32)
+			append(awst::makeBytesConstant(std::vector<uint8_t>(32 - cursor, 0), loc));
+		return word;
+	};
+
+	// Split a stored word into per-var writes (appended to _blk).
+	auto emitPackedStore = [&](SlotInfo const& si, awst::Block& _blk) {
+		// Bind the padded 32-byte word once — every field extracts from it.
+		std::string tmp = "__pk_word_" + std::to_string(awst::NameGen::next("StorageDispatch.pkWord"));
+		auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
+		auto padded = awst::makeLeftPadToN(awst::makeAsBytes(std::move(valueVar), loc), 32, loc);
+		_blk.body.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(tmp, awst::WType::bytesType(), loc), std::move(padded), loc));
+		auto wordVar = [&]() { return awst::makeVarExpression(tmp, awst::WType::bytesType(), loc); };
+
+		for (auto const* v: si.variables)
+		{
+			if (!v || !v->wtype || v->wtype == awst::WType::voidType())
+				continue;
+			unsigned sz = v->byteSize;
+			unsigned start = 32 - v->byteOffset - sz;
+			auto raw = awst::makeExtract(wordVar(), static_cast<int>(start), static_cast<int>(sz), loc);
+
+			std::shared_ptr<awst::Expression> native;
+			if (v->wtype == awst::WType::uint64Type() || v->wtype == awst::WType::boolType())
+			{
+				std::shared_ptr<awst::Expression> u64;
+				if (sz > 8)   // e.g. contract type packed as 20 bytes: numeric low 8
+					u64 = awst::makeBtoi(awst::makeExtract(std::move(raw),
+						static_cast<int>(sz - 8), 8, loc), loc);
+				else
+					u64 = awst::makeBtoi(std::move(raw), loc);
+				// Sub-64 signed: cell convention is 64-bit TC — sign-extend from s bytes.
+				if (auto it = SolIntType::fromSol(v->solType);
+					it && it->isSigned && it->bits < 64 && v->wtype == awst::WType::uint64Type())
+				{
+					uint64_t half = 1ULL << (it->bits - 1);
+					uint64_t addend = ~((1ULL << it->bits) - 1);
+					auto isNeg = awst::makeNumericCompare(u64, awst::NumericComparison::Gte,
+						makeUint64(std::to_string(half)), loc);
+					auto extended = awst::makeUInt64BinOp(u64, awst::UInt64BinaryOperator::Add,
+						makeUint64(std::to_string(addend)), loc);
+					u64 = awst::makeConditional(std::move(isNeg), std::move(extended), u64,
+						awst::WType::uint64Type(), loc);
+				}
+				if (v->wtype == awst::WType::boolType())
+					native = awst::makeNumericCompare(std::move(u64), awst::NumericComparison::Ne,
+						makeUint64("0"), loc);
+				else
+					native = std::move(u64);
+			}
+			else if (v->wtype == awst::WType::biguintType())
+			{
+				native = awst::makeAsBiguint(std::move(raw), loc);
+				// 64 < bits < 256 signed: extend to the canonical 256-bit TC cell form.
+				native = TypeCoercion::signExtendSignedElement(std::move(native), v->solType, loc);
+			}
+			else if (v->wtype == awst::WType::accountType())
+			{
+				native = awst::makeAsAccount(awst::makeLeftPad(std::move(raw), 32 - sz, loc), loc);
+			}
+			else if (v->wtype->kind() == awst::WTypeKind::Bytes)
+			{
+				native = awst::makeReinterpretCast(std::move(raw), v->wtype, loc);
+			}
+			else
+			{
+				Logger::instance().error(
+					"packed storage slot " + std::to_string(v->slot) + " holds '" + v->name
+					+ "' of unsupported type for asm slot access", loc);
+				continue;
+			}
+
+			auto key = awst::makeUtf8BytesConstant(v->name, loc, awst::WType::stateKeyType());
+			auto target = awst::makeAppStateExpression(std::move(key), v->wtype, loc);
+			auto assign = awst::makeAssignmentExpression(
+				std::move(target), std::move(native), loc, v->wtype);
+			_blk.body.push_back(awst::makeExpressionStatement(std::move(assign), loc));
+		}
+	};
+
 	// ── __storage_read(slot: uint64) -> biguint ──
 	{
 		awst::ContractMethod readSub;
@@ -116,18 +275,25 @@ void ContractBuilder::buildStorageDispatch(
 		std::shared_ptr<awst::Statement> current;
 		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
 
-		for (auto const& sv: layout.variables())
+		for (auto const& si: layout.slots())
 		{
-			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
+			std::vector<SlotVariable const*> vars;
+			for (auto const* v: si.variables)
+				if (v && v->wtype && v->wtype != awst::WType::voidType())
+					vars.push_back(v);
+			if (vars.empty()) continue;
 
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq,
-				awst::makeIntegerConstant(std::to_string(sv.slot), loc, awst::WType::biguintType()), loc);
+				awst::makeIntegerConstant(std::to_string(si.slotNumber), loc, awst::WType::biguintType()), loc);
 
 			auto ifBlock = awst::makeBlock(loc);
+			if (si.isDynamic || (vars.size() == 1 && vars[0]->isFullSlot))
 			{
+				// Full-slot single var (or box-backed dynamic root): raw cell bytes
+				// low-aligned into the word — the pre-packing behavior, unchanged.
 				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
-				get->stackArgs.push_back(makeBytes(sv.name));
+				get->stackArgs.push_back(makeBytes(vars[0]->name));
 
 				// Left-pad + take last 32 bytes (global slots may be <32 for short ints).
 				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
@@ -136,6 +302,12 @@ void ContractBuilder::buildStorageDispatch(
 
 				auto ret = awst::makeReturnStatement(std::move(cast), loc);
 				ifBlock->body.push_back(std::move(ret));
+			}
+			else
+			{
+				// Packed slot: assemble the EVM word from each var's typed cell.
+				auto word = awst::makeAsBiguint(packedWordBytes(si), loc);
+				ifBlock->body.push_back(awst::makeReturnStatement(std::move(word), loc));
 			}
 
 			auto ifElse = awst::makeIfElse(
@@ -206,17 +378,22 @@ void ContractBuilder::buildStorageDispatch(
 
 		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
 
-		for (auto const& sv: layout.variables())
+		for (auto const& si: layout.slots())
 		{
-			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
+			std::vector<SlotVariable const*> vars;
+			for (auto const* v: si.variables)
+				if (v && v->wtype && v->wtype != awst::WType::voidType())
+					vars.push_back(v);
+			if (vars.empty()) continue;
 
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq,
-				awst::makeIntegerConstant(std::to_string(sv.slot), loc, awst::WType::biguintType()), loc);
+				awst::makeIntegerConstant(std::to_string(si.slotNumber), loc, awst::WType::biguintType()), loc);
 
 			auto ifBlock = awst::makeBlock(loc);
+			if (si.isDynamic || (vars.size() == 1 && vars[0]->isFullSlot))
 			{
-				// app_global_put: pad value to 32 bytes (EVM slot width).
+				// Full-slot single var: raw 32-byte put — the pre-packing behavior, unchanged.
 				auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 				auto cast = awst::makeAsBytes(std::move(valueVar), loc);
 				auto cat = awst::makeLeftPad(std::move(cast), 32, loc);
@@ -224,13 +401,19 @@ void ContractBuilder::buildStorageDispatch(
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 				auto extract = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
-				auto put = awst::makeAppGlobalPut(makeBytes(sv.name), std::move(extract), loc);
+				auto put = awst::makeAppGlobalPut(makeBytes(vars[0]->name), std::move(extract), loc);
 
 				auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 				ifBlock->body.push_back(std::move(stmt));
 
 				auto ret = awst::makeReturnStatement(nullptr, loc);
 				ifBlock->body.push_back(std::move(ret));
+			}
+			else
+			{
+				// Packed slot: split the word into each var's typed cell.
+				emitPackedStore(si, *ifBlock);
+				ifBlock->body.push_back(awst::makeReturnStatement(nullptr, loc));
 			}
 
 			auto ifElse = awst::makeIfElse(

@@ -104,6 +104,7 @@ void StorageLayout::computeLayout(
 		sv.byteOffset = currentOffset;
 		sv.byteSize = byteSize;
 		sv.wtype = _typeMapper.map(solType);
+		sv.solType = solType;
 		sv.isFullSlot = (byteSize == 32) || isMultiSlot;
 		sv.declId = var->id();
 

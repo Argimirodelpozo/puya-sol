@@ -7,7 +7,7 @@ separate from the ported `tests/<cat>/` suites.
 """
 import pytest
 
-from framework import as_int
+from framework import as_int, as_bytes, as_signed_int
 from framework.compile import CompileError
 
 
@@ -1792,3 +1792,41 @@ def test_this_contract_value(harness):
     real = harness.call(cer, "realAddr()").abi_return
     real_s = real if isinstance(real, str) else algosdk.encoding.encode_address(bytes(real))
     assert real_s == cer.app_addr
+
+
+def test_packed_slot_word_dispatch(harness):
+    """puyasolRegression/contracts/packed_slot_word_dispatch.sol
+
+    Guard for the packed-slot codec in the asm storage dispatcher: EVM packs
+    several sub-word vars into one 32-byte slot, while our model keeps each in
+    its own typed cell (uint64 / canonical-TC biguint / bool / bytes[N]).
+    sload assembles the EVM word from the cells; sstore splits it back through
+    each var's native repr (incl. 64-bit-TC sign-extension for sub-64 signed).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/packed_slot_word_dispatch.sol")
+    expected = int.from_bytes(
+        bytes(10) + bytes([0x01]) + bytes.fromhex('3333333333333333')
+        + bytes.fromhex('2222222222222222') + bytes.fromhex('fffffffe') + bytes([0x11]), 'big')
+    # high-level writes -> asm word read
+    harness.call(app, 'set(uint8,int32,uint64,bytes8,bool)',
+                 0x11, -2, 0x2222222222222222, bytes.fromhex('3333333333333333'), True)
+    r = harness.call(app, 'readWord()')
+    assert as_int(r.abi_return) == expected
+    # asm word write -> high-level reads
+    w2 = int.from_bytes(
+        bytes(10) + bytes([0x00]) + bytes.fromhex('4444444444444444')
+        + bytes.fromhex('5555555555555555') + bytes.fromhex('00000007') + bytes([0x99]), 'big')
+    harness.call(app, 'writeWord(uint256)', w2)
+    vals = harness.call(app, 'get()').abi_return
+    assert as_int(vals[0]) == 0x99
+    assert as_signed_int(vals[1]) == 7
+    assert as_int(vals[2]) == 0x5555555555555555
+    assert as_bytes(vals[3]) == bytes.fromhex('4444444444444444')
+    assert vals[4] is False
+    # negative sub-64 signed through the word, both directions
+    w3 = int.from_bytes(bytes(27) + bytes.fromhex('fffffffd') + bytes([0x01]), 'big')
+    harness.call(app, 'writeWord(uint256)', w3)
+    r = harness.call(app, 'get()')
+    assert as_signed_int(r.abi_return[1]) == -3
+    r = harness.call(app, 'readWord()')
+    assert as_int(r.abi_return) == w3
