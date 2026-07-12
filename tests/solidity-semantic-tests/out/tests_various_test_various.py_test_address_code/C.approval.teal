@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     bytecblock "initCode" "__ctor_pending" 0x151f7c75
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -122,7 +121,7 @@ main_ternary_merge@31:
     pop
     len
     itob
-    pushint 380
+    pushint 100
     itob
     b>
     pushbytes 0x00
@@ -151,31 +150,11 @@ main___postInit_route@5:
     intc_1 // 0
     box_create
     pop
-    global CurrentApplicationID
-    app_params_get AppApprovalProgram
-    pop
-    len
-    itob
-    intc_1 // 0
-    itob
-    b==
-    dup
-    bury 2
-    bnz main_after_if_else@35
-    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@35:
-    dup
-    assert
-    global CurrentApplicationID
-    app_params_get AppApprovalProgram
-    pop
     bytec_0 // "initCode"
     box_del
     pop
     bytec_0 // "initCode"
-    swap
+    pushbytes 0x
     box_put
     intc_0 // 1
     return

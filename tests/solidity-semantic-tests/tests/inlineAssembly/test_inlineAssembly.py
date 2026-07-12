@@ -551,11 +551,18 @@ def test_leave(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 2
 
-def test_mcopy(harness):  # currently fails
+def test_mcopy(harness):  # currently fails: asm-referenced memory params/returns
+    # aren't blob-materialized (src/dst resolve to their VALUES, not pointers) —
+    # needs the memory-pointer seam model. Byte-granular mcopy itself is supported.
     """inlineAssembly/contracts/mcopy.sol"""
     app = harness.compile_and_deploy('inlineAssembly/contracts/mcopy.sol')
-    r = harness.call(app, 'f(bytes)', 0x20, 0x20, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff)
-    assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x20, 0x0000000000000000776655443322110000112233445566770000000000000000,)
+    # ARC-4 form of solc's raw-calldata expectation: one 32-byte payload in, the
+    # spliced 32-byte payload out (the 0x20/0x20 head words are EVM ABI framing,
+    # carried implicitly by byte[] here).
+    src = bytes.fromhex('ffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff')
+    r = harness.call(app, 'f(bytes)', src)
+    assert as_bytes(r.abi_return) == bytes.fromhex(
+        '0000000000000000776655443322110000112233445566770000000000000000')
 
 def test_mcopy_as_identifier_pre_cancun(harness):
     """inlineAssembly/contracts/mcopy_as_identifier_pre_cancun.sol"""

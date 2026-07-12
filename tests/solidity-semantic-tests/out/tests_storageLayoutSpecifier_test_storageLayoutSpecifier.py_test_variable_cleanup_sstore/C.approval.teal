@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "b" "x" "y"
+    bytecblock "x" "y" "b" 0x0000000000000000000000000000000000000000000000000000000061627f10
     pushbytes ""
     pushint 4096
     bzero
@@ -25,13 +25,13 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "x"
+    bytec_0 // "x"
     intc_0 // 0
     app_global_put
-    bytec_2 // "y"
+    bytec_1 // "y"
     intc_0 // 0
     app_global_put
-    bytec_0 // "b"
+    bytec_2 // "b"
     pushbytes 0x0000
     app_global_put
     intc_1 // 1
@@ -61,22 +61,40 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
-    bytec_0 // "b"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000061627f10
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000061627f10
+    pushint 31
+    getbyte
+    bytec_0 // "x"
+    swap
+    app_global_put
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000061627f10
+    pushint 30
+    getbyte
+    dup
+    pushint 128
+    >=
+    bz main_ternary_false@16
+    pushint 18446744073709551360
+    +
+
+main_ternary_merge@17:
+    bytec_1 // "y"
+    swap
+    app_global_put
+    bytec_2 // "b"
+    pushbytes 0x6162
     app_global_put
     load 0
     store 0
     intc_0 // 0
-    assert
-    intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     pushint 65535
     &
     bury 1
     intc_0 // 0
-    bytec_2 // "y"
+    bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
     itob
@@ -99,7 +117,7 @@ main_ternary_merge@12:
     bzero
     b|
     intc_0 // 0
-    bytec_0 // "b"
+    bytec_2 // "b"
     app_global_get_ex
     assert // check b exists
     pushint 14
@@ -120,6 +138,9 @@ main_ternary_merge@12:
 
 main_ternary_false@11:
     b main_ternary_merge@12
+
+main_ternary_false@16:
+    b main_ternary_merge@17
 
 main_ternary_false@8:
     intc_0 // 0

@@ -47,11 +47,15 @@ def test_delete_transient_state_variable(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 0
 
-def test_delete_transient_state_variable_non_zero_offset(harness):  # currently fails
+def test_delete_transient_state_variable_non_zero_offset(harness):
     """variables/contracts/delete_transient_state_variable_non_zero_offset.sol"""
     app = harness.compile_and_deploy('variables/contracts/delete_transient_state_variable_non_zero_offset.sol')
     r = harness.call(app, 'f()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0xffffffffffffffffffffffffffff000000000000000000000000000000000000, 0, 0xffffffffffffffffffffffffffff,)
+    # ARC-4 bytes14 is byte[14] (raw bytes), not solc's left-aligned 32-byte word;
+    # the delete-y-at-nonzero-offset packed-slot semantics are what's under test.
+    assert as_bytes(r.abi_return[0]) == bytes.fromhex('ff' * 14)
+    assert as_int(r.abi_return[1]) == 0
+    assert as_int(r.abi_return[2]) == 0xffffffffffffffffffffffffffff
 
 def test_mapping_local_assignment(harness):
     """variables/contracts/mapping_local_assignment.sol"""

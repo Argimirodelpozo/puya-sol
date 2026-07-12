@@ -598,10 +598,10 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "mcopy")
 		{
-			// Constant multiple-of-32 length: unroll to mstore(mload) word copies
-			// (forward order: correct for non-overlapping/copy-down).
-			// Dynamic/byte-granular/huge lengths hard-error (old code silently
-			// dropped bytes past the first word for len > 32).
+			// Constant length: unroll full words to mstore(mload) copies (forward
+			// order: correct for non-overlapping/copy-down), then stitch a sub-word
+			// tail via word read-modify-write. Dynamic/huge lengths hard-error
+			// (old code silently dropped bytes past the first word for len > 32).
 			auto const* lenConst = (args.size() >= 3)
 				? dynamic_cast<awst::IntegerConstant const*>(args[2].get())
 				: nullptr;
@@ -616,13 +616,6 @@ void AssemblyBuilder::buildExpressionStatement(
 			solidity::u256 lenVal(lenConst->value);
 			if (lenVal == 0)
 				return;  // no-op (mcopy_empty pattern)
-			if (lenVal % 32 != 0)
-			{
-				Logger::instance().error(
-					"mcopy with a non-32-byte-multiple length is not "
-					"supported in the scratch-slot memory model", loc);
-				return;
-			}
 			if (lenVal > 4096)
 			{
 				Logger::instance().error(
@@ -632,28 +625,40 @@ void AssemblyBuilder::buildExpressionStatement(
 			}
 			if (args.size() >= 2)
 			{
+				auto atOff = [&](std::shared_ptr<awst::Expression> const& base,
+					unsigned long long delta) -> std::shared_ptr<awst::Expression>
+				{
+					if (delta == 0)
+						return base;
+					return makeBigUIntBinOp(base,
+						awst::BigUIntBinaryOperator::Add,
+						awst::makeBiguintConstant(std::to_string(delta), loc), loc);
+				};
 				auto nwords = (lenVal / 32).convert_to<unsigned long long>();
 				for (unsigned long long w = 0; w < nwords; ++w)
 				{
-					std::shared_ptr<awst::Expression> srcOff = args[1];
-					std::shared_ptr<awst::Expression> dstOff = args[0];
-					if (w > 0)
-					{
-						auto delta = std::to_string(32 * w);
-						srcOff = makeBigUIntBinOp(args[1],
-							awst::BigUIntBinaryOperator::Add,
-							awst::makeBiguintConstant(delta, loc), loc);
-						dstOff = makeBigUIntBinOp(args[0],
-							awst::BigUIntBinaryOperator::Add,
-							awst::makeBiguintConstant(delta, loc), loc);
-					}
-					auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{srcOff};
+					auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{atOff(args[1], 32 * w)};
 					auto loadedVal = handleMload(mloadArgs, loc);
 					if (loadedVal)
 					{
-						auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{dstOff, loadedVal};
+						auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{atOff(args[0], 32 * w), loadedVal};
 						handleMstore(storeArgs, loc, _out);
 					}
+				}
+				// Sub-word tail: splice the first r bytes of the src word over the
+				// dst word (single write — safe under the same overlap caveat as
+				// the word loop above).
+				auto r = (lenVal % 32).convert_to<unsigned>();
+				if (r != 0)
+				{
+					auto srcWord = readMemWordDyn(atOff(args[1], 32 * nwords), loc);
+					auto dstWord = readMemWordDyn(atOff(args[0], 32 * nwords), loc);
+					auto stitched = awst::makeConcat(
+						awst::makeExtract(std::move(srcWord), 0, static_cast<int>(r), loc),
+						awst::makeExtract(std::move(dstWord), static_cast<int>(r),
+							static_cast<int>(32 - r), loc),
+						loc);
+					writeMemWordDyn(atOff(args[0], 32 * nwords), std::move(stitched), loc, _out);
 				}
 			}
 			return;
