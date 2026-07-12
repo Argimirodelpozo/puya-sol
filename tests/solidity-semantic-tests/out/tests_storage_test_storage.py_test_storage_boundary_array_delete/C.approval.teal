@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "s:" 0x01
+    bytecblock 0x 0x01 0x02 0x03 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     intc_2 // 0
     dup
     pushint 4096
@@ -64,28 +64,136 @@ main_ternary_merge@14:
     replace2 64
     store 0
     callsub getArray
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    intc_0 // 32
-    bzero
-    swap
-    concat
+    dup
+    callsub __storage_read
     dup
     len
     intc_0 // 32
-    -
+    <=
+    assert // overflow
     intc_0 // 32
-    extract3
-    bytec_2 // "s:"
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    bytec_1 // 0x01
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 3
+    bytec_2 // 0x02
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    dig 4
+    bytec_3 // 0x03
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    dig 5
+    pushbytes 0x04
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    dig 6
+    pushbytes 0x05
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    b|
+    dig 7
+    pushbytes 0x06
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    b|
+    dig 8
+    pushbytes 0x07
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 8
+    b|
+    dig 9
+    pushbytes 0x08
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    uncover 10
+    pushbytes 0x09
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 10
+    b|
+    uncover 9
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
     swap
     concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
     pushbytes 0x151f7c75
     swap
     concat
@@ -113,17 +221,17 @@ main_ternary_merge@19:
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec_3 // 0x01
+    bytec_1 // 0x01
     b+
     bytec_0 // 0x
     callsub __storage_write
     dup
-    pushbytes 0x02
+    bytec_2 // 0x02
     b+
     bytec_0 // 0x
     callsub __storage_write
     dup
-    pushbytes 0x03
+    bytec_3 // 0x03
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -192,7 +300,7 @@ main_while_top@25:
     b+
     dig 1
     callsub __storage_write
-    bytec_3 // 0x01
+    bytec_1 // 0x01
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -210,11 +318,41 @@ main_ternary_false@23:
     b main_ternary_merge@24
 
 
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury -1
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
 // __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_bury -2
     intc_0 // 32
@@ -228,7 +366,7 @@ __storage_write:
     -
     intc_0 // 32
     extract3
-    bytec_2 // "s:"
+    bytec 5 // "s:"
     swap
     concat
     dup

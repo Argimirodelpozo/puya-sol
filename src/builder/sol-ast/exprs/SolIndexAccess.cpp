@@ -4,11 +4,13 @@
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/SlotHandleAccess.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "awst/WType.h"
+#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -32,6 +34,77 @@ std::shared_ptr<awst::Expression> readStorageSlotBiguint(
 	return call;
 }
 } // namespace
+
+std::shared_ptr<awst::Expression> SolIndexAccess::materializeSlotArray(
+	std::shared_ptr<awst::Expression> _baseSlot,
+	solidity::frontend::ArrayType const* _arrType)
+{
+	if (!_arrType || _arrType->isDynamicallySized())
+		return nullptr;
+	auto lenU = _arrType->length();
+	if (lenU == 0 || lenU > 64)
+	{
+		Logger::instance().error(
+			"cannot materialize slot-handle array of length " + lenU.str()
+			+ " (unrolled reads capped at 64 elements)", m_loc);
+		return nullptr;
+	}
+	unsigned len = static_cast<unsigned>(lenU);
+	auto const* elemType = _arrType->baseType();
+	auto const* arrW = m_ctx.typeMapper.map(_arrType);
+	auto arr = awst::makeNewArray(arrW, m_loc);
+
+	// bind the base slot once (read per element)
+	std::string tmp = "__slotarr_" + std::to_string(m_indexAccess.id());
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc),
+		std::move(_baseSlot), m_loc));
+	auto baseVar = [&]() {
+		return awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc);
+	};
+
+	if (auto const* structElem = dynamic_cast<StructType const*>(elemType))
+	{
+		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(
+			m_ctx.typeMapper.map(structElem));
+		if (!structW)
+			return nullptr;
+		auto stride = structElem->storageSize();
+		for (unsigned j = 0; j < len; ++j)
+		{
+			auto elemBase = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant((stride * j).str(), m_loc, awst::WType::biguintType()),
+				m_loc);
+			arr->values.push_back(builder::SlotHandleAccess::readStructElem(
+				m_ctx.prePendingStatements, std::move(elemBase), structElem, structW, m_loc));
+		}
+		return arr;
+	}
+
+	// scalar elements → canonical biguint reads, ARC4-encoded per element
+	awst::WType const* elemW = nullptr;
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
+		elemW = sa->elementType();
+	if (!elemW)
+		elemW = m_ctx.typeMapper.map(elemType);
+	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
+	for (unsigned j = 0; j < len; ++j)
+	{
+		auto v = builder::SlotHandleAccess::readScalarElem(
+			baseVar(), awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()),
+			layout, elemType, m_loc);
+		if (elemW == awst::WType::arc4BoolType())
+		{
+			auto b = awst::makeNumericCompare(std::move(v), awst::NumericComparison::Ne,
+				awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()), m_loc);
+			arr->values.push_back(awst::makeARC4Encode(std::move(b), elemW, m_loc));
+		}
+		else
+			arr->values.push_back(awst::makeARC4Encode(std::move(v), elemW, m_loc));
+	}
+	return arr;
+}
 
 SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _node)
 	: SolExpression(_ctx, _node), m_indexAccess(_node)
@@ -86,39 +159,48 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				auto const* arrType = dynamic_cast<ArrayType const*>(baseType);
 				if (arrType && arrType->baseType()->category() == Type::Category::Array)
 				{
-					// Outer dim: slot ref for the inner array (stride = inner array length).
+					// Outer dim: slot ref for the inner array. EVM stride = the
+					// inner array's SLOT footprint (storageSize), not its element
+					// count — packed inner arrays span fewer slots, multislot
+					// struct elements span more.
 					auto const* innerArr = dynamic_cast<ArrayType const*>(arrType->baseType());
-					if (innerArr && indexExpr)
+					if (innerArr && indexExpr && !innerArr->isDynamicallySized())
 					{
-						unsigned innerLen = innerArr->isDynamicallySized() ? 0
-							: static_cast<unsigned>(innerArr->length());
-						if (innerLen > 0)
-						{
-							// newSlot = slot + index * innerLen
-							auto stride = awst::makeIntegerConstant(innerLen, m_loc, awst::WType::biguintType());
-
-							auto mul = awst::makeBigUIntBinOp(std::move(indexExpr), awst::BigUIntBinaryOperator::Mult, std::move(stride), m_loc);
-
-							auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(mul), m_loc);
-							return add;
-						}
+						auto stride = awst::makeIntegerConstant(
+							innerArr->storageSize().str(), m_loc, awst::WType::biguintType());
+						auto mul = awst::makeBigUIntBinOp(std::move(indexExpr), awst::BigUIntBinaryOperator::Mult, std::move(stride), m_loc);
+						auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(mul), m_loc);
+						return add;
 					}
 					// Fallback: just return slot
 					return slotVar;
 				}
 
-				// Inner dim: _x is already a biguint slot offset → __storage_read(slot+j)
+				// Inner dim: _x is a biguint slot handle. Reads are packed-aware
+				// element reads; writes return the computed slot for the
+				// assignment handler (packed/struct element writes intercept in
+				// SolAssignment BEFORE this path builds).
 				if (indexExpr)
 				{
-					auto add = awst::makeBigUIntBinOp(std::move(slotVar), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
-					return readStorageSlotBiguint(std::move(add), m_loc);
+					if (m_indexAccess.annotation().willBeWrittenTo)
+						return awst::makeBigUIntBinOp(std::move(slotVar),
+							awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
+					auto layout = builder::SlotHandleAccess::layoutFor(
+						arrType ? arrType->baseType() : nullptr);
+					return builder::SlotHandleAccess::readScalarElem(
+						std::move(slotVar), std::move(indexExpr), layout,
+						arrType ? arrType->baseType() : nullptr, m_loc);
 				}
 			}
 		}
 	}
 
 	// Slot arithmetic for any biguint base on a storage-located array
-	// (_x[i][j], getArray()[j], etc.).
+	// (_x[i][j], getArray()[j], etc.). Result shapes:
+	//   outer dim (result is an array)  → inner handle (slot), or materialized
+	//                                     memory array in read position
+	//   struct element                  → slot (write) / NewStruct (read)
+	//   scalar element                  → slot (write) / packed-aware read
 	{
 		auto const* baseSolType = m_indexAccess.baseExpression().annotation().type;
 		auto const* baseArrayType = dynamic_cast<ArrayType const*>(baseSolType);
@@ -137,12 +219,55 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						indexExpr = awst::makeAsBiguint(std::move(itob), m_loc);
 					}
 
-					auto add = awst::makeBigUIntBinOp(std::move(baseExpr), awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
+					bool written = m_indexAccess.annotation().willBeWrittenTo;
+					auto const* elemType = baseArrayType->baseType();
 
-					if (!m_indexAccess.annotation().willBeWrittenTo) // read: __storage_read(truncated_slot)
-						return readStorageSlotBiguint(std::move(add), m_loc);
-					// Write: return computed slot for assignment handler
-					return add;
+					// Outer dim: result is itself a (fixed) array — handle = base
+					// + idx * inner storageSize; reads materialize a memory copy.
+					if (auto const* resArr = dynamic_cast<ArrayType const*>(elemType))
+					{
+						if (!resArr->isDynamicallySized())
+						{
+							auto stride = awst::makeIntegerConstant(
+								resArr->storageSize().str(), m_loc, awst::WType::biguintType());
+							auto mul = awst::makeBigUIntBinOp(std::move(indexExpr),
+								awst::BigUIntBinaryOperator::Mult, std::move(stride), m_loc);
+							auto add = awst::makeBigUIntBinOp(std::move(baseExpr),
+								awst::BigUIntBinaryOperator::Add, std::move(mul), m_loc);
+							if (written)
+								return add;
+							if (auto arr = materializeSlotArray(std::move(add), resArr))
+								return arr;
+							return nullptr;
+						}
+					}
+
+					// Struct element.
+					if (auto const* structElem = dynamic_cast<StructType const*>(elemType))
+					{
+						auto stride = awst::makeIntegerConstant(
+							structElem->storageSize().str(), m_loc, awst::WType::biguintType());
+						auto mul = awst::makeBigUIntBinOp(std::move(indexExpr),
+							awst::BigUIntBinaryOperator::Mult, std::move(stride), m_loc);
+						auto add = awst::makeBigUIntBinOp(std::move(baseExpr),
+							awst::BigUIntBinaryOperator::Add, std::move(mul), m_loc);
+						if (written)
+							return add;
+						auto const* structW = dynamic_cast<awst::ARC4Struct const*>(
+							m_ctx.typeMapper.map(structElem));
+						if (!structW)
+							return nullptr;
+						return builder::SlotHandleAccess::readStructElem(
+							m_ctx.prePendingStatements, std::move(add), structElem, structW, m_loc);
+					}
+
+					// Scalar element.
+					if (written)
+						return awst::makeBigUIntBinOp(std::move(baseExpr),
+							awst::BigUIntBinaryOperator::Add, std::move(indexExpr), m_loc);
+					auto layout = builder::SlotHandleAccess::layoutFor(elemType);
+					return builder::SlotHandleAccess::readScalarElem(
+						std::move(baseExpr), std::move(indexExpr), layout, elemType, m_loc);
 				}
 			}
 		}

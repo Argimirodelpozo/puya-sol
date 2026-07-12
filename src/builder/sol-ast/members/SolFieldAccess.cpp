@@ -5,6 +5,8 @@
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
+#include "builder/storage/SlotHandleAccess.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -65,6 +67,57 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 							}
 
 	auto base = buildExpr(baseExpression());
+
+	// Struct field through a SLOT HANDLE: base is an EVM slot number bound via
+	// asm `.slot :=`. Handle LOCALS resolve with their declared struct wtype
+	// through the generic identifier path — consult the registry as well.
+	if (base && base->wtype != awst::WType::biguintType()
+		&& !m_memberAccess.annotation().willBeWrittenTo)
+		if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpression()))
+			if (auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+					baseId->annotation().referencedDeclaration))
+				if (vd->isLocalVariable() && m_scope.findSlotStorageRef(vd->id()))
+					base = awst::makeVarExpression(vd->name(), awst::WType::biguintType(), m_loc);
+	// Writes intercept in SolAssignment (slot-handle field write).
+	if (base && base->wtype == awst::WType::biguintType()
+		&& !m_memberAccess.annotation().willBeWrittenTo)
+		if (auto const* solStruct = dynamic_cast<solidity::frontend::StructType const*>(
+				baseExpression().annotation().type))
+		{
+			auto const& off = solStruct->storageOffsetsOfMember(member);
+			auto const* fieldSolType = m_memberAccess.annotation().type;
+			unsigned size = fieldSolType ? fieldSolType->storageBytes() : 32;
+			auto slotExpr = awst::makeBigUIntBinOp(std::move(base),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant(off.first.str(), m_loc, awst::WType::biguintType()),
+				m_loc);
+			std::shared_ptr<awst::Expression> val;
+			if (size == 32 && off.second == 0)
+				val = builder::SlotHandleAccess::readSlot(std::move(slotExpr), m_loc);
+			else
+			{
+				auto word = builder::SlotHandleAccess::readSlot(std::move(slotExpr), m_loc);
+				auto wordB = awst::makeLeftPadToN(
+					awst::makeAsBytes(std::move(word), m_loc), 32, m_loc);
+				unsigned start = 32 - off.second - size;
+				auto raw = awst::makeExtract(std::move(wordB),
+					static_cast<int>(start), static_cast<int>(size), m_loc);
+				val = awst::makeAsBiguint(std::move(raw), m_loc);
+			}
+			// canonical biguint; coerce to the native repr consumers expect
+			if (auto it = builder::SolIntType::fromSol(fieldSolType);
+				it && it->isSigned && it->bits < 256)
+				val = builder::TypeCoercion::signExtendToUint256(std::move(val), it->bits, m_loc);
+			auto const* nativeW = m_ctx.typeMapper.map(fieldSolType);
+			if (nativeW == awst::WType::uint64Type())
+				val = awst::makeBtoi(awst::makeExtractLastN(
+					awst::makeZeroExtendToN(awst::makeAsBytes(std::move(val), m_loc), 32, m_loc),
+					8, m_loc), m_loc);
+			else if (nativeW == awst::WType::boolType())
+				val = awst::makeNumericCompare(std::move(val), awst::NumericComparison::Ne,
+					awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()), m_loc);
+			return val;
+		}
 
 	if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4Struct)
 	{

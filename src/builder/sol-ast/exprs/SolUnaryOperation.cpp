@@ -1,5 +1,6 @@
 /// @file SolUnaryOperation.cpp — unary operation translation.
 
+#include "Logger.h"
 #include "builder/sol-types/SolcConstFold.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
@@ -675,7 +676,19 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		auto const* arrType = subExprType ? dynamic_cast<ArrayType const*>(subExprType) : nullptr;
 		unsigned slotCount = 1;
 		if (arrType && !arrType->isDynamicallySized())
-			slotCount = static_cast<unsigned>(arrType->length());
+		{
+			// EVM clears the array's SLOT footprint — packed arrays span fewer
+			// slots than elements, multislot-element arrays span more.
+			auto slots = arrType->storageSize();
+			if (slots > 4096)
+			{
+				Logger::instance().error(
+					"slot-handle delete of " + slots.str()
+					+ " slots exceeds the unroll cap (4096)", m_loc);
+				slots = 1;
+			}
+			slotCount = static_cast<unsigned>(slots);
+		}
 
 		for (unsigned j = 0; j < slotCount; ++j)
 		{

@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_creation.sol.C.approval_program() -> uint64:
 main:
+    bytecblock "__ctor_pending"
     pushbytes ""
     pushint 4096
     bzero
@@ -22,7 +23,31 @@ main:
     replace2 64
     store 0
     txn ApplicationID
-    bnz main_after_if_else@4
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    pushint 1
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@4
+    err
+
+main___postInit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    pushint 0
+    app_global_put
     load 0
     store 0
     load 5
@@ -38,19 +63,9 @@ main:
     b==
     dup
     bury 2
-    bnz main_after_if_else@3
+    bnz main_after_if_else@8
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@3:
-    return
-
-main_after_if_else@4:
-    txn NumAppArgs
-    !
-    assert
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
+main_after_if_else@8:
     return

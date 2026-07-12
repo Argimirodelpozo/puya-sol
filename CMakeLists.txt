@@ -88,6 +88,8 @@ set(SOURCES
 	# Storage, type, and intrinsic mappers
 	src/builder/storage/StorageMapper.cpp
 	src/builder/storage/StorageLayout.cpp
+	src/builder/storage/SlotHandleAccess.cpp
+	src/builder/storage/SlotWordCodec.cpp
 	src/builder/storage/TransientStorage.cpp
 	src/builder/sol-types/TypeMapper.cpp
 	src/builder/sol-intrinsics/IntrinsicMapper.cpp

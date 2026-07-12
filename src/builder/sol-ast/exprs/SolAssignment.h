@@ -89,6 +89,16 @@ private:
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::Token _op);
 
+	/// `arr[i] = v` through a slot handle where elements are PACKED sub-word
+	/// scalars or STRUCTS: re-derive (slot, byteOffset) via SlotHandleAccess —
+	/// the generic slot paths write whole words, wrong for both. Pre-buildExpr
+	/// (controls building of base/idx/rhs itself).
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleElemWrite();
+
+	/// `ptr.field = v` where ptr is a struct SLOT HANDLE (biguint): write the
+	/// field's packed bytes into its word (full-word or read-modify-write).
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleFieldWrite();
+
 	/// `slot = arr` (slot is biguint, arr is static-sized): expand to
 	/// per-element __storage_write(slot+j, arr[j]).
 	std::optional<std::shared_ptr<awst::Expression>> trySlotBasedArrayWrite(

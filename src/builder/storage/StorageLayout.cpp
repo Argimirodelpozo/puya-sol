@@ -27,17 +27,11 @@ void StorageLayout::computeLayout(
 	m_totalSlots = 0;
 
 	// `contract C layout at N`: shift base slot via storageLayoutSpecifier().baseSlot.
-	unsigned baseSlot = 0;
+	solidity::u256 baseSlot = 0;
 	if (auto const* spec = _contract.storageLayoutSpecifier())
-	{
 		if (spec->annotation().baseSlot.set())
-		{
-			auto const& v = *spec->annotation().baseSlot;
-			if (v <= std::numeric_limits<unsigned>::max())
-				baseSlot = static_cast<unsigned>(v);
-		}
-	}
-	unsigned currentSlot = baseSlot;
+			baseSlot = *spec->annotation().baseSlot;
+	solidity::u256 currentSlot = baseSlot;
 	unsigned currentOffset = 0; // bytes used in current slot
 
 	// Collect state vars base-first (reverse of linearization).
@@ -141,7 +135,11 @@ void StorageLayout::computeLayout(
 		}
 	}
 
-	m_totalSlots = (currentOffset > 0) ? currentSlot + 1 : currentSlot;
+	// Relative used-slot count (layout-at bases would otherwise overflow this).
+	solidity::u256 used = currentSlot - baseSlot + ((currentOffset > 0) ? 1 : 0);
+	m_totalSlots = used > std::numeric_limits<unsigned>::max()
+		? std::numeric_limits<unsigned>::max()
+		: static_cast<unsigned>(used);
 
 	Logger::instance().debug(
 		"Storage layout: " + std::to_string(m_variables.size()) + " variables in "
@@ -162,7 +160,7 @@ SlotVariable const* StorageLayout::getVarInfoById(int64_t _declId) const
 	return (it != m_varById.end()) ? &m_variables[it->second] : nullptr;
 }
 
-SlotInfo const* StorageLayout::getSlotInfo(unsigned _slotNumber) const
+SlotInfo const* StorageLayout::getSlotInfo(solidity::u256 const& _slotNumber) const
 {
 	auto it = m_slotByNumber.find(_slotNumber);
 	return (it != m_slotByNumber.end()) ? &m_slots[it->second] : nullptr;

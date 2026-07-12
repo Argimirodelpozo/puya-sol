@@ -181,6 +181,58 @@ bool detectMsgRefInConstructor(solidity::frontend::ContractDefinition const& _co
 	return checker.found;
 }
 
+/// True if the constructor's call closure contains inline assembly. Asm
+/// sload/sstore lowers to the storage dispatcher, whose box-per-slot fallback
+/// creates boxes of the app itself — impossible during the create txn (the app
+/// id doesn't exist yet), so such ctor bodies must run in __postInit.
+/// Conservative: asm-for-pure-math ctors get postInit too (harmless).
+bool detectAsmInConstructor(solidity::frontend::ContractDefinition const& _contract)
+{
+	struct AsmDetector: public solidity::frontend::ASTConstVisitor
+	{
+		bool found = false;
+		bool visit(solidity::frontend::InlineAssembly const&) override
+		{ found = true; return false; }
+	};
+	AsmDetector direct;
+	walkAllConstructors(_contract, direct, [&]{ return direct.found; });
+	if (direct.found)
+		return true;
+
+	// Indirect (one level): ctor calls a function whose body has asm.
+	std::set<int64_t> asmFuncIds;
+	forEachDefinedFunction(_contract, [&](auto const* func)
+	{
+		if (func->isConstructor() || !func->isImplemented())
+			return;
+		AsmDetector fnCheck;
+		func->body().accept(fnCheck);
+		if (fnCheck.found)
+			asmFuncIds.insert(func->id());
+	});
+	if (asmFuncIds.empty())
+		return false;
+
+	struct CallChecker: public solidity::frontend::ASTConstVisitor
+	{
+		std::set<int64_t> const& targetIds;
+		bool found = false;
+		explicit CallChecker(std::set<int64_t> const& t): targetIds(t) {}
+		bool visit(solidity::frontend::Identifier const& _node) override
+		{
+			if (found) return false;
+			if (auto const* fn = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+					_node.annotation().referencedDeclaration))
+				if (targetIds.count(fn->id()))
+					found = true;
+			return !found;
+		}
+	};
+	CallChecker calls(asmFuncIds);
+	walkAllConstructors(_contract, calls, [&]{ return calls.found; });
+	return calls.found;
+}
+
 /// True if the constructor calls AVM stdlib (inner txns need MBR+ASA → post AppCreate).
 bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const& _contract)
 {
@@ -223,6 +275,11 @@ bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contrac
 	if (detectAvmLibCallInConstructor(_contract))
 	{
 		Logger::instance().debug("Forcing __postInit: constructor/state-init calls into AVM stdlib");
+		return true;
+	}
+	if (detectAsmInConstructor(_contract))
+	{
+		Logger::instance().debug("Forcing __postInit: constructor/state-init reaches inline assembly (storage dispatcher may create boxes)");
 		return true;
 	}
 	return false;

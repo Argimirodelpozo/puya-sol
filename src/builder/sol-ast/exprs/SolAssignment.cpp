@@ -14,6 +14,8 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
+#include "builder/storage/SlotHandleAccess.h"
+#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -45,6 +47,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleOffsetStructRefFieldWrite()) return std::move(*r);
 	if (auto r = tryHandleBlobAggregateWrite())      return std::move(*r);
 	if (auto r = tryHandlePushAssignRewrite(op))     return std::move(*r);
+	if (auto r = tryHandleSlotHandleElemWrite())     return std::move(*r);
+	if (auto r = tryHandleSlotHandleFieldWrite())    return std::move(*r);
 
 	// (2) Build target + value (if tryHandlePushAssignRewrite claimed, it already returned).
 	auto target = buildExpr(m_assignment.leftHandSide());
@@ -166,14 +170,188 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 	return val;
 }
 
+namespace
+{
+/// True iff `e` peels (through index layers) to an Identifier registered as a
+/// slot-storage-ref local. Side-effect-free by construction — used to gate the
+/// slot-handle write intercepts BEFORE building any expression (building a
+/// side-effecting base like `m[1].push()` twice would double its effects).
+bool rootsInSlotHandle(
+	solidity::frontend::Expression const& e,
+	puyasol::builder::sol_ast::Context& scope)
+{
+	auto const* cur = &e;
+	while (auto const* ia = dynamic_cast<solidity::frontend::IndexAccess const*>(cur))
+		cur = &ia->baseExpression();
+	auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(cur);
+	if (!id)
+		return false;
+	auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+		id->annotation().referencedDeclaration);
+	return vd && vd->isLocalVariable() && scope.findSlotStorageRef(vd->id()) != nullptr;
+}
+} // namespace
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleSlotHandleElemWrite()
+{
+	// `arr[i] = v` on a slot-handle base with PACKED sub-word or STRUCT
+	// elements. Full-word scalars keep the generic slot path.
+	if (m_assignment.assignmentOperator() != Token::Assign) return std::nullopt;
+	auto const* lhs = dynamic_cast<IndexAccess const*>(&m_assignment.leftHandSide());
+	if (!lhs || !lhs->indexExpression()) return std::nullopt;
+	auto const* arrType = dynamic_cast<ArrayType const*>(lhs->baseExpression().annotation().type);
+	if (!arrType || arrType->isDynamicallySized()
+		|| !arrType->dataStoredIn(DataLocation::Storage)) return std::nullopt;
+	auto const* elemType = arrType->baseType();
+	auto const* structElem = dynamic_cast<StructType const*>(elemType);
+	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
+	if (!structElem && layout.perSlot <= 1) return std::nullopt;
+
+	// Gate on AST shape BEFORE building: the base chain must root in a
+	// slot-handle local (building a side-effecting base twice would double
+	// its effects — e.g. `m[1].push().a = v` box-model writes).
+	if (!rootsInSlotHandle(lhs->baseExpression(), m_scope)) return std::nullopt;
+	auto base = buildExpr(lhs->baseExpression());
+	if (!base || base->wtype != awst::WType::biguintType()) return std::nullopt;
+	auto idx = buildExpr(*lhs->indexExpression());
+	if (!idx) return std::nullopt;
+	if (idx->wtype == awst::WType::uint64Type())
+		idx = awst::makeAsBiguint(awst::makeItob(std::move(idx), m_loc), m_loc);
+
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	if (structElem)
+	{
+		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(
+			m_ctx.typeMapper.map(structElem));
+		if (!structW) return std::nullopt;
+		auto value = buildExpr(m_assignment.rightHandSide());
+		if (!value) return std::nullopt;
+		auto stride = awst::makeIntegerConstant(
+			structElem->storageSize().str(), m_loc, awst::WType::biguintType());
+		auto elemBase = awst::makeBigUIntBinOp(std::move(base),
+			awst::BigUIntBinaryOperator::Add,
+			awst::makeBigUIntBinOp(std::move(idx), awst::BigUIntBinaryOperator::Mult,
+				std::move(stride), m_loc), m_loc);
+		builder::SlotHandleAccess::writeStructElem(
+			out, std::move(elemBase), structElem, structW, std::move(value), m_loc);
+	}
+	else
+	{
+		auto value = buildExpr(m_assignment.rightHandSide());
+		if (!value) return std::nullopt;
+		// canonical biguint value
+		if (value->wtype && value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+			value = awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), m_loc);
+		else if (value->wtype == awst::WType::uint64Type())
+			value = awst::makeAsBiguint(awst::makeItob(std::move(value), m_loc), m_loc);
+		else if (value->wtype == awst::WType::boolType())
+			value = awst::makeConditional(std::move(value),
+				awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
+				awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
+				awst::WType::biguintType(), m_loc);
+		builder::SlotHandleAccess::writeScalarElem(
+			out, std::move(base), std::move(idx), layout, std::move(value), m_loc);
+	}
+	for (auto& st: out)
+		m_ctx.queuePending(std::move(st));
+	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleSlotHandleFieldWrite()
+{
+	if (m_assignment.assignmentOperator() != Token::Assign) return std::nullopt;
+	auto const* lhs = dynamic_cast<MemberAccess const*>(&m_assignment.leftHandSide());
+	if (!lhs) return std::nullopt;
+	auto const* solStruct = dynamic_cast<StructType const*>(lhs->expression().annotation().type);
+	if (!solStruct || !solStruct->dataStoredIn(DataLocation::Storage)) return std::nullopt;
+	// The handle local resolves with its DECLARED struct wtype through the
+	// generic identifier path — consult the slot-storage-ref registry directly.
+	// ONLY registry-rooted bases: building an arbitrary (possibly
+	// side-effecting) base to inspect its wtype would double its effects.
+	std::shared_ptr<awst::Expression> base;
+	if (auto const* baseId = dynamic_cast<Identifier const*>(&lhs->expression()))
+		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
+				baseId->annotation().referencedDeclaration))
+			if (vd->isLocalVariable() && m_scope.findSlotStorageRef(vd->id()))
+				base = awst::makeVarExpression(vd->name(), awst::WType::biguintType(), m_loc);
+	if (!base && rootsInSlotHandle(lhs->expression(), m_scope))
+	{
+		base = buildExpr(lhs->expression());
+		if (!base || base->wtype != awst::WType::biguintType())
+			return std::nullopt;
+	}
+	if (!base)
+		return std::nullopt;
+
+	auto const& off = solStruct->storageOffsetsOfMember(lhs->memberName());
+	auto const* fieldSolType = lhs->annotation().type;
+	unsigned size = fieldSolType ? fieldSolType->storageBytes() : 32;
+
+	auto value = buildExpr(m_assignment.rightHandSide());
+	if (!value) return std::nullopt;
+	// canonical biguint
+	if (value->wtype && value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+		value = awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), m_loc);
+	else if (value->wtype == awst::WType::uint64Type())
+		value = awst::makeAsBiguint(awst::makeItob(std::move(value), m_loc), m_loc);
+	else if (value->wtype == awst::WType::boolType())
+		value = awst::makeConditional(std::move(value),
+			awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
+			awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
+			awst::WType::biguintType(), m_loc);
+	if (value->wtype != awst::WType::biguintType()) return std::nullopt;
+
+	auto slotExpr = awst::makeBigUIntBinOp(std::move(base),
+		awst::BigUIntBinaryOperator::Add,
+		awst::makeIntegerConstant(off.first.str(), m_loc, awst::WType::biguintType()), m_loc);
+
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	if (size == 32 && off.second == 0)
+		out.push_back(builder::SlotHandleAccess::writeSlot(
+			std::move(slotExpr), std::move(value), m_loc));
+	else
+	{
+		// packed field: word read-modify-write at compile-time position
+		std::string tmp = "__slotf_" + std::to_string(m_assignment.id());
+		out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc),
+			std::move(slotExpr), m_loc));
+		auto slotVar = [&]() {
+			return awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc);
+		};
+		unsigned start = 32 - off.second - size;
+		auto fieldB = awst::makeExtract(
+			awst::makeZeroExtendToN(awst::makeAsBytes(std::move(value), m_loc), 32, m_loc),
+			static_cast<int>(32 - size), static_cast<int>(size), m_loc);
+		auto wordB = awst::makeLeftPadToN(awst::makeAsBytes(
+			builder::SlotHandleAccess::readSlot(slotVar(), m_loc), m_loc), 32, m_loc);
+		auto newWord = awst::makeReplace3(std::move(wordB),
+			awst::makeIntegerConstant(static_cast<uint64_t>(start), m_loc),
+			std::move(fieldB), m_loc);
+		out.push_back(builder::SlotHandleAccess::writeSlot(slotVar(),
+			awst::makeAsBiguint(std::move(newWord), m_loc), m_loc));
+	}
+	for (auto& st: out)
+		m_ctx.queuePending(std::move(st));
+	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
+}
+
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::trySlotBasedArrayWrite(
 	Token _op,
 	std::shared_ptr<awst::Expression> const& _target,
 	std::shared_ptr<awst::Expression> const& _value)
 {
-	// Slot-based array write: target is biguint slot offset, expand to
-	// per-element __storage_write(slot+j, value[j]).
+	// Slot-based array write: target is a biguint slot handle for a fixed
+	// array. Three shapes:
+	//   rhs slot handle (biguint)  → slot-level copy over storageSize() slots
+	//                                (type-agnostic: packed/multislot/mixed)
+	//   rhs array VALUE            → packed-aware per-element writes, with the
+	//                                lhs tail ZERO-FILLED (EVM partial-assign
+	//                                semantics: copy then clear the rest)
+	//   struct elements            → per-slot word writes via SlotHandleAccess
 	if (_op != Token::Assign || _target->wtype != awst::WType::biguintType()) return std::nullopt;
 	auto const* lhsType = m_assignment.leftHandSide().annotation().type;
 	auto const* arrType = lhsType ? dynamic_cast<ArrayType const*>(lhsType) : nullptr;
@@ -184,40 +362,133 @@ SolAssignment::trySlotBasedArrayWrite(
 	}
 	if (!arrType || arrType->isDynamicallySized()) return std::nullopt;
 
-	unsigned len = static_cast<unsigned>(arrType->length());
-	for (unsigned j = 0; j < len; ++j)
+	std::vector<std::shared_ptr<awst::Statement>> out;
+
+	// rhs is itself a slot handle → copy every slot of the array footprint.
+	if (_value->wtype == awst::WType::biguintType())
 	{
-		auto jConst = awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType());
-		auto slotJ = awst::makeBigUIntBinOp(_target, awst::BigUIntBinaryOperator::Add, std::move(jConst), m_loc);
-		auto castBytes = awst::makeAsBytes(std::move(slotJ), m_loc);
-		auto last8 = awst::makeExtractLastN(std::move(castBytes), 8, m_loc);
-		auto btoi = awst::makeBtoi(std::move(last8), m_loc);
-
-		auto idx = awst::makeIntegerConstant(j, m_loc);
-		awst::WType const* elemWtype;
-		if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_value->wtype))
-			elemWtype = sa->elementType();
-		else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(_value->wtype))
-			elemWtype = da->elementType();
-		else
-			elemWtype = m_ctx.typeMapper.map(arrType->baseType());
-
-		auto elemExpr = awst::makeIndexExpression(_value, std::move(idx), elemWtype, m_loc);
-
-		std::shared_ptr<awst::Expression> elemVal = std::move(elemExpr);
-		if (elemVal->wtype && elemVal->wtype->kind() == awst::WTypeKind::ARC4UIntN)
-			elemVal = awst::makeARC4Decode(std::move(elemVal), awst::WType::biguintType(), m_loc);
-		else if (elemVal->wtype == awst::WType::uint64Type())
+		auto slots = arrType->storageSize();
+		if (slots > 256)
 		{
-			auto itob = awst::makeItob(std::move(elemVal), m_loc);
-			elemVal = awst::makeAsBiguint(std::move(itob), m_loc);
+			Logger::instance().error(
+				"slot-handle array copy of " + slots.str()
+				+ " slots exceeds the unroll cap (256)", m_loc);
+			return std::nullopt;
+		}
+		auto srcVar = [&]() { return _value; };
+		auto dstVar = [&]() { return _target; };
+		unsigned n = static_cast<unsigned>(slots);
+		for (unsigned j = 0; j < n; ++j)
+		{
+			auto jc = [&]() { return awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()); };
+			auto src = awst::makeBigUIntBinOp(srcVar(), awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+			auto dst = awst::makeBigUIntBinOp(dstVar(), awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+			out.push_back(builder::SlotHandleAccess::writeSlot(
+				std::move(dst), builder::SlotHandleAccess::readSlot(std::move(src), m_loc), m_loc));
+		}
+		for (auto& st: out)
+			m_ctx.queuePending(std::move(st));
+		return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
+	}
+
+	// rhs is an array VALUE.
+	unsigned lhsLen = static_cast<unsigned>(arrType->length());
+	if (lhsLen > 64)
+	{
+		Logger::instance().error(
+			"slot-handle array assignment of length " + std::to_string(lhsLen)
+			+ " exceeds the unroll cap (64)", m_loc);
+		return std::nullopt;
+	}
+	unsigned rhsLen = lhsLen;
+	if (auto const* rhsArr = dynamic_cast<ArrayType const*>(
+			m_assignment.rightHandSide().annotation().type))
+		if (!rhsArr->isDynamicallySized())
+			rhsLen = static_cast<unsigned>(rhsArr->length());
+
+	auto const* elemType = arrType->baseType();
+	auto const* structElem = dynamic_cast<StructType const*>(elemType);
+	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
+
+	// bind target + value once
+	std::string tBase = "__slotw_base_" + std::to_string(m_assignment.id());
+	out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tBase, awst::WType::biguintType(), m_loc), _target, m_loc));
+	auto baseVar = [&]() { return awst::makeVarExpression(tBase, awst::WType::biguintType(), m_loc); };
+	std::string tVal = "__slotw_val_" + std::to_string(m_assignment.id());
+	out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tVal, _value->wtype, m_loc), _value, m_loc));
+	auto valVar = [&]() { return awst::makeVarExpression(tVal, _value->wtype, m_loc); };
+
+	awst::WType const* elemWtype;
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_value->wtype))
+		elemWtype = sa->elementType();
+	else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(_value->wtype))
+		elemWtype = da->elementType();
+	else
+		elemWtype = m_ctx.typeMapper.map(elemType);
+
+	auto const* structW = structElem
+		? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(structElem))
+		: nullptr;
+	if (structElem && !structW)
+		return std::nullopt;
+
+	for (unsigned j = 0; j < lhsLen; ++j)
+	{
+		auto jConst = [&]() {
+			return awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType());
+		};
+		if (structElem)
+		{
+			auto elemBase = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant(
+					(structElem->storageSize() * j).str(), m_loc, awst::WType::biguintType()),
+				m_loc);
+			if (j < rhsLen)
+			{
+				auto elemVal = awst::makeIndexExpression(valVar(),
+					awst::makeIntegerConstant(j, m_loc), structW, m_loc);
+				builder::SlotHandleAccess::writeStructElem(
+					out, std::move(elemBase), structElem, structW, std::move(elemVal), m_loc);
+			}
+			else
+			{
+				// zero-fill: clear every slot of the element
+				unsigned stride = static_cast<unsigned>(structElem->storageSize());
+				for (unsigned st = 0; st < stride; ++st)
+				{
+					auto slotJ = awst::makeBigUIntBinOp(baseVar(),
+						awst::BigUIntBinaryOperator::Add,
+						awst::makeIntegerConstant(
+							(structElem->storageSize() * j + st).str(),
+							m_loc, awst::WType::biguintType()), m_loc);
+					out.push_back(builder::SlotHandleAccess::writeSlot(std::move(slotJ),
+						awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()), m_loc));
+				}
+			}
+			continue;
 		}
 
-		auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
-		awst::pushCallArg(call->args, "__slot", std::move(btoi));
-		awst::pushCallArg(call->args, "__value", std::move(elemVal));
-		m_ctx.queueStmt(std::move(call), m_loc);
+		std::shared_ptr<awst::Expression> elemVal;
+		if (j < rhsLen)
+		{
+			elemVal = awst::makeIndexExpression(valVar(),
+				awst::makeIntegerConstant(j, m_loc), elemWtype, m_loc);
+			if (elemVal->wtype && elemVal->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+				elemVal = awst::makeARC4Decode(std::move(elemVal), awst::WType::biguintType(), m_loc);
+			else if (elemVal->wtype == awst::WType::uint64Type())
+				elemVal = awst::makeAsBiguint(awst::makeItob(std::move(elemVal), m_loc), m_loc);
+		}
+		else
+			elemVal = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());
+
+		builder::SlotHandleAccess::writeScalarElem(
+			out, baseVar(), jConst(), layout, std::move(elemVal), m_loc);
 	}
+	for (auto& st: out)
+		m_ctx.queuePending(std::move(st));
 	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
 }
 

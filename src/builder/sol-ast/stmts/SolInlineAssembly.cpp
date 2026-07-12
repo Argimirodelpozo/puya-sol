@@ -273,13 +273,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					AssemblyBuilder::SlotRoute root;
 					root.kind = AssemblyBuilder::SlotRoute::Kind::ArrayRoot;
 					root.varName = svDecl->name();
-					slotRoutes[std::to_string(vi->slot)] = root;
+					slotRoutes[vi->slot.str()] = root;
 
 					// K = keccak256(32-byte BE root slot) — compile-time.
-					solidity::bytes slotWord(32, 0);
-					uint64_t sl = vi->slot;
-					for (int i = 0; i < 8; ++i)
-						slotWord[31 - i] = static_cast<uint8_t>(sl >> (8 * i));
+					auto slotWord = solidity::toBigEndian(vi->slot);
 					auto k = solidity::u256(solidity::util::keccak256(slotWord));
 					AssemblyBuilder::SlotRoute data;
 					data.kind = AssemblyBuilder::SlotRoute::Kind::ArrayData;
@@ -295,7 +292,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					r.kind = AssemblyBuilder::SlotRoute::Kind::Scalar;
 					r.varName = svDecl->name();
 					r.wtype = vi->wtype;
-					slotRoutes[std::to_string(vi->slot)] = r;
+					slotRoutes[vi->slot.str()] = r;
 				}
 			});
 
@@ -333,7 +330,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (!vi) continue;
 				auto memberOff = structType->storageOffsetsOfMember(fieldName);
 				if (memberOff.second != 0) continue;   // arrays always start a fresh slot
-				auto absSlot = solidity::u256(vi->slot) + memberOff.first;
+				auto absSlot = vi->slot + memberOff.first;
 				std::string slotStr = absSlot.str();
 
 				AssemblyBuilder::SlotRoute r;
@@ -375,7 +372,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				// via TransientStorage, which mirrors the packed layout but
 				// with its own slot numbering (EIP-1153).
 				bool isTransient = varDecl->referenceLocation() == VariableDeclaration::Location::Transient;
-				unsigned slotNum = 0, byteOffset = 0;
+				std::string slotStr;
+				unsigned byteOffset = 0;
 				bool resolved = false;
 				if (isTransient)
 				{
@@ -384,7 +382,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					{
 						if (auto const* tv = ts->getVarInfo(varDecl->name()))
 						{
-							slotNum = tv->slot;
+							slotStr = std::to_string(tv->slot);
 							byteOffset = tv->byteOffset;
 							resolved = true;
 						}
@@ -394,7 +392,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				{
 					if (auto const* varInfo = layout.getVarInfo(varDecl->name()))
 					{
-						slotNum = varInfo->slot;
+						slotStr = varInfo->slot.str();
 						byteOffset = varInfo->byteOffset;
 						resolved = true;
 					}
@@ -403,7 +401,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 				if (suffix == "slot")
 				{
-					constants[yulName] = std::to_string(slotNum);
+					constants[yulName] = slotStr;
 					storageSlotVars[yulName] = varDecl->name();
 				}
 				else if (suffix == "offset")

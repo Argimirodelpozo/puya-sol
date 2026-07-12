@@ -4,6 +4,7 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/Numeric.h>
 
 #include <map>
 #include <string>
@@ -16,7 +17,7 @@ namespace puyasol::builder
 struct SlotVariable
 {
 	std::string name;          ///< Solidity variable name
-	unsigned slot = 0;         ///< EVM slot number
+	solidity::u256 slot = 0;   ///< EVM slot number (layout-at bases can be near 2^256)
 	unsigned byteOffset = 0;   ///< Byte offset within the 32-byte slot (EVM low-order)
 	unsigned byteSize = 0;     ///< Size in bytes (from Type::storageBytes())
 	awst::WType const* wtype = nullptr;  ///< AWST type
@@ -28,7 +29,7 @@ struct SlotVariable
 /// Describes a single 32-byte storage slot and which variables are packed in it.
 struct SlotInfo
 {
-	unsigned slotNumber = 0;
+	solidity::u256 slotNumber = 0;
 	std::vector<SlotVariable*> variables;
 	unsigned bytesUsed = 0;
 	bool isDynamic = false;  ///< True for mappings/arrays (box storage, not packed)
@@ -53,9 +54,9 @@ public:
 	SlotVariable const* getVarInfoById(int64_t _declId) const;
 
 	/// Look up a slot by number.
-	SlotInfo const* getSlotInfo(unsigned _slotNumber) const;
+	SlotInfo const* getSlotInfo(solidity::u256 const& _slotNumber) const;
 
-	/// Total number of slots (including dynamic/box slots).
+	/// Number of USED slots (relative count — layout-at bases don't inflate it).
 	unsigned totalSlots() const { return m_totalSlots; }
 
 	/// All slot infos.
@@ -69,7 +70,7 @@ private:
 	std::vector<SlotInfo> m_slots;
 	std::map<std::string, size_t> m_varByName;   ///< name → index in m_variables
 	std::map<int64_t, size_t> m_varById;          ///< declId → index in m_variables
-	std::map<unsigned, size_t> m_slotByNumber;    ///< slotNumber → index in m_slots
+	std::map<solidity::u256, size_t> m_slotByNumber;   ///< slotNumber → index in m_slots
 	unsigned m_totalSlots = 0;
 };
 

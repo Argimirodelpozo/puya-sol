@@ -4,9 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x "y" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    bytecblock 0x "y" 0x01 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     intc_2 // 0
-    dupn 2
+    dup
     pushint 4096
     bzero
     dup
@@ -68,7 +68,7 @@ main_ternary_merge@15:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -103,55 +103,142 @@ main_ternary_merge@20:
     replace2 64
     store 0
     callsub getArray
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
-    bury 4
-    bytec_0 // 0x
-    b==
-    bz main_else_body@36
-    intc_0 // 32
-    bzero
-    bytec_1 // "y"
-    app_global_get
-    concat
+    callsub __storage_read
     dup
     len
     intc_0 // 32
-    -
+    <=
+    assert // overflow
     intc_0 // 32
-    extract3
-
-main_after_inlined___puyasol___storage_read@37:
-    bytec_2 // 0x151f7c75
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    bytec_2 // 0x01
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 3
+    pushbytes 0x02
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    dig 4
+    pushbytes 0x03
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    dig 5
+    pushbytes 0x04
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    dig 6
+    pushbytes 0x05
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    b|
+    dig 7
+    pushbytes 0x06
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    b|
+    dig 8
+    pushbytes 0x07
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 8
+    b|
+    dig 9
+    pushbytes 0x08
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    uncover 10
+    pushbytes 0x09
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 10
+    b|
+    uncover 9
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
-
-main_else_body@36:
-    intc_0 // 32
-    bzero
-    dig 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 4 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
-    b main_after_inlined___puyasol___storage_read@37
 
 main_ternary_false@19:
     intc_2 // 0
@@ -173,7 +260,7 @@ main_ternary_merge@25:
     bytec_0 // 0x
     callsub __storage_write
     dup
-    pushbytes 0x01
+    bytec_2 // 0x01
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -252,7 +339,7 @@ main_while_top@31:
     b+
     dig 1
     callsub __storage_write
-    pushbytes 0x01
+    bytec_2 // 0x01
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -270,11 +357,59 @@ main_ternary_false@29:
     b main_ternary_merge@30
 
 
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec_0 // 0x
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    bytec_1 // "y"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@2:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
 // __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -2
@@ -308,7 +443,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 4 // "s:"
+    bytec 5 // "s:"
     swap
     concat
     dup
