@@ -863,6 +863,8 @@ void AWSTBuilder::translateContracts(
 	bool _viaYulBehavior,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
+	bool emittedDeployable = false;
+	std::vector<solidity::frontend::ContractDefinition const*> deployableLibraries;
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -884,7 +886,21 @@ void AWSTBuilder::translateContracts(
 			}
 
 			if (contract->isLibrary())
+			{
+				// Remember libraries with externally-callable functions: if the
+				// source has NO deployable contract, EVM deploys the library
+				// itself (public/external fns get external dispatch) — mirrored
+				// after the loop.
+				for (auto const* f: contract->definedFunctions())
+					if (f->isImplemented() && !f->isConstructor()
+						&& (f->visibility() == solidity::frontend::Visibility::Public
+							|| f->visibility() == solidity::frontend::Visibility::External))
+					{
+						deployableLibraries.push_back(contract);
+						break;
+					}
 				continue;
+			}
 
 			Logger::instance().info("Translating contract: " + contract->name());
 
@@ -968,6 +984,7 @@ void AWSTBuilder::translateContracts(
 					lsig->reservedScratchSpace = awstContract->reservedScratchSpace;
 					lsig->avmVersion = awstContract->avmVersion;
 					roots.push_back(std::move(lsig));
+					emittedDeployable = true;
 					Logger::instance().info("Emitted LogicSignature: " + contract->name());
 					continue;
 				}
@@ -1013,11 +1030,39 @@ void AWSTBuilder::translateContracts(
 			{
 				eliminateDeadCode(*awstContract);
 				roots.push_back(std::move(awstContract));
+				emittedDeployable = true;
 			}
 			else
 				Logger::instance().debug("Skipping non-deployable contract: " + contract->name());
 		}
 	}
+
+	// Library-only source: EVM deploys the library itself (public/external fns
+	// get external dispatch). Mirror that by building the first such library as
+	// a deployable contract — its fns are ALSO root subroutines (the library
+	// pass above), which is fine: self-calls resolve to the subroutines, and
+	// unused copies are DCE'd.
+	if (!emittedDeployable)
+		for (auto const* lib: deployableLibraries)
+		{
+			Logger::instance().info("Translating library as deployable contract: " + lib->name());
+			ContractBuilder translator(
+				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
+				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
+				m_internalizableLibFuncs
+			);
+			auto awstContract = translator.build(*lib);
+			for (auto& sub : translator.takeDispatchSubroutines())
+				roots.push_back(std::move(sub));
+			bool hasPublicMethod = false;
+			for (auto const& method: awstContract->methods)
+				if (method.arc4MethodConfig.has_value()) { hasPublicMethod = true; break; }
+			if (!hasPublicMethod)
+				continue;
+			eliminateDeadCode(*awstContract);
+			roots.push_back(std::move(awstContract));
+			break;
+		}
 }
 
 } // namespace puyasol::builder
