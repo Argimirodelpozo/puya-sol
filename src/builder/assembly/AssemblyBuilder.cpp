@@ -646,7 +646,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguintSlotArg(
 		|| w->kind() == awst::WTypeKind::ARC4UIntN;
 	if (scalar)
 		return ensureBiguint(std::move(_expr), _loc);
-	return _expr;
+	// A non-scalar here means an UNMODELED `.slot` reference (e.g. a local
+	// storage ref to a struct-member array: `uint256[] storage x = s.x;
+	// sstore(x.slot, ...)`) that fell through every resolution path. The slot
+	// value would be garbage at runtime — the write lands on an arbitrary slot.
+	// Fail loudly rather than miscompile silently.
+	Logger::instance().error(
+		"unmodeled .slot reference (type '" + w->name()
+		+ "') used as a storage slot — sload/sstore through this alias is not"
+		" supported yet (storage refs to struct-member aggregates)",
+		_loc
+	);
+	return awst::makeBiguintConstant("0", _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(

@@ -999,8 +999,9 @@ private:
 
 	/// sload/sstore slot args only: like ensureBiguint, but a non-scalar slot
 	/// expression (unmodeled `.slot` ref, e.g. a struct-member array alias)
-	/// passes through UNCHANGED instead of hard-erroring — historical dispatcher
-	/// behavior some fixtures rely on (struct_delete_storage_with_array).
+	/// hard-errors with a slot-specific diagnostic. Historically this passed
+	/// through unchecked and puya zero-init'd it — a silent wrong-slot write
+	/// (struct_delete_storage_with_array only "passed" by luck).
 	std::shared_ptr<awst::Expression> ensureBiguintSlotArg(
 		std::shared_ptr<awst::Expression> _expr,
 		awst::SourceLocation const& _loc
