@@ -308,7 +308,7 @@ def call(
 
         # Budget-exhausted? Retry with a pool of dummy helper-app calls in
         # the same group (each contributes 700 opcodes via fee pooling).
-        if _is_budget_error(e):
+        if _is_budget_error(e) or _is_resource_error(e):
             retry_result = _retry_with_budget_pool(
                 algod=algod,
                 localnet=localnet,
@@ -348,6 +348,16 @@ def call(
 def _is_budget_error(exc: Exception) -> bool:
     msg = str(exc).lower()
     return "budget" in msg or "opcode" in msg or "dynamic cost" in msg
+
+
+def _is_resource_error(exc: Exception) -> bool:
+    """Reference-array overflow: >8 foreign refs per txn. The budget-pool retry
+    group (16 txns) also multiplies reference capacity (8 per txn), so the same
+    retry fixes it — e.g. box-per-slot storage touching 10+ slots in one call."""
+    msg = str(exc).lower()
+    return ("invalid box reference" in msg or "unavailable box" in msg
+            or "invalid app reference" in msg or "unavailable resource" in msg
+            or "unavailable account" in msg)
 
 
 def _retry_with_budget_pool(

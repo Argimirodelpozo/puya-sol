@@ -332,10 +332,19 @@ def _call_postinit(
         method_args=args[: len(abi_method.args)],
         note=os.urandom(8),
     )
-    atc = au.populate_app_call_resources(atc, algod)
     try:
+        atc = au.populate_app_call_resources(atc, algod)
         atc.execute(algod, wait_rounds=4)
     except Exception as e:
+        # Reference-array overflow (>8 foreign refs on the single postinit txn):
+        # retry with dummy helper txns — each group txn carries 8 more refs.
+        msg = str(e).lower()
+        if budget_pool == 0 and ("box reference" in msg or "unavailable" in msg
+                                 or "budget" in msg or "opcode" in msg):
+            return _call_postinit(
+                algod=algod, localnet=localnet, app_id=app_id, app_spec=app_spec,
+                postinit_spec=postinit_spec, ctor_args=ctor_args,
+                postinit_args=postinit_args, budget_pool=8, inner_txns=inner_txns)
         raise DeployError(f"__postInit failed: {str(e)[:300]}") from e
 
 
