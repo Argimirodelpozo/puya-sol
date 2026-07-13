@@ -2,6 +2,7 @@
 /// Handles abi.encode*, abi.decode — extracted from FunctionCallBuilder.
 
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/storage/StorageMapper.h"
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -153,6 +154,10 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	}
 	else if (_expr->wtype == awst::WType::accountType())
 	{
+		// Packed address/contract stays the FULL 32-byte AVM account
+		// (EVM packs 20). EVM_DIVERGENCE pinned by conversions/
+		// encodepacked_widths: a 20-byte slice would TRUNCATE real accounts —
+		// only literal-derived addresses would round-trip.
 		auto cast = awst::makeAsBytes(std::move(_expr), _loc);
 		bytesExpr = std::move(cast);
 	}
@@ -290,13 +295,81 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 			else
 			{
 				// abi.encodePacked of a DYNAMIC array: ARC4-encode then STRIP the 2-byte
-				// length prefix. encodePacked concatenates the elements tight with NO
-				// length header (each element is its 32-byte ARC4 word for the 32-byte
-				// element types). Without the strip, the keccak input gains a spurious
+				// length prefix. encodePacked concatenates the elements with NO length
+				// header. EVM pads in-place array elements to the FULL 32-byte word
+				// (same rule as the fixed-size branch above) — for 32-byte element
+				// types the raw ARC4 body already IS that; sub-word elements (e.g.
+				// uint120 → 15-byte ARC4 backing) are re-padded element-by-element in
+				// a runtime loop. Without the strip, the keccak input gains a spurious
 				// 2-byte prefix — this was silently corrupting EVERY Fiat-Shamir keccak in
 				// the honk transcript (eta and all downstream challenges wrong).
 				std::shared_ptr<awst::Expression> arc4 =
 					awst::makeARC4Encode(std::move(arrayExpr), awst::WType::bytesType(), _loc);
+
+				awst::WType const* elemW = _ctx.typeMapper.mapSolTypeToARC4(elemSolType);
+				int elemSize = builder::StorageMapper::computeEncodedElementSize(elemW);
+				if (elemSize > 0 && elemSize != 32)
+				{
+					// __pkd_src = body; loop i<n: out ||= pad32(elem i)
+					auto uniq = std::to_string(_callNode.id()) + "_" + std::to_string(argIdx);
+					auto bytesVar = [&](std::string const& n) {
+						return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
+					};
+					auto u64Var = [&](std::string const& n) {
+						return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
+					};
+					std::string src = "__pkd_src_" + uniq, out = "__pkd_out_" + uniq,
+						iN = "__pkd_i_" + uniq, nN = "__pkd_n_" + uniq;
+					auto& pre = _ctx.prePendingStatements;
+					pre.push_back(awst::makeAssignmentStatement(
+						bytesVar(src), std::move(arc4), _loc));
+					pre.push_back(awst::makeAssignmentStatement(
+						u64Var(nN),
+						awst::makeUInt64BinOp(
+							awst::makeUInt64BinOp(awst::makeLen(bytesVar(src), _loc),
+								awst::UInt64BinaryOperator::Sub,
+								awst::makeIntegerConstant("2", _loc), _loc),
+							awst::UInt64BinaryOperator::FloorDiv,
+							awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), _loc), _loc),
+						_loc));
+					pre.push_back(awst::makeAssignmentStatement(
+						bytesVar(out), awst::makeBytesConstant({}, _loc), _loc));
+					pre.push_back(awst::makeAssignmentStatement(
+						u64Var(iN), awst::makeZero(_loc), _loc));
+
+					auto body = awst::makeBlock(_loc);
+					{
+						auto pos = awst::makeUInt64BinOp(
+							awst::makeIntegerConstant("2", _loc),
+							awst::UInt64BinaryOperator::Add,
+							awst::makeUInt64BinOp(u64Var(iN),
+								awst::UInt64BinaryOperator::Mult,
+								awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), _loc), _loc),
+							_loc);
+						auto elem = awst::makeExtract3(bytesVar(src), std::move(pos),
+							awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), _loc), _loc);
+						std::shared_ptr<awst::Expression> elem32;
+						auto const* eit = dynamic_cast<IntegerType const*>(elemSolType);
+						if (eit && eit->isSigned())
+							elem32 = signExtendBytesTo32(std::move(elem), _loc);
+						else
+							elem32 = leftPadBytes(std::move(elem), 32, _loc);
+						body->body.push_back(awst::makeAssignmentStatement(
+							bytesVar(out),
+							awst::makeConcat(bytesVar(out), std::move(elem32), _loc), _loc));
+						body->body.push_back(awst::makeAssignmentStatement(
+							u64Var(iN),
+							awst::makeUInt64BinOp(u64Var(iN),
+								awst::UInt64BinaryOperator::Add, awst::makeOne(_loc), _loc),
+							_loc));
+					}
+					pre.push_back(awst::makeWhileLoop(
+						awst::makeNumericCompare(u64Var(iN), awst::NumericComparison::Lt,
+							u64Var(nN), _loc),
+						std::move(body), _loc));
+					return bytesVar(out);
+				}
+
 				auto lenExpr = awst::makeLen(arc4, _loc);
 				auto lenMinus2 = awst::makeUInt64BinOp(
 					std::move(lenExpr), awst::UInt64BinaryOperator::Sub,

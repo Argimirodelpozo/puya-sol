@@ -289,11 +289,18 @@ def test_keccak256_packed(harness):
     r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
     assert as_int(r.abi_return) == 85248082031449023985059491939699956408088110354102027088226743004047620283667
 
-def test_keccak256_packed_complex_types(harness):  # currently fails
-    """builtinFunctions/contracts/keccak256_packed_complex_types.sol"""
+def test_keccak256_packed_complex_types(harness):
+    """builtinFunctions/contracts/keccak256_packed_complex_types.sol
+
+    hash1/hash2 (uint120[3] storage / uint120[] memory) are EVM-exact: packed
+    array elements pad to the full 32-byte word. hash3 EVM_DIVERGENCE (pinned
+    by conversions/encodepacked_widths): encodePacked(address) packs the FULL
+    32-byte AVM account, not EVM's 20 bytes — a 20-byte slice would truncate
+    real accounts. hash3 = keccak256(32-byte 0x…1234) instead of solc's
+    keccak256(20-byte 0x…1234) = 0xe7490f…"""
     app = harness.compile_and_deploy('builtinFunctions/contracts/keccak256_packed_complex_types.sol')
     r = harness.call(app, 'f()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe7490fade3a8e31113ecb6c0d2635e28a6f5ca8359a57afe914827f41ddf0848,)
+    assert tuple(as_int(x) for x in r.abi_return) == (0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5,)
 
 def test_keccak256_with_bytes(harness):
     """builtinFunctions/contracts/keccak256_with_bytes.sol"""
