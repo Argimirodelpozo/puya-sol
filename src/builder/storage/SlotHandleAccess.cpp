@@ -188,19 +188,7 @@ void SlotHandleAccess::writeScalarElem(
 	_out.push_back(writeSlot(slotVar(), awst::makeAsBiguint(std::move(newWord), _loc), _loc));
 }
 
-namespace
-{
-struct FieldPos
-{
-	std::string name;
-	unsigned slot = 0;        ///< slot offset within the element
-	unsigned byteOffset = 0;  ///< low-order byte offset within that slot
-	unsigned size = 0;
-	awst::WType const* wtype = nullptr;
-	solidity::frontend::Type const* solType = nullptr;
-};
-
-std::vector<FieldPos> structFieldPositions(
+std::vector<SlotHandleAccess::FieldPos> SlotHandleAccess::fieldPositions(
 	solidity::frontend::StructType const* _structType,
 	awst::ARC4Struct const* _structWType)
 {
@@ -222,7 +210,6 @@ std::vector<FieldPos> structFieldPositions(
 	}
 	return out;
 }
-} // namespace
 
 void SlotHandleAccess::writeStructElem(
 	std::vector<std::shared_ptr<awst::Statement>>& _out,
@@ -232,7 +219,7 @@ void SlotHandleAccess::writeStructElem(
 	std::shared_ptr<awst::Expression> _structVal,
 	awst::SourceLocation const& _loc)
 {
-	auto fields = structFieldPositions(_structType, _structWType);
+	auto fields = fieldPositions(_structType, _structWType);
 	unsigned strideSlots = static_cast<unsigned>(_structType->storageSize());
 
 	// Bind value + base once (fields read the value per slot; base used per slot).
@@ -284,7 +271,7 @@ std::shared_ptr<awst::Expression> SlotHandleAccess::readStructElem(
 	awst::ARC4Struct const* _structWType,
 	awst::SourceLocation const& _loc)
 {
-	auto fields = structFieldPositions(_structType, _structWType);
+	auto fields = fieldPositions(_structType, _structWType);
 	unsigned strideSlots = static_cast<unsigned>(_structType->storageSize());
 
 	auto baseVar = bindTemp(_preOut, std::move(_elemBaseSlot),

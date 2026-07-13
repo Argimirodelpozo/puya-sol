@@ -64,6 +64,20 @@ struct SlotHandleAccess
 		std::shared_ptr<awst::Expression> _valueBiguint,
 		awst::SourceLocation const& _loc);
 
+	/// A struct field's storage position within its element/variable.
+	struct FieldPos
+	{
+		std::string name;
+		unsigned slot = 0;        ///< slot offset within the element
+		unsigned byteOffset = 0;  ///< low-order byte offset within that slot
+		unsigned size = 0;
+		awst::WType const* wtype = nullptr;
+		solidity::frontend::Type const* solType = nullptr;
+	};
+	static std::vector<FieldPos> fieldPositions(
+		solidity::frontend::StructType const* _structType,
+		awst::ARC4Struct const* _structWType);
+
 	/// Struct element write: `_structVal` (ARC4Struct-typed value) split into
 	/// per-slot words at `_elemBaseSlot` (whole element overwritten, gaps zero —
 	/// EVM struct assignment writes full slots).

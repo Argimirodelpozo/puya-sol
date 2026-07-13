@@ -3,6 +3,9 @@
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/SlotWordCodec.h"
+#include "builder/storage/SlotHandleAccess.h"
+
+#include <libsolidity/ast/Types.h>
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 #include "awst/NameGen.h"
@@ -11,6 +14,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <algorithm>
+#include <set>
 
 namespace puyasol::builder
 {
@@ -147,6 +151,54 @@ void ContractBuilder::buildStorageDispatch(
 		}
 	};
 
+	// State vars stored as BOXES (structs with dynamic members etc.) vs
+	// app-globals — struct-slot routing needs the right cell either way.
+	std::map<std::string, bool> boxVars;
+	std::map<std::string, solidity::frontend::StructType const*> structVars;
+	forEachStateVar(_contract, [&](auto const* var)
+	{
+		if (!var || var->isConstant() || var->immutable()) return;
+		boxVars[var->name()] = StorageMapper::shouldUseBoxStorage(*var);
+		if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(var->type()))
+			structVars[var->name()] = st;
+	});
+
+	// Can SlotWordCodec handle this field? Leaf scalars only — array/struct/
+	// mapping members occupy their own slots (solc storageBytes==32 for them),
+	// and their slots keep the box-per-slot fallback. byte[N] passes only when
+	// the arc4 array length EQUALS the field's packed byte size (a true bytesN;
+	// uint8[2] arrays report storageBytes 32 and are rejected here).
+	auto codecSupported = [&](SlotHandleAccess::FieldPos const& f) {
+		auto const* w = f.wtype;
+		if (!w) return false;
+		if (w == awst::WType::uint64Type() || w == awst::WType::boolType()
+			|| w == awst::WType::biguintType() || w == awst::WType::accountType()
+			|| w == awst::WType::arc4BoolType())
+			return true;
+		if (w->kind() == awst::WTypeKind::ARC4UIntN || w->kind() == awst::WTypeKind::Bytes)
+			return true;
+		if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(w))
+			if (auto const* el = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType()))
+				return el->n() == 8
+					&& sa->arraySize() == static_cast<int64_t>(f.size);   // bytesN-as-byte[N]
+		return false;
+	};
+
+	// Read the struct var's cell (typed).
+	auto structCellRead = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
+		if (boxVars[v->name])
+			return StorageMapper::makeStateGetWithDefault(
+				StorageMapper::makeTopLevelBoxExpr(v->name, v->wtype, loc), v->wtype, loc);
+		return m_storageMapper.createStateRead(
+			v->name, v->wtype, awst::AppStorageKind::AppGlobal, loc);
+	};
+	auto structCellTarget = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
+		if (boxVars[v->name])
+			return StorageMapper::makeTopLevelBoxExpr(v->name, v->wtype, loc);
+		auto key = awst::makeUtf8BytesConstant(v->name, loc, awst::WType::stateKeyType());
+		return awst::makeAppStateExpression(std::move(key), v->wtype, loc);
+	};
+
 	// ── __storage_read(slot: uint64) -> biguint ──
 	{
 		awst::ContractMethod readSub;
@@ -207,6 +259,76 @@ void ContractBuilder::buildStorageDispatch(
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq,
 				awst::makeIntegerConstant(si.slotNumber.str(), loc, awst::WType::biguintType()), loc);
+
+			// STRUCT state var: its slots hold packed FIELDS, and the cell is a
+			// typed ARC4Struct (box or app-global) — assemble each slot's word
+			// from the fields living there. One compare per internal slot whose
+			// field group the codec fully supports; others keep the fallback.
+			if (vars.size() == 1)
+				if (auto stIt = structVars.find(vars[0]->name); stIt != structVars.end())
+				{
+					auto const* structW = dynamic_cast<awst::ARC4Struct const*>(vars[0]->wtype);
+					if (structW)
+					{
+						auto fields = SlotHandleAccess::fieldPositions(stIt->second, structW);
+						unsigned stride = static_cast<unsigned>(stIt->second->storageSize() > 64
+							? 64 : static_cast<unsigned>(stIt->second->storageSize()));
+						for (unsigned k = 0; k < stride; ++k)
+						{
+							std::vector<SlotHandleAccess::FieldPos const*> group;
+							bool ok = true;
+							for (auto const& f: fields)
+								if (f.slot == k)
+								{
+									if (!codecSupported(f) || f.size == 0 || f.size > 32)
+										ok = false;
+									group.push_back(&f);
+								}
+							if (!ok || group.empty())
+								continue;
+							std::sort(group.begin(), group.end(), [](auto const* a, auto const* b) {
+								return a->byteOffset > b->byteOffset;
+							});
+							auto cmpK = awst::makeNumericCompare(
+								awst::makeVarExpression("__slot", awst::WType::biguintType(), loc),
+								awst::NumericComparison::Eq,
+								awst::makeIntegerConstant((si.slotNumber + k).str(), loc,
+									awst::WType::biguintType()), loc);
+							auto blkK = awst::makeBlock(loc);
+							{
+								std::shared_ptr<awst::Expression> word;
+								auto append = [&](std::shared_ptr<awst::Expression> piece) {
+									word = word ? awst::makeConcat(std::move(word), std::move(piece), loc)
+												: std::move(piece);
+								};
+								unsigned cursor = 0;
+								for (auto const* f: group)
+								{
+									unsigned start = 32 - f->byteOffset - f->size;
+									if (start > cursor)
+										append(awst::makeBytesConstant(
+											std::vector<uint8_t>(start - cursor, 0), loc));
+									auto fv = awst::makeFieldExpression(
+										structCellRead(vars[0]), f->name, f->wtype, loc);
+									append(SlotWordCodec::nativeToPackedBytes(
+										std::move(fv), f->wtype, f->size, loc));
+									cursor = start + f->size;
+								}
+								if (cursor < 32)
+									append(awst::makeBytesConstant(
+										std::vector<uint8_t>(32 - cursor, 0), loc));
+								blkK->body.push_back(awst::makeReturnStatement(
+									awst::makeAsBiguint(std::move(word), loc), loc));
+							}
+							auto ifElseK = awst::makeIfElse(
+								std::move(cmpK), std::move(blkK), std::move(elseBlock), loc);
+							auto newElseK = awst::makeBlock(loc);
+							newElseK->body.push_back(std::move(ifElseK));
+							elseBlock = std::move(newElseK);
+						}
+						continue;
+					}
+				}
 
 			auto ifBlock = awst::makeBlock(loc);
 			if (si.isDynamic || (vars.size() == 1 && vars[0]->isFullSlot))
@@ -310,6 +432,90 @@ void ContractBuilder::buildStorageDispatch(
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
 			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq,
 				awst::makeIntegerConstant(si.slotNumber.str(), loc, awst::WType::biguintType()), loc);
+
+			// STRUCT state var (see the read side): split the stored word into
+			// the slot's fields via COW on the typed cell.
+			if (vars.size() == 1)
+				if (auto stIt = structVars.find(vars[0]->name); stIt != structVars.end())
+				{
+					auto const* structW = dynamic_cast<awst::ARC4Struct const*>(vars[0]->wtype);
+					if (structW)
+					{
+						auto fields = SlotHandleAccess::fieldPositions(stIt->second, structW);
+						unsigned stride = static_cast<unsigned>(stIt->second->storageSize() > 64
+							? 64 : static_cast<unsigned>(stIt->second->storageSize()));
+						for (unsigned k = 0; k < stride; ++k)
+						{
+							std::vector<SlotHandleAccess::FieldPos const*> group;
+							bool ok = true;
+							for (auto const& f: fields)
+								if (f.slot == k)
+								{
+									if (!codecSupported(f) || f.size == 0 || f.size > 32)
+										ok = false;
+									group.push_back(&f);
+								}
+							if (!ok || group.empty())
+								continue;
+							auto cmpK = awst::makeNumericCompare(
+								awst::makeVarExpression("__slot", awst::WType::biguintType(), loc),
+								awst::NumericComparison::Eq,
+								awst::makeIntegerConstant((si.slotNumber + k).str(), loc,
+									awst::WType::biguintType()), loc);
+							auto blkK = awst::makeBlock(loc);
+							{
+								// bind the padded word once
+								std::string tmp = "__pk_sw_" + std::to_string(
+									awst::NameGen::next("StorageDispatch.pkStructWord"));
+								auto valueVar = awst::makeVarExpression(
+									"__value", awst::WType::biguintType(), loc);
+								blkK->body.push_back(awst::makeAssignmentStatement(
+									awst::makeVarExpression(tmp, awst::WType::bytesType(), loc),
+									awst::makeLeftPadToN(
+										awst::makeAsBytes(std::move(valueVar), loc), 32, loc),
+									loc));
+								auto wordVar = [&]() {
+									return awst::makeVarExpression(tmp, awst::WType::bytesType(), loc);
+								};
+								// COW: rebuild the struct with this slot's fields replaced
+								std::set<std::string> replaced;
+								for (auto const* f: group)
+									replaced.insert(f->name);
+								auto ns = awst::makeNewStruct(structW, loc);
+								for (auto const& [fname, ftype]: structW->fields())
+								{
+									if (replaced.count(fname))
+									{
+										SlotHandleAccess::FieldPos const* fp = nullptr;
+										for (auto const* g: group)
+											if (g->name == fname) { fp = g; break; }
+										unsigned start = 32 - fp->byteOffset - fp->size;
+										auto raw = awst::makeExtract(wordVar(),
+											static_cast<int>(start), static_cast<int>(fp->size), loc);
+										auto native = SlotWordCodec::packedBytesToNative(
+											std::move(raw), fp->wtype, fp->solType, fp->size, loc);
+										if (native)
+											ns->values[fname] = std::move(native);
+									}
+									else
+										ns->values[fname] = awst::makeFieldExpression(
+											structCellRead(vars[0]), fname, ftype, loc);
+								}
+								blkK->body.push_back(awst::makeExpressionStatement(
+									awst::makeAssignmentExpression(
+										structCellTarget(vars[0]), std::move(ns), loc,
+										vars[0]->wtype), loc));
+								blkK->body.push_back(awst::makeReturnStatement(nullptr, loc));
+							}
+							auto ifElseK = awst::makeIfElse(
+								std::move(cmpK), std::move(blkK), std::move(elseBlock), loc);
+							auto newElseK = awst::makeBlock(loc);
+							newElseK->body.push_back(std::move(ifElseK));
+							elseBlock = std::move(newElseK);
+						}
+						continue;
+					}
+				}
 
 			auto ifBlock = awst::makeBlock(loc);
 			if (si.isDynamic || (vars.size() == 1 && vars[0]->isFullSlot))
