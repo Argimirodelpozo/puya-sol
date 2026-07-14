@@ -786,6 +786,26 @@ def test_signed_mixedwidth_mul(harness):
     assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
 
 
+def test_signed_mapping_key_once(harness):
+    """puyasolRegression/contracts/signed_mapping_key_once.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (mapping_key_side_effect_once uint256->int48).
+    A side-effecting SIGNED sub-word mapping key ran TWICE in a compound `m[k()] += x`
+    / `delete m[k()]` (the derived box key is referenced by the read-modify-write). The
+    key materialization guard only caught an AssignmentExpression key; a call-valued key
+    (k() with cnt++) was materialized only for UNSIGNED keys via puya CSE (identical
+    derivations merged), but a signed key's sign-extension defeats CSE so k() ran twice.
+    FIX: materialize a SubroutineCallExpression key too, once, before coercion.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_mapping_key_once.sol")
+    def pair(r): return (as_int(r.abi_return[0]), as_int(r.abi_return[1]))
+    assert pair(harness.call(app, "compound()")) == (15, 1)     # key ran once
+    assert pair(harness.call(app, "del()")) == (0, 1)
+    assert pair(harness.call(app, "write()")) == (55, 1)
+    assert pair(harness.call(app, "read()")) == (7, 1)
+    assert pair(harness.call(app, "compound16()")) == (23, 1)   # int16 key, negative
+
+
 def test_signed_array_getter(harness):
     """puyasolRegression/contracts/signed_array_getter.sol — NOT an o.g. semantic test.
 

@@ -158,11 +158,25 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			awst::WType const* keyWType = (ki < declaredKeyWTypes.size() && declaredKeyWTypes[ki])
 				? declaredKeyWTypes[ki] : awst::WType::uint64Type();
 
-			if (keyWType != translated->wtype)
-				translated = builder::TypeCoercion::implicitNumericCast(
-					std::move(translated), keyWType, m_loc);
-
-			if (dynamic_cast<awst::AssignmentExpression const*>(translated.get()))
+			// Materialise a SIDE-EFFECTING key to a temp BEFORE any coercion. The
+			// derived box key is referenced twice in a compound `m[k()] += x` /
+			// `delete m[k()]` (read current + write), so a side-effecting key (`k()`
+			// with cnt++) must evaluate ONCE. The guard is a bare AssignmentExpression,
+			// but a SIGNED sub-word key's implicitNumericCast (sign-extend) would WRAP
+			// that AssignmentExpression and hide it from the check — so the coercion
+			// must run AFTER the materialisation, not before. Unsigned keys matched the
+			// key type (no cast) and were already materialised; signed keys ran k()
+			// twice. Found by the corpus-mutation fuzzer (mapping_key_side_effect_once
+			// uint256->int48).
+			// A SIDE-EFFECTING key (`m[k()]` where k() bumps a counter) is embedded in
+			// the derived box key, which a compound `+= ` / `delete` references twice
+			// (read current + write). An AssignmentExpression key was materialised; a
+			// call-valued key (SubroutineCallExpression) was NOT — the unsigned case
+			// only survived because puya CSE-merged the two IDENTICAL derivations, but a
+			// SIGNED key's sign-extension makes them differ, defeating CSE, so k() ran
+			// twice. Materialise call-valued keys too, once, before coercion.
+			if (dynamic_cast<awst::AssignmentExpression const*>(translated.get())
+				|| dynamic_cast<awst::SubroutineCallExpression const*>(translated.get()))
 			{
 				std::string tempName = "__sol_idx_" + std::to_string(awst::NameGen::next("SolIndexAccessHandlers.idxTempCounter"));
 				auto tempVar = awst::makeVarExpression(tempName, translated->wtype, m_loc);
@@ -171,6 +185,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 				translated = tempVar;
 			}
+
+			if (keyWType != translated->wtype)
+				translated = builder::TypeCoercion::implicitNumericCast(
+					std::move(translated), keyWType, m_loc);
 
 			currentPrefix = awst::makeMappingKeyLayer(
 				std::move(translated), keyWType, std::move(currentPrefix), m_loc);
