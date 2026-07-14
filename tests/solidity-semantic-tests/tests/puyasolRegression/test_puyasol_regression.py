@@ -786,6 +786,29 @@ def test_signed_mixedwidth_mul(harness):
     assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
 
 
+def test_modifier_storage_ref_arg(harness):
+    """puyasolRegression/contracts/modifier_storage_ref_arg.sol — NOT an o.g. semantic test.
+
+    Found by COVERAGE-GUIDED fuzzing (the storage-ref alias path in ModifierInliner
+    was 0%-covered). A modifier with a STORAGE-REFERENCE param — modifier
+    m(uint256[] storage a, uint256 i) { a[i] += 1; _; } applied as m(arr, i) — bound
+    the ref to a __mod_a LOCAL and remapped, so the modifier body's a[i] += 1 wrote a
+    local copy and the mutation was SILENTLY DROPPED (fArr(0) returned 10 not 11).
+    ModifierBodyInliner aliased storage-ref params; the subroutine-chain
+    ModifierInliner (the default for non-constructor fns) didn't. FIX: port the
+    storage-alias branch — the aliased target is a contract-global state var,
+    resolvable from the modifier subroutine.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_storage_ref_arg.sol")
+    assert as_int(harness.call(app, "fArr(uint256)", 0).abi_return) == 11   # arr[0] 10->11
+    assert as_int(harness.call(app, "fArr(uint256)", 0).abi_return) == 12   # persists 11->12
+    assert as_int(harness.call(app, "getArr(uint256)", 0).abi_return) == 12
+    assert as_int(harness.call(app, "fArr(uint256)", 1).abi_return) == 21   # arr[1] 20->21
+    assert as_int(harness.call(app, "fMap(uint256)", 7).abi_return) == 5    # m[7] 0->5
+    assert as_int(harness.call(app, "fMap(uint256)", 7).abi_return) == 10
+    assert as_int(harness.call(app, "getMap(uint256)", 7).abi_return) == 10
+
+
 def test_modifier_arg_side_effecting(harness):
     """puyasolRegression/contracts/modifier_arg_side_effecting.sol — NOT an o.g. semantic test.
 

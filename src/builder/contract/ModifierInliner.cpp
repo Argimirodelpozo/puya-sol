@@ -223,6 +223,35 @@ void ContractBuilder::buildModifierChain(
 
 				auto argExpr = m_exprBuilder->build(*(*args)[pi]);
 				if (!argExpr) continue;
+
+				// Storage-POINTER modifier param (`modifier m(uint256[] storage a, ...)`
+				// / `mapping(...) storage`): alias it to the ARGUMENT's storage location
+				// so the modifier body's writes (`a[i] += 1`) mutate the real state var,
+				// not a local copy. Mirrors ModifierBodyInliner; the aliased target is a
+				// contract-global state var / mapping, resolvable from this modifier
+				// subroutine. Without it the write was bound to a `__mod_a` LOCAL and
+				// silently DROPPED. Found by coverage-guided fuzzing (this storage-ref
+				// alias path was 0%-covered in the whole suite).
+				if (param->referenceLocation()
+					== solidity::frontend::VariableDeclaration::Location::Storage)
+				{
+					m_exprBuilder->appendPendingTo(modBody->body);
+					sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
+						if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
+							return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
+						if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
+							return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
+						if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
+							return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
+						if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
+							return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
+						return sol_ast::StorageAlias::stateRead(std::move(argExpr));
+					}();
+					m_tr->setStorageAlias(param->id(), std::move(alias));
+					remappedDeclIds.push_back(param->id());
+					continue;
+				}
+
 				argExpr = TypeCoercion::implicitNumericCast(std::move(argExpr), paramType, modLoc);
 
 				// A modifier ARGUMENT can be a side-effecting expression — a ternary
