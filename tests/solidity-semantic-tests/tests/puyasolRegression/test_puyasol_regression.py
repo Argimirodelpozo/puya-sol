@@ -811,6 +811,28 @@ def test_enum_conversion_wide_range(harness):
     assert as_int(harness.call(app, "fromI16(int16)", 1).abi_return) == 1
 
 
+def test_signed_asm_read_word(harness):
+    """puyasolRegression/contracts/signed_asm_read_word.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (assembly_access_bytes2_abicoder_v1
+    uint256->int64). A signed intN (N<=64) local is uint64-backed (64-bit TC), but a
+    Yul identifier is the full 256-bit EVM word — solc sign-extends on entry. Our asm
+    read returned the value zero-padded, so `ret := val` into a bytes2 took 0x0000
+    from the top instead of 0xFFFF for every negative input (silent wrong data).
+    FIX: register signed <=64-bit locals (SolInlineAssembly signedParamBits) and
+    sign-extend to the canonical 256-bit word at the bare-identifier read
+    (CoreTranslation), only while the local is still uint64-backed.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_asm_read_word.sol")
+    for v in [-(1 << 63), -8388608, -1]:
+        assert [int(x) for x in harness.call(app, "h(int64)", v).abi_return] == [255, 255], v
+    assert [int(x) for x in harness.call(app, "h(int64)", 5).abi_return] == [0, 0]
+    assert [int(x) for x in harness.call(app, "top(int32)", -2).abi_return] == [255, 255]
+    assert [int(x) for x in harness.call(app, "top(int32)", 3).abi_return] == [0, 0]
+    assert as_int(harness.call(app, "asWord(int64)", -1).abi_return) == (1 << 256) - 1
+    assert as_int(harness.call(app, "asWord(int64)", 7).abi_return) == 7
+
+
 def test_mstore8_bytes_memory_large(harness):
     """puyasolRegression/contracts/mstore8_bytes_memory_large.sol — NOT an o.g. semantic test.
 

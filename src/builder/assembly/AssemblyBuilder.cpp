@@ -794,6 +794,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	auto savedCalldataParamNames = std::move(m_calldataParamNames);
 	auto savedUpgraded = std::move(m_upgradedLocals);
 	auto savedParamBitWidths = m_paramBitWidths;
+	auto savedSignedParamBits = m_signedParamBits;
 	auto savedPending = std::move(m_pendingStatements);
 	auto savedHalt = m_haltEmitted;
 	auto savedInlineDepth = m_inlineDepth;
@@ -881,6 +882,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_calldataParamNames = std::move(savedCalldataParamNames);
 	m_upgradedLocals = std::move(savedUpgraded);
 	m_paramBitWidths = std::move(savedParamBitWidths);
+	m_signedParamBits = std::move(savedSignedParamBits);
 	m_pendingStatements = std::move(savedPending);
 	m_haltEmitted = savedHalt;
 	m_inlineDepth = savedInlineDepth;

@@ -429,6 +429,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// byte OFFSET of their data (`s := s2`, `s := t` read/write it). Kept separate
 	// from the dynamic set — statics have only __cd_off_<name>, no length local.
 	std::set<std::string> calldataStaticPtrNames;
+	// Signed intN (N<=64) locals: name→bits, for sign-extended bare Yul reads.
+	std::map<std::string, unsigned> signedParamBits;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
 		if (!extInfo.declaration) continue;
@@ -475,6 +477,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 		if (auto it = builder::SolIntType::fromSol(varDecl->annotation().type); it && it->bits < 64)
 			paramBitWidths[name] = it->bits;
+		// Signed intN (N<=64) value locals are uint64-backed 64-bit TC; a bare Yul
+		// read must present the sign-extended 256-bit word (EVM identifier = full
+		// word). Wider signed (64<N<256) are biguint-backed canonical already.
+		if (auto it = builder::SolIntType::fromSol(varDecl->annotation().type);
+			it && it->isSigned && it->bits <= 64)
+			signedParamBits[name] = it->bits;
 	}
 	for (auto const& [n, bw]: m_blk.fn.paramBitWidths)
 		paramBitWidths.emplace(n, bw);
@@ -485,6 +493,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
+	asmTranslator.setSignedParamBits(std::move(signedParamBits));
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		augmentedParams,

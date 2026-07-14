@@ -104,6 +104,13 @@ public:
 		m_slotDataRegions = std::move(_regions);
 	}
 
+	/// Register signed intN (N<=64) locals whose bare Yul read must sign-extend
+	/// to the canonical 256-bit word (see m_signedParamBits).
+	void setSignedParamBits(std::map<std::string, unsigned> _m)
+	{
+		m_signedParamBits = std::move(_m);
+	}
+
 	/// True when the block emitted an unconditional halt at top level
 	/// (branch-local halts not counted — translateSwitch/If save+restore the flag).
 	bool haltEmitted() const { return m_haltEmitted; }
@@ -891,6 +898,13 @@ private:
 
 	/// Solidity param bit-widths (uint16→16); used to truncate values on block exit.
 	std::map<std::string, unsigned> m_paramBitWidths;
+
+	/// SIGNED intN (N<=64) Solidity locals referenced in this asm block, name→bits.
+	/// Their uint64-backed 64-bit-TC value must sign-extend to the canonical 256-bit
+	/// word on a bare Yul read (an EVM identifier IS the full word: int64 -1 =
+	/// 0xFF..FF, so e.g. `bytes2(v)` takes 0xFFFF from the top). Wider signed
+	/// (64<N<256) are biguint-backed canonical already — not registered.
+	std::map<std::string, unsigned> m_signedParamBits;
 
 	/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
 	std::map<std::string, uint64_t> m_localConstants;
