@@ -80,6 +80,21 @@ def _resolve_method(app_spec, sig: str):
     candidates = [m for m in app_spec.methods if m.name == base_name]
     if len(candidates) == 1:
         return candidates[0].to_abi_method()
+
+    # OVERLOADS: exact type-matching above can fail because puya-sol PROMOTES
+    # signed types in the ARC-4 signature (Solidity `int16` -> arc4 `uint64` param
+    # / `uint256` return) — a mapping `_sol_token_to_arc4` does not model. The
+    # single-candidate fallback rescues non-overloaded methods, but an OVERLOADED
+    # signed method resolved to None, and the caller then submitted a SYNTHETIC
+    # selector that hit the router's `err` — a resolution failure masquerading as a
+    # contract REVERT, i.e. a phantom "compiler bug". (The overnight fuzzer reported
+    # exactly this on inheritance/super_overload mutants; the compiler was correct.)
+    # Overloads differ by ARITY in practice, so disambiguate on arg count.
+    if has_paren:
+        want = len(_split_top_level(target_inner)) if target_inner.strip() else 0
+        by_arity = [m for m in candidates if len(m.to_abi_method().args) == want]
+        if len(by_arity) == 1:
+            return by_arity[0].to_abi_method()
     return None
 
 
