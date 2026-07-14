@@ -786,6 +786,30 @@ def test_signed_mixedwidth_mul(harness):
     assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
 
 
+def test_signed_array_getter(harness):
+    """puyasolRegression/contracts/signed_array_getter.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (userDefinedValueType/memory_to_storage
+    uint16->int72). The auto-generated PUBLIC array/UDVT getter sign-extended the
+    element only when bits<=64, so a 64<bits<256 signed element (int72/int128) or a
+    UDVT over one returned the element at its NATURAL width -- int72 -1 came back as
+    2^72-1 (a huge positive on the ABI wire) instead of the sign-extended -1. FIX:
+    sign-extend ANY signed sub-256 getter return (signExtendToUint256 is idempotent,
+    safe for the already-canonical scalar case).
+    """
+    import ctypes
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_array_getter.sol")
+    vals = [-1, -300, 5, 70000]
+    harness.call(app, "setAll(int72[])", vals)
+    harness.call(app, "setScalar(int72)", -42)
+    for i, v in enumerate(vals):
+        assert as_signed_int(harness.call(app, "small(uint256)", i).abi_return) == v   # UDVT int72
+        assert as_signed_int(harness.call(app, "a72(uint256)", i).abi_return) == v
+        assert as_signed_int(harness.call(app, "a128(uint256)", i).abi_return) == v
+        assert as_signed_int(harness.call(app, "a32(uint256)", i).abi_return) == ctypes.c_int32(v & 0xFFFFFFFF).value
+    assert as_signed_int(harness.call(app, "scalar72()").abi_return) == -42
+
+
 def test_struct_array_box_size(harness):
     """puyasolRegression/contracts/struct_array_box_size.sol — NOT an o.g. semantic test.
 

@@ -171,7 +171,16 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				getter.returnType = m_typeMapper.map(solReturnTypes[0]);
 				if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]))
 				{
-					if (intInfo->isSigned && intInfo->bits <= 64)
+					// ANY signed sub-256 return must sign-extend to canonical 256-bit
+					// TC for the ABI. ≤64-bit is uint64-backed (override to biguint);
+					// 64<bits<256 already maps to biguint, but an ARRAY-ELEMENT / UDVT
+					// getter reads the element at its NATURAL width (int72 -1 = 2^72-1),
+					// which is NOT canonical — the old `<= 64` gate skipped sign-extension
+					// for those, so `int72[] public a; a(i)` returned 2^72-1 for -1.
+					// signExtendToUint256 is idempotent, so widening is safe for the
+					// already-canonical scalar case too. Found by the corpus-mutation
+					// fuzzer (userDefinedValueType/memory_to_storage uint16->int72).
+					if (intInfo->isSigned && intInfo->bits < 256)
 					{
 						getter.returnType = awst::WType::biguintType();
 						signedGetterBits = intInfo->bits;
