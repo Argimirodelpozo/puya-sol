@@ -52,27 +52,25 @@ def avm_step(h, app, sig, args, is_view):
         return REVERT                                          # reverted txn => state unchanged
 
 
-def main():
-    argv = list(sys.argv[1:])
-    max_per_fn = 24
-    if "--max-per-fn" in argv:
-        i = argv.index("--max-per-fn"); max_per_fn = int(argv[i + 1]); del argv[i:i + 2]
-    # --contract NAME pins the ENTRY contract on BOTH sides (EVM oracle + AVM harness). Needed for
-    # multi-contract fixtures (e.g. cross-contract: a Caller that `new`s a Callee) where the default
-    # "most functions" heuristic could pick the wrong one and every call would 404 → spurious REVERTs.
-    entry = None
-    if "--contract" in argv:
-        i = argv.index("--contract"); entry = argv[i + 1]; del argv[i:i + 2]
-    # --budget-pool N: deploy-time opcode pool (cross-contract inner-creates can need it).
-    budget_pool = 0
-    if "--budget-pool" in argv:
-        i = argv.index("--budget-pool"); budget_pool = int(argv[i + 1]); del argv[i:i + 2]
-    fixture = Path(argv[0]).resolve()
+def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
+                      harness=None, quiet=False, solc_version="0.8.26",
+                      evm_version="paris"):
+    """Run the stateful differential (EVM oracle vs AVM harness) on one fixture.
 
-    base = {"fixture": str(fixture), "solc_version": "0.8.26", "evm_version": "paris"}
+    Returns a result dict:
+      {ok, diffed, diverged: [(sig,args,exp,act)], avm_errors, evm_skips,
+       contract, n_calls} — ok is True iff no divergences AND no AVM errors.
+    Reused by main() (CLI) and by fuzz_mutate.py (corpus mutation campaign).
+    Pass a shared `harness` to amortise LocalNet setup across many mutants.
+    `quiet=True` suppresses the per-fixture prints (campaign mode)."""
+    def say(*a):
+        if not quiet:
+            print(*a)
+
+    base = {"fixture": str(fixture), "solc_version": solc_version, "evm_version": evm_version}
     if entry:
         base["contract"] = entry
-    print(f"[introspect] {fixture.name}…")
+    say(f"[introspect] {fixture.name}…")
     info = _oracle({**base, "introspect": True})
     mut = {f["sig"]: f.get("mut", "") for f in info["functions"]}
     has_output = {f["sig"]: bool(f["outputs"]) for f in info["functions"]}
@@ -103,16 +101,17 @@ def main():
         seq = list(zero_getters)
 
     n_mut = sum(1 for s, _ in seq if not _is_view(mut.get(s, "")))
-    print(f"  contract {info['contract']}: {len(seq)} calls in sequence "
-          f"({n_mut} state-changing, {len(seq) - n_mut} reads)")
+    say(f"  contract {info['contract']}: {len(seq)} calls in sequence "
+        f"({n_mut} state-changing, {len(seq) - n_mut} reads)")
 
-    print(f"[EVM] running stateful sequence…")
+    say(f"[EVM] running stateful sequence…")
     evm = _oracle({**base, "stateful": True,
                    "calls": [{"sig": s, "args": a} for s, a in seq]})["results"]
 
-    ln = LocalNet(); h = Harness(ln, HERE / "out_state")
-    print("[AVM] compiling + deploying…")
-    app = h.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool)
+    if harness is None:
+        ln = LocalNet(); harness = Harness(ln, HERE / "out_state")
+    say("[AVM] compiling + deploying…")
+    app = harness.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool)
 
     diverged, avm_errors, evm_skips = [], [], []
     for (sig, args), er in zip(seq, evm):
@@ -123,7 +122,7 @@ def main():
         else:
             evm_skips.append((sig, args, er.get("err", "?"))); continue
         try:
-            actual = avm_step(h, app, sig, args, _is_view(mut.get(sig, "")))
+            actual = avm_step(harness, app, sig, args, _is_view(mut.get(sig, "")))
         except Exception as e:
             avm_errors.append((sig, args, type(e).__name__ + ": " + str(e)[:140])); continue
         if has_output.get(sig):
@@ -141,21 +140,41 @@ def main():
                                  "REVERT" if actual == REVERT else "ok"))
 
     diffed = len(seq) - len(avm_errors) - len(evm_skips)
-    print(f"\n=== {diffed} sequenced calls diffed (AVM vs live EVM, state persisted) ===")
+    say(f"\n=== {diffed} sequenced calls diffed (AVM vs live EVM, state persisted) ===")
     if avm_errors:
-        print(f"\n⚠️  {len(avm_errors)} AVM errors:")
+        say(f"\n⚠️  {len(avm_errors)} AVM errors:")
         for sig, args, err in avm_errors[:8]:
-            print(f"   {sig}{_fmt(args)}  {err}")
+            say(f"   {sig}{_fmt(args)}  {err}")
     if diverged:
-        print(f"\n❌ {len(diverged)} DIVERGENCE(S):")
+        say(f"\n❌ {len(diverged)} DIVERGENCE(S):")
         for sig, args, exp, act in diverged[:25]:
-            print(f"   {sig}{_fmt(args)}  evm={_fmt1(exp)}  avm={_fmt1(act)}")
-    else:
-        print("\n✅ no divergences — persisted state matches a live solc+EVM across the sequence")
+            say(f"   {sig}{_fmt(args)}  evm={_fmt1(exp)}  avm={_fmt1(act)}")
+    elif not quiet:
+        say("\n✅ no divergences — persisted state matches a live solc+EVM across the sequence")
+    return {"ok": not diverged and not avm_errors, "diffed": diffed,
+            "diverged": diverged, "avm_errors": avm_errors, "evm_skips": evm_skips,
+            "contract": info["contract"], "n_calls": len(seq)}
+
+
+def main():
+    argv = list(sys.argv[1:])
+    max_per_fn = 24
+    if "--max-per-fn" in argv:
+        i = argv.index("--max-per-fn"); max_per_fn = int(argv[i + 1]); del argv[i:i + 2]
+    # --contract NAME pins the ENTRY contract on BOTH sides (EVM oracle + AVM harness). Needed for
+    # multi-contract fixtures (e.g. cross-contract: a Caller that `new`s a Callee) where the default
+    # "most functions" heuristic could pick the wrong one and every call would 404 → spurious REVERTs.
+    entry = None
+    if "--contract" in argv:
+        i = argv.index("--contract"); entry = argv[i + 1]; del argv[i:i + 2]
+    # --budget-pool N: deploy-time opcode pool (cross-contract inner-creates can need it).
+    budget_pool = 0
+    if "--budget-pool" in argv:
+        i = argv.index("--budget-pool"); budget_pool = int(argv[i + 1]); del argv[i:i + 2]
+    fixture = Path(argv[0]).resolve()
+    r = run_stateful_diff(fixture, entry=entry, max_per_fn=max_per_fn, budget_pool=budget_pool)
     # Exit non-zero on divergence so callers (fuzz_crosscall, campaign) actually see it.
-    # (Previously always exited 0, so diverging cross-contract fixtures were miscounted clean —
-    # that masked the bool-tuple decode bug until the log classifier caught it.)
-    sys.exit(1 if diverged else 0)
+    sys.exit(1 if r["diverged"] else 0)
 
 
 if __name__ == "__main__":
