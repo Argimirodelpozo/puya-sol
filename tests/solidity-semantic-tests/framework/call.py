@@ -91,11 +91,41 @@ def _resolve_method(app_spec, sig: str):
     # exactly this on inheritance/super_overload mutants; the compiler was correct.)
     # Overloads differ by ARITY in practice, so disambiguate on arg count.
     if has_paren:
-        want = len(_split_top_level(target_inner)) if target_inner.strip() else 0
-        by_arity = [m for m in candidates if len(m.to_abi_method().args) == want]
+        want_args = _split_top_level(target_inner) if target_inner.strip() else []
+        by_arity = [m for m in candidates if len(m.to_abi_method().args) == len(want_args)]
         if len(by_arity) == 1:
             return by_arity[0].to_abi_method()
+        # Still ambiguous (e.g. deposit(address,int240) vs deposit(address,bool)):
+        # match each arg by CATEGORY (integer / bool / address / bytes / tuple),
+        # which survives the signed->unsigned promotion the exact matcher trips on.
+        if len(by_arity) > 1:
+            want_cats = [_type_category(t) for t in want_args]
+            by_cat = [
+                m for m in by_arity
+                if [_type_category(str(a.type)) for a in m.to_abi_method().args] == want_cats
+            ]
+            if len(by_cat) == 1:
+                return by_cat[0].to_abi_method()
     return None
+
+
+def _type_category(t: str) -> str:
+    """Broad type category, ignoring sign/width — for overload resolution that
+    must survive puya-sol's signed->unsigned ARC-4 promotion."""
+    t = t.strip()
+    if t.startswith("("):
+        return "tuple"
+    if t.endswith("]"):
+        return "array"
+    if t == "bool":
+        return "bool"
+    if t == "address":
+        return "address"
+    if t == "string" or t.startswith("byte") or t.startswith("bytes"):
+        return "bytes"
+    if t.startswith(("uint", "int", "ufixed", "fixed")):
+        return "integer"
+    return t
 
 
 def _extract_inner_args(method_sig: str) -> str:
