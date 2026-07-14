@@ -162,15 +162,27 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 	auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(
 		m_call.annotation().type);
 	auto argExpr = buildExpr(*m_call.arguments()[0]);
-	auto result = TypeCoercion::implicitNumericCast(
-		std::move(argExpr), awst::WType::uint64Type(), m_loc);
-
 	unsigned numMembers = enumType->numberOfMembers();
-	auto stmt = awst::makeExpressionStatement(
-		awst::makeEnumRangeAssert(result, numMembers, m_loc), m_loc);
-	m_ctx.prePendingStatements.push_back(std::move(stmt));
 
-	return result;
+	// Range-check the FULL value BEFORE truncating to uint64. A wide input
+	// (int136 etc. = biguint) truncated first would drop its high bits, so a
+	// value whose full magnitude is out of range but whose LOW 64 bits form a
+	// valid ordinal (e.g. int136 -2^135 → low64 == 0) slipped the check and
+	// returned the WRONG enum member instead of Panic(0x21). The constant is
+	// typed to the value's width so a biguint value compares at biguint width
+	// (a canonical negative = 2^256-k is > numMembers → reverts). Found by the
+	// corpus-mutation fuzzer (internal_library_function_attached_to_enum
+	// uint256->int136).
+	auto argOnce = awst::makeEvalOnce(std::move(argExpr), m_loc);
+	auto numConst = awst::makeIntegerConstant(numMembers, m_loc, argOnce->wtype);
+	m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeNumericCompare(argOnce, awst::NumericComparison::Lt,
+				std::move(numConst), m_loc),
+			m_loc, "enum out of range"),
+		m_loc));
+
+	return TypeCoercion::implicitNumericCast(argOnce, awst::WType::uint64Type(), m_loc);
 }
 
 // ─────────────────────────────────────────────────────────────────────

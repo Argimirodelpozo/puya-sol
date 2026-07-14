@@ -316,15 +316,22 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 	auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(_targetSolType);
 	if (!enumType) return nullptr;
 
-	auto result = TypeCoercion::implicitNumericCast(
-		std::move(_arg), awst::WType::uint64Type(), _loc);
-
-	// EVM Panic(0x21) if value >= numMembers.
+	// Range-check the FULL value BEFORE truncating to uint64 (see the parallel
+	// SolTypeConversion::handleEnumConversion): a wide biguint input truncated
+	// first drops its high bits, so a value out of range whose low 64 bits form a
+	// valid ordinal returned the wrong member instead of Panic(0x21). Typed
+	// constant so a biguint value compares at biguint width.
 	unsigned numMembers = enumType->numberOfMembers();
-	auto stmt = awst::makeExpressionStatement(
-		awst::makeEnumRangeAssert(result, numMembers, _loc), _loc);
-	_ctx.prePendingStatements.push_back(std::move(stmt));
+	auto argOnce = awst::makeEvalOnce(std::move(_arg), _loc);
+	auto numConst = awst::makeIntegerConstant(numMembers, _loc, argOnce->wtype);
+	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeNumericCompare(argOnce, awst::NumericComparison::Lt,
+				std::move(numConst), _loc),
+			_loc, "enum out of range"),
+		_loc));
 
+	auto result = TypeCoercion::implicitNumericCast(argOnce, awst::WType::uint64Type(), _loc);
 	return std::make_unique<SolEnumBuilder>(_ctx, enumType, std::move(result));
 }
 

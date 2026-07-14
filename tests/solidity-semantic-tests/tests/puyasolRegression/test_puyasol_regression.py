@@ -786,6 +786,31 @@ def test_signed_mixedwidth_mul(harness):
     assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
 
 
+def test_enum_conversion_wide_range(harness):
+    """puyasolRegression/contracts/enum_conversion_wide_range.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (internal_library_function_attached_to_enum
+    uint256->int136). An int->enum conversion truncated a WIDE biguint input to uint64
+    BEFORE the range check, so a value out of range whose LOW 64 bits form a valid enum
+    ordinal (int136 -2^135 -> low64 == 0) passed the check and returned the WRONG member
+    instead of Panic(0x21) -- a silent miscompile. FIX: range-check the FULL value at its
+    own width (typed constant) before truncating. Fixed in both conversion paths
+    (SolTypeConversion + eb TypeConversions).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/enum_conversion_wide_range.sol")
+    assert as_int(harness.call(app, "fromI136(int136)", 0).abi_return) == 0
+    assert as_int(harness.call(app, "fromI136(int136)", 1).abi_return) == 1
+    # adversarial: full value out of range, low 64 bits == 0
+    assert harness.call(app, "fromI136(int136)", -(1 << 135), expect_revert=True).reverted
+    assert harness.call(app, "fromI136(int136)", 5, expect_revert=True).reverted
+    assert harness.call(app, "fromI136(int136)", -1, expect_revert=True).reverted
+    assert harness.call(app, "fromI200(int200)", -(1 << 199), expect_revert=True).reverted
+    assert as_int(harness.call(app, "fromI200(int200)", 1).abi_return) == 1
+    assert harness.call(app, "fromU256(uint256)", 1 << 200, expect_revert=True).reverted
+    assert harness.call(app, "fromI16(int16)", -256, expect_revert=True).reverted
+    assert as_int(harness.call(app, "fromI16(int16)", 1).abi_return) == 1
+
+
 def test_signed_mapping_key_once(harness):
     """puyasolRegression/contracts/signed_mapping_key_once.sol — NOT an o.g. semantic test.
 
