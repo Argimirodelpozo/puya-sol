@@ -267,6 +267,18 @@ void inlineModifiers(
 				if (!argExpr)
 					continue;
 
+				// A modifier ARGUMENT can be an arbitrary side-effecting expression:
+				// a ternary with a checked/negate branch, a checked op, a short-circuit.
+				// SolConditional lowers such a ternary to a branch-gating if/else that
+				// assigns its result to a temp (returning a bare temp-READ as the
+				// expression) — emitted as a PRE-pending statement. build() leaves those
+				// in the context; the inliner must drain them into the modifier body at
+				// the binding point. Without this the temp is never assigned and the
+				// bound value is garbage — `mod(a > 0 ? a : -a)` collapsed to `-a`,
+				// reverting on EVERY call. Found by coverage-guided fuzzing (this inliner
+				// was 39.9% line-covered; modifier args with side-effecting exprs unhit).
+				m_exprBuilder.appendPendingTo(modBody->body);
+
 				// Storage-pointer params: alias to the original storage location;
 				// writes must mutate storage, not a local copy.
 				if (param->referenceLocation()

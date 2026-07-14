@@ -225,6 +225,16 @@ void ContractBuilder::buildModifierChain(
 				if (!argExpr) continue;
 				argExpr = TypeCoercion::implicitNumericCast(std::move(argExpr), paramType, modLoc);
 
+				// A modifier ARGUMENT can be a side-effecting expression — a ternary
+				// with a checked/negate branch (`mod(a > 0 ? a : -a)`), a checked op —
+				// whose SolConditional emits a branch-gating if/else assigning the
+				// result to a temp, returning a bare temp-READ. build()/the cast leave
+				// those PRE-statements in the context; drain them into the modifier body
+				// BEFORE the binding, else `__mod_arg = …(temp)` runs before the if/else
+				// assigns the temp (the ternary collapsed to its false branch, reverting
+				// every call). Found by coverage-guided fuzzing (modifier inliner cold).
+				m_exprBuilder->appendPendingTo(modBody->body);
+
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 
 				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);

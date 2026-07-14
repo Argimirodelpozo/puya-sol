@@ -786,6 +786,32 @@ def test_signed_mixedwidth_mul(harness):
     assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
 
 
+def test_modifier_arg_side_effecting(harness):
+    """puyasolRegression/contracts/modifier_arg_side_effecting.sol — NOT an o.g. semantic test.
+
+    Found by COVERAGE-GUIDED fuzzing (ModifierInliner was 39.9% line-covered;
+    modifier args with side-effecting exprs were unhit). A modifier ARGUMENT
+    that is a ternary with a negate/checked branch — `gate(uint256(int256(
+    a > 0 ? a : -a)))` — lowered the ternary as a branch-gating if/else assigning
+    its result to a temp, but the ModifierInliner never drained that if/else into
+    the modifier body before binding the arg. So the binding read the temp before
+    it was assigned → the ternary collapsed to its false branch (`-a`) → the gate
+    arg became huge → require(<1000) failed on EVERY call. FIX: drain the arg
+    expression's pre/pending statements into the modifier body before the bind.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_arg_side_effecting.sol")
+    # gate arg = abs(a); require(abs(a) < 1000); returns a
+    assert as_signed_int(harness.call(app, "absGate(int64)", 1).abi_return) == 1
+    assert as_signed_int(harness.call(app, "absGate(int64)", -7).abi_return) == -7
+    assert as_signed_int(harness.call(app, "absGate(int64)", 0).abi_return) == 0
+    assert as_signed_int(harness.call(app, "absGate(int64)", 999).abi_return) == 999
+    assert harness.call(app, "absGate(int64)", 1500, expect_revert=True).reverted
+    assert harness.call(app, "absGate(int64)", -1500, expect_revert=True).reverted
+    # stacked modifiers + named return + body multiply
+    assert as_signed_int(harness.call(app, "stackedNamed(int64,int64)", 3, 7).abi_return) == 21
+    assert as_signed_int(harness.call(app, "stackedNamed(int64,int64)", -4, 5).abi_return) == -20
+
+
 def test_unchecked_uint64_mul_add(harness):
     """puyasolRegression/contracts/unchecked_uint64_mul_add.sol — NOT an o.g. semantic test.
 
