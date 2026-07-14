@@ -960,6 +960,21 @@ void ContractBuilder::emitBoxCreateForStateVars(
 							// 32 → under-sized box (64 B for int256[2][2] not 128) → grid[1][j] hit
 							// "replacement end beyond original length". Recurses correctly.
 							elemSize = StorageMapper::arc4StaticArrayTotalBytes(elemT);
+						else if (elemT->kind() == awst::WTypeKind::ARC4Struct)
+						{
+							// STRUCT element (e.g. `S[5] data` where S packs to 55 B): the element's byte
+							// size is the struct's full ARC4 encoding. Same missed-case class as the nested
+							// static array above — without this the default 32 UNDER-SIZED the box (5*32=160
+							// for a struct needing 5*55=275), so element access overran it ("extraction end
+							// 165 is beyond length: 160") and low indices silently read/wrote the wrong
+							// bytes. Latent for ANY Struct[N] state array whose struct isn't exactly 32 B.
+							// Found by the corpus-mutation fuzzer (structs/memory_structs_read_write,
+							// uint16->int160). computeEncodedElementSize returns 0 for a DYNAMIC struct —
+							// keep the existing default in that case (dynArc4Default handles it above).
+							int structSize = builder::computeEncodedElementSize(elemT);
+							if (structSize > 0)
+								elemSize = static_cast<uint64_t>(structSize);
+						}
 					}
 					// AVM box cap = 32768 B; oversized → multi-box below.
 					// Record per-box size here.

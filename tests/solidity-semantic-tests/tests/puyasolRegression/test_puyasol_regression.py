@@ -786,6 +786,32 @@ def test_signed_mixedwidth_mul(harness):
     assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
 
 
+def test_struct_array_box_size(harness):
+    """puyasolRegression/contracts/struct_array_box_size.sol — NOT an o.g. semantic test.
+
+    Found by the CORPUS-MUTATION fuzzer (structs/memory_structs_read_write mutated
+    uint16->int160). A fixed array of STRUCTS had its box sized with the default
+    32 bytes/element: the sizing switch only had cases for uintN / bytesN /
+    nested-static-array elements, so a struct element fell through. Any Struct[N]
+    whose ARC-4 encoding isn't exactly 32 B was UNDER-ALLOCATED (5*32=160 for a
+    55-byte struct needing 275), and element access overran the box
+    ("extraction end 165 is beyond length: 160"); low indices happened to fit,
+    which is why the suite never caught it. FIX: size struct elements via
+    computeEncodedElementSize. Guards the HIGHEST index (the one that overran).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/struct_array_box_size.sol")
+    for i in (0, 2, 4):   # index 4 overran the under-sized box
+        harness.call(app, "setWide(uint256,uint8,int160,uint256,uint8)", i, 1, -7, 3, 4)
+        r = harness.call(app, "getWide(uint256)", i)   # storage -> memory struct copy
+        assert as_int(r.abi_return[0]) == 1
+        assert as_signed_int(r.abi_return[1]) == -7
+        assert as_int(r.abi_return[2]) == 3
+        assert as_int(r.abi_return[3]) == 4
+    for i in (0, 4):
+        harness.call(app, "setSmall(uint256,uint256)", i, 9)
+        assert as_int(harness.call(app, "getSmall(uint256)", i).abi_return) == 9
+
+
 def test_modifier_storage_ref_arg(harness):
     """puyasolRegression/contracts/modifier_storage_ref_arg.sol — NOT an o.g. semantic test.
 
