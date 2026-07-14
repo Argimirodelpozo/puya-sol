@@ -811,6 +811,28 @@ def test_enum_conversion_wide_range(harness):
     assert as_int(harness.call(app, "fromI16(int16)", 1).abi_return) == 1
 
 
+def test_mstore8_bytes_memory_large(harness):
+    """puyasolRegression/contracts/mstore8_bytes_memory_large.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (byte_array_to_storage_cleanup lit 63->126).
+    Inline-assembly `mstore8` into a `bytes memory` local reverted once the array
+    exceeded 64 bytes: the local stays a VALUE, and the generic path lowered
+    `add(m, k)` to a bigint `b+` on that >64-byte value -- past AVM's bigint-operand
+    limit ("math attempted on large byte-array"). FIX: a dedicated mstore8 write
+    handler computes the data index and writes one byte via a guarded replace3
+    (guard `off < len` keeps an out-of-bounds padding write a no-op, matching EVM).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/mstore8_bytes_memory_large.sol")
+    # write byte 0x42 at data index k of new bytes(n); expect byte@k=66,
+    # byte@0 = 66 iff k==0 else 0, length == n. Sizes span the <=64 / >64 threshold.
+    for n, k in [(64, 0), (65, 0), (65, 10), (96, 50), (128, 100), (200, 199)]:
+        ret = harness.call(app, "poke(uint256,uint256)", n, k).abi_return
+        assert [int(x) for x in ret] == [66, 66 if k == 0 else 0, n], (n, k, ret)
+    # writing one byte past the logical end is EVM padding (never copied) -> no-op, not a revert
+    for n in [63, 65, 128]:
+        assert as_int(harness.call(app, "pokePadding(uint256)", n).abi_return) == n
+
+
 def test_signed_mapping_key_once(harness):
     """puyasolRegression/contracts/signed_mapping_key_once.sol — NOT an o.g. semantic test.
 

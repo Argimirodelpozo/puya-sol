@@ -519,6 +519,8 @@ void AssemblyBuilder::buildExpressionStatement(
 		// Pattern checks that need the raw Yul AST must run before arg translation.
 		if (funcName == "mstore" && tryHandleBytesMemoryWrite(*call, loc, _out))
 			return;
+		if (funcName == "mstore8" && tryHandleBytesMemoryWrite8(*call, loc, _out))
+			return;
 		if (funcName == "mcopy" && tryHandleBytesMemoryMcopy(*call, loc, _out))
 			return;
 

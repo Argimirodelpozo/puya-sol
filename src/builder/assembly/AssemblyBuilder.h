@@ -774,6 +774,16 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// Match mstore8(add(bytes_var, 32+k), value) → one-byte replace3 on the var's
+	/// data at offset k. Keeps the bytes local a VALUE (not blob-backed); guards the
+	/// write behind k < len so an out-of-bounds/padding byte is a no-op (matches EVM,
+	/// where such a byte is never copied by a length-bounded `s = m`).
+	bool tryHandleBytesMemoryWrite8(
+		solidity::yul::FunctionCall const& _call,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	/// Match mcopy(add(add(bytes_var, 0x20), dstOff), …) → replace3/extract3 on the var.
 	/// Returns true if matched; false falls through to generic mcopy handler.
 	bool tryHandleBytesMemoryMcopy(

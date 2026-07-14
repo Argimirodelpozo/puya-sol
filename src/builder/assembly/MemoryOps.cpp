@@ -372,6 +372,106 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	return true;
 }
 
+bool AssemblyBuilder::tryHandleBytesMemoryWrite8(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Match: mstore8(<ptr>, value) where <ptr> addresses a bytes/string memory
+	// local's data region. The local stays a VALUE (raw bytes, no length header);
+	// the generic path would `b+` on that value and revert once it exceeds 64 bytes
+	// (AVM bigint-op operand limit). Here we compute the data byte index and write
+	// one byte via replace3, guarded by `off < len` so a padding byte (off >= len,
+	// e.g. `new bytes(63)` written at index 63) is a no-op — matching EVM, where a
+	// length-bounded `s = m` never copies it.
+	if (_call.arguments.size() != 2)
+		return false;
+
+	auto asBytesLocal = [&](solidity::yul::Expression const& e)
+		-> std::optional<std::pair<std::string, awst::WType const*>>
+	{
+		auto* id = std::get_if<solidity::yul::Identifier>(&e);
+		if (!id)
+			return std::nullopt;
+		std::string name = resolveVarRef(*id);
+		auto it = m_locals.find(name);
+		if (it == m_locals.end())
+			return std::nullopt;
+		if (it->second != awst::WType::bytesType() && it->second != awst::WType::stringType())
+			return std::nullopt;
+		return std::make_pair(name, it->second);
+	};
+
+	auto* addCall = std::get_if<solidity::yul::FunctionCall>(&_call.arguments[0]);
+	if (!addCall || getFunctionName(addCall->functionName) != "add"
+		|| addCall->arguments.size() != 2)
+		return false;
+
+	std::string varName;
+	awst::WType const* varType = nullptr;
+	std::shared_ptr<awst::Expression> dataOff;
+
+	// Case 1: add(m, O) / add(O, m) → data offset = O - 32 (O skips the length word).
+	for (int i = 0; i < 2 && !varType; ++i)
+		if (auto bl = asBytesLocal(addCall->arguments[i]))
+		{
+			varName = bl->first;
+			varType = bl->second;
+			auto oExpr = offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc);
+			dataOff = awst::makeUInt64BinOp(std::move(oExpr), awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant("32", _loc), _loc);
+		}
+
+	// Case 2: add(add(m, 32), k) / commuted → data offset = k.
+	for (int i = 0; i < 2 && !varType; ++i)
+	{
+		auto* inner = std::get_if<solidity::yul::FunctionCall>(&addCall->arguments[i]);
+		if (!inner || getFunctionName(inner->functionName) != "add" || inner->arguments.size() != 2)
+			continue;
+		for (int j = 0; j < 2 && !varType; ++j)
+		{
+			auto bl = asBytesLocal(inner->arguments[j]);
+			auto c = resolveConstantYulValue(inner->arguments[1 - j]);
+			if (bl && c && *c == 32)
+			{
+				varName = bl->first;
+				varType = bl->second;
+				dataOff = offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc);
+			}
+		}
+	}
+
+	if (!varType)
+		return false;
+
+	auto lowByte = awst::makeExtract3(
+		padTo32Bytes(ensureBiguint(buildExpression(_call.arguments[1]), _loc), _loc),
+		awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);
+
+	// Side effects in the offset / value (e.g. an mload) land as pending; drain
+	// them before the materialisation + write statements below.
+	drainPendingStatements(_out);
+
+	static int s_ctr = 0;
+	std::string offN = "__mstore8_off_" + std::to_string(s_ctr++);
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc), std::move(dataOff), _loc));
+	auto offRef = [&]() { return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc); };
+	auto varRef = [&]() { return awst::makeVarExpression(varName, varType, _loc); };
+
+	// m = (off < len(m)) ? replace3(m, off, lowByte) : m
+	auto written = awst::makeReplace3(varRef(), offRef(), std::move(lowByte), _loc);
+	auto cond = awst::makeNumericCompare(
+		offRef(), awst::NumericComparison::Lt, awst::makeLen(varRef(), _loc), _loc);
+	auto merged = awst::makeConditional(std::move(cond), std::move(written), varRef(), varType, _loc);
+	_out.push_back(awst::makeAssignmentStatement(varRef(), std::move(merged), _loc));
+
+	Logger::instance().debug(
+		"mstore8 bytes memory write: guarded replace3 on '" + varName + "'", _loc);
+	return true;
+}
+
 // ── tryHandleBytesMemoryMcopy ──────────────────────────────────────────────
 // Matches: mcopy(add(add(bytes_var, 0x20), dstOff), add(add(src_var, 0x20), srcOff), len)
 // EVM: add(x,0x20) skips the 32-byte length header; data[off] = add(x,0x20)+off.
