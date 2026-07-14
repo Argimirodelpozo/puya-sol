@@ -3,6 +3,7 @@
 #include "builder/sol-types/SolcConstFold.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-ast/exprs/SolBinaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
@@ -267,13 +268,42 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			// pure leaves pass through, keeping `x+y`/`x+1` codegen byte-identical.
 			left = awst::makeEvalOnce(std::move(left), m_loc);
 			right = awst::makeEvalOnce(std::move(right), m_loc);
+			bool const isAddSubMul = (op == Token::Add || op == Token::AssignAdd
+				|| op == Token::Sub || op == Token::AssignSub
+				|| op == Token::Mul || op == Token::AssignMul);
+			// MIXED-WIDTH signed add/sub/mul: a NARROWER signed operand arrives as its
+			// OWN-width two's complement (int32 -10 = uint64 2^64-10 / int128 -10 =
+			// biguint 2^128-10). buildSignedArithmetic then masks to 2^commonBits, which
+			// EMBEDS that narrow-width TC as a large positive (int32(-10)*int192(20) gave
+			// -20*(2^64-10) not 200). Sign-extend each narrower signed operand to the
+			// common width first — mirrors the div/mod path below. Gated on src<common so
+			// the same-width common case stays byte-identical (incl. the __smul_l_ puya
+			// workaround). Found by the corpus-mutation fuzzer (small_signed_types int64->int192).
+			bool leftWidened = false;
+			if (isAddSubMul)
+			{
+				auto* commonW = m_ctx.typeMapper.map(commonType);
+				unsigned const bits = intType->numBits();
+				auto widen = [&](std::shared_ptr<awst::Expression> v,
+						solidity::frontend::Type const* srcT, bool* flag) {
+					if (auto s = builder::SolIntType::fromSol(srcT); s && s->isSigned && s->bits < bits)
+					{
+						if (flag) *flag = true;
+						return builder::TypeCoercion::coerceToCommonInt(std::move(v), srcT, commonW, m_loc);
+					}
+					return v;
+				};
+				left = widen(std::move(left), m_binOp.leftExpression().annotation().type, &leftWidened);
+				right = widen(std::move(right), m_binOp.rightExpression().annotation().type, nullptr);
+			}
 			// puya mis-lowers a SingleEvaluation(complex expr) used as the LEFT operand of a signed
 			// MULTIPLY (stack-slot miscount in the abs/overflow codegen) -> false revert for
 			// `(bitwise/shift/cast/ternary) * x`. Materialise a complex left operand to a REAL local
 			// (an explicit `T t = expr; t * x` is clean -- fuzzer discriminator); the right operand and
-			// add/sub are unaffected. Same pre-statement scoping as the existing overflow check.
+			// add/sub are unaffected. A widened left (mixed-width mul) is likewise a complex
+			// expr — materialise it too. Same pre-statement scoping as the existing overflow check.
 			if ((op == Token::Mul || op == Token::AssignMul)
-				&& dynamic_cast<awst::SingleEvaluation const*>(left.get()))
+				&& (leftWidened || dynamic_cast<awst::SingleEvaluation const*>(left.get())))
 			{
 				auto smulVar = awst::makeVarExpression(
 					"__smul_l_" + std::to_string(m_binOp.id()), left->wtype, m_loc);
@@ -281,9 +311,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 					awst::makeAssignmentStatement(smulVar, std::move(left), m_loc));
 				left = smulVar;
 			}
-			if (op == Token::Add || op == Token::AssignAdd
-				|| op == Token::Sub || op == Token::AssignSub
-				|| op == Token::Mul || op == Token::AssignMul)
+			if (isAddSubMul)
 			{
 				return buildSignedArithmetic(op, std::move(left), std::move(right), intType);
 			}

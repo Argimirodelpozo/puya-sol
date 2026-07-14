@@ -761,6 +761,31 @@ def test_signed_mixedwidth_divmod(harness):
     assert s(harness.call(app, "mod256_16(int256,int16)", (1 << 200) + 5, 32767)) == ((1 << 200) + 5) % 32767
 
 
+def test_signed_mixedwidth_mul(harness):
+    """puyasolRegression/contracts/signed_mixedwidth_mul.sol — NOT an o.g. semantic test.
+
+    Found by the CORPUS-MUTATION fuzzer (fuzz_mutate.py, small_signed_types.sol
+    mutated int64->int192). Mixed-width signed add/sub/MUL with a NARROWER signed
+    operand returned garbage: `-int32(10) * -int192(20)` gave -20*(2^64-10) not 200.
+    A narrower signed operand arrives as its OWN-width two's complement (int32 -10 =
+    uint64 2^64-10 / int128 -10 = biguint 2^128-10); buildSignedArithmetic then masks
+    to 2^commonBits, embedding that as a large POSITIVE. FIX: sign-extend each narrower
+    signed operand to the common width first (coerceToCommonInt) — mirrors the div/mod
+    path (test_signed_mixedwidth_divmod).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_mixedwidth_mul.sol")
+    def s(r):
+        v = as_int(r.abi_return); return v - (1 << 256) if v >= (1 << 255) else v
+    assert s(harness.call(app, "mul32_192(int32,int192)", -10, 20)) == -200
+    assert s(harness.call(app, "mul64_192(int64,int192)", -10, 20)) == -200
+    assert s(harness.call(app, "mul128_192(int128,int192)", -10, 20)) == -200
+    assert s(harness.call(app, "mul128_192(int128,int192)", -3, -7)) == 21
+    assert s(harness.call(app, "add32_192(int32,int192)", -5, 3)) == -2
+    assert s(harness.call(app, "sub192_32(int192,int32)", 10, -5)) == 15
+    assert s(harness.call(app, "run()")) == 200
+    assert s(harness.call(app, "mul192_32(int192,int32)", -20, -10)) == 200
+
+
 def test_unchecked_uint64_mul_add(harness):
     """puyasolRegression/contracts/unchecked_uint64_mul_add.sol — NOT an o.g. semantic test.
 
