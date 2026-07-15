@@ -31,4 +31,19 @@ contract C {
             r := val
         }
     }
+
+    // WRITE-then-READ round-trip (Uniswap V4 LiquidityMath.addDelta shape, caught
+    // by the fuzzer as signextend_adddelta uint128->int64): `z := add(...)` can
+    // wrap past 2^256 into a word with real bits above 64; the shr(128, z) guard
+    // must see them. An eager 8-byte truncation of the write (then sign-extending
+    // the re-read) fabricates 0xFF..FF and false-fires the guard.
+    function addDelta(int64 x, int128 y) public pure returns (int64 z) {
+        assembly ("memory-safe") {
+            z := add(and(x, 0xffffffffffffffffffffffffffffffff), signextend(15, y))
+            if shr(128, z) {
+                mstore(0, 0x93dafdf1) // SafeCastOverflow()
+                revert(0x1c, 0x04)
+            }
+        }
+    }
 }

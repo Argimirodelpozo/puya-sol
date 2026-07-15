@@ -2,7 +2,6 @@
 /// Core expression translation: dispatch, literals, identifiers, function calls.
 
 #include "builder/assembly/AssemblyBuilder.h"
-#include "builder/sol-types/TypeCoercion.h" // signExtendToUint256 (signed intN asm reads)
 #include "Logger.h"
 
 #include <sstream>
@@ -292,19 +291,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	if (boIt != m_blobOffsetVars.end())
 		return awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc);
 
+	// Signed intN (N<=64) Solidity local: reads hit its biguint shadow — the full
+	// 256-bit Yul word, seeded sign-extended at block entry (buildBlock prologue).
+	if (auto shIt = m_signedShadow.find(name); shIt != m_signedShadow.end())
+		return awst::makeVarExpression(shIt->second, awst::WType::biguintType(), loc);
+
 	auto it = m_locals.find(name);
 	// Default: all assembly vars are uint256
 	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
 	auto node = awst::makeVarExpression(name, wtype, loc);
-
-	// Signed intN (N<=64) Solidity local: uint64-backed 64-bit TC, but a Yul
-	// identifier IS the full 256-bit word (int64 -1 = 0xFF..FF; `ret := val` into
-	// a bytes2 takes 0xFFFF from the top). Sign-extend at declared width. Only
-	// while still uint64-backed — once an asm write upgrades the local to biguint,
-	// reads return that raw word and must not be re-extended.
-	if (auto sbIt = m_signedParamBits.find(name);
-		sbIt != m_signedParamBits.end() && wtype == awst::WType::uint64Type())
-		return TypeCoercion::signExtendToUint256(std::move(node), sbIt->second, loc);
 
 	// bytesN variables in assembly need left-alignment (right-padded to 32 bytes).
 	// EVM stores bytesN left-aligned in 256-bit words: bytes4(0xAABBCCDD) = 0xAABBCCDD000...00

@@ -391,6 +391,11 @@ void AssemblyBuilder::buildAssignment(
 		}
 	}
 
+	// Signed intN (N<=64) local: writes land on its biguint shadow (the raw Yul
+	// word — see the buildBlock prologue); the typed local refreshes at block exit.
+	if (auto shIt = m_signedShadow.find(name); shIt != m_signedShadow.end())
+		name = shIt->second;
+
 	auto it = m_locals.find(name);
 	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
 	auto target = awst::makeVarExpression(name, wtype, loc);

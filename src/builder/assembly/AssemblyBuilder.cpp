@@ -137,6 +137,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_arrayParamName.clear();
 	m_arrayParamType = nullptr;
 	m_arrayParamSize = 0;
+	m_signedShadow.clear();
 	m_haltEmitted = false;
 
 	for (auto const& [name, type]: _params)
@@ -286,6 +287,25 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// Load scratch blob, write params into it; blob pre-allocated in preamble.
 	initializeMemoryBlob(_params, result);
 
+	// Signed intN (N<=64) locals: seed a biguint SHADOW with the sign-extended
+	// 256-bit word (see m_signedShadow). Reads/writes in the block hit the shadow.
+	for (auto const& [name, bits]: m_signedParamBits)
+	{
+		auto lit = m_locals.find(name);
+		if (lit == m_locals.end() || lit->second != awst::WType::uint64Type())
+			continue;
+		awst::SourceLocation loc;
+		loc.file = m_sourceFile;
+		std::string shadow = "__asmsx_" + name;
+		result.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(shadow, awst::WType::biguintType(), loc),
+			TypeCoercion::signExtendToUint256(
+				awst::makeVarExpression(name, awst::WType::uint64Type(), loc), bits, loc),
+			loc));
+		m_locals[shadow] = awst::WType::biguintType();
+		m_signedShadow[name] = shadow;
+	}
+
 	for (auto const& stmt: _block.statements)
 	{
 		if (std::holds_alternative<solidity::yul::FunctionDefinition>(stmt))
@@ -300,6 +320,21 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		loc.file = m_sourceFile;
 		flushMemoryToScratch(loc, result);
 	}
+
+	// Write the signed shadows' low 8 bytes back to their typed locals (the
+	// 64-bit-TC view of the possibly-dirty word — EVM keeps asm dirt too).
+	if (m_haltEmitted)
+		m_signedShadow.clear();
+	for (auto const& [name, shadow]: m_signedShadow)
+	{
+		awst::SourceLocation loc;
+		loc.file = m_sourceFile;
+		result.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(name, awst::WType::uint64Type(), loc),
+			safeBtoi(awst::makeVarExpression(shadow, awst::WType::biguintType(), loc), loc),
+			loc));
+	}
+	m_signedShadow.clear();
 
 	// Coerce biguint-upgraded variables back to their original types at block end.
 	if (m_haltEmitted)
@@ -795,6 +830,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	auto savedUpgraded = std::move(m_upgradedLocals);
 	auto savedParamBitWidths = m_paramBitWidths;
 	auto savedSignedParamBits = m_signedParamBits;
+	auto savedSignedShadow = std::move(m_signedShadow);
 	auto savedPending = std::move(m_pendingStatements);
 	auto savedHalt = m_haltEmitted;
 	auto savedInlineDepth = m_inlineDepth;
@@ -883,6 +919,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_upgradedLocals = std::move(savedUpgraded);
 	m_paramBitWidths = std::move(savedParamBitWidths);
 	m_signedParamBits = std::move(savedSignedParamBits);
+	m_signedShadow = std::move(savedSignedShadow);
 	m_pendingStatements = std::move(savedPending);
 	m_haltEmitted = savedHalt;
 	m_inlineDepth = savedInlineDepth;

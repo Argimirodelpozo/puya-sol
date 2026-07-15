@@ -811,6 +811,25 @@ def test_enum_conversion_wide_range(harness):
     assert as_int(harness.call(app, "fromI16(int16)", 1).abi_return) == 1
 
 
+def test_nested_asm_param_gate(harness):
+    """puyasolRegression/contracts/nested_asm_param_gate.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (slot_access_via_mapping_pointer,
+    unchecked-wrap). Every "does this function use inline assembly" gate scanned
+    only the body's TOP-LEVEL statements, so asm nested in `unchecked {}` or a
+    plain block flipped them: the ARC4 param remap ran, the asm switch compared
+    an arc4.uint256-typed `i` against biguint case constants -- never equal, so
+    every call silently took the default branch (wrong slot 0). FIX: one shared
+    recursive containsInlineAssembly (sol-ast/AsmScan.h) used by all five gates
+    (param remap + decode + storage-ref-return x callee/caller/collection).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/nested_asm_param_gate.sol")
+    for i in [0, 1, 2]:
+        assert as_int(harness.call(app, "viaUnchecked(uint256)", i).abi_return) == i
+    for i in [0, 1]:
+        assert as_int(harness.call(app, "viaNestedBlock(uint256)", i).abi_return) == i
+
+
 def test_signed_asm_read_word(harness):
     """puyasolRegression/contracts/signed_asm_read_word.sol — NOT an o.g. semantic test.
 
@@ -831,6 +850,13 @@ def test_signed_asm_read_word(harness):
     assert [int(x) for x in harness.call(app, "top(int32)", 3).abi_return] == [0, 0]
     assert as_int(harness.call(app, "asWord(int64)", -1).abi_return) == (1 << 256) - 1
     assert as_int(harness.call(app, "asWord(int64)", 7).abi_return) == 7
+    # write-then-read round-trip: `z := add(...)` wrapping past 2^256, then a
+    # shr(128, z) guard on the REAL word (V4 addDelta; signed-shadow model)
+    i128min = -(1 << 127)
+    for x in [-1, -2, -(1 << 63)]:
+        assert as_signed_int(harness.call(app, "addDelta(int64,int128)", x, i128min).abi_return) == x
+    assert harness.call(app, "addDelta(int64,int128)", 0, i128min, expect_revert=True).reverted
+    assert as_signed_int(harness.call(app, "addDelta(int64,int128)", 5, 10).abi_return) == 15
 
 
 def test_mstore8_bytes_memory_large(harness):
@@ -853,6 +879,16 @@ def test_mstore8_bytes_memory_large(harness):
     # writing one byte past the logical end is EVM padding (never copied) -> no-op, not a revert
     for n in [63, 65, 128]:
         assert as_int(harness.call(app, "pokePadding(uint256)", n).abi_return) == n
+    # sibling WORD write (mstore) at data offset k: MSB lands at k, LSB at k+31
+    for n, k in [(65, 0), (96, 50), (128, 64), (64, 32), (200, 168)]:
+        ret = harness.call(app, "pokeWord(uint256,uint256)", n, k).abi_return
+        exp = [0xAA, 0xBB if k + 31 < n else 0, 0xAA if k == 0 else 0, n]
+        assert [int(x) for x in ret] == exp, (n, k, ret)
+    # straddling word at offset len-1 writes exactly the MSB, drops the tail spill
+    for n in [65, 128]:
+        assert [int(x) for x in harness.call(app, "pokeWordTail(uint256)", n).abi_return] == [0xCC, n]
+    # legacy offset-0 short-array truncation semantics unchanged
+    assert [int(x) for x in harness.call(app, "pokeWordShort()").abi_return] == [0x11, 0x88, 8]
 
 
 def test_signed_mapping_key_once(harness):

@@ -774,17 +774,39 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Match mstore(add(bytes_var, 32), value) → variable assignment (no blob write).
+	/// A Yul pointer expression addressing a bytes/string memory local's DATA region:
+	/// add(m, O) → dataOff = O−32 (O skips the length word; constant O < 32 does NOT
+	/// match — that's a length-word write, left to the generic path), or
+	/// add(add(m, 32), k) → dataOff = k. Both shapes commuted too.
+	struct BytesDataPtrMatch
+	{
+		std::string name;
+		awst::WType const* type;
+		std::shared_ptr<awst::Expression> dataOff; // uint64 byte index into the data
+	};
+	std::optional<BytesDataPtrMatch> matchBytesMemoryDataPtr(
+		solidity::yul::Expression const& _addr,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Guarded in-place write of `_value32` at `_m.dataOff`:
+	/// m = (off < len) ? replace3(m, off, slice) : m, slice truncated to len−off.
+	void emitGuardedBytesDataWrite(
+		BytesDataPtrMatch _m,
+		std::shared_ptr<awst::Expression> _value32,
+		int _sliceLen, // 32 = mstore (MSB-first), 1 = mstore8 (low byte)
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Match mstore(<data ptr>, value) → guarded word write on the var (no blob write).
 	bool tryHandleBytesMemoryWrite(
 		solidity::yul::FunctionCall const& _call,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	/// Match mstore8(add(bytes_var, 32+k), value) → one-byte replace3 on the var's
-	/// data at offset k. Keeps the bytes local a VALUE (not blob-backed); guards the
-	/// write behind k < len so an out-of-bounds/padding byte is a no-op (matches EVM,
-	/// where such a byte is never copied by a length-bounded `s = m`).
+	/// Match mstore8(<data ptr>, value) → guarded one-byte write on the var.
 	bool tryHandleBytesMemoryWrite8(
 		solidity::yul::FunctionCall const& _call,
 		awst::SourceLocation const& _loc,
@@ -900,11 +922,17 @@ private:
 	std::map<std::string, unsigned> m_paramBitWidths;
 
 	/// SIGNED intN (N<=64) Solidity locals referenced in this asm block, name→bits.
-	/// Their uint64-backed 64-bit-TC value must sign-extend to the canonical 256-bit
-	/// word on a bare Yul read (an EVM identifier IS the full word: int64 -1 =
-	/// 0xFF..FF, so e.g. `bytes2(v)` takes 0xFFFF from the top). Wider signed
-	/// (64<N<256) are biguint-backed canonical already — not registered.
+	/// Their uint64-backed 64-bit-TC value is NOT the Yul word (an EVM identifier
+	/// IS the full 256-bit word: int64 -1 = 0xFF..FF, so `bytes2(v)` takes 0xFFFF
+	/// from the top, and `shr(128, z)` after `z := ...` sees real high bits).
+	/// Wider signed (64<N<256) are biguint-backed canonical already — not registered.
 	std::map<std::string, unsigned> m_signedParamBits;
+
+	/// name → biguint shadow local holding the full 256-bit word for each
+	/// m_signedParamBits entry. Seeded sign-extended at block entry; all reads and
+	/// writes inside the block hit the shadow raw; the epilogue writes the low 8
+	/// bytes back to the typed local (64-bit-TC view, EVM-faithfully "dirty").
+	std::map<std::string, std::string> m_signedShadow;
 
 	/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
 	std::map<std::string, uint64_t> m_localConstants;

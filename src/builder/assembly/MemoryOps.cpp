@@ -306,88 +306,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	return awst::makeAsBiguint(std::move(extract), _loc);
 }
 
-bool AssemblyBuilder::tryHandleBytesMemoryWrite(
-	solidity::yul::FunctionCall const& _call,
-	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _out
+std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMemoryDataPtr(
+	solidity::yul::Expression const& _addr,
+	awst::SourceLocation const& _loc
 )
 {
-	// Match: mstore(add(bytes_var, 32), value) or add(32, bytes_var).
-	// EVM: add(x,32) skips the length header, mstore writes 32 bytes; len(x) unchanged.
-	// AVM: x is raw bytes; overwrite first len(x) bytes of the 32-byte value.
-
-	if (_call.arguments.size() != 2)
-		return false;
-
-	// First arg must be add(bytes_var, 32) or add(32, bytes_var)
-	auto* addCall = std::get_if<solidity::yul::FunctionCall>(&_call.arguments[0]);
-	if (!addCall || getFunctionName(addCall->functionName) != "add"
-		|| addCall->arguments.size() != 2)
-		return false;
-
-	// Find which arg is 32 and which is the bytes variable
-	solidity::yul::Expression const* varExpr = nullptr;
-
-	auto val0 = resolveConstantYulValue(addCall->arguments[0]);
-	auto val1 = resolveConstantYulValue(addCall->arguments[1]);
-
-	if (val1 && *val1 == 32)
-		varExpr = &addCall->arguments[0];
-	else if (val0 && *val0 == 32)
-		varExpr = &addCall->arguments[1];
-	else
-		return false;
-
-	// The variable must be an Identifier referencing a bytes/string local
-	auto* varId = std::get_if<solidity::yul::Identifier>(varExpr);
-	if (!varId)
-		return false;
-
-	std::string varName = resolveVarRef(*varId);
-	auto localIt = m_locals.find(varName);
-	if (localIt == m_locals.end())
-		return false;
-
-	auto* varType = localIt->second;
-	if (varType != awst::WType::bytesType() && varType != awst::WType::stringType())
-		return false;
-
-	auto valueExpr = buildExpression(_call.arguments[1]);
-
-	Logger::instance().debug(
-		"mstore bytes memory write: replacing content of '" + varName + "'", _loc
-	);
-
-	// x = extract3(pad32(value), 0, len(x))
-	auto lenCall = awst::makeLen(awst::makeVarExpression(varName, varType, _loc), _loc);
-	auto padded = padTo32Bytes(ensureBiguint(valueExpr, _loc), _loc);
-	auto extract = awst::makeExtract3(std::move(padded), awst::makeZero(_loc), std::move(lenCall), _loc);
-	std::shared_ptr<awst::Expression> newValue = std::move(extract);
-	if (varType == awst::WType::stringType())
-		newValue = awst::makeReinterpretCast(std::move(newValue), awst::WType::stringType(), _loc);
-
-	_out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(varName, varType, _loc), std::move(newValue), _loc));
-
-	return true;
-}
-
-bool AssemblyBuilder::tryHandleBytesMemoryWrite8(
-	solidity::yul::FunctionCall const& _call,
-	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _out
-)
-{
-	// Match: mstore8(<ptr>, value) where <ptr> addresses a bytes/string memory
-	// local's data region. The local stays a VALUE (raw bytes, no length header);
-	// the generic path would `b+` on that value and revert once it exceeds 64 bytes
-	// (AVM bigint-op operand limit). Here we compute the data byte index and write
-	// one byte via replace3, guarded by `off < len` so a padding byte (off >= len,
-	// e.g. `new bytes(63)` written at index 63) is a no-op — matching EVM, where a
-	// length-bounded `s = m` never copies it.
-	if (_call.arguments.size() != 2)
-		return false;
-
 	auto asBytesLocal = [&](solidity::yul::Expression const& e)
 		-> std::optional<std::pair<std::string, awst::WType const*>>
 	{
@@ -403,72 +326,129 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite8(
 		return std::make_pair(name, it->second);
 	};
 
-	auto* addCall = std::get_if<solidity::yul::FunctionCall>(&_call.arguments[0]);
+	auto* addCall = std::get_if<solidity::yul::FunctionCall>(&_addr);
 	if (!addCall || getFunctionName(addCall->functionName) != "add"
 		|| addCall->arguments.size() != 2)
-		return false;
+		return std::nullopt;
 
-	std::string varName;
-	awst::WType const* varType = nullptr;
-	std::shared_ptr<awst::Expression> dataOff;
-
-	// Case 1: add(m, O) / add(O, m) → data offset = O - 32 (O skips the length word).
-	for (int i = 0; i < 2 && !varType; ++i)
+	// Case 1: add(m, O) / add(O, m) → data offset = O − 32 (O skips the length
+	// word). A CONSTANT O < 32 targets the length word itself — not a data write,
+	// leave it to the generic path (old behaviour).
+	for (int i = 0; i < 2; ++i)
 		if (auto bl = asBytesLocal(addCall->arguments[i]))
 		{
-			varName = bl->first;
-			varType = bl->second;
+			auto c = resolveConstantYulValue(addCall->arguments[1 - i]);
+			if (c && *c < 32)
+				return std::nullopt;
 			auto oExpr = offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc);
-			dataOff = awst::makeUInt64BinOp(std::move(oExpr), awst::UInt64BinaryOperator::Sub,
+			auto off = awst::makeUInt64BinOp(std::move(oExpr), awst::UInt64BinaryOperator::Sub,
 				awst::makeIntegerConstant("32", _loc), _loc);
+			return BytesDataPtrMatch{bl->first, bl->second, std::move(off)};
 		}
 
 	// Case 2: add(add(m, 32), k) / commuted → data offset = k.
-	for (int i = 0; i < 2 && !varType; ++i)
+	for (int i = 0; i < 2; ++i)
 	{
 		auto* inner = std::get_if<solidity::yul::FunctionCall>(&addCall->arguments[i]);
 		if (!inner || getFunctionName(inner->functionName) != "add" || inner->arguments.size() != 2)
 			continue;
-		for (int j = 0; j < 2 && !varType; ++j)
+		for (int j = 0; j < 2; ++j)
 		{
 			auto bl = asBytesLocal(inner->arguments[j]);
 			auto c = resolveConstantYulValue(inner->arguments[1 - j]);
 			if (bl && c && *c == 32)
-			{
-				varName = bl->first;
-				varType = bl->second;
-				dataOff = offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc);
-			}
+				return BytesDataPtrMatch{bl->first, bl->second,
+					offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc)};
 		}
 	}
 
-	if (!varType)
-		return false;
+	return std::nullopt;
+}
 
-	auto lowByte = awst::makeExtract3(
-		padTo32Bytes(ensureBiguint(buildExpression(_call.arguments[1]), _loc), _loc),
-		awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);
+void AssemblyBuilder::emitGuardedBytesDataWrite(
+	BytesDataPtrMatch _m,
+	std::shared_ptr<awst::Expression> _value32,
+	int _sliceLen,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// The local stays a VALUE (raw bytes, no length header); the generic path
+	// would `b+` on that value and revert past 64 bytes (AVM bigint-op operand
+	// limit). Write in place instead:
+	//   m = (off < len(m)) ? replace3(m, off, slice) : m
+	// slice = the value's low byte (mstore8) or its leading min(32, len−off)
+	// bytes (mstore; EVM words are MSB-first, data[off] gets the top byte).
+	// Bytes at/past len are EVM padding / adjacent memory that a length-bounded
+	// copy never observes — dropped, not an error.
+	auto varRef = [&]() { return awst::makeVarExpression(_m.name, _m.type, _loc); };
+	auto len = [&]() { return awst::makeLen(varRef(), _loc); };
+	// off is referenced by the guard + replace3 (+ rem); eval-once, guard-first.
+	auto off = awst::makeEvalOnce(std::move(_m.dataOff), _loc);
 
-	// Side effects in the offset / value (e.g. an mload) land as pending; drain
-	// them before the materialisation + write statements below.
-	drainPendingStatements(_out);
+	std::shared_ptr<awst::Expression> slice;
+	if (_sliceLen == 1)
+		slice = awst::makeExtract3(std::move(_value32),
+			awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);
+	else
+	{
+		// wlen = min(32, len − off); the sub only evaluates in the off < len branch.
+		auto rem = awst::makeEvalOnce(
+			awst::makeUInt64BinOp(len(), awst::UInt64BinaryOperator::Sub, off, _loc), _loc);
+		auto wlen = awst::makeConditional(
+			awst::makeNumericCompare(rem, awst::NumericComparison::Lt,
+				awst::makeIntegerConstant("32", _loc), _loc),
+			rem, awst::makeIntegerConstant("32", _loc), awst::WType::uint64Type(), _loc);
+		slice = awst::makeExtract3(std::move(_value32), awst::makeZero(_loc), std::move(wlen), _loc);
+	}
 
-	static int s_ctr = 0;
-	std::string offN = "__mstore8_off_" + std::to_string(s_ctr++);
-	_out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc), std::move(dataOff), _loc));
-	auto offRef = [&]() { return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc); };
-	auto varRef = [&]() { return awst::makeVarExpression(varName, varType, _loc); };
-
-	// m = (off < len(m)) ? replace3(m, off, lowByte) : m
-	auto written = awst::makeReplace3(varRef(), offRef(), std::move(lowByte), _loc);
-	auto cond = awst::makeNumericCompare(
-		offRef(), awst::NumericComparison::Lt, awst::makeLen(varRef(), _loc), _loc);
-	auto merged = awst::makeConditional(std::move(cond), std::move(written), varRef(), varType, _loc);
+	std::shared_ptr<awst::Expression> written =
+		awst::makeReplace3(varRef(), off, std::move(slice), _loc);
+	if (_m.type == awst::WType::stringType())
+		written = awst::makeReinterpretCast(std::move(written), awst::WType::stringType(), _loc);
+	auto guard = awst::makeNumericCompare(off, awst::NumericComparison::Lt, len(), _loc);
+	auto merged = awst::makeConditional(
+		std::move(guard), std::move(written), varRef(), _m.type, _loc);
 	_out.push_back(awst::makeAssignmentStatement(varRef(), std::move(merged), _loc));
+}
 
-	Logger::instance().debug(
-		"mstore8 bytes memory write: guarded replace3 on '" + varName + "'", _loc);
+bool AssemblyBuilder::tryHandleBytesMemoryWrite(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// mstore(<data ptr>, value): 32-byte word write into a bytes/string memory
+	// local at any data offset (see emitGuardedBytesDataWrite for semantics).
+	if (_call.arguments.size() != 2)
+		return false;
+	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
+	if (!m)
+		return false;
+	auto padded = padTo32Bytes(ensureBiguint(buildExpression(_call.arguments[1]), _loc), _loc);
+	// Side effects in the offset / value (e.g. an mload) land as pending; drain
+	// them before the materialisation + write statements.
+	drainPendingStatements(_out);
+	emitGuardedBytesDataWrite(std::move(*m), std::move(padded), 32, _loc, _out);
+	return true;
+}
+
+bool AssemblyBuilder::tryHandleBytesMemoryWrite8(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// mstore8(<data ptr>, value): one-byte write (the value's LOW byte) into a
+	// bytes/string memory local at any data offset.
+	if (_call.arguments.size() != 2)
+		return false;
+	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
+	if (!m)
+		return false;
+	auto padded = padTo32Bytes(ensureBiguint(buildExpression(_call.arguments[1]), _loc), _loc);
+	drainPendingStatements(_out);
+	emitGuardedBytesDataWrite(std::move(*m), std::move(padded), 1, _loc, _out);
 	return true;
 }
 
