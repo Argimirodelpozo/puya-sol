@@ -193,12 +193,19 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto r = std::move(_args[2]);
 	auto s = std::move(_args[3]);
 
+	// Normalise each operand to a 32-byte word. uint64 (e.g. a literal 0 arg)
+	// can't reinterpret to bytes (not bytes-backed) — itob + left-pad; biguint is
+	// minimal-length — ARC4-encode to a full uint256 word; bytes[N] reinterprets.
 	auto toBytes = [&](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
+		if (expr->wtype == awst::WType::uint64Type())
+			return awst::makeLeftPad(awst::makeItob(std::move(expr), _loc), 24, _loc);
+		if (expr->wtype == awst::WType::biguintType())
+			return awst::makeAsBytes(
+				awst::makeARC4Encode(std::move(expr),
+					_ctx.typeMapper.createType<awst::ARC4UIntN>(256), _loc),
+				_loc);
 		if (expr->wtype != awst::WType::bytesType())
-		{
-			auto cast = awst::makeAsBytes(std::move(expr), _loc);
-			return cast;
-		}
+			return awst::makeAsBytes(std::move(expr), _loc);
 		return expr;
 	};
 	msgHash = toBytes(std::move(msgHash));
@@ -237,6 +244,16 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		return c;
 	};
 
+	// Persist r/s in temps: each is read by the validity checks AND the recover call.
+	std::string rTmpName = "__ecrecover_r_" + std::to_string(ecTmpId);
+	std::string sTmpName = "__ecrecover_s_" + std::to_string(ecTmpId);
+	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(rTmpName, awst::WType::bytesType(), _loc), std::move(r), _loc));
+	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(sTmpName, awst::WType::bytesType(), _loc), std::move(s), _loc));
+	auto readR = [&]() { return awst::makeVarExpression(rTmpName, awst::WType::bytesType(), _loc); };
+	auto readS = [&]() { return awst::makeVarExpression(sTmpName, awst::WType::bytesType(), _loc); };
+
 	// recovery_id = v>=27 ? v-27 : 0 (unguarded v-27 underflows for v<27).
 	auto vGte27 = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
 
@@ -249,7 +266,42 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto recIdClamp = awst::makeUInt64BinOp(std::move(recIdCond), awst::UInt64BinaryOperator::BitAnd, mkU64("1"), _loc);
 	std::shared_ptr<awst::Expression> recoveryId = std::move(recIdClamp);
 
-	// ecdsa_pk_recover Secp256k1 → (pubkey_x: bytes, pubkey_y: bytes)
+	// EVM ecrecover returns address(0) for v ∉ {27,28}, r ∉ [1,N-1], s ∉ [1,N-1]
+	// (N = secp256k1 group order). AVM ecdsa_pk_recover PANICS on such inputs, so
+	// gate the opcode itself behind the checkable conditions and yield zero without
+	// running it. (Residue: an in-range r whose x-coordinate isn't on the curve
+	// still panics where EVM returns 0 — not checkable without the recover itself.)
+	static char const* kSecp256k1N =
+		"115792089237316195423570985008687907852837564279074904382605163141518161494337";
+	auto isValid = [&]() -> std::shared_ptr<awst::Expression> {
+		auto asBig = [&](std::shared_ptr<awst::Expression> e) {
+			return awst::makeAsBiguint(std::move(e), _loc);
+		};
+		auto bigN = [&]() {
+			return awst::makeIntegerConstant(kSecp256k1N, _loc, awst::WType::biguintType());
+		};
+		auto bigZero = [&]() {
+			return awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
+		};
+		auto andOp = [&](std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b) {
+			return awst::makeBoolBinOp(std::move(a), awst::BinaryBooleanOperator::And, std::move(b), _loc);
+		};
+		auto cond = andOp(
+			awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc),
+			awst::makeNumericCompare(readV(), awst::NumericComparison::Lte, mkU64("28"), _loc));
+		cond = andOp(std::move(cond),
+			awst::makeNumericCompare(asBig(readR()), awst::NumericComparison::Ne, bigZero(), _loc));
+		cond = andOp(std::move(cond),
+			awst::makeNumericCompare(asBig(readR()), awst::NumericComparison::Lt, bigN(), _loc));
+		cond = andOp(std::move(cond),
+			awst::makeNumericCompare(asBig(readS()), awst::NumericComparison::Ne, bigZero(), _loc));
+		cond = andOp(std::move(cond),
+			awst::makeNumericCompare(asBig(readS()), awst::NumericComparison::Lt, bigN(), _loc));
+		return cond;
+	};
+
+	// ecdsa_pk_recover Secp256k1 → (pubkey_x: bytes, pubkey_y: bytes) — built
+	// INSIDE the conditional's true branch so invalid inputs never execute it.
 	auto tupleType = _ctx.typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()}
 	);
@@ -258,47 +310,22 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	ecdsaRecover->immediates.push_back("Secp256k1");
 	ecdsaRecover->stackArgs.push_back(std::move(msgHash));
 	ecdsaRecover->stackArgs.push_back(std::move(recoveryId));
-	ecdsaRecover->stackArgs.push_back(std::move(r));
-	ecdsaRecover->stackArgs.push_back(std::move(s));
+	ecdsaRecover->stackArgs.push_back(readR());
+	ecdsaRecover->stackArgs.push_back(readS());
 
-	// Unique per call — see vTmpName comment.
-	std::string tmpName = "__ecrecover_result_" + std::to_string(ecTmpId);
-	auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, _loc);
+	// Tuple read twice (x, y) — eval-once so the opcode runs a single time.
+	auto tupleOnce = awst::makeEvalOnce(std::move(ecdsaRecover), _loc);
+	auto pubkeyX = awst::makeTupleItem(tupleOnce, 0, awst::WType::bytesType(), _loc);
+	auto pubkeyY = awst::makeTupleItem(tupleOnce, 1, awst::WType::bytesType(), _loc);
 
-	auto assignTuple = awst::makeAssignmentStatement(tmpTarget, std::move(ecdsaRecover), _loc);
-	_ctx.prePendingStatements.push_back(std::move(assignTuple));
-
-	auto tupleRead0 = awst::makeVarExpression(tmpName, tupleType, _loc);
-	auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
-
-	auto tupleRead1 = awst::makeVarExpression(tmpName, tupleType, _loc);
-	auto pubkeyY = awst::makeTupleItem(std::move(tupleRead1), 1, awst::WType::bytesType(), _loc);
-
-	// concat(pubkey_x, pubkey_y) → 64 bytes
+	// keccak256(pubkey_x ++ pubkey_y)[12:32] left-padded = Ethereum address word
 	auto pubkeyConcat = awst::makeConcat(std::move(pubkeyX), std::move(pubkeyY), _loc);
-
-	// keccak256(pubkey) → 32 bytes
 	auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
-
-	// extract3(hash, 12, 20) → last 20 bytes = Ethereum address
 	auto addr20 = awst::makeExtract(std::move(hash), 12, 20, _loc);
-
-	// Left-pad to 32 bytes: concat(bzero(12), addr20) → bytes32 form
 	auto paddedAddr = awst::makeLeftPad(std::move(addr20), 12, _loc);
 
-	// EVM ecrecover returns address(0) for invalid v; we always run ecdsa_pk_recover
-	// and mask to bzero(32) when v ∉ {27,28}.
-	auto isValidV = [&]() -> std::shared_ptr<awst::Expression> {
-		auto gte = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
-
-		auto lte = awst::makeNumericCompare(readV(), awst::NumericComparison::Lte, mkU64("28"), _loc);
-
-		auto andOp = awst::makeBoolBinOp(std::move(gte), awst::BinaryBooleanOperator::And, std::move(lte), _loc);
-		return andOp;
-	};
-
 	auto maskedAddr = awst::makeConditional(
-		isValidV(), std::move(paddedAddr), awst::makeBzero(32, _loc),
+		isValid(), std::move(paddedAddr), awst::makeBzero(32, _loc),
 		awst::WType::bytesType(), _loc);
 
 	auto addrCast = awst::makeAsAccount(std::move(maskedAddr), _loc);
