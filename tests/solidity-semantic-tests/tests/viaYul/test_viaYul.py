@@ -1053,82 +1053,89 @@ def test_exp_literals_success(harness):
     assert as_int(r.abi_return) in (-452312848583266388373324160190187140051835877600158453279131187530910662656, 115339776388732929035197660848497720713218148788040405586178452820382218977280)
 
 def test_exp_neg(harness):
-    """viaYul/contracts/exp_neg.sol"""
-    app = harness.compile_and_deploy("viaYul/contracts/exp_neg.sol")
+    """viaYul/contracts/exp_neg.sol
+
+    Exponents up to 2^256-1 drive the b* square-and-multiply loop to ~25k ops,
+    past the 16-txn budget-pool ceiling — compile with ensure_budget (program
+    opups itself via inner txns) and fund them per-call with extra_fee. The old
+    sim-fallback reported values without ever executing the real transaction.
+    """
+    app = harness.compile_and_deploy("viaYul/contracts/exp_neg.sol",
+                                     ensure_budget={"f": 30000})
     # f(int256,uint256): 0, 0 -> 1
-    r = harness.call(app, "f(int256,uint256)", 0, 0)
+    r = harness.call(app, "f(int256,uint256)", 0, 0, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): 0, 1 -> 0x00
-    r = harness.call(app, "f(int256,uint256)", 0, 1)
+    r = harness.call(app, "f(int256,uint256)", 0, 1, extra_fee=50000)
     assert as_int(r.abi_return) == 0
     # f(int256,uint256): 0, 2 -> 0x00
-    r = harness.call(app, "f(int256,uint256)", 0, 2)
+    r = harness.call(app, "f(int256,uint256)", 0, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 0
     # f(int256,uint256): 1, 0 -> 1
-    r = harness.call(app, "f(int256,uint256)", 1, 0)
+    r = harness.call(app, "f(int256,uint256)", 1, 0, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): 1, 1 -> 1
-    r = harness.call(app, "f(int256,uint256)", 1, 1)
+    r = harness.call(app, "f(int256,uint256)", 1, 1, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): 1, 2 -> 1
-    r = harness.call(app, "f(int256,uint256)", 1, 2)
+    r = harness.call(app, "f(int256,uint256)", 1, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): 2, 0 -> 1
-    r = harness.call(app, "f(int256,uint256)", 2, 0)
+    r = harness.call(app, "f(int256,uint256)", 2, 0, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): 2, 1 -> 2
-    r = harness.call(app, "f(int256,uint256)", 2, 1)
+    r = harness.call(app, "f(int256,uint256)", 2, 1, extra_fee=50000)
     assert as_int(r.abi_return) == 2
     # f(int256,uint256): 2, 2 -> 4
-    r = harness.call(app, "f(int256,uint256)", 2, 2)
+    r = harness.call(app, "f(int256,uint256)", 2, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 4
     # f(int256,uint256): 7, 63 -> 174251498233690814305510551794710260107945042018748343
-    r = harness.call(app, "f(int256,uint256)", 7, 63)
+    r = harness.call(app, "f(int256,uint256)", 7, 63, extra_fee=50000)
     assert as_int(r.abi_return) == 174251498233690814305510551794710260107945042018748343
     # f(int256,uint256): 128, 2 -> 0x4000
-    r = harness.call(app, "f(int256,uint256)", 128, 2)
+    r = harness.call(app, "f(int256,uint256)", 128, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 16384
     # f(int256,uint256): -1, 0 -> 1
-    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0)
+    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): -1, 1 -> -1
-    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1)
+    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1, extra_fee=50000)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # f(int256,uint256): -1, 2 -> 1
-    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 2)
+    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): -2, 0 -> 1
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0, extra_fee=50000)
     assert as_int(r.abi_return) == 1
     # f(int256,uint256): -2, 1 -> -2
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 1)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 1, extra_fee=50000)
     assert as_int(r.abi_return) in (-2, 115792089237316195423570985008687907853269984665640564039457584007913129639934)
     # f(int256,uint256): -2, 2 -> 4
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 2)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 4
     # f(int256,uint256): -7, 63 -> -174251498233690814305510551794710260107945042018748343
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9, 63)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9, 63, extra_fee=50000)
     assert as_int(r.abi_return) in (-174251498233690814305510551794710260107945042018748343, 115792089237316195423570810757189674162455679155088769329197476062871110891593)
     # f(int256,uint256): -128, 2 -> 0x4000
-    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 2)
+    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80, 2, extra_fee=50000)
     assert as_int(r.abi_return) == 16384
     # f(int256,uint256): -1, 115792089237316195423570985008687907853269984665640564039457584007913129639935 -> -1
-    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=50000)
     assert as_int(r.abi_return) in (-1, 115792089237316195423570985008687907853269984665640564039457584007913129639935)
     # f(int256,uint256): -2, 255 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 255)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 255, extra_fee=50000)
     assert as_int(r.abi_return) in (-57896044618658097711785492504343953926634992332820282019728792003956564819968, 57896044618658097711785492504343953926634992332820282019728792003956564819968)
     # f(int256,uint256): -8, 85 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8, 85)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8, 85, extra_fee=50000)
     assert as_int(r.abi_return) in (-57896044618658097711785492504343953926634992332820282019728792003956564819968, 57896044618658097711785492504343953926634992332820282019728792003956564819968)
     # f(int256,uint256): -131072, 15 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968
-    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0000, 15)
+    r = harness.call(app, "f(int256,uint256)", 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0000, 15, extra_fee=50000)
     assert as_int(r.abi_return) in (-57896044618658097711785492504343953926634992332820282019728792003956564819968, 57896044618658097711785492504343953926634992332820282019728792003956564819968)
     # f(int256,uint256): -32, 51 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968
-    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0, 51)
+    r = harness.call(app, "f(int256,uint256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0, 51, extra_fee=50000)
     assert as_int(r.abi_return) in (-57896044618658097711785492504343953926634992332820282019728792003956564819968, 57896044618658097711785492504343953926634992332820282019728792003956564819968)
     # f(int256,uint256): -57896044618658097711785492504343953926634992332820282019728792003956564819968, 1 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968
-    r = harness.call(app, "f(int256,uint256)", 0x8000000000000000000000000000000000000000000000000000000000000000, 1)
+    r = harness.call(app, "f(int256,uint256)", 0x8000000000000000000000000000000000000000000000000000000000000000, 1, extra_fee=50000)
     assert as_int(r.abi_return) in (-57896044618658097711785492504343953926634992332820282019728792003956564819968, 57896044618658097711785492504343953926634992332820282019728792003956564819968)
 
 def test_exp_neg_overflow(harness):

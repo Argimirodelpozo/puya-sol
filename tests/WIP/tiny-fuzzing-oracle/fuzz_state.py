@@ -41,15 +41,29 @@ def _is_view(mut):
 
 
 def avm_step(h, app, sig, args, is_view):
+    """Returns (value_or_REVERT, fail_reason_str)."""
     args = _args_to_algo(args)                                 # address markers → algosdk base32
     if is_view:
         r = h.call(app, sig, *args, expect_revert=True)        # simulate: read committed state
-        return REVERT if r.reverted else r.abi_return
+        return (REVERT, str(getattr(r, "fail_message", ""))) if r.reverted else (r.abi_return, "")
     try:
         r = h.call(app, sig, *args)                            # execute: commit a real txn
-        return REVERT if getattr(r, "reverted", False) else r.abi_return
-    except Exception:
-        return REVERT                                          # reverted txn => state unchanged
+        if getattr(r, "reverted", False):
+            return REVERT, str(getattr(r, "fail_message", "") or getattr(r, "raw_response", ""))
+        return r.abi_return, ""
+    except Exception as e:
+        return REVERT, str(e)[:200]                            # reverted txn => state unchanged
+
+
+# AVM platform limits (opcode budget past the 16-txn pool, box-reference packing):
+# a revert for these reasons is NOT a miscompile — but it FORKS the state vs the
+# EVM run, so the rest of the sequence is unverifiable.
+def _is_platform_limit(reason: str) -> bool:
+    m = (reason or "").lower()
+    return ("budget" in m or "opcode" in m or "dynamic cost" in m
+            or "invalid box reference" in m or "unavailable box" in m
+            or "unavailable resource" in m or "max_group_size" in m
+            or "exceed" in m and "group" in m)
 
 
 def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
@@ -113,7 +127,7 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
     say("[AVM] compiling + deploying…")
     app = harness.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool)
 
-    diverged, avm_errors, evm_skips = [], [], []
+    diverged, avm_errors, evm_skips, limit_fork = [], [], [], None
     for (sig, args), er in zip(seq, evm):
         if er.get("ok"):
             expected = er["value"]
@@ -122,9 +136,15 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         else:
             evm_skips.append((sig, args, er.get("err", "?"))); continue
         try:
-            actual = avm_step(harness, app, sig, args, _is_view(mut.get(sig, "")))
+            actual, avm_reason = avm_step(harness, app, sig, args, _is_view(mut.get(sig, "")))
         except Exception as e:
             avm_errors.append((sig, args, type(e).__name__ + ": " + str(e)[:140])); continue
+        # AVM platform limit (opcode budget / box-ref packing) where EVM succeeded:
+        # not a miscompile, but the state has now FORKED from the EVM run — stop
+        # diffing; everything after is unverifiable.
+        if actual == REVERT and expected != REVERT and _is_platform_limit(avm_reason):
+            limit_fork = (sig, args, avm_reason[:140])
+            break
         if has_output.get(sig):
             outs = outs_by_sig.get(sig, [])
             exp_c = _apply_addr_canon(expected, outs)       # address returns → 32-byte content hex
@@ -145,6 +165,9 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         say(f"\n⚠️  {len(avm_errors)} AVM errors:")
         for sig, args, err in avm_errors[:8]:
             say(f"   {sig}{_fmt(args)}  {err}")
+    if limit_fork:
+        say(f"\n⏭️  AVM platform limit at {limit_fork[0]}{_fmt(limit_fork[1])} — "
+            f"state forked, sequence truncated: {limit_fork[2]}")
     if diverged:
         say(f"\n❌ {len(diverged)} DIVERGENCE(S):")
         for sig, args, exp, act in diverged[:25]:
@@ -153,6 +176,7 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         say("\n✅ no divergences — persisted state matches a live solc+EVM across the sequence")
     return {"ok": not diverged and not avm_errors, "diffed": diffed,
             "diverged": diverged, "avm_errors": avm_errors, "evm_skips": evm_skips,
+            "limit_fork": limit_fork,
             "contract": info["contract"], "n_calls": len(seq)}
 
 

@@ -387,7 +387,27 @@ def call(
         )
         sim_result = _simulate_for_revert(algod, sim_atc)
         sim_result.raw_response = str(e)
+        if not sim_result.reverted and not _method_is_readonly(app, abi_method):
+            # The SIMULATION succeeds (simulate allows unnamed resources and pooled
+            # budget the real txn group can't carry) while the actual submission
+            # failed. For a READONLY method that's a legitimate read — nothing to
+            # commit. For a MUTATOR it's a FALSE NEGATIVE: a "successful" call that
+            # committed nothing (seen as `setLengths(255,0) -> ok` with the array
+            # silently unchanged). Surface the submit failure for mutators.
+            return Result(reverted=True, fail_message=str(e), raw_response=str(e))
         return sim_result
+
+
+def _method_is_readonly(app, abi_method) -> bool:
+    """arc56 `readonly` flag (view/pure) for the resolved method, by signature."""
+    try:
+        sig = abi_method.get_signature()
+        for m in app.app_spec.methods:
+            if m.to_abi_method().get_signature() == sig:
+                return bool(getattr(m, "readonly", False))
+    except Exception:
+        pass
+    return False
 
 
 def _is_budget_error(exc: Exception) -> bool:

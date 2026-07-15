@@ -204,12 +204,16 @@ def test_array_storage_index_access(harness):
 
 def test_array_storage_index_boundary_test(harness):
     """array/contracts/array_storage_index_boundary_test.sol"""
-    app = harness.compile_and_deploy("array/contracts/array_storage_index_boundary_test.sol")
+    # Growing to 256 elements costs ~20k+ ops and an 8KB box (I/O budget 2048/ref):
+    # ensure_budget + funded opups + duplicate box refs. The old sim-fallback
+    # reported success without executing (see honest submit-failure fix).
+    app = harness.compile_and_deploy("array/contracts/array_storage_index_boundary_test.sol",
+                                     ensure_budget={"test_boundary_check": 45000})
     # test_boundary_check(uint256,uint256): 10, 11 -> FAILURE, hex"4e487b71", 0x32
     r = harness.call(app, "test_boundary_check(uint256,uint256)", 10, 11, expect_revert=True)
     assert r.reverted
     # test_boundary_check(uint256,uint256): 10, 9 -> 0
-    r = harness.call(app, "test_boundary_check(uint256,uint256)", 10, 9)
+    r = harness.call(app, "test_boundary_check(uint256,uint256)", 10, 9, extra_fee=80000, boxes=[(0, b"storageArray")] * 5)
     assert as_int(r.abi_return) == 0
     # test_boundary_check(uint256,uint256): 1, 9 -> FAILURE, hex"4e487b71", 0x32
     r = harness.call(app, "test_boundary_check(uint256,uint256)", 1, 9, expect_revert=True)
@@ -224,13 +228,13 @@ def test_array_storage_index_boundary_test(harness):
     r = harness.call(app, "test_boundary_check(uint256,uint256)", 256, 256, expect_revert=True)
     assert r.reverted
     # test_boundary_check(uint256,uint256): 256, 255 -> 0
-    r = harness.call(app, "test_boundary_check(uint256,uint256)", 256, 255)
+    r = harness.call(app, "test_boundary_check(uint256,uint256)", 256, 255, extra_fee=80000, boxes=[(0, b"storageArray")] * 5)
     assert as_int(r.abi_return) == 0
     # test_boundary_check(uint256,uint256): 256, 0xFFFF -> FAILURE, hex"4e487b71", 0x32
     r = harness.call(app, "test_boundary_check(uint256,uint256)", 256, 65535, expect_revert=True)
     assert r.reverted
     # test_boundary_check(uint256,uint256): 256, 2 -> 0
-    r = harness.call(app, "test_boundary_check(uint256,uint256)", 256, 2)
+    r = harness.call(app, "test_boundary_check(uint256,uint256)", 256, 2, extra_fee=80000, boxes=[(0, b"storageArray")] * 5)
     assert as_int(r.abi_return) == 0
 
 def test_array_storage_index_zeroed_test(harness):
@@ -260,10 +264,11 @@ def test_array_storage_length_access(harness):
     """
     app = harness.compile_and_deploy(
         "array/contracts/array_storage_length_access.sol",
-        ensure_budget={"set_get_length": 20000},
+        ensure_budget={"set_get_length": 45000},
     )
     for n in (0, 1, 10, 20, 255):
-        assert as_int(harness.call(app, "set_get_length(uint256)", n, extra_fee=8000).abi_return) == n
+        assert as_int(harness.call(app, "set_get_length(uint256)", n, extra_fee=80000,
+                                   boxes=[(0, b"storageArray")] * 5).abi_return) == n
     # Out-of-gas case still reverts (now from AVM resource exhaustion rather
     # than EVM gas limits).
     assert harness.call(app, "set_get_length(uint256)", 1048575, expect_revert=True).reverted
@@ -297,10 +302,11 @@ def test_array_storage_push_empty_length_address(harness):
     """
     app = harness.compile_and_deploy(
         "array/contracts/array_storage_push_empty_length_address.sol",
-        ensure_budget={"set_get_length": 20000},
+        ensure_budget={"set_get_length": 45000},
     )
     for n in (0, 1, 10, 20, 0, 255):
-        assert as_int(harness.call(app, "set_get_length(uint256)", n, extra_fee=8000).abi_return) == n
+        assert as_int(harness.call(app, "set_get_length(uint256)", n, extra_fee=80000,
+                                   boxes=[(0, b"addressArray")] * 5).abi_return) == n
     assert harness.call(app, "set_get_length(uint256)", 1048575, expect_revert=True).reverted
 
 def test_array_storage_push_pop(harness):
@@ -312,10 +318,17 @@ def test_array_storage_push_pop(harness):
     """
     app = harness.compile_and_deploy(
         "array/contracts/array_storage_push_pop.sol",
-        ensure_budget={"set_get_length": 20000},
+        ensure_budget={"set_get_length": 45000},
     )
+    # extra_fee must cover the ensure_budget opup itxns: ~45000 ops / 700 per opup
+    # ≈ 64 inner txns ≈ 64000 µA (n=255 alone costs ~21k ops). The old 8000 fee
+    # left the inner group unfunded — the submit failed and the sim-fallback
+    # silently reported success (never executed).
+    # n=255 grows the box to 8162 B: box-ref I/O budget is 2048 B/ref, so pass
+    # duplicate refs explicitly (populate doesn't add enough for >2048 B boxes).
     for n in (0, 1, 10, 20, 255):
-        assert as_int(harness.call(app, "set_get_length(uint256)", n, extra_fee=8000).abi_return) == 0
+        assert as_int(harness.call(app, "set_get_length(uint256)", n, extra_fee=80000,
+                                   boxes=[(0, b"storageArray")] * 5).abi_return) == 0
     # set_get_length(uint256): 0xFFFF -> FAILURE # Out-of-gas #
     r = harness.call(app, "set_get_length(uint256)", 65535, expect_revert=True)
     assert r.reverted
@@ -1078,12 +1091,19 @@ def test_memory(harness):
     # extra opcode budget for the inner txn dance.
     assert as_int(harness.call(app, "i(uint256[4])", [1, 2, 3, 4], extra_fee=2000).abi_return) == 20
 
-def test_memory_arrays_of_various_sizes(harness):  # currently fails
-    """array/contracts/memory_arrays_of_various_sizes.sol"""
-    app = harness.compile_and_deploy('array/contracts/memory_arrays_of_various_sizes.sol')
-    r = harness.call(app, 'f(uint256,uint256)', 3, 1)
+def test_memory_arrays_of_various_sizes(harness):
+    """array/contracts/memory_arrays_of_various_sizes.sol
+
+    f(9,5) costs ~15-25k ops (nested memory-array loops), past the 16-txn
+    budget-pool ceiling — compile with ensure_budget so the program opups
+    itself via inner txns, and fund those with extra_fee. The old sim-fallback
+    reported success without ever executing the real transaction.
+    """
+    app = harness.compile_and_deploy('array/contracts/memory_arrays_of_various_sizes.sol',
+                                     ensure_budget={"f": 30000})
+    r = harness.call(app, 'f(uint256,uint256)', 3, 1, extra_fee=50000)
     assert as_int(r.abi_return) == 1
-    r = harness.call(app, 'f(uint256,uint256)', 9, 5)
+    r = harness.call(app, 'f(uint256,uint256)', 9, 5, extra_fee=50000)
     assert as_int(r.abi_return) == 70
 
 def test_nested_calldata_storage(harness):

@@ -236,13 +236,13 @@ def test_keccak256(harness):
     """builtinFunctions/contracts/keccak256.sol"""
     app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256.sol")
     # f(int256): 4 -> 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
-    r = harness.call(app, "f(int256)", 4)
+    r = harness.call(app, "f(int256)", 4, extra_fee=70000)
     assert as_int(r.abi_return) == 62514009886607029107290561805838585334079798074568712924583230797734656856475
     # f(int256): 5 -> 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
-    r = harness.call(app, "f(int256)", 5)
+    r = harness.call(app, "f(int256)", 5, extra_fee=70000)
     assert as_int(r.abi_return) == 1546678032441257452667456735582814959992782782816731922691272282333561699760
     # f(int256): -1 -> 0xa9c584056064687e149968cbab758a3376d22aedc6a55823d1b3ecbee81b8fb9
-    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=70000)
     assert as_int(r.abi_return) == 76789851457802156565283866979031212934421734113360677815664780851587518795705
 
 def test_keccak256_empty(harness):
@@ -280,13 +280,13 @@ def test_keccak256_packed(harness):
     """builtinFunctions/contracts/keccak256_packed.sol"""
     app = harness.compile_and_deploy("builtinFunctions/contracts/keccak256_packed.sol")
     # f(int256): 4 -> 0xd270285b9966fefc715561efcd09d5b6a8deb15596f7c53cb4a1bb73aa55ac3a
-    r = harness.call(app, "f(int256)", 4)
+    r = harness.call(app, "f(int256)", 4, extra_fee=70000)
     assert as_int(r.abi_return) == 95183863613105289674943871047709809424547296864956777631899359142068901751866
     # f(int256): 5 -> 0xf2f92566c5653600c1e527a7073e5d881576d12bb51887c0b8f3e1f81865b03d
-    r = harness.call(app, "f(int256)", 5)
+    r = harness.call(app, "f(int256)", 5, extra_fee=70000)
     assert as_int(r.abi_return) == 109899912411597832212822893111608843524663982160387972078328824211481649590333
     # f(int256): -1 -> 0xbc78b45e0db67af5af72e4ab62757c67aefa7388cdf0c4e74f8b5fe9dd5d9d13
-    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=70000)
     assert as_int(r.abi_return) == 85248082031449023985059491939699956408088110354102027088226743004047620283667
 
 def test_keccak256_packed_complex_types(harness):
@@ -338,15 +338,20 @@ def test_msg_sig_after_internal_call_is_same(harness):
 
 def test_ripemd160(harness):
     """builtinFunctions/contracts/ripemd160.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160.sol")
+    # The pure-TEAL ripemd160 impl costs well past the 16-txn budget-pool
+    # ceiling; compile with ensure_budget (program opups via inner txns) and
+    # fund them with extra_fee. The old sim-fallback reported hash values
+    # without ever executing the real transaction.
+    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160.sol",
+                                     ensure_budget={"f": 40000})
     # f(int256): 4 -> 0x1b0f3c404d12075c68c938f9f60ebea4f74941a0000000000000000000000000
-    r = harness.call(app, "f(int256)", 4)
+    r = harness.call(app, "f(int256)", 4, extra_fee=70000)
     assert as_int(r.abi_return) == 12239365456053725440107558875761931117347152855322617053615694768895724355584
     # f(int256): 5 -> 0xee54aa84fc32d8fed5a5fe160442ae84626829d9000000000000000000000000
-    r = harness.call(app, "f(int256)", 5)
+    r = harness.call(app, "f(int256)", 5, extra_fee=70000)
     assert as_int(r.abi_return) == 107800049998410314181947434501784187786654500865778811479236083403822943174656
     # f(int256): -1 -> 0x1cf4e77f5966e13e109703cd8a0df7ceda7f3dc3000000000000000000000000
-    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=70000)
     assert as_int(r.abi_return) == 13097468180871836274597881871755309280971053328054043821123942875702197485568
 
 def test_ripemd160_empty(harness):
@@ -358,28 +363,33 @@ def test_ripemd160_empty(harness):
 
 def test_ripemd160_packed(harness):
     """builtinFunctions/contracts/ripemd160_packed.sol"""
-    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160_packed.sol")
+    # The pure-TEAL ripemd160 impl costs well past the 16-txn budget-pool
+    # ceiling; compile with ensure_budget (program opups via inner txns) and
+    # fund them with extra_fee. The old sim-fallback reported hash values
+    # without ever executing the real transaction.
+    app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160_packed.sol",
+                                     ensure_budget={"f": 90000})
     # f(int256): 4 -> 0xf93175303eba2a7b372174fc9330237f5ad202fc000000000000000000000000
-    r = harness.call(app, "f(int256)", 4)
+    r = harness.call(app, "f(int256)", 4, extra_fee=140000)
     assert as_int(r.abi_return) == 112713283608413432366500292079636390015042877224965778699306835103129784025088
     # f(int256): 5 -> 0x04f4fc112e2bfbe0d38f896a46629e08e2fcfad5000000000000000000000000
-    r = harness.call(app, "f(int256)", 5)
+    r = harness.call(app, "f(int256)", 5, extra_fee=140000)
     assert as_int(r.abi_return) == 2242101781399935236999115622957774579424822401483030762403486566236383346688
     # f(int256): -1 -> 0xc0a2e4b1f3ff766a9a0089e7a410391730872495000000000000000000000000
-    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=140000)
     assert as_int(r.abi_return) == 87131874548254851242104262105679177295925122029417861264957203483662101774336
 
 def test_sha256(harness):
     """builtinFunctions/contracts/sha256.sol"""
     app = harness.compile_and_deploy("builtinFunctions/contracts/sha256.sol")
     # f(int256): 4 -> 0xe38990d0c7fc009880a9c07c23842e886c6bbdc964ce6bdd5817ad357335ee6f
-    r = harness.call(app, "f(int256)", 4)
+    r = harness.call(app, "f(int256)", 4, extra_fee=70000)
     assert as_int(r.abi_return) == 102918074156479767208844353797675673170264177419479145455589118040061966151279
     # f(int256): 5 -> 0x96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    r = harness.call(app, "f(int256)", 5)
+    r = harness.call(app, "f(int256)", 5, extra_fee=70000)
     assert as_int(r.abi_return) == 68240159698054048912945530158929160304440341641269126469902820990734598294599
     # f(int256): -1 -> 0xaf9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051
-    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=70000)
     assert as_int(r.abi_return) == 79419909877869412302011273272600157910097194791702522154213193972579280109649
 
 def test_sha256_empty(harness):
@@ -393,11 +403,11 @@ def test_sha256_packed(harness):
     """builtinFunctions/contracts/sha256_packed.sol"""
     app = harness.compile_and_deploy("builtinFunctions/contracts/sha256_packed.sol")
     # f(int256): 4 -> 0x804e0d7003cfd70fc925dc103174d9f898ebb142ecc2a286da1abd22ac2ce3ac
-    r = harness.call(app, "f(int256)", 4)
+    r = harness.call(app, "f(int256)", 4, extra_fee=70000)
     assert as_int(r.abi_return) == 58033951432328784014309100941220065668419038229569888230017781326780325225388
     # f(int256): 5 -> 0xe94921945f9068726c529a290a954f412bcac53184bb41224208a31edbf63cf0
-    r = harness.call(app, "f(int256)", 5)
+    r = harness.call(app, "f(int256)", 5, extra_fee=70000)
     assert as_int(r.abi_return) == 105518105313395515086322545934905310180852738469466176175217259920264724364528
     # f(int256): -1 -> 0xf14def4d07cd185ddd8b10a81b2238326196a38867e6e6adbcc956dc913488c7
-    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+    r = harness.call(app, "f(int256)", 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, extra_fee=70000)
     assert as_int(r.abi_return) == 109145095326669468812651857352188286659179238190865846698410948873810387175623
