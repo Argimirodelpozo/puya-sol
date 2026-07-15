@@ -3,6 +3,7 @@
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/TypeMapper.h" // createType<BytesWType> (constant padding)
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -85,6 +86,50 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 		bool isBytesBacked = _left->wtype == awst::WType::accountType()
 			|| (_left->wtype && _left->wtype->kind() == awst::WTypeKind::Bytes)
 			|| _left->wtype == awst::WType::stringType();
+
+		// EVM bytesN compares 32-byte LEFT-ALIGNED words: bytes22 x == "aa" pads
+		// the literal to the right, and "b" > "aa" (0x62.. > 0x6161..). AVM values
+		// are N raw bytes, so right-pad a shorter CONSTANT operand (BytesConstant,
+		// or the bare 2-byte StringConstant a string literal arrives as) to the
+		// other side's declared bytes[N] width — equality and ordering both.
+		if (isBytesBacked)
+		{
+			auto declaredLen = [](awst::Expression const& e) -> size_t {
+				if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
+					if (bw->length().has_value())
+						return *bw->length();
+				return 0;
+			};
+			auto padShortConstant = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
+				std::vector<uint8_t> val;
+				awst::BytesEncoding enc;
+				if (auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get()))
+				{
+					if (bc->value.size() >= targetLen)
+						return;
+					val = bc->value;
+					enc = bc->encoding;
+				}
+				else if (auto* sc = dynamic_cast<awst::StringConstant*>(expr.get()))
+				{
+					if (sc->value.size() > targetLen)
+						return;
+					val.assign(sc->value.begin(), sc->value.end());
+					enc = awst::BytesEncoding::Utf8;
+				}
+				else
+					return;
+				val.resize(targetLen, 0);
+				expr = awst::makeBytesConstant(std::move(val), expr->sourceLocation, enc,
+					_ctx.typeMapper.createType<awst::BytesWType>(static_cast<int>(targetLen)));
+			};
+			size_t common = std::max(declaredLen(*_left), declaredLen(*_right));
+			if (common > 0)
+			{
+				padShortConstant(_left, common);
+				padShortConstant(_right, common);
+			}
+		}
 
 		if (isBytesBacked && (_op == Token::Equal || _op == Token::NotEqual))
 		{

@@ -92,38 +92,52 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 	if (!otherIsBytes && !otherIsAccount)
 		return nullptr;
 
+	auto lhs = resolve();
+	auto rhs = _other.resolve();
+
+	// EVM bytesN compares 32-byte LEFT-ALIGNED words; bytes3("abc")==bytes4("abc")
+	// is true and "b" > "aa" (0x62.. > 0x6161..). AVM operands are N raw bytes, so
+	// right-pad shorter constants — including bare string literals ("aa" == x with
+	// x bytes22 arrives as a 2-byte StringConstant) — to the declared width.
+	auto padConstant = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
+		std::vector<uint8_t> val;
+		awst::BytesEncoding enc;
+		if (auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get()))
+		{
+			if (bc->value.size() >= targetLen)
+				return;
+			val = bc->value;
+			enc = bc->encoding;
+		}
+		else if (auto* sc = dynamic_cast<awst::StringConstant*>(expr.get()))
+		{
+			if (sc->value.size() > targetLen)
+				return;
+			val.assign(sc->value.begin(), sc->value.end());
+			enc = awst::BytesEncoding::Utf8;
+		}
+		else
+			return;
+		auto* newType = m_ctx.typeMapper.createType<awst::BytesWType>(
+			static_cast<int>(targetLen));
+		val.resize(targetLen, 0);
+		expr = awst::makeBytesConstant(std::move(val), expr->sourceLocation, enc, newType);
+	};
+	auto bytesLen = [](awst::Expression const& e) -> size_t {
+		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
+			if (bw->length().has_value())
+				return *bw->length();
+		return 0;
+	};
+	size_t common = std::max(bytesLen(*lhs), bytesLen(*rhs));
+	if (common > 0)
+	{
+		padConstant(lhs, common);
+		padConstant(rhs, common);
+	}
+
 	if (_op == BuilderComparisonOp::Eq || _op == BuilderComparisonOp::Ne)
 	{
-		auto lhs = resolve();
-		auto rhs = _other.resolve();
-
-		// EVM bytesN: 32-byte left-aligned; bytes3("abc")==bytes4("abc") is true.
-		// AVM constants are N raw bytes, so right-pad shorter literals to match.
-		auto padConstant = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
-			auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get());
-			if (!bc) return;
-			if (bc->value.size() >= targetLen) return;
-			auto* newType = m_ctx.typeMapper.createType<awst::BytesWType>(
-				static_cast<int>(targetLen));
-			auto val = bc->value;
-			val.resize(targetLen, 0);
-			expr = awst::makeBytesConstant(std::move(val), bc->sourceLocation, bc->encoding, newType);
-		};
-		auto bytesLen = [](awst::Expression const& e) -> size_t {
-			if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
-				if (bw->length().has_value())
-					return *bw->length();
-			return 0;
-		};
-		size_t lhsLen = bytesLen(*lhs);
-		size_t rhsLen = bytesLen(*rhs);
-		size_t common = std::max(lhsLen, rhsLen);
-		if (common > 0)
-		{
-			padConstant(lhs, common);
-			padConstant(rhs, common);
-		}
-
 		auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 			if (expr->wtype != awst::WType::bytesType()
 				&& expr->wtype != awst::WType::accountType())
@@ -154,9 +168,12 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 	default: return nullptr;
 	}
 
+	// Ordered compares need the same left-aligned padding (lhs/rhs padded above):
+	// b< is numeric big-endian, so an unpadded "b" (0x62) would sort BELOW "aa"
+	// (0x6161) where EVM's left-aligned words sort it above.
 	auto e = awst::makeIntrinsicCall(std::move(opCode), awst::WType::boolType(), _loc);
-	e->stackArgs.push_back(resolve());
-	e->stackArgs.push_back(_other.resolve());
+	e->stackArgs.push_back(std::move(lhs));
+	e->stackArgs.push_back(std::move(rhs));
 	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
 }
 

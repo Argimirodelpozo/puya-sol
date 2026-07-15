@@ -811,6 +811,27 @@ def test_enum_conversion_wide_range(harness):
     assert as_int(harness.call(app, "fromI16(int16)", 1).abi_return) == 1
 
 
+def test_bytesn_literal_compare_pad(harness):
+    """puyasolRegression/contracts/bytesn_literal_compare_pad.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer's new op_bytesn operator
+    (conditional_expression_storage_memory_1, bytes2->bytes22). A bytesN value
+    compared against a SHORTER string literal reached BinaryOpBuilder's
+    bytes-backed comparison as a raw 2-byte StringConstant and was compared
+    unpadded -- `x == "aa"` false for every N > 2, silent wrong result. Ordered
+    compares had the same gap (unpadded "b" sorted below "aa"). FIX: right-pad
+    constant operands (BytesConstant or StringConstant) to the wider side's
+    declared bytes[N] width before both the equality and ordered paths, in
+    BinaryOpBuilder (live path) and SolFixedBytesBuilder::compare (eb path).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/bytesn_literal_compare_pad.sol")
+    assert as_int(harness.call(app, "viaTernary(bool)", True).abi_return) == 1
+    assert as_int(harness.call(app, "viaTernary(bool)", False).abi_return) == 2
+    assert as_int(harness.call(app, "scalarEq()").abi_return) == 1
+    assert as_int(harness.call(app, "widthSweep()").abi_return) == 15
+    assert as_int(harness.call(app, "ordered()").abi_return) == 7
+
+
 def test_nested_asm_param_gate(harness):
     """puyasolRegression/contracts/nested_asm_param_gate.sol — NOT an o.g. semantic test.
 
