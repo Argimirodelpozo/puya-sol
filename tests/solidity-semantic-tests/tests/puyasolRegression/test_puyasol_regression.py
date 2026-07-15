@@ -811,6 +811,44 @@ def test_enum_conversion_wide_range(harness):
     assert as_int(harness.call(app, "fromI16(int16)", 1).abi_return) == 1
 
 
+def test_ecrecover_invalid_input_zero(harness):
+    """puyasolRegression/contracts/ecrecover_invalid_input_zero.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (failing_ecrecover_invalid_input_proper,
+    ==->!=). EVM ecrecover returns address(0) for invalid inputs (v not 27/28,
+    r/s zero or >= curve order N); AVM ecdsa_pk_recover PANICS on them, and the
+    opcode ran UNCONDITIONALLY with only the v-check masking the result after
+    the fact. FIX: gate the recover opcode itself behind v/r/s validity and
+    yield zero without executing it. (Residue: an in-range r that is not a
+    curve x-coordinate still panics — not checkable without the recover.)
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/ecrecover_invalid_input_zero.sol")
+    zero = 0
+    assert as_int(harness.call(app, "zeroAll()").abi_return) == zero
+    assert as_int(harness.call(app, "zeroRS()").abi_return) == zero
+    for v in [0, 1, 26, 29]:
+        assert as_int(harness.call(app, "badV(uint8)", v).abi_return) == zero, v
+    assert as_int(harness.call(app, "rTooBig()").abi_return) == zero
+    assert as_int(harness.call(app, "sTooBig()").abi_return) == zero
+
+
+def test_signed_getter_cross_call(harness):
+    """puyasolRegression/contracts/signed_getter_cross_call.sol — NOT an o.g. semantic test.
+
+    Found by the corpus-mutation fuzzer (call_forward_bytes, uint256->int24).
+    A SIGNED public var's getter kept a bare biguint return, so puya's router
+    published received()uint512 while callers + arc56 compute received()uint256:
+    the cross-contract read fell to the callee's FALLBACK (empty return log ->
+    "extraction start 28 beyond length 0"). FIX: PublicGetterBuilder remaps
+    signed getter returns to arc4.uint256 (canonical 256-bit TC; unsigned keep
+    declared width), covering int256 too, which skipped BOTH old branches.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/signed_getter_cross_call.sol", contract_name="reader")
+    harness.call(app, "set(int24,int256)", -5, -(1 << 200), extra_fee=2000)
+    assert as_signed_int(harness.call(app, "readSmall()", extra_fee=2000).abi_return) == -5
+    assert as_signed_int(harness.call(app, "readWide()", extra_fee=2000).abi_return) == -(1 << 200)
+
+
 def test_bytesn_literal_compare_pad(harness):
     """puyasolRegression/contracts/bytesn_literal_compare_pad.sol — NOT an o.g. semantic test.
 

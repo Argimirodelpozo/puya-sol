@@ -614,21 +614,25 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					);
 			}
 
-			// Remap biguint return to ARC4UIntN(N): ABI selector "uintN" not "uint512".
-			// Unsigned only: signed two's-complement biguint must NOT be wrapped (overflow).
-			bool isUnsignedIntReturn = false;
+			// Remap biguint return to ARC4UIntN: ABI selector "uintN" not "uint512".
+			// Without this puya's router publishes `received()uint512` while callers
+			// and the arc56 spec compute `received()uint256` — the inner call then
+			// falls to the callee's FALLBACK (silent wrong path; empty return log).
+			// Unsigned: declared width. Signed: canonical 256-bit TC, so encode at
+			// 256 bits always — a sign-extended negative doesn't fit arc4.uintN for
+			// N<256 (matches FunctionBuilder's signed-return promotion).
+			bool isIntReturn = false;
 			unsigned retBits = 256;
 			if (getter.returnType == awst::WType::biguintType()
 				&& solReturnTypes.size() == 1)
 			{
-				if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]);
-					intInfo && !intInfo->isSigned)
+				if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]))
 				{
-					isUnsignedIntReturn = true;
-					retBits = intInfo->bits;
+					isIntReturn = true;
+					retBits = intInfo->isSigned ? 256 : intInfo->bits;
 				}
 			}
-			if (isUnsignedIntReturn)
+			if (isIntReturn)
 			{
 				auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
 				forEachReturnStatement(getter.body->body, [&](awst::ReturnStatement& ret) {
