@@ -2,6 +2,7 @@
 /// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
+#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/SolcConstFold.h"
@@ -219,9 +220,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					&& fd->returnParameters()[0]->referenceLocation()
 						== VariableDeclaration::Location::Storage
 					&& fd->isImplemented()
-					&& std::any_of(fd->body().statements().begin(),
-						fd->body().statements().end(),
-						[](auto const& s){ return dynamic_cast<InlineAssembly const*>(s.get()); }))
+					&& builder::containsInlineAssembly(fd->body()))
 					structRefSlotLocals[yulId->name.str()] = ptr->name();
 			}
 			break;

@@ -7,6 +7,7 @@
 #include "builder/sol-types/SolIntType.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
+#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/AsaIntrinsics.h"
 #include "builder/itxn/CallResolver.h"
@@ -80,8 +81,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 		// Storage reference return with .slot assembly → biguint (slot number)
 		if (_funcDef->returnParameters()[0]->referenceLocation() == VariableDeclaration::Location::Storage
 			&& _funcDef->isImplemented()
-			&& std::any_of(_funcDef->body().statements().begin(), _funcDef->body().statements().end(),
-				[](auto const& s) { return dynamic_cast<InlineAssembly const*>(s.get()); }))
+			&& builder::containsInlineAssembly(_funcDef->body()))
 			return awst::WType::biguintType();
 		// Storage-ref pointer: subroutine returns uint64 index;
 		// buildSubroutineCall wraps in IndexExpression to reconstitute the ref.

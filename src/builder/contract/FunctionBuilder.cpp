@@ -2,6 +2,7 @@
 #include "awst/Termination.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/NatSpecTags.h"
+#include "builder/sol-ast/AsmScan.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/contract/ReturnRewriter.h"
@@ -356,8 +357,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// .slot assembly storage ref: return biguint (slot number).
 		if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& _func.isImplemented()
-			&& std::any_of(_func.body().statements().begin(), _func.body().statements().end(),
-				[](auto const& s) { return dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()); }))
+			&& containsInlineAssembly(_func.body()))
 			method.returnType = awst::WType::biguintType();
 		// Storage-ref pointer (`return _pools[id]`): return uint64 index or bytes box-key.
 		// Box-keyed when the holder is a mapping (storageRefReturnIsBytesKeyed),
@@ -450,14 +450,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		unsigned signedBits = 0; // >0 for signed 64<N<256 int params: sign-extend to 256-bit after decode
 	};
 	std::vector<ParamDecode> paramDecodes;
-	// Detect inline assembly: skip ARC4 param wrapping (would break asm var refs).
-	bool funcHasInlineAssembly = false;
-	if (_func.isImplemented())
-	{
-		for (auto const& stmt: _func.body().statements())
-			if (dynamic_cast<solidity::frontend::InlineAssembly const*>(stmt.get()))
-			{ funcHasInlineAssembly = true; break; }
-	}
+	// Detect inline assembly (at ANY depth — `unchecked { assembly {..} }` counts):
+	// skip ARC4 param wrapping (would break asm var refs).
+	bool funcHasInlineAssembly =
+		_func.isImplemented() && containsInlineAssembly(_func.body());
 
 	// Self-recursive callsubs are rewritten post-translation to wrap biguint args
 	// in ARC4Encode (see wrap pass below) — self-recursion no longer gates the remap.
@@ -801,15 +797,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks);
 
 		// Asm bodies handle param data directly via calldataload; skip ARC4 decode.
-		bool hasInlineAssembly = false;
-		for (auto const& stmt: _func.body().statements())
-		{
-			if (dynamic_cast<solidity::frontend::InlineAssembly const*>(stmt.get()))
-			{
-				hasInlineAssembly = true;
-				break;
-			}
-		}
+		// Any-depth scan — must agree with funcHasInlineAssembly (remap gate).
+		bool hasInlineAssembly = containsInlineAssembly(_func.body());
 
 		// Decode ARC4-remapped params: rename arg to __arc4_<name> and stash decodes.
 		// Deferred until after modifier inlining: inlineModifiers replaces method.body
