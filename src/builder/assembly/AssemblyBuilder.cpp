@@ -420,6 +420,47 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 	return out;
 }
 
+std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAlloc(
+	std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,
+	int _uniqueId, awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	auto u64 = awst::WType::uint64Type();
+	auto k = [&](char const* v) { return awst::makeIntegerConstant(v, _loc); };
+
+	// Materialise the length once; buffer offset = current FMP (extractUInt64 @ 88).
+	std::string lenVar = "__bytesalloc_len_" + std::to_string(_uniqueId);
+	out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(lenVar, u64, _loc), std::move(_lenU64), _loc));
+	auto lenRead = [&]() { return awst::makeVarExpression(lenVar, u64, _loc); };
+
+	out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(_offVar, u64, _loc),
+		awst::makeExtractUInt64(awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc), k("88"), _loc), _loc));
+	auto offRead = [&]() { return awst::makeVarExpression(_offVar, u64, _loc); };
+
+	// Write the 32-byte length word at the buffer offset: replace3(blob, off, pad32(len)).
+	auto lenWord = awst::makeLeftPad(awst::makeItob(lenRead(), _loc), 24, _loc);
+	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(MEMORY_SLOT_FIRST,
+		awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc), offRead(),
+			std::move(lenWord), _loc), _loc), _loc));
+
+	// newFMP = off + 32 + ceil(len/32)*32.
+	auto ceil32 = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(
+			awst::makeUInt64BinOp(lenRead(), awst::UInt64BinaryOperator::Add, k("31"), _loc),
+			awst::UInt64BinaryOperator::FloorDiv, k("32"), _loc),
+		awst::UInt64BinaryOperator::Mult, k("32"), _loc);
+	auto newFmp = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(offRead(), awst::UInt64BinaryOperator::Add, k("32"), _loc),
+		awst::UInt64BinaryOperator::Add, std::move(ceil32), _loc);
+	auto fmpWord = awst::makeLeftPad(awst::makeItob(std::move(newFmp), _loc), 24, _loc);
+	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(MEMORY_SLOT_FIRST,
+		awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc), k("64"),
+			std::move(fmpWord), _loc), _loc), _loc));
+	return out;
+}
+
 void AssemblyBuilder::initializeMemoryBlob(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	std::vector<std::shared_ptr<awst::Statement>>& _out

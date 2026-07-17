@@ -284,13 +284,31 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			&& decl.referenceLocation() == VariableDeclaration::Location::Memory
 			&& m_blk.isAssemblyAggregate(decl.id()))
 		{
-			bool isNew = false;
+			FunctionCall const* newCall = nullptr;
 			if (auto const* fc = dynamic_cast<FunctionCall const*>(initialValue))
-				isNew = dynamic_cast<NewExpression const*>(&fc->expression()) != nullptr;
-			if (isNew)
+				if (dynamic_cast<NewExpression const*>(&fc->expression()))
+					newCall = fc;
+			if (newCall)
 			{
 				using AB = builder::AssemblyBuilder;
 				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+				// Dynamic bytes/string (`new bytes(n)` / `new string(n)`): the OZ
+				// Strings.toString buffer idiom. Blob-alloc with a runtime length
+				// word so `add(buf,32)` points at the data and a value-read
+				// materialises [len][data]. Real arrays: fixed FMP bump, no len word.
+				auto const* at = dynamic_cast<ArrayType const*>(decl.type());
+				if (at && at->isByteArrayOrString() && !newCall->arguments().empty())
+				{
+					auto lenU64 = builder::TypeCoercion::implicitNumericCast(
+						m_blk.builderCtx().build(*newCall->arguments()[0]),
+						awst::WType::uint64Type(), m_loc);
+					for (auto& s: AB::emitBytesBlobAlloc(
+							std::move(lenU64), offN, static_cast<int>(decl.id()), m_loc))
+						result.push_back(std::move(s));
+					m_blk.setBlobAggregate(decl.id(), offN);
+					m_blk.builderCtx().appendPendingTo(result);
+					return result;
+				}
 				result.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
 					awst::makeExtractUInt64(awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),

@@ -7,6 +7,7 @@
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -562,6 +563,12 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		std::string pname = param->name().empty() ? "_param" + std::to_string(idx) : param->name();
 		fnCtx.setBlobAggregate(param->id(), pname);
 	}
+
+	// Promote memory aggregates used as asm-pointers (bytes/string buffers in
+	// internal/library functions, e.g. OZ Strings.toString) to blob-backed before
+	// body translation — the contract-method path does this in ContractBuilder's
+	// buildBlock; the free/library path builds the body directly, so mark here too.
+	markAssemblyAggregates(fnCtx, _func.body());
 
 	sub->body = sol_ast::buildBlock(blk, _func.body());
 

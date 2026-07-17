@@ -2138,3 +2138,29 @@ def test_packed_slot_word_dispatch(harness):
     assert as_signed_int(r.abi_return[1]) == -3
     r = harness.call(app, 'readWord()')
     assert as_int(r.abi_return) == w3
+
+
+def test_asm_string_buffer_pointer(harness):
+    """puyasolRegression/contracts/asm_string_buffer_pointer.sol — NOT an o.g. test.
+
+    The memory-pointer seam: a `new string(n)`/`new bytes(n)` buffer used in
+    inline assembly as its Yul memory POINTER (`add(buffer, k)` + `mstore8` +
+    `return buffer`) — the OpenZeppelin Strings.toString/toHexString idiom.
+    Such a buffer is promoted to the blob-backed (pointer) model so asm writes
+    land in the memory blob, and an outside-asm value-use materialises
+    [len word][data] back out. Guarded across BOTH build paths: the library
+    internal function (AWSTBuilder) and the public function (ContractBuilder) —
+    each marks asm-aggregates via the shared markAssemblyAggregates.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_string_buffer_pointer.sol")
+    # library-internal toString
+    assert harness.call(app, "dec(uint256)", 0).abi_return == "0"
+    assert harness.call(app, "dec(uint256)", 12345).abi_return == "12345"
+    assert harness.call(app, "dec(uint256)", 9876543210).abi_return == "9876543210"
+    # library-internal toHexString(_, 32): "0x" + 64 hex chars
+    assert harness.call(app, "hex32(uint256)", 255).abi_return == "0x" + "00" * 31 + "ff"
+    assert harness.call(app, "hex32(uint256)", 0).abi_return == "0x" + "00" * 32
+    # public build path, same idiom
+    assert harness.call(app, "decInline(uint256)", 0).abi_return == "0"
+    assert harness.call(app, "decInline(uint256)", 42).abi_return == "42"
+    assert harness.call(app, "decInline(uint256)", 9876543210).abi_return == "9876543210"

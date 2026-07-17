@@ -207,6 +207,16 @@ public:
 	static std::vector<std::shared_ptr<awst::Statement>> emitFreeMemoryBump(
 		int _size, awst::SourceLocation const& _loc, int _uniqueId);
 
+	/// Allocate a `new bytes(len)` / `new string(len)` in the memory blob for asm use:
+	/// binds `_offVar` (uint64) to the current FMP (the EVM pointer), writes the
+	/// 32-byte length word at that offset, and bumps FMP by 32 + ceil(len/32)*32.
+	/// `_lenU64` is the runtime length (uint64). The buffer's data lives at
+	/// `_offVar + 32`, matching EVM string/bytes memory layout, so `add(buf, 32)` in
+	/// asm points at the data and value-reads materialise [len word][data].
+	static std::vector<std::shared_ptr<awst::Statement>> emitBytesBlobAlloc(
+		std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,
+		int _uniqueId, awst::SourceLocation const& _loc);
+
 	/// Read a 32-byte EVM-memory word at a DYNAMIC offset via direct scratch
 	/// (`extract3(loads(off/SLOT_SIZE), off%SLOT_SIZE, 32)`). Static so sol-ast can call it.
 	static std::shared_ptr<awst::Expression> readMemWordDirect(

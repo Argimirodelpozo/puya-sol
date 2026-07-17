@@ -13,6 +13,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libyul/AST.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <map>
@@ -76,6 +77,110 @@ namespace {
 /// aggregate's memory pointer (a uint256 offset), so we promote these to
 /// blob-backed (SolVariableDeclaration) and resolve them to a uint64 offset in
 /// the assembly translator.
+// True iff `_vd` (a local) is initialised by `new T(...)` — walk its scope block
+// for the declaring statement. Used to gate blob-backing of bytes/string asm
+// buffers: only a freshly-`new`ed buffer (the OZ Strings.toString idiom) is
+// promoted to the memory-pointer model; a bytes/string VALUE used in asm
+// (`ret := val`) stays value-model.
+static bool _isNewAllocatedLocal(solidity::frontend::VariableDeclaration const* _vd)
+{
+	using namespace solidity::frontend;
+	auto const* block = dynamic_cast<Block const*>(_vd->scope());
+	if (!block)
+		return false;
+	for (auto const& stmt: block->statements())
+	{
+		auto const* vds = dynamic_cast<VariableDeclarationStatement const*>(stmt.get());
+		if (!vds || !vds->initialValue())
+			continue;
+		bool declares = false;
+		for (auto const& d: vds->declarations())
+			if (d && d->id() == _vd->id())
+				declares = true;
+		if (!declares)
+			continue;
+		auto const* fc = dynamic_cast<FunctionCall const*>(vds->initialValue());
+		return fc && dynamic_cast<NewExpression const*>(&fc->expression()) != nullptr;
+	}
+	return false;
+}
+
+// True iff any of `_targets` (Yul identifier nodes referencing the buffer)
+// appears inside `_e` (a Yul expression subtree).
+static bool _yulExprRefs(
+	solidity::yul::Expression const& _e,
+	std::set<solidity::yul::Identifier const*> const& _targets)
+{
+	using namespace solidity::yul;
+	if (auto const* id = std::get_if<Identifier>(&_e))
+		return _targets.count(id) != 0;
+	if (auto const* fc = std::get_if<FunctionCall>(&_e))
+		for (auto const& arg: fc->arguments)
+			if (_yulExprRefs(arg, _targets))
+				return true;
+	return false;
+}
+
+// True iff the buffer's pointer ESCAPES into another Yul variable within `_b` —
+// i.e. it feeds the RHS of an assignment (`ptr := add(buffer, k)`) or a `let`.
+// This is the exact signal that the value-model store handlers (mstore/mstore8
+// with the buffer directly in the address, e.g. `mstore(add(x,32), w)`) can NOT
+// cover the writes: once the pointer lives in an opaque local, only the blob
+// (memory-pointer) model tracks it. A buffer used solely as a direct store
+// address is left value-model. Recurses into nested control-flow blocks.
+static bool _yulBlockEscapes(
+	solidity::yul::Block const& _b,
+	std::set<solidity::yul::Identifier const*> const& _targets)
+{
+	using namespace solidity::yul;
+	for (auto const& stmt: _b.statements)
+	{
+		bool esc = std::visit([&](auto const& s) -> bool {
+			using T = std::decay_t<decltype(s)>;
+			if constexpr (std::is_same_v<T, Assignment>)
+				return s.value && _yulExprRefs(*s.value, _targets);
+			else if constexpr (std::is_same_v<T, VariableDeclaration>)
+				return s.value && _yulExprRefs(*s.value, _targets);
+			else if constexpr (std::is_same_v<T, Block>)
+				return _yulBlockEscapes(s, _targets);
+			else if constexpr (std::is_same_v<T, If>)
+				return _yulBlockEscapes(s.body, _targets);
+			else if constexpr (std::is_same_v<T, Switch>)
+			{
+				for (auto const& c: s.cases)
+					if (_yulBlockEscapes(c.body, _targets))
+						return true;
+				return false;
+			}
+			else if constexpr (std::is_same_v<T, ForLoop>)
+				return _yulBlockEscapes(s.pre, _targets)
+					|| _yulBlockEscapes(s.post, _targets)
+					|| _yulBlockEscapes(s.body, _targets);
+			else if constexpr (std::is_same_v<T, FunctionDefinition>)
+				return _yulBlockEscapes(s.body, _targets);
+			else
+				return false;
+		}, stmt);
+		if (esc)
+			return true;
+	}
+	return false;
+}
+
+// True iff `_vd`'s memory pointer escapes into a Yul local inside `_asm`.
+static bool _bufferPointerEscapes(
+	solidity::frontend::InlineAssembly const& _asm,
+	solidity::frontend::VariableDeclaration const* _vd)
+{
+	std::set<solidity::yul::Identifier const*> targets;
+	for (auto const& ref: _asm.annotation().externalReferences)
+		if (ref.second.declaration == _vd)
+			targets.insert(ref.first);
+	if (targets.empty())
+		return false;
+	return _yulBlockEscapes(_asm.operations().root(), targets);
+}
+
 class AssemblyAggregateScanner: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -93,12 +198,17 @@ public:
 					!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
 			auto const* t = vd->type();
-			// bytes/string keep their dedicated assembly handling (tryHandleBytes*);
-			// promoting them to blob-backed breaks value uses (x[i]=, x.length,
-			// return x). Real arrays + structs only (bytes-Yul-libs handled later).
 			if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
 			{
-				if (!at->isByteArrayOrString())
+				// Real arrays: always blob-back. bytes/string keep the value model
+				// (dedicated tryHandleBytes* handlers preserve x[i]=/x.length/return x,
+				// incl. direct `mstore(add(x,32), w)` word writes) EXCEPT a freshly-
+				// `new`ed buffer whose pointer ESCAPES into a Yul local — the OZ
+				// Strings.toString idiom (`ptr := add(buffer, k)` + `mstore8(ptr,…)`
+				// + `return buffer`). Only then do the value handlers lose the writes,
+				// so blob-back it (memory-pointer model).
+				if (!at->isByteArrayOrString()
+					|| (_isNewAllocatedLocal(vd) && _bufferPointerEscapes(_asm, vd)))
 					ids.insert(vd->id());
 			}
 			else if (dynamic_cast<solidity::frontend::StructType const*>(t))
@@ -109,6 +219,17 @@ public:
 };
 
 } // namespace
+
+void markAssemblyAggregates(
+	sol_ast::FunctionContext& _fn,
+	solidity::frontend::Block const& _block)
+{
+	std::set<int64_t> asmAggIds;
+	AssemblyAggregateScanner scanner{asmAggIds};
+	_block.accept(scanner);
+	for (int64_t id: asmAggIds)
+		_fn.markAssemblyAggregate(id);
+}
 
 std::shared_ptr<awst::Block> buildBlock(
 	FunctionTranslationCtx& _ctx,
@@ -166,13 +287,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	// blob-backs them at their declaration. Not run during modifier re-entrancy
 	// (_placeholder set) — pre-built placeholder contexts are unsafe to re-walk.
 	if (!_placeholder)
-	{
-		std::set<int64_t> asmAggIds;
-		AssemblyAggregateScanner scanner{asmAggIds};
-		_block.accept(scanner);
-		for (int64_t id: asmAggIds)
-			fn.markAssemblyAggregate(id);
-	}
+		markAssemblyAggregates(fn, _block);
 
 	return sol_ast::buildBlock(blk, _block);
 }

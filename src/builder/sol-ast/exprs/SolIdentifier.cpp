@@ -6,6 +6,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
@@ -63,11 +64,36 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
-		// Blob-backed aggregate (>4KB): variable travels as uint64 base offset.
-		// Bare reference resolves to that offset; field/index access go through
-		// SolIndexAccess/resolveBlobOffset.
+		// Blob-backed aggregate: variable travels as a uint64 base offset into the
+		// memory blob. A bare reference of an ARRAY/STRUCT resolves to that offset
+		// (field/index access go through SolIndexAccess). But a bytes/string blob
+		// buffer (the OZ Strings.toString idiom) is small + materialisable: a bare
+		// value-use reads [len word][data] out of the blob and returns the value.
+		// (In assembly the AssemblyBuilder resolves it to the offset via
+		// m_blobOffsetVars — this path is the OUTSIDE-asm value-use.)
 		if (auto off = m_scope.findBlobAggregate(varDecl->id()); !off.empty())
-			return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
+		{
+			using AB = builder::AssemblyBuilder;
+			auto const* vt = m_ctx.typeMapper.map(varDecl->type());
+			if (vt != awst::WType::bytesType() && vt != awst::WType::stringType())
+				return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
+			auto offRead = [&]() {
+				return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
+			};
+			// length = low 8 bytes of the 32-byte length word at the buffer offset.
+			auto length = awst::makeExtractUInt64(
+				AB::readMemWordDirect(offRead(), m_loc),
+				awst::makeIntegerConstant("24", m_loc), m_loc);
+			// data = extract3(blob, offset + 32, length).
+			auto dataStart = awst::makeUInt64BinOp(offRead(),
+				awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant("32", m_loc), m_loc);
+			auto data = awst::makeExtract3(
+				awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),
+				std::move(dataStart), std::move(length), m_loc);
+			if (vt == awst::WType::stringType())
+				return awst::makeReinterpretCast(std::move(data), awst::WType::stringType(), m_loc);
+			return std::shared_ptr<awst::Expression>(std::move(data));
+		}
 
 		// Struct storage-ref param (e.g. V4 `Pool.State storage self`): travels
 		// as box-key PREFIX in bytes. When used as struct value (`self.field`),

@@ -97,6 +97,16 @@ std::shared_ptr<awst::Block> buildBlock(
 	solidity::frontend::Block const& block,
 	std::shared_ptr<awst::Block> placeholder = nullptr);
 
+/// Promote memory aggregates used as VALUES in inline assembly (their Yul memory
+/// pointer) to blob-backed (pointer model) on `fn`. Must run before body
+/// translation so SolVariableDeclaration blob-backs them at declaration. Shared
+/// by the contract-method path (`buildBlock`) and the free/library-function path
+/// (AWSTBuilder) so internal/library asm buffers (OZ Strings.toString) are marked
+/// in both.
+void markAssemblyAggregates(
+	sol_ast::FunctionContext& fn,
+	solidity::frontend::Block const& block);
+
 /// Inline modifier bodies into a function body in place.
 ///
 /// Walks `func.modifiers()` outermost-first; each iteration translates the
