@@ -124,6 +124,15 @@ def deploy(
     # not the max of the two individually. snark.sol hits this: approval=6142
     # + clear=4 = 6146, which needs extra_pages=3 (budget 8192), not 2 (6144).
     extra_pages = max(0, (len(approval_bin) + len(clear_bin) - 1) // 2048)
+    # AVM hard cap: MaxExtraAppProgramPages = 3 → 8192 bytes total. Fail with a
+    # clear platform-limit message instead of algod's raw txn-dump rejection
+    # (fuzz campaigns misread that as a compiler finding). Splitting oversized
+    # contracts is what --uros-splitter / --fn-split exist for.
+    if extra_pages > 3:
+        raise DeployError(
+            f"program exceeds AVM 8KB cap: approval={len(approval_bin)}B + "
+            f"clear={len(clear_bin)}B needs extra_pages={extra_pages} (max 3); "
+            "not a compiler bug — split the contract (uros splitter)")
 
     # Encode constructor args (if any) into ApplicationArgs.
     app_args = None
