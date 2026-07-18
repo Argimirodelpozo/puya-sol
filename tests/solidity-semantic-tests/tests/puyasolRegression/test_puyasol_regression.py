@@ -2252,3 +2252,28 @@ def test_mapping_chain_index_bounds(harness):
     ]:
         r = harness.call(app, sig, *args, expect_revert=True)
         assert getattr(r, "reverted", False), f"{sig}{args} must revert (index OOB)"
+
+
+def test_calldata_empty_array_index(harness):
+    """puyasolRegression/contracts/calldata_empty_array_index.sol — NOT an o.g. test.
+
+    Indexing an EMPTY calldata array kept as an ARC4 VALUE (asm-mode function,
+    struct skips the native decode) read adjacent struct bytes and returned 0
+    where EVM panics 0x32 — puya's IndexExpression has no length check and the
+    empty array's phantom slot stays within valid bytes. Fixed with an explicit
+    idx < uint16-length-prefix assert in SolArrayBuilder::index (calldata ARC4
+    values only). Found by the night-3 stmt-del mutant on dirty_calldata_struct.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/calldata_empty_array_index.sol")
+    # in-bounds still decodes correctly (0x180 sign-extends via the int8 path upstream)
+    assert as_int(harness.call(app, "f((uint16[]))", ([384],)).abi_return) == 384
+    assert as_int(harness.call(app, "fi((uint16[]),uint256)", ([7, 9],), 1).abi_return) == 9
+    # empty inner array / OOB runtime index must revert, not read phantom bytes
+    for sig, args in [
+        ("f((uint16[]))", (([],),)),
+        ("fi((uint16[]),uint256)", (([],), 0)),
+        ("fi((uint16[]),uint256)", (([5],), 1)),   # == length
+        ("fi((uint16[]),uint256)", (([5],), 255)),
+    ]:
+        r = harness.call(app, sig, *args, expect_revert=True)
+        assert getattr(r, "reverted", False), f"{sig}{args} must revert (index OOB)"

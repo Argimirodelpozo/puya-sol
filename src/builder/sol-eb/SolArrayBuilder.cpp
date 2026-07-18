@@ -43,6 +43,37 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	if (!elemType)
 		return nullptr;
 
+	// CALLDATA arrays kept as ARC4 VALUES (asm-mode functions skip the native
+	// decode, so `s.m[i]` indexes the raw encoding): puya's IndexExpression
+	// lowering has NO length check — it relies on the physical extract failing,
+	// and an EMPTY array inside a larger encoding (`s.m[0]` with s = ([]))
+	// reads adjacent struct bytes instead of reverting (EVM Panic 0x32).
+	// Assert idx < the uint16 length prefix. Calldata is never an lvalue, so
+	// the eval-once base wrap is safe. Found by the night-3 stmt-del mutant on
+	// viaYul/dirty_calldata_struct (the deletion was incidental — the empty
+	// inner array was the trigger).
+	if (wtype() && wtype()->kind() == awst::WTypeKind::ARC4DynamicArray
+		&& m_arrayType
+		&& m_arrayType->dataStoredIn(solidity::frontend::DataLocation::CallData))
+	{
+		base = awst::makeEvalOnce(std::move(base), _loc);
+		static int s_cdIxCtr = 0;
+		std::string tmpName = "__sol_cdix_" + std::to_string(s_cdIxCtr++);
+		auto tmpVar = [&]() {
+			return awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
+		};
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(tmpVar(), std::move(index), _loc));
+		auto len = awst::makeExtractUInt16(
+			awst::makeReinterpretCast(base, awst::WType::bytesType(), _loc),
+			awst::makeZero(_loc), _loc);
+		auto cmp = awst::makeNumericCompare(
+			tmpVar(), awst::NumericComparison::Lt, std::move(len), _loc);
+		m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(cmp), _loc, "array index out of bounds"), _loc));
+		index = tmpVar();
+	}
+
 	auto e = awst::makeIndexExpression(std::move(base), std::move(index), elemType, _loc);
 
 	auto* expectedType = m_ctx.typeMapper.map(m_arrayType->baseType());
