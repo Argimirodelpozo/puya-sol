@@ -13,7 +13,7 @@ contract MappingChainIndexBounds {
     function seed() public {
         aom.push(); aom[0][1] = 11;
         fixedAom[2][1] = 22;
-        sarr.push(); sarr[0].m[1] = 33;
+        sarr.push(); sarr[0].m[1] = 33; sarr[0].x = 44;
     }
 
     function readAom(uint i, uint k) public view returns (uint) { return aom[i][k]; }
@@ -21,6 +21,13 @@ contract MappingChainIndexBounds {
     function readFixed(uint i, uint k) public view returns (uint) { return fixedAom[i][k]; }
     function readSarrM(uint i, uint k) public view returns (uint) { return sarr[i].m[k]; }
 
+    // plain struct FIELD in the dynamic-element box array: puya's offset-table
+    // indexing has no length check, so OOB reads returned garbage bytes and
+    // OOB writes landed on phantom elements (see sfield seam).
+    function readSarrX(uint i) public view returns (uint) { return sarr[i].x; }
+    function writeSarrX(uint i, uint v) public { sarr[i].x = v; }
+
     // in-bounds `length - 1` idiom must keep working
     function readLast(uint k) public view returns (uint) { return aom[aom.length - 1][k]; }
+    function readLastX() public view returns (uint) { return sarr[sarr.length - 1].x; }
 }

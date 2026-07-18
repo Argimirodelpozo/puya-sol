@@ -2233,7 +2233,11 @@ def test_mapping_chain_index_bounds(harness):
     assert as_int(harness.call(app, "readAom(uint256,uint256)", 0, 1).abi_return) == 11
     assert as_int(harness.call(app, "readFixed(uint256,uint256)", 2, 1).abi_return) == 22
     assert as_int(harness.call(app, "readSarrM(uint256,uint256)", 0, 1).abi_return) == 33
+    assert as_int(harness.call(app, "readSarrX(uint256)", 0).abi_return) == 44
     assert as_int(harness.call(app, "readLast(uint256)", 1).abi_return) == 11
+    assert as_int(harness.call(app, "readLastX()").abi_return) == 44
+    harness.call(app, "writeSarrX(uint256,uint256)", 0, 45)
+    assert as_int(harness.call(app, "readSarrX(uint256)", 0).abi_return) == 45
     # out-of-bounds must revert (EVM Panic 0x32), not read/write phantom boxes
     for sig, args in [
         ("readAom(uint256,uint256)", (1, 1)),       # == length
@@ -2241,6 +2245,10 @@ def test_mapping_chain_index_bounds(harness):
         ("writeAom(uint256,uint256,uint256)", (1, 1, 99)),
         ("readFixed(uint256,uint256)", (3, 1)),     # == fixed size
         ("readSarrM(uint256,uint256)", (1, 1)),     # == length
+        # struct FIELD via the dynamic-element offset table (was garbage/phantom)
+        ("readSarrX(uint256)", (1,)),               # == length
+        ("readSarrX(uint256)", (255,)),
+        ("writeSarrX(uint256,uint256)", (1, 99)),
     ]:
         r = harness.call(app, sig, *args, expect_revert=True)
         assert getattr(r, "reverted", False), f"{sig}{args} must revert (index OOB)"

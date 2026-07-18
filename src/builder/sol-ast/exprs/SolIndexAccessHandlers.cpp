@@ -70,6 +70,43 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	auto idx = builder::TypeCoercion::checkedIndexToUint64(
 		m_ctx.prePendingStatements, buildExpr(*m_indexAccess.indexExpression()), m_loc);
 
+	// DYNAMIC-element box arrays (struct-with-mapping elements → the mapping
+	// member maps to dynamic bytes): puya's IndexExpression reads the uint16
+	// offset table with NO length check, so an OOB index dereferences whatever
+	// bytes sit at the phantom table slot — garbage instead of a revert.
+	// (Static-stride elements at least die on the physical box_extract
+	// boundary.) Assert idx < length, EVM Panic 0x32 semantics; length via
+	// stateDynArrayLength so it can never disagree with `.length`/push/pop.
+	// Covers reads AND the write lvalue (both built here). Top-level state-var
+	// boxes only — handle-model REF params carry runtime keys the utf8(name)
+	// length convention can't address.
+	if (arrType->isDynamicallySized() && !arrType->isByteArrayOrString()
+		&& builder::StorageMapper::computeEncodedElementSize(elemType) == 0)
+		if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
+			if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
+					ident->annotation().referencedDeclaration);
+				decl && decl->isStateVariable() && !decl->isConstant() && !decl->immutable()
+				&& m_scope.findMappingKeyParam(decl->id()).empty())
+			{
+				// idx feeds the assert AND the element access — pin once.
+				static int s_dynIxCtr = 0;
+				std::string tmpName = "__sol_dynix_" + std::to_string(s_dynIxCtr++);
+				auto tmpVar = [&]() {
+					return awst::makeVarExpression(
+						tmpName, awst::WType::uint64Type(), m_loc);
+				};
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(tmpVar(), std::move(idx), m_loc));
+				auto cmp = awst::makeNumericCompare(
+					tmpVar(), awst::NumericComparison::Lt,
+					SolLengthAccess::stateDynArrayLength(m_ctx, ident->name(), arrType, m_loc),
+					m_loc);
+				m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+					awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"),
+					m_loc));
+				idx = tmpVar();
+			}
+
 	// puya evaluates the index twice (bounds check + access); a side-effecting
 	// index `arr[f()]` ran f() twice (verified cnt==2). makeEvalOnce prevents it.
 	// Write path returns a bare lvalue — leave unwrapped to keep it assignable.
