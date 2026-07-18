@@ -2198,6 +2198,13 @@ def test_array_struct_mapping_alias(harness):
     assert as_int(harness.call(app, "m(uint256)", 0).abi_return) == 500
     assert as_int(harness.call(app, "m(uint256)", 1).abi_return) == 600
     assert as_int(harness.call(app, "m(uint256)", 2).abi_return) == 0
+    # Two same-typed struct STATE VARS: the utf8(field) prefix aliased them
+    # (st2.m[7] clobbered st1.m[7]); now prefixed with the holder var name,
+    # and a `S storage p = st1` aliased write lands where direct reads look.
+    assert as_int(harness.call(app, "st(uint256,uint256)", 0, 7).abi_return) == 100
+    assert as_int(harness.call(app, "st(uint256,uint256)", 1, 7).abi_return) == 200
+    assert as_int(harness.call(app, "st(uint256,uint256)", 0, 8).abi_return) == 111
+    assert as_int(harness.call(app, "st(uint256,uint256)", 1, 8).abi_return) == 0
     # isolation survives a later write
     harness.call(app, "bump(uint256,uint256)", 0, 111)
     assert as_int(harness.call(app, "s(uint256)", 0).abi_return) == 111

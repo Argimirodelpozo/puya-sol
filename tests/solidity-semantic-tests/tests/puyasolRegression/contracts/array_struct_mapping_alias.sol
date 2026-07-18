@@ -15,8 +15,15 @@ contract ArrayStructMappingAlias {
     S[] sarr;                       // array of structs holding a mapping
     mapping(uint => uint)[] aom;    // array of mappings (control)
     mapping(uint => S) mm;          // MAPPING to struct holding a mapping
+    S st1;                          // two same-typed struct STATE VARS
+    S st2;
 
     function seed() public {
+        st1.m[7] = 100;
+        st2.m[7] = 200;             // must NOT clobber st1.m[7]
+        S storage p = st1;          // aliased write lands where direct reads look
+        p.m[8] = 111;
+
         sarr.push(); sarr.push();
         sarr[0].m[7] = 100;
         sarr[1].m[7] = 200;         // must NOT clobber sarr[0].m[7]
@@ -34,6 +41,9 @@ contract ArrayStructMappingAlias {
     function x(uint i) public view returns (uint) { return sarr[i].x; }
     function a(uint i) public view returns (uint) { return aom[i][7]; }
     function m(uint i) public view returns (uint) { return mm[i].m[7]; }
+    function st(uint i, uint k) public view returns (uint) {
+        return i == 0 ? st1.m[k] : st2.m[k];
+    }
 
     // re-write: element isolation must survive later writes too
     function bump(uint i, uint v) public { sarr[i].m[7] = v; }

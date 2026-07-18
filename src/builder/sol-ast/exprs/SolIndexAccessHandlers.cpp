@@ -432,14 +432,12 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 			}
 		}
 
-		// Base identifier bound to a STORAGE ALIAS of a mapping/array element
-		// (base-ctor `A(m[1])` storage param, `S storage p = mm[a];`): the
-		// element's runtime box key is the isolation prefix — same convention
-		// as the direct `mm[a].m[k]` branch above, so the aliased write and
-		// the direct read key the same boxes. Only runtime-DERIVED keys
-		// (sha256 layers) qualify: a static BytesConstant key is a plain
-		// state-var holder whose member mappings keep the legacy utf8(field)
-		// prefix — flipping those would orphan existing layouts.
+		// Base identifier bound to a STORAGE ALIAS (base-ctor `A(m[1])` storage
+		// param, `S storage p = mm[a];` / `= st;`): the aliased holder's box
+		// key is the isolation prefix — same convention as the direct
+		// `mm[a].m[k]` branch above and the state-var-struct branch below, so
+		// the aliased write and the direct read key the same boxes. Static
+		// utf8(name) keys land on name ++ field, identical to direct access.
 		if (auto const* aliasBaseId = dynamic_cast<Identifier const*>(&ma->expression()))
 			if (auto const* aliasDecl = aliasBaseId->annotation().referencedDeclaration)
 				if (auto const* alias = m_scope.findStorageAlias(aliasDecl->id()))
@@ -449,20 +447,37 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 						aliasExpr = sg->field;
 					while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
 						aliasExpr = fe->base;
+					std::shared_ptr<awst::Expression> holderKey;
 					if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-					{
-						auto const* rawKey = boxVal->key.get();
-						while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(rawKey))
-							rawKey = rc->expr.get();
-						if (!dynamic_cast<awst::BytesConstant const*>(rawKey))
-							out.aliasOverridePrefix = awst::makeReinterpretCast(
-								awst::makeConcat(
-									boxVal->key,
-									awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
-									m_loc),
-								awst::WType::boxKeyType(), m_loc);
-					}
+						holderKey = boxVal->key;
+					else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
+						holderKey = appState->key;
+					if (holderKey)
+						out.aliasOverridePrefix = awst::makeReinterpretCast(
+							awst::makeConcat(
+								std::move(holderKey),
+								awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
+								m_loc),
+							awst::WType::boxKeyType(), m_loc);
 				}
+
+		// `st.m[k]` where st is a plain struct STATE VAR: the utf8(field)
+		// fallback prefix aliased every same-typed struct state var — writing
+		// st2.m[k] clobbered st1.m[k]. Prefix with the holder's own name;
+		// extractMappingKeyPrefix and the alias branch use the same
+		// name ++ field convention, so passed refs stay consistent.
+		if (!out.aliasOverridePrefix)
+			if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
+				if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
+						baseId->annotation().referencedDeclaration);
+					vd && vd->isStateVariable() && !vd->isConstant() && !vd->immutable()
+					&& m_scope.findMappingKeyParam(vd->id()).empty())
+					out.aliasOverridePrefix = awst::makeReinterpretCast(
+						awst::makeConcat(
+							awst::makeUtf8BytesConstant(baseId->name(), m_loc),
+							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
+							m_loc),
+						awst::WType::boxKeyType(), m_loc);
 
 		if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
 			if (auto const* decl = baseId->annotation().referencedDeclaration)

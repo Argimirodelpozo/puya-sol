@@ -218,6 +218,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			// box-key ++ utf8(field) — mirrors self.field[k] (resolveCursorContext)
 			// so V4 `self.positions.get(k)` keys under the same box as direct access.
 			if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
+			{
 				if (auto const* d = baseId->annotation().referencedDeclaration;
 					d && !m_scope.findMappingKeyParam(d->id()).empty())
 					return awst::makeReinterpretCast(
@@ -227,6 +228,21 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
 							m_loc),
 						awst::WType::bytesType(), m_loc);
+				// `st.field` where st is a struct STATE VAR: utf8(st) ++
+				// utf8(field) — matches resolveCursorContext's state-var-struct
+				// branch, so a passed `st.m` keys the same boxes as direct
+				// st.m[k]. Plain utf8(field) aliased every same-typed struct
+				// state var.
+				if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
+						baseId->annotation().referencedDeclaration);
+					vd && vd->isStateVariable() && !vd->isConstant() && !vd->immutable())
+					return awst::makeReinterpretCast(
+						awst::makeConcat(
+							awst::makeUtf8BytesConstant(baseId->name(), m_loc),
+							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
+							m_loc),
+						awst::WType::bytesType(), m_loc);
+			}
 			name = ma->memberName();
 		}
 		if (name.empty())
