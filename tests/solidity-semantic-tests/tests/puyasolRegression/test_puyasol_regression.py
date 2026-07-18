@@ -2205,6 +2205,10 @@ def test_array_struct_mapping_alias(harness):
     assert as_int(harness.call(app, "st(uint256,uint256)", 1, 7).abi_return) == 200
     assert as_int(harness.call(app, "st(uint256,uint256)", 0, 8).abi_return) == 111
     assert as_int(harness.call(app, "st(uint256,uint256)", 1, 8).abi_return) == 0
+    # struct-IN-struct state vars (chain depth 2): the MemberAccess chain walk
+    # must append EVERY field to the holder prefix, not just the innermost.
+    assert as_int(harness.call(app, "o(uint256,uint256)", 0, 7).abi_return) == 1000
+    assert as_int(harness.call(app, "o(uint256,uint256)", 1, 7).abi_return) == 2000
     # isolation survives a later write
     harness.call(app, "bump(uint256,uint256)", 0, 111)
     assert as_int(harness.call(app, "s(uint256)", 0).abi_return) == 111

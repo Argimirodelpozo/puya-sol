@@ -17,12 +17,18 @@ contract ArrayStructMappingAlias {
     mapping(uint => S) mm;          // MAPPING to struct holding a mapping
     S st1;                          // two same-typed struct STATE VARS
     S st2;
+    struct Outer { S inner; uint y; }
+    Outer o1;                       // struct-IN-struct state vars (chain depth 2)
+    Outer o2;
 
     function seed() public {
         st1.m[7] = 100;
         st2.m[7] = 200;             // must NOT clobber st1.m[7]
         S storage p = st1;          // aliased write lands where direct reads look
         p.m[8] = 111;
+
+        o1.inner.m[7] = 1000;
+        o2.inner.m[7] = 2000;       // must NOT clobber o1.inner.m[7]
 
         sarr.push(); sarr.push();
         sarr[0].m[7] = 100;
@@ -43,6 +49,9 @@ contract ArrayStructMappingAlias {
     function m(uint i) public view returns (uint) { return mm[i].m[7]; }
     function st(uint i, uint k) public view returns (uint) {
         return i == 0 ? st1.m[k] : st2.m[k];
+    }
+    function o(uint i, uint k) public view returns (uint) {
+        return i == 0 ? o1.inner.m[k] : o2.inner.m[k];
     }
 
     // re-write: element isolation must survive later writes too
