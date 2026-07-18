@@ -2164,3 +2164,33 @@ def test_asm_string_buffer_pointer(harness):
     assert harness.call(app, "decInline(uint256)", 0).abi_return == "0"
     assert harness.call(app, "decInline(uint256)", 42).abi_return == "42"
     assert harness.call(app, "decInline(uint256)", 9876543210).abi_return == "9876543210"
+
+
+def test_array_struct_mapping_alias(harness):
+    """puyasolRegression/contracts/array_struct_mapping_alias.sol — NOT an o.g. test.
+
+    A mapping inside a struct held in a storage ARRAY must be isolated per element.
+    The mapping-key derivation folds each index level of the chain into the box key,
+    but `arr[i].m[k]` stops the chain walk at the MemberAccess (`arr[i].m`), so the
+    array index was dropped: the prefix fell back to plain utf8("m") and EVERY
+    element's mapping shared one box. A write to arr[1].m[k] silently clobbered
+    arr[0].m[k] — wrong data, no revert. Found by the night-3 cold-dir campaign.
+
+    Fixed by folding the array name + index into the prefix (ARRAY bases only —
+    a MAPPING base must keep the per-layer sha256 derivation, which the pre-existing
+    types/test_struct_mapping_abstract_constructor_param pins).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/array_struct_mapping_alias.sol")
+    harness.call(app, "seed()")
+    # the bug: both returned 200 (element 1 clobbered element 0)
+    assert as_int(harness.call(app, "s(uint256)", 0).abi_return) == 100
+    assert as_int(harness.call(app, "s(uint256)", 1).abi_return) == 200
+    # plain struct field + array-of-mappings controls stay isolated
+    assert as_int(harness.call(app, "x(uint256)", 0).abi_return) == 1
+    assert as_int(harness.call(app, "x(uint256)", 1).abi_return) == 2
+    assert as_int(harness.call(app, "a(uint256)", 0).abi_return) == 300
+    assert as_int(harness.call(app, "a(uint256)", 1).abi_return) == 400
+    # isolation survives a later write
+    harness.call(app, "bump(uint256,uint256)", 0, 111)
+    assert as_int(harness.call(app, "s(uint256)", 0).abi_return) == 111
+    assert as_int(harness.call(app, "s(uint256)", 1).abi_return) == 200

@@ -271,6 +271,39 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 		// Nested mapping in struct-storage-ref `self.inner[k]` (V4 Pool.State):
 		// chain must start from `self_prefix ++ fieldName` so each struct instance
 		// has isolated boxes; plain utf8(fieldName) prefix would alias all instances.
+		// `arr[i].m[k]` — mapping inside a struct held in a storage ARRAY. Same
+		// aliasing hazard as the storage-ref case above, but the base is an
+		// IndexAccess (not an Identifier), so that guard never fired: the prefix
+		// fell back to plain utf8(fieldName), making EVERY element's mapping share
+		// one box (a write to arr[1].m[k] clobbered arr[0].m[k] — silent data
+		// corruption, no revert). Fold the array name AND index into the prefix so
+		// each element is isolated. Found by the night-3 cold-dir campaign.
+		if (auto const* baseIdx = dynamic_cast<IndexAccess const*>(&ma->expression()))
+			if (auto const* arrId = dynamic_cast<Identifier const*>(&baseIdx->baseExpression()))
+			{
+				auto const* arrDecl = dynamic_cast<VariableDeclaration const*>(
+					arrId->annotation().referencedDeclaration);
+				// ARRAY base only. A MAPPING base (`mapping(uint=>S) m; m[a].m[b]`)
+				// must keep the per-layer sha256 derivation — the storage-ref param
+				// path (`A(m[1])`) derives its prefix that way, so a concat prefix
+				// here would disagree with the constructor's write.
+				bool baseIsArray = dynamic_cast<ArrayType const*>(
+					baseIdx->baseExpression().annotation().type) != nullptr;
+				if (arrDecl && arrDecl->isStateVariable() && baseIsArray
+					&& baseIdx->indexExpression())
+				{
+					auto idx = builder::TypeCoercion::implicitNumericCast(
+						buildExpr(*baseIdx->indexExpression()), awst::WType::uint64Type(), m_loc);
+					auto combined = awst::makeConcat(
+						awst::makeUtf8BytesConstant(arrId->name(), m_loc),
+						awst::makeItob(std::move(idx), m_loc), m_loc);
+					combined = awst::makeConcat(std::move(combined),
+						awst::makeUtf8BytesConstant(ma->memberName(), m_loc), m_loc);
+					out.aliasOverridePrefix = awst::makeReinterpretCast(
+						std::move(combined), awst::WType::boxKeyType(), m_loc);
+				}
+			}
+
 		if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
 			if (auto const* decl = baseId->annotation().referencedDeclaration)
 			{
