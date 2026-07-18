@@ -190,77 +190,20 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					}
 					return awst::makeIntegerConstant(oss.str(), m_loc, lenWtype);
 				}
-				auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
-
-				auto boxLen = builder::StorageMapper::makeBoxLenTuple(
-					m_ctx.typeMapper, std::move(boxKey), m_loc);
-
-				auto lenVal = awst::makeTupleItem(std::move(boxLen), 0, awst::WType::uint64Type(), m_loc);
-
 				// Dynamic bytes / string state var: the raw box byte count is
 				// the Solidity length. No 2-byte ARC4 prefix is applied on
 				// write (see `bytes data; data = msg.data;` write path which
 				// drops raw bytes into the box), so don't subtract one here.
 				if (arrType->isByteArrayOrString())
-					return lenVal;
-
-				// Use the width-preserving Sol→ARC4 map (not map()+mapToARC4Type,
-				// which erases sub-256 widths to biguint→32) so the divisor
-				// matches the stride push/index store at (SolArrayMethod uses
-				// mapSolTypeToARC4 too). Otherwise uint128[] divides by 32 not 16.
-				auto* arc4ElemType = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
-				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
-
-
-				// Elements of unknown fixed size (nested dynamic arrays, mappings) can't
-				// use the (box_len - 2) / elemSize trick. The ARC4 dynamic-array encoding
-				// keeps a uint16 length prefix at box offset 0 — read that. box_get returns
-				// (contents, exists); ternary on exists so an uninit box reads as length 0.
-				if (elemSize == 0)
 				{
 					auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
-
-					auto* getTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-						std::vector<awst::WType const*>{
-							awst::WType::bytesType(), awst::WType::boolType()});
-					auto boxGet = awst::makeIntrinsicCall("box_get", getTupleType, m_loc);
-					boxGet->stackArgs.push_back(std::move(boxKey));
-
-					auto contents = awst::makeTupleItem(boxGet, 0, awst::WType::bytesType(), m_loc);
-
-					auto exists = awst::makeTupleItem(boxGet, 1, awst::WType::boolType(), m_loc);
-
-					auto extractLen = awst::makeIntrinsicCall(
-						"extract_uint16", awst::WType::uint64Type(), m_loc);
-					extractLen->stackArgs.push_back(std::move(contents));
-					extractLen->stackArgs.push_back(awst::makeZero(m_loc));
-
-					return awst::makeConditional(
-						std::move(exists), std::move(extractLen),
-						awst::makeIntegerConstant("0", m_loc),
-						awst::WType::uint64Type(), m_loc);
+					auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+						m_ctx.typeMapper, std::move(boxKey), m_loc);
+					return awst::makeTupleItem(
+						std::move(boxLen), 0, awst::WType::uint64Type(), m_loc);
 				}
 
-				auto elemSizeConst = awst::makeIntegerConstant(elemSize, m_loc);
-
-				// Guard against box_len returning 0 (uninitialised box):
-				// `(0 - 2) / elemSize` underflows. Use `max(len, 2)` so the
-				// subtraction always stays non-negative, yielding 0 for
-				// empty boxes.
-				auto two = awst::makeIntegerConstant("2", m_loc);
-
-				auto lenGe2 = awst::makeNumericCompare(lenVal, awst::NumericComparison::Gte, two, m_loc);
-
-				auto safeLen = awst::makeConditional(
-					std::move(lenGe2), std::move(lenVal), std::move(two),
-					awst::WType::uint64Type(), m_loc);
-
-				// Subtract 2-byte ARC4 length header before dividing
-				auto headerSize = awst::makeIntegerConstant("2", m_loc);
-				auto dataLen = awst::makeUInt64BinOp(std::move(safeLen), awst::UInt64BinaryOperator::Sub, std::move(headerSize), m_loc);
-
-				auto divExpr = awst::makeUInt64BinOp(std::move(dataLen), awst::UInt64BinaryOperator::FloorDiv, std::move(elemSizeConst), m_loc);
-				return divExpr;
+				return stateDynArrayLength(m_ctx, ident->name(), arrType, m_loc);
 			}
 		}
 	}
@@ -283,6 +226,75 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 	// array.length → ArrayLength node
 	return awst::makeArrayLength(std::move(base), awst::WType::uint64Type(), m_loc);
+}
+
+std::shared_ptr<awst::Expression> SolLengthAccess::stateDynArrayLength(
+	eb::ContractContext& _ctx,
+	std::string const& _name,
+	solidity::frontend::ArrayType const* _arrType,
+	awst::SourceLocation const& _loc)
+{
+	// Use the width-preserving Sol→ARC4 map (not map()+mapToARC4Type,
+	// which erases sub-256 widths to biguint→32) so the divisor
+	// matches the stride push/index store at (SolArrayMethod uses
+	// mapSolTypeToARC4 too). Otherwise uint128[] divides by 32 not 16.
+	auto* arc4ElemType = _ctx.typeMapper.mapSolTypeToARC4(_arrType->baseType());
+	unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
+
+	// Elements of unknown fixed size (nested dynamic arrays, mappings) can't
+	// use the (box_len - 2) / elemSize trick. The ARC4 dynamic-array encoding
+	// keeps a uint16 length prefix at box offset 0 — read that. box_get returns
+	// (contents, exists); ternary on exists so an uninit box reads as length 0.
+	if (elemSize == 0)
+	{
+		auto boxKey = awst::makeUtf8BytesConstant(_name, _loc);
+
+		auto* getTupleType = _ctx.typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{
+				awst::WType::bytesType(), awst::WType::boolType()});
+		auto boxGet = awst::makeIntrinsicCall("box_get", getTupleType, _loc);
+		boxGet->stackArgs.push_back(std::move(boxKey));
+
+		auto contents = awst::makeTupleItem(boxGet, 0, awst::WType::bytesType(), _loc);
+
+		auto exists = awst::makeTupleItem(boxGet, 1, awst::WType::boolType(), _loc);
+
+		auto extractLen = awst::makeIntrinsicCall(
+			"extract_uint16", awst::WType::uint64Type(), _loc);
+		extractLen->stackArgs.push_back(std::move(contents));
+		extractLen->stackArgs.push_back(awst::makeZero(_loc));
+
+		return awst::makeConditional(
+			std::move(exists), std::move(extractLen),
+			awst::makeIntegerConstant("0", _loc),
+			awst::WType::uint64Type(), _loc);
+	}
+
+	auto boxKey = awst::makeUtf8BytesConstant(_name, _loc);
+	auto boxLen = builder::StorageMapper::makeBoxLenTuple(
+		_ctx.typeMapper, std::move(boxKey), _loc);
+	auto lenVal = awst::makeTupleItem(std::move(boxLen), 0, awst::WType::uint64Type(), _loc);
+
+	auto elemSizeConst = awst::makeIntegerConstant(elemSize, _loc);
+
+	// Guard against box_len returning 0 (uninitialised box):
+	// `(0 - 2) / elemSize` underflows. Use `max(len, 2)` so the
+	// subtraction always stays non-negative, yielding 0 for
+	// empty boxes.
+	auto two = awst::makeIntegerConstant("2", _loc);
+
+	auto lenGe2 = awst::makeNumericCompare(lenVal, awst::NumericComparison::Gte, two, _loc);
+
+	auto safeLen = awst::makeConditional(
+		std::move(lenGe2), std::move(lenVal), std::move(two),
+		awst::WType::uint64Type(), _loc);
+
+	// Subtract 2-byte ARC4 length header before dividing
+	auto headerSize = awst::makeIntegerConstant("2", _loc);
+	auto dataLen = awst::makeUInt64BinOp(std::move(safeLen), awst::UInt64BinaryOperator::Sub, std::move(headerSize), _loc);
+
+	auto divExpr = awst::makeUInt64BinOp(std::move(dataLen), awst::UInt64BinaryOperator::FloorDiv, std::move(elemSizeConst), _loc);
+	return divExpr;
 }
 
 } // namespace puyasol::builder::sol_ast

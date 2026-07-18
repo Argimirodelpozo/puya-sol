@@ -2190,7 +2190,46 @@ def test_array_struct_mapping_alias(harness):
     assert as_int(harness.call(app, "x(uint256)", 1).abi_return) == 2
     assert as_int(harness.call(app, "a(uint256)", 0).abi_return) == 300
     assert as_int(harness.call(app, "a(uint256)", 1).abi_return) == 400
+    # MAPPING base (`mapping(uint => S) mm; mm[i].m[k]`): same aliasing family —
+    # all outer keys collapsed onto ONE box (mm[1] write clobbered mm[0]; a
+    # never-written mm[2] read the shared value back). Fixed by prefixing with
+    # the element's derived box key (the storage-ref-param convention), which
+    # test_struct_mapping_abstract_constructor_param pins cross-path.
+    assert as_int(harness.call(app, "m(uint256)", 0).abi_return) == 500
+    assert as_int(harness.call(app, "m(uint256)", 1).abi_return) == 600
+    assert as_int(harness.call(app, "m(uint256)", 2).abi_return) == 0
     # isolation survives a later write
     harness.call(app, "bump(uint256,uint256)", 0, 111)
     assert as_int(harness.call(app, "s(uint256)", 0).abi_return) == 111
     assert as_int(harness.call(app, "s(uint256)", 1).abi_return) == 200
+
+
+def test_mapping_chain_index_bounds(harness):
+    """puyasolRegression/contracts/mapping_chain_index_bounds.sol — NOT an o.g. test.
+
+    ARRAY levels feeding the mapping-key derivation folded the element index
+    into the box key with NO bounds check: `aom[aom.length][k]` read a phantom
+    element's box (0) where EVM panics 0x32, and OOB writes silently stored.
+    Asserts idx < length — fixed-size bounds anywhere in the chain; dynamic
+    lengths for chains rooted at a plain box state var (shared
+    SolLengthAccess::stateDynArrayLength, so asserts agree with `.length`).
+    Found by the night-3 cold-dir campaign (mappings_array_pop_delete `-`→`*`
+    mutant turned `a[a.length-1]` into `a[a.length]`).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/mapping_chain_index_bounds.sol")
+    harness.call(app, "seed()")
+    # in-bounds still works
+    assert as_int(harness.call(app, "readAom(uint256,uint256)", 0, 1).abi_return) == 11
+    assert as_int(harness.call(app, "readFixed(uint256,uint256)", 2, 1).abi_return) == 22
+    assert as_int(harness.call(app, "readSarrM(uint256,uint256)", 0, 1).abi_return) == 33
+    assert as_int(harness.call(app, "readLast(uint256)", 1).abi_return) == 11
+    # out-of-bounds must revert (EVM Panic 0x32), not read/write phantom boxes
+    for sig, args in [
+        ("readAom(uint256,uint256)", (1, 1)),       # == length
+        ("readAom(uint256,uint256)", (255, 1)),
+        ("writeAom(uint256,uint256,uint256)", (1, 1, 99)),
+        ("readFixed(uint256,uint256)", (3, 1)),     # == fixed size
+        ("readSarrM(uint256,uint256)", (1, 1)),     # == length
+    ]:
+        r = harness.call(app, sig, *args, expect_revert=True)
+        assert getattr(r, "reverted", False), f"{sig}{args} must revert (index OOB)"

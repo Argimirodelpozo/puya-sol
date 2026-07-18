@@ -14,6 +14,7 @@ contract ArrayStructMappingAlias {
 
     S[] sarr;                       // array of structs holding a mapping
     mapping(uint => uint)[] aom;    // array of mappings (control)
+    mapping(uint => S) mm;          // MAPPING to struct holding a mapping
 
     function seed() public {
         sarr.push(); sarr.push();
@@ -24,11 +25,15 @@ contract ArrayStructMappingAlias {
         aom.push(); aom.push();
         aom[0][7] = 300;
         aom[1][7] = 400;
+
+        mm[0].m[7] = 500;
+        mm[1].m[7] = 600;           // must NOT clobber mm[0].m[7]
     }
 
     function s(uint i) public view returns (uint) { return sarr[i].m[7]; }
     function x(uint i) public view returns (uint) { return sarr[i].x; }
     function a(uint i) public view returns (uint) { return aom[i][7]; }
+    function m(uint i) public view returns (uint) { return mm[i].m[7]; }
 
     // re-write: element isolation must survive later writes too
     function bump(uint i, uint v) public { sarr[i].m[7] = v; }

@@ -3,6 +3,7 @@
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "awst/NameGen.h"
+#include "builder/sol-ast/members/SolLengthAccess.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -10,6 +11,7 @@
 #include "awst/WType.h"
 
 #include <functional>
+#include <limits>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -140,6 +142,34 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 	auto declaredKeyWTypes = resolveKeyWTypes(ctx.rootMappingType, indexExprs.size());
 
+	// ARRAY levels in the chain (mapping(K=>V)[] a → a[i][k]) fold the element
+	// index into the derived box key with NO bounds check — a[a.length][k] read
+	// a phantom element where EVM panics 0x32. Collect the array type per level
+	// so the key loop can assert idx < length: fixed-size bounds anywhere;
+	// dynamic lengths only for a level-0 chain rooted at a plain box state var
+	// (that is where the utf8(name) length-box / stride convention holds).
+	std::vector<ArrayType const*> arrayLevels(indexExprs.size(), nullptr);
+	{
+		Type const* w = ctx.rootMappingType;
+		for (size_t i = 0; i < indexExprs.size() && w; ++i)
+		{
+			if (auto const* mt = dynamic_cast<MappingType const*>(w))
+				w = mt->valueType();
+			else if (auto const* at = dynamic_cast<ArrayType const*>(w))
+			{
+				arrayLevels[i] = at;
+				w = at->baseType();
+			}
+			else
+				break;
+		}
+	}
+	auto const* cursorIdent = dynamic_cast<Identifier const*>(cursor);
+	auto const* cursorVar = cursorIdent
+		? dynamic_cast<VariableDeclaration const*>(
+			cursorIdent->annotation().referencedDeclaration)
+		: nullptr;
+
 	auto e = std::make_shared<awst::BoxValueExpression>();
 	e->sourceLocation = m_loc;
 	e->wtype = resolveValueWType(baseType);
@@ -184,6 +214,60 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 					tempVar, std::move(translated), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(saveStmt));
 				translated = tempVar;
+			}
+
+			// ARRAY level: assert idx < length BEFORE the key-width coercion so a
+			// wide index is compared un-truncated. The idx is referenced by both
+			// the assert and the key layer — materialise to a temp unless it is
+			// already re-creatable (var / integer constant).
+			if (auto const* at = arrayLevels[ki])
+			{
+				std::shared_ptr<awst::Expression> bound;
+				if (!at->isDynamicallySized())
+				{
+					if (at->length() <= std::numeric_limits<uint64_t>::max())
+						bound = awst::makeIntegerConstant(at->length().str(), m_loc);
+				}
+				else if (ki == 0 && cursorVar && cursorVar->isStateVariable()
+					&& !ctx.aliasOverridePrefix
+					&& builder::StorageMapper::shouldUseBoxStorage(*cursorVar))
+					bound = SolLengthAccess::stateDynArrayLength(
+						m_ctx, cursorIdent->name(), at, m_loc);
+				if (bound)
+				{
+					if (!dynamic_cast<awst::VarExpression const*>(translated.get())
+						&& !dynamic_cast<awst::IntegerConstant const*>(translated.get()))
+					{
+						std::string tempName = "__sol_idx_" + std::to_string(
+							awst::NameGen::next("SolIndexAccessHandlers.idxTempCounter"));
+						auto tempVar = awst::makeVarExpression(
+							tempName, translated->wtype, m_loc);
+						m_ctx.prePendingStatements.push_back(
+							awst::makeAssignmentStatement(
+								tempVar, std::move(translated), m_loc));
+						translated = tempVar;
+					}
+					std::shared_ptr<awst::Expression> idxRef;
+					if (auto const* ve =
+							dynamic_cast<awst::VarExpression const*>(translated.get()))
+						idxRef = awst::makeVarExpression(ve->name, ve->wtype, m_loc);
+					else if (auto const* ic =
+							dynamic_cast<awst::IntegerConstant const*>(translated.get()))
+						idxRef = awst::makeIntegerConstant(ic->value, m_loc, ic->wtype);
+					if (idxRef)
+					{
+						if (bound->wtype != idxRef->wtype)
+							bound = builder::TypeCoercion::implicitNumericCast(
+								std::move(bound), idxRef->wtype, m_loc);
+						auto cmp = awst::makeNumericCompare(std::move(idxRef),
+							awst::NumericComparison::Lt, std::move(bound), m_loc);
+						m_ctx.prePendingStatements.push_back(
+							awst::makeExpressionStatement(
+								awst::makeAssert(std::move(cmp), m_loc,
+									"array index out of bounds"),
+								m_loc));
+					}
+				}
 			}
 
 			if (keyWType != translated->wtype)
@@ -279,30 +363,106 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 		// corruption, no revert). Fold the array name AND index into the prefix so
 		// each element is isolated. Found by the night-3 cold-dir campaign.
 		if (auto const* baseIdx = dynamic_cast<IndexAccess const*>(&ma->expression()))
-			if (auto const* arrId = dynamic_cast<Identifier const*>(&baseIdx->baseExpression()))
+		{
+			auto const* baseOfIdxType = baseIdx->baseExpression().annotation().type;
+			auto const* arrBase = dynamic_cast<ArrayType const*>(baseOfIdxType);
+			auto const* arrId = dynamic_cast<Identifier const*>(&baseIdx->baseExpression());
+			auto const* arrDecl = arrId ? dynamic_cast<VariableDeclaration const*>(
+				arrId->annotation().referencedDeclaration) : nullptr;
+			if (arrBase && arrDecl && arrDecl->isStateVariable() && baseIdx->indexExpression())
 			{
-				auto const* arrDecl = dynamic_cast<VariableDeclaration const*>(
-					arrId->annotation().referencedDeclaration);
-				// ARRAY base only. A MAPPING base (`mapping(uint=>S) m; m[a].m[b]`)
-				// must keep the per-layer sha256 derivation — the storage-ref param
-				// path (`A(m[1])`) derives its prefix that way, so a concat prefix
-				// here would disagree with the constructor's write.
-				bool baseIsArray = dynamic_cast<ArrayType const*>(
-					baseIdx->baseExpression().annotation().type) != nullptr;
-				if (arrDecl && arrDecl->isStateVariable() && baseIsArray
-					&& baseIdx->indexExpression())
+				// Materialise the element index once — the bounds assert AND the
+				// key both reference it.
+				auto idx = builder::TypeCoercion::implicitNumericCast(
+					buildExpr(*baseIdx->indexExpression()), awst::WType::uint64Type(), m_loc);
+				std::string tmpName = "__sol_arridx_" + std::to_string(
+					awst::NameGen::next("SolIndexAccessHandlers.arrIdxCounter"));
+				auto tmpVar = [&]() {
+					return awst::makeVarExpression(tmpName, awst::WType::uint64Type(), m_loc);
+				};
+				m_ctx.prePendingStatements.push_back(
+					awst::makeAssignmentStatement(tmpVar(), std::move(idx), m_loc));
+
+				// EVM bounds check (Panic 0x32): arr[arr.length].m[k] must revert,
+				// not read/write a phantom element's boxes.
+				std::shared_ptr<awst::Expression> bound;
+				if (!arrBase->isDynamicallySized())
 				{
-					auto idx = builder::TypeCoercion::implicitNumericCast(
-						buildExpr(*baseIdx->indexExpression()), awst::WType::uint64Type(), m_loc);
-					auto combined = awst::makeConcat(
-						awst::makeUtf8BytesConstant(arrId->name(), m_loc),
-						awst::makeItob(std::move(idx), m_loc), m_loc);
-					combined = awst::makeConcat(std::move(combined),
-						awst::makeUtf8BytesConstant(ma->memberName(), m_loc), m_loc);
-					out.aliasOverridePrefix = awst::makeReinterpretCast(
-						std::move(combined), awst::WType::boxKeyType(), m_loc);
+					if (arrBase->length() <= std::numeric_limits<uint64_t>::max())
+						bound = awst::makeIntegerConstant(arrBase->length().str(), m_loc);
 				}
+				else
+					bound = SolLengthAccess::stateDynArrayLength(
+						m_ctx, arrId->name(), arrBase, m_loc);
+				if (bound)
+				{
+					auto cmp = awst::makeNumericCompare(
+						tmpVar(), awst::NumericComparison::Lt, std::move(bound), m_loc);
+					m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+						awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"),
+						m_loc));
+				}
+
+				auto combined = awst::makeConcat(
+					awst::makeUtf8BytesConstant(arrId->name(), m_loc),
+					awst::makeItob(tmpVar(), m_loc), m_loc);
+				combined = awst::makeConcat(std::move(combined),
+					awst::makeUtf8BytesConstant(ma->memberName(), m_loc), m_loc);
+				out.aliasOverridePrefix = awst::makeReinterpretCast(
+					std::move(combined), awst::WType::boxKeyType(), m_loc);
 			}
+			// `mm[a].m[k]` — mapping inside a struct held under a MAPPING element.
+			// Same aliasing (plain utf8(field) collapsed every outer key onto ONE
+			// box: mm[1].m[k] writes clobbered mm[0].m[k], and mm[2].m[k] read
+			// them back). The prefix must be the ELEMENT's derived box key ++
+			// field — the registered storage-ref-param convention (selfPrefix ++
+			// field), and exactly what SolInternalCall::extractMappingKeyPrefix
+			// lifts — so direct access and ref-param access key the same boxes
+			// while outer keys stay isolated.
+			else if (dynamic_cast<MappingType const*>(baseOfIdxType))
+			{
+				auto built = awst::unwrapStateGet(buildExpr(ma->expression()));
+				if (auto const* box =
+						dynamic_cast<awst::BoxValueExpression const*>(built.get()))
+					out.aliasOverridePrefix = awst::makeReinterpretCast(
+						awst::makeConcat(
+							box->key,
+							awst::makeUtf8BytesConstant(ma->memberName(), m_loc), m_loc),
+						awst::WType::boxKeyType(), m_loc);
+			}
+		}
+
+		// Base identifier bound to a STORAGE ALIAS of a mapping/array element
+		// (base-ctor `A(m[1])` storage param, `S storage p = mm[a];`): the
+		// element's runtime box key is the isolation prefix — same convention
+		// as the direct `mm[a].m[k]` branch above, so the aliased write and
+		// the direct read key the same boxes. Only runtime-DERIVED keys
+		// (sha256 layers) qualify: a static BytesConstant key is a plain
+		// state-var holder whose member mappings keep the legacy utf8(field)
+		// prefix — flipping those would orphan existing layouts.
+		if (auto const* aliasBaseId = dynamic_cast<Identifier const*>(&ma->expression()))
+			if (auto const* aliasDecl = aliasBaseId->annotation().referencedDeclaration)
+				if (auto const* alias = m_scope.findStorageAlias(aliasDecl->id()))
+				{
+					auto aliasExpr = alias->expr;
+					if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
+						aliasExpr = sg->field;
+					while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
+						aliasExpr = fe->base;
+					if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
+					{
+						auto const* rawKey = boxVal->key.get();
+						while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(rawKey))
+							rawKey = rc->expr.get();
+						if (!dynamic_cast<awst::BytesConstant const*>(rawKey))
+							out.aliasOverridePrefix = awst::makeReinterpretCast(
+								awst::makeConcat(
+									boxVal->key,
+									awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
+									m_loc),
+								awst::WType::boxKeyType(), m_loc);
+					}
+				}
 
 		if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
 			if (auto const* decl = baseId->annotation().referencedDeclaration)
