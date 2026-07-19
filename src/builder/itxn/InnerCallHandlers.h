@@ -47,40 +47,47 @@ private:
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
-	/// .call{value: X}() → payment
+	/// .call{value: X}("") (empty/absent data) → bare payment
 	static std::unique_ptr<InstanceBuilder> handleCallWithValue(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
-	/// .call(abi.encodeCall(fn, args)) → inner app call
+	/// .call{value:V}(abi.encodeCall(fn, args)) → inner app call.
+	/// Non-null `_callValue` prepends a PaymentTxn in the SAME inner group
+	/// (msg.value = preceding payment's Amount on the callee side).
 	static std::unique_ptr<InstanceBuilder> handleCallWithEncodeCall(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		solidity::frontend::FunctionCall const& _encodeCallExpr,
+		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
-	/// .call(abi.encodeWithSignature/WithSelector(...)) → typed inner call.
+	/// .call{value:V}(abi.encodeWithSignature/WithSelector(...)) → typed inner call.
 	static std::unique_ptr<InstanceBuilder> handleCallWithSignatureArgs(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		solidity::frontend::FunctionCall const& _encodeExpr,
 		bool _isSignature,
+		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
 	/// Submit typed inner app call; returns (true, LastLog[4:]) tuple.
+	/// Non-null `_callValue` → [PaymentTxn, ApplicationCall] group submit.
 	static std::unique_ptr<InstanceBuilder> submitTypedAppCall(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::TupleExpression> _argsTuple,
+		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
-	/// .call(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
+	/// .call{value:V}(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
 	static std::unique_ptr<InstanceBuilder> handleCallWithRawData(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _dataBytes,
+		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
 	/// .staticcall(data) for precompile addresses 0x01–0x09.

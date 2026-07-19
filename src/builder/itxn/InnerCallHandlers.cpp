@@ -447,8 +447,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return handleSend(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
-	// .call{value: X}("") → payment
-	if (_memberName == "call" && _callValue)
+	// .call{value: X} with NO data argument → bare payment. A non-empty data
+	// argument must ALSO invoke the target (payment + app call in one inner
+	// group) — matching any .call{value:} here silently dropped the calldata.
+	if (_memberName == "call" && _callValue && _callNode.arguments().empty())
 		return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 
 	// .call(abi.encodeCall(...)) → inner app call
@@ -456,7 +458,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	// inner-txn read-only flag, so the EVM static (no-state-change) guarantee can't be enforced. Route
 	// staticcall through the same handling as call and warn that "static" is not respected. (Precompile
 	// staticcalls, self-calls, encodeCall/encodeWithSignature typed routing all come along for free.)
-	if ((_memberName == "call" || _memberName == "staticcall") && !_callValue && !_callNode.arguments().empty())
+	// solc rejects {value:} on staticcall, so _callValue here implies _memberName == "call".
+	if ((_memberName == "call" || _memberName == "staticcall") && !_callNode.arguments().empty())
 	{
 		if (_memberName == "staticcall")
 			Logger::instance().warning(
@@ -464,6 +467,31 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				"EVM read-only (no-state-change) guarantee is NOT enforced; the callee may mutate state.",
 				_loc);
 		auto const& dataArg = *_callNode.arguments()[0];
+
+		// {value:} needs an inner PaymentTxn grouped with a real inner app call.
+		// Self-calls rewrite to a direct callsub (no inner txn to attach it to)
+		// and precompiles have no account to pay — fail loud, don't drop value.
+		if (_callValue)
+		{
+			bool selfReceiver = false;
+			if (auto const* intr = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
+				if (intr->opCode == "global" && !intr->immediates.empty())
+					if (auto const* im = std::get_if<std::string>(&intr->immediates[0]);
+						im && *im == "CurrentApplicationAddress")
+						selfReceiver = true;
+			if (selfReceiver || detectPrecompileAddress(_baseExpr))
+			{
+				Logger::instance().error(
+					std::string("`.call{value: ...}(data)` to ")
+						+ (selfReceiver ? "the contract itself" : "a precompile address")
+						+ " is not supported on AVM: the value payment cannot be "
+						  "attached (self-calls lower to a direct subroutine call; "
+						  "precompiles have no account). Split into a separate "
+						  "transfer + call.", _loc);
+				_ctx.buildExpr(dataArg);
+				return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+			}
+		}
 
 		// Self-call with abi.encodeWithSignature/WithSelector: resolve to a
 		// direct subroutine call (mirrors handleCallWithEncodeCall self-call
@@ -650,7 +678,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
 			if (encodeMA && encodeMA->memberName() == "encodeCall" && encodeCallExpr->arguments().size() >= 2)
 			{
-				auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _loc);
+				auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _callValue, _loc);
 				if (result) return result;
 			}
 			// .call(abi.encodeWithSignature/WithSelector(...)): encoder visible at call site —
@@ -663,7 +691,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			{
 				auto result = handleCallWithSignatureArgs(
 					_ctx, _receiver, *encodeCallExpr,
-					encodeMA->memberName() == "encodeWithSignature", _loc);
+					encodeMA->memberName() == "encodeWithSignature", _callValue, _loc);
 				if (result) return result;
 			}
 		}
@@ -760,10 +788,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		};
 		if (isEmptyConst(dataExpr.get()))
 		{
+			// Empty data + {value:} = plain transfer (EVM: invokes receive()).
+			if (_callValue)
+				return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 			return std::make_unique<GenericResultBuilder>(_ctx,
 				makeBoolBytesTupleEmpty(_loc));
 		}
-		return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), _loc);
+		return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);
 	}
 
 	if (_memberName == "staticcall")

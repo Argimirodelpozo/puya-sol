@@ -22,6 +22,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	solidity::frontend::FunctionCall const& _encodeCallExpr,
+	std::shared_ptr<awst::Expression> _callValue,
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
@@ -54,6 +55,18 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 
 	if (isSelfCall)
 	{
+		// The dispatcher hard-errors self+{value:} before routing here; a
+		// callsub rewrite has no inner txn to attach the payment to.
+		if (_callValue)
+		{
+			Logger::instance().error(
+				"`.call{value: ...}(abi.encodeCall(...))` to the contract itself "
+				"is not supported on AVM (self-calls lower to a direct subroutine "
+				"call; the value payment cannot be attached).", _loc);
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
+		}
+
 		// Call directly in native types, skipping ARC4 encode/decode.
 		std::vector<ASTPointer<Expression const>> callArgs;
 		auto const& argsExpr = *_encodeCallExpr.arguments()[1];
@@ -146,16 +159,20 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			encodeArgToBytes(_ctx, std::move(argExpr), paramType, _loc));
 	}
 
-	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
+	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), std::move(_callValue), _loc);
 }
 
 // ── Shared tail: typed inner app call ──
 // ApplicationArgs[0] = 4-byte selector, [1..n] = ARC4-encoded args.
 // Returndata = LastLog[4:] (strip 0x151f7c75 prefix; see EVM_DIVERGENCE).
+// _callValue != nullptr → [PaymentTxn, ApplicationCall] group: the payment
+// precedes the app call, so the callee's msg.value (gtxns Amount at
+// GroupIndex-1) and its non-payable check both see it.
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::TupleExpression> _argsTuple,
+	std::shared_ptr<awst::Expression> _callValue,
 	awst::SourceLocation const& _loc)
 {
 	std::vector<awst::WType const*> argTypes;
@@ -163,6 +180,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 		argTypes.push_back(item->wtype);
 	_argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
 
+	// Receiver feeds both the payment's Receiver and the app id derivation.
+	std::shared_ptr<awst::Expression> payTxn;
+	if (_callValue)
+	{
+		_receiver = awst::makeEvalOnce(_receiver, _loc);
+		payTxn = buildPaymentTransaction(_ctx, _receiver, std::move(_callValue), _loc);
+	}
 	auto appId = addressToAppId(std::move(_receiver), _loc);
 
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
@@ -175,6 +199,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
+	if (payTxn)
+		submit->itxns.push_back(std::move(payTxn));
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
@@ -197,6 +223,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	std::shared_ptr<awst::Expression> _receiver,
 	solidity::frontend::FunctionCall const& _encodeExpr,
 	bool _isSignature,
+	std::shared_ptr<awst::Expression> _callValue,
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
@@ -231,7 +258,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 		argsTuple->items.push_back(
 			encodeArgToBytes(_ctx, _ctx.buildExpr(*args[i]), nullptr, _loc));
 
-	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), _loc);
+	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), std::move(_callValue), _loc);
 }
 
 // ── .call(rawBytes) → inner app call ──
@@ -240,6 +267,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _dataBytes,
+	std::shared_ptr<awst::Expression> _callValue,
 	awst::SourceLocation const& _loc)
 {
 	if (_dataBytes->wtype == awst::WType::stringType())
@@ -299,6 +327,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(
 		std::move(argTypes), std::nullopt);
 
+	// Receiver feeds both the payment's Receiver and the app id derivation.
+	std::shared_ptr<awst::Expression> payTxn;
+	if (_callValue)
+	{
+		_receiver = awst::makeEvalOnce(_receiver, _loc);
+		payTxn = buildPaymentTransaction(_ctx, _receiver, std::move(_callValue), _loc);
+	}
 	auto appId = addressToAppId(std::move(_receiver), _loc);
 
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
@@ -311,6 +346,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
+	if (payTxn)
+		submit->itxns.push_back(std::move(payTxn));
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
