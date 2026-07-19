@@ -517,8 +517,74 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					emitStateVarInit(**it2, postInitBody->body);
 			}
 
-			// Inline base constructor bodies into __postInit
+			// Base constructor parameter assignments — DERIVED-FIRST, all before any
+			// body is inlined. An explicit arg for base B is written by a MORE
+			// DERIVED contract and may read that contract's ctor params (`D is C is
+			// A`, `C(uint y) A(y+1)`), so C's params must be assigned before A's
+			// args are evaluated. The old base-first interleaved loop evaluated
+			// `y+1` before `y = 5` (and skipped args entirely for empty-bodied
+			// ctors); the non-postInit path's Phase 1/2 fixed exactly this, the
+			// postInit twin never did.
 			auto const& linearized = _contract.annotation().linearizedBaseContracts;
+			for (auto it = linearized.begin(); it != linearized.end(); ++it)
+			{
+				auto const* base = *it;
+				if (base == &_contract)
+					continue;
+
+				auto const* baseCtor = base->constructor();
+				if (!baseCtor)
+					continue;
+
+				auto argIt = explicitBaseArgs.find(base);
+				if (argIt == explicitBaseArgs.end() || !argIt->second || argIt->second->empty())
+					continue;
+
+				auto const& args = *(argIt->second);
+				auto const& params = baseCtor->parameters();
+				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+				{
+					auto argExpr = m_exprBuilder->build(*args[i]);
+					if (!argExpr)
+						continue;
+
+					// Storage-pointer params: alias, don't copy — writes inside the
+					// base ctor must reach the underlying storage (mirrors
+					// ModifierInliner.cpp:200-228).
+					if (params[i]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
+							if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
+								return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
+							if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
+							if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
+							if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
+							return sol_ast::StorageAlias::stateRead(std::move(argExpr));
+						}();
+						m_tr->setStorageAlias(params[i]->id(), std::move(alias));
+						continue;
+					}
+
+					auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
+
+					argExpr = TypeCoercion::implicitNumericCast(
+						std::move(argExpr), target->wtype, target->sourceLocation
+					);
+
+					// Drain the build's pre-statements (ternary/short-circuit temp
+					// assignments) before the binding (see the create-path twin).
+					m_exprBuilder->appendPendingTo(postInitBody->body);
+
+					auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
+					postInitBody->body.push_back(std::move(assignment));
+				}
+			}
+
+			// Inline base constructor bodies into __postInit (base-first MRO order)
 			for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
 			{
 				auto const* base = *it;
@@ -530,50 +596,6 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					continue;
 				if (baseCtor->body().statements().empty())
 					continue;
-
-				// Base constructor parameter assignments
-				auto argIt = explicitBaseArgs.find(base);
-				if (argIt != explicitBaseArgs.end() && argIt->second && !argIt->second->empty())
-				{
-					auto const& args = *(argIt->second);
-					auto const& params = baseCtor->parameters();
-					for (size_t i = 0; i < args.size() && i < params.size(); ++i)
-					{
-						auto argExpr = m_exprBuilder->build(*args[i]);
-						if (!argExpr)
-							continue;
-
-						// Storage-pointer params: alias, don't copy — writes inside the
-						// base ctor must reach the underlying storage (mirrors
-						// ModifierInliner.cpp:200-228).
-						if (params[i]->referenceLocation()
-							== solidity::frontend::VariableDeclaration::Location::Storage)
-						{
-							sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
-								if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
-									return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
-								if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
-									return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
-								if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
-									return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
-								if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
-									return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
-								return sol_ast::StorageAlias::stateRead(std::move(argExpr));
-							}();
-							m_tr->setStorageAlias(params[i]->id(), std::move(alias));
-							continue;
-						}
-
-						auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
-
-						argExpr = TypeCoercion::implicitNumericCast(
-							std::move(argExpr), target->wtype, target->sourceLocation
-						);
-
-						auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
-						postInitBody->body.push_back(std::move(assignment));
-					}
-				}
 
 				m_currentInConstructor = true;
 			auto baseBody = buildBlock(baseCtor->body());
@@ -685,6 +707,11 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					argExpr = TypeCoercion::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
+					// Drain the build's pre-statements (ternary/short-circuit temp
+					// assignments) BEFORE the param binding — same fix as the
+					// modifier-arg twin (ModifierInliner), which this site missed.
+					m_exprBuilder->appendPendingTo(createBlock->body);
+
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
 					auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
@@ -724,6 +751,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					auto* targetType = m_typeMapper.map(params[i]->type());
 					argExpr = TypeCoercion::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
+
+					// Drain pre-statements before the binding (see Phase 1).
+					m_exprBuilder->appendPendingTo(createBlock->body);
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
