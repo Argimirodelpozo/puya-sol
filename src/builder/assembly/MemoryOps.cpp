@@ -552,23 +552,27 @@ void AssemblyBuilder::handleMstore(
 	if (!checkArity(_args, 2, "mstore", _loc))
 		return;
 
-	m_lastMstoreValue = _args[1];
-
 	// Track constant store values (e.g. FMP init at 0x40) for resolveConstantOffset.
+	// A non-constant value at a constant offset KILLS that offset's entry; a
+	// non-constant offset kills all content entries (could clobber any of them).
 	auto constOffset = resolveConstantOffset(_args[0]);
 	if (constOffset)
 	{
+		std::string varName = "mem_0x" + ([&] {
+			std::ostringstream oss;
+			oss << std::hex << *constOffset;
+			return oss.str();
+		})();
 		auto storedVal = resolveConstantOffset(_args[1]);
 		if (storedVal)
-		{
-			std::string varName = "mem_0x" + ([&] {
-				std::ostringstream oss;
-				oss << std::hex << *constOffset;
-				return oss.str();
-			})();
 			m_localConstants[varName] = *storedVal;
-		}
+		else
+			m_localConstants.erase(varName);
 	}
+	else
+		invalidateMemConstants();
+
+	m_lastMstoreValue = _args[1];
 
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 

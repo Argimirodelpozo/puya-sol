@@ -62,6 +62,9 @@ void AssemblyBuilder::buildIfStatement(
 		for (auto const& innerStmt: _node.body.statements)
 			buildStatement(innerStmt, ifBlock->body);
 		m_haltEmitted = savedHalt;
+		// Memory-content constants recorded inside the conditional body must not
+		// fold in code after the if.
+		invalidateMemConstants();
 
 		_out.push_back(awst::makeIfElse(
 			std::move(cond), std::move(ifBlock), nullptr, loc));
@@ -76,6 +79,10 @@ void AssemblyBuilder::buildForLoop(
 	auto loc = makeLoc(_node.debugData);
 	for (auto const& preStmt: _node.pre.statements)
 		buildStatement(preStmt, _out);
+
+	// Cond/body re-execute per iteration: memory-content constants from before
+	// the loop (or its pre) must not fold inside it.
+	invalidateMemConstants();
 
 	// Condition may produce pending statements (e.g. sideeffect() inside cond);
 	// they must run before every check, not leak into the body.
@@ -99,6 +106,8 @@ void AssemblyBuilder::buildForLoop(
 	m_haltEmitted = savedHalt;
 
 	m_forLoopPost = savedPost;
+	// Body/post recordings must not survive the loop.
+	invalidateMemConstants();
 
 	if (condStmts.empty())
 	{
@@ -200,6 +209,9 @@ void AssemblyBuilder::buildSwitchStatement(
 	bool savedHalt = m_haltEmitted; // switch-case halts are conditional
 	for (auto const& yulCase: _node.cases)
 	{
+		// Each case body starts fresh: recordings from a SIBLING case (translated
+		// just before) never execute on this case's path.
+		invalidateMemConstants();
 		if (!yulCase.value)
 		{
 			auto caseBlock = awst::makeBlock(makeLoc(yulCase.debugData));
@@ -241,6 +253,8 @@ void AssemblyBuilder::buildSwitchStatement(
 		}
 	}
 	m_haltEmitted = savedHalt;
+	// Case-body recordings are conditional — must not fold after the switch.
+	invalidateMemConstants();
 
 	_out.push_back(std::move(switchNode));
 }

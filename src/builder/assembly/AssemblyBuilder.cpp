@@ -121,6 +121,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_returnType = _returnType;
 	m_locals.clear();
 	m_localConstants.clear();
+	m_reassignedLocals.clear();
+	collectReassignedLocals(_block);
 	m_calldataParamNames.clear();
 	m_calldataMap.clear();
 	m_asmFunctions.clear();
@@ -568,6 +570,50 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::offsetToUint64(
 
 	// biguint → bytes → btoi (safe for offsets that fit in uint64)
 	return safeBtoi(ensureBiguint(std::move(_offset), _loc), _loc);
+}
+
+
+void AssemblyBuilder::collectReassignedLocals(solidity::yul::Block const& _block)
+{
+	using namespace solidity::yul;
+	std::function<void(Block const&)> walk = [&](Block const& blk)
+	{
+		for (auto const& s: blk.statements)
+		{
+			if (auto const* assign = std::get_if<Assignment>(&s))
+				for (auto const& var: assign->variableNames)
+					m_reassignedLocals.insert(var.name.str());
+			else if (auto const* b = std::get_if<Block>(&s))
+				walk(*b);
+			else if (auto const* iff = std::get_if<If>(&s))
+				walk(iff->body);
+			else if (auto const* sw = std::get_if<Switch>(&s))
+				for (auto const& c: sw->cases)
+					walk(c.body);
+			else if (auto const* fl = std::get_if<ForLoop>(&s))
+			{
+				walk(fl->pre);
+				walk(fl->post);
+				walk(fl->body);
+			}
+			else if (auto const* fn = std::get_if<FunctionDefinition>(&s))
+				walk(fn->body);
+		}
+	};
+	walk(_block);
+}
+
+
+void AssemblyBuilder::invalidateMemConstants()
+{
+	for (auto it = m_localConstants.begin(); it != m_localConstants.end();)
+	{
+		if (it->first.rfind("mem_0x", 0) == 0)
+			it = m_localConstants.erase(it);
+		else
+			++it;
+	}
+	m_lastMstoreValue = nullptr;
 }
 
 

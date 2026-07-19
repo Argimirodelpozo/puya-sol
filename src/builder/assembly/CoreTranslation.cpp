@@ -348,6 +348,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	for (auto const& arg: _call.arguments)
 		args.push_back(buildExpression(arg));
 
+	// Memory writers the content-constant tracker can't model precisely: drop
+	// all "mem_0x*" entries. mstore itself tracks/invalidates per-offset.
+	// (After arg translation, so entries recorded by inlined arg builds die too.)
+	{
+		static std::set<std::string> const s_memClobberers = {
+			"mstore8", "mcopy", "calldatacopy", "returndatacopy", "codecopy",
+			"extcodecopy", "datacopy", "call", "staticcall", "delegatecall",
+			"callcode", "create", "create2"};
+		if (s_memClobberers.count(funcName))
+			invalidateMemConstants();
+	}
+
 	// User-defined assembly functions take precedence over builtins.
 	// This matches Yul's scoping rules: a user `function basefee() -> r { ... }`
 	// shadows the builtin `basefee()` opcode when called.

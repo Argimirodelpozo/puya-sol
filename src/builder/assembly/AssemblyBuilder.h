@@ -945,7 +945,28 @@ private:
 	std::map<std::string, std::string> m_signedShadow;
 
 	/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
+	/// SOUNDNESS: only single-assignment locals may be recorded (m_reassignedLocals gates the
+	/// `let` recording); "mem_0x<off>" content keys are invalidated on any non-constant or
+	/// unresolvable memory write and at control-flow boundaries (invalidateMemConstants).
 	std::map<std::string, uint64_t> m_localConstants;
+
+	/// Yul locals that are the target of ANY `:=` assignment anywhere in the current
+	/// assembly block (incl. nested blocks/loops and user function bodies, by ORIGINAL
+	/// name). Such locals never enter m_localConstants: the fold is flow-insensitive,
+	/// so a reassigned local's initializer constant would go stale (`let p := 0x80 …
+	/// p := add(p, 0x20)` folded every mstore(p, …) to offset 0x80).
+	std::set<std::string> m_reassignedLocals;
+
+	/// Populate m_reassignedLocals from a Yul AST (recursive over blocks/ifs/switches/
+	/// for-loops and function definitions).
+	void collectReassignedLocals(solidity::yul::Block const& _block);
+
+	/// Drop all "mem_0x<off>" content constants + m_lastMstoreValue. Called on memory
+	/// writes that can't be tracked precisely (non-constant mstore offset, mstore8,
+	/// mcopy, calldatacopy, returndatacopy, precompile output) and when entering/
+	/// leaving if/switch/for translation (entries from a conditionally-executed body
+	/// must not survive it; entries from before a loop must not fold inside it).
+	void invalidateMemConstants();
 
 	/// Names of calldata PARAMS whose head byte-offset is stashed in m_localConstants (for the
 	/// `.offset`/`.length` suffix + calldataMap paths). A BARE param name used as a value (e.g. as a

@@ -152,8 +152,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		pushRename(paramName, uName);
 		awst::WType const* paramType = _args[i]->wtype;
 		m_locals[uName] = paramType;
+		// Only single-assignment params: the fn body's `paramName := …` sites were
+		// collected under the ORIGINAL name; a reassigned param's bound constant
+		// would go stale mid-body (same rule as `let` locals).
 		auto constVal = resolveConstantOffset(_args[i]);
-		if (constVal)
+		if (constVal && !m_reassignedLocals.count(paramName))
 			m_localConstants[uName] = *constVal;
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(uName, paramType, _loc), _args[i], _loc));

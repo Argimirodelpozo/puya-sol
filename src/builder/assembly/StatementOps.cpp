@@ -114,11 +114,20 @@ void AssemblyBuilder::buildVariableDeclaration(
 		std::string name = var.name.str();
 		m_locals[name] = awst::WType::biguintType();
 
-		if (_decl.value)
+		// Record the initializer constant only for SINGLE-ASSIGNMENT locals —
+		// the fold is flow-insensitive, so a later `name := …` (loop counter,
+		// pointer bump) would leave this entry stale. Erase on the non-constant
+		// path: a shadowing `let` in a sibling scope must not inherit a stale
+		// entry from an earlier same-named declaration.
+		if (m_reassignedLocals.count(name))
+			m_localConstants.erase(name);
+		else if (_decl.value)
 		{
 			auto constVal = resolveConstantYulValue(*_decl.value);
 			if (constVal)
 				m_localConstants[name] = *constVal;
+			else
+				m_localConstants.erase(name);
 		}
 		else
 		{
@@ -182,6 +191,7 @@ void AssemblyBuilder::buildAssignment(
 							? m_yulSubReturnTemps[i]
 							: funcDef.returnVariables[i].name.str();
 						std::string varName = resolveVarRef(_assign.variableNames[i]);
+						m_localConstants.erase(varName); // reassigned → any recorded constant is stale
 
 						auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 
@@ -202,6 +212,12 @@ void AssemblyBuilder::buildAssignment(
 	}
 
 	std::string name = resolveVarRef(_assign.variableNames[0]);
+
+	// Reassigned → any recorded constant is stale. Calldata param/pointer names
+	// are exempt: their entries are HEAD OFFSETS owned by the calldata machinery
+	// (repoints go through the mutable __cd_off_/__cd_len_ locals instead).
+	if (!m_calldataParamNames.count(name) && !m_calldataStaticPtrNames.count(name))
+		m_localConstants.erase(name);
 
 	// Bare STATIC calldata pointer write (`s := s2`, `s2 := 4`): repoint —
 	// assign the mutable __cd_off_<name> local; later reads (asm or Solidity
