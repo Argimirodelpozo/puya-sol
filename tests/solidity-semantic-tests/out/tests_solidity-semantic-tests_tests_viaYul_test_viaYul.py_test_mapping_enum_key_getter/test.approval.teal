@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/mapping_enum_key_getter.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 255 8
+    intcblock 1 255 0 8
     bytecblock "__ctor_pending" "table"
     pushbytes ""
     dupn 2
@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -56,9 +64,15 @@ main_ternary_merge@14:
     assert // not payable
     dig 1
     dup
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    dup
     pushint 2
     <=
-    assert // enum validation
+    assert // ABI enum validation
     itob
     bytec_1 // "table"
     concat
@@ -66,7 +80,7 @@ main_ternary_merge@14:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_2 // 0
     swap
     uncover 2
     select
@@ -79,7 +93,7 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@14
 
 main_set_route@6:
@@ -111,17 +125,17 @@ main_ternary_merge@19:
     assert // not payable
     dig 2
     dup
-    intc_2 // 255
+    intc_1 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    intc_1 // 255
     &
     dig 1
     dup
-    intc_2 // 255
+    intc_1 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    intc_1 // 255
     &
     dig 1
     pushint 2
@@ -139,7 +153,7 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main___postInit_route@5:
@@ -147,7 +161,7 @@ main___postInit_route@5:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "table"
     pushint 2

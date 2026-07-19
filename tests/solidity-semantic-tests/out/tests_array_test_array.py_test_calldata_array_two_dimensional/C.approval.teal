@@ -417,14 +417,6 @@ test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_te
     pushint 8
     bzero
     dup
-    frame_dig -2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    swap
     frame_dig -1
     concat
     dup
@@ -432,11 +424,18 @@ test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_te
     pushint 8
     -
     extract_uint64
-    dig 1
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
     intc_0 // 2
     <
     assert // index access is out of bounds
-    swap
     intc_0 // 2
     *
     frame_dig -3
@@ -452,6 +451,12 @@ test(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$2_calldata_ptr,u256,u256)_te
     frame_dig -3
     cover 2
     extract3
+    dup
+    intc_2 // 0
+    extract_uint16
+    dig 2
+    >
+    assert // array index out of bounds
     extract 2 0
     swap
     intc_1 // 32

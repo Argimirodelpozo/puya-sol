@@ -4,12 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 0x22b2fda0
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x22b2fda0
+    pushbytes ""
+    dupn 2
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +38,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_1 // method "fNoArgs()void"
+    bytec_2 // method "fNoArgs()void"
     pushbytess 0xb6e08150 0x2e5fdc8c 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280 0xb2fd8e38 // method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)", method "fSignatureFromLiteralNoArgs()byte[]", method "fPointerNoArgs()byte[]", method "fSignatureFromLiteralArray()byte[]", method "fPointerArray()byte[]", method "fSignatureFromLiteralUint()byte[]", method "fPointerUint()byte[]", method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match main_fNoArgs_route@5 main_fArray_route@6 main_fUint_route@7 main_fSignatureFromLiteralNoArgs_route@8 main_fPointerNoArgs_route@9 main_fSignatureFromLiteralArray_route@10 main_fPointerArray_route@11 main_fSignatureFromLiteralUint_route@12 main_fPointerUint_route@13 main_assertConsistentSelectors_route@14
@@ -50,20 +60,41 @@ main_ternary_merge@21:
     callsub fPointerNoArgs
     keccak256
     ==
+    dup
+    bury 4
+    bnz main_after_if_else@23
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@23:
+    dig 2
     assert
     callsub fSignatureFromLiteralArray
     keccak256
     callsub fPointerArray
     keccak256
     ==
+    dup
+    bury 3
+    bnz main_after_if_else@25
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@25:
+    dig 1
     assert
     callsub fSignatureFromLiteralUint
     keccak256
     callsub fPointerUint
     keccak256
     ==
-    assert
-    intc_0 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@27
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@27:
     return
 
 main_ternary_false@20:
@@ -172,13 +203,13 @@ main_fUint_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@37
+    bz main_ternary_false@43
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@38:
+main_ternary_merge@44:
     !
     assert // not payable
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -186,9 +217,9 @@ main_ternary_merge@38:
     intc_0 // 1
     return
 
-main_ternary_false@37:
+main_ternary_false@43:
     intc_1 // 0
-    b main_ternary_merge@38
+    b main_ternary_merge@44
 
 main_fArray_route@6:
     txna ApplicationArgs 1
@@ -204,34 +235,34 @@ main_fArray_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txn GroupIndex
-    bz main_ternary_false@42
+    bz main_ternary_false@48
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@48:
+main_ternary_merge@54:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@42:
+main_ternary_false@48:
     intc_1 // 0
-    b main_ternary_merge@48
+    b main_ternary_merge@54
 
 main_fNoArgs_route@5:
     txn GroupIndex
-    bz main_ternary_false@47
+    bz main_ternary_false@53
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@48
+    b main_ternary_merge@54
 
-main_ternary_false@47:
+main_ternary_false@53:
     intc_1 // 0
-    b main_ternary_merge@48
+    b main_ternary_merge@54
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fSignatureFromLiteralNoArgs() -> bytes:
@@ -246,7 +277,7 @@ fSignatureFromLiteralNoArgs:
 fSignatureFromLiteralNoArgs_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x1af93581
+    pushbytes 0x5fd2f459 // method "fNoArgs()"
     retsub
 
 fSignatureFromLiteralNoArgs_ternary_false@2:
@@ -266,7 +297,7 @@ fPointerNoArgs:
 fPointerNoArgs_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // method "fNoArgs()void"
+    bytec_2 // 0x22b2fda0
     retsub
 
 fPointerNoArgs_ternary_false@2:
@@ -286,7 +317,7 @@ fSignatureFromLiteralArray:
 fSignatureFromLiteralArray_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0xcb5a77640000
     retsub
 
 fSignatureFromLiteralArray_ternary_false@2:
@@ -326,7 +357,7 @@ fSignatureFromLiteralUint:
 fSignatureFromLiteralUint_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    pushbytes 0x6052c2fd000000000000000c000000000000000d
     retsub
 
 fSignatureFromLiteralUint_ternary_false@2:

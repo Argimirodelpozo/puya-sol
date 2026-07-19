@@ -3,14 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0x151f7c75
+    intcblock 1 0 32
     intc_1 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -26,7 +33,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x99af6cbd 0x06897437 // method "dyn(uint512)byte[]", method "f(uint256)bool"
+    pushbytess 0xede71d09 0x06897437 // method "dyn(uint256)byte[]", method "f(uint256)bool"
     txna ApplicationArgs 0
     match main_dyn_route@5 main_f_route@6
     err
@@ -36,7 +43,7 @@ main_f_route@6:
     dup
     bury 2
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -65,9 +72,9 @@ main_dyn_route@5:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub dyn
     dup
     len
@@ -75,7 +82,7 @@ main_dyn_route@5:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    pushbytes 0x151f7c75
     swap
     concat
     log
@@ -83,7 +90,7 @@ main_dyn_route@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn(x: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn(__arc4_x: bytes) -> bytes:
 dyn:
     proto 1 1
     txn GroupIndex
@@ -97,19 +104,20 @@ dyn_ternary_merge@3:
     !
     assert // not payable
     load 0
+    store 0
+    load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
     replace2 0
+    store 0
+    load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000021
     replace2 32
-    dup
     store 0
-    extract 0 4
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    load 0
+    store 0
+    load 0
+    extract 0 32
+    retsub
 
 dyn_ternary_false@2:
     intc_1 // 0

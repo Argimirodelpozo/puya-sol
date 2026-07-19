@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/value_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 16
+    intcblock 0 1 16 32
     bytecblock 0x151f7c75 "a" "b" "c" "d" "e" "f" "g" "h" "i" 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -239,10 +247,10 @@ main_ternary_merge@45:
     assert // check d exists
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -267,17 +275,26 @@ main_c_route@7:
 main_ternary_merge@50:
     !
     assert // not payable
+    intc_2 // 16
+    bzero
     intc_0 // 0
     bytec_3 // "c"
     app_global_get_ex
     assert // check c exists
+    dig 1
+    swap
+    concat
     dup
     len
-    intc_3 // 16
+    intc_2 // 16
+    -
+    intc_2 // 16
+    extract3
+    dup
+    len
+    intc_2 // 16
     <=
     assert // overflow
-    intc_3 // 16
-    bzero
     b|
     bytec_0 // 0x151f7c75
     swap

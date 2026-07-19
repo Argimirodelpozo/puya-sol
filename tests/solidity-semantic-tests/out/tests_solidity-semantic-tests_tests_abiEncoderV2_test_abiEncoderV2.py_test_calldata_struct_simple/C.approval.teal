@@ -3,14 +3,22 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_struct_simple.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock 0x151f7c75
-    intc_2 // 0
+    intc_1 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -36,7 +44,7 @@ main_g_route@6:
     dup
     bury 2
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for S
     txn GroupIndex
@@ -66,14 +74,14 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main_f_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for S
     callsub f
@@ -105,20 +113,10 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
     frame_dig -1
-    extract 0 32
-    concat
     dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    frame_dig -1
     retsub
 
 f_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b f_ternary_merge@3

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_boundary_test.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 32 0 1
-    bytecblock "storageArray" "__ctor_pending"
+    bytecblock "storageArray" "__ctor_pending" 0x068101
     intc_2 // 0
     dup
     pushint 4096
@@ -68,6 +68,25 @@ main_test_boundary_check_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
+
+main_while_top@30:
+    pushint 45010
+    global OpcodeBudget
+    >
+    bz main_while_top@14
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_2 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_2 // 0x068101
+    itxn_field ClearStateProgram
+    intc_2 // 0
+    itxn_field Fee
+    itxn_submit
+    b main_while_top@30
 
 main_while_top@14:
     bytec_0 // "storageArray"

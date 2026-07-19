@@ -3,14 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_uint_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 65535
-    bytecblock 0x151f7c75 ""
-    bytec_1 // ""
+    intcblock 1 0 2 8 65535
+    bytecblock 0x151f7c75
+    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -42,7 +51,7 @@ main_f2_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    pushbytes 0xd27922c600000000000000000000000000000000000000000000000000000000000012340000000000000000000000000000000000000000000000000000000000001234
+    pushbytes 0xd27922c600000000000012340000000000001234
     callsub removeSignature
     dup
     len
@@ -72,7 +81,7 @@ main_f_route@8:
 main_ternary_merge@21:
     !
     assert // not payable
-    pushbytes 0x07a5a31b123400000000000000000000000000000000000000000000000000000000000061620000000000000000000000000000000000000000000000000000000000001234000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x07a5a31b123461621234
     callsub removeSignature
     dup
     len
@@ -93,16 +102,20 @@ main_ternary_false@20:
 
 main_h_route@7:
     txna ApplicationArgs 1
+    dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
     txna ApplicationArgs 2
+    dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    bytec_1 // ""
+    btoi
     bury 1
     txn GroupIndex
     bz main_ternary_false@25
@@ -114,13 +127,12 @@ main_h_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    dupn 2
-    intc_3 // 65535
+    dig 1
+    intc 4 // 65535
     <=
     assert // ABI validation
-    intc_3 // 65535
-    &
-    intc_3 // 65535
+    dup
+    intc 4 // 65535
     <=
     assert // ABI validation
     intc_0 // 1

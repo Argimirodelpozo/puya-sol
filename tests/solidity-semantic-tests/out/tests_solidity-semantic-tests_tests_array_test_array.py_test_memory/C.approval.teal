@@ -4,13 +4,21 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/memory.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 128
-    bytecblock 0x151f7c75
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     intc_2 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -52,8 +60,13 @@ main_ternary_merge@13:
     dup
     callsub h
     pop
-    pushbytes 0x02
+    pushint 2
+    itob
     b*
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -62,7 +75,7 @@ main_ternary_merge@13:
     intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -82,7 +95,7 @@ main_h_route@5:
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
     callsub h
     pop
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -108,12 +121,24 @@ h_ternary_merge@3:
     frame_dig -1
     extract 32 32 // on error: index access is out of bounds
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_dig -1
     extract 64 32 // on error: index access is out of bounds
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_dig -1
     extract 96 32 // on error: index access is out of bounds
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32

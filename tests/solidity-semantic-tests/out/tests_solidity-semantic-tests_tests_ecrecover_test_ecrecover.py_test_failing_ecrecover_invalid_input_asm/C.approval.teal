@@ -3,19 +3,27 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_asm.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8
-    pushint 4096
+    intcblock 4096 1 8
+    intc_0 // 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -33,7 +41,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -41,22 +49,45 @@ main_ternary_merge@9:
     !
     assert // not payable
     load 0
-    intc_1 // 8
+    store 0
+    intc_2 // 8
     bzero
-    dig 1
+    load 0
     extract 64 32
+    dig 1
+    swap
     concat
-    dup
+    load 0
+    extract 64 32
+    uncover 2
+    swap
+    concat
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
+    dup
+    pushint 32
+    +
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_0 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_0 // 4096
+    %
     pushbytes 0x000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c
     replace3
+    stores
+    load 0
     store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@8:

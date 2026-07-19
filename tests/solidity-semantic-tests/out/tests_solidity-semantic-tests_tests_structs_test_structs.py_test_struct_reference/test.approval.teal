@@ -4,19 +4,27 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_reference.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 4
-    bytecblock 0x0000000000060000 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03 "data" 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139 0x3d016979cb90dcb5e722289a9bd637ae255ec3cb789c791e8dcebb90393b2885
+    bytecblock 0x0000000000060000 "data" 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139 0x7515578b8db054f01a2ad78aa51cfc73f007650229681dd972101d9a8b6fcead
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "data"
+    bytec_1 // "data"
     bytec_0 // 0x0000000000060000
     app_global_put
     intc_1 // 1
@@ -45,7 +53,7 @@ main_ternary_merge@13:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "data"
+    bytec_1 // "data"
     app_global_get_ex
     assert // check data exists
     dup
@@ -64,10 +72,10 @@ main_ternary_merge@13:
     pushbytes 0x000000020006
     swap
     concat
-    bytec_2 // "data"
+    bytec_1 // "data"
     swap
     app_global_put
-    bytec_3 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
+    bytec_2 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -88,13 +96,13 @@ main_ternary_merge@13:
     pushbytes 0x000000030006
     swap
     concat
-    bytec_3 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
+    bytec_2 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
     box_del
     pop
-    bytec_3 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
+    bytec_2 // 0xf3ad5daf7dd6b39669237880ff04827b6effbb057a05f08a487f0f8a2d314139
     swap
     box_put
-    bytec 4 // 0x3d016979cb90dcb5e722289a9bd637ae255ec3cb789c791e8dcebb90393b2885
+    pushbytes 0x6b5e2bb70caf3bf7d7f49c43295b501e258fe2b8409da806e3c3a8a95b6bc9ea
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -107,7 +115,7 @@ main_ternary_merge@13:
     pushint 4294967295
     <=
     assert // overflow
-    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    bytec_3 // 0x7515578b8db054f01a2ad78aa51cfc73f007650229681dd972101d9a8b6fcead
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -138,10 +146,10 @@ main_ternary_merge@13:
     concat
     swap
     concat
-    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    bytec_3 // 0x7515578b8db054f01a2ad78aa51cfc73f007650229681dd972101d9a8b6fcead
     box_del
     pop
-    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    bytec_3 // 0x7515578b8db054f01a2ad78aa51cfc73f007650229681dd972101d9a8b6fcead
     swap
     box_put
     intc_1 // 1
@@ -163,7 +171,7 @@ main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "data"
+    bytec_1 // "data"
     app_global_get_ex
     assert // check data exists
     intc_0 // 0
@@ -171,7 +179,7 @@ main_ternary_merge@18:
     pushint 2
     ==
     bz main_bool_false@23
-    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    pushbytes 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -181,7 +189,7 @@ main_ternary_merge@18:
     pushint 3
     ==
     bz main_bool_false@23
-    bytec 4 // 0x3d016979cb90dcb5e722289a9bd637ae255ec3cb789c791e8dcebb90393b2885
+    pushbytes 0x4fa01c11e1883ce4e36c10dd220d660cdacba1a960fa14475352319b8a2f54c7
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -189,7 +197,7 @@ main_ternary_merge@18:
     intc_0 // 0
     extract_uint32
     bnz main_bool_false@23
-    bytec_1 // 0xed2cf44d785bf4311950ed02516b6d1e095793030a8a5c0054b3f06ad4373a03
+    pushbytes 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
     box_get
     bytec_0 // 0x0000000000060000
     cover 2

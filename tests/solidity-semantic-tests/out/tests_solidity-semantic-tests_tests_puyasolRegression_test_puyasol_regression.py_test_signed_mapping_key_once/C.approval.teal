@@ -1,0 +1,460 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_mapping_key_once.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 2
+    bytecblock "cnt" 0x 0x151f7c75 "ms" 0xc9d9727335344c811c1bb02cbd541ea559d6b51fa84bb711cd18b29767fed1ab "__ctor_pending" 0xc077fc91edb5bb68394e7fdef98ec7dab224f0b97ee1fb0a26d19f1e3dddc53b 0x403a1c837a31d26ff056ba8a3b1a8a5c3bd9ec65c124a3aeb14d91fdfd826d44 0x85a32ecd1fb4deb7739002617e1e55b7b9bffbdecb4c4077384435e36b504994 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x832d98c3 0x10bd5456 0xf3c5bb49 0x8c3a4556 0xbba3279f 0x35011ef9 // method "__postInit()void", method "compound()(uint256,uint256)", method "del()(uint256,uint256)", method "write()(uint256,uint256)", method "read()(uint256,uint256)", method "compound16()(uint256,uint256)", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_compound_route@6 main_del_route@7 main_write_route@8 main_read_route@9 main_compound16_route@10 main_cnt_route@11
+    err
+
+main_cnt_route@11:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+main_compound16_route@10:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    pushint 20
+    itob
+    bytec 4 // 0xc9d9727335344c811c1bb02cbd541ea559d6b51fa84bb711cd18b29767fed1ab
+    box_del
+    pop
+    bytec 4 // 0xc9d9727335344c811c1bb02cbd541ea559d6b51fa84bb711cd18b29767fed1ab
+    swap
+    box_put
+    bytec_0 // "cnt"
+    pushbytes 0x01
+    app_global_put
+    bytec 4 // 0xc9d9727335344c811c1bb02cbd541ea559d6b51fa84bb711cd18b29767fed1ab
+    box_del
+    pop
+    bytec 4 // 0xc9d9727335344c811c1bb02cbd541ea559d6b51fa84bb711cd18b29767fed1ab
+    pushbytes 0x17
+    box_put
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_read_route@9:
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    pushint 7
+    itob
+    bytec 8 // 0x85a32ecd1fb4deb7739002617e1e55b7b9bffbdecb4c4077384435e36b504994
+    box_del
+    pop
+    bytec 8 // 0x85a32ecd1fb4deb7739002617e1e55b7b9bffbdecb4c4077384435e36b504994
+    swap
+    box_put
+    intc_1 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 3
+    callsub ks
+    itob
+    bytec_3 // "ms"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_1 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main_write_route@8:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    intc_0 // 1
+    callsub ks
+    pushint 55
+    itob
+    swap
+    itob
+    bytec_3 // "ms"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0x719effe206ee807e4f93e1913caf79071b277609f73fe8fbdc574c25a3a05338
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_1 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
+
+main_del_route@7:
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
+    !
+    assert // not payable
+    intc_0 // 1
+    itob
+    bytec 6 // 0xc077fc91edb5bb68394e7fdef98ec7dab224f0b97ee1fb0a26d19f1e3dddc53b
+    box_del
+    pop
+    bytec 6 // 0xc077fc91edb5bb68394e7fdef98ec7dab224f0b97ee1fb0a26d19f1e3dddc53b
+    swap
+    box_put
+    intc_1 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 6
+    callsub ks
+    itob
+    bytec_3 // "ms"
+    concat
+    sha256
+    box_del
+    pop
+    bytec 6 // 0xc077fc91edb5bb68394e7fdef98ec7dab224f0b97ee1fb0a26d19f1e3dddc53b
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_1 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@37:
+    intc_1 // 0
+    b main_ternary_merge@38
+
+main_compound_route@6:
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    pushint 10
+    itob
+    bytec 7 // 0x403a1c837a31d26ff056ba8a3b1a8a5c3bd9ec65c124a3aeb14d91fdfd826d44
+    box_del
+    pop
+    bytec 7 // 0x403a1c837a31d26ff056ba8a3b1a8a5c3bd9ec65c124a3aeb14d91fdfd826d44
+    swap
+    box_put
+    intc_1 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    intc_3 // 2
+    callsub ks
+    itob
+    bytec_3 // "ms"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    pushbytes 0x05
+    b+
+    dup
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 7 // 0x403a1c837a31d26ff056ba8a3b1a8a5c3bd9ec65c124a3aeb14d91fdfd826d44
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_1 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_1 // 0
+    b main_ternary_merge@43
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "ms"
+    intc_3 // 2
+    box_create
+    pop
+    pushbytes "ms16"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_0 // "cnt"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_mapping_key_once.sol.C.ks(v: uint64) -> uint64:
+ks:
+    proto 1 1
+    frame_dig -1
+    pushint 140737488355327
+    <=
+    bnz ks_bool_true@2
+    frame_dig -1
+    pushint 18446603336221196288
+    >=
+    bz ks_bool_false@3
+
+ks_bool_true@2:
+    intc_0 // 1
+
+ks_bool_merge@4:
+    assert // ABI validation
+    intc_1 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    frame_dig -1
+    retsub
+
+ks_bool_false@3:
+    intc_1 // 0
+    b ks_bool_merge@4

@@ -6,12 +6,20 @@ main:
     intcblock 0 2 1 32
     bytecblock "storageArray" "__ctor_pending"
     intc_0 // 0
-    dup
+    dupn 2
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -38,7 +46,7 @@ main_after_if_else@2:
 main_pushEmpty_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
+    bury 4
     len
     intc_3 // 32
     ==
@@ -71,7 +79,7 @@ main_ternary_merge@17:
     intc_3 // 32
     /
     itob
-    dig 2
+    dig 3
     b<
     bz main_after_while@19
     bytec_0 // "storageArray"
@@ -110,18 +118,22 @@ main_ternary_merge@17:
 main_after_while@19:
     intc_0 // 0
     itob
+    dup
+    bury 3
     bury 1
 
 main_while_top@20:
     dup
-    dig 2
+    dig 3
     b<
     bz main_after_while@22
+    dupn 2
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
     dig 1
-    dup
-    cover 2
     concat
     dup
     len
@@ -136,11 +148,15 @@ main_while_top@20:
     swap
     intc_3 // 32
     box_extract // on error: index out of bounds
-    pushbytes 0x
+    dig 3
     b==
     assert
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 1
     b main_while_top@20
 

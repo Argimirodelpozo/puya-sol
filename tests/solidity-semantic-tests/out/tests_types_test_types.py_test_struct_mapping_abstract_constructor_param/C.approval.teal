@@ -4,8 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/struct_mapping_abstract_constructor_param.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "__ctor_pending" "m" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytecblock "__ctor_pending" "m" 0x4507c5e4bbb1b50a2c4cb9814380023ba74230c771220af5130fca79a8571ea5
     intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -44,6 +45,8 @@ main_after_if_else@2:
 
 main_getM_route@6:
     txna ApplicationArgs 1
+    dup
+    bury 3
     len
     intc_0 // 32
     ==
@@ -76,7 +79,20 @@ main_ternary_merge@13:
     -
     intc_0 // 32
     extract3
+    dig 1
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_1 // "m"
+    concat
+    sha256
+    bytec_1 // "m"
+    concat
     concat
     sha256
     box_get
@@ -113,10 +129,10 @@ main___postInit_route@5:
     pop
     pushint 16
     itob
-    bytec_2 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytec_2 // 0x4507c5e4bbb1b50a2c4cb9814380023ba74230c771220af5130fca79a8571ea5
     box_del
     pop
-    bytec_2 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytec_2 // 0x4507c5e4bbb1b50a2c4cb9814380023ba74230c771220af5130fca79a8571ea5
     swap
     box_put
     intc_1 // 1

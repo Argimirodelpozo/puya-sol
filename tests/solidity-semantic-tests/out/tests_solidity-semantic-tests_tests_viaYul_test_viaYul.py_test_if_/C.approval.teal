@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/if.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 42
-    bytecblock 0x151f7c75 0x0a 0x000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000000000000000000000000000000017
+    intcblock 1 32 0 10
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000000000000000000000000000000017
     intc_2 // 0
     dupn 3
     pushbytes ""
@@ -12,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -61,7 +69,12 @@ main_ternary_merge@17:
     dig 4
     dig 4
     b+
-    bytec_1 // 0x0a
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_3 // 10
+    itob
     b<
     bz main_else_body@22
     dig 4
@@ -162,7 +175,12 @@ main_ternary_merge@31:
     dig 4
     dig 4
     b+
-    bytec_1 // 0x0a
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_3 // 10
+    itob
     b<
     bz main_else_body@33
     dig 4
@@ -300,7 +318,7 @@ main_ternary_merge@55:
     <=
     assert // ABI bool validation
     bz main_else_body@57
-    intc_3 // 42
+    pushint 42
     itob
     bury 3
 
@@ -359,7 +377,7 @@ main_ternary_merge@63:
     itob
     bury 4
     bz main_after_if_else@65
-    intc_3 // 42
+    pushint 42
     itob
     bury 3
 

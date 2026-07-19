@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/conditional_expression_multiple.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 32 100
     intc_1 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -48,14 +56,17 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dup
-    pushbytes 0x64
-    b>
+    intc_3 // 100
+    itob
+    dig 1
+    b<
     bz main_ternary_false@11
-    dup
-    pushbytes 0x03e8
-    b>
-    pushints 100 1000
+    pushint 1000
+    itob
+    dig 1
+    b<
+    intc_3 // 100
+    pushint 1000
     uncover 2
     select
 
@@ -72,9 +83,10 @@ main_ternary_merge@12:
     return
 
 main_ternary_false@11:
-    dup
-    pushbytes 0x32
-    b>
+    pushint 50
+    itob
+    dig 1
+    b<
     pushints 10 50
     uncover 2
     select

@@ -4,25 +4,33 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/compound_assign_transient_storage.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 0 1
-    bytecblock "value1" 0x
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "value1" 0x
     intc_1 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "value1"
-    bytec_1 // 0x
+    bytec_1 // "value1"
+    bytec_2 // 0x
     app_global_put
     pushbytes "value2"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     intc_2 // 1
     return
@@ -64,19 +72,27 @@ main_ternary_merge@9:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "value1"
+    bytec_1 // "value1"
     app_global_get_ex
     assert // check value1 exists
     dig 2
     dup
     cover 2
     b+
-    bytec_0 // "value1"
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "value1"
     dig 1
     app_global_put
     dig 2
     uncover 2
     b*
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     load 5
     intc_0 // 32
     bzero
@@ -85,7 +101,15 @@ main_ternary_merge@9:
     uncover 3
     uncover 4
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dig 1
     b|
     extract 0 32
@@ -98,6 +122,10 @@ main_ternary_merge@9:
     extract 0 32
     pushbytes 0x07
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dig 2
     b|
     extract 0 32

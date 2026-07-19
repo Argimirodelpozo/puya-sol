@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -31,7 +39,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xdc2ae7fe 0x5c5e3bbc 0x7c1072af 0xbb0aa89c // method "xAndYSlots()(uint512,uint512)", method "y()uint256", method "x()uint256", method "xSlot()uint512"
+    pushbytess 0x754f94b6 0x5c5e3bbc 0x7c1072af 0x1453c42d // method "xAndYSlots()(uint256,uint256)", method "y()uint256", method "x()uint256", method "xSlot()uint256"
     txna ApplicationArgs 0
     match main_xAndYSlots_route@5 main_y_route@6 main_x_route@7 main_xSlot_route@8
     err
@@ -49,7 +57,9 @@ main_ternary_merge@15:
     assert // not payable
     load 0
     store 0
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005
     log
     intc_0 // 1
     return
@@ -139,7 +149,9 @@ main_ternary_merge@30:
     assert // not payable
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000006
     log
     intc_0 // 1
     return

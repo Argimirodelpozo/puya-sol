@@ -171,20 +171,23 @@ main_g2_route@8:
 main_ternary_merge@21:
     !
     assert // not payable
-    dig 6
+    dupn 2
+    assert // array index out of bounds
+    dig 7
     dup
     extract 0 32
     swap
     extract 34 32
-    dig 7
+    dig 8
     dup
+    cover 2
     extract 0 32
-    dig 4
+    uncover 4
     itob
     intc_1 // 32
     bzero
     b|
-    uncover 2
+    uncover 3
     extract 34 32
     dig 7
     extract 2 32
@@ -249,10 +252,22 @@ main_g_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    dig 7
+    dig 1
     dup
+    assert // array index out of bounds
+    intc_2 // 1
+    dig 1
+    <
+    assert // array index out of bounds
+    pushint 2
+    dig 1
+    <
+    assert // array index out of bounds
+    dig 8
+    dup
+    cover 2
     extract 0 32
-    dig 3
+    swap
     itob
     intc_1 // 32
     bzero

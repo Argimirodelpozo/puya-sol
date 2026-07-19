@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/mcopy_overlap.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 16 0
-    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
+    intcblock 1 16 0 48
+    bytecblock 0x151f7c75 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -41,11 +49,11 @@ main_mcopy_to_left_no_overlap_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    intc_2 // 16
+    intc_1 // 16
     itob
-    pushint 48
+    intc_3 // 48
     itob
-    intc_1 // 32
+    pushint 32
     itob
     callsub copy
     dup
@@ -62,7 +70,7 @@ main_ternary_merge@16:
     return
 
 main_ternary_false@15:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@16
 
 main_mcopy_to_right_no_overlap_route@8:
@@ -76,11 +84,11 @@ main_mcopy_to_right_no_overlap_route@8:
 main_ternary_merge@21:
     !
     assert // not payable
-    pushint 48
+    intc_3 // 48
     itob
-    intc_2 // 16
+    intc_1 // 16
     itob
-    intc_1 // 32
+    pushint 32
     itob
     callsub copy
     dup
@@ -97,7 +105,7 @@ main_ternary_merge@21:
     return
 
 main_ternary_false@20:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@21
 
 main_mcopy_in_place_route@7:
@@ -111,7 +119,7 @@ main_mcopy_in_place_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    intc_2 // 16
+    intc_1 // 16
     itob
     pushint 64
     itob
@@ -132,7 +140,7 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@26
 
 main_mcopy_to_left_overlap_route@6:
@@ -146,11 +154,11 @@ main_mcopy_to_left_overlap_route@6:
 main_ternary_merge@31:
     !
     assert // not payable
-    intc_2 // 16
+    intc_1 // 16
     itob
-    intc_1 // 32
+    pushint 32
     itob
-    pushint 48
+    intc_3 // 48
     itob
     callsub copy
     dup
@@ -167,7 +175,7 @@ main_ternary_merge@31:
     return
 
 main_ternary_false@30:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@31
 
 main_mcopy_to_right_overlap_route@5:
@@ -181,11 +189,11 @@ main_mcopy_to_right_overlap_route@5:
 main_ternary_merge@36:
     !
     assert // not payable
-    intc_1 // 32
+    pushint 32
     itob
-    intc_2 // 16
+    intc_1 // 16
     itob
-    pushint 48
+    intc_3 // 48
     itob
     callsub copy
     dup
@@ -202,7 +210,7 @@ main_ternary_merge@36:
     return
 
 main_ternary_false@35:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@36
 
 
@@ -210,53 +218,39 @@ main_ternary_false@35:
 copy:
     proto 3 1
     load 0
+    store 0
     pushint 8
     bzero
-    bytec_2 // 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
-    pushbytes 0x20
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
     frame_dig -3
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 2
-    swap
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
-    bzero
-    uncover 2
+    dig 1
     frame_dig -2
-    b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 3
-    swap
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 3
-    swap
-    intc_1 // 32
-    extract3
+    uncover 2
+    frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    pushint 8
     -
-    intc_1 // 32
+    extract_uint64
+    bytec_1 // 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
+    cover 2
     extract3
+    bytec_1 // 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
+    cover 2
     replace3
+    load 0
     store 0
-    bytec_2 // 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
     retsub

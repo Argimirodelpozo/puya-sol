@@ -3,14 +3,22 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 64
-    bytecblock "a" 0x151f7c75
+    intcblock 0 1 32
+    bytecblock "a" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     intc_0 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -29,7 +37,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x67b0912f 0xb5251388 // method "f(uint256)uint512", method "a()uint256"
+    pushbytess 0x1928cd24 0xb5251388 // method "f(uint256)uint256", method "a()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_a_route@6
     err
@@ -57,7 +65,7 @@ main_ternary_merge@13:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -86,26 +94,42 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
+    pushint 2
+    itob
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 5
+    itob
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dig 1
     b+
-    pushbytes 0x07
-    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "a"
     dig 1
     app_global_put
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -102,6 +110,8 @@ main_after_for@9:
 main_ternary_merge@12:
     !
     assert // not payable
+    dig 3
+    assert // array index out of bounds
     intc_1 // 1
     return
 

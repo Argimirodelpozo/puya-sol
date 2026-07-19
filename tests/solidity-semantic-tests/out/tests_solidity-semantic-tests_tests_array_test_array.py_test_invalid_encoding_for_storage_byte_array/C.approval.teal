@@ -4,19 +4,27 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x151f7c75 "__ctor_pending" "1234567890123456789012345678901234567" "abc" "__dyn_storage"
+    bytecblock "x" "y" 0x151f7c75 0x "__ctor_pending" "1234567890123456789012345678901234567" "abc"
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -110,7 +118,7 @@ main_ternary_merge@39:
     box_del
     pop
     bytec_0 // "x"
-    pushbytes 0x
+    bytec_3 // 0x
     box_put
     intc_0 // 1
     return
@@ -190,7 +198,7 @@ main_ternary_merge@54:
     assert // not payable
     bytec_0 // "x"
     box_len
-    pop
+    assert // box exists
     intc_0 // 1
     -
     bytec_0 // "x"
@@ -225,13 +233,13 @@ main_ternary_merge@59:
     box_del
     pop
     bytec_1 // "y"
-    bytec 4 // "1234567890123456789012345678901234567"
+    bytec 5 // "1234567890123456789012345678901234567"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 4 // "1234567890123456789012345678901234567"
+    bytec 5 // "1234567890123456789012345678901234567"
     box_put
     intc_0 // 1
     return
@@ -255,13 +263,13 @@ main_ternary_merge@64:
     box_del
     pop
     bytec_1 // "y"
-    bytec 5 // "abc"
+    bytec 6 // "abc"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 5 // "abc"
+    bytec 6 // "abc"
     box_put
     intc_0 // 1
     return
@@ -312,7 +320,7 @@ main_ternary_merge@74:
     box_del
     pop
     bytec_0 // "x"
-    bytec 4 // "1234567890123456789012345678901234567"
+    bytec 5 // "1234567890123456789012345678901234567"
     box_put
     intc_0 // 1
     return
@@ -476,15 +484,17 @@ main_ternary_merge@104:
     !
     assert // not payable
     load 0
-    intc_1 // 0
+    store 0
+    bytec_3 // 0x
     pushbytes 0x05
     callsub __storage_write
+    load 0
     store 0
     bytec_1 // "y"
     box_del
     pop
     bytec_1 // "y"
-    pushbytes 0x
+    bytec_3 // 0x
     box_put
     intc_0 // 1
     return
@@ -505,15 +515,17 @@ main_ternary_merge@109:
     !
     assert // not payable
     load 0
-    intc_1 // 0
+    store 0
+    bytec_3 // 0x
     pushbytes 0x40
     callsub __storage_write
+    load 0
     store 0
     bytec_1 // "y"
     box_del
     pop
     bytec_1 // "y"
-    pushbytes 0x
+    bytec_3 // 0x
     box_put
     intc_0 // 1
     return
@@ -523,10 +535,10 @@ main_ternary_false@108:
     b main_ternary_merge@109
 
 main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "x"
@@ -534,7 +546,7 @@ main___postInit_route@5:
     box_create
     pop
     bytec_0 // "x"
-    bytec 5 // "abc"
+    bytec 6 // "abc"
     box_put
     bytec_1 // "y"
     intc_1 // 0
@@ -544,12 +556,16 @@ main___postInit_route@5:
     return
 
 
-// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
-    intc_0 // 1
-    ==
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    pushbytes 0x01
+    b==
     bz __storage_write_else_body@2
     intc_2 // 32
     bzero
@@ -568,7 +584,9 @@ __storage_write:
 
 __storage_write_else_body@2:
     frame_dig -2
-    bnz __storage_write_else_body@4
+    bytec_3 // 0x
+    b==
+    bz __storage_write_else_body@4
     intc_2 // 32
     bzero
     frame_dig -1
@@ -585,17 +603,25 @@ __storage_write_else_body@2:
     retsub
 
 __storage_write_else_body@4:
-    bytec 6 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    frame_dig -2
-    pushint 256
-    %
-    intc_2 // 32
-    *
     intc_2 // 32
     bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    pushbytes "s:"
+    swap
+    concat
+    dup
+    intc_2 // 32
+    box_create
+    pop
+    swap
     frame_dig -1
     concat
     dup
@@ -604,7 +630,7 @@ __storage_write_else_body@4:
     -
     intc_2 // 32
     extract3
-    bytec 6 // "__dyn_storage"
-    cover 2
+    intc_1 // 0
+    swap
     box_replace
     retsub

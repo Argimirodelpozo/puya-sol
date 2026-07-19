@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/storing_invalid_boolean.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "perm" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    bytecblock "perm" 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x73bb1403 0xb257502d 0xa800241b 0xef4cbd06 // method "set()uint512", method "ret()bool", method "ev()uint512", method "perm()bool"
+    pushbytess 0x90f88440 0xb257502d 0x2d0127c5 0xef4cbd06 // method "set()uint256", method "ret()bool", method "ev()uint256", method "perm()bool"
     txna ApplicationArgs 0
     match main_set_route@5 main_ret_route@6 main_ev_route@7 main_perm_route@8
     err
@@ -76,9 +84,11 @@ main_ternary_merge@20:
     assert // not payable
     load 0
     store 0
+    load 0
+    store 0
     pushbytes 0x803bd84c80
     log
-    bytec_1 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
@@ -98,6 +108,8 @@ main_ret_route@6:
 main_ternary_merge@25:
     !
     assert // not payable
+    load 0
+    store 0
     load 0
     store 0
     pushbytes 0x151f7c7580
@@ -122,10 +134,12 @@ main_ternary_merge@30:
     assert // not payable
     load 0
     store 0
+    load 0
+    store 0
     bytec_0 // "perm"
     intc_0 // 1
     app_global_put
-    bytec_1 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return

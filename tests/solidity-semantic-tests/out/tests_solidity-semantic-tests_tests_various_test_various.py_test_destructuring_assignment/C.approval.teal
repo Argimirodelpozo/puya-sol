@@ -6,12 +6,20 @@ main:
     intcblock 2 1 0 32
     bytecblock "arrayData" "y" "data" "__ctor_pending" "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005
     intc_2 // 0
-    dupn 2
+    dupn 4
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -38,7 +46,7 @@ main_after_if_else@2:
 main_f_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
+    bury 4
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
@@ -49,7 +57,7 @@ main_f_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
+    bury 4
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -61,6 +69,9 @@ main_ternary_merge@14:
     !
     assert // not payable
     callsub returnsArray
+    intc_0 // 2
+    itob
+    bury 6
     bytec_0 // "arrayData"
     pushint 98
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
@@ -69,7 +80,7 @@ main_ternary_merge@14:
     box_del
     pop
     bytec_2 // "data"
-    dig 4
+    dig 5
     box_put
     bytec_1 // "y"
     box_del
@@ -79,6 +90,8 @@ main_ternary_merge@14:
     box_put
     pushint 4
     itob
+    dup
+    bury 2
     bytec 4 // "x"
     swap
     app_global_put
@@ -98,7 +111,8 @@ main_ternary_merge@19:
     intc_3 // 32
     /
     itob
-    pushbytes 0x09
+    pushint 9
+    itob
     b!=
     bz main_after_if_else@21
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -116,7 +130,8 @@ main_after_if_else@21:
     pushint 66
     intc_3 // 32
     box_extract // on error: index out of bounds
-    pushbytes 0x05
+    pushint 5
+    itob
     b!=
     bz main_after_if_else@23
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
@@ -127,7 +142,7 @@ main_after_if_else@23:
     pushint 226
     intc_3 // 32
     box_extract // on error: index out of bounds
-    pushbytes 0x04
+    dig 1
     b!=
     bz main_after_if_else@25
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000005
@@ -138,7 +153,7 @@ main_after_if_else@25:
     box_len
     pop
     itob
-    dig 3
+    dig 4
     len
     itob
     b!=
@@ -151,7 +166,7 @@ main_after_if_else@27:
     pushint 3
     intc_1 // 1
     box_extract
-    dig 2
+    dig 3
     extract 5 1
     !=
     bz main_after_if_else@29
@@ -163,7 +178,7 @@ main_after_if_else@29:
     pushint 98
     intc_3 // 32
     box_extract // on error: index out of bounds
-    pushbytes 0x02
+    dig 5
     b!=
     bz main_after_if_else@31
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
@@ -176,7 +191,7 @@ main_after_if_else@31:
     box_extract
     btoi
     itob
-    bury 1
+    bury 2
     bytec_0 // "arrayData"
     box_len
     pop
@@ -193,13 +208,15 @@ main_ternary_merge@34:
     intc_3 // 32
     /
     itob
-    dig 1
+    dig 2
     b!=
     bz main_after_if_else@36
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
 main_after_if_else@36:
+    pushint 789
+    itob
     bytec_1 // "y"
     pushint 66
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000315
@@ -213,7 +230,6 @@ main_after_if_else@36:
     pushint 66
     intc_3 // 32
     box_extract // on error: index out of bounds
-    pushbytes 0x0315
     b!=
     bz main_after_if_else@40
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
@@ -294,6 +310,16 @@ returnsArray_ternary_merge@3:
     pushint 66
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000005
     box_replace // on error: index out of bounds
+    bytec_0 // "arrayData"
+    box_len
+    bury 1
+    bnz returnsArray_after_if_else@7
+    bytec_0 // "arrayData"
+    intc_0 // 2
+    box_create
+    pop
+
+returnsArray_after_if_else@7:
     bytec_0 // "arrayData"
     pushint 226
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004

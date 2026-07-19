@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/multiple_inheritance.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" "y" "w" 0x151f7c75 "z"
+    bytecblock "x" "y" "w" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "z"
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -25,7 +33,7 @@ main:
     bytec_2 // "w"
     pushbytes 0x
     app_global_put
-    bytec 4 // "z"
+    bytec 5 // "z"
     pushbytes 0x
     app_global_put
     intc_1 // 1
@@ -189,7 +197,7 @@ main_ternary_merge@40:
     !
     assert // not payable
     intc_0 // 0
-    bytec 4 // "z"
+    bytec 5 // "z"
     app_global_get_ex
     assert // check z exists
     dup
@@ -229,9 +237,14 @@ main_ternary_merge@45:
     bytec_2 // "w"
     app_global_get_ex
     assert // check w exists
-    pushbytes 0x02
+    pushint 2
+    itob
     b+
-    bytec 4 // "z"
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "z"
     dig 1
     app_global_put
     intc_0 // 0
@@ -321,6 +334,10 @@ h_ternary_merge@3:
     app_global_get_ex
     assert // check y exists
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_2 // "w"
     swap
     app_global_put
@@ -350,13 +367,22 @@ g_ternary_merge@3:
     assert // check x exists
     frame_dig -1
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     callsub f
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x01
+    intc_1 // 1
+    itob
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_1 // "y"
     swap
     app_global_put

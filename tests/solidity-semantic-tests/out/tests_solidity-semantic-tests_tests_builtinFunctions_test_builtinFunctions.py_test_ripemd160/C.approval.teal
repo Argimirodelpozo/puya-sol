@@ -4,13 +4,21 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/ripemd160.sol.C.approval_program() -> uint64:
 main:
     intcblock 4294967295 255 0 1
-    bytecblock 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    bytecblock 0x068101 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
     intc_2 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -49,6 +57,27 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+
+main_while_top@11:
+    pushint 40010
+    global OpcodeBudget
+    >
+    bz main_after_while@16
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_0 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_0 // 0x068101
+    itxn_field ClearStateProgram
+    intc_2 // 0
+    itxn_field Fee
+    itxn_submit
+    b main_while_top@11
+
+main_after_while@16:
     pushint 32
     bzero
     dig 1
@@ -230,7 +259,7 @@ __builtin_ripemd160_while_top@14:
     swap
     dig 1
     +
-    bytec_0 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    bytec_1 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
     swap
     getbyte
     frame_bury 15
@@ -492,7 +521,7 @@ __builtin_ripemd160_while_top@41:
     swap
     dig 1
     +
-    bytec_0 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
+    bytec_1 // 0x0b0e0f0c050807090b0d0e0f060709080c0d0b0f060909070c0f0b0d070807070d0f0e0b070706080d0e0d0c050506090e0b0c0e080605050f0c0f0e090908060f0c0d0d090508060e0b0c0b08060505
     swap
     getbyte
     frame_bury 15

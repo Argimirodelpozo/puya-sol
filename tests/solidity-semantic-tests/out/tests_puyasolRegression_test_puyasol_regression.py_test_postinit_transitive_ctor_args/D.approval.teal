@@ -1,0 +1,211 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_transitive_ctor_args.sol.D.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 2
+    bytecblock "arr" "__ctor_pending" "va" 0x151f7c75 "y2"
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x051b943c 0x51d1611d 0x8323b2b3 // method "__postInit()void", method "arr(uint256)uint256", method "y2()uint256", method "va()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_arr_route@6 main_y2_route@7 main_va_route@8
+    err
+
+main_va_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "va"
+    app_global_get_ex
+    assert // check va exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_y2_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 4 // "y2"
+    app_global_get_ex
+    assert // check y2 exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_arr_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    pushint 8
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_2 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "arr"
+    swap
+    intc_2 // 32
+    box_extract // on error: index out of bounds
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "arr"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_2 // "va"
+    pushbytes 0x
+    app_global_put
+    bytec 4 // "y2"
+    pushbytes 0x
+    app_global_put
+    pushint 5
+    itob
+    bytec_2 // "va"
+    pushbytes 0x06
+    app_global_put
+    bytec 4 // "y2"
+    swap
+    app_global_put
+    bytec_0 // "arr"
+    intc_0 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // "arr"
+    pushint 34
+    box_resize
+    dup
+    intc_1 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "arr"
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_2 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "arr"
+    swap
+    intc_0 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    box_splice
+    intc_1 // 1
+    return

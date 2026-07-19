@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe03b32a4 0x7c1072af // method "f()uint512", method "x()uint256"
+    pushbytess 0xcd78b354 0x7c1072af // method "f()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_x_route@6
     err
@@ -83,7 +91,7 @@ main_ternary_merge@18:
     bytec_0 // "x"
     swap
     app_global_put
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
     return

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_explicit_overflow.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8
-    bytecblock "choice" 0x151f7c75
+    bytecblock "choice" 0x03 0x151f7c75
     intc_1 // 0
     pushint 4096
     bzero
@@ -85,9 +85,13 @@ main_getChoiceFromSigned_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
+    dupn 2
+    bytec_1 // 0x03
+    b<
+    assert // enum out of range
     intc_3 // 8
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -105,7 +109,7 @@ main_ternary_merge@19:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -134,9 +138,13 @@ main_getChoiceExp_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
+    dupn 2
+    bytec_1 // 0x03
+    b<
+    assert // enum out of range
     intc_3 // 8
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -154,7 +162,7 @@ main_ternary_merge@24:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/contracts/static_memory_array_allocation.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 88 640
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -57,11 +65,7 @@ main_ternary_merge@13:
     swap
     replace2 64
     store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
     load 0
     dup
     intc_2 // 88
@@ -74,11 +78,7 @@ main_ternary_merge@13:
     concat
     replace2 64
     store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
     dup
     dig 2
     b>=
@@ -90,6 +90,10 @@ main_ternary_merge@13:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_1 // 32
     <=
@@ -97,7 +101,7 @@ main_ternary_merge@13:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -131,16 +135,8 @@ main_ternary_merge@18:
     concat
     replace2 64
     store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
-    load 0
-    dup
-    extract 64 32
-    swap
-    store 0
+    callsub memorySize
+    callsub memorySize
     dup
     dig 2
     b>=
@@ -152,6 +148,10 @@ main_ternary_merge@18:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
     len
     intc_1 // 32
     <=
@@ -159,7 +159,7 @@ main_ternary_merge@18:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -169,3 +169,14 @@ main_ternary_merge@18:
 main_ternary_false@17:
     pushint 0
     b main_ternary_merge@18
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/contracts/static_memory_array_allocation.sol.C.memorySize() -> bytes:
+memorySize:
+    load 0
+    store 0
+    load 0
+    extract 64 32
+    load 0
+    store 0
+    retsub

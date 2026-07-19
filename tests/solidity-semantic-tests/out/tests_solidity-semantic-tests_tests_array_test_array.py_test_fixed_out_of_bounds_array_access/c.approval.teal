@@ -4,21 +4,29 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/fixed_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8
-    bytecblock "__ctor_pending" "data"
+    bytecblock "data" "__ctor_pending" 0x010000000000000000
     intc_2 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -73,14 +81,19 @@ main_get_route@7:
 main_ternary_merge@20:
     !
     assert // not payable
-    bytec_1 // "data"
+    dig 1
+    dup
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "data"
     box_get
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     intc_3 // 8
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -127,6 +140,20 @@ main_set_route@6:
 main_ternary_merge@25:
     !
     assert // not payable
+    dig 1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@27
+    bytec_0 // "data"
+    pushint 128
+    box_create
+    pop
+
+main_after_if_else@27:
     intc_3 // 8
     bzero
     dig 2
@@ -138,7 +165,7 @@ main_ternary_merge@25:
     extract_uint64
     intc_1 // 32
     *
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     dig 2
     box_replace // on error: index out of bounds
@@ -152,13 +179,13 @@ main_ternary_false@24:
     b main_ternary_merge@25
 
 main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "data"
+    bytec_0 // "data"
     pushint 128
     box_create
     pop

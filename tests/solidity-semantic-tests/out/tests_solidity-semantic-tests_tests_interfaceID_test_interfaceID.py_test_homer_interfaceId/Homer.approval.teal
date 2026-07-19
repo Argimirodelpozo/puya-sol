@@ -4,12 +4,21 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/homer_interfaceId.sol.Homer.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0x4e22a3ba
     intc_1 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -25,7 +34,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4e22a3ba 0x027c6bc8 0xf76e680b // method "supportsInterface(byte[4])bool", method "is2D()bool", method "skinColor()string"
+    bytec_0 // method "supportsInterface(byte[4])bool"
+    pushbytess 0x027c6bc8 0xf76e680b // method "is2D()bool", method "skinColor()string"
     txna ApplicationArgs 0
     match main_supportsInterface_route@5 main_is2D_route@6 main_skinColor_route@7
     err
@@ -89,11 +99,11 @@ main_ternary_merge@24:
     !
     assert // not payable
     dup
-    pushbytes 0x01ffc9a7
+    bytec_0 // method "supportsInterface(byte[4])bool"
     ==
     bnz main_bool_true@26
     dup
-    pushbytes 0x73b6b492
+    pushbytes 0xf51203c3
     ==
     bz main_bool_false@27
 

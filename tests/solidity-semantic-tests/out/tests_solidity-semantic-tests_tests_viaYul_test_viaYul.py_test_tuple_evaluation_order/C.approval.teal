@@ -3,13 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/tuple_evaluation_order.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 0 1 32
     bytecblock "y" "x" 0x 0x151f7c75
+    intc_0 // 0
+    bytec_2 // ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -22,7 +32,7 @@ main:
     bytec_0 // "y"
     bytec_2 // 0x
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -40,14 +50,14 @@ main_f_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@13:
     !
     assert // not payable
-    intc_0 // 1
+    intc_1 // 1
     itob
     dup
     callsub set
@@ -60,6 +70,8 @@ main_ternary_merge@13:
     pushint 3
     itob
     dup
+    bury 5
+    dup
     callsub set
     pop
     dig 2
@@ -84,7 +96,7 @@ main_ternary_merge@13:
     bytec_0 // "y"
     swap
     app_global_put
-    uncover 2
+    dig 2
     callsub set
     uncover 2
     callsub set
@@ -95,21 +107,28 @@ main_ternary_merge@13:
     bytec_0 // "y"
     dig 1
     app_global_put
-    pushbytes 0x01
     b==
     bz main_bool_false@16
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x03
+    dig 2
     b==
     bz main_bool_false@16
-    intc_0 // 1
+    intc_1 // 1
+    bury 1
 
 main_bool_merge@17:
+    dup
+    bnz main_after_if_else@19
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@19:
+    dup
     assert
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
@@ -123,7 +142,7 @@ main_bool_merge@17:
     swap
     dig 1
     b|
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
     assert // check y exists
@@ -139,15 +158,16 @@ main_bool_merge@17:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_bool_false@16:
-    intc_1 // 0
+    intc_0 // 0
+    bury 1
     b main_bool_merge@17
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@13
 
 main_set_route@5:
@@ -162,7 +182,7 @@ main_set_route@5:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -172,7 +192,7 @@ set:
     txn GroupIndex
     bz set_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -186,5 +206,5 @@ set_ternary_merge@3:
     retsub
 
 set_ternary_false@2:
-    intc_1 // 0
+    intc_0 // 0
     b set_ternary_merge@3

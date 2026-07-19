@@ -172,8 +172,9 @@ main_ternary_merge@15:
     !
     assert // not payable
     dig 5
+    dup
     itob
-    dig 12
+    dig 13
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -188,6 +189,10 @@ main_ternary_merge@15:
     pushint 8
     -
     extract_uint64
+    dup
+    uncover 4
+    <
+    assert // array index out of bounds
     dig 13
     dup
     bytec_0 // 0x010000000000000000
@@ -227,13 +232,14 @@ main_ternary_merge@15:
     extract3
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
+    dup
     itob
-    dig 15
+    dig 16
     dup
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    uncover 4
+    uncover 5
     swap
     concat
     dup
@@ -241,6 +247,10 @@ main_ternary_merge@15:
     pushint 8
     -
     extract_uint64
+    dup
+    uncover 3
+    <
+    assert // array index out of bounds
     uncover 4
     uncover 4
     callsub dynamic_array_read_dynamic_element

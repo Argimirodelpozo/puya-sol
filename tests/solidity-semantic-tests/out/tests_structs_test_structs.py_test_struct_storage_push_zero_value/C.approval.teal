@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_storage_push_zero_value.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 54
+    intcblock 0 2 1 54
     bytecblock "s" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" "b"
-    intc_1 // 0
+    intc_0 // 0
     dupn 2
     pushbytes ""
     dupn 11
@@ -60,7 +60,7 @@ main_ternary_merge@13:
     box_get
     assert // box exists
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     dup
     intc_2 // 1
@@ -71,23 +71,23 @@ main_ternary_merge@13:
     swap
     extract 2 0
     bury 16
-    intc_0 // 2
+    intc_1 // 2
     *
     bury 12
-    intc_1 // 0
+    intc_0 // 0
     bury 1
 
-main_for_header@33:
+main_for_header@63:
     dup
     dig 12
     <
-    bz main_after_for@35
+    bz main_after_for@65
     dig 14
     dig 1
     dup
     cover 2
     extract_uint16
-    intc_0 // 2
+    intc_1 // 2
     +
     itob
     extract 6 0
@@ -95,23 +95,23 @@ main_for_header@33:
     swap
     concat
     bury 15
-    intc_0 // 2
+    intc_1 // 2
     +
     bury 1
-    b main_for_header@33
+    b main_for_header@63
 
-main_after_for@35:
+main_after_for@65:
     dig 14
     len
     bury 2
-    intc_1 // 0
+    intc_0 // 0
     bury 1
 
-main_for_header@36:
+main_for_header@66:
     dup
-    intc_0 // 2
+    intc_1 // 2
     <
-    bz main_after_for@38
+    bz main_after_for@68
     pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
     dig 1
     dup
@@ -125,12 +125,12 @@ main_for_header@36:
     swap
     concat
     bury 15
-    intc_0 // 2
+    intc_1 // 2
     +
     bury 1
-    b main_for_header@36
+    b main_for_header@66
 
-main_after_for@38:
+main_after_for@68:
     dig 14
     dig 12
     dig 3
@@ -147,32 +147,56 @@ main_after_for@38:
     swap
     box_put
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@15
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@16:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "s"
     swap
     pushint 32
     box_extract // on error: index out of bounds
-    intc_1 // 0
+    intc_0 // 0
     itob
     dup
     bury 15
     b==
     dup
     bury 12
-    bnz main_after_if_else@15
+    bnz main_after_if_else@18
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@15:
+main_after_if_else@18:
     dig 10
     assert
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@20
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@21:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
@@ -186,15 +210,27 @@ main_after_if_else@15:
     b==
     dup
     bury 11
-    bnz main_after_if_else@17
+    bnz main_after_if_else@23
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@17:
+main_after_if_else@23:
     dig 9
     assert
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@25
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@26:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
@@ -208,15 +244,39 @@ main_after_if_else@17:
     dup
     !
     bury 10
-    bz main_after_if_else@19
+    bz main_after_if_else@28
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@19:
+main_after_if_else@28:
     dig 8
     assert
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@30
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@31:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz main_ternary_false@33
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@34:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
@@ -231,15 +291,39 @@ main_after_if_else@19:
     b==
     dup
     bury 9
-    bnz main_after_if_else@21
+    bnz main_after_if_else@36
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@21:
+main_after_if_else@36:
     dig 7
     assert
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@38
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@39:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz main_ternary_false@41
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@42:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
@@ -254,15 +338,39 @@ main_after_if_else@21:
     b==
     dup
     bury 8
-    bnz main_after_if_else@23
+    bnz main_after_if_else@44
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@23:
+main_after_if_else@44:
     dig 6
     assert
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@46
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@47:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz main_ternary_false@49
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@50:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
@@ -277,15 +385,27 @@ main_after_if_else@23:
     b==
     dup
     bury 7
-    bnz main_after_if_else@25
+    bnz main_after_if_else@52
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@25:
+main_after_if_else@52:
     dig 5
     assert
     bytec_0 // "s"
-    intc_0 // 2
+    box_len
+    bury 1
+    bz main_ternary_false@54
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@55:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
     dup
     box_extract
     btoi
@@ -293,7 +413,7 @@ main_after_if_else@25:
     +
     bytec_0 // "s"
     swap
-    intc_0 // 2
+    intc_1 // 2
     box_extract
     btoi
     itob
@@ -301,14 +421,14 @@ main_after_if_else@25:
     b==
     dup
     bury 6
-    bnz main_after_if_else@27
+    bnz main_after_if_else@57
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@27:
+main_after_if_else@57:
     dig 4
     assert
-    intc_1 // 0
+    intc_0 // 0
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
@@ -316,14 +436,14 @@ main_after_if_else@27:
     ==
     dup
     bury 5
-    bnz main_after_if_else@29
+    bnz main_after_if_else@59
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@29:
+main_after_if_else@59:
     dig 3
     assert
-    intc_1 // 0
+    intc_0 // 0
     pushbytes "a"
     app_global_get_ex
     assert // check a exists
@@ -331,16 +451,56 @@ main_after_if_else@29:
     ==
     dup
     bury 4
-    bnz main_after_if_else@31
+    bnz main_after_if_else@61
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@31:
+main_after_if_else@61:
     dig 2
     return
 
+main_ternary_false@54:
+    intc_0 // 0
+    b main_ternary_merge@55
+
+main_ternary_false@49:
+    intc_0 // 0
+    b main_ternary_merge@50
+
+main_ternary_false@46:
+    intc_0 // 0
+    b main_ternary_merge@47
+
+main_ternary_false@41:
+    intc_0 // 0
+    b main_ternary_merge@42
+
+main_ternary_false@38:
+    intc_0 // 0
+    b main_ternary_merge@39
+
+main_ternary_false@33:
+    intc_0 // 0
+    b main_ternary_merge@34
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main_ternary_false@25:
+    intc_0 // 0
+    b main_ternary_merge@26
+
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21
+
+main_ternary_false@15:
+    intc_0 // 0
+    b main_ternary_merge@16
+
 main_ternary_false@12:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@13
 
 main___postInit_route@5:
@@ -348,10 +508,10 @@ main___postInit_route@5:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     bytec_0 // "s"
-    intc_0 // 2
+    intc_1 // 2
     box_create
     pop
     bytec_3 // "b"

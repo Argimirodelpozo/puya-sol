@@ -4,14 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_or_receive.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x 0x01
+    bytecblock "x" "y" 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     bytec_2 // ""
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -128,6 +136,10 @@ __fallback:
     assert // check x exists
     bytec_3 // 0x01
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put
@@ -142,6 +154,10 @@ __receive:
     assert // check y exists
     bytec_3 // 0x01
     b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_1 // "y"
     swap
     app_global_put

@@ -1,0 +1,370 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_negate_typemin.sol.ConstNegateTypeMin.approval_program() -> uint64:
+main:
+    intcblock 1 0 8 32
+    bytecblock 0x8000 0x010000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000007fff 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x38ee8a96 0xc1758f75 0x99cc113e 0x4c236cf5 0x5ff41968 0x7f4442d2 0x07a57dfe 0x755892fe 0xafe875ad 0x452e7877 0x83e6f39b 0x82c8e4c1 // method "negMin8()uint256", method "negMin16()uint256", method "negMin64()uint256", method "negMin128()uint256", method "negMin256()uint256", method "nested()uint256", method "tildeMin()uint256", method "uncheckedMin()uint256", method "negMax16()uint256", method "negMinPlus()uint256", method "negConst()uint256", method "negVar(uint64)uint256"
+    txna ApplicationArgs 0
+    match main_negMin8_route@5 main_negMin16_route@6 main_negMin64_route@7 main_negMin128_route@8 main_negMin256_route@9 main_nested_route@10 main_tildeMin_route@11 main_uncheckedMin_route@12 main_negMax16_route@13 main_negMinPlus_route@14 main_negConst_route@15 main_negVar_route@16
+    err
+
+main_negVar_route@16:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    dup
+    pushint 32767
+    <=
+    bnz main_bool_true@25
+    dup
+    pushint 18446744073709518848
+    >=
+    bz main_bool_false@26
+
+main_bool_true@25:
+    intc_0 // 1
+
+main_bool_merge@27:
+    assert // ABI validation
+    dupn 2
+    pushint 65535
+    &
+    itob
+    bytec_0 // 0x8000
+    b!=
+    assert // signed negation overflow
+    intc_2 // 8
+    bzero
+    swap
+    itob
+    bytec_1 // 0x010000000000000000
+    swap
+    b-
+    bytec_1 // 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 65536
+    %
+    dup
+    pushint 32768
+    >=
+    bz main_ternary_false@29
+    pushint 18446744073709486080
+    +
+
+main_ternary_merge@30:
+    itob
+    pushbytes 0xffff
+    b&
+    dup
+    bytec_0 // 0x8000
+    b>=
+    bz main_ternary_false@32
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+
+main_ternary_merge@33:
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@32:
+    b main_ternary_merge@33
+
+main_ternary_false@29:
+    b main_ternary_merge@30
+
+main_bool_false@26:
+    intc_1 // 0
+    b main_bool_merge@27
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_negConst_route@15:
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@37:
+    intc_1 // 0
+    b main_ternary_merge@38
+
+main_negMinPlus_route@14:
+    txn GroupIndex
+    bz main_ternary_false@50
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@51:
+    !
+    assert // not payable
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000007fff
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@50:
+    intc_1 // 0
+    b main_ternary_merge@51
+
+main_negMax16_route@13:
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@61:
+    intc_1 // 0
+    b main_ternary_merge@62
+
+main_uncheckedMin_route@12:
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@71:
+    !
+    assert // not payable
+    bytec_3 // 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@70:
+    intc_1 // 0
+    b main_ternary_merge@71
+
+main_tildeMin_route@11:
+    txn GroupIndex
+    bz main_ternary_false@79
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@80:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000007fff
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@79:
+    intc_1 // 0
+    b main_ternary_merge@80
+
+main_nested_route@10:
+    txn GroupIndex
+    bz main_ternary_false@88
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@124:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    bytec_3 // 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@88:
+    intc_1 // 0
+    b main_ternary_merge@124
+
+main_negMin256_route@9:
+    txn GroupIndex
+    bz main_ternary_false@103
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@104:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@103:
+    intc_1 // 0
+    b main_ternary_merge@104
+
+main_negMin128_route@8:
+    txn GroupIndex
+    bz main_ternary_false@108
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@109:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffff80000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@108:
+    intc_1 // 0
+    b main_ternary_merge@109
+
+main_negMin64_route@7:
+    txn GroupIndex
+    bz main_ternary_false@117
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@118:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffff8000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@117:
+    intc_1 // 0
+    b main_ternary_merge@118
+
+main_negMin16_route@6:
+    txn GroupIndex
+    bz main_ternary_false@123
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@124
+
+main_ternary_false@123:
+    intc_1 // 0
+    b main_ternary_merge@124
+
+main_negMin8_route@5:
+    txn GroupIndex
+    bz main_ternary_false@132
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@133:
+    !
+    assert // not payable
+    intc_1 // 0
+    assert // signed negation overflow
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@132:
+    intc_1 // 0
+    b main_ternary_merge@133

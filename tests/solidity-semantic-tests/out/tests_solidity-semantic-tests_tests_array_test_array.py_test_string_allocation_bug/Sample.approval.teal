@@ -12,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -162,11 +170,11 @@ main___postInit_route@5:
     bury 3
     bury 1
 
-main_for_header@15:
+main_for_header@19:
     dup
     pushint 4
     <
-    bz main_after_for@17
+    bz main_after_for@21
     dig 1
     dup
     dig 2
@@ -186,9 +194,9 @@ main_for_header@15:
     intc_0 // 2
     +
     bury 1
-    b main_for_header@15
+    b main_for_header@19
 
-main_after_for@17:
+main_after_for@21:
     bytec_0 // "p"
     box_del
     pop

@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_selector.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x92bbf6e8 "s1" "s2" "s3" "s4"
+    bytecblock 0x34127e13 "s1" "s2" "s3" "s4"
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -17,16 +25,16 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "s1"
-    bytec_0 // 0x92bbf6e8
+    bytec_0 // method "E()"
     app_global_put
     bytec_2 // "s2"
-    pushbytes 0x002ff067
+    pushbytes 0xd5c1f7fc // method "E(uint256)"
     app_global_put
     bytec_3 // "s3"
-    bytec_0 // 0x92bbf6e8
+    bytec_0 // method "E()"
     app_global_put
     bytec 4 // "s4"
-    bytec_0 // 0x92bbf6e8
+    bytec_0 // method "E()"
     app_global_put
     intc_0 // 1
     return
@@ -53,7 +61,7 @@ main_test3_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    pushbytes 0x151f7c7528811f59
+    pushbytes 0x151f7c75f4584dfc
     log
     intc_0 // 1
     return
@@ -118,7 +126,7 @@ main_test1_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    pushbytes 0x151f7c7592bbf6e8002ff06792bbf6e892bbf6e8
+    pushbytes 0x151f7c7534127e13d5c1f7fc34127e1334127e13
     log
     intc_0 // 1
     return

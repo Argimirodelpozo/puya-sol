@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -42,7 +50,7 @@ main_testSol_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    pushbytes 0x151f7c7500000000e16b4a9b
+    pushbytes 0x151f7c750000000089aac53b
     log
     intc_0 // 1
     return
@@ -67,11 +75,11 @@ main_ternary_merge@19:
     bytec_0 // method "testFunction()void"
     concat
     load 0
-    swap
+    store 0
     pushint 8
     extract_uint32
     itob
-    swap
+    load 0
     store 0
     intc_2 // 32
     bzero
@@ -105,18 +113,18 @@ main_ternary_false@18:
 
 main_testFunction_route@5:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@25:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@24:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@25

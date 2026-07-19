@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/immutable_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "a" "b" 0x151f7c75
+    intcblock 0 32 1
+    bytecblock "a" "b" 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x151f7c75
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -31,9 +32,9 @@ main:
     pushbytes 0x6162
     app_global_put
     pushbytes "f"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -51,40 +52,51 @@ main_viaasm_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@13:
     !
     assert // not payable
-    intc_2 // 0
+    intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_2 // 0
+    intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
+    swap
+    bury 3
     assert // check b exists
     load 0
     store 0
-    intc_0 // 32
-    bzero
-    uncover 2
     itob
-    dig 1
-    swap
+    bytec_2 // 0xffff
+    b&
+    dup
+    bytec_3 // 0x8000
+    b>=
+    bz main_ternary_false@15
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+
+main_ternary_merge@16:
+    intc_1 // 32
+    bzero
+    dup
+    uncover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     extract 0 32
     pushint 30
     bzero
-    uncover 3
+    dig 3
     swap
     concat
     uncover 2
@@ -92,74 +104,77 @@ main_ternary_merge@13:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     extract 0 32
     load 0
     store 0
     concat
-    bytec_2 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
+main_ternary_false@15:
+    b main_ternary_merge@16
+
 main_ternary_false@12:
-    intc_2 // 0
+    intc_0 // 0
     b main_ternary_merge@13
 
 main_direct_route@5:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@20
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@21:
     !
     assert // not payable
-    intc_2 // 0
+    intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
     itob
-    pushbytes 0xffff
+    bytec_2 // 0xffff
     b&
     dup
-    pushbytes 0x8000
+    bytec_3 // 0x8000
     b>=
-    bz main_ternary_false@20
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bz main_ternary_false@23
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
 
-main_ternary_merge@21:
+main_ternary_merge@24:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
-    intc_2 // 0
+    intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
     assert // check b exists
     concat
-    bytec_2 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@20:
-    b main_ternary_merge@21
+main_ternary_false@23:
+    b main_ternary_merge@24
 
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21

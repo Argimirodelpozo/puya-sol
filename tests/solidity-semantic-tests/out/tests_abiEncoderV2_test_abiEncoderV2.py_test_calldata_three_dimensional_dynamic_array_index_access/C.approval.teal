@@ -368,12 +368,6 @@ main_ternary_merge@33:
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 17
-    dup
-    cover 2
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     pushint 8
     bzero
     dup
@@ -384,8 +378,17 @@ main_ternary_merge@33:
     pushint 8
     -
     extract_uint64
-    swap
+    dup
+    dig 10
+    <
+    assert // array index out of bounds
+    dig 18
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     uncover 2
+    swap
     concat
     dup
     len
@@ -393,6 +396,16 @@ main_ternary_merge@33:
     -
     extract_uint64
     dig 13
+    dup
+    cover 2
+    dig 3
+    callsub dynamic_array_read_dynamic_element
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    >
+    assert // array index out of bounds
+    swap
     uncover 2
     callsub dynamic_array_read_dynamic_element
     swap
@@ -546,6 +559,17 @@ main_ternary_merge@44:
     -
     extract_uint64
     dig 12
+    dup
+    cover 2
+    intc_1 // 0
+    intc_2 // 1
+    callsub static_array_read_dynamic_element
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    >
+    assert // array index out of bounds
+    swap
     intc_1 // 0
     intc_2 // 1
     callsub static_array_read_dynamic_element
@@ -729,18 +753,6 @@ main_ternary_merge@55:
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 17
-    dup
-    cover 2
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 17
-    dup
-    cover 3
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     pushint 8
     bzero
     dup
@@ -751,16 +763,17 @@ main_ternary_merge@55:
     pushint 8
     -
     extract_uint64
-    dig 1
-    uncover 3
-    concat
     dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    uncover 2
-    uncover 3
+    dig 13
+    <
+    assert // array index out of bounds
+    dig 18
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 2
+    swap
     concat
     dup
     len
@@ -768,7 +781,30 @@ main_ternary_merge@55:
     -
     extract_uint64
     dig 14
+    dup
+    cover 4
+    dig 2
+    callsub dynamic_array_read_dynamic_element
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    >
+    assert // array index out of bounds
+    dig 19
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     uncover 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    dig 3
     callsub dynamic_array_read_dynamic_element
     dup
     intc_1 // 0
@@ -777,11 +813,38 @@ main_ternary_merge@55:
     >
     assert // index out of bounds
     extract 2 0
-    uncover 2
+    dig 2
     intc_0 // 2
     *
+    dup2
+    extract_uint16
+    dig 2
     dig 1
-    swap
+    extract_uint16
+    intc_3 // 32
+    *
+    intc_0 // 2
+    +
+    uncover 3
+    cover 2
+    extract3
+    intc_1 // 0
+    extract_uint16
+    dig 2
+    >
+    assert // array index out of bounds
+    uncover 4
+    uncover 4
+    callsub dynamic_array_read_dynamic_element
+    dup
+    intc_1 // 0
+    extract_uint16
+    uncover 4
+    >
+    assert // index out of bounds
+    extract 2 0
+    dup
+    uncover 2
     extract_uint16
     dup2
     extract_uint16
@@ -902,12 +965,6 @@ main_ternary_merge@63:
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 17
-    dup
-    cover 2
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     pushint 8
     bzero
     dup
@@ -918,18 +975,23 @@ main_ternary_merge@63:
     pushint 8
     -
     extract_uint64
-    swap
+    dup
+    dig 6
+    <
+    assert // array index out of bounds
+    dig 18
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     uncover 2
+    swap
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    dig 1
-    dig 6
-    <
-    assert // index out of bounds
     swap
     intc_0 // 2
     *
@@ -944,6 +1006,12 @@ main_ternary_merge@63:
     intc_0 // 2
     +
     extract3
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 2
+    >
+    assert // array index out of bounds
     extract 2 0
     swap
     intc_3 // 32

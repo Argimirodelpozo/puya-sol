@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_transient_storage_access_inside_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 0 32
     bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -33,7 +41,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe03b32a4 0x62d38f3e 0x5848be20 // method "f()uint512", method "y()uint64", method "z()uint256"
+    pushbytess 0xcd78b354 0x62d38f3e 0x5848be20 // method "f()uint256", method "y()uint64", method "z()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_y_route@6 main_z_route@7
     err
@@ -108,19 +116,23 @@ main_ternary_merge@24:
     !
     assert // not payable
     load 0
+    store 0
     load 5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     replace2 32
     store 5
+    load 0
     store 0
     load 5
     extract 32 32
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

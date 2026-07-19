@@ -4,24 +4,32 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_array_cross_calls.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 32
-    bytecblock 0x151f7c75 0x "counter" 0xcf0aa045 0xcd78b354 0x4b2c0376 0x5935cd14 0xb238366a TMPL_APPROVAL_D TMPL_CLEAR_D
+    bytecblock 0x151f7c75 "counter" 0xcf0aa045 0xcd78b354 0x4b2c0376 0x5935cd14 0xb238366a 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff TMPL_APPROVAL_D TMPL_CLEAR_D
     intc_0 // 0
     dupn 4
-    bytec_1 // ""
+    pushbytes ""
     dupn 2
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "counter"
-    bytec_1 // 0x
+    bytec_1 // "counter"
+    pushbytes 0x
     app_global_put
     intc_1 // 1
     return
@@ -33,11 +41,11 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0x34914231 // method "test()(uint256,uint256,uint256)"
-    bytec_3 // method "e()uint256"
-    bytec 4 // method "f()uint256"
-    bytec 5 // method "g()uint256"
-    bytec 6 // method "h()byte[12]"
-    bytec 7 // method "htwo()byte[12]"
+    bytec_2 // method "e()uint256"
+    bytec_3 // method "f()uint256"
+    bytec 4 // method "g()uint256"
+    bytec 5 // method "h()byte[12]"
+    bytec 6 // method "htwo()byte[12]"
     txna ApplicationArgs 0
     match main_test_route@5 main_e_route@6 main_f_route@7 main_g_route@8 main_h_route@9 main_htwo_route@10
     err
@@ -55,7 +63,7 @@ main_ternary_merge@17:
     assert // not payable
     global CurrentApplicationID
     itob
-    bytec_3 // method "e()uint256"
+    bytec_2 // method "e()uint256"
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -80,21 +88,26 @@ main_ternary_merge@22:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "counter"
+    bytec_1 // "counter"
     app_global_get_ex
     assert // check counter exists
     dup
     pushbytes 0x01
     b+
-    bytec_2 // "counter"
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "counter"
     swap
     app_global_put
-    bytec_1 // 0x
+    intc_0 // 0
+    itob
     b==
     bz main_ternary_false@24
     global CurrentApplicationID
     itob
-    bytec 4 // method "f()uint256"
+    bytec_3 // method "f()uint256"
     concat
 
 main_ternary_merge@25:
@@ -108,7 +121,7 @@ main_ternary_merge@25:
 main_ternary_false@24:
     global CurrentApplicationID
     itob
-    bytec 5 // method "g()uint256"
+    bytec 4 // method "g()uint256"
     concat
     b main_ternary_merge@25
 
@@ -158,25 +171,28 @@ main_ternary_merge@36:
     bury 4
     intc_0 // 0
     itob
-    bury 6
+    bury 5
 
 main_while_top@37:
     dig 3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 6
+    dig 5
     b>
     bz main_after_while@39
+    dig 4
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     global CurrentApplicationID
     itob
-    bytec 6 // method "h()byte[12]"
+    bytec 5 // method "h()byte[12]"
     concat
     pushint 8
     bzero
-    dig 7
-    dup
-    cover 2
+    dig 2
     concat
     dup
     len
@@ -189,18 +205,22 @@ main_while_top@37:
     +
     dig 6
     swap
-    uncover 3
+    uncover 2
     replace3 // on error: index access is out of bounds
     bury 5
     pushbytes 0x01
     b+
-    bury 6
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 5
     b main_while_top@37
 
 main_after_while@39:
     global CurrentApplicationID
     itob
-    bytec 7 // method "htwo()byte[12]"
+    bytec 6 // method "htwo()byte[12]"
     concat
     dig 4
     swap
@@ -248,7 +268,7 @@ main_after_while@39:
     itxn_submit
     itxn LastLog
     dup
-    bury 6
+    bury 7
     extract 4 12
     dup
     intc_0 // 0
@@ -264,7 +284,7 @@ main_after_while@39:
     bury 8
 
 main_after_if_else@42:
-    dig 4
+    dig 5
     extract 16 12
     dup
     intc_0 // 0
@@ -280,7 +300,7 @@ main_after_if_else@42:
     bury 7
 
 main_after_if_else@45:
-    dig 4
+    dig 5
     extract 28 12
     dup
     intc_0 // 0
@@ -482,7 +502,7 @@ __funcptr_dispatch_ret_u256_else_body@4:
 __sel_to_id___funcptr_dispatch_ret_u256:
     proto 1 1
     frame_dig -1
-    bytec 5 // method "g()uint256"
+    bytec 4 // method "g()uint256"
     ==
     bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@2
     pushint 4
@@ -490,7 +510,7 @@ __sel_to_id___funcptr_dispatch_ret_u256:
 
 __sel_to_id___funcptr_dispatch_ret_u256_else_body@2:
     frame_dig -1
-    bytec 4 // method "f()uint256"
+    bytec_3 // method "f()uint256"
     ==
     bz __sel_to_id___funcptr_dispatch_ret_u256_else_body@4
     pushint 3
@@ -498,7 +518,7 @@ __sel_to_id___funcptr_dispatch_ret_u256_else_body@2:
 
 __sel_to_id___funcptr_dispatch_ret_u256_else_body@4:
     frame_dig -1
-    bytec_3 // method "e()uint256"
+    bytec_2 // method "e()uint256"
     ==
     assert // unknown function selector in self-call dispatch
     pushint 5

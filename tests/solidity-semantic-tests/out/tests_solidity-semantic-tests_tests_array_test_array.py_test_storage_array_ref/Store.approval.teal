@@ -3,15 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
-    bytecblock "data" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
+    intcblock 1 32 0 2
+    bytecblock "data" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x010000000000000000
     intc_2 // 0
     dupn 2
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -19,9 +27,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_3 // 1
+    intc_0 // 1
     app_global_put
-    intc_3 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,13 +48,13 @@ main_find_route@7:
     dup
     bury 4
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_3 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -60,26 +68,26 @@ main_ternary_merge@14:
     itob
     bytec_0 // "data"
     intc_2 // 0
-    intc_1 // 2
+    intc_3 // 2
     box_extract
     btoi
     itob
     dig 5
-    callsub find(23,u256,u256,u256)
+    callsub find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)
     pop
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@13:
@@ -91,34 +99,37 @@ main_add_route@6:
     dup
     bury 4
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_3 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@19:
     !
     assert // not payable
+    intc_0 // 1
+    itob
+    bury 1
     bytec_0 // "data"
     intc_2 // 0
-    intc_1 // 2
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "data"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "data"
     swap
     box_resize
     dup
-    intc_3 // 1
+    intc_0 // 1
     +
     itob
     extract 6 2
@@ -126,9 +137,9 @@ main_ternary_merge@19:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_3 // 2
     +
     bytec_0 // "data"
     swap
@@ -138,7 +149,7 @@ main_ternary_merge@19:
     bytec_0 // "data"
     box_len
     pop
-    intc_1 // 2
+    intc_3 // 2
     >=
     bz main_ternary_false@21
     bytec_0 // "data"
@@ -146,95 +157,64 @@ main_ternary_merge@19:
     pop
 
 main_ternary_merge@22:
-    intc_1 // 2
+    intc_3 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
-    bytec_1 // 0x01
+    dup
+    dig 2
+    dup
+    cover 3
     b>=
     assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 3
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 4 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@24
+    bytec_0 // "data"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@24:
     pushint 8
     bzero
-    bury 2
-    bytec_0 // "data"
-    box_len
-    pop
-    intc_1 // 2
-    >=
-    bz main_ternary_false@24
-    bytec_0 // "data"
-    box_len
-    pop
-
-main_ternary_merge@25:
-    intc_1 // 2
-    -
-    intc_0 // 32
-    /
-    itob
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_1 // 0x01
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dig 2
-    swap
     concat
-    bury 1
-    bytec_0 // "data"
-    box_len
-    pop
-    intc_1 // 2
-    >=
-    bz main_ternary_false@27
-    bytec_0 // "data"
-    box_len
-    pop
-
-main_ternary_merge@28:
-    intc_1 // 2
-    -
-    intc_0 // 32
-    /
-    itob
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_1 // 0x01
-    b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 2
-    swap
-    concat
+    dup
     len
     pushint 8
     -
-    dig 1
-    swap
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_3 // 2
     +
     bytec_0 // "data"
     swap
     dig 4
     box_replace // on error: index out of bounds
-    intc_3 // 1
+    intc_0 // 1
     return
 
-main_ternary_false@27:
-    intc_1 // 2
-    b main_ternary_merge@28
-
-main_ternary_false@24:
-    intc_1 // 2
-    b main_ternary_merge@25
-
 main_ternary_false@21:
-    intc_1 // 2
+    intc_3 // 2
     b main_ternary_merge@22
 
 main_ternary_false@18:
@@ -249,66 +229,55 @@ main___postInit_route@5:
     intc_2 // 0
     app_global_put
     bytec_0 // "data"
-    intc_1 // 2
+    intc_3 // 2
     box_create
     pop
-    intc_3 // 1
+    intc_0 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.find(23,u256,u256,u256)(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes, bytes:
-find(23,u256,u256,u256):
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes, bytes:
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256):
     proto 4 2
     intc_2 // 0
-    dupn 2
+    dupn 3
+    itob
     frame_dig -2
-    pushbytes 0x
     b==
-    bnz find(23,u256,u256,u256)_if_body@3
-    frame_dig -2
-    bytec_1 // 0x01
-    b==
-    bz find(23,u256,u256,u256)_after_if_else@4
-    pushint 8
-    bzero
-    frame_dig -3
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    frame_dig -4
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    frame_dig -1
-    b!=
-    bz find(23,u256,u256,u256)_after_if_else@4
+    bz find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@2
+    intc_0 // 1
 
-find(23,u256,u256,u256)_if_body@3:
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_after_if_else@6:
+    bz find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_after_if_else@8
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -4
     frame_bury 1
     frame_bury 0
     retsub
 
-find(23,u256,u256,u256)_after_if_else@4:
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_after_if_else@8:
+    intc_3 // 2
+    itob
     frame_dig -2
-    pushbytes 0x02
+    swap
     b/
     dup
-    frame_bury 0
-    pushint 8
-    bzero
+    frame_bury 1
     frame_dig -3
-    uncover 2
     b+
     dup
-    frame_bury 1
+    frame_bury 0
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec 4 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
     concat
     dup
     len
@@ -318,59 +287,104 @@ find(23,u256,u256,u256)_after_if_else@4:
     frame_dig -4
     extract 2 0
     swap
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_0 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
     dup
     frame_bury 2
     frame_dig -1
     b>
-    bz find(23,u256,u256,u256)_else_body@8
+    bz find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@12
     frame_dig -4
     frame_dig -3
-    frame_dig 0
+    frame_dig 1
     frame_dig -1
-    callsub find(23,u256,u256,u256)
+    callsub find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)
     dup
     frame_bury -4
     frame_bury 1
     frame_bury 0
     retsub
 
-find(23,u256,u256,u256)_else_body@8:
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@12:
     frame_dig -1
     frame_dig 2
     b>
-    bz find(23,u256,u256,u256)_else_body@12
-    frame_dig 0
+    bz find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@16
+    intc_0 // 1
+    itob
+    frame_dig 1
     dup
-    bytec_1 // 0x01
+    cover 2
+    dig 1
     b>=
     assert // underflow
-    frame_dig 1
-    bytec_1 // 0x01
+    frame_dig 0
+    dig 1
     b+
-    swap
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    uncover 2
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    uncover 2
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_dig -4
     cover 2
     frame_dig -1
-    callsub find(23,u256,u256,u256)
+    callsub find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)
     dup
     frame_bury -4
     frame_bury 1
     frame_bury 0
     retsub
 
-find(23,u256,u256,u256)_else_body@12:
-    frame_dig 1
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@16:
+    frame_dig 0
     frame_dig -4
     frame_bury 1
     frame_bury 0
     retsub
+
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@2:
+    intc_0 // 1
+    itob
+    frame_dig -2
+    b==
+    bz find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@4
+    frame_dig -3
+    bytec 4 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    frame_dig -3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -4
+    extract 2 0
+    swap
+    intc_1 // 32
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
+    frame_dig -1
+    b!=
+    b find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_after_if_else@6
+
+find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_else_body@4:
+    intc_2 // 0
+    b find(t_array$_t_uint256_$dyn_storage_ptr,u256,u256,u256)_after_if_else@6

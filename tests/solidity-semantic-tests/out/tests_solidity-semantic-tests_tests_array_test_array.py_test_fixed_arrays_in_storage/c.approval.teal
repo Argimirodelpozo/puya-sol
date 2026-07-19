@@ -4,21 +4,29 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8 1024 32768
-    bytecblock "data" "__ctor_pending" 0x151f7c75 "ids" 0x6964730000000000000000
+    bytecblock "data" 0x010000000000000000 "__ctor_pending" 0x151f7c75 "ids" 0x6964730000000000000000
     intc_2 // 0
     dupn 3
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -73,9 +81,14 @@ main_getData_route@10:
 main_ternary_merge@23:
     !
     assert // not payable
+    dig 2
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 3
+    swap
     concat
     dup
     len
@@ -93,7 +106,7 @@ main_ternary_merge@23:
     swap
     extract 32 32
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -122,9 +135,14 @@ main_getID_route@9:
 main_ternary_merge@28:
     !
     assert // not payable
+    dig 2
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 3
+    swap
     concat
     dup
     len
@@ -135,7 +153,7 @@ main_ternary_merge@28:
     intc 4 // 1024
     /
     itob
-    bytec_3 // "ids"
+    bytec 4 // "ids"
     swap
     concat
     swap
@@ -145,7 +163,7 @@ main_ternary_merge@28:
     *
     intc_1 // 32
     box_extract
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -188,9 +206,14 @@ main_setData_route@8:
 main_ternary_merge@33:
     !
     assert // not payable
+    dig 2
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 3
+    swap
     concat
     dup
     len
@@ -253,9 +276,14 @@ main_setID_route@7:
 main_ternary_merge@38:
     !
     assert // not payable
+    dig 2
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 3
+    swap
     concat
     dup
     len
@@ -266,7 +294,7 @@ main_ternary_merge@38:
     intc 4 // 1024
     /
     itob
-    bytec_3 // "ids"
+    bytec 4 // "ids"
     swap
     concat
     swap
@@ -301,7 +329,7 @@ main_setIDStatic_route@6:
 main_ternary_merge@43:
     !
     assert // not payable
-    bytec 4 // 0x6964730000000000000000
+    bytec 5 // 0x6964730000000000000000
     pushint 64
     dig 5
     box_replace
@@ -313,17 +341,17 @@ main_ternary_false@42:
     b main_ternary_merge@43
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_0 // "data"
     intc 5 // 32768
     box_create
     pop
-    bytec 4 // 0x6964730000000000000000
+    bytec 5 // 0x6964730000000000000000
     intc 5 // 32768
     box_create
     pop

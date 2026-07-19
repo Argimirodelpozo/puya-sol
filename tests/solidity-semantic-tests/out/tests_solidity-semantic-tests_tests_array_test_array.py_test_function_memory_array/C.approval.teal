@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
     dup
     pushbytes ""
@@ -12,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -58,9 +66,14 @@ main_test_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
+    dig 2
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 3
+    swap
     concat
     dup
     len
@@ -225,9 +238,14 @@ a:
 a_ternary_merge@3:
     !
     assert // not payable
+    intc_1 // 1
+    itob
     frame_dig -1
-    pushbytes 0x01
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -256,9 +274,14 @@ b:
 b_ternary_merge@3:
     !
     assert // not payable
+    pushint 2
+    itob
     frame_dig -1
-    pushbytes 0x02
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -287,9 +310,14 @@ c:
 c_ternary_merge@3:
     !
     assert // not payable
+    pushint 3
+    itob
     frame_dig -1
-    pushbytes 0x03
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -318,9 +346,14 @@ d:
 d_ternary_merge@3:
     !
     assert // not payable
+    pushint 5
+    itob
     frame_dig -1
-    pushbytes 0x05
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32
@@ -349,9 +382,14 @@ e:
 e_ternary_merge@3:
     !
     assert // not payable
+    intc_3 // 8
+    itob
     frame_dig -1
-    pushbytes 0x08
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_0 // 32

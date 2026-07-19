@@ -1,0 +1,180 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/shortcircuit_side_effect.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "cnt" 0x151f7c75
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "cnt"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x281a6ea8 0xc8b49bc9 0xf615effb 0x35011ef9 // method "andSC()(bool,uint256)", method "orSC()(bool,uint256)", method "divGuard(uint256)bool", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main_andSC_route@5 main_orSC_route@6 main_divGuard_route@7 main_cnt_route@8
+    err
+
+main_cnt_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_divGuard_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    dig 1
+    b!=
+    bz main_bool_false@23
+    pushint 100
+    itob
+    dig 1
+    b/
+    pushint 5
+    itob
+    b>
+    bz main_bool_false@23
+    intc_1 // 1
+
+main_bool_merge@24:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bool_false@23:
+    intc_0 // 0
+    b main_bool_merge@24
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_orSC_route@6:
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushbytes 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_0 // 0
+    b main_ternary_merge@29
+
+main_andSC_route@5:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36

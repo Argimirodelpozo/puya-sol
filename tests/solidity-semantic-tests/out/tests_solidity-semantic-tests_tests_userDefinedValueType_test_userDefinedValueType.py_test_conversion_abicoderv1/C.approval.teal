@@ -3,15 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/conversion_abicoderv1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 0 255
-    bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 8 0 255 18446744073709551360
+    bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     intc_2 // 0
     pushbytes ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -193,19 +201,27 @@ main_ternary_merge@38:
     dup
     intc_3 // 255
     &
+    pushint 256
+    %
+    dup
+    pushint 128
+    >=
+    bz main_ternary_false@40
+    intc 4 // 18446744073709551360
+    +
+
+main_ternary_merge@41:
     itob
     bytec_1 // 0xff
     b&
     dup
     bytec_2 // 0x80
     b>=
-    bz main_ternary_false@40
+    bz main_ternary_false@43
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
-main_ternary_merge@41:
+main_ternary_merge@44:
     dup
     len
     pushint 32
@@ -220,6 +236,9 @@ main_ternary_merge@41:
     log
     intc_0 // 1
     return
+
+main_ternary_false@43:
+    b main_ternary_merge@44
 
 main_ternary_false@40:
     b main_ternary_merge@41
@@ -237,13 +256,13 @@ main_g_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@45
+    bz main_ternary_false@48
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@46:
+main_ternary_merge@49:
     !
     assert // not payable
     intc_1 // 8
@@ -257,19 +276,27 @@ main_ternary_merge@46:
     extract_uint64
     intc_3 // 255
     &
+    pushint 256
+    %
+    dup
+    pushint 128
+    >=
+    bz main_ternary_false@51
+    intc 4 // 18446744073709551360
+    +
+
+main_ternary_merge@52:
     itob
     bytec_1 // 0xff
     b&
     dup
     bytec_2 // 0x80
     b>=
-    bz main_ternary_false@48
+    bz main_ternary_false@54
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
-main_ternary_merge@49:
+main_ternary_merge@55:
     dup
     len
     pushint 32
@@ -285,12 +312,15 @@ main_ternary_merge@49:
     intc_0 // 1
     return
 
-main_ternary_false@48:
-    b main_ternary_merge@49
+main_ternary_false@54:
+    b main_ternary_merge@55
 
-main_ternary_false@45:
+main_ternary_false@51:
+    b main_ternary_merge@52
+
+main_ternary_false@48:
     intc_2 // 0
-    b main_ternary_merge@46
+    b main_ternary_merge@49
 
 main_f_route@5:
     txna ApplicationArgs 1
@@ -301,13 +331,13 @@ main_f_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@53
+    bz main_ternary_false@59
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@54:
+main_ternary_merge@60:
     !
     assert // not payable
     intc_1 // 8
@@ -329,6 +359,6 @@ main_ternary_merge@54:
     intc_0 // 1
     return
 
-main_ternary_false@53:
+main_ternary_false@59:
     intc_2 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@60

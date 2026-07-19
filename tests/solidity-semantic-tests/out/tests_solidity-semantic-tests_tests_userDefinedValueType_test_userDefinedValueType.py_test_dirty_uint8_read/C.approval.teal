@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/dirty_uint8_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
-    bytecblock "x" 0x151f7c75
+    intcblock 32 1 0
+    bytecblock "x" 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9172775d 0x0232350d 0x3f4abdfd // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint512"
+    pushbytess 0x9172775d 0x0232350d 0x7c1072af // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint256"
     txna ApplicationArgs 0
     match main_create_dirty_slot_route@5 main_read_unclean_value_route@6 main_x_route@7
     err
@@ -49,27 +57,25 @@ main_ternary_merge@14:
     app_global_get_ex
     assert // check x exists
     itob
-    pushbytes 0xff
+    bytec_1 // 0xff
     b&
     dup
-    pushbytes 0x80
+    bytec_2 // 0x80
     b>=
     bz main_ternary_false@16
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@17:
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -99,10 +105,21 @@ main_ternary_merge@22:
     app_global_get_ex
     assert // check x exists
     load 0
+    store 0
+    itob
+    bytec_1 // 0xff
+    b&
+    dup
+    bytec_2 // 0x80
+    b>=
+    bz main_ternary_false@24
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+main_ternary_merge@25:
     intc_0 // 32
     bzero
-    uncover 2
-    itob
+    swap
     concat
     dup
     len
@@ -111,14 +128,17 @@ main_ternary_merge@22:
     intc_0 // 32
     extract3
     extract 0 32
-    swap
+    load 0
     store 0
-    bytec_1 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+main_ternary_false@24:
+    b main_ternary_merge@25
 
 main_ternary_false@21:
     intc_2 // 0
@@ -126,21 +146,30 @@ main_ternary_false@21:
 
 main_create_dirty_slot_route@5:
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@29
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@30:
     !
     assert // not payable
     load 0
+    store 0
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    extract 7 1
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
     intc_0 // 32
     bzero
-    bytec_0 // "x"
-    app_global_get
-    dig 1
     swap
     concat
     dup
@@ -149,22 +178,27 @@ main_ternary_merge@27:
     -
     intc_0 // 32
     extract3
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    concat
+    pushint 31
+    getbyte
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    pushint 128
+    >=
+    bz main_ternary_false@38
+    pushint 18446744073709551360
+    +
+
+main_ternary_merge@39:
     bytec_0 // "x"
     swap
     app_global_put
+    load 0
     store 0
     intc_1 // 1
     return
 
-main_ternary_false@26:
+main_ternary_false@38:
+    b main_ternary_merge@39
+
+main_ternary_false@29:
     intc_2 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@30

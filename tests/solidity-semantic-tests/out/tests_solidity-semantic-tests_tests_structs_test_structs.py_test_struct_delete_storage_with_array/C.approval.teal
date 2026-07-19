@@ -3,14 +3,25 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_delete_storage_with_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 23
-    bytecblock "s" 0x 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000 "b" "a" 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002a "__dyn_storage"
-    intc_1 // 0
+    intcblock 0 16 1 23
+    bytecblock "s" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000 "b" "a" 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002a
+    intc_0 // 0
+    dupn 3
+    pushbytes ""
+    dupn 8
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -38,8 +49,6 @@ main_after_if_else@2:
     err
 
 main_g_route@6:
-    intc_1 // 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -56,12 +65,18 @@ main_ternary_merge@13:
     bytec_0 // "s"
     bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
     box_put
+    intc_2 // 1
+    itob
+    bury 13
     bytec_0 // "s"
     box_del
     pop
     bytec_0 // "s"
     bytec 5 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a
     box_put
+    pushint 2
+    itob
+    bury 12
     bytec_0 // "s"
     box_del
     pop
@@ -92,79 +107,165 @@ main_ternary_merge@13:
     bytec_0 // "s"
     pushbytes 0x0000000000000000000000000000000100300000000000000000000000000000000000000000000000000000000000020000
     box_put
+    intc_0 // 0
+    itob
+    dup
+    bury 11
     load 0
-    dig 1
-    pushbytes 0x03
-    callsub __storage_write
     store 0
+    pushint 96
+    bzero
+    pushbytes 0x0000000000000000000000000000000100300000000000000000000000000000000000000000000000000000000000020003
+    swap
+    concat
+    bytec_0 // "s"
+    box_del
+    pop
+    bytec_0 // "s"
+    dig 1
+    box_put
+    load 0
+    store 0
+    dup
+    intc_1 // 16
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 32
+    b==
+    dup
+    bury 8
+    bnz main_after_if_else@17
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@17:
+    dig 6
+    assert
     bytec_0 // "s"
     box_get
     bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    pushint 16
+    intc_1 // 16
     extract_uint16
     dig 1
     len
-    dig 2
-    cover 2
     substring3
-    dup
-    extract 2 32
-    bytec_1 // 0x
-    b==
-    assert
-    dup
     extract 34 32
-    bytec_1 // 0x
+    dig 10
     b==
+    dup
+    bury 7
+    bnz main_after_if_else@19
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@19:
+    dig 5
     assert
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_1 // 16
+    extract_uint16
+    dig 1
+    len
+    substring3
     extract 66 32
-    bytec_1 // 0x
+    dig 10
     b==
+    dup
+    bury 6
+    bnz main_after_if_else@21
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@21:
+    dig 4
     assert
-    intc_1 // 0
+    intc_0 // 0
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
     intc_3 // 23
     ==
+    dup
+    bury 5
+    bnz main_after_if_else@23
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@23:
+    dig 3
     assert
-    intc_1 // 0
+    intc_0 // 0
     bytec 4 // "a"
     app_global_get_ex
     assert // check a exists
     pushint 17
     ==
-    assert
     dup
+    bury 4
+    bnz main_after_if_else@25
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@25:
+    dig 2
+    assert
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 0 16
-    pushbytes 0x01
+    dig 13
     b==
+    dup
+    bury 3
+    bnz main_after_if_else@27
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@27:
+    dig 1
     assert
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 18 30
-    pushbytes 0x02
+    dig 12
     b==
-    assert
-    intc_2 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@29
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@29:
     return
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@13
 
 main_f_route@5:
-    intc_1 // 0
-    bury 1
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@33
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@34:
     !
     assert // not payable
     bytec_0 // "s"
@@ -197,139 +298,119 @@ main_ternary_merge@18:
     bytec_0 // "s"
     bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
     box_put
+    intc_0 // 0
+    itob
+    dup
+    bury 12
     load 0
-    dig 1
-    pushbytes 0x03
-    callsub __storage_write
     store 0
+    pushint 96
+    bzero
+    pushbytes 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000003
+    swap
+    concat
+    bytec_0 // "s"
+    box_del
+    pop
+    bytec_0 // "s"
+    dig 1
+    box_put
+    load 0
+    store 0
+    dup
+    intc_1 // 16
+    extract_uint16
+    dig 1
+    len
+    substring3
+    extract 2 32
+    b==
+    dup
+    bury 10
+    bnz main_after_if_else@38
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@38:
+    dig 8
+    assert
     bytec_0 // "s"
     box_get
     bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
-    pushint 16
+    intc_1 // 16
     extract_uint16
     dig 1
     len
     substring3
-    dup
-    extract 2 32
-    bytec_1 // 0x
-    b==
-    assert
-    dup
     extract 34 32
-    bytec_1 // 0x
+    dig 11
     b==
+    dup
+    bury 9
+    bnz main_after_if_else@40
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@40:
+    dig 7
     assert
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_1 // 16
+    extract_uint16
+    dig 1
+    len
+    substring3
     extract 66 32
-    bytec_1 // 0x
+    dig 11
     b==
+    dup
+    bury 8
+    bnz main_after_if_else@42
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@42:
+    dig 6
     assert
-    intc_1 // 0
+    intc_0 // 0
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
     intc_3 // 23
     ==
+    dup
+    bury 7
+    bnz main_after_if_else@44
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@44:
+    dig 5
     assert
-    intc_1 // 0
+    intc_0 // 0
     bytec 4 // "a"
     app_global_get_ex
     assert // check a exists
     pushint 17
     ==
-    assert
-    intc_2 // 1
+    dup
+    bury 6
+    bnz main_after_if_else@46
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@46:
+    dig 4
     return
 
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
-
-
-// __puyasol___storage_write(__slot: uint64, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    pushint 4
-    ==
-    bz __storage_write_else_body@2
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 4 // "a"
-    swap
-    app_global_put
-    retsub
-
-__storage_write_else_body@2:
-    frame_dig -2
-    intc_2 // 1
-    ==
-    bz __storage_write_else_body@4
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // "s"
-    swap
-    app_global_put
-    retsub
-
-__storage_write_else_body@4:
-    frame_dig -2
-    bnz __storage_write_else_body@6
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // "b"
-    swap
-    app_global_put
-    retsub
-
-__storage_write_else_body@6:
-    bytec 8 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    frame_dig -2
-    pushint 256
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 8 // "__dyn_storage"
-    cover 2
-    box_replace
-    retsub
+main_ternary_false@33:
+    intc_0 // 0
+    b main_ternary_merge@34

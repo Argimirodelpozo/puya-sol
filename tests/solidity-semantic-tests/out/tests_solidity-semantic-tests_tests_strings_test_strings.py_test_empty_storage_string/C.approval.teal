@@ -3,15 +3,24 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/contracts/empty_storage_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 31
-    bytecblock 0x151f7c75 "nonEmptyString" "uninitializedString" "emptyBytes" "emptyString" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000020 0x0004 "uninitializedBytes" "nonEmptyString2"
+    intcblock 0 1 2 4
+    bytecblock 0x151f7c75 "uninitializedString" "nonEmptyString" "emptyBytes" "emptyString" "__ctor_pending" 0x0004 "uninitializedBytes" "nonEmptyString2"
     intc_0 // 0
     dup
+    pushbytes ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -47,7 +56,7 @@ main_ternary_merge@28:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "nonEmptyString"
+    bytec_2 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
     dup
@@ -72,14 +81,14 @@ main_set_route@20:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
+    bury 3
     txn GroupIndex
     bz main_ternary_false@32
     txn GroupIndex
@@ -90,8 +99,8 @@ main_set_route@20:
 main_ternary_merge@33:
     !
     assert // not payable
-    bytec_1 // "nonEmptyString"
-    dig 2
+    bytec_2 // "nonEmptyString"
+    dig 3
     app_global_put
     intc_1 // 1
     return
@@ -111,42 +120,14 @@ main_s_route@19:
 main_ternary_merge@38:
     !
     assert // not payable
-    intc_2 // 32
-    bzero
     intc_0 // 0
-    bytec_2 // "uninitializedString"
+    bytec_1 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     dup
     len
-    dup
     itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    intc_3 // 31
-    bzero
-    uncover 3
-    swap
-    concat
-    uncover 2
-    intc_3 // 31
-    +
-    intc_2 // 32
-    /
-    intc_2 // 32
-    *
-    intc_0 // 0
-    swap
-    extract3
-    concat
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    extract 6 2
     swap
     concat
     bytec_3 // "emptyBytes"
@@ -187,9 +168,9 @@ main_ternary_merge@43:
     box_del
     pop
     bytec_3 // "emptyBytes"
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0000
     box_put
-    pushbytes 0x151f7c75004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c7500020000
     log
     intc_1 // 1
     return
@@ -209,7 +190,7 @@ main_q_route@17:
 main_ternary_merge@48:
     !
     assert // not payable
-    bytec 8 // "uninitializedBytes"
+    bytec 7 // "uninitializedBytes"
     box_get
     assert // box exists
     dup
@@ -292,6 +273,20 @@ main_n_route@14:
 main_ternary_merge@63:
     !
     assert // not payable
+    intc_0 // 0
+    bytec_1 // "uninitializedString"
+    app_global_get_ex
+    assert // check uninitializedString exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x13a822db // method "EmptyError(string)"
+    swap
+    concat
+    log
     err // EmptyError
 
 main_ternary_false@62:
@@ -309,42 +304,14 @@ main_m_route@13:
 main_ternary_merge@68:
     !
     assert // not payable
-    intc_2 // 32
-    bzero
     intc_0 // 0
     bytec 4 // "emptyString"
     app_global_get_ex
     assert // check emptyString exists
     dup
     len
-    dup
     itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    intc_3 // 31
-    bzero
-    uncover 3
-    swap
-    concat
-    uncover 2
-    intc_3 // 31
-    +
-    intc_2 // 32
-    /
-    intc_2 // 32
-    *
-    intc_0 // 0
-    swap
-    extract3
-    concat
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    extract 6 2
     swap
     concat
     dup
@@ -367,16 +334,18 @@ main_ternary_false@67:
 main_l_route@12:
     txna ApplicationArgs 1
     dup
+    bury 3
+    dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
-    dig 1
+    swap
     len
+    dup
+    bury 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@72
     txn GroupIndex
@@ -387,47 +356,10 @@ main_l_route@12:
 main_ternary_merge@73:
     !
     assert // not payable
-    intc_2 // 32
-    bzero
-    dig 2
     dup
-    cover 2
-    len
-    dup
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    intc_3 // 31
-    bzero
-    uncover 3
-    swap
-    concat
-    uncover 2
-    intc_3 // 31
-    +
-    intc_2 // 32
-    /
-    intc_2 // 32
-    *
-    intc_0 // 0
-    swap
-    extract3
-    concat
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    dup
-    len
     itob
     extract 6 2
-    swap
+    dig 2
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -451,7 +383,7 @@ main_k_route@11:
 main_ternary_merge@78:
     !
     assert // not payable
-    bytec 9 // "nonEmptyString2"
+    bytec 8 // "nonEmptyString2"
     pushbytes ""
     app_global_put
     pushbytes 0x151f7c750000
@@ -466,11 +398,11 @@ main_ternary_false@77:
 main_j_route@10:
     txna ApplicationArgs 1
     dup
-    bury 2
+    bury 3
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
     swap
     len
@@ -487,7 +419,7 @@ main_ternary_merge@83:
     !
     assert // not payable
     bytec_0 // 0x151f7c75
-    dig 1
+    dig 2
     concat
     log
     intc_1 // 1
@@ -509,7 +441,7 @@ main_ternary_merge@88:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "nonEmptyString"
+    bytec_2 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
     intc_0 // 0
@@ -524,7 +456,7 @@ main_ternary_merge@88:
     concat
     dup
     len
-    pushint 4
+    intc_3 // 4
     +
     dig 2
     len
@@ -535,7 +467,7 @@ main_ternary_merge@88:
     swap
     itob
     extract 6 2
-    bytec 7 // 0x0004
+    bytec 6 // 0x0004
     swap
     concat
     uncover 2
@@ -565,11 +497,11 @@ main_ternary_merge@93:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "uninitializedString"
+    bytec_1 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     intc_0 // 0
-    bytec_1 // "nonEmptyString"
+    bytec_2 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
     dig 1
@@ -580,7 +512,7 @@ main_ternary_merge@93:
     concat
     dup
     len
-    pushint 4
+    intc_3 // 4
     +
     dig 2
     len
@@ -591,7 +523,7 @@ main_ternary_merge@93:
     swap
     itob
     extract 6 2
-    bytec 7 // 0x0004
+    bytec 6 // 0x0004
     swap
     concat
     uncover 2
@@ -621,7 +553,7 @@ main_ternary_merge@98:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "uninitializedString"
+    bytec_1 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     intc_0 // 0
@@ -636,7 +568,7 @@ main_ternary_merge@98:
     concat
     dup
     len
-    pushint 4
+    intc_3 // 4
     +
     dig 2
     len
@@ -647,7 +579,7 @@ main_ternary_merge@98:
     swap
     itob
     extract 6 2
-    bytec 7 // 0x0004
+    bytec 6 // 0x0004
     swap
     concat
     uncover 2
@@ -677,7 +609,7 @@ main_ternary_merge@103:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "uninitializedString"
+    bytec_1 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     dup
@@ -704,7 +636,7 @@ main___postInit_route@5:
     bytec 5 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec 8 // "uninitializedBytes"
+    bytec 7 // "uninitializedBytes"
     intc_0 // 0
     box_create
     pop
@@ -712,16 +644,16 @@ main___postInit_route@5:
     intc_0 // 0
     box_create
     pop
-    bytec_2 // "uninitializedString"
+    bytec_1 // "uninitializedString"
     pushbytes 0x
     app_global_put
     bytec 4 // "emptyString"
     pushbytes ""
     app_global_put
-    bytec_1 // "nonEmptyString"
+    bytec_2 // "nonEmptyString"
     pushbytes "This is a non empty string"
     app_global_put
-    bytec 9 // "nonEmptyString2"
+    bytec 8 // "nonEmptyString2"
     pushbytes "Another string"
     app_global_put
     intc_1 // 1

@@ -4,14 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/mapping_of_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 3 2
-    bytecblock 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927 "__ctor_pending" "x" 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c
+    bytecblock 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927 "__ctor_pending" 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c "x"
     intc_1 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -66,7 +74,7 @@ main_ternary_merge@13:
     !
     assert // not payable
     dup
-    bytec_2 // "x"
+    bytec_3 // "x"
     concat
     sha256
     box_get
@@ -102,39 +110,63 @@ main___postInit_route@5:
     bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_2 // "x"
+    bytec_3 // "x"
     intc_3 // 2
     box_create
     pop
     bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
+    box_len
+    bury 1
+    bnz main_after_if_else@17
+    bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
     intc_2 // 3
     box_create
     pop
+
+main_after_if_else@17:
     bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
     intc_1 // 0
     pushbytes 0x01
     box_replace // on error: index out of bounds
     bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
+    box_len
+    bury 1
+    bnz main_after_if_else@19
+    bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
     intc_2 // 3
     box_create
     pop
+
+main_after_if_else@19:
     bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
     intc_3 // 2
     pushbytes 0x03
     box_replace // on error: index out of bounds
     bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
+    box_len
+    bury 1
+    bnz main_after_if_else@21
+    bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
     intc_2 // 3
     box_create
     pop
+
+main_after_if_else@21:
     bytec_0 // 0x7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927
     intc_0 // 1
     pushbytes 0x02
     box_replace // on error: index out of bounds
-    bytec_3 // 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c
+    bytec_2 // 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c
+    box_len
+    bury 1
+    bnz main_after_if_else@23
+    bytec_2 // 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c
     intc_2 // 3
     box_create
     pop
-    bytec_3 // 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c
+
+main_after_if_else@23:
+    bytec_2 // 0x71ac1b8e63cd9e1235eaad5b5f6c4e993630b71cfc80adfb04303b1f13f5f53c
     intc_0 // 1
     pushbytes 0x09
     box_replace // on error: index out of bounds

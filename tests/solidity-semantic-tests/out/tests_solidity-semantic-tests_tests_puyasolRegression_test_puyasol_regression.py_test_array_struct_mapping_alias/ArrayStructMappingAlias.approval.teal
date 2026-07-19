@@ -1,0 +1,1170 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_struct_mapping_alias.sol.ArrayStructMappingAlias.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 2
+    bytecblock "sarr" 0x "aom" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000007 "__ctor_pending" "m" "mm" 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5 0x41568aacd942bbc8125d38e2ba9580edc0ee3998e09fb8c909697c51850c9e3d 0x34ea140695d5a4908e79b93a5fe5881fa070c6d250f74137bceeaef1655e2597 0xff4f8678af17d4a3ac3bc9aac656130d5d56cc33dafe41be78dad7628630f18a 0x0002002200000000000000000000000000000000000000000000000000000000000000000000 0xf656b9f75cb8389eb36fb49a0d40d87a052cba40c6c4f8a3e58b709ca78e4e52 0x5f9d45293d03923d85ce507b1a299213f4a21a700711d2ede36558c1b4d3f7d5 0x7d500ceeef534922693bf4dcfba48606f128e37b95fdf4aee1897450bcaf00a2 0xe7dc6719b433559ce2d3d4aeb52a420c523a819302ba98beb526d77b00d98185 0x83278134458c4e618a69b1ec4af1e9ac1b4f4ab327a46cbacd5387ed5cbec1f7 0x5fba69cecb0adc6c8a5946629286f30c24f97030799679428e49fa4c524d16be 0x002200000000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dupn 4
+    bytec_1 // ""
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x100b7c32 0x33c18336 0x1cd31b6c 0x7e9f4949 0x8338d04b 0x127471e4 0x290584a3 0x3c6cbcac // method "__postInit()void", method "seed()void", method "s(uint256)uint256", method "x(uint256)uint256", method "a(uint256)uint256", method "m(uint256)uint256", method "st(uint256,uint256)uint256", method "o(uint256,uint256)uint256", method "bump(uint256,uint256)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_seed_route@6 main_s_route@7 main_x_route@8 main_a_route@9 main_m_route@10 main_st_route@11 main_o_route@12 main_bump_route@13
+    err
+
+main_bump_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    pushint 8
+    bzero
+    dig 8
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bury 2
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@22
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@23:
+    dig 2
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    itob
+    bytec_0 // "sarr"
+    swap
+    concat
+    bytec 6 // "m"
+    concat
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000007
+    swap
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 6
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@22:
+    intc_0 // 0
+    b main_ternary_merge@23
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_o_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    dig 8
+    b==
+    bz main_ternary_false@30
+    intc_1 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes "o1innerm"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+
+main_ternary_merge@31:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@30:
+    intc_1 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes "o2innerm"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    intc_0 // 0
+    b main_ternary_merge@28
+
+main_st_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    dig 8
+    b==
+    bz main_ternary_false@38
+    intc_1 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes "st1m"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+
+main_ternary_merge@39:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@38:
+    intc_1 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes "st2m"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b main_ternary_merge@39
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+main_m_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    dup
+    dig 9
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec 7 // "mm"
+    concat
+    sha256
+    bytec 6 // "m"
+    concat
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000007
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@43:
+    intc_0 // 0
+    b main_ternary_merge@44
+
+main_a_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    bytec_2 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@51
+    bytec_2 // "aom"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@52:
+    itob
+    dig 8
+    dup
+    uncover 2
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    pushint 8
+    extract3
+    bytec_2 // "aom"
+    concat
+    sha256
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000007
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@51:
+    intc_0 // 0
+    b main_ternary_merge@52
+
+main_ternary_false@48:
+    intc_0 // 0
+    b main_ternary_merge@49
+
+main_x_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    dig 7
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bury 1
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@59
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@60:
+    dig 1
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    intc_3 // 2
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "sarr"
+    swap
+    intc_3 // 2
+    box_extract
+    btoi
+    pushint 4
+    +
+    bytec_0 // "sarr"
+    swap
+    intc_1 // 32
+    box_extract // on error: index out of bounds
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@59:
+    intc_0 // 0
+    b main_ternary_merge@60
+
+main_ternary_false@56:
+    intc_0 // 0
+    b main_ternary_merge@57
+
+main_s_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@64
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@65:
+    !
+    assert // not payable
+    pushint 8
+    bzero
+    dig 8
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bury 3
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@67
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@68:
+    dig 3
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    itob
+    bytec_0 // "sarr"
+    swap
+    concat
+    bytec 6 // "m"
+    concat
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000007
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@67:
+    intc_0 // 0
+    b main_ternary_merge@68
+
+main_ternary_false@64:
+    intc_0 // 0
+    b main_ternary_merge@65
+
+main_seed_route@6:
+    txn GroupIndex
+    bz main_ternary_false@72
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@73:
+    !
+    assert // not payable
+    pushint 100
+    itob
+    dup
+    bury 5
+    bytec 8 // 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd
+    box_del
+    pop
+    bytec 8 // 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd
+    swap
+    box_put
+    pushint 200
+    itob
+    dup
+    bury 6
+    bytec 9 // 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5
+    box_del
+    pop
+    bytec 9 // 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5
+    swap
+    box_put
+    pushint 111
+    itob
+    bytec 10 // 0x41568aacd942bbc8125d38e2ba9580edc0ee3998e09fb8c909697c51850c9e3d
+    box_del
+    pop
+    bytec 10 // 0x41568aacd942bbc8125d38e2ba9580edc0ee3998e09fb8c909697c51850c9e3d
+    swap
+    box_put
+    pushint 1000
+    itob
+    bytec 11 // 0x34ea140695d5a4908e79b93a5fe5881fa070c6d250f74137bceeaef1655e2597
+    box_del
+    pop
+    bytec 11 // 0x34ea140695d5a4908e79b93a5fe5881fa070c6d250f74137bceeaef1655e2597
+    swap
+    box_put
+    pushint 2000
+    itob
+    bytec 12 // 0xff4f8678af17d4a3ac3bc9aac656130d5d56cc33dafe41be78dad7628630f18a
+    box_del
+    pop
+    bytec 12 // 0xff4f8678af17d4a3ac3bc9aac656130d5d56cc33dafe41be78dad7628630f18a
+    swap
+    box_put
+    bytec_0 // "sarr"
+    box_get
+    assert // box exists
+    bytec 13 // 0x0002002200000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 1
+    callsub dynamic_array_concat_dynamic_element
+    bytec_0 // "sarr"
+    box_del
+    pop
+    bytec_0 // "sarr"
+    dig 1
+    box_put
+    bytec 13 // 0x0002002200000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 1
+    callsub dynamic_array_concat_dynamic_element
+    bytec_0 // "sarr"
+    box_del
+    pop
+    bytec_0 // "sarr"
+    swap
+    box_put
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@75
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@76:
+    assert // array index out of bounds
+    bytec 14 // 0xf656b9f75cb8389eb36fb49a0d40d87a052cba40c6c4f8a3e58b709ca78e4e52
+    box_del
+    pop
+    bytec 14 // 0xf656b9f75cb8389eb36fb49a0d40d87a052cba40c6c4f8a3e58b709ca78e4e52
+    dig 4
+    box_put
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@78
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@79:
+    intc_2 // 1
+    >
+    assert // array index out of bounds
+    bytec 15 // 0x5f9d45293d03923d85ce507b1a299213f4a21a700711d2ede36558c1b4d3f7d5
+    box_del
+    pop
+    bytec 15 // 0x5f9d45293d03923d85ce507b1a299213f4a21a700711d2ede36558c1b4d3f7d5
+    dig 5
+    box_put
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@81
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@82:
+    assert // array index out of bounds
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bnz main_after_if_else@84
+    bytec_0 // "sarr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@84:
+    bytec_0 // "sarr"
+    intc_3 // 2
+    dup
+    box_extract
+    btoi
+    pushint 36
+    +
+    bytec_0 // "sarr"
+    dig 1
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_3 // 2
+    +
+    bytec_0 // "sarr"
+    cover 2
+    box_extract
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x00220000000000000000000000000000000000000000000000000000000000000001
+    swap
+    concat
+    bytec_0 // "sarr"
+    box_get
+    pop
+    swap
+    intc_0 // 0
+    callsub dynamic_array_replace_dynamic_element
+    bytec_0 // "sarr"
+    box_del
+    pop
+    bytec_0 // "sarr"
+    swap
+    box_put
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@86
+    bytec_0 // "sarr"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@87:
+    intc_2 // 1
+    >
+    assert // array index out of bounds
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bnz main_after_if_else@89
+    bytec_0 // "sarr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@89:
+    bytec_0 // "sarr"
+    pushint 4
+    intc_3 // 2
+    box_extract
+    btoi
+    pushint 36
+    +
+    bytec_0 // "sarr"
+    dig 1
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_3 // 2
+    +
+    bytec_0 // "sarr"
+    cover 2
+    box_extract
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x00220000000000000000000000000000000000000000000000000000000000000002
+    swap
+    concat
+    bytec_0 // "sarr"
+    box_get
+    pop
+    swap
+    intc_2 // 1
+    callsub dynamic_array_replace_dynamic_element
+    bytec_0 // "sarr"
+    box_del
+    pop
+    bytec_0 // "sarr"
+    swap
+    box_put
+    bytec_2 // "aom"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    len
+    bz main_ternary_false@91
+    bytec_2 // "aom"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@92:
+    intc_2 // 1
+    +
+    itob
+    extract 6 2
+    intc_0 // 0
+    extract_uint16
+    intc_2 // 1
+    +
+    itob
+    extract 6 2
+    bytec_2 // "aom"
+    swap
+    box_put
+    bytec_2 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@97
+    bytec_2 // "aom"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@98:
+    assert // array index out of bounds
+    pushint 300
+    itob
+    bytec 16 // 0x7d500ceeef534922693bf4dcfba48606f128e37b95fdf4aee1897450bcaf00a2
+    box_del
+    pop
+    bytec 16 // 0x7d500ceeef534922693bf4dcfba48606f128e37b95fdf4aee1897450bcaf00a2
+    swap
+    box_put
+    bytec_2 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@100
+    bytec_2 // "aom"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+main_ternary_merge@101:
+    intc_2 // 1
+    >
+    assert // array index out of bounds
+    pushint 400
+    itob
+    bytec 17 // 0xe7dc6719b433559ce2d3d4aeb52a420c523a819302ba98beb526d77b00d98185
+    box_del
+    pop
+    bytec 17 // 0xe7dc6719b433559ce2d3d4aeb52a420c523a819302ba98beb526d77b00d98185
+    swap
+    box_put
+    pushint 500
+    itob
+    bytec 18 // 0x83278134458c4e618a69b1ec4af1e9ac1b4f4ab327a46cbacd5387ed5cbec1f7
+    box_del
+    pop
+    bytec 18 // 0x83278134458c4e618a69b1ec4af1e9ac1b4f4ab327a46cbacd5387ed5cbec1f7
+    swap
+    box_put
+    pushint 600
+    itob
+    bytec 19 // 0x5fba69cecb0adc6c8a5946629286f30c24f97030799679428e49fa4c524d16be
+    box_del
+    pop
+    bytec 19 // 0x5fba69cecb0adc6c8a5946629286f30c24f97030799679428e49fa4c524d16be
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@100:
+    intc_0 // 0
+    b main_ternary_merge@101
+
+main_ternary_false@97:
+    intc_0 // 0
+    b main_ternary_merge@98
+
+main_ternary_false@91:
+    intc_0 // 0
+    b main_ternary_merge@92
+
+main_ternary_false@86:
+    intc_0 // 0
+    b main_ternary_merge@87
+
+main_ternary_false@81:
+    intc_0 // 0
+    b main_ternary_merge@82
+
+main_ternary_false@78:
+    intc_0 // 0
+    b main_ternary_merge@79
+
+main_ternary_false@75:
+    intc_0 // 0
+    b main_ternary_merge@76
+
+main_ternary_false@72:
+    intc_0 // 0
+    b main_ternary_merge@73
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "sarr"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_2 // "aom"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "mm"
+    intc_3 // 2
+    box_create
+    pop
+    pushbytes "st1"
+    bytec 20 // 0x002200000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    pushbytes "st2"
+    bytec 20 // 0x002200000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
+dynamic_array_concat_dynamic_element:
+    proto 3 1
+    bytec_1 // ""
+    frame_dig -3
+    intc_0 // 0
+    extract_uint16
+    dup
+    frame_dig -1
+    +
+    itob
+    extract 6 0
+    swap
+    frame_dig -3
+    extract 2 0
+    swap
+    intc_3 // 2
+    *
+    frame_dig -1
+    intc_3 // 2
+    *
+    intc_0 // 0
+
+dynamic_array_concat_dynamic_element_for_header@1:
+    frame_dig 5
+    frame_dig 3
+    <
+    bz dynamic_array_concat_dynamic_element_after_for@4
+    frame_dig 2
+    frame_dig 5
+    dup
+    cover 2
+    extract_uint16
+    frame_dig 4
+    +
+    itob
+    extract 6 0
+    frame_dig 1
+    swap
+    concat
+    frame_bury 1
+    intc_3 // 2
+    +
+    frame_bury 5
+    b dynamic_array_concat_dynamic_element_for_header@1
+
+dynamic_array_concat_dynamic_element_after_for@4:
+    frame_dig 2
+    len
+    frame_bury 0
+    intc_0 // 0
+    frame_bury 5
+
+dynamic_array_concat_dynamic_element_for_header@5:
+    frame_dig 5
+    frame_dig 4
+    <
+    bz dynamic_array_concat_dynamic_element_after_for@8
+    frame_dig -2
+    frame_dig 5
+    dup
+    cover 2
+    extract_uint16
+    frame_dig 0
+    +
+    itob
+    extract 6 0
+    frame_dig 1
+    swap
+    concat
+    frame_bury 1
+    intc_3 // 2
+    +
+    frame_bury 5
+    b dynamic_array_concat_dynamic_element_for_header@5
+
+dynamic_array_concat_dynamic_element_after_for@8:
+    frame_dig 2
+    frame_dig 3
+    frame_dig 0
+    substring3
+    frame_dig 1
+    swap
+    concat
+    frame_dig -2
+    len
+    frame_dig -2
+    frame_dig 4
+    uncover 2
+    substring3
+    concat
+    frame_bury 0
+    retsub
+
+
+// _puya_lib.arc4.dynamic_array_replace_dynamic_element(source: bytes, new_item: bytes, index: uint64) -> bytes:
+dynamic_array_replace_dynamic_element:
+    proto 3 1
+    frame_dig -3
+    substring 0 2
+    dup
+    btoi
+    frame_dig -3
+    extract 2 0
+    frame_dig -2
+    len
+    cover 2
+    dup
+    len
+    frame_dig -1
+    intc_2 // 1
+    +
+    intc_3 // 2
+    *
+    dig 2
+    dig 1
+    extract_uint16
+    dig 4
+    frame_dig -1
+    -
+    intc_2 // 1
+    -
+    dig 3
+    cover 2
+    select
+    frame_dig -1
+    intc_3 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    dup2
+    -
+    cover 6
+    dig 4
+    intc_0 // 0
+    uncover 2
+    substring3
+    frame_dig -2
+    concat
+    uncover 4
+    uncover 2
+    uncover 4
+    substring3
+    concat
+    cover 2
+    swap
+    intc_3 // 2
+    *
+    swap
+
+dynamic_array_replace_dynamic_element_for_header@2:
+    frame_dig 5
+    frame_dig 4
+    <
+    bz dynamic_array_replace_dynamic_element_after_for@5
+    frame_dig 3
+    dup
+    frame_dig 5
+    dup
+    cover 3
+    extract_uint16
+    frame_dig 1
+    +
+    frame_dig 2
+    -
+    itob
+    extract 6 0
+    dig 2
+    swap
+    replace3
+    frame_bury 3
+    intc_3 // 2
+    +
+    frame_bury 5
+    b dynamic_array_replace_dynamic_element_for_header@2
+
+dynamic_array_replace_dynamic_element_after_for@5:
+    frame_dig 0
+    frame_dig 3
+    concat
+    frame_bury 0
+    retsub

@@ -3,22 +3,27 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_for_storage_structs.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock "s" 0x0000000000000000000000000000000000000000000000000000000000000007
+    intcblock 1 32
+    bytecblock "s"
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "s"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
     intc_0 // 1
     return
 
@@ -47,11 +52,10 @@ main_ternary_merge@9:
     intc_1 // 32
     bzero
     bytec_0 // "s"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000007
-    app_global_put
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000007
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    box_put
+    bytec_0 // "s"
     callsub L.f
-    pop
     dup
     len
     intc_1 // 32
@@ -59,12 +63,8 @@ main_ternary_merge@9:
     assert // overflow
     dig 1
     b|
-    intc_2 // 0
     bytec_0 // "s"
-    app_global_get_ex
-    assert // check s exists
     callsub L.f
-    pop
     dup
     len
     intc_1 // 32
@@ -81,14 +81,17 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_for_storage_structs.sol.L.f(_x: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_for_storage_structs.sol.L.f(_x: bytes) -> bytes:
 L.f:
-    proto 1 2
+    proto 1 1
     frame_dig -1
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 0 32
-    frame_dig -1
     retsub

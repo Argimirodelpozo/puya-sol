@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/multi_modifiers.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x"
+    bytecblock "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -82,8 +90,18 @@ main_ternary_merge@19:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x04
+    bytec_2 // 0x01
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushbytes 0x03
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put
@@ -109,8 +127,18 @@ main_ternary_merge@24:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x08
+    bytec_2 // 0x01
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushbytes 0x07
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put

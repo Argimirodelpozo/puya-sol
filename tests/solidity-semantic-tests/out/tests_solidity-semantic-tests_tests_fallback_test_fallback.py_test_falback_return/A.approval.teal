@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -113,7 +121,8 @@ __fallback_ternary_merge@3:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x02
+    pushint 2
+    itob
     b==
     bz __fallback_after_if_else@5
     retsub
@@ -125,6 +134,10 @@ __fallback_after_if_else@5:
     assert // check x exists
     pushbytes 0x01
     b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put

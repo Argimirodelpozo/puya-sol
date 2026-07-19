@@ -8,7 +8,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -112,8 +120,9 @@ main_ternary_false@8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
 extract:
     proto 2 2
+    intc_2 // 0
+    itob
     frame_dig -1
-    pushbytes 0x
     b==
     bz extract_else_body@2
     frame_dig -2
@@ -124,8 +133,9 @@ extract:
     retsub
 
 extract_else_body@2:
+    intc_0 // 1
+    itob
     frame_dig -1
-    pushbytes 0x01
     b==
     bz extract_else_body@4
     frame_dig -2

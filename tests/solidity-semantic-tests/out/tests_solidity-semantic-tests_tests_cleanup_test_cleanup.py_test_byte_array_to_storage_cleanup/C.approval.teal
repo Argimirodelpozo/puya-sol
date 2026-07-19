@@ -10,7 +10,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -135,8 +143,8 @@ main_ternary_merge@26:
     intc_2 // 63
     bzero
     load 0
-    pushbytes 0x42
-    replace2 95
+    store 0
+    load 0
     store 0
     bytec_0 // "s"
     box_del
@@ -161,13 +169,13 @@ main_ternary_false@25:
 
 main_h_route@6:
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@31
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+main_ternary_merge@32:
     !
     assert // not payable
     pushbytes 0xdd0b0fa3000a0000000000000021000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -191,9 +199,9 @@ main_ternary_merge@31:
     intc_0 // 1
     return
 
-main_ternary_false@30:
+main_ternary_false@31:
     intc_1 // 0
-    b main_ternary_merge@31
+    b main_ternary_merge@32
 
 main___postInit_route@5:
     bytec_1 // "__ctor_pending"

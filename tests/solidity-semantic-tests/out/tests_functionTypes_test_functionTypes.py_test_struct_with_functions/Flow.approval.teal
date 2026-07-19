@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_functions.sol.Flow.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 24
+    intcblock 1 24 2 0
     bytecblock "t" 0x000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending"
     pushint 4096
     bzero
@@ -58,7 +58,7 @@ main_ternary_merge@13:
     cover 2
     select
     extract 0 12 // on error: index access is out of bounds
-    intc_1 // 2
+    intc_2 // 2
     extract_uint64
     callsub __funcptr_dispatch_ret_u256
     dup
@@ -77,7 +77,7 @@ main_ternary_merge@13:
     cover 2
     select
     extract 12 12 // on error: index access is out of bounds
-    intc_1 // 2
+    intc_2 // 2
     extract_uint64
     callsub __funcptr_dispatch_ret_u256
     dup
@@ -96,7 +96,7 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@13
 
 main___postInit_route@5:
@@ -104,10 +104,10 @@ main___postInit_route@5:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "t"
-    pushint 64
+    intc_1 // 24
     box_create
     pop
     bytec_0 // "t"
@@ -126,7 +126,7 @@ main___postInit_route@5:
     swap
     concat
     bytec_0 // "t"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
@@ -134,7 +134,7 @@ main___postInit_route@5:
     bury 1
     bnz main_after_if_else@19
     bytec_0 // "t"
-    intc_3 // 24
+    intc_1 // 24
     box_create
     pop
 
@@ -153,7 +153,7 @@ main_after_if_else@19:
     bytec_2 // 0xff07
     concat
     bytec_0 // "t"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
@@ -161,7 +161,7 @@ main_after_if_else@19:
     bury 1
     bnz main_after_if_else@21
     bytec_0 // "t"
-    intc_3 // 24
+    intc_1 // 24
     box_create
     pop
 
@@ -192,7 +192,7 @@ main_after_if_else@21:
     bury 1
     bnz main_after_if_else@23
     bytec_0 // "t"
-    intc_3 // 24
+    intc_1 // 24
     box_create
     pop
 
@@ -221,7 +221,7 @@ main_after_if_else@23:
     bury 1
     bnz main_after_if_else@25
     bytec_0 // "t"
-    intc_3 // 24
+    intc_1 // 24
     box_create
     pop
 
@@ -248,7 +248,7 @@ main_after_if_else@25:
     bury 1
     bnz main_after_if_else@27
     bytec_0 // "t"
-    intc_3 // 24
+    intc_1 // 24
     box_create
     pop
 
@@ -263,7 +263,7 @@ main_after_if_else@27:
     extract 0 2
     swap
     extract 10 2
-    intc_1 // 2
+    intc_2 // 2
     itob
     uncover 2
     swap
@@ -271,7 +271,7 @@ main_after_if_else@27:
     swap
     concat
     bytec_0 // "t"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace // on error: index out of bounds
     intc_0 // 1
@@ -285,13 +285,13 @@ __funcptr_dispatch_ret_u256:
     intc_0 // 1
     ==
     bz __funcptr_dispatch_ret_u256_else_body@2
-    intc_1 // 2
+    intc_2 // 2
     itob
     retsub
 
 __funcptr_dispatch_ret_u256_else_body@2:
     frame_dig -1
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid function pointer
     intc_0 // 1

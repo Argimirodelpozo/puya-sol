@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_constructor_nested.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 24 88
+    intcblock 1 24 88 96
     bytecblock "__ctor_pending" "s"
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x0d12e299 // method "__postInit()void", method "get()(uint512,uint256[3],uint512,uint512)"
+    pushbytess 0xbacc49e3 0xece3c955 // method "__postInit()void", method "get()(uint256,uint256[3],uint256,uint256)"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_get_route@6
     err
@@ -45,12 +53,12 @@ main_ternary_merge@13:
     !
     assert // not payable
     load 0
-    intc_2 // 24
+    intc_1 // 24
     bzero
     dig 1
-    intc_3 // 88
+    intc_2 // 88
     extract_uint64
-    pushint 96
+    intc_3 // 96
     +
     itob
     concat
@@ -71,34 +79,12 @@ main_ternary_merge@13:
     extract 0 32
     swap
     extract 32 32
-    dig 3
-    len
-    intc_1 // 64
-    <=
-    assert // overflow
-    intc_1 // 64
-    bzero
-    uncover 4
-    dig 1
-    b|
-    uncover 4
-    concat
-    dig 3
-    len
-    intc_1 // 64
-    <=
-    assert // overflow
     uncover 3
-    dig 2
-    b|
+    uncover 3
     concat
-    dig 2
-    len
-    intc_1 // 64
-    <=
-    assert // overflow
-    cover 2
-    b|
+    uncover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap
@@ -119,12 +105,12 @@ main___postInit_route@5:
     pushint 0
     app_global_put
     load 0
-    intc_2 // 24
+    intc_1 // 24
     bzero
     dig 1
-    intc_3 // 88
+    intc_2 // 88
     extract_uint64
-    pushint 96
+    intc_3 // 96
     +
     itob
     concat

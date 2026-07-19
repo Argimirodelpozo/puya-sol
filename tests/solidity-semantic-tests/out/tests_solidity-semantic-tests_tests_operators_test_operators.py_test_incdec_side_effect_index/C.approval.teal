@@ -1,0 +1,102 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/incdec_side_effect_index.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 24 88 96
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9425a90b 0xe05a6f3f // method "memArr()(uint256,uint256,uint256,uint256)", method "memArrDec()(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_memArr_route@5 main_memArrDec_route@6
+    err
+
+main_memArrDec_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    load 0
+    intc_1 // 24
+    bzero
+    dig 1
+    intc_2 // 88
+    extract_uint64
+    intc_3 // 96
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001f0000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    pushint 0
+    b main_ternary_merge@13
+
+main_memArr_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    load 0
+    intc_1 // 24
+    bzero
+    dig 1
+    intc_2 // 88
+    extract_uint64
+    intc_3 // 96
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    pushint 0
+    b main_ternary_merge@18

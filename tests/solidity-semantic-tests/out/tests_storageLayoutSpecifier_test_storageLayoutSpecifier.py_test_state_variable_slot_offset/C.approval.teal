@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_slot_offset.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 32
+    intcblock 1 0 32
     bytecblock 0x151f7c75 "x" "y" "z"
     pushint 4096
     bzero
@@ -42,7 +42,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x558a5700 0xdc54cee4 0x1e4ed8da 0x3f4abdfd 0x60d68bc1 0x5848be20 // method "xSlotOffset()(uint256,uint256)", method "ySlotOffset()(uint256,uint256)", method "zSlotOffset()(uint256,uint256)", method "x()uint512", method "y()uint512", method "z()uint256"
+    pushbytess 0x558a5700 0xdc54cee4 0x1e4ed8da 0x7c1072af 0x5c5e3bbc 0x5848be20 // method "xSlotOffset()(uint256,uint256)", method "ySlotOffset()(uint256,uint256)", method "zSlotOffset()(uint256,uint256)", method "x()uint256", method "y()uint256", method "z()uint256"
     txna ApplicationArgs 0
     match main_xSlotOffset_route@5 main_ySlotOffset_route@6 main_zSlotOffset_route@7 main_x_route@8 main_y_route@9 main_z_route@10
     err
@@ -64,10 +64,10 @@ main_ternary_merge@17:
     assert // check z exists
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -109,10 +109,10 @@ main_ternary_merge@22:
 main_ternary_merge@25:
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -157,10 +157,10 @@ main_ternary_merge@30:
 main_ternary_merge@33:
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -227,13 +227,13 @@ main_ternary_false@42:
 
 main_xSlotOffset_route@5:
     txn GroupIndex
-    bz main_ternary_false@47
+    bz main_ternary_false@49
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@48:
+main_ternary_merge@50:
     !
     assert // not payable
     load 0
@@ -245,6 +245,6 @@ main_ternary_merge@48:
     intc_0 // 1
     return
 
-main_ternary_false@47:
+main_ternary_false@49:
     intc_1 // 0
-    b main_ternary_merge@48
+    b main_ternary_merge@50

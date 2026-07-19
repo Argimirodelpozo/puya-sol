@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/function_type_library_internal.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
     dupn 2
     pushbytes ""
@@ -11,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -71,11 +80,14 @@ main_while_top@11:
     dig 4
     b>
     bz main_after_while@13
+    dig 3
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 4
-    dup
-    cover 2
+    dig 1
     concat
     dup
     len
@@ -94,6 +106,10 @@ main_while_top@11:
     bury 4
     pushbytes 0x01
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 4
     b main_while_top@11
 
@@ -125,4 +141,8 @@ Utils.sum:
     frame_dig -2
     frame_dig -1
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub

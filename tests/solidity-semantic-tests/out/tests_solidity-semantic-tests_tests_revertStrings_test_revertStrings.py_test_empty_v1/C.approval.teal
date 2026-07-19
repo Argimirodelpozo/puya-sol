@@ -3,19 +3,28 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/empty_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 0 32 1 31
+    intc_0 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -32,39 +41,84 @@ main_after_if_else@2:
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_0 // 1
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    dig 1
+    dup
+    cover 2
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    intc_3 // 31
+    bzero
+    uncover 3
+    swap
+    concat
+    uncover 2
+    intc_3 // 31
+    +
+    intc_1 // 32
+    /
+    intc_1 // 32
+    *
+    intc_0 // 0
+    swap
+    extract3
+    concat
+    log
+    err // revert
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main_f_route@5:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@18:
     !
     assert // not payable
-    err // revert
-
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@18
-
-main_f_route@5:
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@18
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    log
+    err
 
 main_ternary_false@17:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@18

@@ -4,19 +4,28 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 "__ctor_pending" 0x
+    bytecblock 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 0x "__ctor_pending"
+    bytec_1 // ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -46,7 +55,7 @@ main_ternary_merge@14:
     assert // not payable
     bytec_0 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -81,11 +90,13 @@ main_ternary_merge@19:
     assert // not payable
     intc_0 // 1
     itob
+    intc_1 // 0
+    itob
     bytec_0 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
     box_del
     pop
     bytec_0 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
-    swap
+    uncover 2
     box_put
     load 5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
@@ -100,10 +111,14 @@ main_ternary_merge@19:
     store 5
     load 5
     extract 0 32
-    bytec_2 // 0x
     b==
-    assert
-    intc_0 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@21
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@21:
     return
 
 main_ternary_false@18:
@@ -111,10 +126,10 @@ main_ternary_false@18:
     b main_ternary_merge@19
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     pushbytes "m"
@@ -122,7 +137,7 @@ main___postInit_route@5:
     box_create
     pop
     pushbytes "t"
-    bytec_2 // 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return

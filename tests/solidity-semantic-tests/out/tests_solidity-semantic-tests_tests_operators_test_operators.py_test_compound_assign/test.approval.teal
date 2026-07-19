@@ -4,25 +4,33 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/compound_assign.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 32 1
-    bytecblock "value1" "value2" 0x
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "value1" "value2" 0x
     intc_0 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "value1"
-    bytec_2 // 0x
+    bytec_1 // "value1"
+    bytec_3 // 0x
     app_global_put
-    bytec_1 // "value2"
-    bytec_2 // 0x
+    bytec_2 // "value2"
+    bytec_3 // 0x
     app_global_put
     intc_2 // 1
     return
@@ -64,30 +72,50 @@ main_ternary_merge@9:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "value1"
+    bytec_1 // "value1"
     app_global_get_ex
     assert // check value1 exists
     dig 2
     dup
     cover 2
     b+
-    bytec_0 // "value1"
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "value1"
     dig 1
     app_global_put
     dig 2
     uncover 2
     b*
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     intc_0 // 0
-    bytec_1 // "value2"
+    bytec_2 // "value2"
     app_global_get_ex
     assert // check value2 exists
     swap
     uncover 2
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     b*
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     pushbytes 0x07
     b+
-    bytec_1 // "value2"
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "value2"
     dig 1
     app_global_put
     dup

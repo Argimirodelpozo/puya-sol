@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_memory_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8
+    intcblock 0 1 8 32
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     dup
@@ -119,12 +119,28 @@ main_while_top@10:
 main_after_while@12:
     load 0
     store 0
+    dup
+    bz main_ternary_merge@18
+    dup
+    intc_3 // 32
+    <
+    bz main_ternary_false@15
+    dup
+
+main_ternary_merge@16:
     pushbytes 0x3132333435363738393031323334353637383930313233343536373839303132
     intc_0 // 0
-    dig 2
+    uncover 2
     extract3
+    dig 2
+    swap
+    replace2 0
+    bury 2
+
+main_ternary_merge@18:
     load 0
     store 0
+    dig 1
     dup
     len
     itob
@@ -137,6 +153,10 @@ main_after_while@12:
     log
     intc_1 // 1
     return
+
+main_ternary_false@15:
+    intc_3 // 32
+    b main_ternary_merge@16
 
 main_ternary_false@8:
     intc_0 // 0

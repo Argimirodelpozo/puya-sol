@@ -8,7 +8,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -24,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x98411453 0x08d05333 0xed371b95 0x0c192409 0xf777099f // method "f0()(uint512,bool)", method "f1()uint256", method "f2()uint256", method "f3()uint256", method "f4()uint256"
+    pushbytess 0xfb60da41 0x08d05333 0xed371b95 0x0c192409 0xf777099f // method "f0()(uint256,bool)", method "f1()uint256", method "f2()uint256", method "f3()uint256", method "f4()uint256"
     txna ApplicationArgs 0
     match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_f4_route@9
     err
@@ -120,7 +128,7 @@ main_f0_route@5:
 main_ternary_merge@36:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000280
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000280
     log
     intc_0 // 1
     return

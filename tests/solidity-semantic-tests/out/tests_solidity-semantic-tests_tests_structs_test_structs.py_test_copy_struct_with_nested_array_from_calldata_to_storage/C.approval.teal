@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 3
+    intcblock 0 1 3 2
     intc_0 // 0
     dup
     pushbytes ""
@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -84,12 +92,13 @@ main_ternary_merge@9:
     assert
     dup
     itob
-    pushbytes 0x02
+    intc_3 // 2
+    itob
     b==
     assert
     dig 1
     dup
-    pushint 2
+    intc_3 // 2
     getbyte
     pushint 7
     ==

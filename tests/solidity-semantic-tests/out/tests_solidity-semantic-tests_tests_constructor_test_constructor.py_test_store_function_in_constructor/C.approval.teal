@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/store_function_in_constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32 0 2
     bytecblock "result_in_constructor" 0x151f7c75 "x"
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -22,7 +30,7 @@ main:
     bytec_2 // "x"
     intc_0 // 1
     app_global_put
-    pushint 2
+    intc_3 // 2
     itob
     callsub use
     bytec_0 // "result_in_constructor"
@@ -120,9 +128,14 @@ double:
 double_ternary_merge@3:
     !
     assert // not payable
+    intc_3 // 2
+    itob
     frame_dig -1
-    pushbytes 0x02
     b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32

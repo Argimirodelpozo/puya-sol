@@ -129,7 +129,9 @@ main_ternary_merge@13:
     concat
     dup
     intc_1 // 0
-    extract_uint16 // on error: invalid array length header
+    extract_uint16
+    dup
+    assert // array index out of bounds
     itob
     swap
     extract 2 32
@@ -185,6 +187,8 @@ main_ternary_merge@18:
     !
     assert // not payable
     dig 1
+    dup
+    assert // array index out of bounds
     itob
     dig 3
     extract 2 32

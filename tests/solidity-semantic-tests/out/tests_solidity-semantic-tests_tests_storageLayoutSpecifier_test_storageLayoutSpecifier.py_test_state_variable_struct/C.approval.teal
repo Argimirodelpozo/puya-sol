@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -37,7 +45,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x48b0aa08 0x1a8006db 0x27b5e8ca 0x999aa266 // method "initS1()(uint512,address,bool)", method "initS2()(uint512,address,bool)", method "s2()(uint512,address,bool)", method "s1()(uint512,address,bool)"
+    pushbytess 0xbf146c38 0x213446c3 0x27b5e8ca 0x999aa266 // method "initS1()(uint256,address,bool)", method "initS2()(uint256,address,bool)", method "s2()(uint512,address,bool)", method "s1()(uint512,address,bool)"
     txna ApplicationArgs 0
     match main_initS1_route@5 main_initS2_route@6 main_s2_route@7 main_s1_route@8
     err
@@ -221,16 +229,7 @@ main_ternary_merge@25:
     setbit
     intc_0 // 0
     getbit
-    dig 2
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    uncover 3
-    b|
-    uncover 2
+    cover 2
     concat
     bytec_0 // 0x00
     intc_0 // 0
@@ -315,16 +314,7 @@ main_ternary_merge@30:
     setbit
     intc_0 // 0
     getbit
-    dig 2
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    uncover 3
-    b|
-    uncover 2
+    cover 2
     concat
     bytec_0 // 0x00
     intc_0 // 0

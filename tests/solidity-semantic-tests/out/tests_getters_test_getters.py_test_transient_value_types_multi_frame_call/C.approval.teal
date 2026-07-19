@@ -36,21 +36,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0xf2b65f27 0xafedb2e5 0x3f4abdfd // method "f()uint256", method "g()void", method "h()uint256", method "x()uint512"
+    pushbytess 0xcd78b354 0xf2b65f27 0xafedb2e5 0x7c1072af // method "f()uint256", method "g()void", method "h()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6 main_h_route@7 main_x_route@8
     err
 
 main_x_route@8:
     callsub x
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -285,10 +277,20 @@ x_ternary_merge@3:
     bz x_ternary_false@5
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
+
+x_ternary_merge@6:
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
     retsub
 
 x_ternary_false@5:
-    retsub
+    b x_ternary_merge@6
 
 x_ternary_false@2:
     intc_2 // 0

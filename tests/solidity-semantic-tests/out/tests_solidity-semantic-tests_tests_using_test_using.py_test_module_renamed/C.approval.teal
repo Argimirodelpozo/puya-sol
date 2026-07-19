@@ -1,16 +1,25 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_m1qxnodj/C.sol.C.approval_program() -> uint64:
+// /tmp/multisource_tv1wyf19/C.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -90,19 +99,29 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/multisource_m1qxnodj/C.sol.f(x: bytes) -> bytes:
+// /tmp/multisource_tv1wyf19/C.sol.f(x: bytes) -> bytes:
 f:
     proto 1 1
+    pushint 2
+    itob
     frame_dig -1
-    pushbytes 0x02
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub
 
 
-// /tmp/multisource_m1qxnodj/C.sol.g(x: bytes) -> bytes:
+// /tmp/multisource_tv1wyf19/C.sol.g(x: bytes) -> bytes:
 g:
     proto 1 1
+    pushint 8
+    itob
     frame_dig -1
-    pushbytes 0x08
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub

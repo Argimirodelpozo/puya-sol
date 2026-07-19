@@ -4,13 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/continue_in_modifier.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" 0x01
+    bytecblock "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01
     intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -81,42 +90,60 @@ main_ternary_merge@18:
     assert // not payable
     intc_0 // 0
     itob
-    bury 1
+    bury 2
 
-main_while_top@19:
-    dup
-    pushbytes 0x0a
-    b<
-    bz main_after_while@23
-    dup
-    pushbytes 0x02
+main_while_top@20:
+    pushint 10
+    itob
+    dig 2
+    b>
+    bz main_after_while@24
+    pushint 2
+    itob
+    dig 2
+    swap
     b%
-    bytec_1 // 0x01
-    b==
-    bz main_after_if_else@22
+    intc_1 // 1
+    itob
     dup
-    bytec_1 // 0x01
+    bury 3
+    b==
+    bz main_after_if_else@23
+    dig 1
+    bytec_2 // 0x01
     b+
-    bury 1
-    b main_while_top@19
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 2
+    b main_while_top@20
 
-main_after_if_else@22:
+main_after_if_else@23:
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    bytec_1 // 0x01
+    dig 1
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "x"
     swap
     app_global_put
-    dup
-    bytec_1 // 0x01
+    dig 1
+    bytec_2 // 0x01
     b+
-    bury 1
-    b main_while_top@19
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 2
+    b main_while_top@20
 
-main_after_while@23:
+main_after_while@24:
     intc_1 // 1
     return
 

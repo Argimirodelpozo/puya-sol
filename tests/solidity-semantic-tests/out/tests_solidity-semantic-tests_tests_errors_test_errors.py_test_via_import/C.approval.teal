@@ -1,14 +1,22 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_z4z0jhfe/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_v3qj55eu/s3.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -37,14 +45,16 @@ main_z_route@7:
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@14:
     !
     assert // not payable
+    pushbytes 0xd5c1f7fc0000000000000000000000000000000000000000000000000000000000000003
+    log
     err // E
 
 main_ternary_false@13:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@14
 
 main_y_route@6:
     txn GroupIndex
@@ -53,11 +63,17 @@ main_y_route@6:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    pushbytes 0xd5c1f7fc0000000000000000000000000000000000000000000000000000000000000002
+    log
+    err // E
 
 main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@19
 
 main_x_route@5:
     txn GroupIndex
@@ -66,7 +82,13 @@ main_x_route@5:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    pushbytes 0xd5c1f7fc0000000000000000000000000000000000000000000000000000000000000001
+    log
+    err // E
 
 main_ternary_false@23:
     intc_1 // 0

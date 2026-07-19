@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/byte_array_transitional_2.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 255 32
     bytecblock "data" "__ctor_pending"
     intc_1 // 0
     dup
@@ -13,7 +13,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -49,17 +57,17 @@ main_ternary_merge@13:
     !
     assert // not payable
     intc_1 // 0
-    bury 3
+    bury 1
 
 main_while_top@14:
-    dig 2
+    dup
     pushint 33
     <
     bz main_after_while@16
     bytec_0 // "data"
     box_get
     assert // box exists
-    dig 3
+    dig 1
     dup
     cover 2
     itob
@@ -73,15 +81,19 @@ main_while_top@14:
     box_put
     intc_0 // 1
     +
-    bury 3
+    dup
+    intc_2 // 255
+    <=
+    assert // overflow
+    bury 1
     b main_while_top@14
 
 main_after_while@16:
     intc_1 // 0
-    bury 2
+    bury 3
 
 main_while_top@17:
-    dig 1
+    dig 2
     itob
     dup
     bury 6
@@ -92,14 +104,14 @@ main_while_top@17:
     b<
     bz main_after_while@21
     bytec_0 // "data"
-    dig 2
+    dig 3
     intc_0 // 1
     box_extract
     dig 5
     extract 7 1
     !=
     bz main_after_if_else@20
-    intc_2 // 32
+    intc_3 // 32
     bzero
     dig 5
     b|
@@ -113,16 +125,20 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     return
 
 main_after_if_else@20:
-    dig 1
+    dig 2
     intc_0 // 1
     +
-    bury 2
+    dup
+    intc_2 // 255
+    <=
+    assert // overflow
+    bury 3
     b main_while_top@17
 
 main_after_while@21:
     bytec_0 // "data"
     box_len
-    pop
+    assert // box exists
     intc_0 // 1
     -
     bytec_0 // "data"
@@ -137,7 +153,7 @@ main_after_while@21:
     box_put
     bytec_0 // "data"
     box_len
-    pop
+    assert // box exists
     intc_0 // 1
     -
     bytec_0 // "data"
@@ -151,10 +167,10 @@ main_after_while@21:
     swap
     box_put
     intc_1 // 0
-    bury 1
+    bury 2
 
 main_while_top@22:
-    dup
+    dig 1
     itob
     dup
     bury 5
@@ -165,24 +181,28 @@ main_while_top@22:
     b<
     bz main_after_while@26
     bytec_0 // "data"
-    dig 1
+    dig 2
     intc_0 // 1
     box_extract
     dig 4
     extract 7 1
     !=
     bz main_after_if_else@25
-    intc_2 // 32
+    intc_3 // 32
     bzero
     dig 4
     b|
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/byte_array_transitional_2.sol.c.test@27
 
 main_after_if_else@25:
-    dup
+    dig 1
     intc_0 // 1
     +
-    bury 1
+    dup
+    intc_2 // 255
+    <=
+    assert // overflow
+    bury 2
     b main_while_top@22
 
 main_after_while@26:

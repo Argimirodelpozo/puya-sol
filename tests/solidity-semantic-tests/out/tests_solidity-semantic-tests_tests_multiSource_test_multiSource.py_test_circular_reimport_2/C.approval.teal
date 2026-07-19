@@ -1,15 +1,23 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_em8lneab/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_3kqd9isc/s3.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000002710
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -41,35 +49,44 @@ main_foo_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    callsub /tmp/multisource_em8lneab/s3.sol.f_67
-    pushbytes 0x2710
+    pushint 10000
+    itob
+    callsub /tmp/multisource_3kqd9isc/s3.sol.f_28
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     callsub g
+    dup2
     b>=
     assert // underflow
-    callsub /tmp/multisource_em8lneab/s3.sol.f_67
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000002710
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub g
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     callsub f
+    dup2
     b>=
     assert // underflow
-    callsub /tmp/multisource_em8lneab/s3.sol.f_67
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000002710
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub g
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    callsub f
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -90,32 +107,42 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/multisource_em8lneab/s3.sol.f_93() -> bytes:
+// /tmp/multisource_3kqd9isc/s3.sol.f() -> bytes:
 f:
+    pushint 1000
+    itob
     callsub g
-    pushbytes 0x03e8
     b+
-    callsub /tmp/multisource_em8lneab/s3.sol.f_67
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    callsub /tmp/multisource_3kqd9isc/s3.sol.f_28
+    dup2
     b>=
     assert // underflow
-    callsub g
-    pushbytes 0x0100000000000000000000000000000000000000000000000000000000000003e8
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub /tmp/multisource_em8lneab/s3.sol.f_67
+    swap
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub
 
 
-// /tmp/multisource_em8lneab/s3.sol.f_67() -> bytes:
-/tmp/multisource_em8lneab/s3.sol.f_67:
+// /tmp/multisource_3kqd9isc/s3.sol.f_28() -> bytes:
+/tmp/multisource_3kqd9isc/s3.sol.f_28:
     pushint 2
     itob
     retsub
 
 
-// /tmp/multisource_em8lneab/s3.sol.g_75() -> bytes:
+// /tmp/multisource_3kqd9isc/s3.sol.g() -> bytes:
 g:
     pushint 4
     itob

@@ -12,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -109,8 +117,13 @@ main_ternary_merge@12:
     !
     assert // not payable
     dig 2
-    assert // index out of bounds
-    dig 4
+    assert // array index out of bounds
+    dig 5
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 5
     dup
     intc_0 // 0
     extract_uint16
@@ -122,7 +135,7 @@ main_ternary_merge@12:
     extract 2 0
     pushint 8
     bzero
-    dig 7
+    uncover 2
     concat
     dup
     len

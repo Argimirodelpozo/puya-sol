@@ -1,0 +1,276 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_multiple_placeholder.sol.G.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "acc" "ctr" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x 0x151f7c75
+    intc_0 // 0
+    bytec_3 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "acc"
+    bytec_3 // 0x
+    app_global_put
+    bytec_1 // "ctr"
+    bytec_3 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6f6cd4c8 0x4fe10e61 0x0e386792 0xc6d02479 0x5c3550b4 // method "addTwice(uint256)void", method "addStacked(uint256)void", method "ret(uint256)uint256", method "getAcc()uint256", method "getCtr()uint256"
+    txna ApplicationArgs 0
+    match main_addTwice_route@5 main_addStacked_route@6 main_ret_route@7 main_getAcc_route@8 main_getCtr_route@9
+    err
+
+main_getCtr_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "ctr"
+    app_global_get_ex
+    assert // check ctr exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 0
+    b main_ternary_merge@16
+
+main_getAcc_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "acc"
+    app_global_get_ex
+    assert // check acc exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21
+
+main_ret_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    dup
+    bury 2
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    dup
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    dig 2
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_0 // 0
+    b main_ternary_merge@26
+
+main_addStacked_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "ctr"
+    app_global_get_ex
+    assert // check ctr exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "ctr"
+    swap
+    app_global_put
+    dig 1
+    dup
+    callsub addStacked__body_1
+    callsub addStacked__body_1
+    intc_0 // 0
+    bytec_1 // "ctr"
+    app_global_get_ex
+    assert // check ctr exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "ctr"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main_addTwice_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    dig 1
+    dup
+    callsub addTwice__body_0
+    callsub addTwice__body_0
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_multiple_placeholder.sol.G.addTwice__body_0(__arc4_v: bytes) -> void:
+addTwice__body_0:
+    proto 1 0
+    intc_0 // 0
+    bytec_0 // "acc"
+    app_global_get_ex
+    assert // check acc exists
+    frame_dig -1
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "acc"
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_multiple_placeholder.sol.G.addStacked__body_1(__arc4_v: bytes) -> void:
+addStacked__body_1:
+    proto 1 0
+    intc_0 // 0
+    bytec_0 // "acc"
+    app_global_get_ex
+    assert // check acc exists
+    frame_dig -1
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "acc"
+    swap
+    app_global_put
+    retsub

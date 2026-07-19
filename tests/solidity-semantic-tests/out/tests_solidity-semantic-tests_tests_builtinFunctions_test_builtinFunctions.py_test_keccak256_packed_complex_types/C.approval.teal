@@ -3,13 +3,24 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 15 32 1 0
-    bytecblock "x"
+    intcblock 15 32 0 1
+    bytecblock "x" 0x
+    intc_2 // 0
+    dupn 2
+    bytec_1 // ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -19,7 +30,7 @@ main:
     bytec_0 // "x"
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -37,7 +48,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -46,7 +57,7 @@ main_ternary_merge@9:
     assert // not payable
     intc_0 // 15
     bzero
-    intc_3 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -61,7 +72,10 @@ main_ternary_merge@9:
     app_global_put
     intc_1 // 32
     bzero
-    dig 1
+    dup
+    cover 2
+    bury 5
+    dup
     extract 0 15 // on error: index access is out of bounds
     dig 3
     swap
@@ -72,7 +86,7 @@ main_ternary_merge@9:
     -
     intc_0 // 15
     extract3
-    dig 1
+    dig 2
     swap
     concat
     dup
@@ -81,7 +95,7 @@ main_ternary_merge@9:
     -
     intc_1 // 32
     extract3
-    dig 2
+    dig 1
     extract 15 15 // on error: index access is out of bounds
     dig 4
     swap
@@ -92,7 +106,7 @@ main_ternary_merge@9:
     -
     intc_0 // 15
     extract3
-    dig 2
+    dig 3
     swap
     concat
     dup
@@ -102,7 +116,7 @@ main_ternary_merge@9:
     intc_1 // 32
     extract3
     concat
-    uncover 2
+    swap
     extract 30 15 // on error: index access is out of bounds
     uncover 3
     swap
@@ -124,15 +138,59 @@ main_ternary_merge@9:
     extract3
     concat
     keccak256
-    pushbytes 0xf3ed94453839016594195213862043a45afef6b72cf9af39746fed7b77793c60e321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
+    bury 3
+    bytec_1 // 0x
+    bury 4
+    intc_2 // 0
+    bury 1
+
+main_while_top@10:
+    dup
+    pushint 3
+    <
+    bz main_after_while@12
+    dupn 2
+    intc_0 // 15
+    *
+    pushint 2
+    +
+    pushbytes 0x0003fffffffffffffffffffffffffffffefffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffc
+    swap
+    intc_0 // 15
+    extract3
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    bury 5
+    intc_3 // 1
+    +
+    bury 1
+    b main_while_top@10
+
+main_after_while@12:
+    dig 3
+    keccak256
+    dig 3
+    swap
+    concat
+    pushbytes 0xe321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
     concat
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_ternary_false@8:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@9

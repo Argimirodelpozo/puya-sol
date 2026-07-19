@@ -1,0 +1,229 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/encodepacked_widths.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 255 8
+    bytecblock 0x151f7c75
+    intc_1 // 0
+    pushbytes ""
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9c4602c1 0xe2bd7042 0x8d91befa 0xb8bb3ceb 0x38985ce9 // method "pEnum(uint64)byte[]", method "pMix(uint64,uint64)byte[]", method "pI8neg()byte[]", method "pI128neg()byte[]", method "pAddr(address)byte[]"
+    txna ApplicationArgs 0
+    match main_pEnum_route@5 main_pMix_route@6 main_pI8neg_route@7 main_pI128neg_route@8 main_pAddr_route@9
+    err
+
+main_pAddr_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    dup
+    bury 3
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    dig 1
+    itob
+    extract 6 2
+    dig 4
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
+
+main_pI128neg_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750010fffffffffffffffffffffffffffffffd
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_pI8neg_route@7:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750001fd
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_pMix_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 3
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    dupn 2
+    intc_2 // 255
+    <=
+    assert // ABI validation
+    intc_2 // 255
+    &
+    dig 3
+    dup
+    intc_2 // 255
+    <=
+    assert // ABI validation
+    intc_2 // 255
+    &
+    dup
+    pushint 2
+    <=
+    assert // ABI enum validation
+    swap
+    itob
+    extract 7 1
+    swap
+    itob
+    extract 7 1
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_pEnum_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 3
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    dig 2
+    dup
+    intc_2 // 255
+    <=
+    assert // ABI validation
+    intc_2 // 255
+    &
+    dup
+    pushint 2
+    <=
+    assert // ABI enum validation
+    itob
+    extract 7 1
+    pushbytes 0x151f7c750001
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37

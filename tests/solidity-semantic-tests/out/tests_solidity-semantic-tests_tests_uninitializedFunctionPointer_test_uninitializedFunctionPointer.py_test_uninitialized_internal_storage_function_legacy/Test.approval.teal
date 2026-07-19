@@ -4,11 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/contracts/uninitialized_internal_storage_function_legacy.sol.Test.approval_program() -> uint64:
 main:
     intcblock 0 1
+    pushbytes ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -48,12 +57,21 @@ main_ternary_merge@9:
     app_global_get_ex
     assert // check x exists
     load 0
-    swap
-    itob
-    swap
     store 0
-    pushbytes 0x
+    itob
+    load 0
+    store 0
+    intc_0 // 0
+    itob
     b!=
+    dup
+    bury 2
+    bnz main_after_if_else@11
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@11:
+    dup
     assert
     pushbytes 0x151f7c7580
     log

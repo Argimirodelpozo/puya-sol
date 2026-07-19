@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_dynamic_invalid.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 2 1 32
+    bytecblock 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     intc_0 // 0
     pushbytes ""
     dupn 4
@@ -11,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -99,17 +108,19 @@ main_after_for@13:
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@16:
     !
     assert // not payable
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    dig 3
+    assert // array index out of bounds
+    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     log
     intc_2 // 1
     return
 
 main_ternary_false@15:
     intc_0 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@16
 
 main_f_route@5:
     txna ApplicationArgs 1
@@ -177,7 +188,14 @@ main_after_for@21:
     intc_2 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    log
+    intc_2 // 1
+    return
 
 main_ternary_false@23:
     intc_0 // 0

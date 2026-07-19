@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 2 1 32
-    bytecblock 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5 0x0000 "__ctor_pending"
+    intcblock 2 0 1 32
+    bytecblock 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5 0x0000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -51,10 +59,11 @@ main_while_top@14:
     bytec_1 // 0x0000
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    pushbytes 0x14
+    pushint 20
+    itob
     b<
     bz main_after_while@18
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
@@ -62,20 +71,20 @@ main_while_top@14:
     bury 1
     bnz main_after_if_else@17
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
 
 main_after_if_else@17:
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
-    intc_0 // 0
-    intc_1 // 2
+    intc_1 // 0
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
     swap
@@ -86,25 +95,45 @@ main_after_if_else@17:
     itob
     extract 6 2
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     box_replace
-    intc_1 // 2
+    intc_0 // 2
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
     swap
-    intc_0 // 0
+    intc_1 // 0
     bytec_1 // 0x0000
     box_splice
     b main_while_top@14
 
 main_after_while@18:
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
+    box_len
+    bury 1
+    bnz main_after_if_else@20
+    bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@20:
+    bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
     pushint 10
     pushbytes 0x0009
     box_replace // on error: index out of bounds
+    bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
+    box_len
+    bury 1
+    bnz main_after_if_else@22
+    bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@22:
     bytec_0 // 0x432069a512da412be9b2f71eaf54056305174a8c33df60045e8da73ec59f26b5
     pushint 36
     pushbytes 0x0003
@@ -152,7 +181,7 @@ main_after_while@18:
     return
 
 main_ternary_false@12:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main___postInit_route@5:
@@ -160,10 +189,10 @@ main___postInit_route@5:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "data"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_2 // 1
@@ -173,20 +202,25 @@ main___postInit_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol.Lib.find(_haystack: bytes, _needle: uint64) -> bytes, bytes:
 Lib.find:
     proto 2 2
-    intc_0 // 0
+    intc_1 // 0
     itob
 
 Lib.find_while_top@1:
     frame_dig -2
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
     frame_dig 0
     b>
     bz Lib.find_after_while@5
+    frame_dig 0
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    frame_dig 0
+    swap
     concat
     dup
     len
@@ -196,7 +230,7 @@ Lib.find_while_top@1:
     frame_dig -2
     extract 2 0
     swap
-    intc_1 // 2
+    intc_0 // 2
     *
     extract_uint16
     frame_dig -1
@@ -211,11 +245,15 @@ Lib.find_after_if_else@4:
     frame_dig 0
     pushbytes 0x01
     b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     frame_bury 0
     b Lib.find_while_top@1
 
 Lib.find_after_while@5:
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     frame_dig -2
     uncover 2
     retsub

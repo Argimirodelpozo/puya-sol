@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xacd46a0c 0x0a1c1d05 0xa6fd40b7 // method "cSlotOffset()(uint512,uint512)", method "setBlue()void", method "checkBlue()bool"
+    pushbytess 0xbabc40ea 0x0a1c1d05 0xa6fd40b7 // method "cSlotOffset()(uint256,uint256)", method "setBlue()void", method "checkBlue()bool"
     txna ApplicationArgs 0
     match main_cSlotOffset_route@5 main_setBlue_route@6 main_checkBlue_route@7
     err
@@ -103,7 +111,9 @@ main_ternary_merge@24:
     assert // not payable
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load 0
+    store 0
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

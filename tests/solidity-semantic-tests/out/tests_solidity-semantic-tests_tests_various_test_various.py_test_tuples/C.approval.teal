@@ -6,11 +6,20 @@ main:
     intcblock 1 0 2 32
     bytecblock "data" "__ctor_pending" 0x151f7c75
     intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -45,6 +54,9 @@ main_f_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
+    pushint 3
+    itob
+    bury 1
     bytec_0 // "data"
     intc_1 // 0
     intc_2 // 2
@@ -77,12 +89,14 @@ main_ternary_merge@14:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     box_splice
     callsub h
-    bury 2
-    pushbytes 0x05
+    bury 3
+    pushint 5
+    itob
     b!=
     bnz main_if_body@16
-    dup
-    pushbytes 0x06
+    pushint 6
+    itob
+    dig 2
     b!=
     bz main_after_if_else@17
 
@@ -102,7 +116,7 @@ main_after_if_else@17:
     intc_2 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
-    pushbytes 0x03
+    dig 1
     b!=
     bz main_after_if_else@21
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002

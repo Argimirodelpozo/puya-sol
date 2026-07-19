@@ -10,7 +10,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -58,7 +66,7 @@ main_ternary_merge@9:
     intc_0 // 1
     <=
     assert // ABI bool validation
-    assert // E
+    bz main_else_body@11
     intc_1 // 0
     bytec_0 // "s"
     app_global_get_ex
@@ -76,8 +84,17 @@ main_ternary_merge@9:
     pushbytes 0x00220003616263
     concat
     bytec_0 // "s"
-    swap
+    dig 1
     app_global_put
+    pushbytes 0xa5b7c1fb000000000000000000000000000000000000000000000000000000000000000200420000000000000000000000000000000000000000000000000000000000000007
+    swap
+    concat
+    log
+    err // E
+
+main_else_body@11:
+    pushbytes 0xa5b7c1fb00000000000000000000000000000000000000000000000000000000000000070000000000000002002a000000000000000000000000000000000000000000000000000000000000000900220003616263
+    log
     err // E
 
 main_ternary_false@8:

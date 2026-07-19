@@ -4,13 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/abi_decode_fixed_arrays.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 8 1 0
+    bytecblock 0x010000000000000000
     intc_3 // 0
     dupn 4
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -77,10 +86,27 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    dig 4
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 4
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 4
+    dup
+    cover 3
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_1 // 8
     bzero
     dup
-    dig 6
+    uncover 2
     concat
     dup
     len
@@ -89,7 +115,7 @@ main_ternary_merge@9:
     extract_uint64
     pushint 2
     *
-    dig 3
+    dig 5
     swap
     extract_uint16
     itob
@@ -99,7 +125,7 @@ main_ternary_merge@9:
     dig 1
     b|
     dig 2
-    dig 7
+    uncover 4
     concat
     dup
     len
@@ -107,7 +133,7 @@ main_ternary_merge@9:
     -
     extract_uint64
     uncover 3
-    dig 6
+    uncover 4
     concat
     dup
     len

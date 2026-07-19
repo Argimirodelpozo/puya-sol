@@ -4,21 +4,30 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
     intcblock 2 1 32 0
-    bytecblock "data" "ids" "__ctor_pending" 0x151f7c75
+    bytecblock "data" "ids" 0x010000000000000000 "__ctor_pending" 0x151f7c75
     intc_3 // 0
     dupn 6
+    pushbytes ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -38,14 +47,14 @@ main_after_if_else@2:
 main_setLengths_route@12:
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 7
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 5
+    bury 6
     len
     intc_2 // 32
     ==
@@ -78,7 +87,7 @@ main_ternary_merge@23:
     pushint 64
     /
     itob
-    dig 5
+    dig 6
     b<
     bz main_while_top@25
     bytec_0 // "data"
@@ -106,7 +115,7 @@ main_ternary_merge@28:
     intc_2 // 32
     /
     itob
-    dig 4
+    dig 5
     b<
     bz main_after_while@30
     bytec_1 // "ids"
@@ -160,7 +169,7 @@ main_ternary_merge@38:
     pushint 64
     /
     itob
-    bury 1
+    bury 2
     bytec_1 // "ids"
     box_len
     pop
@@ -179,13 +188,13 @@ main_ternary_merge@41:
     itob
     intc_2 // 32
     bzero
-    dig 2
+    dig 3
     dig 1
     b|
     cover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -207,7 +216,7 @@ main_ternary_false@34:
 main_getData_route@10:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 8
     len
     intc_2 // 32
     ==
@@ -222,9 +231,14 @@ main_getData_route@10:
 main_ternary_merge@46:
     !
     assert // not payable
+    dig 6
+    dup
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 6
+    swap
     concat
     dup
     len
@@ -244,7 +258,7 @@ main_ternary_merge@46:
     swap
     extract 32 32
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -258,7 +272,7 @@ main_ternary_false@45:
 main_getID_route@9:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 8
     len
     intc_2 // 32
     ==
@@ -273,9 +287,14 @@ main_getID_route@9:
 main_ternary_merge@51:
     !
     assert // not payable
+    dig 6
+    dup
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 6
+    swap
     concat
     dup
     len
@@ -290,7 +309,7 @@ main_ternary_merge@51:
     swap
     intc_2 // 32
     box_extract // on error: index out of bounds
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -304,21 +323,21 @@ main_ternary_false@50:
 main_setData_route@8:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 8
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
+    bury 5
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 3
+    bury 4
     len
     intc_2 // 32
     ==
@@ -333,9 +352,23 @@ main_setData_route@8:
 main_ternary_merge@56:
     !
     assert // not payable
+    dig 6
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@58
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@58:
     pushint 8
     bzero
-    dig 6
+    dig 7
     concat
     dup
     len
@@ -346,24 +379,37 @@ main_ternary_merge@56:
     *
     intc_0 // 2
     +
+    dup
+    bury 2
     bytec_0 // "data"
     dig 1
     pushint 64
     box_extract // on error: index out of bounds
     extract 32 32
-    dig 4
+    dig 5
     swap
     concat
     bytec_0 // "data"
-    dig 2
-    uncover 2
+    cover 2
     box_replace // on error: index out of bounds
     bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@60
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@60:
+    bytec_0 // "data"
     dig 1
+    dup
+    cover 2
     pushint 64
     box_extract // on error: index out of bounds
     extract 0 32
-    dig 3
+    dig 4
     concat
     bytec_0 // "data"
     cover 2
@@ -378,31 +424,45 @@ main_ternary_false@55:
 main_setID_route@7:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 8
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 8
+    bury 9
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@60
+    bz main_ternary_false@64
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@61:
+main_ternary_merge@65:
     !
     assert // not payable
+    dig 6
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_1 // "ids"
+    box_len
+    bury 1
+    bnz main_after_if_else@67
+    bytec_1 // "ids"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@67:
     pushint 8
     bzero
-    dig 6
+    dig 7
     concat
     dup
     len
@@ -415,49 +475,59 @@ main_ternary_merge@61:
     +
     bytec_1 // "ids"
     swap
-    dig 8
+    dig 9
     box_replace // on error: index out of bounds
     intc_1 // 1
     return
 
-main_ternary_false@60:
+main_ternary_false@64:
     intc_3 // 0
-    b main_ternary_merge@61
+    b main_ternary_merge@65
 
 main_setIDStatic_route@6:
     txna ApplicationArgs 1
     dup
-    bury 8
+    bury 9
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@65
+    bz main_ternary_false@71
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@66:
+main_ternary_merge@72:
     !
     assert // not payable
     bytec_1 // "ids"
+    box_len
+    bury 1
+    bnz main_after_if_else@74
+    bytec_1 // "ids"
+    intc_0 // 2
+    box_create
+    pop
+
+main_after_if_else@74:
+    bytec_1 // "ids"
     pushint 66
-    dig 8
+    dig 9
     box_replace // on error: index out of bounds
     intc_1 // 1
     return
 
-main_ternary_false@65:
+main_ternary_false@71:
     intc_3 // 0
-    b main_ternary_merge@66
+    b main_ternary_merge@72
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_3 // 0
     app_global_put
     bytec_0 // "data"

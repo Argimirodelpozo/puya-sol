@@ -3,15 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/keccak_yul_optimization.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
-    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
-    intc_1 // 0
-    dupn 2
+    intcblock 1 32 0
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
+    intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -27,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5ed33a7f 0xe03b32a4 // method "g()uint512", method "f()uint512"
+    pushbytess 0x4b2c0376 0xcd78b354 // method "g()uint256", method "f()uint256"
     txna ApplicationArgs 0
     match main_g_route@5 main_f_route@6
     err
@@ -43,13 +51,15 @@ main_f_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    bytec_0 // 0x
+    bytec_1 // 0x
     bury 1
     load 0
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    load 0
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
-    bury 3
-    bytec_0 // 0x
+    store 0
+    bytec_1 // 0x
     bury 2
 
 main_while_top@14:
@@ -57,30 +67,33 @@ main_while_top@14:
     pushbytes 0x14
     b<
     bz main_after_while@16
-    dig 2
+    load 0
     extract 32 16
     keccak256
     bury 1
     dig 1
     pushbytes 0x01
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 2
     b main_while_top@14
 
 main_after_while@16:
-    dig 2
+    load 0
     store 0
-    dupn 2
+    dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -88,7 +101,7 @@ main_after_while@16:
     return
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@13
 
 main_g_route@5:
@@ -103,17 +116,27 @@ main_ternary_merge@21:
     !
     assert // not payable
     load 0
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    load 0
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     replace2 32
-    dup
+    store 0
+    load 0
     extract 32 16
     keccak256
-    swap
+    load 0
     store 0
-    intc_2 // 64
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -121,5 +144,5 @@ main_ternary_merge@21:
     return
 
 main_ternary_false@20:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@21

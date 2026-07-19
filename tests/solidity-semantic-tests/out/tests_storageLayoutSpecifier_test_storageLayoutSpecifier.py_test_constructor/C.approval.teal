@@ -128,7 +128,7 @@ main_after_if_else@6:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5bb3453a 0x60d68bc1 0x7c1072af // method "z()uint64", method "y()uint512", method "x()uint256"
+    pushbytess 0x5bb3453a 0x5c5e3bbc 0x7c1072af // method "z()uint64", method "y()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match main_z_route@9 main_y_route@10 main_x_route@11
     err
@@ -195,10 +195,10 @@ main_ternary_merge@23:
 main_ternary_merge@26:
     dup
     len
-    pushint 64
+    intc_3 // 32
     <=
     assert // overflow
-    pushint 64
+    intc_3 // 32
     bzero
     b|
     bytec 5 // 0x151f7c75

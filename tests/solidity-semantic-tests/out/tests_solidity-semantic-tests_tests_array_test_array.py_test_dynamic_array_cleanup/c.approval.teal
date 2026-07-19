@@ -4,13 +4,21 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_array_cleanup.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1 2 32
-    bytecblock "dynamic" "__ctor_pending"
+    bytecblock "dynamic" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -87,7 +95,8 @@ main_ternary_merge@24:
     intc_3 // 32
     /
     itob
-    pushbytes 0x05
+    pushint 5
+    itob
     b>
     bz main_after_while@34
     bytec_0 // "dynamic"
@@ -151,15 +160,21 @@ main_ternary_merge@31:
     bury 1
 
 main_while_top@32:
-    dup
-    pushbytes 0x15
-    b<
+    pushint 21
+    itob
+    dig 1
+    b>
     bz main_after_while@34
+    intc_1 // 1
+    itob
+    dig 1
     dup
-    pushbytes 0x01
+    uncover 2
     b+
     dup
-    bury 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_3 // 32
@@ -209,6 +224,13 @@ main_while_top@32:
     intc_0 // 0
     uncover 3
     box_splice
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 1
     b main_while_top@32
 
 main_ternary_false@30:

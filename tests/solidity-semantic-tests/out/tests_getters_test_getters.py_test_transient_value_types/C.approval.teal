@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 8 64
+    intcblock 1 32 0 8
     bytecblock 0xff 0x151f7c75 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     pushint 4096
     bzero
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     intc_0 // 1
     return
@@ -36,21 +36,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x3f4abdfd // method "f()uint256", method "x()uint512"
+    pushbytess 0xcd78b354 0x7c1072af // method "f()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_x_route@6
     err
 
 main_x_route@6:
     callsub x
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -70,7 +62,7 @@ main_ternary_merge@15:
     !
     assert // not payable
     load 5
-    intc_2 // 8
+    intc_3 // 8
     bzero
     swap
     bytec_0 // 0xff
@@ -80,9 +72,9 @@ main_ternary_merge@15:
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
-    intc_2 // 8
+    intc_3 // 8
     extract3
     bytec_0 // 0xff
     b&
@@ -96,10 +88,10 @@ main_ternary_merge@15:
 main_ternary_merge@18:
     dup
     len
-    pushint 32
+    intc_1 // 32
     <=
     assert // overflow
-    pushint 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -113,7 +105,7 @@ main_ternary_false@17:
     b main_ternary_merge@18
 
 main_ternary_false@14:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
 
@@ -141,11 +133,21 @@ x_ternary_merge@3:
     bz x_ternary_false@5
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
+
+x_ternary_merge@6:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
     retsub
 
 x_ternary_false@5:
-    retsub
+    b x_ternary_merge@6
 
 x_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b x_ternary_merge@3

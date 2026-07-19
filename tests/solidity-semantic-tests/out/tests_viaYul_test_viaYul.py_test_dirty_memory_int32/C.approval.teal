@@ -123,7 +123,17 @@ main_ternary_merge@12:
     load 0
     store 0
     itob
+    pushbytes 0xffffffff
+    b&
+    dup
+    pushbytes 0x80000000
+    b>=
+    bz main_ternary_false@14
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
+    b+
     bury 3
+
+main_ternary_merge@15:
     load 0
     store 0
     dig 1
@@ -134,14 +144,14 @@ main_ternary_merge@12:
     pushint 62678480396345005
     itob
     b==
-    bz main_bool_false@15
+    bz main_bool_false@18
     dig 2
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffef15dead
     b==
-    bz main_bool_false@15
+    bz main_bool_false@18
     intc_1 // 1
 
-main_bool_merge@16:
+main_bool_merge@19:
     pushbytes 0x00
     intc_0 // 0
     uncover 2
@@ -153,9 +163,13 @@ main_bool_merge@16:
     intc_1 // 1
     return
 
-main_bool_false@15:
+main_bool_false@18:
     intc_0 // 0
-    b main_bool_merge@16
+    b main_bool_merge@19
+
+main_ternary_false@14:
+    bury 3
+    b main_ternary_merge@15
 
 main_ternary_false@11:
     b main_ternary_merge@12

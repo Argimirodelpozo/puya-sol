@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/constructor.sol.B.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 64
+    intcblock 0 1 32
     bytecblock "x" "y" 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -31,7 +39,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x60d68bc1 0x7c1072af // method "y()uint512", method "x()uint256"
+    pushbytess 0x5c5e3bbc 0x7c1072af // method "y()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match main_y_route@5 main_x_route@6
     err
@@ -94,16 +102,14 @@ main_ternary_merge@18:
     bz main_ternary_false@20
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
 
 main_ternary_merge@21:
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

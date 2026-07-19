@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/check_var_init.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "__ctor_pending" "x" 0x0a 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "__ctor_pending" "x" 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -83,33 +91,27 @@ main___postInit_route@5:
 
 main_ternary_merge@18:
     itob
-    bytec_2 // 0x0a
+    pushint 10
+    itob
+    dup2
     b>=
     assert // underflow
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@21:
-    itob
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_2 // 0x0a
+    swap
     b-
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_1 // "x"
     swap
     app_global_put
     intc_0 // 1
     return
-
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
 
 main_ternary_false@17:
     intc_1 // 0

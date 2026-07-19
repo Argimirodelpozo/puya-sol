@@ -1,3 +1,25 @@
+# Semantic Test Status — v449
+
+> **fix: the four fable-review-3 criticals (call{value}(data), asm const caches, ctor-arg drain, postInit ordering) (2026-07-19):**
+> **12 failed / 1331 passed / 109 xf / 28 xp** (failure set identical to baseline = zero regressions; +4 new
+> regression guards + 2 pass-count drift from prior commits). Fixes, each with an E2E localnet guard in
+> puyasolRegression: (1) `.call{value:X}(data)` routed ANY value-call to a bare payment, silently dropping
+> the calldata — now only empty/absent data is a pure payment; non-empty data lowers as ONE inner group
+> [PaymentTxn, ApplicationCall] (receiver EvalOnce-shared), so the callee runs AND sees msg.value at
+> GroupIndex-1; self-call/precompile + {value:} hard-error (guard test_call_value_with_data_invokes_target).
+> (2) assembly m_localConstants was never invalidated on `:=` and mem_0x<off> content constants never at
+> all — pointer-bump/indexed-loop mstores folded to stale constant offsets and keccak/mload folds read
+> stale contents. Now: pre-scan admits only single-assignment locals (collectReassignedLocals), erase on
+> assignment + on shadowing non-const `let`, and invalidateMemConstants() on untrackable memory writers
+> (mstore8/mcopy/calldatacopy/... central dispatch), non-const-offset or non-const-value mstore, and at
+> if/for/switch boundaries (guard test_asm_const_cache_invalidation). (3) all three base-ctor-arg sites
+> bound params BEFORE draining build pre-statements (ternary args bound unassigned __cond temps; the
+> modifier-inliner twins had the appendPendingTo fix) — drained now (guard test_ctor_ternary_base_arg).
+> (4) __postInit inlined base-most-first with args interleaved, so transitive args (`D is C is A`,
+> `C(uint y) A(y+1)`) read params not yet assigned — arg evaluation is now a separate DERIVED-FIRST pass
+> before any body inlining, mirroring the create path's Phase 1/2 (also no longer skips args of
+> empty-bodied ctors) (guard test_postinit_transitive_ctor_args). Full run: RESULTS_review3_criticals.txt.
+
 # Semantic Test Status — v448
 
 > **feat(itxn): encodeCall self-resolution + ARC4 return encoding for self-staticcall; xfail 2 abi_encode_call (2026-06-25):**

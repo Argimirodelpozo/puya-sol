@@ -4,11 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/stack_height_check_on_adding_gas_variable_to_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    pushbytes ""
+    dupn 2
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -43,51 +54,78 @@ main_ternary_merge@14:
     global CurrentApplicationAddress
     dup
     ==
-    bz main_bool_false@17
+    bz main_else_body@17
     global CurrentApplicationAddress
     dup
     ==
-    bz main_bool_false@17
+    bz main_else_body@17
     intc_0 // 1
+    bury 3
 
-main_bool_merge@18:
+main_after_if_else@18:
+    dig 2
+    bnz main_after_if_else@20
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@20:
+    dig 2
     assert
     global CurrentApplicationAddress
     dup
     ==
-    bz main_bool_false@21
+    bz main_else_body@23
     global CurrentApplicationAddress
     dup
     ==
-    bz main_bool_false@21
+    bz main_else_body@23
     intc_0 // 1
+    bury 2
 
-main_bool_merge@22:
+main_after_if_else@24:
+    dig 1
+    bnz main_after_if_else@26
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@26:
+    dig 1
     assert
     global CurrentApplicationAddress
     dup
     ==
-    bz main_bool_false@24
+    bz main_else_body@28
     intc_0 // 1
+    bury 1
 
-main_bool_merge@25:
+main_after_if_else@29:
+    dup
+    bnz main_after_if_else@31
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@31:
+    dup
     assert
     pushbytes 0x151f7c7580
     log
     intc_0 // 1
     return
 
-main_bool_false@24:
+main_else_body@28:
     intc_1 // 0
-    b main_bool_merge@25
+    bury 1
+    b main_after_if_else@29
 
-main_bool_false@21:
+main_else_body@23:
     intc_1 // 0
-    b main_bool_merge@22
+    bury 2
+    b main_after_if_else@24
 
-main_bool_false@17:
+main_else_body@17:
     intc_1 // 0
-    b main_bool_merge@18
+    bury 3
+    b main_after_if_else@18
 
 main_ternary_false@13:
     intc_1 // 0
@@ -99,18 +137,18 @@ main_h_route@6:
 
 main_g_route@5:
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@37
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+main_ternary_merge@38:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@31:
+main_ternary_false@37:
     intc_1 // 0
-    b main_ternary_merge@32
+    b main_ternary_merge@38

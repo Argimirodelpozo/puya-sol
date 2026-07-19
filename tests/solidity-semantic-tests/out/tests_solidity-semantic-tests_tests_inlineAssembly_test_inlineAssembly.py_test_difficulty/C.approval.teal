@@ -7,7 +7,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -18,7 +26,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xe03b32a4 // method "f()uint512"
+    pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -41,7 +49,9 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bebc200
+    load 0
+    store 0
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000bebc200
     log
     pushint 1
     return

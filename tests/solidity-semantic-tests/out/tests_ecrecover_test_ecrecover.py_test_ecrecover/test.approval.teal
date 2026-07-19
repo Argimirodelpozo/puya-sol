@@ -4,9 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/ecrecover.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 32 0 255
+    bytecblock 0x 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     intc_2 // 0
-    dupn 4
-    pushbytes ""
+    dupn 3
+    bytec_0 // ""
     dup
     pushint 4096
     bzero
@@ -44,7 +45,7 @@ main_a_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 6
+    bury 7
     len
     intc_1 // 32
     ==
@@ -59,14 +60,14 @@ main_a_route@4:
     bury 1
     txna ApplicationArgs 3
     dup
-    bury 5
+    bury 6
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
-    bury 4
+    bury 5
     len
     intc_1 // 32
     ==
@@ -93,37 +94,52 @@ main_ternary_merge@9:
     >=
     dup
     bury 3
-    bz main_ternary_false@11
+    bz main_ternary_false@19
+    dup
+    pushint 28
+    <=
+    bz main_ternary_false@19
+    dig 4
+    bytec_0 // 0x
+    b!=
+    bz main_ternary_false@19
+    dig 4
+    bytec_1 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    b<
+    bz main_ternary_false@19
+    dig 3
+    bytec_0 // 0x
+    b!=
+    bz main_ternary_false@19
+    dig 3
+    bytec_1 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    b<
+    bz main_ternary_false@19
+    pushint 12
+    bzero
+    bury 3
+    dig 1
+    bz main_ternary_false@17
     dup
     pushint 27
     -
 
-main_ternary_merge@12:
+main_ternary_merge@18:
     intc_0 // 1
     &
-    dig 5
+    dig 6
     swap
-    dig 5
-    dig 5
+    dig 6
+    dig 6
     ecdsa_pk_recover Secp256k1
-    bury 7
-    bury 7
-    dig 1
-    bz main_ternary_false@15
-    dup
-    pushint 28
-    <=
-    bz main_ternary_false@15
-    pushint 12
-    bzero
-    dig 7
-    dig 7
     concat
     keccak256
     extract 12 20
+    dig 3
+    swap
     concat
 
-main_ternary_merge@16:
+main_ternary_merge@20:
     pushbytes 0x151f7c75
     swap
     concat
@@ -131,14 +147,14 @@ main_ternary_merge@16:
     intc_0 // 1
     return
 
-main_ternary_false@15:
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18
+
+main_ternary_false@19:
     intc_1 // 32
     bzero
-    b main_ternary_merge@16
-
-main_ternary_false@11:
-    intc_2 // 0
-    b main_ternary_merge@12
+    b main_ternary_merge@20
 
 main_ternary_false@8:
     intc_2 // 0

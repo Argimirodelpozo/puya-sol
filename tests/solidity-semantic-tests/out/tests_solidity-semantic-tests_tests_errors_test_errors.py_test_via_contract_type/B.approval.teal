@@ -8,7 +8,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -37,14 +45,16 @@ main_h_route@7:
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@14:
     !
     assert // not payable
+    pushbytes 0x59f616340003616263
+    log
     err // E
 
 main_ternary_false@13:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@14
 
 main_g_route@6:
     txn GroupIndex
@@ -53,7 +63,13 @@ main_g_route@6:
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    pushbytes 0xd5c1f7fc0000000000000000000000000000000000000000000000000000000000000001
+    log
+    err // E
 
 main_ternary_false@18:
     intc_1 // 0

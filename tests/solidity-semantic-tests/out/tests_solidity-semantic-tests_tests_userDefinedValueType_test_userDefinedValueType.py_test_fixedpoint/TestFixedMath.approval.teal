@@ -4,14 +4,22 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/fixedpoint.sol.TestFixedMath.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x151f7c75 0x0de0b6b3a7640000
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0de0b6b3a7640000
     intc_2 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -209,6 +217,10 @@ FixedMath.add:
     frame_dig -2
     frame_dig -1
     b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub
 
 
@@ -218,6 +230,10 @@ FixedMath.mul:
     frame_dig -2
     frame_dig -1
     b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub
 
 
@@ -225,7 +241,7 @@ FixedMath.mul:
 FixedMath.floor:
     proto 1 1
     frame_dig -1
-    bytec_1 // 0x0de0b6b3a7640000
+    bytec_2 // 0x0de0b6b3a7640000
     b/
     retsub
 
@@ -234,6 +250,10 @@ FixedMath.floor:
 FixedMath.toUFixed256x18:
     proto 1 1
     frame_dig -1
-    bytec_1 // 0x0de0b6b3a7640000
+    bytec_2 // 0x0de0b6b3a7640000
     b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     retsub

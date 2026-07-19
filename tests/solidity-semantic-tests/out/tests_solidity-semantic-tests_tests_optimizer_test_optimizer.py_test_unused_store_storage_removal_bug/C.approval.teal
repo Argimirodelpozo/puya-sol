@@ -11,7 +11,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -261,7 +269,8 @@ main_ternary_merge@68:
 main_ternary_merge@70:
     len
     itob
-    pushbytes 0x04
+    pushint 4
+    itob
     b>
     bz main_after_if_else@72
     intc_3 // 2
@@ -273,6 +282,8 @@ main_ternary_merge@70:
     return
 
 main_after_if_else@72:
+    load 0
+    store 0
     load 0
     store 0
     intc_1 // 1

@@ -5,11 +5,20 @@
 main:
     intcblock 1 0
     bytecblock 0xf2b65f27
+    pushbytes ""
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -51,6 +60,14 @@ main_ternary_merge@13:
     bytec_0 // method "g()void"
     concat
     !=
+    dup
+    bury 2
+    bnz main_after_if_else@15
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@15:
+    dup
     assert
     load 5
     global CurrentApplicationID
@@ -83,18 +100,18 @@ main_ternary_false@12:
 
 main_g_route@5:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@20:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@17:
+main_ternary_false@19:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@20

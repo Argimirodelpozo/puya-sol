@@ -8,7 +8,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -63,6 +71,10 @@ main_ternary_false@8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_attached_to_string_accepting_memory.sol.L.at(a: bytes, i: bytes) -> uint64:
 L.at:
     proto 2 1
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_2 // 8
     bzero
     frame_dig -1

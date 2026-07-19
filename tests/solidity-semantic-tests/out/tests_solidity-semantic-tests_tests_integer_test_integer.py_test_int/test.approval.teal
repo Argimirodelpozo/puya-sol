@@ -8,7 +8,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -37,7 +45,7 @@ main_intMaxD_route@12:
     -
     gtxns Amount
 
-main_ternary_merge@54:
+main_ternary_merge@107:
     !
     assert // not payable
     pushbytes 0x151f7c7580
@@ -47,95 +55,95 @@ main_ternary_merge@54:
 
 main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
 main_intMaxC_route@11:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@30
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
-main_ternary_false@23:
+main_ternary_false@30:
     intc_1 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
 main_intMaxB_route@10:
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@54
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@54
-
-main_intMaxA_route@9:
-    txn GroupIndex
-    bz main_ternary_false@33
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@54
-
-main_ternary_false@33:
-    intc_1 // 0
-    b main_ternary_merge@54
-
-main_intMinD_route@8:
-    txn GroupIndex
-    bz main_ternary_false@38
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@54
-
-main_ternary_false@38:
-    intc_1 // 0
-    b main_ternary_merge@54
-
-main_intMinC_route@7:
     txn GroupIndex
     bz main_ternary_false@43
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
 main_ternary_false@43:
     intc_1 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@107
+
+main_intMaxA_route@9:
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@107
+
+main_ternary_false@56:
+    intc_1 // 0
+    b main_ternary_merge@107
+
+main_intMinD_route@8:
+    txn GroupIndex
+    bz main_ternary_false@68
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@107
+
+main_ternary_false@68:
+    intc_1 // 0
+    b main_ternary_merge@107
+
+main_intMinC_route@7:
+    txn GroupIndex
+    bz main_ternary_false@80
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@107
+
+main_ternary_false@80:
+    intc_1 // 0
+    b main_ternary_merge@107
 
 main_intMinB_route@6:
     txn GroupIndex
-    bz main_ternary_false@48
+    bz main_ternary_false@93
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
-main_ternary_false@48:
+main_ternary_false@93:
     intc_1 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
 main_intMinA_route@5:
     txn GroupIndex
-    bz main_ternary_false@53
+    bz main_ternary_false@106
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@54
+    b main_ternary_merge@107
 
-main_ternary_false@53:
+main_ternary_false@106:
     intc_1 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@107

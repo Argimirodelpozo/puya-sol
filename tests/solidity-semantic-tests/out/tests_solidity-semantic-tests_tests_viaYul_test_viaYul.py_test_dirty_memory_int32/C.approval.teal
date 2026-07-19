@@ -3,18 +3,30 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_int32.sol.C.approval_program() -> uint64:
 main:
-    pushint 4096
+    intcblock 0 1 32 4096
+    intc_0 // 0
+    pushbytes ""
+    dup
+    intc_3 // 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -32,7 +44,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -40,28 +52,128 @@ main_ternary_merge@9:
     !
     assert // not payable
     load 0
+    pushint 88
+    extract_uint64
+    load 0
     pushint 24
     bzero
     dig 1
     pushint 88
     extract_uint64
-    pushint 32
+    intc_2 // 32
     +
     itob
     concat
     replace2 64
     store 0
     load 0
-    pushbytes 0x00000000000000000000000000000000000000000000000000deadbeef15dead
-    replace2 0
     store 0
+    dup
+    intc_2 // 32
+    +
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    dup
+    bury 4
+    dup
+    loads
+    uncover 2
+    intc_3 // 4096
+    %
+    dup
+    bury 4
+    swap
+    dig 1
+    pushbytes 0x00000000000000000000000000000000000000000000000000deadbeef15dead
+    replace3
+    dig 2
+    swap
+    stores
     load 0
     store 0
-    pushbytes 0x151f7c7500
+    pushint 8
+    bzero
+    uncover 2
+    loads
+    uncover 2
+    intc_2 // 32
+    extract3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 4294967295
+    &
+    pushint 4294967296
+    %
+    dup
+    pushint 2147483648
+    >=
+    bz main_ternary_false@11
+    pushint 18446744069414584320
+    +
+
+main_ternary_merge@12:
+    load 0
+    store 0
+    itob
+    pushbytes 0xffffffff
+    b&
+    dup
+    pushbytes 0x80000000
+    b>=
+    bz main_ternary_false@14
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
+    b+
+    bury 3
+
+main_ternary_merge@15:
+    load 0
+    store 0
+    dig 1
+    loads
+    dig 1
+    intc_2 // 32
+    extract3
+    pushint 62678480396345005
+    itob
+    b==
+    bz main_bool_false@18
+    dig 2
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffef15dead
+    b==
+    bz main_bool_false@18
+    intc_1 // 1
+
+main_bool_merge@19:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_1 // 1
     return
 
+main_bool_false@18:
+    intc_0 // 0
+    b main_bool_merge@19
+
+main_ternary_false@14:
+    bury 3
+    b main_ternary_merge@15
+
+main_ternary_false@11:
+    b main_ternary_merge@12
+
 main_ternary_false@8:
-    pushint 0
+    intc_0 // 0
     b main_ternary_merge@9

@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -54,10 +62,14 @@ main_ternary_merge@9:
     b>
     bz main_after_if_else@11
     load 0
+    store 0
+    load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     replace2 0
-    dup
     store 0
+    load 0
+    store 0
+    load 0
     extract 0 32
     pushbytes 0x151f7c75
     swap
@@ -67,10 +79,24 @@ main_ternary_merge@9:
     return
 
 main_after_if_else@11:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
     intc_0 // 1
-    return
+    itob
+    bytec_0 // "mutex"
+    swap
+    app_global_put
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 1600
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    err // invalid function pointer
 
 main_ternary_false@8:
     intc_1 // 0

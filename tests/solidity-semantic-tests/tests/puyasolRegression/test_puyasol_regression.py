@@ -2277,3 +2277,75 @@ def test_calldata_empty_array_index(harness):
     ]:
         r = harness.call(app, sig, *args, expect_revert=True)
         assert getattr(r, "reverted", False), f"{sig}{args} must revert (index OOB)"
+
+
+def test_call_value_with_data_invokes_target(harness):
+    """puyasolRegression/contracts/call_value_with_data.sol — NOT an o.g. test.
+
+    `.call{value: X}(data)` with NON-empty data must invoke the target AND
+    transfer the value. The pre-fix dispatcher matched any .call{value:} and
+    lowered it to a bare payment: the calldata was silently dropped, deposit()
+    never ran, ok == true. Now lowered as one inner group
+    [PaymentTxn, ApplicationCall], so the callee runs and its msg.value
+    (gtxns Amount at GroupIndex-1) sees the payment.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/call_value_with_data.sol", fund_wei=2_000_000
+    )
+    r = harness.call(app, "run()", extra_fee=30_000).abi_return
+    ok, deposits, got = bool(r[0]), as_int(r[1]), as_int(r[2])
+    assert ok
+    assert deposits == 1, "deposit() did not execute — calldata dropped"
+    assert got == 150_000, f"msg.value not visible to callee (got={got})"
+
+
+def test_asm_const_cache_invalidation(harness):
+    """puyasolRegression/contracts/asm_const_cache.sol — NOT an o.g. test.
+
+    Assembly constant caches must be invalidated on reassignment / untrackable
+    memory writes / control flow. Pre-fix, `let p := 0x80 … p := add(p, 0x20)
+    … mstore(p, v)` folded BOTH stores to offset 0x80 (pointer-bump and
+    indexed-loop idioms silently miscompiled), and "mem_0x<off>" content
+    entries fed stale values to the keccak/mload folds.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_const_cache.sol")
+    assert as_int(harness.call(app, "reassign()").abi_return) == 111
+    assert as_int(harness.call(app, "loopFold()").abi_return) == 2
+    # value-dependence: pre-fix both returned keccak(5)
+    k5 = as_bytes(harness.call(app, "kec(uint256)", 5).abi_return)
+    k7 = as_bytes(harness.call(app, "kec(uint256)", 7).abi_return)
+    assert k5 != k7, "keccak folded a stale mem constant (value-independent hash)"
+    assert as_int(harness.call(app, "branch(uint256)", 0).abi_return) == 1
+    assert as_int(harness.call(app, "branch(uint256)", 1).abi_return) == 7
+
+
+def test_ctor_ternary_base_arg(harness):
+    """puyasolRegression/contracts/ctor_arg_prestmts.sol — NOT an o.g. test.
+
+    A branch-lowered (ternary) base-ctor argument must have its pre-statements
+    (the if/else assigning the __cond temp) emitted BEFORE the param binding.
+    Pre-fix the create path bound `x = __cond_N` first, so A initialized with 0.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/ctor_arg_prestmts.sol", "D", ctor_args=[5]
+    )
+    assert as_signed_int(harness.call(app, "va()").abi_return) == 5
+    app2 = harness.compile_and_deploy(
+        "puyasolRegression/contracts/ctor_arg_prestmts.sol", "D", ctor_args=[-3]
+    )
+    assert as_signed_int(harness.call(app2, "va()").abi_return) == 3
+
+
+def test_postinit_transitive_ctor_args(harness):
+    """puyasolRegression/contracts/postinit_transitive_ctor_args.sol — NOT an o.g. test.
+
+    __postInit must assign base-ctor params derived-first before inlining any
+    ctor body: `D is C is A`, `C(uint y) A(y+1)` — A's arg reads C's y.
+    Pre-fix order was `x = y + 1; va = x; y = 5; …` → va == 1 instead of 6.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/postinit_transitive_ctor_args.sol", "D"
+    )
+    assert as_int(harness.call(app, "va()").abi_return) == 6
+    assert as_int(harness.call(app, "y2()").abi_return) == 5
+    assert as_int(harness.call(app, "arr(uint256)", 0).abi_return) == 9

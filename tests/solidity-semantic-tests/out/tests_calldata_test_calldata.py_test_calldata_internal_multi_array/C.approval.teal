@@ -320,6 +320,12 @@ f_ternary_merge@3:
     frame_dig -2
     cover 2
     extract3
+    dup
+    intc_1 // 0
+    extract_uint16
+    intc_2 // 1
+    >
+    assert // array index out of bounds
     extract 34 32
     frame_dig -2
     intc_0 // 2
@@ -334,6 +340,10 @@ f_ternary_merge@3:
     frame_dig -2
     cover 2
     extract3
+    dup
+    intc_1 // 0
+    extract_uint16
+    assert // array index out of bounds
     extract 2 32
     frame_dig -2
     retsub

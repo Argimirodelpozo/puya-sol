@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -42,23 +50,20 @@ main_ternary_merge@9:
     !
     assert // not payable
     load 0
+    store 0
     intc_2 // 32
     bzero
+    txn Sender
+    concat
     dup
-    txn Sender
-    concat
-    txn Sender
-    uncover 2
-    swap
-    concat
     len
     intc_2 // 32
     -
     intc_2 // 32
     extract3
     dup
-    bury 3
-    swap
+    bury 2
+    load 0
     store 0
     txn Sender
     ==

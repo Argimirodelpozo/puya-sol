@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -75,6 +83,13 @@ main_ternary_merge@13:
     intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     box_splice
+    bytec_0 // "x"
+    box_get
+    pop
+    pushbytes 0x09e747f6000400090003616263
+    swap
+    concat
+    log
     err // E
 
 main_ternary_false@12:

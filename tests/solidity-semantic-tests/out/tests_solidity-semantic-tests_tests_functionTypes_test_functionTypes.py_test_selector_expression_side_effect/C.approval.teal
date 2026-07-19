@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -96,7 +104,11 @@ h_ternary_merge@3:
     bytec_0 // "x"
     swap
     app_global_put
-    global CurrentApplicationAddress
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
     retsub
 
 h_ternary_false@2:

@@ -1,0 +1,390 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/arg_eval_semantics.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "cnt" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "seq"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "cnt"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "seq"
+    pushbytes 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb98264fb 0xe6fb76f4 0xbf9654d0 0x97ff407b 0x715381a1 0x35011ef9 0x2383e5c9 // method "argOnce()(uint256,uint256)", method "order()uint256", method "nested()(uint256,uint256)", method "ext(uint256,uint256)uint256", method "viaThis()(uint256,uint256)", method "cnt()uint256", method "seq()uint256"
+    txna ApplicationArgs 0
+    match main_argOnce_route@5 main_order_route@6 main_nested_route@7 main_ext_route@8 main_viaThis_route@9 main_cnt_route@10 main_seq_route@11
+    err
+
+main_seq_route@11:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_3 // "seq"
+    app_global_get_ex
+    assert // check seq exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18
+
+main_cnt_route@10:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@22:
+    intc_0 // 0
+    b main_ternary_merge@23
+
+main_viaThis_route@9:
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    callsub a
+    callsub b
+    callsub ext
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@27:
+    intc_0 // 0
+    b main_ternary_merge@28
+
+main_ext_route@8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub ext
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_nested_route@7:
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    callsub a
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@34:
+    intc_0 // 0
+    b main_ternary_merge@35
+
+main_order_route@6:
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    bytec_3 // "seq"
+    pushbytes 0x0c
+    app_global_put
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000c
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@39:
+    intc_0 // 0
+    b main_ternary_merge@40
+
+main_argOnce_route@5:
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    intc_0 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    callsub a
+    callsub b
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@44:
+    intc_0 // 0
+    b main_ternary_merge@45
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/arg_eval_semantics.sol.C.a() -> bytes:
+a:
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 10
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/arg_eval_semantics.sol.C.b() -> bytes:
+b:
+    intc_0 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    assert // check cnt exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    pushint 20
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/arg_eval_semantics.sol.C.ext(__arc4_x: bytes, __arc4_y: bytes) -> bytes:
+ext:
+    proto 2 1
+    txn GroupIndex
+    bz ext_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+ext_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+ext_ternary_false@2:
+    intc_0 // 0
+    b ext_ternary_merge@3

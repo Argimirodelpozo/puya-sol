@@ -4,25 +4,35 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75 0xd50c8672 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000001313233 "sideEffectRan" "fPointer" "xstor" 0xd50c86720000000000000000000000000000000000000000000000000000000000000001313233
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0xd50c8672 0x81ca86700000000000000001000a0003313233 0x000000000000000000000000000000000000000000000000000000000000000100220003313233 "sideEffectRan" "fPointer" "xstor" 0xd50c8672000000000000000000000000000000000000000000000000000000000000000100220003313233
+    pushbytes ""
+    dupn 5
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "sideEffectRan"
+    bytec 5 // "sideEffectRan"
     intc_1 // 0
     app_global_put
-    bytec 5 // "fPointer"
+    bytec 6 // "fPointer"
     pushbytes 0x000000000000000000000000
     app_global_put
-    bytec 6 // "xstor"
+    bytec 7 // "xstor"
     pushbytes 0x
     app_global_put
     intc_0 // 1
@@ -34,7 +44,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_1 // method "fExternal(uint256,string)void"
+    bytec_2 // method "fExternal(uint256,string)void"
     pushbytess 0xea1e7ff8 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91 0xb2fd8e38 // method "getExternalFunctionPointer()byte[12]", method "fSignatureFromLiteral()byte[]", method "fSignatureFromLiteralCall()byte[]", method "fSignatureFromMemory()byte[]", method "fSignatureFromMemoryCall()byte[]", method "fSignatureFromMemorys()byte[]", method "fPointerCall()byte[]", method "fLocalPointerCall()byte[]", method "fReturnedFunctionPointer()byte[]", method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match main_fExternal_route@5 main_getExternalFunctionPointer_route@6 main_fSignatureFromLiteral_route@7 main_fSignatureFromLiteralCall_route@8 main_fSignatureFromMemory_route@9 main_fSignatureFromMemoryCall_route@10 main_fSignatureFromMemorys_route@11 main_fPointerCall_route@12 main_fLocalPointerCall_route@13 main_fReturnedFunctionPointer_route@14 main_assertConsistentSelectors_route@15
@@ -56,38 +66,83 @@ main_ternary_merge@22:
     callsub fSignatureFromLiteralCall
     keccak256
     ==
+    dup
+    bury 7
+    bnz main_after_if_else@24
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@24:
+    dig 5
     assert
     callsub fSignatureFromMemory
     keccak256
     callsub fSignatureFromMemoryCall
     keccak256
     ==
+    dup
+    bury 6
+    bnz main_after_if_else@26
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@26:
+    dig 4
     assert
     callsub fSignatureFromMemoryCall
     keccak256
     callsub fSignatureFromMemorys
     keccak256
     ==
+    dup
+    bury 5
+    bnz main_after_if_else@28
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@28:
+    dig 3
     assert
     callsub fPointerCall
     keccak256
     callsub fSignatureFromLiteral
     keccak256
     ==
+    dup
+    bury 4
+    bnz main_after_if_else@30
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@30:
+    dig 2
     assert
     callsub fLocalPointerCall
     keccak256
     callsub fSignatureFromLiteral
     keccak256
     ==
+    dup
+    bury 3
+    bnz main_after_if_else@32
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@32:
+    dig 1
     assert
     callsub fReturnedFunctionPointer
     keccak256
     callsub fSignatureFromLiteral
     keccak256
     ==
-    assert
-    intc_0 // 1
+    dup
+    bury 2
+    bnz main_after_if_else@34
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@34:
     return
 
 main_ternary_false@21:
@@ -240,21 +295,21 @@ main_fExternal_route@5:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     txn GroupIndex
-    bz main_ternary_false@44
+    bz main_ternary_false@56
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@45:
+main_ternary_merge@57:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@44:
+main_ternary_false@56:
     intc_1 // 0
-    b main_ternary_merge@45
+    b main_ternary_merge@57
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.getExternalFunctionPointer() -> bytes:
@@ -269,12 +324,12 @@ getExternalFunctionPointer:
 getExternalFunctionPointer_ternary_merge@3:
     !
     assert // not payable
-    bytec 4 // "sideEffectRan"
+    bytec 5 // "sideEffectRan"
     intc_0 // 1
     app_global_put
     global CurrentApplicationID
     itob
-    bytec_1 // method "fExternal(uint256,string)void"
+    bytec_2 // method "fExternal(uint256,string)void"
     concat
     retsub
 
@@ -295,7 +350,7 @@ fSignatureFromLiteral:
 fSignatureFromLiteral_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x81ca86700000000000000001000a0003313233
     retsub
 
 fSignatureFromLiteral_ternary_false@2:
@@ -315,7 +370,7 @@ fSignatureFromLiteralCall:
 fSignatureFromLiteralCall_ternary_merge@3:
     !
     assert // not payable
-    bytec 7 // 0xd50c86720000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 8 // 0xd50c8672000000000000000000000000000000000000000000000000000000000000000100220003313233
     retsub
 
 fSignatureFromLiteralCall_ternary_false@2:
@@ -335,7 +390,7 @@ fSignatureFromMemory:
 fSignatureFromMemory_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x81ca86700000000000000001000a0003313233
     retsub
 
 fSignatureFromMemory_ternary_false@2:
@@ -355,7 +410,7 @@ fSignatureFromMemoryCall:
 fSignatureFromMemoryCall_ternary_merge@3:
     !
     assert // not payable
-    bytec 7 // 0xd50c86720000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 8 // 0xd50c8672000000000000000000000000000000000000000000000000000000000000000100220003313233
     retsub
 
 fSignatureFromMemoryCall_ternary_false@2:
@@ -375,10 +430,10 @@ fSignatureFromMemorys:
 fSignatureFromMemorys_ternary_merge@3:
     !
     assert // not payable
-    bytec 6 // "xstor"
+    bytec 7 // "xstor"
     pushbytes "fExternal(uint256,string)"
     app_global_put
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x81ca86700000000000000001000a0003313233
     retsub
 
 fSignatureFromMemorys_ternary_false@2:
@@ -400,13 +455,13 @@ fPointerCall_ternary_merge@3:
     assert // not payable
     global CurrentApplicationID
     itob
-    bytec_1 // method "fExternal(uint256,string)void"
+    bytec_2 // method "fExternal(uint256,string)void"
     concat
-    bytec 5 // "fPointer"
+    bytec 6 // "fPointer"
     dig 1
     app_global_put
     extract 8 4
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 4 // 0x000000000000000000000000000000000000000000000000000000000000000100220003313233
     concat
     retsub
 
@@ -429,10 +484,10 @@ fLocalPointerCall_ternary_merge@3:
     assert // not payable
     global CurrentApplicationID
     itob
-    bytec_1 // method "fExternal(uint256,string)void"
+    bytec_2 // method "fExternal(uint256,string)void"
     concat
     extract 8 4
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 4 // 0x000000000000000000000000000000000000000000000000000000000000000100220003313233
     concat
     retsub
 
@@ -455,7 +510,7 @@ fReturnedFunctionPointer_ternary_merge@3:
     assert // not payable
     callsub getExternalFunctionPointer
     extract 8 4
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 4 // 0x000000000000000000000000000000000000000000000000000000000000000100220003313233
     concat
     retsub
 

@@ -3,22 +3,30 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_length_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 64
-    bytecblock 0x151f7c75
-    intc_0 // 0
+    intcblock 32 0 1 28
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000020 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intc_1 // 0
     dup
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -27,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1abbebc2 0xa0462538 // method "lenBytesRead(byte[])uint512", method "lenStringRead(string)uint512"
+    pushbytess 0x644078a9 0x6eb0a6d5 // method "lenBytesRead(byte[])uint256", method "lenStringRead(string)uint256"
     txna ApplicationArgs 0
     match main_lenBytesRead_route@5 main_lenStringRead_route@6
     err
@@ -35,9 +43,9 @@ main_after_if_else@2:
 main_lenStringRead_route@6:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    pushint 2
     +
     dig 1
     len
@@ -48,7 +56,7 @@ main_lenStringRead_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -56,31 +64,83 @@ main_ternary_merge@13:
     !
     assert // not payable
     load 0
-    dig 2
-    len
-    itob
-    swap
     store 0
-    intc_3 // 64
+    txn NumAppArgs
+    bz main_ternary_false@15
+    txna ApplicationArgs 0
+
+main_ternary_merge@16:
+    pushint 24
+    bzero
+    swap
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    concat
+    dig 3
+    dup
+    cover 3
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    dup
+    intc_3 // 28
+    extract_uint64
+    intc_3 // 28
+    +
+    pushint 8
+    extract3
+    load 0
+    store 0
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
+main_ternary_false@15:
+    pushint 4
+    bzero
+    b main_ternary_merge@16
+
 main_ternary_false@12:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main_lenBytesRead_route@5:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    pushint 2
     +
     dig 1
     len
@@ -89,31 +149,83 @@ main_lenBytesRead_route@5:
     extract 2 0
     bury 1
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@20
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@21:
     !
     assert // not payable
     load 0
-    dig 1
-    len
-    itob
-    swap
     store 0
-    intc_3 // 64
+    txn NumAppArgs
+    bz main_ternary_false@23
+    txna ApplicationArgs 0
+
+main_ternary_merge@24:
+    pushint 24
+    bzero
+    swap
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    concat
+    dig 2
+    dup
+    cover 3
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    dup
+    intc_3 // 28
+    extract_uint64
+    intc_3 // 28
+    +
+    pushint 8
+    extract3
+    load 0
+    store 0
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@17:
-    intc_0 // 0
-    b main_ternary_merge@18
+main_ternary_false@23:
+    pushint 4
+    bzero
+    b main_ternary_merge@24
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21

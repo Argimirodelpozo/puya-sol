@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/memory_arrays_of_various_sizes.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 32 0 1
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000 0x0000 0x0000000000000000000000000000000000000000000000000000000000000001
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000 0x0000 0x068101 0x0000000000000000000000000000000000000000000000000000000000000001
     intc_2 // 0
     dupn 12
     pushbytes ""
@@ -67,6 +67,27 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+
+main_while_top@23:
+    pushint 30010
+    global OpcodeBudget
+    >
+    bz main_after_while@28
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec 4 // 0x068101
+    itxn_field ApprovalProgram
+    bytec 4 // 0x068101
+    itxn_field ClearStateProgram
+    intc_2 // 0
+    itxn_field Fee
+    itxn_submit
+    b main_while_top@23
+
+main_after_while@28:
     pushint 8
     bzero
     dup
@@ -117,11 +138,11 @@ main_while_top@10:
     intc_2 // 0
     bury 1
 
-main_for_header@25:
+main_for_header@32:
     dup
     dig 3
     <
-    bz main_after_for@27
+    bz main_after_for@34
     dig 14
     dig 1
     dup
@@ -138,20 +159,20 @@ main_for_header@25:
     intc_0 // 2
     +
     bury 1
-    b main_for_header@25
+    b main_for_header@32
 
-main_after_for@27:
+main_after_for@34:
     dig 14
     len
     bury 2
     intc_2 // 0
     bury 1
 
-main_for_header@28:
+main_for_header@35:
     dup
     intc_0 // 2
     <
-    bz main_after_for@30
+    bz main_after_for@37
     pushbytes 0x00020000
     dig 1
     dup
@@ -168,9 +189,9 @@ main_for_header@28:
     intc_0 // 2
     +
     bury 1
-    b main_for_header@28
+    b main_for_header@35
 
-main_after_for@30:
+main_after_for@37:
     dig 14
     dig 3
     dig 3
@@ -313,7 +334,7 @@ main_after_while@17:
     +
     uncover 2
     swap
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001
     replace3 // on error: index access is out of bounds
     uncover 3
     swap
@@ -337,7 +358,7 @@ main_after_while@17:
     intc_0 // 2
     +
     extract3
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001
     replace2 2 // on error: index access is out of bounds
     uncover 3
     callsub dynamic_array_replace_dynamic_element

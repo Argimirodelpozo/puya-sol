@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x590a1470 0xa4346735 0x6184bbd7 // method "s()uint512", method "t()uint512", method "u()uint512"
+    pushbytess 0x8e71a86f 0x3e9a707a 0xa17429e2 // method "s()uint256", method "t()uint256", method "u()uint256"
     txna ApplicationArgs 0
     match main_s_route@5 main_t_route@6 main_u_route@7
     err
@@ -45,40 +45,40 @@ main_u_route@7:
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@26:
     !
     assert // not payable
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
+    pushbytes 0x151f7c750000000001925c317317e232abd2ce57aa86fc6cd3698c7c097ed0a903275f48
     log
     intc_0 // 1
     return
 
 main_ternary_false@13:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@26
 
 main_t_route@6:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+    b main_ternary_merge@26
 
-main_ternary_false@18:
+main_ternary_false@19:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@26
 
 main_s_route@5:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@25
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@24
+    b main_ternary_merge@26
 
-main_ternary_false@23:
+main_ternary_false@25:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@26

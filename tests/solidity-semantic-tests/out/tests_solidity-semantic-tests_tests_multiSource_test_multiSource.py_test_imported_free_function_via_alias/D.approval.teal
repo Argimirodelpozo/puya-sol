@@ -1,14 +1,23 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_oim65600/s2.sol.D.approval_program() -> uint64:
+// /tmp/multisource_n3k4d6sr/s2.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 32 0
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -50,7 +59,7 @@ main_ternary_merge@9:
 main_ternary_merge@13:
     !
     assert // not payable
-    callsub /tmp/multisource_oim65600/s2.sol.f_56
+    callsub f
     dup
     len
     intc_1 // 32
@@ -61,10 +70,19 @@ main_ternary_merge@13:
     swap
     dig 1
     b|
-    callsub f
-    pushbytes 0x2710
+    callsub /tmp/multisource_n3k4d6sr/s2.sol.f_28
+    pushint 10000
+    itob
     b*
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     dup
     len
     intc_1 // 32
@@ -87,15 +105,15 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/multisource_oim65600/s2.sol.f_28() -> bytes:
+// /tmp/multisource_n3k4d6sr/s2.sol.f() -> bytes:
 f:
-    pushint 6
+    pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_oim65600/s2.sol.f_56() -> bytes:
-/tmp/multisource_oim65600/s2.sol.f_56:
-    pushint 1337
+// /tmp/multisource_n3k4d6sr/s2.sol.f_28() -> bytes:
+/tmp/multisource_n3k4d6sr/s2.sol.f_28:
+    pushint 6
     itob
     retsub

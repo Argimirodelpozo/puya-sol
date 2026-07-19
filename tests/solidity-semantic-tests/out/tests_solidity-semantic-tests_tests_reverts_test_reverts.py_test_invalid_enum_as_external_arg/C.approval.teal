@@ -3,13 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/invalid_enum_as_external_arg.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 0 255
+    intcblock 1 32 0 255
     bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -25,7 +33,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x87be92fe 0xe1fb067c // method "tested(uint64)uint256", method "test()uint512"
+    pushbytess 0x87be92fe 0xc95a9d21 // method "tested(uint64)uint256", method "test()uint256"
     txna ApplicationArgs 0
     match main_tested_route@5 main_test_route@6
     err
@@ -43,14 +51,18 @@ main_ternary_merge@13:
     assert // not payable
     load 0
     store 0
+    load 0
+    store 0
     pushint 5
     callsub tested
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

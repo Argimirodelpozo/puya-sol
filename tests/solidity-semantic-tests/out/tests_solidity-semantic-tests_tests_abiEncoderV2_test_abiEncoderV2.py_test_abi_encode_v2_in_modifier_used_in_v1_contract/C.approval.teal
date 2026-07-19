@@ -1,15 +1,23 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_qjckqh1u/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_ahsioawc/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 64
+    intcblock 0 1 6 32
     bytecblock "y" "x" 0x290efb48 TMPL_APPROVAL_A TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +36,7 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x3cc4fb64 // method "test()(uint512,uint512)"
+    pushbytes 0x619fed17 // method "test()(uint256,uint256)"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -125,17 +133,17 @@ main_ternary_merge@9:
     app_global_put
     dig 1
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
     cover 2

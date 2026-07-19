@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/array_multiple_local_vars.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
     dupn 3
     pushbytes ""
@@ -11,7 +12,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -71,19 +80,29 @@ main_while_top@10:
     dig 5
     b>
     bz main_after_while@17
-    dig 4
-    pushbytes 0x0a
-    b>=
+    pushint 10
+    itob
+    dig 5
+    b<=
     bnz main_after_while@17
+    dig 4
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dig 5
+    swap
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
+    dup
+    dig 2
+    <
+    assert // array index out of bounds
     dig 4
     extract 2 0
     swap
@@ -93,12 +112,18 @@ main_while_top@10:
     extract3 // on error: index access is out of bounds
     dup
     bury 3
-    pushbytes 0x03e8
+    pushint 1000
+    itob
     b>=
     bz main_else_body@14
-    dig 4
-    pushbytes 0x01
+    intc_2 // 1
+    itob
+    dig 5
     b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bury 5
     b main_while_top@10
 
@@ -106,8 +131,12 @@ main_else_body@14:
     dig 2
     dig 2
     b+
-    dup
-    pushbytes 0x01f4
+    dupn 2
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 500
+    itob
     b>=
     bz main_after_if_else@16
     dup
@@ -131,8 +160,13 @@ main_after_if_else@16:
     dig 5
     pushbytes 0x01
     b+
-    bury 6
-    bury 3
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    bury 4
+    bury 5
     b main_while_top@10
 
 main_after_while@17:

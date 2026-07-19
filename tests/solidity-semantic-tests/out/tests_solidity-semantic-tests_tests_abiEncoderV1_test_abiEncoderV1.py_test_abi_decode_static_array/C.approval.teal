@@ -9,7 +9,15 @@ main:
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -33,16 +41,16 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
-    dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -65,10 +73,8 @@ main_ternary_merge@9:
     concat
     replace2 64
     store 0
-    dup
-    extract 2 32
     pushbytes 0x151f7c75
-    swap
+    dig 1
     concat
     log
     intc_1 // 1

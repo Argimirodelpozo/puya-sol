@@ -4,15 +4,24 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_memory.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 24 16
-    bytecblock 0x40e33532 0x04 TMPL_APPROVAL_D TMPL_CLEAR_D
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x40e33532 TMPL_APPROVAL_D TMPL_CLEAR_D
     intc_1 // 0
-    dup
+    dupn 2
     pushbytes ""
+    dupn 2
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -28,7 +37,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "something()void"
+    bytec_1 // method "something()void"
     pushbytes 0x32064c45 // method "test()byte[4]"
     txna ApplicationArgs 0
     match main_something_route@5 main_test_route@6
@@ -59,7 +68,7 @@ main_ternary_merge@13:
     store 0
     global CurrentApplicationID
     itob
-    bytec_0 // method "something()void"
+    bytec_1 // method "something()void"
     concat
     pushbytes 0x000000000000000000000000000000000000000000000000
     swap
@@ -94,7 +103,7 @@ main_ternary_merge@13:
     itxn_field Amount
     itxn_submit
     itob
-    bytec_0 // method "something()void"
+    bytec_1 // method "something()void"
     concat
     replace2 12 // on error: index access is out of bounds
     dup
@@ -103,19 +112,22 @@ main_ternary_merge@13:
     extract 0 12 // on error: index access is out of bounds
     extract 8 4
     dup
-    bury 5
+    bury 8
     swap
     extract 8 4
-    bury 3
+    bury 6
     len
     itob
-    bytec_1 // 0x04
+    pushint 4
+    itob
+    dup
+    bury 6
     b==
     bz main_bool_false@17
-    dig 1
+    dig 4
     len
     itob
-    bytec_1 // 0x04
+    dig 4
     b==
     dup
     bury 2
@@ -123,16 +135,43 @@ main_ternary_merge@13:
     dup
     bz main_bool_false@17
     intc_0 // 1
+    bury 3
 
 main_bool_merge@18:
-    assert
     dig 2
-    dup
-    dig 3
-    ==
+    bnz main_after_if_else@20
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@20:
+    dig 2
     assert
+    dig 5
+    dig 5
+    ==
+    dup
+    bury 3
+    bnz main_after_if_else@22
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@22:
+    dig 1
+    dup
+    assert
+    bnz main_after_if_else@24
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@24:
+    dig 1
+    bnz main_after_if_else@26
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@26:
     pushbytes 0x151f7c75
-    swap
+    dig 6
     concat
     log
     intc_0 // 1
@@ -140,6 +179,7 @@ main_bool_merge@18:
 
 main_bool_false@17:
     intc_1 // 0
+    bury 3
     b main_bool_merge@18
 
 main_ternary_false@12:
@@ -148,18 +188,18 @@ main_ternary_false@12:
 
 main_something_route@5:
     txn GroupIndex
-    bz main_ternary_false@22
+    bz main_ternary_false@30
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@23:
+main_ternary_merge@31:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@22:
+main_ternary_false@30:
     intc_1 // 0
-    b main_ternary_merge@23
+    b main_ternary_merge@31

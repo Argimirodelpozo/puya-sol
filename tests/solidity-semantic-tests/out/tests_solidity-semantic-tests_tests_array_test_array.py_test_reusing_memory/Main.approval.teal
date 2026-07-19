@@ -4,13 +4,21 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/reusing_memory.sol.Main.approval_program() -> uint64:
 main:
     intcblock 32 0 1 6
-    bytecblock "__ctor_pending" "map" 0x151f7c75 0x TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    bytecblock "__ctor_pending" "map" 0x151f7c75 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
     intc_1 // 0
     pushint 4096
     bzero
     dup
     store 5
+    dup
     store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
@@ -86,24 +94,14 @@ main_ternary_merge@16:
     dup
     box_del
     pop
-    dup
-    dig 2
+    dig 1
     box_put
     itxn_begin
-    swap
     callsub g
-    dig 2
+    dig 1
     swap
     concat
-    swap
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
-    callsub g
-    dig 2
-    swap
-    concat
+    dup
     len
     intc_0 // 32
     -
@@ -112,8 +110,8 @@ main_ternary_merge@16:
     keccak256
     dig 1
     b|
-    bytec 4 // TMPL_APPROVAL_Helper
-    bytec 5 // TMPL_CLEAR_Helper
+    bytec_3 // TMPL_APPROVAL_Helper
+    bytec 4 // TMPL_CLEAR_Helper
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -214,7 +212,7 @@ g_ternary_merge@3:
     concat
     sha256
     box_get
-    bytec_3 // 0x
+    pushbytes 0x
     cover 2
     select
     dup
