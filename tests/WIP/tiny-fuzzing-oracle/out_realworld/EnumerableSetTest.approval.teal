@@ -1,0 +1,318 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "_length" 0x151f7c75 "_contains" "__ctor_pending" 0x00 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_0 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7393d181 0xc00bc131 0x0ead9533 0x54411274 // method "__postInit()void", method "add(uint256)bool", method "remove(uint256)bool", method "contains(uint256)bool", method "length()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_add_route@6 main_remove_route@7 main_contains_route@8 main_length_route@9
+    err
+
+main_length_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 0
+    b main_ternary_merge@16
+
+main_contains_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // "_contains"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bytec 4 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21
+
+main_remove_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // "_contains"
+    concat
+    sha256
+    dup
+    bury 2
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz main_after_if_else@28
+    intc_0 // 0
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.remove@29:
+    bytec 4 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@28:
+    intc_0 // 0
+    itob
+    dig 1
+    swap
+    box_put
+    intc_0 // 0
+    bytec_0 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dup
+    bytec 5 // 0x01
+    b>=
+    assert // underflow
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 5 // 0x01
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "_length"
+    swap
+    app_global_put
+    intc_1 // 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.remove@29
+
+main_ternary_false@25:
+    intc_0 // 0
+    b main_ternary_merge@26
+
+main_add_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // "_contains"
+    concat
+    sha256
+    dup
+    bury 2
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bz main_after_if_else@36
+    intc_0 // 0
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.add@37:
+    bytec 4 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@36:
+    intc_1 // 1
+    itob
+    dig 1
+    swap
+    box_put
+    intc_0 // 0
+    bytec_0 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    bytec 5 // 0x01
+    b+
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "_length"
+    swap
+    app_global_put
+    intc_1 // 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.add@37
+
+main_ternary_false@33:
+    intc_0 // 0
+    b main_ternary_merge@34
+
+main___postInit_route@5:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "_contains"
+    pushint 2
+    box_create
+    pop
+    bytec_0 // "_length"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return

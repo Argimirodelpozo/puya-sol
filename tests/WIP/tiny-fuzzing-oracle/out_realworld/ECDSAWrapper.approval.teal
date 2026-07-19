@@ -1,0 +1,821 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/ECDSAWrapper.sol.ECDSAWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 8 4096 0 20480
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000008baa579f 0x0000000000000000000000000000000000000000000000000000000000000002 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000040 0x40 0x0000000000000000000000000000000000000000000000000000000000000041 0x0000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000
+    intc_3 // 0
+    dup
+    intc_2 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcad47c11 0x3edc7f26 0xb471c4e4 // method "recover(byte[32],byte[])address", method "recoverCalldata(byte[32],byte[])address", method "toEthSignedMessageHash(byte[32])byte[32]"
+    txna ApplicationArgs 0
+    match main_recover_route@5 main_recoverCalldata_route@6 main_toEthSignedMessageHash_route@7
+    err
+
+main_toEthSignedMessageHash_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    dig 1
+    callsub ECDSA.toEthSignedMessageHash
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+main_ternary_false@13:
+    intc_3 // 0
+    b main_ternary_merge@14
+
+main_recoverCalldata_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dup2
+    callsub ECDSA.recoverCalldata
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+main_ternary_false@18:
+    intc_3 // 0
+    b main_ternary_merge@19
+
+main_recover_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    dup2
+    callsub ECDSA.recover
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+main_ternary_false@23:
+    intc_3 // 0
+    b main_ternary_merge@24
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/ECDSAWrapper.sol.ECDSA.recover(2)(hash: bytes, signature: bytes) -> bytes:
+ECDSA.recover:
+    proto 2 1
+    intc_3 // 0
+    load 0
+    store 0
+    load 0
+    extract 64 32
+    intc_1 // 8
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    dup
+    intc_2 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_2 // 4096
+    %
+    swap
+    dig 1
+    intc_0 // 32
+    extract3
+    dig 3
+    b|
+    uncover 2
+    loads
+    uncover 2
+    intc_0 // 32
+    extract3
+    uncover 2
+    b|
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000041
+    uncover 2
+    match ECDSA.recover_switch_case_0@3 ECDSA.recover_switch_case_1@13
+    load 0
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000008baa579f
+    replace2 0
+    store 0
+    err // revert
+
+ECDSA.recover_switch_case_1@13:
+    frame_dig -1
+    pushbytes 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    load 0
+    dig 1
+    intc_2 // 4096
+    /
+    loads
+    uncover 2
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    frame_dig 3
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 1
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 32
+    store 0
+    frame_dig -1
+    bytec 5 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    load 0
+    dig 1
+    intc_2 // 4096
+    /
+    loads
+    uncover 2
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    store 0
+
+ECDSA.recover_switch_case_next@18:
+    load 0
+    frame_dig 3
+    dup
+    cover 2
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 0
+    store 0
+    frame_dig -1
+    pushbytes 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    load 0
+    dig 1
+    intc_2 // 4096
+    /
+    loads
+    uncover 2
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    store 0
+    load 0
+    extract 1 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_bury 0
+    load 0
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 96
+    store 0
+    load 0
+    swap
+    frame_dig 1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    store 0
+    itxn LastLog
+    len
+    bz ECDSA.recover_after_if_else@20
+    load 0
+    store 0
+    retsub
+
+ECDSA.recover_after_if_else@20:
+    load 0
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000008baa579f
+    replace2 0
+    store 0
+    err // revert
+
+ECDSA.recover_switch_case_0@3:
+    frame_dig -1
+    bytec 5 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_2 // 4096
+    /
+    loads
+    swap
+    intc_2 // 4096
+    %
+    intc_0 // 32
+    extract3
+    load 0
+    dig 1
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b/
+    pushbytes 0x1b
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 3
+    dup
+    cover 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    store 0
+    load 0
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    store 0
+    b ECDSA.recover_switch_case_next@18
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/ECDSAWrapper.sol.ECDSA.recoverCalldata(hash: bytes, signature: bytes) -> bytes:
+ECDSA.recoverCalldata:
+    proto 2 1
+    intc_3 // 0
+    dupn 2
+    load 0
+    store 0
+    txn NumAppArgs
+    bz ECDSA.recoverCalldata_ternary_false@2
+    txna ApplicationArgs 0
+
+ECDSA.recoverCalldata_ternary_merge@3:
+    frame_dig -2
+    concat
+    pushint 24
+    bzero
+    swap
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    concat
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    dupn 2
+    pushint 60
+    extract_uint64
+    dup
+    pushint 36
+    +
+    itob
+    cover 3
+    pushint 28
+    +
+    intc_1 // 8
+    extract3
+    load 0
+    extract 64 32
+    frame_bury 0
+    intc_0 // 32
+    bzero
+    dup
+    frame_bury 2
+    b|
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000041
+    uncover 2
+    match ECDSA.recoverCalldata_switch_case_0@6 ECDSA.recoverCalldata_switch_case_1@16
+    load 0
+    intc_1 // 8
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushint 64
+    extract3
+    replace2 64
+    store 0
+    load 0
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000008baa579f
+    replace2 0
+    store 0
+    err // revert
+
+ECDSA.recoverCalldata_switch_case_1@16:
+    load 0
+    intc_1 // 8
+    bzero
+    uncover 3
+    bytec 5 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    intc_0 // 32
+    extract3
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    store 0
+
+ECDSA.recoverCalldata_switch_case_next@21:
+    load 0
+    frame_dig 2
+    dup
+    cover 2
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 0
+    store 0
+    load 0
+    extract 1 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_bury 1
+    load 0
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 96
+    store 0
+    load 0
+    swap
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    store 0
+    itxn LastLog
+    len
+    bz ECDSA.recoverCalldata_after_if_else@23
+    load 0
+    store 0
+    frame_dig 1
+    frame_bury 0
+    retsub
+
+ECDSA.recoverCalldata_after_if_else@23:
+    load 0
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000008baa579f
+    replace2 0
+    store 0
+    err // revert
+
+ECDSA.recoverCalldata_switch_case_0@6:
+    intc_1 // 8
+    bzero
+    uncover 2
+    dup
+    cover 2
+    pushbytes 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 3
+    dup
+    cover 3
+    swap
+    intc_0 // 32
+    extract3
+    load 0
+    dig 1
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b/
+    pushbytes 0x1b
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    cover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    store 0
+    load 0
+    uncover 3
+    uncover 5
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 4
+    swap
+    intc_0 // 32
+    extract3
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    store 0
+    load 0
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    store 0
+    b ECDSA.recoverCalldata_switch_case_next@21
+
+ECDSA.recoverCalldata_ternary_false@2:
+    pushint 4
+    bzero
+    b ECDSA.recoverCalldata_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/ECDSAWrapper.sol.ECDSA.toEthSignedMessageHash(1)_0(hash: bytes) -> bytes:
+ECDSA.toEthSignedMessageHash:
+    proto 1 1
+    load 0
+    store 0
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 32
+    store 0
+    load 0
+    pushbytes 0x0000000019457468657265756d205369676e6564204d6573736167653a0a3332
+    replace2 0
+    store 0
+    load 0
+    extract 4 32
+    keccak256
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    load 0
+    store 0
+    retsub

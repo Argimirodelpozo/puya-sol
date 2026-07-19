@@ -1,0 +1,382 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/RegressionImplementation.sol.Implementation3.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00 0x "_value" 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    intc_1 // 0
+    dup
+    bytec_1 // ""
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_value"
+    bytec_1 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfd2c93cd 0xc46a4b39 0xdb0f056d // method "initialize()void", method "setValue(uint256)void", method "getValue(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_initialize_route@5 main_setValue_route@6 main_getValue_route@7
+    err
+
+main_getValue_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "_value"
+    app_global_get_ex
+    assert // check _value exists
+    dig 5
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_setValue_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    bytec_2 // "_value"
+    dig 5
+    app_global_put
+    intc_2 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_initialize_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    dup
+    bury 5
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_1 // 0x
+    b!=
+    dup
+    bury 3
+    !
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    uncover 2
+    b|
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    !
+    uncover 2
+    &&
+    bury 3
+    intc_2 // 1
+    ==
+    bz main_else_body@27
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    intc_1 // 0
+    itob
+    b==
+    bury 3
+
+main_after_if_else@28:
+    dig 1
+    bnz main_after_if_else@31
+    dig 2
+    bnz main_after_if_else@31
+    pushbytes 0x38c3eeee // method "InvalidInitialization()"
+    log
+    err // InvalidInitialization
+
+main_after_if_else@31:
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x0000000000000001
+    replace2 24
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    swap
+    callsub __storage_write
+    dup
+    bnz main_after_if_else@33
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x01
+    replace2 23
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    swap
+    callsub __storage_write
+
+main_after_if_else@33:
+    dup
+    bnz main_after_if_else@35
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x00
+    replace2 23
+    bytec_0 // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    swap
+    callsub __storage_write
+    pushbytes 0x80d71e940000000000000001
+    log
+
+main_after_if_else@35:
+    intc_2 // 1
+    return
+
+main_else_body@27:
+    intc_1 // 0
+    bury 3
+    b main_after_if_else@28
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec_1 // 0x
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    bytec_2 // "_value"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@2:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec_1 // 0x
+    b==
+    bz __storage_write_else_body@2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_value"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    swap
+    box_replace
+    retsub

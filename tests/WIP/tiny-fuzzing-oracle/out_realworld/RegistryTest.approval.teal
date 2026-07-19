@@ -1,0 +1,864 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Registry.sol.RegistryTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x "_nameToOwner" "_registrationCount" 0x151f7c75 "_primaryName" "_nameToExpiry" "_owner" "_registrationFee" "__ctor_pending" 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000134e616d65206e6f74207265676973746572656400000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e4e6f74206e616d65206f776e6572000000000000000000000000000000000000
+    intc_2 // 0
+    dupn 15
+    bytec_1 // ""
+    dupn 3
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0x9ec4c01a 0xcd5a68e7 0x5092edb0 0xb5d4bad8 0x011ee243 0x1727b32b 0x0b5fce90 0xfd2e059c 0x5a824f2a 0x536bdfb3 0xca03de43 // method "__postInit()void", method "owner()address", method "registrationCount()uint256", method "registrationFee()uint256", method "setRegistrationFee(uint256)void", method "register(uint256,address,uint256)void", method "ownerOfName(uint256)address", method "expiryOf(uint256)uint256", method "primaryName(address)uint256", method "setPrimaryName(address,uint256)void", method "transferName(uint256,address,address)void", method "renewName(uint256,uint256)void", method "releaseName(uint256)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_registrationCount_route@7 main_registrationFee_route@8 main_setRegistrationFee_route@9 main_register_route@10 main_ownerOfName_route@11 main_expiryOf_route@12 main_primaryName_route@13 main_setPrimaryName_route@14 main_transferName_route@15 main_renewName_route@16 main_releaseName_route@17
+    err
+
+main_releaseName_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 7
+    bytec_2 // "_nameToOwner"
+    concat
+    sha256
+    dup
+    bury 13
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    bury 11
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    dup
+    bury 4
+    bnz main_after_if_else@26
+    bytec 12 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000134e616d65206e6f74207265676973746572656400000000000000000000000000
+    log
+
+main_after_if_else@26:
+    dig 2
+    assert // Name not registered
+    dig 11
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 5 // "_primaryName"
+    concat
+    sha256
+    dup
+    bury 8
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 17
+    b==
+    bz main_after_if_else@28
+    dig 6
+    dup
+    box_del
+    pop
+    dig 10
+    box_put
+
+main_after_if_else@28:
+    dig 11
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    dig 5
+    bytec 6 // "_nameToExpiry"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 10
+    box_put
+    intc_2 // 0
+    bytec_3 // "_registrationCount"
+    app_global_get_ex
+    assert // check _registrationCount exists
+    dup
+    bytec 10 // 0x01
+    b>=
+    assert // underflow
+    bytec 13 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 10 // 0x01
+    b-
+    bytec 13 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_3 // "_registrationCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_2 // 0
+    b main_ternary_merge@24
+
+main_renewName_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 21
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 14
+    bytec_2 // "_nameToOwner"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    dup
+    bury 4
+    bnz main_after_if_else@35
+    bytec 12 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000134e616d65206e6f74207265676973746572656400000000000000000000000000
+    log
+
+main_after_if_else@35:
+    dig 2
+    assert // Name not registered
+    dig 12
+    bytec 6 // "_nameToExpiry"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 21
+    b+
+    dup
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@32:
+    intc_2 // 0
+    b main_ternary_merge@33
+
+main_transferName_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_nameToOwner"
+    concat
+    sha256
+    dup
+    bury 13
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 15
+    ==
+    dup
+    bury 5
+    bnz main_after_if_else@42
+    bytec 14 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e4e6f74206e616d65206f776e6572000000000000000000000000000000000000
+    log
+
+main_after_if_else@42:
+    dig 3
+    assert // Not name owner
+    dig 11
+    dig 5
+    box_put
+    dig 14
+    bytec 5 // "_primaryName"
+    concat
+    sha256
+    dup
+    bury 9
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 17
+    b==
+    bz main_after_if_else@44
+    intc_2 // 0
+    itob
+    dig 8
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+main_after_if_else@44:
+    intc_1 // 1
+    return
+
+main_ternary_false@39:
+    intc_2 // 0
+    b main_ternary_merge@40
+
+main_setPrimaryName_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 17
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_nameToOwner"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 16
+    ==
+    dup
+    bury 5
+    bnz main_after_if_else@51
+    bytec 14 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e4e6f74206e616d65206f776e6572000000000000000000000000000000000000
+    log
+
+main_after_if_else@51:
+    dig 3
+    assert // Not name owner
+    dig 15
+    bytec 5 // "_primaryName"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 17
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@48:
+    intc_2 // 0
+    b main_ternary_merge@49
+
+main_primaryName_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 17
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    dig 15
+    bytec 5 // "_primaryName"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@55:
+    intc_2 // 0
+    b main_ternary_merge@56
+
+main_expiryOf_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@60
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@61:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 18
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 6 // "_nameToExpiry"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@60:
+    intc_2 // 0
+    b main_ternary_merge@61
+
+main_ownerOfName_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@65
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@66:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_nameToOwner"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@65:
+    intc_2 // 0
+    b main_ternary_merge@66
+
+main_register_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@71:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 14
+    bytec_2 // "_nameToOwner"
+    concat
+    sha256
+    dup
+    bury 12
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    bury 10
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    dup
+    bury 4
+    bnz main_after_if_else@73
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a4e616d652074616b656e00000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@73:
+    dig 2
+    assert // Name taken
+    dig 18
+    dig 9
+    b>
+    dup
+    bury 3
+    bnz main_after_if_else@75
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000144475726174696f6e206d757374206265203e2030000000000000000000000000
+    log
+
+main_after_if_else@75:
+    dig 1
+    assert // Duration must be > 0
+    dig 10
+    dig 14
+    box_put
+    dig 12
+    bytec 6 // "_nameToExpiry"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 19
+    box_put
+    intc_2 // 0
+    bytec_3 // "_registrationCount"
+    app_global_get_ex
+    assert // check _registrationCount exists
+    bytec 10 // 0x01
+    b+
+    dup
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_3 // "_registrationCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@70:
+    intc_2 // 0
+    b main_ternary_merge@71
+
+main_setRegistrationFee_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 19
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@79
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@80:
+    !
+    assert // not payable
+    txn Sender
+    intc_2 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@83
+    global CallerApplicationID
+    bz main_bool_false@84
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_2 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@84
+
+main_bool_true@83:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@85:
+    dup
+    bnz main_after_if_else@87
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@87:
+    dup
+    assert // Not owner
+    bytec 8 // "_registrationFee"
+    dig 18
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@84:
+    intc_2 // 0
+    bury 1
+    b main_bool_merge@85
+
+main_ternary_false@79:
+    intc_2 // 0
+    b main_ternary_merge@80
+
+main_registrationFee_route@8:
+    txn GroupIndex
+    bz main_ternary_false@91
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@92:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 8 // "_registrationFee"
+    app_global_get_ex
+    assert // check _registrationFee exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@91:
+    intc_2 // 0
+    b main_ternary_merge@92
+
+main_registrationCount_route@7:
+    txn GroupIndex
+    bz main_ternary_false@96
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@97:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "_registrationCount"
+    app_global_get_ex
+    assert // check _registrationCount exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@96:
+    intc_2 // 0
+    b main_ternary_merge@97
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@101
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@102:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@101:
+    intc_2 // 0
+    b main_ternary_merge@102
+
+main___postInit_route@5:
+    bytec 9 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 9 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "_nameToOwner"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "_nameToExpiry"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_primaryName"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_owner"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "_registrationCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 8 // "_registrationFee"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 100
+    itob
+    bytec 8 // "_registrationFee"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

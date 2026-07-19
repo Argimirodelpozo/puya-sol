@@ -1,0 +1,834 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 24
+    bytecblock 0x 0x151f7c75 "_owner" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_defaultFeeRate" "_totalCollected" "_totalWithdrawn" "_customFeeRate" 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000 "_feesPaid"
+    intc_0 // 0
+    dupn 5
+    bytec_0 // ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0x41dcdf4a 0x1fbe4065 0x11ca9f9a 0x96f38aef 0x0cf920d0 0x4aedebd4 0x530d3f9e 0xbaa12a0f 0x1a657b19 0x3195d6a1 0xa11efeba // method "__postInit()void", method "owner()address", method "totalCollected()uint256", method "totalWithdrawn()uint256", method "defaultFeeRate()uint256", method "setDefaultFeeRate(uint256)void", method "setCustomFeeRate(address,uint256)void", method "getFeeRate(address)uint256", method "calculateFee(address,uint256)uint256", method "collectFee(address,uint256)uint256", method "feesPaid(address)uint256", method "withdraw(uint256)void", method "availableBalance()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_totalCollected_route@7 main_totalWithdrawn_route@8 main_defaultFeeRate_route@9 main_setDefaultFeeRate_route@10 main_setCustomFeeRate_route@11 main_getFeeRate_route@12 main_calculateFee_route@13 main_collectFee_route@14 main_feesPaid_route@15 main_withdraw_route@16 main_availableBalance_route@17
+    err
+
+main_availableBalance_route@17:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 5 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    intc_0 // 0
+    bytec 6 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    dup2
+    b>=
+    assert // underflow
+    swap
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_0 // 0
+    b main_ternary_merge@24
+
+main_withdraw_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@32
+    global CallerApplicationID
+    bz main_bool_false@33
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@33
+
+main_bool_true@32:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@34:
+    dup
+    bnz main_after_if_else@36
+    bytec 10 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@36:
+    dup
+    assert // Not owner
+    intc_0 // 0
+    bytec 5 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    intc_0 // 0
+    bytec 6 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    dup2
+    b>=
+    assert // underflow
+    swap
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 8
+    b>=
+    dup
+    bury 3
+    bnz main_after_if_else@38
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000014496e73756666696369656e742062616c616e6365000000000000000000000000
+    log
+
+main_after_if_else@38:
+    dig 1
+    assert // Insufficient balance
+    intc_0 // 0
+    bytec 6 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    dig 8
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 6 // "_totalWithdrawn"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@33:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@34
+
+main_ternary_false@28:
+    intc_0 // 0
+    b main_ternary_merge@29
+
+main_feesPaid_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    dig 5
+    bytec 11 // "_feesPaid"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@42:
+    intc_0 // 0
+    b main_ternary_merge@43
+
+main_collectFee_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 9
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@47
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@48:
+    !
+    assert // not payable
+    dig 5
+    bytec 7 // "_customFeeRate"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 4
+    intc_0 // 0
+    itob
+    b>
+    bz main_ternary_false@50
+    dig 2
+
+main_ternary_merge@51:
+    dig 8
+    b*
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 10000
+    itob
+    b/
+    dig 6
+    bytec 11 // "_feesPaid"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 5 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    dig 1
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_totalCollected"
+    swap
+    app_global_put
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@50:
+    intc_0 // 0
+    bytec 4 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    b main_ternary_merge@51
+
+main_ternary_false@47:
+    intc_0 // 0
+    b main_ternary_merge@48
+
+main_calculateFee_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 9
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    dig 5
+    bytec 7 // "_customFeeRate"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 5
+    intc_0 // 0
+    itob
+    b>
+    bz main_ternary_false@58
+    dig 3
+
+main_ternary_merge@59:
+    dig 8
+    b*
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 10000
+    itob
+    b/
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@58:
+    intc_0 // 0
+    bytec 4 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    b main_ternary_merge@59
+
+main_ternary_false@55:
+    intc_0 // 0
+    b main_ternary_merge@56
+
+main_getFeeRate_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    dig 5
+    bytec 7 // "_customFeeRate"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 6
+    intc_0 // 0
+    itob
+    b>
+    bz main_after_if_else@66
+    dig 4
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.getFeeRate@67:
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@66:
+    intc_0 // 0
+    bytec 4 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.getFeeRate@67
+
+main_ternary_false@63:
+    intc_0 // 0
+    b main_ternary_merge@64
+
+main_setCustomFeeRate_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@71
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@72:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@75
+    global CallerApplicationID
+    bz main_bool_false@76
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@76
+
+main_bool_true@75:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@77:
+    dup
+    bnz main_after_if_else@79
+    bytec 10 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@79:
+    dup
+    assert // Not owner
+    dig 5
+    bytec 7 // "_customFeeRate"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    intc_1 // 1
+    return
+
+main_bool_false@76:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@77
+
+main_ternary_false@71:
+    intc_0 // 0
+    b main_ternary_merge@72
+
+main_setDefaultFeeRate_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@83
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@84:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@87
+    global CallerApplicationID
+    bz main_bool_false@88
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@88
+
+main_bool_true@87:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@89:
+    dup
+    bnz main_after_if_else@91
+    bytec 10 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@91:
+    dup
+    assert // Not owner
+    pushint 5000
+    itob
+    dig 7
+    b>=
+    dup
+    bury 3
+    bnz main_after_if_else@93
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000074d61782035302500000000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@93:
+    dig 1
+    assert // Max 50%
+    bytec 4 // "_defaultFeeRate"
+    dig 7
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@88:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@89
+
+main_ternary_false@83:
+    intc_0 // 0
+    b main_ternary_merge@84
+
+main_defaultFeeRate_route@9:
+    txn GroupIndex
+    bz main_ternary_false@97
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@98:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 4 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@97:
+    intc_0 // 0
+    b main_ternary_merge@98
+
+main_totalWithdrawn_route@8:
+    txn GroupIndex
+    bz main_ternary_false@102
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@103:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 6 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@102:
+    intc_0 // 0
+    b main_ternary_merge@103
+
+main_totalCollected_route@7:
+    txn GroupIndex
+    bz main_ternary_false@107
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@108:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 5 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@107:
+    intc_0 // 0
+    b main_ternary_merge@108
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@112
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@113:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@112:
+    intc_0 // 0
+    b main_ternary_merge@113
+
+main___postInit_route@5:
+    bytec 9 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 9 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec 7 // "_customFeeRate"
+    pushint 2
+    box_create
+    pop
+    bytec 11 // "_feesPaid"
+    pushint 2
+    box_create
+    pop
+    bytec_2 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_totalCollected"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_totalWithdrawn"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_defaultFeeRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 300
+    itob
+    bytec 4 // "_defaultFeeRate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

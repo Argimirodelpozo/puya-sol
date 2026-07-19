@@ -1,0 +1,350 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "_hasCheckpoint" 0x151f7c75 "_latestValue" 0x "_latestKey" "__ctor_pending" "_values"
+    intc_0 // 0
+    dupn 2
+    bytec_3 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xcce463fb 0x6ed10c2d 0x06c2ac2b 0xef4931c2 0x9e22701c // method "__postInit()void", method "push(uint256,uint256)(uint256,uint256)", method "latest()uint256", method "latestCheckpoint()(bool,uint256,uint256)", method "getAtKey(uint256)uint256", method "hasCheckpoint()bool"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_push_route@6 main_latest_route@7 main_latestCheckpoint_route@8 main_getAtKey_route@9 main_hasCheckpoint_route@10
+    err
+
+main_hasCheckpoint_route@10:
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "_hasCheckpoint"
+    app_global_get_ex
+    assert // check _hasCheckpoint exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@16:
+    intc_0 // 0
+    b main_ternary_merge@17
+
+main_getAtKey_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    dup
+    dig 5
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec 6 // "_values"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_latestCheckpoint_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "_hasCheckpoint"
+    app_global_get_ex
+    assert // check _hasCheckpoint exists
+    intc_0 // 0
+    bytec 4 // "_latestKey"
+    app_global_get_ex
+    assert // check _latestKey exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 0
+    bytec_2 // "_latestValue"
+    app_global_get_ex
+    assert // check _latestValue exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 4
+    setbit
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@26:
+    intc_0 // 0
+    b main_ternary_merge@27
+
+main_latest_route@7:
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "_latestValue"
+    app_global_get_ex
+    assert // check _latestValue exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@31:
+    intc_0 // 0
+    b main_ternary_merge@32
+
+main_push_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "_latestValue"
+    app_global_get_ex
+    swap
+    bury 3
+    assert // check _latestValue exists
+    intc_0 // 0
+    bytec_0 // "_hasCheckpoint"
+    app_global_get_ex
+    assert // check _hasCheckpoint exists
+    bz main_after_if_else@41
+    intc_0 // 0
+    bytec 4 // "_latestKey"
+    app_global_get_ex
+    assert // check _latestKey exists
+    dig 4
+    b<=
+    dup
+    bury 2
+    bnz main_after_if_else@40
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001b436865636b706f696e743a2064656372656173696e67206b6579730000000000
+    log
+
+main_after_if_else@40:
+    dup
+    assert // Checkpoint: decreasing keys
+
+main_after_if_else@41:
+    intc_1 // 32
+    bzero
+    dup
+    dig 5
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec 6 // "_values"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 5
+    dup
+    cover 2
+    box_put
+    bytec 4 // "_latestKey"
+    uncover 2
+    app_global_put
+    bytec_2 // "_latestValue"
+    dig 1
+    app_global_put
+    bytec_0 // "_hasCheckpoint"
+    intc_2 // 1
+    app_global_put
+    dig 3
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@36:
+    intc_0 // 0
+    b main_ternary_merge@37
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec 6 // "_values"
+    pushint 2
+    box_create
+    pop
+    bytec 4 // "_latestKey"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "_latestValue"
+    bytec_3 // 0x
+    app_global_put
+    bytec_0 // "_hasCheckpoint"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return

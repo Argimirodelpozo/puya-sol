@@ -1,0 +1,560 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Allowlist.sol.AllowlistTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 24
+    bytecblock 0x "_memberCount" "_owner" "_tiers" 0x151f7c75 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x00 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dupn 6
+    bytec_0 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 7 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0xe3425a03 0xc44d7eb4 0x7841f109 0x4be39795 0xd243910f 0x323961fd 0x0685595e // method "__postInit()void", method "owner()address", method "memberCount()uint256", method "tierOf(address)uint256", method "isAllowed(address)bool", method "isPremium(address)bool", method "isAdmin(address)bool", method "setTier(address,uint256)void", method "removeMember(address)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_memberCount_route@7 main_tierOf_route@8 main_isAllowed_route@9 main_isPremium_route@10 main_isAdmin_route@11 main_setTier_route@12 main_removeMember_route@13
+    err
+
+main_removeMember_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@23
+    global CallerApplicationID
+    bz main_bool_false@24
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@24
+
+main_bool_true@23:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@25:
+    dup
+    bnz main_after_if_else@27
+    bytec 10 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@27:
+    dup
+    assert // Not owner
+    dig 6
+    bytec_3 // "_tiers"
+    concat
+    sha256
+    dup
+    bury 6
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    itob
+    dup
+    bury 6
+    b>
+    bz main_after_if_else@29
+    intc_0 // 0
+    bytec_1 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    dup
+    bytec 5 // 0x01
+    b>=
+    assert // underflow
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 5 // 0x01
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_memberCount"
+    swap
+    app_global_put
+
+main_after_if_else@29:
+    dig 4
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    intc_1 // 1
+    return
+
+main_bool_false@24:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@25
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_setTier_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 9
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@37
+    global CallerApplicationID
+    bz main_bool_false@38
+    intc_3 // 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@38
+
+main_bool_true@37:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@39:
+    dup
+    bnz main_after_if_else@41
+    bytec 10 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@41:
+    dup
+    assert // Not owner
+    dig 6
+    bytec_3 // "_tiers"
+    concat
+    sha256
+    dup
+    bury 4
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 7
+    intc_0 // 0
+    itob
+    dup
+    bury 4
+    b==
+    bz main_else_body@44
+    dig 7
+    dig 2
+    b>
+    bz main_else_body@44
+    intc_0 // 0
+    bytec_1 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    bytec 5 // 0x01
+    b+
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_memberCount"
+    swap
+    app_global_put
+
+main_after_if_else@47:
+    dig 2
+    dup
+    box_del
+    pop
+    dig 8
+    box_put
+    intc_1 // 1
+    return
+
+main_else_body@44:
+    dig 5
+    dig 2
+    b>
+    bz main_after_if_else@47
+    dig 7
+    dig 2
+    b==
+    bz main_after_if_else@47
+    intc_0 // 0
+    bytec_1 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    dup
+    bytec 5 // 0x01
+    b>=
+    assert // underflow
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 5 // 0x01
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_memberCount"
+    swap
+    app_global_put
+    b main_after_if_else@47
+
+main_bool_false@38:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@39
+
+main_ternary_false@33:
+    intc_0 // 0
+    b main_ternary_merge@34
+
+main_isAdmin_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    dig 6
+    bytec_3 // "_tiers"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushint 3
+    itob
+    b>=
+    bytec 9 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@51:
+    intc_0 // 0
+    b main_ternary_merge@52
+
+main_isPremium_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    dig 6
+    bytec_3 // "_tiers"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushint 2
+    itob
+    b>=
+    bytec 9 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@56:
+    intc_0 // 0
+    b main_ternary_merge@57
+
+main_isAllowed_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    dig 6
+    bytec_3 // "_tiers"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    itob
+    b>
+    bytec 9 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@61:
+    intc_0 // 0
+    b main_ternary_merge@62
+
+main_tierOf_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@66
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@67:
+    !
+    assert // not payable
+    dig 6
+    bytec_3 // "_tiers"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@66:
+    intc_0 // 0
+    b main_ternary_merge@67
+
+main_memberCount_route@7:
+    txn GroupIndex
+    bz main_ternary_false@71
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@72:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@71:
+    intc_0 // 0
+    b main_ternary_merge@72
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@76
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@77:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@76:
+    intc_0 // 0
+    b main_ternary_merge@77
+
+main___postInit_route@5:
+    bytec 7 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 7 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "_tiers"
+    pushint 2
+    box_create
+    pop
+    bytec_2 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_memberCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_owner"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return

@@ -229,7 +229,139 @@ def op_literal(body, rng):
     return f"lit {k}->{to}", body[:m.start()] + to + body[m.end():]
 
 
-OPERATORS = [op_type, op_binop, op_unchecked, op_literal]
+def op_negate(body, rng):
+    """Prefix a decimal literal with unary minus. Only survives the validity
+    gate in signed contexts — exactly the negative-value paths (sign-extension,
+    canonical TC, signed codecs) where this compiler's bugs have clustered."""
+    lits = [m for m in re.finditer(r"(?<![\w.\-])(\d+)(?![\w.])", body)]
+    lits = [m for m in lits if m.group(1) != "0"]
+    if not lits:
+        return None
+    m = rng.choice(lits)
+    return f"negate {m.group(1)}", body[:m.start()] + "-" + m.group(1) + body[m.end():]
+
+
+def op_swap_args(body, rng):
+    """Swap the two arguments of one simple 2-arg call `f(a, b)` → `f(b, a)`.
+    Same-type args stay valid (different types usually fail the gate); exercises
+    evaluation order, arg encoding, and non-commutative callee logic."""
+    calls = [m for m in re.finditer(
+        r"\b(\w+)\(\s*([^(),;{}]+?)\s*,\s*([^(),;{}]+?)\s*\)", body)]
+    calls = [m for m in calls
+             if m.group(1) not in ("function", "returns", "return", "mapping", "emit")]
+    if not calls:
+        return None
+    m = rng.choice(calls)
+    swapped = f"{m.group(1)}({m.group(3)}, {m.group(2)})"
+    return (f"swapargs {m.group(1)}#{m.start()}",
+            body[:m.start()] + swapped + body[m.end():])
+
+
+_BYTES_N = [f"bytes{i}" for i in range(1, 33)]
+
+
+def op_bytesn(body, rng):
+    """Global bytesN→bytesM width rewrite (the bytesN sibling of op_type).
+    Exercises the left-aligned padding/truncation codecs — fixed bugs lived in
+    the bytesN shift/bitwise and asm left-alignment seams."""
+    present = sorted(set(re.findall(r"\bbytes([1-9]|[12]\d|3[0-2])\b", body)), key=int)
+    if not present:
+        return None
+    frm = "bytes" + rng.choice(present)
+    to = rng.choice([t for t in _BYTES_N if t != frm])
+    return f"bytesN {frm}->{to}", re.sub(rf"\b{frm}\b", to, body)
+
+
+def op_const2immutable(body, rng):
+    """Rewrite one `constant` state variable to `immutable`. Constants fold at
+    compile time; immutables are ctor-written runtime values — same observable
+    behavior through a completely different codegen path. Reference types fail
+    the validity gate (immutable is value-type-only)."""
+    ms = list(re.finditer(r"\bconstant\b", body))
+    if not ms:
+        return None
+    m = rng.choice(ms)
+    return (f"const->immutable#{ms.index(m)}",
+            body[:m.start()] + "immutable" + body[m.end():])
+
+
+# ── Structural operators (control-flow / program-shape, not value/type) ─────
+# A statement is "side-effecting-safe" to duplicate/delete if it's an assignment
+# or a call — NOT a declaration (dup → redeclare error; delete → later-use error),
+# control flow, or return. solc's validity gate discards the ones that break.
+_DECL_RE = re.compile(
+    r'^\s*(uint\d*|int\d*|u?fixed[\dx]*|bool|address|bytes\d*|string|mapping\s*\(|struct\b|enum\b|[A-Z]\w*)'
+    r'(\s*\[[^\]]*\])?(\s+(memory|storage|calldata))?\s+\w+\s*(=|;|,)')
+_CTRL_RE = re.compile(
+    r'^\s*(return|if|for|while|else|do|continue|break|function|modifier|event|error|'
+    r'constructor|receive|fallback|import|using|pragma|struct|enum|assembly|unchecked)\b')
+
+
+def _sideeffect_stmts(body):
+    """Single-line assignment/call statements safe to duplicate or delete."""
+    out = []
+    for m in re.finditer(r'(?m)^([ \t]+)([^\n{}]*?;)[ \t]*$', body):
+        stmt = "  " + m.group(2)
+        if _CTRL_RE.match(stmt) or _DECL_RE.match(stmt):
+            continue
+        if not re.search(r'(=|\+\+|--|\()', m.group(2)):     # assignment or call
+            continue
+        out.append(m)
+    return out
+
+
+def op_stmt_dup(body, rng):
+    """Duplicate one side-effecting statement (run it TWICE). Directly targets the
+    double-evaluation / eval-once bug class — many fixed bugs were side-effecting
+    subexpressions materialised or evaluated twice (`m[k()] += x`, ternary operands,
+    modifier args). `x += n;` twice, `emit E(f());` twice."""
+    stmts = _sideeffect_stmts(body)
+    if not stmts:
+        return None
+    m = rng.choice(stmts)
+    dup = m.group(0) + "\n" + m.group(1) + m.group(2)
+    return f"stmt-dup#{m.start()}", body[:m.start()] + dup + body[m.end():]
+
+
+def op_stmt_delete(body, rng):
+    """Delete one side-effecting statement. Tests DCE + whether the statement's
+    absence changes observable behaviour; the oracle recomputes ground truth from
+    the mutated program, so an AVM/EVM disagreement = a real miscompile."""
+    stmts = _sideeffect_stmts(body)
+    if not stmts:
+        return None
+    m = rng.choice(stmts)
+    end = m.end() + 1 if body[m.end():m.end() + 1] == "\n" else m.end()
+    return f"stmt-del#{m.start()}", body[:m.start()] + body[end:]
+
+
+def _in_fn_header(body, pos):
+    start = max(body.rfind(';', 0, pos), body.rfind('{', 0, pos),
+                body.rfind('}', 0, pos)) + 1
+    return bool(re.search(r'\b(function|constructor|receive|fallback)\b', body[start:pos]))
+
+
+def op_visibility(body, rng):
+    """Flip a FUNCTION's visibility/mutability: public<->external, widen view->
+    nonpayable / pure->view. Exercises the dispatcher, ABI mutability checks and
+    non-payable guards — a codegen region the value/type operators never reach.
+    solc gates the invalid widenings (e.g. external on an internally-called fn)."""
+    muts = [(r'\bpublic\b', "external"), (r'\bexternal\b', "public"),
+            (r'\bview\b', "payable"), (r'\bpure\b', "view")]
+    rng.shuffle(muts)
+    for pat, repl in muts:
+        occ = [m for m in re.finditer(pat, body) if _in_fn_header(body, m.start())]
+        if not occ:
+            continue
+        m = rng.choice(occ)
+        return f"vis {pat.strip(chr(92)+'b')}->{repl}#{m.start()}", \
+            body[:m.start()] + repl + body[m.end():]
+    return None
+
+
+OPERATORS = [op_type, op_binop, op_unchecked, op_literal,
+             op_negate, op_swap_args, op_bytesn, op_const2immutable,
+             op_stmt_dup, op_stmt_delete, op_visibility]
 
 
 def gen_mutants(body: str, rng, k: int):
@@ -313,6 +445,16 @@ def main():
                     print(f"  ❌ DIVERGENCE {f.name} [{desc}]:")
                     for sig, args, exp, act in res["diverged"][:6]:
                         print(f"       {sig}{args}  evm={exp}  avm={act}")
+                elif res.get("event_div"):
+                    findings.append((f, desc + " [EVENT]", res["event_div"]))
+                    print(f"  📣 EVENT DIVERGENCE {f.name} [{desc}]:")
+                    for sig, args, eo, ao in res["event_div"][:6]:
+                        print(f"       {sig}{args}  evm_only={eo}  avm_only={ao}")
+                elif res.get("revert_div"):
+                    findings.append((f, desc + " [REVERT]", res["revert_div"]))
+                    print(f"  💥 REVERT-PAYLOAD DIVERGENCE {f.name} [{desc}]:")
+                    for sig, args, ev, av in res["revert_div"][:6]:
+                        print(f"       {sig}{args}  evm={ev}  avm={av}")
                 elif res["avm_errors"]:
                     print(f"  ⚠️  AVM-error-only {f.name} [{desc}]: "
                           f"{res['avm_errors'][0][2]}")

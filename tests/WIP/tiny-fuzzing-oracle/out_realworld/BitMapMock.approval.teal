@@ -1,0 +1,455 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/polymarket/ctf-exchange/lib/openzeppelin-contracts/contracts/mocks/BitmapMock.sol.BitMapMock.approval_program() -> uint64:
+main:
+    intcblock 32 1 256 0 255
+    bytecblock 0x "_bitmap" 0x0000000000000000000000000000000000000000000000000000000000000100 0x0100 0x010000000000000000000000000000000000000000000000000000000000000000 "_data"
+    intc_3 // 0
+    bytec_0 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_bitmap"
+    pushbytes 0x00020000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x582e3a5b 0x9b7e95f1 0x7cb116cd 0x57911d18 // method "get(uint256)bool", method "setTo(uint256,bool)void", method "set(uint256)void", method "unset(uint256)void"
+    txna ApplicationArgs 0
+    match main_get_route@5 main_setTo_route@6 main_set_route@7 main_unset_route@8
+    err
+
+main_unset_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    bytec_1 // "_bitmap"
+    dig 2
+    callsub BitMaps.unset
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_3 // 0
+    b main_ternary_merge@15
+
+main_set_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    bytec_1 // "_bitmap"
+    dig 2
+    callsub BitMaps.set
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_3 // 0
+    b main_ternary_merge@20
+
+main_setTo_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    dupn 2
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    bytec_1 // "_bitmap"
+    dig 3
+    uncover 2
+    callsub BitMaps.setTo
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_3 // 0
+    b main_ternary_merge@25
+
+main_get_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    bytec_1 // "_bitmap"
+    dig 2
+    callsub BitMaps.get
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@29:
+    intc_3 // 0
+    b main_ternary_merge@30
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/polymarket/ctf-exchange/lib/openzeppelin-contracts/contracts/mocks/BitmapMock.sol.BitMaps.get(bitmap: bytes, index: bytes) -> uint64:
+BitMaps.get:
+    proto 2 1
+    bytec_0 // ""
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc 4 // 255
+    itob
+    frame_dig -1
+    b&
+    dup
+    bytec_3 // 0x0100
+    b<
+    bz BitMaps.get_ternary_false@5
+    pushint 8
+    bzero
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_bury 0
+
+BitMaps.get_ternary_merge@6:
+    frame_dig 0
+    intc_2 // 256
+    <
+    bz BitMaps.get_ternary_false@8
+    frame_dig 0
+    intc_2 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+BitMaps.get_ternary_merge@9:
+    frame_dig 1
+    frame_dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    bytec 5 // "_data"
+    concat
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b&
+    intc_3 // 0
+    itob
+    b!=
+    frame_bury 0
+    retsub
+
+BitMaps.get_ternary_false@8:
+    bytec_0 // 0x
+    b BitMaps.get_ternary_merge@9
+
+BitMaps.get_ternary_false@5:
+    intc_2 // 256
+    frame_bury 0
+    b BitMaps.get_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/polymarket/ctf-exchange/lib/openzeppelin-contracts/contracts/mocks/BitmapMock.sol.BitMaps.setTo(bitmap: bytes, index: bytes, value: uint64) -> void:
+BitMaps.setTo:
+    proto 3 0
+    frame_dig -1
+    bz BitMaps.setTo_else_body@2
+    frame_dig -3
+    frame_dig -2
+    callsub BitMaps.set
+    retsub
+
+BitMaps.setTo_else_body@2:
+    frame_dig -3
+    frame_dig -2
+    callsub BitMaps.unset
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/polymarket/ctf-exchange/lib/openzeppelin-contracts/contracts/mocks/BitmapMock.sol.BitMaps.set(bitmap: bytes, index: bytes) -> void:
+BitMaps.set:
+    proto 2 0
+    bytec_0 // ""
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc 4 // 255
+    itob
+    frame_dig -1
+    b&
+    dup
+    bytec_3 // 0x0100
+    b<
+    bz BitMaps.set_ternary_false@5
+    pushint 8
+    bzero
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_bury 0
+
+BitMaps.set_ternary_merge@6:
+    frame_dig 0
+    intc_2 // 256
+    <
+    bz BitMaps.set_ternary_false@8
+    frame_dig 0
+    intc_2 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+BitMaps.set_ternary_merge@9:
+    frame_dig 1
+    frame_dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    bytec 5 // "_data"
+    concat
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b|
+    dig 1
+    box_del
+    pop
+    box_put
+    retsub
+
+BitMaps.set_ternary_false@8:
+    bytec_0 // 0x
+    b BitMaps.set_ternary_merge@9
+
+BitMaps.set_ternary_false@5:
+    intc_2 // 256
+    frame_bury 0
+    b BitMaps.set_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/polymarket/ctf-exchange/lib/openzeppelin-contracts/contracts/mocks/BitmapMock.sol.BitMaps.unset(bitmap: bytes, index: bytes) -> void:
+BitMaps.unset:
+    proto 2 0
+    bytec_0 // ""
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc 4 // 255
+    itob
+    frame_dig -1
+    b&
+    dup
+    bytec_3 // 0x0100
+    b<
+    bz BitMaps.unset_ternary_false@5
+    pushint 8
+    bzero
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_bury 0
+
+BitMaps.unset_ternary_merge@6:
+    frame_dig 0
+    intc_2 // 256
+    <
+    bz BitMaps.unset_ternary_false@8
+    frame_dig 0
+    intc_2 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+BitMaps.unset_ternary_merge@9:
+    frame_dig 1
+    dup
+    frame_dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    bytec 5 // "_data"
+    concat
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b~
+    b&
+    dig 1
+    box_del
+    pop
+    box_put
+    retsub
+
+BitMaps.unset_ternary_false@8:
+    bytec_0 // 0x
+    b BitMaps.unset_ternary_merge@9
+
+BitMaps.unset_ternary_false@5:
+    intc_2 // 256
+    frame_bury 0
+    b BitMaps.unset_ternary_merge@6

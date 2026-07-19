@@ -1,0 +1,1145 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 255 256
+    bytecblock "_owner" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 "_userRoles" "_rolesWithCapability" 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c554e415554484f52495a45440000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "_capabilityPublic" 0x00 "__ctor_pending" 0x9a223efb
+    intc_1 // 0
+    dupn 17
+    bytec_2 // ""
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 10 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0xe17bafb4 0x3088a1ac 0xade5e01f 0x021bf095 0x3295adef 0xd9d2e135 0xd86cab76 0xb9786051 0x194904f8 0x475f6e4f // method "__postInit()void", method "owner()address", method "transferOwnership(address)void", method "getUserRoles(address)byte[32]", method "isCapabilityPublic(address,byte[4])bool", method "getRolesWithCapability(address,byte[4])byte[32]", method "doesUserHaveRole(address,uint64)bool", method "doesRoleHaveCapability(uint64,address,byte[4])bool", method "canCall(address,address,byte[4])bool", method "setPublicCapability(address,byte[4],bool)void", method "setRoleCapability(uint64,address,byte[4],bool)void", method "setUserRole(address,uint64,bool)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_transferOwnership_route@7 main_getUserRoles_route@8 main_isCapabilityPublic_route@9 main_getRolesWithCapability_route@10 main_doesUserHaveRole_route@11 main_doesRoleHaveCapability_route@12 main_canCall_route@13 main_setPublicCapability_route@14 main_setRoleCapability_route@15 main_setUserRole_route@16
+    err
+
+main_setUserRole_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txna ApplicationArgs 3
+    dup
+    bury 11
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 3
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@86
+    global CallerApplicationID
+    bz main_bool_false@87
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@87
+
+main_bool_true@86:
+    intc_0 // 1
+    bury 2
+
+main_bool_merge@88:
+    dig 1
+    bnz main_after_if_else@90
+    bytec 6 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c554e415554484f52495a45440000000000000000000000000000000000000000
+    log
+
+main_after_if_else@90:
+    dig 1
+    assert // UNAUTHORIZED
+    dupn 2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    intc_3 // 255
+    &
+    bury 1
+    dig 2
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz main_else_body@95
+    dig 3
+    bytec 4 // "_userRoles"
+    concat
+    sha256
+    dup
+    bury 10
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 17
+    intc_2 // 32
+    bzero
+    bury 8
+    dup
+    intc 4 // 256
+    <
+    bz main_ternary_false@93
+    dup
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 8
+    swap
+    intc_0 // 1
+    setbit
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@94:
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    dig 17
+    b|
+    dig 9
+    swap
+    box_put
+
+main_after_if_else@99:
+    dup
+    itob
+    dig 4
+    swap
+    concat
+    dig 10
+    concat
+    pushbytes 0xd4add385 // method "UserRoleUpdated(address,uint64,bool)"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@93:
+    bytec_2 // 0x
+    b main_ternary_merge@94
+
+main_else_body@95:
+    dig 3
+    bytec 4 // "_userRoles"
+    concat
+    sha256
+    dup
+    bury 15
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 16
+    intc_2 // 32
+    bzero
+    bury 13
+    dup
+    intc 4 // 256
+    <
+    bz main_ternary_false@97
+    dup
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 13
+    swap
+    intc_0 // 1
+    setbit
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@98:
+    dig 13
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    b~
+    dig 16
+    b&
+    dig 14
+    swap
+    box_put
+    b main_after_if_else@99
+
+main_ternary_false@97:
+    bytec_2 // 0x
+    b main_ternary_merge@98
+
+main_bool_false@87:
+    intc_1 // 0
+    bury 2
+    b main_bool_merge@88
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_setRoleCapability_route@15:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 20
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txna ApplicationArgs 4
+    dup
+    bury 8
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 3
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@104
+    global CallerApplicationID
+    bz main_bool_false@105
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@105
+
+main_bool_true@104:
+    intc_0 // 1
+    bury 2
+
+main_bool_merge@106:
+    dig 1
+    bnz main_after_if_else@108
+    bytec 6 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c554e415554484f52495a45440000000000000000000000000000000000000000
+    log
+
+main_after_if_else@108:
+    dig 1
+    assert // UNAUTHORIZED
+    dupn 2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    intc_3 // 255
+    &
+    bury 1
+    dig 2
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz main_else_body@113
+    dig 14
+    bytec 5 // "_rolesWithCapability"
+    concat
+    sha256
+    dig 19
+    swap
+    concat
+    sha256
+    dup
+    bury 7
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 17
+    intc_2 // 32
+    bzero
+    bury 5
+    dup
+    intc 4 // 256
+    <
+    bz main_ternary_false@111
+    dup
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 5
+    swap
+    intc_0 // 1
+    setbit
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@112:
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    dig 17
+    b|
+    dig 6
+    swap
+    box_put
+
+main_after_if_else@117:
+    dup
+    itob
+    dig 15
+    concat
+    dig 19
+    concat
+    dig 7
+    concat
+    pushbytes 0xc2592cf8 // method "RoleCapabilityUpdated(uint64,address,byte[4],bool)"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@111:
+    bytec_2 // 0x
+    b main_ternary_merge@112
+
+main_else_body@113:
+    dig 14
+    bytec 5 // "_rolesWithCapability"
+    concat
+    sha256
+    dig 19
+    swap
+    concat
+    sha256
+    dup
+    bury 13
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 16
+    intc_2 // 32
+    bzero
+    bury 11
+    dup
+    intc 4 // 256
+    <
+    bz main_ternary_false@115
+    dup
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 11
+    swap
+    intc_0 // 1
+    setbit
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@116:
+    dig 11
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    b~
+    dig 16
+    b&
+    dig 12
+    swap
+    box_put
+    b main_after_if_else@117
+
+main_ternary_false@115:
+    bytec_2 // 0x
+    b main_ternary_merge@116
+
+main_bool_false@105:
+    intc_1 // 0
+    bury 2
+    b main_bool_merge@106
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main_setPublicCapability_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 20
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txna ApplicationArgs 3
+    dup
+    bury 11
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 3
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@122
+    global CallerApplicationID
+    bz main_bool_false@123
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@123
+
+main_bool_true@122:
+    intc_0 // 1
+    bury 2
+
+main_bool_merge@124:
+    dig 1
+    bnz main_after_if_else@126
+    bytec 6 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c554e415554484f52495a45440000000000000000000000000000000000000000
+    log
+
+main_after_if_else@126:
+    dig 1
+    assert // UNAUTHORIZED
+    dig 2
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    dig 15
+    dup
+    cover 2
+    bytec 8 // "_capabilityPublic"
+    concat
+    sha256
+    dig 21
+    dup
+    uncover 2
+    concat
+    sha256
+    uncover 2
+    itob
+    box_put
+    concat
+    dig 10
+    concat
+    pushbytes 0x3ba87231 // method "PublicCapabilityUpdated(address,byte[4],bool)"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bool_false@123:
+    intc_1 // 0
+    bury 2
+    b main_bool_merge@124
+
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
+
+main_canCall_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 20
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
+    !
+    assert // not payable
+    dig 14
+    bytec 8 // "_capabilityPublic"
+    concat
+    sha256
+    dig 19
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz main_after_if_else@40
+    intc_0 // 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.canCall@41:
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@40:
+    dig 3
+    bytec 4 // "_userRoles"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 15
+    bytec 5 // "_rolesWithCapability"
+    concat
+    sha256
+    dig 20
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    b&
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.canCall@41
+
+main_ternary_false@37:
+    intc_1 // 0
+    b main_ternary_merge@38
+
+main_doesRoleHaveCapability_route@12:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txna ApplicationArgs 2
+    dup
+    bury 16
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 20
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    dupn 2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    intc_3 // 255
+    &
+    dup
+    bury 2
+    dig 15
+    bytec 5 // "_rolesWithCapability"
+    concat
+    sha256
+    dig 20
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 21
+    intc 4 // 256
+    <
+    bz main_ternary_false@48
+    intc_2 // 32
+    bzero
+    dig 1
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    intc_0 // 1
+    setbit
+    dig 20
+    swap
+    b/
+
+main_ternary_merge@49:
+    intc_0 // 1
+    itob
+    b&
+    intc_1 // 0
+    itob
+    b!=
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@48:
+    bytec_2 // 0x
+    b main_ternary_merge@49
+
+main_ternary_false@45:
+    intc_1 // 0
+    b main_ternary_merge@46
+
+main_doesUserHaveRole_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@53
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@54:
+    !
+    assert // not payable
+    dupn 2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    intc_3 // 255
+    &
+    dup
+    bury 2
+    dig 4
+    bytec 4 // "_userRoles"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 22
+    intc 4 // 256
+    <
+    bz main_ternary_false@56
+    intc_2 // 32
+    bzero
+    dig 1
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    intc_0 // 1
+    setbit
+    dig 21
+    swap
+    b/
+
+main_ternary_merge@57:
+    intc_0 // 1
+    itob
+    b&
+    intc_1 // 0
+    itob
+    b!=
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@56:
+    bytec_2 // 0x
+    b main_ternary_merge@57
+
+main_ternary_false@53:
+    intc_1 // 0
+    b main_ternary_merge@54
+
+main_getRolesWithCapability_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 20
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    dig 14
+    bytec 5 // "_rolesWithCapability"
+    concat
+    sha256
+    dig 19
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@61:
+    intc_1 // 0
+    b main_ternary_merge@62
+
+main_isCapabilityPublic_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 20
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txn GroupIndex
+    bz main_ternary_false@66
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@67:
+    !
+    assert // not payable
+    dig 14
+    bytec 8 // "_capabilityPublic"
+    concat
+    sha256
+    dig 19
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@66:
+    intc_1 // 0
+    b main_ternary_merge@67
+
+main_getUserRoles_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@71
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@72:
+    !
+    assert // not payable
+    dig 3
+    bytec 4 // "_userRoles"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@71:
+    intc_1 // 0
+    b main_ternary_merge@72
+
+main_transferOwnership_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 19
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@76
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@77:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@131
+    global CallerApplicationID
+    bz main_bool_false@132
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@132
+
+main_bool_true@131:
+    intc_0 // 1
+    bury 2
+
+main_bool_merge@133:
+    dig 1
+    bnz main_after_if_else@135
+    bytec 6 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c554e415554484f52495a45440000000000000000000000000000000000000000
+    log
+
+main_after_if_else@135:
+    dig 1
+    assert // UNAUTHORIZED
+    bytec_0 // "_owner"
+    dig 18
+    dup
+    cover 2
+    app_global_put
+    txn Sender
+    swap
+    concat
+    bytec 11 // method "OwnershipTransferred(address,address)"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bool_false@132:
+    intc_1 // 0
+    bury 2
+    b main_bool_merge@133
+
+main_ternary_false@76:
+    intc_1 // 0
+    b main_ternary_merge@77
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@81
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@82:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@81:
+    intc_1 // 0
+    b main_ternary_merge@82
+
+main___postInit_route@5:
+    bytec 10 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 10 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 4 // "_userRoles"
+    pushint 2
+    box_create
+    pop
+    bytec 8 // "_capabilityPublic"
+    pushint 2
+    box_create
+    pop
+    bytec 5 // "_rolesWithCapability"
+    pushint 2
+    box_create
+    pop
+    bytec_0 // "_owner"
+    txn Sender
+    app_global_put
+    txn Sender
+    dup
+    concat
+    bytec 11 // method "OwnershipTransferred(address,address)"
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

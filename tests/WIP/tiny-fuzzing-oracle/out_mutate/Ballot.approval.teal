@@ -1,0 +1,302 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.Ballot.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 2
+    bytecblock 0x800000000000000000 0x "__ctor_pending" "canVote" "voteCount" 0x01000000000000000000 "voted" 0x151f7c75 0xffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000
+    intc_1 // 0
+    dupn 5
+    bytec_1 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xaf08416b 0x81890f0b 0x39830387 // method "__postInit()void", method "getVoteCount(address)uint256", method "grantVoteRight(address)void", method "vote(address,address)bool"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_getVoteCount_route@6 main_grantVoteRight_route@7 main_vote_route@8
+    err
+
+main_vote_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    dig 1
+    bytec_3 // "canVote"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz main_if_body@17
+    dig 1
+    bytec 6 // "voted"
+    concat
+    sha256
+    dup
+    bury 5
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz main_after_if_else@18
+
+main_if_body@17:
+    intc_1 // 0
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.Ballot.vote@26:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@18:
+    intc_0 // 1
+    itob
+    dig 4
+    swap
+    box_put
+    dig 2
+    bytec 4 // "voteCount"
+    concat
+    sha256
+    dup
+    bury 7
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 5 // 0x01000000000000000000
+    b%
+    dup
+    bury 6
+    bytec_0 // 0x800000000000000000
+    b<
+    dup
+    !
+    bury 2
+    bz main_bool_true@20
+    dig 4
+    pushbytes 0x01
+    b+
+    bytec 5 // 0x01000000000000000000
+    b%
+    bytec_0 // 0x800000000000000000
+    b<
+    !
+    dig 1
+    ==
+    bz main_bool_false@21
+
+main_bool_true@20:
+    intc_0 // 1
+
+main_bool_merge@22:
+    assert // signed arithmetic overflow
+    dig 4
+    pushbytes 0x01
+    b+
+    bytec 5 // 0x01000000000000000000
+    b%
+    bytec 8 // 0xffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x800000000000000000
+    b>=
+    bz main_ternary_false@24
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000
+    b+
+
+main_ternary_merge@25:
+    dig 6
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.Ballot.vote@26
+
+main_ternary_false@24:
+    b main_ternary_merge@25
+
+main_bool_false@21:
+    intc_1 // 0
+    b main_bool_merge@22
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_grantVoteRight_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    dig 6
+    bytec_3 // "canVote"
+    concat
+    sha256
+    intc_0 // 1
+    itob
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@31
+
+main_getVoteCount_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    dig 6
+    bytec 4 // "voteCount"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 8 // 0xffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x800000000000000000
+    b>=
+    bz main_ternary_false@38
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000
+    b+
+
+main_ternary_merge@39:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@38:
+    b main_ternary_merge@39
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "canVote"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 4 // "voteCount"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "voted"
+    intc_3 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return

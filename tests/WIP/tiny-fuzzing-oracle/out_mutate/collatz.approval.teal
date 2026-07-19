@@ -1,0 +1,207 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.collatz.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75
+    intc_2 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc87eb40b 0xf26572ae 0x12977eed // method "run(uint256)uint256", method "evenStep(uint256)uint256", method "oddStep(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_run_route@5 main_evenStep_route@6 main_oddStep_route@7
+    err
+
+main_oddStep_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub oddStep
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_evenStep_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub evenStep
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_run_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    dig 1
+    bury 1
+
+main_while_top@19:
+    intc_1 // 1
+    itob
+    dig 1
+    b<
+    bz main_after_while@24
+    intc_3 // 2
+    itob
+    dig 1
+    swap
+    b%
+    intc_2 // 0
+    itob
+    b==
+    bz main_else_body@22
+    dup
+    callsub evenStep
+    bury 1
+    b main_while_top@19
+
+main_else_body@22:
+    dup
+    callsub oddStep
+    bury 1
+    b main_while_top@19
+
+main_after_while@24:
+    dupn 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.collatz.evenStep(__arc4_x: bytes) -> bytes:
+evenStep:
+    proto 1 1
+    txn GroupIndex
+    bz evenStep_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+evenStep_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 2
+    itob
+    frame_dig -1
+    swap
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+evenStep_ternary_false@2:
+    intc_2 // 0
+    b evenStep_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.collatz.oddStep(__arc4_x: bytes) -> bytes:
+oddStep:
+    proto 1 1
+    txn GroupIndex
+    bz oddStep_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+oddStep_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    frame_dig -1
+    b*
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+oddStep_ternary_false@2:
+    intc_2 // 0
+    b oddStep_ternary_merge@3

@@ -1,0 +1,709 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x "_length" "_indexOf" 0x151f7c75 "_values" "_keyAtIndex" 0x00 "__ctor_pending" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_1 // 0
+    dupn 9
+    bytec_0 // ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 7 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x68547044 0xc00bc131 0x0ead9533 0x54411274 0x38d1df60 0x96f3d936 0xeecc5c5a // method "__postInit()void", method "set(uint256,uint256)bool", method "remove(uint256)bool", method "contains(uint256)bool", method "length()uint256", method "at(uint256)(uint256,uint256)", method "get(uint256)uint256", method "tryGet(uint256)(bool,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_set_route@6 main_remove_route@7 main_contains_route@8 main_length_route@9 main_at_route@10 main_get_route@11 main_tryGet_route@12
+    err
+
+main_tryGet_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec_2 // "_indexOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b!=
+    swap
+    bytec 4 // "_values"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_get_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    bury 6
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 4
+    bytec_2 // "_indexOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b!=
+    dup
+    bury 2
+    bnz main_after_if_else@26
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d6b6579206e6f7420666f756e6400000000000000000000000000000000000000
+    log
+
+main_after_if_else@26:
+    dup
+    assert // key not found
+    dig 2
+    bytec 4 // "_values"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_at_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dig 12
+    b<
+    bz main_bool_false@34
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dig 12
+    b>=
+    bz main_bool_false@34
+    intc_2 // 1
+    bury 2
+
+main_bool_merge@35:
+    dig 1
+    bnz main_after_if_else@37
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013696e646578206f7574206f6620626f756e647300000000000000000000000000
+    log
+
+main_after_if_else@37:
+    dig 1
+    assert // index out of bounds
+    intc_0 // 32
+    bzero
+    dup
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_keyAtIndex"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_values"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_bool_false@34:
+    intc_1 // 0
+    bury 2
+    b main_bool_merge@35
+
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@31
+
+main_length_route@9:
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42
+
+main_contains_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_indexOf"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b!=
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@46:
+    intc_1 // 0
+    b main_ternary_merge@47
+
+main_remove_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    bury 6
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 4
+    bytec_2 // "_indexOf"
+    concat
+    sha256
+    dup
+    bury 8
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 10
+    intc_1 // 0
+    itob
+    b==
+    bz main_after_if_else@54
+    intc_1 // 0
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.remove@57:
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@54:
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 10
+    assert // check _length exists
+    dig 9
+    b!=
+    bz main_after_if_else@56
+    dig 4
+    dup
+    dig 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_keyAtIndex"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    dig 11
+    dup
+    cover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_keyAtIndex"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_indexOf"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+main_after_if_else@56:
+    dig 4
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_keyAtIndex"
+    concat
+    sha256
+    box_del
+    pop
+    dig 6
+    box_del
+    pop
+    dig 2
+    bytec 4 // "_values"
+    concat
+    sha256
+    box_del
+    pop
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dup
+    bytec 8 // 0x01
+    b>=
+    assert // underflow
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 8 // 0x01
+    b-
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_length"
+    swap
+    app_global_put
+    intc_2 // 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.remove@57
+
+main_ternary_false@51:
+    intc_1 // 0
+    b main_ternary_merge@52
+
+main_set_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    bury 5
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec 4 // "_values"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 11
+    box_put
+    bytec_2 // "_indexOf"
+    concat
+    sha256
+    dup
+    bury 7
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b==
+    bz main_after_if_else@64
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    bytec 8 // 0x01
+    b+
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_length"
+    dig 1
+    app_global_put
+    dig 6
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_keyAtIndex"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 11
+    box_put
+    intc_2 // 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.set@65:
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@64:
+    intc_1 // 0
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.set@65
+
+main_ternary_false@61:
+    intc_1 // 0
+    b main_ternary_merge@62
+
+main___postInit_route@5:
+    bytec 7 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 7 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 4 // "_values"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_2 // "_indexOf"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_keyAtIndex"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_1 // "_length"
+    bytec_0 // 0x
+    app_global_put
+    intc_2 // 1
+    return

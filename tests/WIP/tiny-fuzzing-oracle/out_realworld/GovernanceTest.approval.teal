@@ -1,0 +1,1139 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_forVotes" "_againstVotes" "_abstainVotes" "_quorum" "_admin" "_proposalDeadline" "_votingPower" "_proposalCount" "_votingPeriod" "__ctor_pending" "_proposalExecuted"
+    intc_2 // 0
+    dupn 14
+    bytec_0 // ""
+    dupn 5
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 12 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x0a4fb6b3 0x399fe6cd 0xbc7c19d1 0x6c7d53fb 0x50a2d9a5 0x0e2ad83d 0xc86d7aaa 0x3f70812a 0x9fab6013 0xb5e02818 0x62d35ed7 0x912903c1 0xbc4ecddd 0x75901a61 0x7c46337b // method "__postInit()void", method "admin()address", method "proposalCount()uint256", method "votingPeriod()uint256", method "quorum()uint256", method "setVotingPower(address,uint256)void", method "getVotingPower(address)uint256", method "createProposal(uint256)uint256", method "castVote(uint256,uint256,address)void", method "forVotes(uint256)uint256", method "againstVotes(uint256)uint256", method "abstainVotes(uint256)uint256", method "proposalDeadline(uint256)uint256", method "isProposalPassed(uint256)bool", method "executeProposal(uint256,uint256)bool", method "isProposalExecuted(uint256)bool"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_admin_route@6 main_proposalCount_route@7 main_votingPeriod_route@8 main_quorum_route@9 main_setVotingPower_route@10 main_getVotingPower_route@11 main_createProposal_route@12 main_castVote_route@13 main_forVotes_route@14 main_againstVotes_route@15 main_abstainVotes_route@16 main_proposalDeadline_route@17 main_isProposalPassed_route@18 main_executeProposal_route@19 main_isProposalExecuted_route@20
+    err
+
+main_isProposalExecuted_route@20:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 13 // "_proposalExecuted"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@26:
+    intc_2 // 0
+    b main_ternary_merge@27
+
+main_executeProposal_route@19:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 22
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 17
+    bytec 13 // "_proposalExecuted"
+    concat
+    sha256
+    dup
+    bury 15
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    dup
+    !
+    bury 6
+    bz main_after_if_else@34
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010416c726561647920657865637574656400000000000000000000000000000000
+    log
+
+main_after_if_else@34:
+    dig 4
+    assert // Already executed
+    dig 15
+    bytec 8 // "_proposalDeadline"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 21
+    b<=
+    dup
+    bury 4
+    bnz main_after_if_else@36
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010566f74696e67206e6f7420656e64656400000000000000000000000000000000
+    log
+
+main_after_if_else@36:
+    dig 2
+    assert // Voting not ended
+    dig 15
+    dup
+    bytec_3 // "_forVotes"
+    concat
+    sha256
+    dup
+    bury 14
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    bytec 4 // "_againstVotes"
+    concat
+    sha256
+    dup
+    bury 14
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    bytec 5 // "_abstainVotes"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_2 // 0
+    bytec 6 // "_quorum"
+    app_global_get_ex
+    assert // check _quorum exists
+    b>=
+    dup
+    bury 3
+    bnz main_after_if_else@38
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001251756f72756d206e6f7420726561636865640000000000000000000000000000
+    log
+
+main_after_if_else@38:
+    dig 1
+    assert // Quorum not reached
+    dig 11
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 11
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    dup
+    bury 5
+    bnz main_after_if_else@40
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001350726f706f73616c206e6f742070617373656400000000000000000000000000
+    log
+
+main_after_if_else@40:
+    dig 3
+    assert // Proposal not passed
+    intc_1 // 1
+    itob
+    dig 14
+    swap
+    box_put
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@31:
+    intc_2 // 0
+    b main_ternary_merge@32
+
+main_isProposalPassed_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec_3 // "_forVotes"
+    concat
+    sha256
+    dup
+    bury 17
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    bytec 4 // "_againstVotes"
+    concat
+    sha256
+    dup
+    bury 16
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    bytec 5 // "_abstainVotes"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_2 // 0
+    bytec 6 // "_quorum"
+    app_global_get_ex
+    assert // check _quorum exists
+    b<
+    bz main_after_if_else@47
+    intc_2 // 0
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.isProposalPassed@48:
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@47:
+    dig 14
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 13
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.isProposalPassed@48
+
+main_ternary_false@44:
+    intc_2 // 0
+    b main_ternary_merge@45
+
+main_proposalDeadline_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@52
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@53:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "_proposalDeadline"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@52:
+    intc_2 // 0
+    b main_ternary_merge@53
+
+main_abstainVotes_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@57
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@58:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_abstainVotes"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@57:
+    intc_2 // 0
+    b main_ternary_merge@58
+
+main_againstVotes_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@62
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@63:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_againstVotes"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@62:
+    intc_2 // 0
+    b main_ternary_merge@63
+
+main_forVotes_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@67
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@68:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // "_forVotes"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@67:
+    intc_2 // 0
+    b main_ternary_merge@68
+
+main_castVote_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 20
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 19
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@72
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@73:
+    !
+    assert // not payable
+    dig 7
+    bytec 9 // "_votingPower"
+    concat
+    sha256
+    dup
+    bury 11
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    dup
+    bury 11
+    b>
+    dup
+    bury 7
+    bnz main_after_if_else@75
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f4e6f20766f74696e6720706f7765720000000000000000000000000000000000
+    log
+
+main_after_if_else@75:
+    dig 5
+    assert // No voting power
+    dig 9
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 7
+    dig 17
+    dig 9
+    b==
+    bz main_else_body@77
+    intc_0 // 32
+    bzero
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_againstVotes"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 8
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+
+main_after_if_else@80:
+    intc_1 // 1
+    return
+
+main_else_body@77:
+    intc_1 // 1
+    itob
+    dig 18
+    b==
+    bz main_else_body@79
+    intc_0 // 32
+    bzero
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // "_forVotes"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 8
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    b main_after_if_else@80
+
+main_else_body@79:
+    intc_0 // 32
+    bzero
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_abstainVotes"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 8
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    b main_after_if_else@80
+
+main_ternary_false@72:
+    intc_2 // 0
+    b main_ternary_merge@73
+
+main_createProposal_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 22
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@84
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@85:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 10 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 10 // "_proposalCount"
+    dig 1
+    app_global_put
+    intc_2 // 0
+    bytec 11 // "_votingPeriod"
+    app_global_get_ex
+    assert // check _votingPeriod exists
+    dig 22
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "_proposalDeadline"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@84:
+    intc_2 // 0
+    b main_ternary_merge@85
+
+main_getVotingPower_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@89
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@90:
+    !
+    assert // not payable
+    dig 16
+    bytec 9 // "_votingPower"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@89:
+    intc_2 // 0
+    b main_ternary_merge@90
+
+main_setVotingPower_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 21
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@94
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@95:
+    !
+    assert // not payable
+    txn Sender
+    intc_2 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    bnz main_bool_true@98
+    global CallerApplicationID
+    bz main_bool_false@99
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_2 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    bz main_bool_false@99
+
+main_bool_true@98:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@100:
+    dup
+    bnz main_after_if_else@102
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f742061646d696e0000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@102:
+    dup
+    assert // Not admin
+    dig 16
+    bytec 9 // "_votingPower"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 20
+    box_put
+    intc_1 // 1
+    return
+
+main_bool_false@99:
+    intc_2 // 0
+    bury 1
+    b main_bool_merge@100
+
+main_ternary_false@94:
+    intc_2 // 0
+    b main_ternary_merge@95
+
+main_quorum_route@9:
+    txn GroupIndex
+    bz main_ternary_false@106
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@107:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 6 // "_quorum"
+    app_global_get_ex
+    assert // check _quorum exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@106:
+    intc_2 // 0
+    b main_ternary_merge@107
+
+main_votingPeriod_route@8:
+    txn GroupIndex
+    bz main_ternary_false@111
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@112:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 11 // "_votingPeriod"
+    app_global_get_ex
+    assert // check _votingPeriod exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@111:
+    intc_2 // 0
+    b main_ternary_merge@112
+
+main_proposalCount_route@7:
+    txn GroupIndex
+    bz main_ternary_false@116
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@117:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 10 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@116:
+    intc_2 // 0
+    b main_ternary_merge@117
+
+main_admin_route@6:
+    txn GroupIndex
+    bz main_ternary_false@121
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@122:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@121:
+    intc_2 // 0
+    b main_ternary_merge@122
+
+main___postInit_route@5:
+    bytec 12 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 12 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec 9 // "_votingPower"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "_forVotes"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 4 // "_againstVotes"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_abstainVotes"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 13 // "_proposalExecuted"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "_proposalDeadline"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 10 // "_proposalCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 11 // "_votingPeriod"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_quorum"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_admin"
+    txn Sender
+    app_global_put
+    pushint 100
+    itob
+    bytec 11 // "_votingPeriod"
+    swap
+    app_global_put
+    pushint 10
+    itob
+    bytec 6 // "_quorum"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

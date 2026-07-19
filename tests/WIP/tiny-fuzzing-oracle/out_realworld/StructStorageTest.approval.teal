@@ -1,0 +1,242 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 256 64
+    bytecblock "config" 0x00 0x151f7c75
+    intc_0 // 0
+    dupn 2
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "config"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xac5bbcfc 0xa8adfc6d 0x6da23006 0x4281bf5c 0x253bb67b // method "setConfig(uint256,bool)void", method "updateThreshold(uint256)void", method "getThreshold()uint256", method "isActive()bool", method "config()(uint512,bool)"
+    txna ApplicationArgs 0
+    match main_setConfig_route@5 main_updateThreshold_route@6 main_getThreshold_route@7 main_isActive_route@8 main_config_route@9
+    err
+
+main_config_route@9:
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    dup
+    extract 0 32
+    swap
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    dig 1
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    uncover 2
+    b|
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 0
+    b main_ternary_merge@16
+
+main_isActive_route@8:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21
+
+main_getThreshold_route@7:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    extract 0 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_0 // 0
+    b main_ternary_merge@26
+
+main_updateThreshold_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    dig 4
+    swap
+    concat
+    bytec_0 // "config"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main_setConfig_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    dig 2
+    dig 2
+    concat
+    bytec_0 // "config"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36

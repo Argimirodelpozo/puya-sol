@@ -1,0 +1,380 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock 0x "_totalDeposits" "_owner" "_deposits" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x151f7c75
+    intc_0 // 0
+    dupn 2
+    bytec_0 // ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0xa1790e8f 0xc8d4da64 0x11740bbd 0x7d555e6a // method "__postInit()void", method "owner()address", method "depositsOf(address)uint256", method "totalDeposits()uint256", method "deposit(address,uint256)void", method "withdraw(address,uint256)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_depositsOf_route@7 main_totalDeposits_route@8 main_deposit_route@9 main_withdraw_route@10
+    err
+
+main_withdraw_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@20
+    global CallerApplicationID
+    bz main_bool_false@21
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@21
+
+main_bool_true@20:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@22:
+    dup
+    bnz main_after_if_else@24
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001f457363726f773a2063616c6c6572206973206e6f7420746865206f776e657200
+    log
+
+main_after_if_else@24:
+    dup
+    assert // Escrow: caller is not the owner
+    dig 3
+    bytec_3 // "_deposits"
+    concat
+    sha256
+    dup
+    bury 4
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    b>=
+    dup
+    bury 3
+    bnz main_after_if_else@26
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001c457363726f773a20696e73756666696369656e74206465706f73697400000000
+    log
+
+main_after_if_else@26:
+    dig 1
+    assert // Escrow: insufficient deposit
+    dig 2
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 7
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_0 // 0
+    bytec_1 // "_totalDeposits"
+    app_global_get_ex
+    assert // check _totalDeposits exists
+    dup
+    dig 2
+    b>=
+    assert // underflow
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_totalDeposits"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@21:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@22
+
+main_ternary_false@16:
+    intc_0 // 0
+    b main_ternary_merge@17
+
+main_deposit_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    dig 3
+    bytec_3 // "_deposits"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 6
+    dup
+    cover 3
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec_1 // "_totalDeposits"
+    app_global_get_ex
+    assert // check _totalDeposits exists
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_totalDeposits"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main_totalDeposits_route@8:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "_totalDeposits"
+    app_global_get_ex
+    assert // check _totalDeposits exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+main_depositsOf_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@40
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@41:
+    !
+    assert // not payable
+    dig 3
+    bytec_3 // "_deposits"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@40:
+    intc_0 // 0
+    b main_ternary_merge@41
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@45:
+    intc_0 // 0
+    b main_ternary_merge@46
+
+main___postInit_route@5:
+    bytec 6 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 6 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "_deposits"
+    pushint 2
+    box_create
+    pop
+    bytec_2 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_totalDeposits"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_owner"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return

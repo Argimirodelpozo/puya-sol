@@ -1,0 +1,807 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/InitializableMock.sol.ReinitializerMock.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 8
+    bytecblock 0x "counter" 0x01 0x00 0x151f7c75 0x38c3eeee 0x80d71e94 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    intc_2 // 0
+    dupn 2
+    bytec_0 // ""
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "counter"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x76447a55 0xfd2c93cd 0xc911704b 0xe345f8e8 0x114f0b7b 0xa18ea559 0xeaef69c7 0x5f026f4f // method "getInitializedVersion()uint64", method "initialize()void", method "reinitialize(uint64)void", method "nestedReinitialize(uint64,uint64)void", method "chainReinitialize(uint64,uint64)void", method "disableInitializers()void", method "doStuff()void", method "counter()uint256"
+    txna ApplicationArgs 0
+    match main_getInitializedVersion_route@5 main_initialize_route@6 main_reinitialize_route@7 main_nestedReinitialize_route@8 main_chainReinitialize_route@9 main_disableInitializers_route@10 main_doStuff_route@11 main_counter_route@12
+    err
+
+main_counter_route@12:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main_doStuff_route@11:
+    callsub doStuff
+    intc_1 // 1
+    return
+
+main_disableInitializers_route@10:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    callsub _getInitializableStorage
+    dup
+    bury 9
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    bury 8
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    bnz main_if_body@65
+    dig 7
+    callsub __storage_read
+    dig 6
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 18446744073709551615
+    !=
+    bz main_after_if_else@70
+    dig 7
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0xffffffffffffffff
+    replace2 24
+    callsub __storage_write
+    pushbytes 0x80d71e94ffffffffffffffff
+    log
+
+main_after_if_else@70:
+    intc_1 // 1
+    return
+
+main_if_body@65:
+    bytec 5 // method "InvalidInitialization()"
+    log
+    err // InvalidInitialization
+
+main_ternary_false@25:
+    intc_2 // 0
+    b main_ternary_merge@26
+
+main_chainReinitialize_route@9:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    dig 3
+    callsub reinitialize
+    dig 1
+    callsub reinitialize
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_2 // 0
+    b main_ternary_merge@31
+
+main_nestedReinitialize_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 4
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    callsub _getInitializableStorage
+    dup
+    bury 9
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    bury 8
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    bnz main_if_body@65
+    dig 7
+    callsub __storage_read
+    dig 6
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 4
+    >=
+    bnz main_if_body@65
+    dig 7
+    dup
+    callsub __storage_read
+    dig 7
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 6
+    itob
+    dig 2
+    b|
+    extract 24 8
+    replace2 24
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x01
+    replace2 23
+    dig 2
+    swap
+    callsub __storage_write
+    dig 3
+    callsub reinitialize
+    dig 1
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x00
+    replace2 23
+    callsub __storage_write
+    bytec 6 // method "Initialized(uint64)"
+    dig 7
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_reinitialize_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub reinitialize
+    intc_1 // 1
+    return
+
+main_initialize_route@6:
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    callsub _getInitializableStorage
+    dup
+    bury 9
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    bury 8
+    dup
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    dup
+    bury 4
+    !
+    swap
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    uncover 2
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    !
+    uncover 2
+    &&
+    bury 4
+    intc_1 // 1
+    ==
+    bz main_else_body@62
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    intc_2 // 0
+    itob
+    b==
+    bury 5
+
+main_after_if_else@63:
+    dig 2
+    bnz main_after_if_else@66
+    dig 4
+    bnz main_after_if_else@66
+    b main_if_body@65
+
+main_after_if_else@66:
+    dig 7
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x0000000000000001
+    replace2 24
+    callsub __storage_write
+    dup
+    bnz main_after_if_else@68
+    dig 7
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x01
+    replace2 23
+    callsub __storage_write
+
+main_after_if_else@68:
+    callsub doStuff
+    dup
+    bnz main_after_if_else@70
+    dig 7
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x00
+    replace2 23
+    callsub __storage_write
+    pushbytes 0x80d71e940000000000000001
+    log
+    b main_after_if_else@70
+
+main_else_body@62:
+    intc_2 // 0
+    bury 5
+    b main_after_if_else@63
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_getInitializedVersion_route@5:
+    txn GroupIndex
+    bz main_ternary_false@47
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@48:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub _getInitializableStorage
+    callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@47:
+    intc_2 // 0
+    b main_ternary_merge@48
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury -1
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/InitializableMock.sol.ReinitializerMock.reinitialize(i: uint64) -> void:
+reinitialize:
+    proto 1 0
+    intc_2 // 0
+    dup
+    txn GroupIndex
+    bz reinitialize_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+reinitialize_ternary_merge@3:
+    !
+    assert // not payable
+    callsub _getInitializableStorage
+    dup
+    frame_bury 0
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    frame_bury 1
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    bnz reinitialize_if_body@6
+    frame_dig 0
+    callsub __storage_read
+    frame_dig 1
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -1
+    >=
+    bz reinitialize_after_if_else@7
+
+reinitialize_if_body@6:
+    bytec 5 // method "InvalidInitialization()"
+    log
+    err // InvalidInitialization
+
+reinitialize_after_if_else@7:
+    frame_dig 0
+    dup
+    callsub __storage_read
+    frame_dig 1
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    itob
+    dig 2
+    dig 1
+    b|
+    extract 24 8
+    uncover 2
+    swap
+    replace2 24
+    dig 3
+    swap
+    callsub __storage_write
+    dig 2
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x01
+    replace2 23
+    dig 3
+    swap
+    callsub __storage_write
+    callsub doStuff
+    dig 2
+    callsub __storage_read
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x00
+    replace2 23
+    uncover 2
+    swap
+    callsub __storage_write
+    bytec 6 // method "Initialized(uint64)"
+    swap
+    concat
+    log
+    retsub
+
+reinitialize_ternary_false@2:
+    intc_2 // 0
+    b reinitialize_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/InitializableMock.sol.ReinitializerMock.doStuff() -> void:
+doStuff:
+    txn GroupIndex
+    bz doStuff_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+doStuff_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub _getInitializableStorage
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    bnz doStuff_after_if_else@6
+    pushbytes 0xe0afb883 // method "NotInitializing()"
+    log
+    err // NotInitializing
+
+doStuff_after_if_else@6:
+    intc_2 // 0
+    bytec_1 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    bytec_2 // 0x01
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "counter"
+    swap
+    app_global_put
+    retsub
+
+doStuff_ternary_false@2:
+    intc_2 // 0
+    b doStuff_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/InitializableMock.sol.ReinitializerMock._getInitializableStorage() -> bytes:
+_getInitializableStorage:
+    load 0
+    store 0
+    load 0
+    store 0
+    pushbytes 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    retsub

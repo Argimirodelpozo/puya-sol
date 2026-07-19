@@ -1,0 +1,1344 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "_states" "_depositors" "_nextEscrowId" "_votesRelease" "_votesRefund" "_deadlines" "_amounts" "_arbiters" "_beneficiaries" "__ctor_pending" "_hasVoted" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x53b6f6a9 0xc209ec90 0xd3263059
+    intc_2 // 0
+    dupn 15
+    bytec_0 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 12 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x9bd0e954 0xfbf9de6f 0x73967039 0x9b536207 0x103ed16d 0x75118217 0x35e50cab 0x83f9502c 0x18d07f96 0x0eded3ce 0x014ae688 0x1c6dbec0 0x4ff09bc0 0x1e86416b // method "__postInit()void", method "createEscrow(address,address,uint256,uint256)uint256", method "fund(uint256)void", method "dispute(uint256)void", method "vote(uint256,bool)void", method "refundExpired(uint256)void", method "getDepositor(uint256)address", method "getBeneficiary(uint256)address", method "getArbiter(uint256)address", method "getAmount(uint256)uint256", method "getState(uint256)uint256", method "getDeadline(uint256)uint256", method "getVotes(uint256)(uint256,uint256)", method "hasVoted(uint256,address)bool", method "escrowCount()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_createEscrow_route@6 main_fund_route@7 main_dispute_route@8 main_vote_route@9 main_refundExpired_route@10 main_getDepositor_route@11 main_getBeneficiary_route@12 main_getArbiter_route@13 main_getAmount_route@14 main_getState_route@15 main_getDeadline_route@16 main_getVotes_route@17 main_hasVoted_route@18 main_escrowCount_route@19
+    err
+
+main_escrowCount_route@19:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 5 // "_nextEscrowId"
+    app_global_get_ex
+    assert // check _nextEscrowId exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_2 // 0
+    b main_ternary_merge@26
+
+main_hasVoted_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    concat
+    keccak256
+    bytec 13 // "_hasVoted"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_2 // 0
+    b main_ternary_merge@31
+
+main_getVotes_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 16
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec 6 // "_votesRelease"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    swap
+    bytec 7 // "_votesRefund"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_getDeadline_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@40
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@41:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 16
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "_deadlines"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@40:
+    intc_2 // 0
+    b main_ternary_merge@41
+
+main_getState_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 16
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // "_states"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@45:
+    intc_2 // 0
+    b main_ternary_merge@46
+
+main_getAmount_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@50
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@51:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 16
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 9 // "_amounts"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@50:
+    intc_2 // 0
+    b main_ternary_merge@51
+
+main_getArbiter_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 10 // "_arbiters"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@55:
+    intc_2 // 0
+    b main_ternary_merge@56
+
+main_getBeneficiary_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@60
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@61:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 11 // "_beneficiaries"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@60:
+    intc_2 // 0
+    b main_ternary_merge@61
+
+main_getDepositor_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@65
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@66:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_depositors"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@65:
+    intc_2 // 0
+    b main_ternary_merge@66
+
+main_refundExpired_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@71:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    bury 7
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 4
+    bytec_3 // "_states"
+    concat
+    sha256
+    dup
+    bury 10
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 13
+    intc_1 // 1
+    itob
+    b!=
+    bz main_after_if_else@74
+    intc_3 // 2
+    itob
+    dig 12
+    b!=
+    bz main_after_if_else@74
+    dig 11
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    concat
+    bytec 15 // method "EscrowInvalidState(uint256,uint256)"
+    swap
+    concat
+    log
+    err // EscrowInvalidState
+
+main_after_if_else@74:
+    dig 14
+    callsub _requireDepositor
+    global LatestTimestamp
+    itob
+    dig 3
+    bytec 8 // "_deadlines"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b<=
+    bz main_after_if_else@76
+    pushbytes 0xd0eac418 // method "EscrowDeadlineNotPassed()"
+    log
+    err // EscrowDeadlineNotPassed
+
+main_after_if_else@76:
+    pushint 4
+    itob
+    dig 9
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0xddd111b3 // method "EscrowRefunded(uint256)"
+    dig 15
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@70:
+    intc_2 // 0
+    b main_ternary_merge@71
+
+main_vote_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 12
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@80
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@81:
+    !
+    assert // not payable
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    dig 14
+    dup
+    intc_3 // 2
+    callsub _requireState
+    dup
+    callsub _requireParticipant
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 11
+    txn Sender
+    concat
+    keccak256
+    bytec 13 // "_hasVoted"
+    concat
+    sha256
+    dup
+    bury 9
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bz main_after_if_else@83
+    pushbytes 0x43373be2 // method "EscrowAlreadyVoted(address)"
+    txn Sender
+    concat
+    log
+    err // EscrowAlreadyVoted
+
+main_after_if_else@83:
+    intc_1 // 1
+    itob
+    dig 8
+    swap
+    box_put
+    dup
+    bz main_else_body@85
+    dig 9
+    bytec 6 // "_votesRelease"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+
+main_after_if_else@86:
+    dig 14
+    txn Sender
+    concat
+    dig 11
+    concat
+    pushbytes 0xc4207277 // method "VoteCast(uint256,address,bool)"
+    swap
+    concat
+    log
+    dig 9
+    bytec 6 // "_votesRelease"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_3 // 2
+    itob
+    dup
+    bury 9
+    b>=
+    bz main_else_body@88
+    pushint 3
+    itob
+    dig 10
+    bytec_3 // "_states"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 14
+    pushbytes 0x80
+    concat
+    bytec 16 // method "EscrowResolved(uint256,bool)"
+    swap
+    concat
+    log
+
+main_after_if_else@90:
+    intc_1 // 1
+    return
+
+main_else_body@88:
+    dig 9
+    bytec 7 // "_votesRefund"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 7
+    b>=
+    bz main_after_if_else@90
+    pushint 4
+    itob
+    dig 10
+    bytec_3 // "_states"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 14
+    pushbytes 0x00
+    concat
+    bytec 16 // method "EscrowResolved(uint256,bool)"
+    swap
+    concat
+    log
+    b main_after_if_else@90
+
+main_else_body@85:
+    dig 9
+    bytec 7 // "_votesRefund"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    b main_after_if_else@86
+
+main_ternary_false@80:
+    intc_2 // 0
+    b main_ternary_merge@81
+
+main_dispute_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@94
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@95:
+    !
+    assert // not payable
+    dig 14
+    dup
+    intc_1 // 1
+    callsub _requireState
+    dup
+    callsub _requireParticipant
+    intc_3 // 2
+    itob
+    intc_0 // 32
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // "_states"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    concat
+    pushbytes 0x39aa8819 // method "EscrowDisputed(uint256,address)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@94:
+    intc_2 // 0
+    b main_ternary_merge@95
+
+main_fund_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@99
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@100:
+    !
+    assert // not payable
+    dig 14
+    dup
+    intc_2 // 0
+    callsub _requireState
+    dup
+    callsub _requireDepositor
+    intc_1 // 1
+    itob
+    intc_0 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec_3 // "_states"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 9 // "_amounts"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    concat
+    pushbytes 0xf0d2f24d // method "EscrowFunded(uint256,uint256)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@99:
+    intc_2 // 0
+    b main_ternary_merge@100
+
+main_createEscrow_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 18
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    bury 17
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@104
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@105:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    bury 5
+    intc_2 // 0
+    itob
+    bury 4
+    dig 12
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    bz main_after_if_else@107
+
+main_if_body@106:
+    pushbytes 0xf96d9bc9 // method "EscrowZeroAddress()"
+    log
+    err // EscrowZeroAddress
+
+main_after_if_else@107:
+    dig 13
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    bnz main_if_body@106
+    dig 16
+    dig 4
+    b==
+    bz main_after_if_else@111
+    pushbytes 0x12aca522 // method "EscrowInsufficientAmount()"
+    log
+    err // EscrowInsufficientAmount
+
+main_after_if_else@111:
+    intc_2 // 0
+    bytec 5 // "_nextEscrowId"
+    app_global_get_ex
+    assert // check _nextEscrowId exists
+    intc_1 // 1
+    itob
+    dig 1
+    b+
+    dup
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_nextEscrowId"
+    swap
+    app_global_put
+    txn Sender
+    dig 6
+    dup
+    cover 3
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec 4 // "_depositors"
+    concat
+    sha256
+    uncover 2
+    box_put
+    dup
+    bytec 11 // "_beneficiaries"
+    concat
+    sha256
+    dig 16
+    dup
+    cover 3
+    box_put
+    dup
+    bytec 10 // "_arbiters"
+    concat
+    sha256
+    dig 18
+    box_put
+    dup
+    bytec 9 // "_amounts"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 21
+    box_put
+    dup
+    bytec_3 // "_states"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 8
+    box_put
+    bytec 8 // "_deadlines"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 19
+    box_put
+    txn Sender
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    uncover 3
+    b|
+    dup
+    uncover 2
+    concat
+    uncover 2
+    concat
+    pushbytes 0xc255874e // method "EscrowCreated(uint256,address,address)"
+    swap
+    concat
+    log
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@104:
+    intc_2 // 0
+    b main_ternary_merge@105
+
+main___postInit_route@5:
+    bytec 12 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 12 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec 4 // "_depositors"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 11 // "_beneficiaries"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 10 // "_arbiters"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 9 // "_amounts"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "_states"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "_deadlines"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "_votesRelease"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_votesRefund"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 13 // "_hasVoted"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_nextEscrowId"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty._requireState(escrowId: bytes, expected: uint64) -> void:
+_requireState:
+    proto 2 0
+    frame_dig -1
+    pushint 255
+    <=
+    assert // ABI validation
+    frame_dig -1
+    pushint 255
+    &
+    dup
+    frame_bury -1
+    pushint 4
+    <=
+    assert // ABI enum validation
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // "_states"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    itob
+    dup
+    cover 2
+    b!=
+    bz _requireState_after_if_else@2
+    frame_dig 1
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig 0
+    dup
+    cover 2
+    b|
+    frame_dig 2
+    uncover 2
+    b|
+    concat
+    bytec 15 // method "EscrowInvalidState(uint256,uint256)"
+    swap
+    concat
+    log
+    err // EscrowInvalidState
+
+_requireState_after_if_else@2:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty._requireDepositor(escrowId: bytes) -> void:
+_requireDepositor:
+    proto 1 0
+    txn Sender
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_depositors"
+    concat
+    sha256
+    dup
+    cover 2
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bnz _requireDepositor_after_if_else@4
+    global CallerApplicationID
+    bz _requireDepositor_if_body@3
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    frame_dig 0
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bnz _requireDepositor_after_if_else@4
+
+_requireDepositor_if_body@3:
+    bytec 17 // method "EscrowNotParticipant(address)"
+    txn Sender
+    concat
+    log
+    err // EscrowNotParticipant
+
+_requireDepositor_after_if_else@4:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty._requireParticipant(escrowId: bytes) -> void:
+_requireParticipant:
+    proto 1 0
+    txn Sender
+    dup
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    cover 2
+    bytec 4 // "_depositors"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    !=
+    bz _requireParticipant_after_if_else@4
+    frame_dig 1
+    bytec 11 // "_beneficiaries"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    frame_dig 0
+    !=
+    bz _requireParticipant_after_if_else@4
+    frame_dig 1
+    bytec 10 // "_arbiters"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    frame_dig 0
+    !=
+    bz _requireParticipant_after_if_else@4
+    bytec 17 // method "EscrowNotParticipant(address)"
+    frame_dig 0
+    concat
+    log
+    err // EscrowNotParticipant
+
+_requireParticipant_after_if_else@4:
+    retsub

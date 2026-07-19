@@ -1,0 +1,1178 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 "_owner" 0x151f7c75 "_vestingTotal" "_vestingStart" "_vestingDuration" "_vestingReleased" "_totalAllocated" 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    intc_1 // 0
+    dupn 21
+    bytec_0 // ""
+    dupn 3
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 11 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0x07fad77f 0x1706c518 0x78ccf461 0xcb8f3580 0x85576a0f 0xdd4e8405 0x781fa3cc 0x5a4f1a8d 0x490ebc45 0x055b3d0f // method "__postInit()void", method "owner()address", method "totalAllocated()uint256", method "createVesting(address,uint256,uint256,uint256)void", method "vestingTotal(address)uint256", method "vestingReleased(address)uint256", method "vestingStart(address)uint256", method "vestingDuration(address)uint256", method "vestedAmount(address,uint256)uint256", method "releasable(address,uint256)uint256", method "release(address,uint256)uint256", method "revokeVesting(address)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_totalAllocated_route@7 main_createVesting_route@8 main_vestingTotal_route@9 main_vestingReleased_route@10 main_vestingStart_route@11 main_vestingDuration_route@12 main_vestedAmount_route@13 main_releasable_route@14 main_release_route@15 main_revokeVesting_route@16
+    err
+
+main_revokeVesting_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@26
+    global CallerApplicationID
+    bz main_bool_false@27
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@27
+
+main_bool_true@26:
+    intc_2 // 1
+    bury 1
+
+main_bool_merge@28:
+    dup
+    bnz main_after_if_else@30
+    bytec 12 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@30:
+    dup
+    assert // Not owner
+    dig 21
+    dup
+    bytec 5 // "_vestingTotal"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    bytec 8 // "_vestingReleased"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    dig 1
+    b>=
+    assert // underflow
+    intc_1 // 0
+    bytec 9 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    uncover 3
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup2
+    b>=
+    assert // underflow
+    swap
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 9 // "_totalAllocated"
+    swap
+    app_global_put
+    intc_1 // 0
+    itob
+    dig 2
+    box_del
+    pop
+    uncover 2
+    dig 1
+    box_put
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    dig 1
+    bytec 6 // "_vestingStart"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    swap
+    bytec 7 // "_vestingDuration"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+main_bool_false@27:
+    intc_1 // 0
+    bury 1
+    b main_bool_merge@28
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_release_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 27
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@38
+    global CallerApplicationID
+    bz main_bool_false@39
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@39
+
+main_bool_true@38:
+    intc_2 // 1
+    bury 1
+
+main_bool_merge@40:
+    dup
+    bnz main_after_if_else@42
+    bytec 12 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@42:
+    dup
+    assert // Not owner
+    dig 21
+    bytec 5 // "_vestingTotal"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 9
+    intc_1 // 0
+    itob
+    dup
+    bury 8
+    b>
+    dup
+    bury 5
+    bnz main_after_if_else@44
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a4e6f2076657374696e6700000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@44:
+    dig 3
+    assert // No vesting
+    dig 21
+    dup
+    bytec 6 // "_vestingStart"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    bury 16
+    dup
+    bytec 7 // "_vestingDuration"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 21
+    bytec 8 // "_vestingReleased"
+    concat
+    sha256
+    dup
+    bury 13
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 18
+    dig 26
+    b>
+    bz main_else_body@46
+    dig 5
+    bury 5
+
+main_after_if_else@50:
+    dig 4
+    dig 17
+    b>
+    bnz main_if_body@51
+    dig 5
+
+main_after_if_else@52:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_if_body@51:
+    dig 4
+    dup
+    dig 18
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    dig 1
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 12
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b main_after_if_else@52
+
+main_else_body@46:
+    dig 13
+    dig 19
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 26
+    b<=
+    bz main_else_body@48
+    dig 7
+    bury 5
+    b main_after_if_else@50
+
+main_else_body@48:
+    dig 25
+    dup
+    dig 15
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 8
+    b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 19
+    b/
+    bury 5
+    b main_after_if_else@50
+
+main_bool_false@39:
+    intc_1 // 0
+    bury 1
+    b main_bool_merge@40
+
+main_ternary_false@34:
+    intc_1 // 0
+    b main_ternary_merge@35
+
+main_releasable_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 27
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    dig 21
+    bytec 5 // "_vestingTotal"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 10
+    intc_1 // 0
+    itob
+    dup
+    bury 9
+    b==
+    bz main_after_if_else@59
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80:
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@59:
+    dig 21
+    dup
+    bytec 6 // "_vestingStart"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    bury 17
+    dup
+    bytec 7 // "_vestingDuration"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 22
+    bytec 8 // "_vestingReleased"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 19
+    dig 26
+    b>
+    bnz main_after_if_else@65
+    dig 14
+    dig 20
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 26
+    b<=
+    bz main_else_body@63
+    dig 8
+    bury 7
+
+main_after_if_else@65:
+    dig 6
+    dig 18
+    b<=
+    bz main_after_if_else@67
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80
+
+main_after_if_else@67:
+    dig 6
+    dup
+    dig 19
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80
+
+main_else_body@63:
+    dig 25
+    dup
+    dig 16
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 9
+    b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 20
+    b/
+    bury 7
+    b main_after_if_else@65
+
+main_ternary_false@56:
+    intc_1 // 0
+    b main_ternary_merge@57
+
+main_vestedAmount_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 27
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@72
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@73:
+    !
+    assert // not payable
+    dig 21
+    bytec 5 // "_vestingTotal"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 11
+    intc_1 // 0
+    itob
+    b==
+    bz main_after_if_else@75
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80
+
+main_after_if_else@75:
+    dig 21
+    dup
+    bytec 6 // "_vestingStart"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    bury 18
+    bytec 7 // "_vestingDuration"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 22
+    dig 26
+    b>
+    bz main_after_if_else@77
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80
+
+main_after_if_else@77:
+    dig 15
+    dig 21
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 26
+    b<=
+    bz main_after_if_else@79
+    dig 9
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80
+
+main_after_if_else@79:
+    dig 25
+    dup
+    dig 17
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 10
+    b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 21
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@80
+
+main_ternary_false@72:
+    intc_1 // 0
+    b main_ternary_merge@73
+
+main_vestingDuration_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@84
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@85:
+    !
+    assert // not payable
+    dig 21
+    bytec 7 // "_vestingDuration"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@84:
+    intc_1 // 0
+    b main_ternary_merge@85
+
+main_vestingStart_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@89
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@90:
+    !
+    assert // not payable
+    dig 21
+    bytec 6 // "_vestingStart"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@89:
+    intc_1 // 0
+    b main_ternary_merge@90
+
+main_vestingReleased_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@94
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@95:
+    !
+    assert // not payable
+    dig 21
+    bytec 8 // "_vestingReleased"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@94:
+    intc_1 // 0
+    b main_ternary_merge@95
+
+main_vestingTotal_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@99
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@100:
+    !
+    assert // not payable
+    dig 21
+    bytec 5 // "_vestingTotal"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@99:
+    intc_1 // 0
+    b main_ternary_merge@100
+
+main_createVesting_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 23
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 24
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 25
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    bury 26
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@104
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@105:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@108
+    global CallerApplicationID
+    bz main_bool_false@109
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@109
+
+main_bool_true@108:
+    intc_2 // 1
+    bury 1
+
+main_bool_merge@110:
+    dup
+    bnz main_after_if_else@112
+    bytec 12 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@112:
+    dup
+    assert // Not owner
+    intc_1 // 0
+    itob
+    dup
+    bury 14
+    dig 23
+    b<
+    dup
+    bury 5
+    bnz main_after_if_else@114
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012416d6f756e74206d757374206265203e20300000000000000000000000000000
+    log
+
+main_after_if_else@114:
+    dig 3
+    assert // Amount must be > 0
+    dig 24
+    dig 13
+    b>
+    dup
+    bury 4
+    bnz main_after_if_else@116
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000144475726174696f6e206d757374206265203e2030000000000000000000000000
+    log
+
+main_after_if_else@116:
+    dig 2
+    assert // Duration must be > 0
+    dig 21
+    bytec 5 // "_vestingTotal"
+    concat
+    sha256
+    dup
+    bury 13
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 13
+    b==
+    dup
+    bury 3
+    bnz main_after_if_else@118
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013416c7265616479206861732076657374696e6700000000000000000000000000
+    log
+
+main_after_if_else@118:
+    dig 1
+    assert // Already has vesting
+    dig 11
+    dup
+    box_del
+    pop
+    dig 23
+    dup
+    cover 2
+    box_put
+    dig 22
+    dup
+    bytec 8 // "_vestingReleased"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 15
+    box_put
+    dup
+    bytec 6 // "_vestingStart"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 26
+    box_put
+    bytec 7 // "_vestingDuration"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 26
+    box_put
+    intc_1 // 0
+    bytec 9 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 9 // "_totalAllocated"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_bool_false@109:
+    intc_1 // 0
+    bury 1
+    b main_bool_merge@110
+
+main_ternary_false@104:
+    intc_1 // 0
+    b main_ternary_merge@105
+
+main_totalAllocated_route@7:
+    txn GroupIndex
+    bz main_ternary_false@122
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@123:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 9 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@122:
+    intc_1 // 0
+    b main_ternary_merge@123
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@127
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@128:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@127:
+    intc_1 // 0
+    b main_ternary_merge@128
+
+main___postInit_route@5:
+    bytec 11 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 11 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 5 // "_vestingTotal"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "_vestingReleased"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "_vestingStart"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_vestingDuration"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "_owner"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 9 // "_totalAllocated"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_owner"
+    txn Sender
+    app_global_put
+    intc_2 // 1
+    return

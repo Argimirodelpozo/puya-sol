@@ -1,0 +1,320 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/polymarket/ctf-exchange-v2/src/test/dev/mocks/UniversalMock.sol.UniversalMock.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfafb6a08 0x29e26b9c 0x198c9820 0x6df41f6d 0x83bad7cc 0x422641da 0x03b34a3c 0x1c8e4238 0x85ba747a 0xeab83997 0xc2c29197 // method "approve(address,uint256)bool", method "setApprovalForAll(address,bool)void", method "transfer(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "balanceOf(address)uint256", method "balanceOf(address,uint256)uint256", method "safeTransferFrom(address,address,uint256,uint256,byte[])void", method "getImplementation()address", method "proxyCreationCode()byte[]", method "masterCopy()address", method "wcol()address"
+    txna ApplicationArgs 0
+    match main_approve_route@5 main_setApprovalForAll_route@6 main_transfer_route@7 main_transferFrom_route@8 main_balanceOf_route@9 main_balanceOf_route@10 main_safeTransferFrom_route@11 main_getImplementation_route@12 main_proxyCreationCode_route@13 main_masterCopy_route@14 main_wcol_route@15
+    err
+
+main_wcol_route@15:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75
+    global CurrentApplicationAddress
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@37
+
+main_masterCopy_route@14:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@37
+
+main_ternary_false@26:
+    intc_2 // 0
+    b main_ternary_merge@37
+
+main_proxyCreationCode_route@13:
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000100
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_2 // 0
+    b main_ternary_merge@32
+
+main_getImplementation_route@12:
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@37
+
+main_ternary_false@36:
+    intc_2 // 0
+    b main_ternary_merge@37
+
+main_safeTransferFrom_route@11:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@41:
+    intc_2 // 0
+    b main_ternary_merge@42
+
+main_balanceOf_route@10:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@46:
+    intc_2 // 0
+    b main_ternary_merge@52
+
+main_balanceOf_route@9:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@52
+
+main_ternary_false@51:
+    intc_2 // 0
+    b main_ternary_merge@52
+
+main_transferFrom_route@8:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@72:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@56:
+    intc_2 // 0
+    b main_ternary_merge@72
+
+main_transfer_route@7:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@72
+
+main_ternary_false@61:
+    intc_2 // 0
+    b main_ternary_merge@72
+
+main_setApprovalForAll_route@6:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@66
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@67:
+    !
+    assert // not payable
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    intc_0 // 1
+    return
+
+main_ternary_false@66:
+    intc_2 // 0
+    b main_ternary_merge@67
+
+main_approve_route@5:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@71
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@72
+
+main_ternary_false@71:
+    intc_2 // 0
+    b main_ternary_merge@72

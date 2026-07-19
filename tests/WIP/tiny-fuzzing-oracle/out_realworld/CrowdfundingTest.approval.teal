@@ -1,0 +1,861 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock 0x "_totalPledged" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_backerCount" "_claimed" "_pledges" 0x01 "_creator" "_goal" 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f416c726561647920636c61696d65640000000000000000000000000000000000 "_deadline" "__ctor_pending"
+    intc_0 // 0
+    dupn 7
+    bytec_0 // ""
+    dupn 3
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 13 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x19a642a7 0xbb566020 0xa0a0dde7 0x39e63fab 0x204c5cf2 0x514ba09d 0x0ae1c6b5 0x4b9af476 0x4dc9b66a 0x53fc8fe3 0xf1577726 0xea937c96 // method "__postInit()void", method "creator()address", method "goal()uint256", method "deadline()uint256", method "totalPledged()uint256", method "claimed()bool", method "backerCount()uint256", method "pledgeOf(address)uint256", method "isGoalReached()bool", method "pledge(address,uint256,uint256)void", method "unpledge(address,uint256)void", method "claim()void", method "refund(address)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_creator_route@6 main_goal_route@7 main_deadline_route@8 main_totalPledged_route@9 main_claimed_route@10 main_backerCount_route@11 main_pledgeOf_route@12 main_isGoalReached_route@13 main_pledge_route@14 main_unpledge_route@15 main_claim_route@16 main_refund_route@17
+    err
+
+main_refund_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 6 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    dup
+    !
+    bury 5
+    bz main_after_if_else@26
+    bytec 11 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f416c726561647920636c61696d65640000000000000000000000000000000000
+    log
+
+main_after_if_else@26:
+    dig 3
+    assert // Already claimed
+    dig 8
+    bytec 7 // "_pledges"
+    concat
+    sha256
+    dup
+    bury 9
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 11
+    intc_0 // 0
+    itob
+    dup
+    bury 9
+    b>
+    bz main_after_if_else@28
+    dig 7
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    intc_0 // 0
+    bytec_1 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    dup
+    dig 11
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_totalPledged"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec 5 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    dup
+    bytec 8 // 0x01
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 8 // 0x01
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_backerCount"
+    swap
+    app_global_put
+
+main_after_if_else@28:
+    dig 9
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_0 // 0
+    b main_ternary_merge@24
+
+main_claim_route@16:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec 9 // "_creator"
+    app_global_get_ex
+    assert // check _creator exists
+    ==
+    bnz main_bool_true@36
+    global CallerApplicationID
+    bz main_bool_false@37
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec 9 // "_creator"
+    app_global_get_ex
+    assert // check _creator exists
+    ==
+    bz main_bool_false@37
+
+main_bool_true@36:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@38:
+    dup
+    bnz main_after_if_else@40
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b4e6f742063726561746f72000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@40:
+    dup
+    assert // Not creator
+    intc_0 // 0
+    bytec_1 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    intc_0 // 0
+    bytec 10 // "_goal"
+    app_global_get_ex
+    assert // check _goal exists
+    b>=
+    dup
+    bury 5
+    bnz main_after_if_else@42
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010476f616c206e6f74207265616368656400000000000000000000000000000000
+    log
+
+main_after_if_else@42:
+    dig 3
+    assert // Goal not reached
+    intc_0 // 0
+    bytec 6 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    dup
+    !
+    bury 4
+    bz main_after_if_else@44
+    bytec 11 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f416c726561647920636c61696d65640000000000000000000000000000000000
+    log
+
+main_after_if_else@44:
+    dig 2
+    assert // Already claimed
+    bytec 6 // "_claimed"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@37:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@38
+
+main_ternary_false@32:
+    intc_0 // 0
+    b main_ternary_merge@33
+
+main_unpledge_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 13
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    dig 8
+    bytec 7 // "_pledges"
+    concat
+    sha256
+    dup
+    bury 7
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 12
+    b>=
+    dup
+    bury 5
+    bnz main_after_if_else@51
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013496e73756666696369656e7420706c6564676500000000000000000000000000
+    log
+
+main_after_if_else@51:
+    dig 3
+    assert // Insufficient pledge
+    intc_0 // 0
+    bytec 6 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    dup
+    !
+    bury 4
+    bz main_after_if_else@53
+    bytec 11 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f416c726561647920636c61696d65640000000000000000000000000000000000
+    log
+
+main_after_if_else@53:
+    dig 2
+    assert // Already claimed
+    dig 5
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 14
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 2
+    box_del
+    pop
+    uncover 2
+    dig 1
+    box_put
+    intc_0 // 0
+    bytec_1 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    dup
+    dig 3
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_totalPledged"
+    swap
+    app_global_put
+    intc_0 // 0
+    itob
+    b==
+    bz main_after_if_else@55
+    intc_0 // 0
+    bytec 5 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    dup
+    bytec 8 // 0x01
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 8 // 0x01
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_backerCount"
+    swap
+    app_global_put
+
+main_after_if_else@55:
+    intc_1 // 1
+    return
+
+main_ternary_false@48:
+    intc_0 // 0
+    b main_ternary_merge@49
+
+main_pledge_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 13
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 12
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@59
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@60:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 12 // "_deadline"
+    app_global_get_ex
+    assert // check _deadline exists
+    dig 11
+    b>
+    dup
+    bury 5
+    bnz main_after_if_else@62
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e43616d706169676e20656e646564000000000000000000000000000000000000
+    log
+
+main_after_if_else@62:
+    dig 3
+    assert // Campaign ended
+    intc_0 // 0
+    itob
+    dup
+    bury 8
+    dig 12
+    b<
+    dup
+    bury 4
+    bnz main_after_if_else@64
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012416d6f756e74206d757374206265203e20300000000000000000000000000000
+    log
+
+main_after_if_else@64:
+    dig 2
+    assert // Amount must be > 0
+    intc_0 // 0
+    bytec 6 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    dup
+    !
+    bury 3
+    bz main_after_if_else@66
+    bytec 11 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f416c726561647920636c61696d65640000000000000000000000000000000000
+    log
+
+main_after_if_else@66:
+    dig 1
+    assert // Already claimed
+    dig 8
+    bytec 7 // "_pledges"
+    concat
+    sha256
+    dup
+    bury 6
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 7
+    b==
+    bz main_after_if_else@68
+    intc_0 // 0
+    bytec 5 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    bytec 8 // 0x01
+    b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_backerCount"
+    swap
+    app_global_put
+
+main_after_if_else@68:
+    dig 4
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 13
+    dup
+    cover 3
+    b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec_1 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "_totalPledged"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@59:
+    intc_0 // 0
+    b main_ternary_merge@60
+
+main_isGoalReached_route@13:
+    txn GroupIndex
+    bz main_ternary_false@72
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@73:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    intc_0 // 0
+    bytec 10 // "_goal"
+    app_global_get_ex
+    assert // check _goal exists
+    b>=
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@72:
+    intc_0 // 0
+    b main_ternary_merge@73
+
+main_pledgeOf_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    dig 8
+    bytec 7 // "_pledges"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@77:
+    intc_0 // 0
+    b main_ternary_merge@78
+
+main_backerCount_route@11:
+    txn GroupIndex
+    bz main_ternary_false@82
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@83:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 5 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@82:
+    intc_0 // 0
+    b main_ternary_merge@83
+
+main_claimed_route@10:
+    txn GroupIndex
+    bz main_ternary_false@87
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@88:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 6 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@87:
+    intc_0 // 0
+    b main_ternary_merge@88
+
+main_totalPledged_route@9:
+    txn GroupIndex
+    bz main_ternary_false@92
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@93:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@92:
+    intc_0 // 0
+    b main_ternary_merge@93
+
+main_deadline_route@8:
+    txn GroupIndex
+    bz main_ternary_false@97
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@98:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 12 // "_deadline"
+    app_global_get_ex
+    assert // check _deadline exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@97:
+    intc_0 // 0
+    b main_ternary_merge@98
+
+main_goal_route@7:
+    txn GroupIndex
+    bz main_ternary_false@102
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@103:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 10 // "_goal"
+    app_global_get_ex
+    assert // check _goal exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@102:
+    intc_0 // 0
+    b main_ternary_merge@103
+
+main_creator_route@6:
+    txn GroupIndex
+    bz main_ternary_false@107
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@108:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 9 // "_creator"
+    app_global_get_ex
+    assert // check _creator exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@107:
+    intc_0 // 0
+    b main_ternary_merge@108
+
+main___postInit_route@5:
+    bytec 13 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 13 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec 7 // "_pledges"
+    pushint 2
+    box_create
+    pop
+    bytec 9 // "_creator"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 10 // "_goal"
+    bytec_0 // 0x
+    app_global_put
+    bytec 12 // "_deadline"
+    bytec_0 // 0x
+    app_global_put
+    bytec_1 // "_totalPledged"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_claimed"
+    intc_0 // 0
+    app_global_put
+    bytec 5 // "_backerCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 9 // "_creator"
+    txn Sender
+    app_global_put
+    pushint 10000
+    itob
+    bytec 10 // "_goal"
+    swap
+    app_global_put
+    pushint 999999
+    itob
+    bytec 12 // "_deadline"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

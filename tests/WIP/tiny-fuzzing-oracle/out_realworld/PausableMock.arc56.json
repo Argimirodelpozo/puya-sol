@@ -1,0 +1,284 @@
+{
+    "name": "PausableMock",
+    "structs": {},
+    "methods": [
+        {
+            "name": "normalProcess",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "drasticMeasure",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "pause",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [
+                {
+                    "name": "Paused",
+                    "args": [
+                        {
+                            "type": "address",
+                            "name": "account"
+                        }
+                    ]
+                }
+            ],
+            "recommendations": {}
+        },
+        {
+            "name": "unpause",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [
+                {
+                    "name": "Unpaused",
+                    "args": [
+                        {
+                            "type": "address",
+                            "name": "account"
+                        }
+                    ]
+                }
+            ],
+            "recommendations": {}
+        },
+        {
+            "name": "drasticMeasureTaken",
+            "args": [],
+            "returns": {
+                "type": "bool"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "count",
+            "args": [],
+            "returns": {
+                "type": "uint256"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "paused",
+            "args": [],
+            "returns": {
+                "type": "bool"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "desc": " @dev Returns true if the contract is paused, and false otherwise.",
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 2,
+                "bytes": 1
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {
+                "drasticMeasureTaken": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "ZHJhc3RpY01lYXN1cmVUYWtlbg=="
+                },
+                "count": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMBytes",
+                    "key": "Y291bnQ="
+                },
+                "_paused": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "X3BhdXNlZA=="
+                }
+            },
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        485
+                    ],
+                    "errorMessage": "EnforcedPause"
+                },
+                {
+                    "pc": [
+                        500
+                    ],
+                    "errorMessage": "ExpectedPause"
+                },
+                {
+                    "pc": [
+                        466
+                    ],
+                    "errorMessage": "check _paused exists"
+                },
+                {
+                    "pc": [
+                        232,
+                        399
+                    ],
+                    "errorMessage": "check count exists"
+                },
+                {
+                    "pc": [
+                        267
+                    ],
+                    "errorMessage": "check drasticMeasureTaken exists"
+                },
+                {
+                    "pc": [
+                        228,
+                        263,
+                        297,
+                        332,
+                        367,
+                        392,
+                        462
+                    ],
+                    "errorMessage": "not payable"
+                },
+                {
+                    "pc": [
+                        237,
+                        440
+                    ],
+                    "errorMessage": "overflow"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvV0lQL2V4YW1wbGVzL3VuaXN3YXAtdjQvbGliL29wZW56ZXBwZWxpbi1jb250cmFjdHMvY29udHJhY3RzL21vY2tzL1BhdXNhYmxlTW9jay5zb2wuUGF1c2FibGVNb2NrLmFwcHJvdmFsX3Byb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMCAxIDMyCiAgICBieXRlY2Jsb2NrICJfcGF1c2VkIiAiY291bnQiICJkcmFzdGljTWVhc3VyZVRha2VuIiAweDE1MWY3Yzc1CiAgICBwdXNoaW50IDQwOTYKICAgIGJ6ZXJvCiAgICBkdXAKICAgIHN0b3JlIDUKICAgIGR1cAogICAgc3RvcmUgMAogICAgZHVwCiAgICBzdG9yZSAxCiAgICBkdXAKICAgIHN0b3JlIDIKICAgIGR1cAogICAgc3RvcmUgMwogICAgc3RvcmUgNAogICAgbG9hZCAwCiAgICBwdXNoYnl0ZXMgMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDgwCiAgICByZXBsYWNlMiA2NAogICAgc3RvcmUgMAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgYnl0ZWNfMCAvLyAiX3BhdXNlZCIKICAgIGludGNfMCAvLyAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgYnl0ZWNfMiAvLyAiZHJhc3RpY01lYXN1cmVUYWtlbiIKICAgIGludGNfMCAvLyAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgYnl0ZWNfMSAvLyAiY291bnQiCiAgICBwdXNoYnl0ZXMgMHgKICAgIGFwcF9nbG9iYWxfcHV0CiAgICBieXRlY18wIC8vICJfcGF1c2VkIgogICAgaW50Y18wIC8vIDAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICBieXRlY18yIC8vICJkcmFzdGljTWVhc3VyZVRha2VuIgogICAgaW50Y18wIC8vIDAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICBpbnRjXzAgLy8gMAogICAgaXRvYgogICAgYnl0ZWNfMSAvLyAiY291bnQiCiAgICBzd2FwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQKICAgIHB1c2hieXRlc3MgMHg5OGNhMzE1ZSAweGQ2MjFiYmQ5IDB4MDE3OGY5NGIgMHgxYjUyOWRlOCAweDE5MDZiMjkyIDB4OTM4MzM1MjggMHg5YWQ0ODQwMiAvLyBtZXRob2QgIm5vcm1hbFByb2Nlc3MoKXZvaWQiLCBtZXRob2QgImRyYXN0aWNNZWFzdXJlKCl2b2lkIiwgbWV0aG9kICJwYXVzZSgpdm9pZCIsIG1ldGhvZCAidW5wYXVzZSgpdm9pZCIsIG1ldGhvZCAiZHJhc3RpY01lYXN1cmVUYWtlbigpYm9vbCIsIG1ldGhvZCAiY291bnQoKXVpbnQyNTYiLCBtZXRob2QgInBhdXNlZCgpYm9vbCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fbm9ybWFsUHJvY2Vzc19yb3V0ZUA1IG1haW5fZHJhc3RpY01lYXN1cmVfcm91dGVANiBtYWluX3BhdXNlX3JvdXRlQDcgbWFpbl91bnBhdXNlX3JvdXRlQDggbWFpbl9kcmFzdGljTWVhc3VyZVRha2VuX3JvdXRlQDkgbWFpbl9jb3VudF9yb3V0ZUAxMCBtYWluX3BhdXNlZF9yb3V0ZUAxMQogICAgZXJyCgptYWluX3BhdXNlZF9yb3V0ZUAxMToKICAgIGNhbGxzdWIgcGF1c2VkCiAgICBwdXNoYnl0ZXMgMHgwMAogICAgaW50Y18wIC8vIDAKICAgIHVuY292ZXIgMgogICAgc2V0Yml0CiAgICBieXRlY18zIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgptYWluX2NvdW50X3JvdXRlQDEwOgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGJ6IG1haW5fdGVybmFyeV9mYWxzZUAxOQogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMSAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCm1haW5fdGVybmFyeV9tZXJnZUAyMDoKICAgICEKICAgIGFzc2VydCAvLyBub3QgcGF5YWJsZQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzEgLy8gImNvdW50IgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBjb3VudCBleGlzdHMKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzIgLy8gMzIKICAgIDw9CiAgICBhc3NlcnQgLy8gb3ZlcmZsb3cKICAgIGludGNfMiAvLyAzMgogICAgYnplcm8KICAgIGJ8CiAgICBieXRlY18zIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgptYWluX3Rlcm5hcnlfZmFsc2VAMTk6CiAgICBpbnRjXzAgLy8gMAogICAgYiBtYWluX3Rlcm5hcnlfbWVyZ2VAMjAKCm1haW5fZHJhc3RpY01lYXN1cmVUYWtlbl9yb3V0ZUA5OgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGJ6IG1haW5fdGVybmFyeV9mYWxzZUAyNAogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMSAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCm1haW5fdGVybmFyeV9tZXJnZUAyNToKICAgICEKICAgIGFzc2VydCAvLyBub3QgcGF5YWJsZQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzIgLy8gImRyYXN0aWNNZWFzdXJlVGFrZW4iCiAgICBhcHBfZ2xvYmFsX2dldF9leAogICAgYXNzZXJ0IC8vIGNoZWNrIGRyYXN0aWNNZWFzdXJlVGFrZW4gZXhpc3RzCiAgICBwdXNoYnl0ZXMgMHgwMAogICAgaW50Y18wIC8vIDAKICAgIHVuY292ZXIgMgogICAgc2V0Yml0CiAgICBieXRlY18zIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgptYWluX3Rlcm5hcnlfZmFsc2VAMjQ6CiAgICBpbnRjXzAgLy8gMAogICAgYiBtYWluX3Rlcm5hcnlfbWVyZ2VAMjUKCm1haW5fdW5wYXVzZV9yb3V0ZUA4OgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGJ6IG1haW5fdGVybmFyeV9mYWxzZUAyOQogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMSAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCm1haW5fdGVybmFyeV9tZXJnZUAzMDoKICAgICEKICAgIGFzc2VydCAvLyBub3QgcGF5YWJsZQogICAgY2FsbHN1YiBfcmVxdWlyZVBhdXNlZAogICAgYnl0ZWNfMCAvLyAiX3BhdXNlZCIKICAgIGludGNfMCAvLyAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgcHVzaGJ5dGVzIDB4NmI4YTE5ZDEgLy8gbWV0aG9kICJVbnBhdXNlZChhZGRyZXNzKSIKICAgIHR4biBTZW5kZXIKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgptYWluX3Rlcm5hcnlfZmFsc2VAMjk6CiAgICBpbnRjXzAgLy8gMAogICAgYiBtYWluX3Rlcm5hcnlfbWVyZ2VAMzAKCm1haW5fcGF1c2Vfcm91dGVANzoKICAgIHR4biBHcm91cEluZGV4CiAgICBieiBtYWluX3Rlcm5hcnlfZmFsc2VAMzQKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzEgLy8gMQogICAgLQogICAgZ3R4bnMgQW1vdW50CgptYWluX3Rlcm5hcnlfbWVyZ2VAMzU6CiAgICAhCiAgICBhc3NlcnQgLy8gbm90IHBheWFibGUKICAgIGNhbGxzdWIgX3JlcXVpcmVOb3RQYXVzZWQKICAgIGJ5dGVjXzAgLy8gIl9wYXVzZWQiCiAgICBpbnRjXzEgLy8gMQogICAgYXBwX2dsb2JhbF9wdXQKICAgIHB1c2hieXRlcyAweGE3NTUwNTNhIC8vIG1ldGhvZCAiUGF1c2VkKGFkZHJlc3MpIgogICAgdHhuIFNlbmRlcgogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUAzNDoKICAgIGludGNfMCAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUAzNQoKbWFpbl9kcmFzdGljTWVhc3VyZV9yb3V0ZUA2OgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGJ6IG1haW5fdGVybmFyeV9mYWxzZUAzOQogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMSAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCm1haW5fdGVybmFyeV9tZXJnZUA0MDoKICAgICEKICAgIGFzc2VydCAvLyBub3QgcGF5YWJsZQogICAgY2FsbHN1YiBfcmVxdWlyZVBhdXNlZAogICAgYnl0ZWNfMiAvLyAiZHJhc3RpY01lYXN1cmVUYWtlbiIKICAgIGludGNfMSAvLyAxCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKbWFpbl90ZXJuYXJ5X2ZhbHNlQDM5OgogICAgaW50Y18wIC8vIDAKICAgIGIgbWFpbl90ZXJuYXJ5X21lcmdlQDQwCgptYWluX25vcm1hbFByb2Nlc3Nfcm91dGVANToKICAgIHR4biBHcm91cEluZGV4CiAgICBieiBtYWluX3Rlcm5hcnlfZmFsc2VANDQKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzEgLy8gMQogICAgLQogICAgZ3R4bnMgQW1vdW50CgptYWluX3Rlcm5hcnlfbWVyZ2VANDU6CiAgICAhCiAgICBhc3NlcnQgLy8gbm90IHBheWFibGUKICAgIGNhbGxzdWIgX3JlcXVpcmVOb3RQYXVzZWQKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18xIC8vICJjb3VudCIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgY291bnQgZXhpc3RzCiAgICBwdXNoYnl0ZXMgMHgwMQogICAgYisKICAgIGR1cAogICAgcHVzaGJ5dGVzIDB4ZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZgogICAgYjw9CiAgICBhc3NlcnQgLy8gb3ZlcmZsb3cKICAgIGJ5dGVjXzEgLy8gImNvdW50IgogICAgc3dhcAogICAgYXBwX2dsb2JhbF9wdXQKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUA0NDoKICAgIGludGNfMCAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUA0NQoKCi8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9XSVAvZXhhbXBsZXMvdW5pc3dhcC12NC9saWIvb3BlbnplcHBlbGluLWNvbnRyYWN0cy9jb250cmFjdHMvbW9ja3MvUGF1c2FibGVNb2NrLnNvbC5QYXVzYWJsZU1vY2sucGF1c2VkKCkgLT4gdWludDY0OgpwYXVzZWQ6CiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogcGF1c2VkX3Rlcm5hcnlfZmFsc2VAMgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMSAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCnBhdXNlZF90ZXJuYXJ5X21lcmdlQDM6CiAgICAhCiAgICBhc3NlcnQgLy8gbm90IHBheWFibGUKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18wIC8vICJfcGF1c2VkIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBfcGF1c2VkIGV4aXN0cwogICAgcmV0c3ViCgpwYXVzZWRfdGVybmFyeV9mYWxzZUAyOgogICAgaW50Y18wIC8vIDAKICAgIGIgcGF1c2VkX3Rlcm5hcnlfbWVyZ2VAMwoKCi8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9XSVAvZXhhbXBsZXMvdW5pc3dhcC12NC9saWIvb3BlbnplcHBlbGluLWNvbnRyYWN0cy9jb250cmFjdHMvbW9ja3MvUGF1c2FibGVNb2NrLnNvbC5QYXVzYWJsZU1vY2suX3JlcXVpcmVOb3RQYXVzZWQoKSAtPiB2b2lkOgpfcmVxdWlyZU5vdFBhdXNlZDoKICAgIGNhbGxzdWIgcGF1c2VkCiAgICBieiBfcmVxdWlyZU5vdFBhdXNlZF9hZnRlcl9pZl9lbHNlQDIKICAgIHB1c2hieXRlcyAweDZkMzYwM2NiIC8vIG1ldGhvZCAiRW5mb3JjZWRQYXVzZSgpIgogICAgbG9nCiAgICBlcnIgLy8gRW5mb3JjZWRQYXVzZQoKX3JlcXVpcmVOb3RQYXVzZWRfYWZ0ZXJfaWZfZWxzZUAyOgogICAgcmV0c3ViCgoKLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL1dJUC9leGFtcGxlcy91bmlzd2FwLXY0L2xpYi9vcGVuemVwcGVsaW4tY29udHJhY3RzL2NvbnRyYWN0cy9tb2Nrcy9QYXVzYWJsZU1vY2suc29sLlBhdXNhYmxlTW9jay5fcmVxdWlyZVBhdXNlZCgpIC0+IHZvaWQ6Cl9yZXF1aXJlUGF1c2VkOgogICAgY2FsbHN1YiBwYXVzZWQKICAgIGJueiBfcmVxdWlyZVBhdXNlZF9hZnRlcl9pZl9lbHNlQDIKICAgIHB1c2hieXRlcyAweGJiMTNmNGI3IC8vIG1ldGhvZCAiRXhwZWN0ZWRQYXVzZSgpIgogICAgbG9nCiAgICBlcnIgLy8gRXhwZWN0ZWRQYXVzZQoKX3JlcXVpcmVQYXVzZWRfYWZ0ZXJfaWZfZWxzZUAyOgogICAgcmV0c3ViCg==",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvV0lQL2V4YW1wbGVzL3VuaXN3YXAtdjQvbGliL29wZW56ZXBwZWxpbi1jb250cmFjdHMvY29udHJhY3RzL21vY2tzL1BhdXNhYmxlTW9jay5zb2wuUGF1c2FibGVNb2NrLmNsZWFyX3N0YXRlX3Byb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEKICAgIHJldHVybgo="
+    },
+    "byteCode": {
+        "approval": "DCADAAEgJgQHX3BhdXNlZAVjb3VudBNkcmFzdGljTWVhc3VyZVRha2VuBBUffHWBgCCvSTUFSTUASTUBSTUCSTUDNQQ0AIAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBcQDUAMRhAABcoImcqImcpgABnKCJnKiJnIhYpTGcjQzEZFEQxGESCBwSYyjFeBNYhu9kEAXj5SwQbUp3oBBkGspIEk4M1KASa1IQCNhoAjgcAtQCcAHkAVgA0ABEAAQCIAPeAAQAiTwJUK0xQsCNDMRZBABoxFiMJOAgURCIpZURJFSQORCSvqytMULAjQyJC/+gxFkEAGTEWIwk4CBREIiplRIABACJPAlQrTFCwI0MiQv/pMRZBABoxFiMJOAgURIgAuigiZ4AEa4oZ0TEAULAjQyJC/+gxFkEAGjEWIwk4CBREiACIKCNngASnVQU6MQBQsCNDIkL/6DEWQQAQMRYjCTgIFESIAHQqI2cjQyJC//IxFkEAPTEWIwk4CBREiABMIillRIABAaBJgCD//////////////////////////////////////////6ZEKUxnI0MiQv/FMRZBAA0xFiMJOAgURCIoZUSJIkL/9Yj/50EACIAEbTYDy7AAiYj/2EAACIAEuxP0t7AAiQ==",
+        "clear": "DIEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 9,
+            "patch": 0
+        }
+    },
+    "events": [
+        {
+            "name": "Paused",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "account"
+                }
+            ]
+        },
+        {
+            "name": "Unpaused",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "account"
+                }
+            ]
+        }
+    ],
+    "templateVariables": {}
+}

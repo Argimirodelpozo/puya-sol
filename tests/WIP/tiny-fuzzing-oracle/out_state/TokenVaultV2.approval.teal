@@ -1,0 +1,1149 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "_balances" "_withdrawalFeeBps" "_owner" "_totalFees" "_totalBalance" "_depositCount" 0x010000000000000000000000000000000000000000000000000000000000000000 "_totalDeposited" "_totalWithdrawn" "_depositorsCount" "__ctor_pending" 0x2710 0x04e26502
+    intc_1 // 0
+    dupn 3
+    bytec_0 // ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 13 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x74aea993 0x3195d6a1 0xf3d9437c 0x6cefe925 0x83bad7cc 0x9e0b4198 0xe0a7d5ee 0x2eaa958e 0x43daf384 0xf60cd314 0x44c1450d 0x84a9a528 0x500381cc 0xb1bbb0a8 0x2da14f35 // method "__postInit()void", method "deposit(uint256)void", method "withdraw(uint256)void", method "collectFees()void", method "setFee(uint256)void", method "balanceOf(address)uint256", method "depositCount(address)uint256", method "totalDeposited(address)uint256", method "totalWithdrawn(address)uint256", method "accountInfo(address)(uint256,uint256,uint256,uint256)", method "totalBalance()uint256", method "totalFees()uint256", method "withdrawalFeeBps()uint256", method "depositorsCount()uint256", method "owner()address", method "calculateFee(uint256)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_deposit_route@6 main_withdraw_route@7 main_collectFees_route@8 main_setFee_route@9 main_balanceOf_route@10 main_depositCount_route@11 main_totalDeposited_route@12 main_totalWithdrawn_route@13 main_accountInfo_route@14 main_totalBalance_route@15 main_totalFees_route@16 main_withdrawalFeeBps_route@17 main_depositorsCount_route@18 main_owner_route@19 main_calculateFee_route@20
+    err
+
+main_calculateFee_route@20:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    dig 5
+    b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 14 // 0x2710
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@26:
+    intc_1 // 0
+    b main_ternary_merge@27
+
+main_owner_route@19:
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_depositorsCount_route@18:
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 12 // "_depositorsCount"
+    app_global_get_ex
+    assert // check _depositorsCount exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main_withdrawalFeeBps_route@17:
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42
+
+main_totalFees_route@16:
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 6 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@46:
+    intc_1 // 0
+    b main_ternary_merge@47
+
+main_totalBalance_route@15:
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 7 // "_totalBalance"
+    app_global_get_ex
+    assert // check _totalBalance exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@51:
+    intc_1 // 0
+    b main_ternary_merge@52
+
+main_accountInfo_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    dig 2
+    dup
+    bytec_3 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    bytec 8 // "_depositCount"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 3
+    bytec 10 // "_totalDeposited"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    uncover 4
+    bytec 11 // "_totalWithdrawn"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@56:
+    intc_1 // 0
+    b main_ternary_merge@57
+
+main_totalWithdrawn_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    dig 2
+    bytec 11 // "_totalWithdrawn"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@61:
+    intc_1 // 0
+    b main_ternary_merge@62
+
+main_totalDeposited_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@66
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@67:
+    !
+    assert // not payable
+    dig 2
+    bytec 10 // "_totalDeposited"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@66:
+    intc_1 // 0
+    b main_ternary_merge@67
+
+main_depositCount_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@71
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@72:
+    !
+    assert // not payable
+    dig 2
+    bytec 8 // "_depositCount"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@71:
+    intc_1 // 0
+    b main_ternary_merge@72
+
+main_balanceOf_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@76
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@77:
+    !
+    assert // not payable
+    dig 2
+    bytec_3 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@76:
+    intc_1 // 0
+    b main_ternary_merge@77
+
+main_setFee_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    dup
+    bury 2
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@81
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@82:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_after_if_else@111
+    global CallerApplicationID
+    bz main_if_body@110
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_after_if_else@111
+
+main_if_body@110:
+    bytec 15 // method "VaultNotOwner(address)"
+    txn Sender
+    concat
+    log
+    err // VaultNotOwner
+
+main_after_if_else@111:
+    pushint 1000
+    itob
+    dig 4
+    b<
+    bz main_after_if_else@113
+    dup
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 4
+    b|
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000003e8
+    concat
+    pushbytes 0xa0ce3d6c // method "VaultFeeExceedsMax(uint256,uint256)"
+    swap
+    concat
+    log
+    err // VaultFeeExceedsMax
+
+main_after_if_else@113:
+    intc_1 // 0
+    bytec 4 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    bytec 4 // "_withdrawalFeeBps"
+    dig 5
+    dup
+    cover 3
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    swap
+    concat
+    pushbytes 0x23ba405b // method "FeeUpdated(uint256,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@81:
+    intc_1 // 0
+    b main_ternary_merge@82
+
+main_collectFees_route@8:
+    txn GroupIndex
+    bz main_ternary_false@86
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@87:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_after_if_else@119
+    global CallerApplicationID
+    bz main_if_body@118
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_after_if_else@119
+
+main_if_body@118:
+    bytec 15 // method "VaultNotOwner(address)"
+    txn Sender
+    concat
+    log
+    err // VaultNotOwner
+
+main_after_if_else@119:
+    intc_1 // 0
+    bytec 6 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    intc_1 // 0
+    itob
+    bytec 6 // "_totalFees"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    txn Sender
+    swap
+    concat
+    pushbytes 0xfdaef7c7 // method "FeeCollected(address,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@86:
+    intc_1 // 0
+    b main_ternary_merge@87
+
+main_withdraw_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    dup
+    bury 2
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@91
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@92:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dig 5
+    b==
+    bnz main_if_body@102
+    txn Sender
+    bytec_3 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 6
+    b<
+    bz main_after_if_else@96
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    uncover 2
+    b|
+    concat
+    pushbytes 0x40d1bea5 // method "VaultInsufficientBalance(uint256,uint256)"
+    swap
+    concat
+    log
+    err // VaultInsufficientBalance
+
+main_after_if_else@96:
+    intc_1 // 0
+    bytec 4 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    dig 6
+    dup
+    uncover 2
+    b*
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 14 // 0x2710
+    b/
+    dup2
+    b>=
+    assert // underflow
+    dig 1
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    uncover 3
+    dup
+    dig 4
+    b>=
+    assert // underflow
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 3
+    b-
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    txn Sender
+    bytec_3 // "_balances"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    bytec 11 // "_totalWithdrawn"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    txn Sender
+    bytec 11 // "_totalWithdrawn"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec 7 // "_totalBalance"
+    app_global_get_ex
+    assert // check _totalBalance exists
+    dup
+    dig 4
+    b>=
+    assert // underflow
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 3
+    b-
+    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 7 // "_totalBalance"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 6 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dig 2
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 6 // "_totalFees"
+    swap
+    app_global_put
+    txn Sender
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    uncover 2
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    pushbytes 0xcea7f505 // method "Withdrawn(address,uint256,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_if_body@102:
+    pushbytes 0xaa5c2d7b // method "VaultZeroAmount()"
+    log
+    err // VaultZeroAmount
+
+main_ternary_false@91:
+    intc_1 // 0
+    b main_ternary_merge@92
+
+main_deposit_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@100
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@101:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dup
+    bury 3
+    dig 5
+    b==
+    bz main_after_if_else@103
+    b main_if_body@102
+
+main_after_if_else@103:
+    txn Sender
+    bytec_3 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b==
+    bz main_after_if_else@106
+    txn Sender
+    bytec 8 // "_depositCount"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b==
+    bz main_after_if_else@106
+    intc_1 // 0
+    bytec 12 // "_depositorsCount"
+    app_global_get_ex
+    assert // check _depositorsCount exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 12 // "_depositorsCount"
+    swap
+    app_global_put
+
+main_after_if_else@106:
+    txn Sender
+    bytec_3 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    dup
+    cover 2
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    txn Sender
+    bytec_3 // "_balances"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    bytec 10 // "_totalDeposited"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    txn Sender
+    bytec 10 // "_totalDeposited"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    bytec 8 // "_depositCount"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    txn Sender
+    bytec 8 // "_depositCount"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec 7 // "_totalBalance"
+    app_global_get_ex
+    assert // check _totalBalance exists
+    dig 1
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 7 // "_totalBalance"
+    swap
+    app_global_put
+    txn Sender
+    dup
+    bytec_3 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    swap
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x95120817 // method "Deposited(address,uint256,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@100:
+    intc_1 // 0
+    b main_ternary_merge@101
+
+main___postInit_route@5:
+    bytec 13 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 13 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "_balances"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "_depositCount"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 10 // "_totalDeposited"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 11 // "_totalWithdrawn"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "_totalBalance"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_totalFees"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_withdrawalFeeBps"
+    bytec_0 // 0x
+    app_global_put
+    bytec 12 // "_depositorsCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 200
+    itob
+    bytec 4 // "_withdrawalFeeBps"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

@@ -1,0 +1,731 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/MultipleInheritanceInitializableMocks.sol.SampleMother.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 8
+    bytecblock 0x "isHuman" "mother" 0x01 0x00 0x0000000000000001 0x80d71e940000000000000001 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "child" "father" "gramps" "s:"
+    intc_1 // 0
+    dupn 3
+    bytec_0 // ""
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "isHuman"
+    intc_1 // 0
+    app_global_put
+    bytec_2 // "mother"
+    bytec_0 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x28127168 0x79af5a53 0xa1fe4344 0xfd2c93cd // method "initialize(uint256)void", method "mother()uint256", method "isHuman()bool", method "initialize()void"
+    txna ApplicationArgs 0
+    match main_initialize_route@5 main_mother_route@6 main_isHuman_route@7 main_initialize_route@8
+    err
+
+main_initialize_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub _getInitializableStorage
+    dup
+    bury 10
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    bury 9
+    dup
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    dup
+    bury 5
+    !
+    swap
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    uncover 2
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    !
+    uncover 2
+    &&
+    bury 4
+    intc_2 // 1
+    ==
+    bz main_else_body@33
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    intc_1 // 0
+    itob
+    b==
+    bury 4
+
+main_after_if_else@34:
+    dig 2
+    bnz main_after_if_else@37
+    dig 3
+    bz main_if_body@48
+
+main_after_if_else@37:
+    dig 8
+    dup
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // 0x0000000000000001
+    replace2 24
+    callsub __storage_write
+    dig 1
+    bnz main_after_if_else@39
+    dig 8
+    dup
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x01
+    replace2 23
+    callsub __storage_write
+
+main_after_if_else@39:
+    callsub _checkInitializing
+    callsub _checkInitializing
+    bytec_1 // "isHuman"
+    intc_2 // 1
+    app_global_put
+    dig 1
+    bnz main_after_if_else@53
+    dig 8
+    dup
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // 0x00
+    replace2 23
+    callsub __storage_write
+    bytec 6 // 0x80d71e940000000000000001
+    log
+
+main_after_if_else@53:
+    intc_2 // 1
+    return
+
+main_if_body@48:
+    pushbytes 0x38c3eeee // method "InvalidInitialization()"
+    log
+    err // InvalidInitialization
+
+main_else_body@33:
+    intc_1 // 0
+    bury 4
+    b main_after_if_else@34
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_isHuman_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "isHuman"
+    app_global_get_ex
+    assert // check isHuman exists
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_mother_route@6:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "mother"
+    app_global_get_ex
+    assert // check mother exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_initialize_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    callsub _getInitializableStorage
+    dup
+    bury 10
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    bury 8
+    dup
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    dup
+    bury 4
+    !
+    swap
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 24 8
+    uncover 2
+    b|
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    !
+    uncover 2
+    &&
+    bury 4
+    intc_2 // 1
+    ==
+    bz main_else_body@45
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    intc_1 // 0
+    itob
+    b==
+    bury 5
+
+main_after_if_else@46:
+    dig 2
+    bnz main_after_if_else@49
+    dig 4
+    bnz main_after_if_else@49
+    b main_if_body@48
+
+main_after_if_else@49:
+    dig 8
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // 0x0000000000000001
+    replace2 24
+    callsub __storage_write
+    dup
+    bnz main_after_if_else@51
+    dig 8
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x01
+    replace2 23
+    callsub __storage_write
+
+main_after_if_else@51:
+    callsub _checkInitializing
+    callsub _checkInitializing
+    callsub _checkInitializing
+    bytec_1 // "isHuman"
+    intc_2 // 1
+    app_global_put
+    callsub _checkInitializing
+    bytec_2 // "mother"
+    dig 8
+    app_global_put
+    dup
+    bnz main_after_if_else@53
+    dig 8
+    dup
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // 0x00
+    replace2 23
+    callsub __storage_write
+    bytec 6 // 0x80d71e940000000000000001
+    log
+    b main_after_if_else@53
+
+main_else_body@45:
+    intc_1 // 0
+    bury 5
+    b main_after_if_else@46
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    pushbytes 0x04
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    bytec 9 // "child"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@2:
+    frame_dig -1
+    pushbytes 0x03
+    b==
+    bz __storage_read_else_body@4
+    intc_0 // 32
+    bzero
+    bytec 10 // "father"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@4:
+    frame_dig -1
+    pushbytes 0x02
+    b==
+    bz __storage_read_else_body@6
+    intc_0 // 32
+    bzero
+    bytec 11 // "gramps"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@6:
+    frame_dig -1
+    bytec_3 // 0x01
+    b==
+    bz __storage_read_else_body@8
+    intc_0 // 32
+    bzero
+    bytec_2 // "mother"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@8:
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bz __storage_read_else_body@10
+    intc_1 // 0
+    bytec_1 // "isHuman"
+    app_global_get_ex
+    assert // check isHuman exists
+    intc_1 // 0
+    !=
+    itob
+    extract 7 1
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    retsub
+
+__storage_read_else_body@10:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 12 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    pushbytes 0x04
+    b==
+    bz __storage_write_else_body@2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 9 // "child"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@2:
+    frame_dig -2
+    pushbytes 0x03
+    b==
+    bz __storage_write_else_body@4
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 10 // "father"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@4:
+    frame_dig -2
+    pushbytes 0x02
+    b==
+    bz __storage_write_else_body@6
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 11 // "gramps"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@6:
+    frame_dig -2
+    bytec_3 // 0x01
+    b==
+    bz __storage_write_else_body@8
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "mother"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@8:
+    frame_dig -2
+    bytec_0 // 0x
+    b==
+    bz __storage_write_else_body@10
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_1 // "isHuman"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@10:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 12 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    swap
+    box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/MultipleInheritanceInitializableMocks.sol.SampleMother._checkInitializing() -> void:
+_checkInitializing:
+    intc_0 // 32
+    bzero
+    callsub _getInitializableStorage
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 23 1
+    bytec_0 // 0x
+    b!=
+    bnz _checkInitializing_after_if_else@2
+    pushbytes 0xe0afb883 // method "NotInitializing()"
+    log
+    err // NotInitializing
+
+_checkInitializing_after_if_else@2:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/uniswap-v4/lib/openzeppelin-contracts/contracts/mocks/MultipleInheritanceInitializableMocks.sol.SampleMother._getInitializableStorage() -> bytes:
+_getInitializableStorage:
+    load 0
+    store 0
+    load 0
+    store 0
+    pushbytes 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
+    retsub

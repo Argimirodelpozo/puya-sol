@@ -1,0 +1,927 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x 0x151f7c75 "_totalFunds" 0x0000000000000000000000000000000000000000000000000000000000000000 "_proposalExecuted" "_proposalApprovals" "_requiredApprovals" "_admin" "_proposalAmount" "_proposalCreator" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_proposalCount" "__ctor_pending" "_proposalRecipient" 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001250726f706f73616c206e6f7420666f756e640000000000000000000000000000 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010416c726561647920657865637574656400000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012416d6f756e74206d757374206265203e20300000000000000000000000000000
+    intc_1 // 0
+    dupn 7
+    bytec_0 // ""
+    dupn 5
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 12 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x0a4fb6b3 0x399fe6cd 0x399daf52 0xd790e2f5 0x30dd6f4e 0x74aea993 0x4fc470e7 0xf30a8b52 0xe11987e1 0x0653f5ae 0xe5f7675f 0x80e070d2 0x7c46337b // method "__postInit()void", method "admin()address", method "proposalCount()uint256", method "requiredApprovals()uint256", method "totalFunds()uint256", method "setRequiredApprovals(uint256)void", method "deposit(uint256)void", method "createProposal(address,uint256)uint256", method "approve(uint256)void", method "executeProposal(uint256)bool", method "getProposalAmount(uint256)uint256", method "getProposalRecipient(uint256)address", method "getProposalApprovals(uint256)uint256", method "isProposalExecuted(uint256)bool"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_admin_route@6 main_proposalCount_route@7 main_requiredApprovals_route@8 main_totalFunds_route@9 main_setRequiredApprovals_route@10 main_deposit_route@11 main_createProposal_route@12 main_approve_route@13 main_executeProposal_route@14 main_getProposalAmount_route@15 main_getProposalRecipient_route@16 main_getProposalApprovals_route@17 main_isProposalExecuted_route@18
+    err
+
+main_isProposalExecuted_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_proposalExecuted"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_getProposalApprovals_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_proposalApprovals"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30
+
+main_getProposalRecipient_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 13 // "_proposalRecipient"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@34:
+    intc_1 // 0
+    b main_ternary_merge@35
+
+main_getProposalAmount_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "_proposalAmount"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@39:
+    intc_1 // 0
+    b main_ternary_merge@40
+
+main_executeProposal_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 8
+    bytec 9 // "_proposalCreator"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    dup
+    bury 6
+    bnz main_after_if_else@47
+    bytec 14 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001250726f706f73616c206e6f7420666f756e640000000000000000000000000000
+    log
+
+main_after_if_else@47:
+    dig 4
+    assert // Proposal not found
+    dig 6
+    bytec 4 // "_proposalExecuted"
+    concat
+    sha256
+    dup
+    bury 10
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    !
+    bury 5
+    bz main_after_if_else@49
+    bytec 15 // 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010416c726561647920657865637574656400000000000000000000000000000000
+    log
+
+main_after_if_else@49:
+    dig 3
+    assert // Already executed
+    dig 6
+    bytec 5 // "_proposalApprovals"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec 6 // "_requiredApprovals"
+    app_global_get_ex
+    assert // check _requiredApprovals exists
+    b>=
+    dup
+    bury 4
+    bnz main_after_if_else@51
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000144e6f7420656e6f75676820617070726f76616c73000000000000000000000000
+    log
+
+main_after_if_else@51:
+    dig 2
+    assert // Not enough approvals
+    dig 6
+    bytec 8 // "_proposalAmount"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 12
+    intc_1 // 0
+    bytec_2 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    b<=
+    dup
+    bury 3
+    bnz main_after_if_else@53
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012496e73756666696369656e742066756e64730000000000000000000000000000
+    log
+
+main_after_if_else@53:
+    dig 1
+    assert // Insufficient funds
+    intc_2 // 1
+    itob
+    dig 9
+    swap
+    box_put
+    intc_1 // 0
+    bytec_2 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    dup
+    dig 12
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec 16 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec 16 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "_totalFunds"
+    swap
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@44:
+    intc_1 // 0
+    b main_ternary_merge@45
+
+main_approve_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@57
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@58:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 8
+    bytec 9 // "_proposalCreator"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    dup
+    bury 6
+    bnz main_after_if_else@60
+    bytec 14 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001250726f706f73616c206e6f7420666f756e640000000000000000000000000000
+    log
+
+main_after_if_else@60:
+    dig 4
+    assert // Proposal not found
+    dig 6
+    bytec 4 // "_proposalExecuted"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    !
+    bury 5
+    bz main_after_if_else@62
+    bytec 15 // 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010416c726561647920657865637574656400000000000000000000000000000000
+    log
+
+main_after_if_else@62:
+    dig 3
+    assert // Already executed
+    dig 6
+    bytec 5 // "_proposalApprovals"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@57:
+    intc_1 // 0
+    b main_ternary_merge@58
+
+main_createProposal_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@66
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@67:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dup
+    bury 9
+    dig 14
+    b<
+    dup
+    bury 7
+    bnz main_after_if_else@69
+    bytec 17 // 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012416d6f756e74206d757374206265203e20300000000000000000000000000000
+    log
+
+main_after_if_else@69:
+    dig 5
+    assert // Amount must be > 0
+    intc_1 // 0
+    bytec 11 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 11 // "_proposalCount"
+    dig 1
+    app_global_put
+    txn Sender
+    intc_0 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec 9 // "_proposalCreator"
+    concat
+    sha256
+    uncover 3
+    box_put
+    dup
+    bytec 8 // "_proposalAmount"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 17
+    box_put
+    dup
+    bytec 13 // "_proposalRecipient"
+    concat
+    sha256
+    dig 13
+    box_put
+    dup
+    bytec 5 // "_proposalApprovals"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 11
+    box_put
+    bytec 4 // "_proposalExecuted"
+    concat
+    sha256
+    intc_1 // 0
+    itob
+    box_put
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@66:
+    intc_1 // 0
+    b main_ternary_merge@67
+
+main_deposit_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 15
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@73
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@74:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dig 14
+    b<
+    dup
+    bury 7
+    bnz main_after_if_else@76
+    bytec 17 // 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012416d6f756e74206d757374206265203e20300000000000000000000000000000
+    log
+
+main_after_if_else@76:
+    dig 5
+    assert // Amount must be > 0
+    intc_1 // 0
+    bytec_2 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    dig 14
+    b+
+    dup
+    bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "_totalFunds"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_ternary_false@73:
+    intc_1 // 0
+    b main_ternary_merge@74
+
+main_setRequiredApprovals_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@80
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@81:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    bnz main_bool_true@84
+    global CallerApplicationID
+    bz main_bool_false@85
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    bz main_bool_false@85
+
+main_bool_true@84:
+    intc_2 // 1
+    bury 1
+
+main_bool_merge@86:
+    dup
+    bnz main_after_if_else@88
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f742061646d696e0000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@88:
+    dup
+    assert // Not admin
+    intc_1 // 0
+    itob
+    dig 13
+    b<
+    dup
+    bury 7
+    bnz main_after_if_else@90
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b4d757374206265203e2030000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@90:
+    dig 5
+    assert // Must be > 0
+    bytec 6 // "_requiredApprovals"
+    dig 13
+    app_global_put
+    intc_2 // 1
+    return
+
+main_bool_false@85:
+    intc_1 // 0
+    bury 1
+    b main_bool_merge@86
+
+main_ternary_false@80:
+    intc_1 // 0
+    b main_ternary_merge@81
+
+main_totalFunds_route@9:
+    txn GroupIndex
+    bz main_ternary_false@94
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@95:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_2 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@94:
+    intc_1 // 0
+    b main_ternary_merge@95
+
+main_requiredApprovals_route@8:
+    txn GroupIndex
+    bz main_ternary_false@99
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@100:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 6 // "_requiredApprovals"
+    app_global_get_ex
+    assert // check _requiredApprovals exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@99:
+    intc_1 // 0
+    b main_ternary_merge@100
+
+main_proposalCount_route@7:
+    txn GroupIndex
+    bz main_ternary_false@104
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@105:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 11 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@104:
+    intc_1 // 0
+    b main_ternary_merge@105
+
+main_admin_route@6:
+    txn GroupIndex
+    bz main_ternary_false@109
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@110:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@109:
+    intc_1 // 0
+    b main_ternary_merge@110
+
+main___postInit_route@5:
+    bytec 12 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 12 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 9 // "_proposalCreator"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "_proposalAmount"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 13 // "_proposalRecipient"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_proposalApprovals"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 4 // "_proposalExecuted"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_admin"
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 11 // "_proposalCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_requiredApprovals"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_totalFunds"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_admin"
+    txn Sender
+    app_global_put
+    intc_3 // 2
+    itob
+    bytec 6 // "_requiredApprovals"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

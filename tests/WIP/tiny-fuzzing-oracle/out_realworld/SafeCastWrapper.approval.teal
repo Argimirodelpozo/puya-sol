@@ -1,0 +1,543 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 8 255 4294967295 65535
+    bytecblock 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x0100000000000000000000000000000000
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x22642d71 0x8cce50bb 0x3bc99ff0 0x9e7dd1bc 0xd82f3eb6 0x1077d618 0xa95a4ac6 0xa63e7ffd // method "toUint8(uint256)uint64", method "toUint16(uint256)uint64", method "toUint32(uint256)uint64", method "toUint64(uint256)uint64", method "toUint128(uint256)uint128", method "toInt8(uint256)uint256", method "toInt256(uint256)uint256", method "toUint256(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_toUint8_route@5 main_toUint16_route@6 main_toUint32_route@7 main_toUint64_route@8 main_toUint128_route@9 main_toInt8_route@10 main_toInt256_route@11 main_toUint256_route@12
+    err
+
+main_toUint256_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toUint256
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main_toInt256_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toInt256
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_2 // 0
+    b main_ternary_merge@24
+
+main_toInt8_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toInt8
+    itob
+    pushbytes 0xff
+    b&
+    dup
+    pushbytes 0x80
+    b>=
+    bz main_ternary_false@31
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+main_ternary_merge@32:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    b main_ternary_merge@32
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_toUint128_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    pushint 16
+    bzero
+    dig 1
+    callsub SafeCastLib.toUint128
+    dig 1
+    swap
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@36:
+    intc_2 // 0
+    b main_ternary_merge@37
+
+main_toUint64_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toUint64
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@41:
+    intc_2 // 0
+    b main_ternary_merge@42
+
+main_toUint32_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toUint32
+    intc 5 // 4294967295
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@46:
+    intc_2 // 0
+    b main_ternary_merge@47
+
+main_toUint16_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toUint16
+    intc 6 // 65535
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@51:
+    intc_2 // 0
+    b main_ternary_merge@52
+
+main_toUint8_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    dup
+    callsub SafeCastLib.toUint8
+    intc 4 // 255
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@56:
+    intc_2 // 0
+    b main_ternary_merge@57
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint8(x: bytes) -> uint64:
+SafeCastLib.toUint8:
+    proto 1 1
+    pushint 256
+    itob
+    frame_dig -1
+    b<=
+    bz SafeCastLib.toUint8_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint8_after_if_else@2:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 4 // 255
+    &
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint16(x: bytes) -> uint64:
+SafeCastLib.toUint16:
+    proto 1 1
+    pushint 65536
+    itob
+    frame_dig -1
+    b<=
+    bz SafeCastLib.toUint16_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint16_after_if_else@2:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 6 // 65535
+    &
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint32(x: bytes) -> uint64:
+SafeCastLib.toUint32:
+    proto 1 1
+    pushint 4294967296
+    itob
+    frame_dig -1
+    b<=
+    bz SafeCastLib.toUint32_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint32_after_if_else@2:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 4294967295
+    &
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint64(x: bytes) -> uint64:
+SafeCastLib.toUint64:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b>=
+    bz SafeCastLib.toUint64_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint64_after_if_else@2:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint128(x: bytes) -> bytes:
+SafeCastLib.toUint128:
+    proto 1 1
+    frame_dig -1
+    bytec_2 // 0x0100000000000000000000000000000000
+    b>=
+    bz SafeCastLib.toUint128_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint128_after_if_else@2:
+    frame_dig -1
+    bytec_2 // 0x0100000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toInt8(1)_0(x: bytes) -> uint64:
+SafeCastLib.toInt8:
+    proto 1 1
+    pushint 128
+    itob
+    frame_dig -1
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_2 // 0
+    itob
+    b==
+    bz SafeCastLib._revertOverflow
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 4 // 255
+    &
+    pushint 256
+    %
+    dup
+    pushint 128
+    >=
+    bz SafeCastLib.toInt8_ternary_false@6
+    pushint 18446744073709551360
+    +
+    retsub
+
+SafeCastLib.toInt8_ternary_false@6:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toInt256(x: bytes) -> bytes:
+SafeCastLib.toInt256:
+    proto 1 1
+    frame_dig -1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz SafeCastLib._revertOverflow
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint256(x: bytes) -> bytes:
+SafeCastLib.toUint256:
+    proto 1 1
+    frame_dig -1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz SafeCastLib._revertOverflow
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib._revertOverflow() -> void:
+SafeCastLib._revertOverflow:
+    load 0
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000035278d12
+    replace2 0
+    store 0
+    err // revert

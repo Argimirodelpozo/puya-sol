@@ -1,0 +1,904 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 512
+    bytecblock "_positions" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_orders" 0x00 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    dupn 9
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xa385066b 0x84a300fa 0x161b840d 0xd87e4a17 0x3b95c1d2 0xb56bef9c 0xd39a8f8c 0x05c023a0 0xdee20300 0xaa25959f 0x20f1c3f9 0xb9de959e // method "__postInit()void", method "setSupply(uint256,uint256)void", method "getSupply(uint256)uint256", method "addSupply(uint256,uint256)void", method "subSupply(uint256,uint256)void", method "updatePosition(uint256,uint256,uint256,uint256)void", method "getPosition(uint256)(uint256,uint256,uint256)", method "updateViaPointer(uint256,uint256)void", method "addCollateralViaPointer(uint256,uint256)void", method "createAndModify(uint256,uint256,uint256)void", method "getOrder(uint256)(uint256,uint256,bool)", method "fillOrder(uint256,uint256)void", method "setBoth(uint256,uint256,uint256)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setSupply_route@6 main_getSupply_route@7 main_addSupply_route@8 main_subSupply_route@9 main_updatePosition_route@10 main_getPosition_route@11 main_updateViaPointer_route@12 main_addCollateralViaPointer_route@13 main_createAndModify_route@14 main_getOrder_route@15 main_fillOrder_route@16 main_setBoth_route@17
+    err
+
+main_setBoth_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    extract 64 32
+    dig 4
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    bytec_2 // "_orders"
+    concat
+    sha256
+    dup
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_3 // 512
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    swap
+    extract 32 32
+    dig 6
+    swap
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@23:
+    intc_2 // 0
+    b main_ternary_merge@24
+
+main_fillOrder_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_orders"
+    concat
+    sha256
+    dup
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_3 // 512
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    swap
+    extract 32 32
+    dig 7
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    concat
+    pushbytes 0x80
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_getOrder_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_orders"
+    concat
+    sha256
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    intc_3 // 512
+    getbit
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    intc_2 // 0
+    getbit
+    cover 2
+    concat
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
+    concat
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@33:
+    intc_2 // 0
+    b main_ternary_merge@34
+
+main_createAndModify_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    dig 3
+    dig 3
+    concat
+    bytec_3 // 0x00
+    concat
+    intc_0 // 32
+    bzero
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_orders"
+    concat
+    sha256
+    dig 1
+    extract 0 32
+    uncover 2
+    extract 32 32
+    concat
+    pushbytes 0x80
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@38:
+    intc_2 // 0
+    b main_ternary_merge@39
+
+main_addCollateralViaPointer_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    dig 1
+    extract 64 32
+    dig 14
+    b+
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 2
+    extract 0 32
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@43:
+    intc_2 // 0
+    b main_ternary_merge@44
+
+main_updateViaPointer_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 64 32
+    swap
+    extract 0 32
+    dig 8
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@48:
+    intc_2 // 0
+    b main_ternary_merge@49
+
+main_getPosition_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@53
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@54:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    extract 64 32
+    cover 2
+    concat
+    swap
+    concat
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@53:
+    intc_2 // 0
+    b main_ternary_merge@54
+
+main_updatePosition_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@58
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@59:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    extract 64 32
+    dig 4
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 64 32
+    swap
+    extract 0 32
+    dig 11
+    concat
+    swap
+    concat
+    dup
+    extract 32 32
+    swap
+    extract 0 32
+    swap
+    concat
+    dig 9
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@58:
+    intc_2 // 0
+    b main_ternary_merge@59
+
+main_subSupply_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dup
+    dig 14
+    dup
+    cover 4
+    b>=
+    assert // underflow
+    dig 1
+    extract 32 32
+    uncover 2
+    extract 64 32
+    uncover 2
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 3
+    b-
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@63:
+    intc_2 // 0
+    b main_ternary_merge@64
+
+main_addSupply_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@68
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@69:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 0 32
+    dig 14
+    b+
+    dup
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@68:
+    intc_2 // 0
+    b main_ternary_merge@69
+
+main_getSupply_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@73
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@74:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@73:
+    intc_2 // 0
+    b main_ternary_merge@74
+
+main_setSupply_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@78
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@79:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "_positions"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    extract 64 32
+    dig 12
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+main_ternary_false@78:
+    intc_2 // 0
+    b main_ternary_merge@79
+
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "_positions"
+    pushint 2
+    box_create
+    pop
+    bytec_2 // "_orders"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return

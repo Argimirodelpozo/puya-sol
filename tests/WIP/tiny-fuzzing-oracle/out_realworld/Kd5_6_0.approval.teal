@@ -1,0 +1,575 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_d5_6.sol.Kd5_6_0.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 100
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "log" "sum" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "log"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "sum"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x75540df1 0xcda975cb 0x4e6a772f 0x2f6d2b38 0xc97b1991 0xa4e6d68b // method "f0(uint256)void", method "f1(uint256)uint512", method "f2(uint256)void", method "f3(uint256)void", method "log()uint256", method "sum()uint256"
+    txna ApplicationArgs 0
+    match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_log_route@9 main_sum_route@10
+    err
+
+main_sum_route@10:
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "sum"
+    app_global_get_ex
+    assert // check sum exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@16:
+    intc_0 // 0
+    b main_ternary_merge@17
+
+main_log_route@9:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_f3_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    intc_3 // 100
+    itob
+    swap
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 13
+    itob
+    swap
+    dig 1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 23
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 7
+    itob
+    dig 4
+    dup
+    cover 3
+    swap
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_2 // "sum"
+    app_global_get_ex
+    assert // check sum exists
+    swap
+    uncover 2
+    b%
+    intc_1 // 1
+    itob
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "sum"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 14
+    itob
+    swap
+    dig 1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 12
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@26:
+    intc_0 // 0
+    b main_ternary_merge@27
+
+main_f2_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    pushint 2
+    itob
+    b%
+    intc_0 // 0
+    itob
+    b==
+    bz main_else_body@47
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    intc_3 // 100
+    itob
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 16
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    swap
+    app_global_put
+    dup
+    callsub f2__body_2
+
+main_after_if_else@48:
+    intc_1 // 1
+    return
+
+main_else_body@47:
+    dup
+    callsub f2__body_2
+    b main_after_if_else@48
+
+main_ternary_false@31:
+    intc_0 // 0
+    b main_ternary_merge@32
+
+main_f1_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    intc_3 // 100
+    itob
+    swap
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 11
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 90
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 9
+    itob
+    dig 3
+    dup
+    cover 4
+    swap
+    b%
+    swap
+    dig 1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 70
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 21
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 7
+    itob
+    uncover 2
+    swap
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    dig 1
+    app_global_put
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@36:
+    intc_0 // 0
+    b main_ternary_merge@37
+
+main_f0_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    intc_3 // 100
+    itob
+    swap
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 11
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 15
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    swap
+    app_global_put
+    dupn 2
+    callsub f0__body_0
+    callsub f0__body_0
+    intc_1 // 1
+    return
+
+main_ternary_false@41:
+    intc_0 // 0
+    b main_ternary_merge@42
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_d5_6.sol.Kd5_6_0.f0__body_0(__arc4_a: bytes) -> void:
+f0__body_0:
+    proto 1 0
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    intc_3 // 100
+    itob
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 20
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 7
+    itob
+    frame_dig -1
+    swap
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_2 // "sum"
+    app_global_get_ex
+    assert // check sum exists
+    pushint 13
+    itob
+    frame_dig -1
+    swap
+    b%
+    intc_1 // 1
+    itob
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "sum"
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_d5_6.sol.Kd5_6_0.f2__body_2(__arc4_a: bytes) -> void:
+f2__body_2:
+    proto 1 0
+    intc_0 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    assert // check log exists
+    intc_3 // 100
+    itob
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 22
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 7
+    itob
+    frame_dig -1
+    swap
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_2 // "sum"
+    app_global_get_ex
+    assert // check sum exists
+    pushint 13
+    itob
+    frame_dig -1
+    swap
+    b%
+    intc_1 // 1
+    itob
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "sum"
+    swap
+    app_global_put
+    retsub

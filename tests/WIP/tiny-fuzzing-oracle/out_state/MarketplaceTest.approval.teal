@@ -1,0 +1,814 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_feePercent" "_itemSeller" "_itemSold" "_itemPrice" "_owner" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_totalFees" "_itemCount" "__ctor_pending" 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c416c726561647920736f6c640000000000000000000000000000000000000000
+    intc_1 // 0
+    dupn 7
+    bytec_1 // ""
+    dupn 5
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 11 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0x08ea7652 0x1a0c8ab8 0x44c1450d 0x1c57a26a 0xc57cc492 0x8f7b8547 0x04c7149c 0x78744862 0x2da14f35 0xfd942b63 0x59d22dd8 // method "__postInit()void", method "owner()address", method "itemCount()uint256", method "feePercent()uint256", method "totalFees()uint256", method "setFeePercent(uint256)void", method "listItem(address,uint256)uint256", method "getItemSeller(uint256)address", method "getItemPrice(uint256)uint256", method "isItemSold(uint256)bool", method "calculateFee(uint256)uint256", method "buyItem(uint256)bool", method "cancelItem(uint256,address)void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_itemCount_route@7 main_feePercent_route@8 main_totalFees_route@9 main_setFeePercent_route@10 main_listItem_route@11 main_getItemSeller_route@12 main_getItemPrice_route@13 main_isItemSold_route@14 main_calculateFee_route@15 main_buyItem_route@16 main_cancelItem_route@17
+    err
+
+main_cancelItem_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 8
+    bytec 4 // "_itemSeller"
+    concat
+    sha256
+    dup
+    bury 10
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 11
+    ==
+    dup
+    bury 6
+    bnz main_after_if_else@26
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a4e6f742073656c6c657200000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@26:
+    dig 4
+    assert // Not seller
+    dig 6
+    bytec 5 // "_itemSold"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    !
+    bury 4
+    bz main_after_if_else@28
+    bytec 12 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c416c726561647920736f6c640000000000000000000000000000000000000000
+    log
+
+main_after_if_else@28:
+    dig 2
+    assert // Already sold
+    intc_1 // 0
+    itob
+    dig 9
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    dig 7
+    bytec 6 // "_itemPrice"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_buyItem_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bury 8
+    bytec 4 // "_itemSeller"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    dup
+    bury 5
+    bnz main_after_if_else@35
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e4974656d206e6f7420666f756e64000000000000000000000000000000000000
+    log
+
+main_after_if_else@35:
+    dig 3
+    assert // Item not found
+    dig 6
+    bytec 5 // "_itemSold"
+    concat
+    sha256
+    dup
+    bury 9
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    !
+    bury 3
+    bz main_after_if_else@37
+    bytec 12 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c416c726561647920736f6c640000000000000000000000000000000000000000
+    log
+
+main_after_if_else@37:
+    dig 1
+    assert // Already sold
+    dig 6
+    bytec 6 // "_itemPrice"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_3 // "_feePercent"
+    app_global_get_ex
+    assert // check _feePercent exists
+    b*
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 10000
+    itob
+    b/
+    intc_1 // 0
+    bytec 9 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    b+
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 9 // "_totalFees"
+    swap
+    app_global_put
+    intc_2 // 1
+    itob
+    dig 8
+    swap
+    box_put
+    pushbytes 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
+
+main_calculateFee_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "_feePercent"
+    app_global_get_ex
+    assert // check _feePercent exists
+    dig 12
+    b*
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 10000
+    itob
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42
+
+main_isItemSold_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_itemSold"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@46:
+    intc_1 // 0
+    b main_ternary_merge@47
+
+main_getItemPrice_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    dig 14
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 6 // "_itemPrice"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@51:
+    intc_1 // 0
+    b main_ternary_merge@52
+
+main_getItemSeller_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 14
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_itemSeller"
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@56:
+    intc_1 // 0
+    b main_ternary_merge@57
+
+main_listItem_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 13
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dig 12
+    b<
+    dup
+    bury 7
+    bnz main_after_if_else@64
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000115072696365206d757374206265203e2030000000000000000000000000000000
+    log
+
+main_after_if_else@64:
+    dig 5
+    assert // Price must be > 0
+    intc_1 // 0
+    bytec 10 // "_itemCount"
+    app_global_get_ex
+    assert // check _itemCount exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 10 // "_itemCount"
+    dig 1
+    app_global_put
+    intc_0 // 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    bytec 4 // "_itemSeller"
+    concat
+    sha256
+    dig 13
+    box_put
+    dup
+    bytec 6 // "_itemPrice"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 15
+    box_put
+    bytec 5 // "_itemSold"
+    concat
+    sha256
+    intc_1 // 0
+    itob
+    box_put
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@61:
+    intc_1 // 0
+    b main_ternary_merge@62
+
+main_setFeePercent_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 15
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@68
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@69:
+    !
+    assert // not payable
+    txn Sender
+    intc_1 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@72
+    global CallerApplicationID
+    bz main_bool_false@73
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_1 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@73
+
+main_bool_true@72:
+    intc_2 // 1
+    bury 1
+
+main_bool_merge@74:
+    dup
+    bnz main_after_if_else@76
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@76:
+    dup
+    assert // Not owner
+    pushint 1000
+    itob
+    dig 14
+    b>=
+    dup
+    bury 7
+    bnz main_after_if_else@78
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c46656520746f6f20686967680000000000000000000000000000000000000000
+    log
+
+main_after_if_else@78:
+    dig 5
+    assert // Fee too high
+    bytec_3 // "_feePercent"
+    dig 14
+    app_global_put
+    intc_2 // 1
+    return
+
+main_bool_false@73:
+    intc_1 // 0
+    bury 1
+    b main_bool_merge@74
+
+main_ternary_false@68:
+    intc_1 // 0
+    b main_ternary_merge@69
+
+main_totalFees_route@9:
+    txn GroupIndex
+    bz main_ternary_false@82
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@83:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 9 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@82:
+    intc_1 // 0
+    b main_ternary_merge@83
+
+main_feePercent_route@8:
+    txn GroupIndex
+    bz main_ternary_false@87
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@88:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "_feePercent"
+    app_global_get_ex
+    assert // check _feePercent exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@87:
+    intc_1 // 0
+    b main_ternary_merge@88
+
+main_itemCount_route@7:
+    txn GroupIndex
+    bz main_ternary_false@92
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@93:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 10 // "_itemCount"
+    app_global_get_ex
+    assert // check _itemCount exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@92:
+    intc_1 // 0
+    b main_ternary_merge@93
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@97
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@98:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@97:
+    intc_1 // 0
+    b main_ternary_merge@98
+
+main___postInit_route@5:
+    bytec 11 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 11 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 4 // "_itemSeller"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "_itemPrice"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "_itemSold"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_owner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 10 // "_itemCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_feePercent"
+    bytec_1 // 0x
+    app_global_put
+    bytec 9 // "_totalFees"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 250
+    itob
+    bytec_3 // "_feePercent"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

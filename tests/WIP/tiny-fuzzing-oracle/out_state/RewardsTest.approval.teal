@@ -1,0 +1,949 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 2
+    bytecblock 0x 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_owner" "_points" "_totalPointsIssued" "_redemptionRate" "_totalEarned" "_pointsPerAction" "_totalRedeemed" "__ctor_pending" "_totalSpent" 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dupn 7
+    bytec_0 // ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 10 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb1bbb0a8 0xdddccdd2 0x7a90b62f 0xccdf276e 0x35e9bfb4 0x95d7b5f8 0x5651a39c 0x27d22143 0x534917d9 0x13e2d187 0x9829bc88 0x129a75c8 0xfbbbe785 0xabd0ae4b // method "__postInit()void", method "owner()address", method "pointsPerAction()uint256", method "redemptionRate()uint256", method "totalPointsIssued()uint256", method "totalRedeemed()uint256", method "pointsOf(address)uint256", method "totalEarnedOf(address)uint256", method "totalSpentOf(address)uint256", method "setPointsPerAction(uint256)void", method "earnPoints(address,uint256)void", method "awardBonus(address,uint256)void", method "redeem(address,uint256)uint256", method "getLevel(address)uint256", method "redeemableUnits(address)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_owner_route@6 main_pointsPerAction_route@7 main_redemptionRate_route@8 main_totalPointsIssued_route@9 main_totalRedeemed_route@10 main_pointsOf_route@11 main_totalEarnedOf_route@12 main_totalSpentOf_route@13 main_setPointsPerAction_route@14 main_earnPoints_route@15 main_awardBonus_route@16 main_redeem_route@17 main_getLevel_route@18 main_redeemableUnits_route@19
+    err
+
+main_redeemableUnits_route@19:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    dig 4
+    bytec 4 // "_points"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec 6 // "_redemptionRate"
+    app_global_get_ex
+    assert // check _redemptionRate exists
+    b/
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_0 // 0
+    b main_ternary_merge@26
+
+main_getLevel_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    dig 4
+    bytec 7 // "_totalEarned"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 4
+    pushint 10000
+    itob
+    b>=
+    bz main_after_if_else@33
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@42:
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@33:
+    pushint 5000
+    itob
+    dig 3
+    b<=
+    bz main_after_if_else@35
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@42
+
+main_after_if_else@35:
+    pushint 1000
+    itob
+    dig 3
+    b<=
+    bz main_after_if_else@37
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@42
+
+main_after_if_else@37:
+    pushint 100
+    itob
+    dig 3
+    b<=
+    bz main_after_if_else@39
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@42
+
+main_after_if_else@39:
+    intc_0 // 0
+    itob
+    dig 3
+    b<
+    bz main_after_if_else@41
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@42
+
+main_after_if_else@41:
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@42
+
+main_ternary_false@30:
+    intc_0 // 0
+    b main_ternary_merge@31
+
+main_redeem_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 8
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 6 // "_redemptionRate"
+    app_global_get_ex
+    assert // check _redemptionRate exists
+    dig 7
+    b*
+    dup
+    bury 7
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 5
+    bytec 4 // "_points"
+    concat
+    sha256
+    dup
+    bury 6
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b<=
+    dup
+    bury 3
+    bnz main_after_if_else@49
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013496e73756666696369656e7420706f696e747300000000000000000000000000
+    log
+
+main_after_if_else@49:
+    dig 1
+    assert // Insufficient points
+    dig 3
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 8
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec 13 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec 13 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    dig 5
+    bytec 11 // "_totalSpent"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 9 // "_totalRedeemed"
+    app_global_get_ex
+    assert // check _totalRedeemed exists
+    dig 8
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 9 // "_totalRedeemed"
+    swap
+    app_global_put
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@46:
+    intc_0 // 0
+    b main_ternary_merge@47
+
+main_awardBonus_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 9
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@53
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@54:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@57
+    global CallerApplicationID
+    bz main_bool_false@58
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@58
+
+main_bool_true@57:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@59:
+    dup
+    bnz main_after_if_else@61
+    bytec 14 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@61:
+    dup
+    assert // Not owner
+    dig 4
+    dup
+    bytec 4 // "_points"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 10
+    dup
+    cover 4
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 7 // "_totalEarned"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 5 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_totalPointsIssued"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@58:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@59
+
+main_ternary_false@53:
+    intc_0 // 0
+    b main_ternary_merge@54
+
+main_earnPoints_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@65
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@66:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 8 // "_pointsPerAction"
+    app_global_get_ex
+    assert // check _pointsPerAction exists
+    dig 10
+    b*
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 5
+    dup
+    cover 2
+    bytec 4 // "_points"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    swap
+    bytec 7 // "_totalEarned"
+    concat
+    sha256
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 5 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // "_totalPointsIssued"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@65:
+    intc_0 // 0
+    b main_ternary_merge@66
+
+main_setPointsPerAction_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@71:
+    !
+    assert // not payable
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bnz main_bool_true@74
+    global CallerApplicationID
+    bz main_bool_false@75
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    intc_0 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    bz main_bool_false@75
+
+main_bool_true@74:
+    intc_1 // 1
+    bury 1
+
+main_bool_merge@76:
+    dup
+    bnz main_after_if_else@78
+    bytec 14 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000094e6f74206f776e65720000000000000000000000000000000000000000000000
+    log
+
+main_after_if_else@78:
+    dup
+    assert // Not owner
+    bytec 8 // "_pointsPerAction"
+    dig 9
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@75:
+    intc_0 // 0
+    bury 1
+    b main_bool_merge@76
+
+main_ternary_false@70:
+    intc_0 // 0
+    b main_ternary_merge@71
+
+main_totalSpentOf_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@82
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@83:
+    !
+    assert // not payable
+    dig 4
+    bytec 11 // "_totalSpent"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@82:
+    intc_0 // 0
+    b main_ternary_merge@83
+
+main_totalEarnedOf_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@87
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@88:
+    !
+    assert // not payable
+    dig 4
+    bytec 7 // "_totalEarned"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@87:
+    intc_0 // 0
+    b main_ternary_merge@88
+
+main_pointsOf_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@92
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@93:
+    !
+    assert // not payable
+    dig 4
+    bytec 4 // "_points"
+    concat
+    sha256
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@92:
+    intc_0 // 0
+    b main_ternary_merge@93
+
+main_totalRedeemed_route@10:
+    txn GroupIndex
+    bz main_ternary_false@97
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@98:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 9 // "_totalRedeemed"
+    app_global_get_ex
+    assert // check _totalRedeemed exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@97:
+    intc_0 // 0
+    b main_ternary_merge@98
+
+main_totalPointsIssued_route@9:
+    txn GroupIndex
+    bz main_ternary_false@102
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@103:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 5 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@102:
+    intc_0 // 0
+    b main_ternary_merge@103
+
+main_redemptionRate_route@8:
+    txn GroupIndex
+    bz main_ternary_false@107
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@108:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 6 // "_redemptionRate"
+    app_global_get_ex
+    assert // check _redemptionRate exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@107:
+    intc_0 // 0
+    b main_ternary_merge@108
+
+main_pointsPerAction_route@7:
+    txn GroupIndex
+    bz main_ternary_false@112
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@113:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec 8 // "_pointsPerAction"
+    app_global_get_ex
+    assert // check _pointsPerAction exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@112:
+    intc_0 // 0
+    b main_ternary_merge@113
+
+main_owner_route@6:
+    txn GroupIndex
+    bz main_ternary_false@117
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@118:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@117:
+    intc_0 // 0
+    b main_ternary_merge@118
+
+main___postInit_route@5:
+    bytec 10 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 10 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // "_points"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "_totalEarned"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 11 // "_totalSpent"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "_owner"
+    bytec 12 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 8 // "_pointsPerAction"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_redemptionRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_totalPointsIssued"
+    bytec_0 // 0x
+    app_global_put
+    bytec 9 // "_totalRedeemed"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 10
+    itob
+    bytec 8 // "_pointsPerAction"
+    swap
+    app_global_put
+    pushint 100
+    itob
+    bytec 6 // "_redemptionRate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

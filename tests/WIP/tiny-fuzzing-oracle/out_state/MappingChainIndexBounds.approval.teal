@@ -1,0 +1,735 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/mcib.sol.MappingChainIndexBounds.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 8
+    bytecblock "aom" "sarr" 0x 0x151f7c75 "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 "fixedAom" 0xb37e03b380875881c461715820f761456bc1f7933cf44d7b024a9a4a5e3c719b 0x0da4e7dc21908c3217b5b50e602b2554518cafd638bea48a75e6016eeb4c8a42 0x26b1d34616555406b976633d757235334e78a8e16d409b6b9ed114eff6391b49
+    intc_1 // 0
+    dupn 5
+    bytec_2 // ""
+    dupn 3
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x100b7c32 0x2c785a0f 0x22d054a7 0x5214f1ac 0x752a9cc0 0xf1eb69d2 // method "__postInit()void", method "seed()void", method "readAom(uint256,uint256)uint256", method "writeAom(uint256,uint256,uint256)void", method "readFixed(uint256,uint256)uint256", method "readSarrM(uint256,uint256)uint256", method "readLast(uint256)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_seed_route@6 main_readAom_route@7 main_writeAom_route@8 main_readFixed_route@9 main_readSarrM_route@10 main_readLast_route@11
+    err
+
+main_readLast_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    bytec_0 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@20
+    bytec_0 // "aom"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@21:
+    itob
+    intc_2 // 1
+    itob
+    dup2
+    b>=
+    assert // underflow
+    swap
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 8
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@23
+    bytec_0 // "aom"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@24:
+    itob
+    dig 7
+    dup
+    uncover 2
+    b<
+    assert // array index out of bounds
+    intc_0 // 32
+    bzero
+    dup
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    bytec_0 // "aom"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+main_readSarrM_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    dig 10
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bury 4
+    bytec_1 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@31
+    bytec_1 // "sarr"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@32:
+    dig 4
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    intc_0 // 32
+    bzero
+    dup
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    itob
+    bytec_1 // "sarr"
+    swap
+    concat
+    pushbytes "m"
+    concat
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_readFixed_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    dig 10
+    dup
+    uncover 2
+    b<
+    assert // array index out of bounds
+    intc_0 // 32
+    bzero
+    dup
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    bytec 6 // "fixedAom"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main_writeAom_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 9
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    bytec_0 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@44
+    bytec_0 // "aom"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@45:
+    itob
+    dig 10
+    dup
+    uncover 2
+    b<
+    assert // array index out of bounds
+    intc_0 // 32
+    bzero
+    dig 10
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    bytec_0 // "aom"
+    concat
+    sha256
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 8
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@44:
+    intc_1 // 0
+    b main_ternary_merge@45
+
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42
+
+main_readAom_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    bytec_0 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@52
+    bytec_0 // "aom"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@53:
+    itob
+    dig 10
+    dup
+    uncover 2
+    b<
+    assert // array index out of bounds
+    intc_0 // 32
+    bzero
+    dup
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    bytec_0 // "aom"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@52:
+    intc_1 // 0
+    b main_ternary_merge@53
+
+main_ternary_false@49:
+    intc_1 // 0
+    b main_ternary_merge@50
+
+main_seed_route@6:
+    txn GroupIndex
+    bz main_ternary_false@57
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@58:
+    !
+    assert // not payable
+    bytec_0 // "aom"
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    len
+    bz main_ternary_false@60
+    bytec_0 // "aom"
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@61:
+    intc_2 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "aom"
+    swap
+    box_put
+    bytec_0 // "aom"
+    box_len
+    bury 1
+    bz main_ternary_false@63
+    bytec_0 // "aom"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@64:
+    assert // array index out of bounds
+    pushint 11
+    itob
+    bytec 7 // 0xb37e03b380875881c461715820f761456bc1f7933cf44d7b024a9a4a5e3c719b
+    box_del
+    pop
+    bytec 7 // 0xb37e03b380875881c461715820f761456bc1f7933cf44d7b024a9a4a5e3c719b
+    swap
+    box_put
+    pushint 22
+    itob
+    bytec 8 // 0x0da4e7dc21908c3217b5b50e602b2554518cafd638bea48a75e6016eeb4c8a42
+    box_del
+    pop
+    bytec 8 // 0x0da4e7dc21908c3217b5b50e602b2554518cafd638bea48a75e6016eeb4c8a42
+    swap
+    box_put
+    bytec_1 // "sarr"
+    box_get
+    assert // box exists
+    dup
+    intc_1 // 0
+    extract_uint16
+    dup
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
+    bury 7
+    swap
+    extract 2 0
+    bury 7
+    pushint 2
+    *
+    bury 3
+    intc_1 // 0
+    bury 1
+
+main_for_header@69:
+    dup
+    dig 3
+    <
+    bz main_after_for@71
+    dig 5
+    dig 1
+    dup
+    cover 2
+    extract_uint16
+    pushint 2
+    +
+    itob
+    extract 6 0
+    dig 6
+    swap
+    concat
+    bury 6
+    pushint 2
+    +
+    bury 1
+    b main_for_header@69
+
+main_after_for@71:
+    dig 5
+    len
+    bury 2
+    intc_1 // 0
+    bury 1
+
+main_for_header@72:
+    dup
+    pushint 2
+    <
+    bz main_after_for@74
+    pushbytes 0x0002002200000000000000000000000000000000000000000000000000000000000000000000
+    dig 1
+    dup
+    cover 2
+    extract_uint16
+    dig 3
+    +
+    itob
+    extract 6 0
+    dig 6
+    swap
+    concat
+    bury 6
+    pushint 2
+    +
+    bury 1
+    b main_for_header@72
+
+main_after_for@74:
+    dig 5
+    dig 3
+    dig 3
+    substring3
+    dig 5
+    swap
+    concat
+    pushbytes 0x002200000000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bytec_1 // "sarr"
+    box_del
+    pop
+    bytec_1 // "sarr"
+    swap
+    box_put
+    bytec_1 // "sarr"
+    box_len
+    bury 1
+    bz main_ternary_false@66
+    bytec_1 // "sarr"
+    box_get
+    pop
+    intc_1 // 0
+    extract_uint16
+
+main_ternary_merge@67:
+    assert // array index out of bounds
+    pushint 33
+    itob
+    bytec 9 // 0x26b1d34616555406b976633d757235334e78a8e16d409b6b9ed114eff6391b49
+    box_del
+    pop
+    bytec 9 // 0x26b1d34616555406b976633d757235334e78a8e16d409b6b9ed114eff6391b49
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@66:
+    intc_1 // 0
+    b main_ternary_merge@67
+
+main_ternary_false@63:
+    intc_1 // 0
+    b main_ternary_merge@64
+
+main_ternary_false@60:
+    intc_1 // 0
+    b main_ternary_merge@61
+
+main_ternary_false@57:
+    intc_1 // 0
+    b main_ternary_merge@58
+
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "aom"
+    pushint 2
+    box_create
+    pop
+    bytec_1 // "sarr"
+    pushint 2
+    box_create
+    pop
+    bytec 6 // "fixedAom"
+    pushbytes 0x00060008000a000000000000
+    app_global_put
+    intc_2 // 1
+    return

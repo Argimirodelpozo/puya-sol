@@ -1,0 +1,890 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.StructStorageRefLocal.approval_program() -> uint64:
+main:
+    intcblock 32 10 1 0
+    bytecblock 0x80000000000000000000 0xffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000 0x000000000000000000000000000000000000000000160000 "_m" "__ctor_pending" 0x0100000000000000000000 0x151f7c75 0x0016 "inner"
+    intc_3 // 0
+    dupn 14
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1cfd8a19 0x3623f161 0x3f0e04b3 0xa0c1207b // method "__postInit()void", method "bumpDirect(uint80,uint80,uint80)void", method "getDirect(uint80,uint80)(uint256,uint256,uint256)", method "bumpLocal(uint80,uint80,uint80)void", method "getLocal(uint80,uint80)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_bumpDirect_route@6 main_getDirect_route@7 main_bumpLocal_route@8 main_getLocal_route@9
+    err
+
+main_getLocal_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    dig 14
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@18
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 3
+
+main_ternary_merge@19:
+    dig 13
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@21
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 2
+
+main_ternary_merge@22:
+    dig 2
+    callsub _getS
+    dig 2
+    callsub L.get
+    bury 11
+    bury 11
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@24
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@25:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dup
+    bury 6
+    b|
+    bury 6
+    dig 9
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@27
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@28:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    bury 5
+    dig 8
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@30
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@31:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    dig 6
+    dig 6
+    concat
+    swap
+    concat
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@30:
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    b main_ternary_merge@28
+
+main_ternary_false@24:
+    b main_ternary_merge@25
+
+main_ternary_false@21:
+    bury 2
+    b main_ternary_merge@22
+
+main_ternary_false@18:
+    bury 3
+    b main_ternary_merge@19
+
+main_ternary_false@15:
+    intc_3 // 0
+    b main_ternary_merge@16
+
+main_bumpLocal_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txna ApplicationArgs 3
+    dup
+    bury 14
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    dig 14
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@38
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 3
+
+main_ternary_merge@39:
+    dig 13
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@41
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 2
+
+main_ternary_merge@42:
+    dig 12
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@44
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@45:
+    dig 3
+    callsub _getS
+    dup
+    callsub L.checkInit
+    dig 3
+    uncover 2
+    callsub L.bump
+    intc_2 // 1
+    return
+
+main_ternary_false@44:
+    b main_ternary_merge@45
+
+main_ternary_false@41:
+    bury 2
+    b main_ternary_merge@42
+
+main_ternary_false@38:
+    bury 3
+    b main_ternary_merge@39
+
+main_ternary_false@35:
+    intc_3 // 0
+    b main_ternary_merge@36
+
+main_getDirect_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    dig 14
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@52
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 3
+
+main_ternary_merge@53:
+    dig 13
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@55
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 2
+
+main_ternary_merge@56:
+    intc_0 // 32
+    bzero
+    dup
+    bury 2
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_m"
+    concat
+    sha256
+    dig 2
+    callsub L.get
+    bury 13
+    bury 13
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@58
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@59:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    bury 8
+    dig 11
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@61
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@62:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    bury 7
+    dig 10
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@64
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@65:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    dig 8
+    dig 8
+    concat
+    swap
+    concat
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@64:
+    b main_ternary_merge@65
+
+main_ternary_false@61:
+    b main_ternary_merge@62
+
+main_ternary_false@58:
+    b main_ternary_merge@59
+
+main_ternary_false@55:
+    bury 2
+    b main_ternary_merge@56
+
+main_ternary_false@52:
+    bury 3
+    b main_ternary_merge@53
+
+main_ternary_false@49:
+    intc_3 // 0
+    b main_ternary_merge@50
+
+main_bumpDirect_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 16
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txna ApplicationArgs 2
+    dup
+    bury 15
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txna ApplicationArgs 3
+    dup
+    bury 14
+    len
+    intc_1 // 10
+    ==
+    assert // invalid number of bytes for arc4.uint80
+    txn GroupIndex
+    bz main_ternary_false@69
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@70:
+    !
+    assert // not payable
+    dig 14
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@72
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 3
+
+main_ternary_merge@73:
+    dig 13
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@75
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    bury 2
+
+main_ternary_merge@76:
+    dig 12
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz main_ternary_false@78
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+main_ternary_merge@79:
+    intc_0 // 32
+    bzero
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_m"
+    concat
+    sha256
+    dig 3
+    uncover 2
+    callsub L.bump
+    intc_2 // 1
+    return
+
+main_ternary_false@78:
+    b main_ternary_merge@79
+
+main_ternary_false@75:
+    bury 2
+    b main_ternary_merge@76
+
+main_ternary_false@72:
+    bury 3
+    b main_ternary_merge@73
+
+main_ternary_false@69:
+    intc_3 // 0
+    b main_ternary_merge@70
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec 4 // "_m"
+    pushint 2
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.L.bump(self: bytes, k: bytes, v: bytes) -> void:
+L.bump:
+    proto 3 0
+    intc_3 // 0
+    dup
+    pushbytes ""
+    frame_dig -3
+    box_get
+    bytec_3 // 0x000000000000000000000000000000000000000000160000
+    cover 2
+    select
+    extract 0 10
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz L.bump_ternary_false@2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+L.bump_ternary_merge@3:
+    bytec 6 // 0x0100000000000000000000
+    b%
+    dup
+    frame_bury 1
+    bytec_0 // 0x80000000000000000000
+    b<
+    dup
+    !
+    frame_bury 2
+    bz L.bump_bool_true@5
+    frame_dig 1
+    pushbytes 0x01
+    b+
+    bytec 6 // 0x0100000000000000000000
+    b%
+    bytec_0 // 0x80000000000000000000
+    b<
+    !
+    frame_dig 2
+    ==
+    bz L.bump_bool_false@6
+
+L.bump_bool_true@5:
+    intc_2 // 1
+
+L.bump_bool_merge@7:
+    assert // signed arithmetic overflow
+    intc_1 // 10
+    bzero
+    frame_bury 0
+    frame_dig 1
+    pushbytes 0x01
+    b+
+    bytec 6 // 0x0100000000000000000000
+    b%
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz L.bump_ternary_false@9
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+L.bump_ternary_merge@10:
+    frame_dig 0
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 10
+    -
+    intc_1 // 10
+    extract3
+    dup
+    len
+    intc_1 // 10
+    <=
+    assert // overflow
+    dig 1
+    b|
+    frame_dig -3
+    box_get
+    bytec_3 // 0x000000000000000000000000000000000000000000160000
+    cover 2
+    select
+    dup
+    extract 10 10
+    dig 1
+    pushint 20
+    extract_uint16
+    dig 2
+    len
+    uncover 3
+    cover 2
+    substring3
+    extract 2 0
+    cover 2
+    concat
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    swap
+    bytec 8 // 0x0016
+    concat
+    swap
+    concat
+    frame_dig -3
+    box_del
+    pop
+    frame_dig -3
+    dig 1
+    box_put
+    dup
+    extract 0 10
+    dig 2
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_1 // 10
+    -
+    intc_1 // 10
+    extract3
+    dup
+    len
+    intc_1 // 10
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    dig 2
+    pushint 20
+    extract_uint16
+    dig 3
+    len
+    uncover 4
+    cover 2
+    substring3
+    extract 2 0
+    cover 2
+    concat
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    swap
+    bytec 8 // 0x0016
+    concat
+    swap
+    concat
+    frame_dig -3
+    box_del
+    pop
+    frame_dig -3
+    swap
+    box_put
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -3
+    bytec 9 // "inner"
+    concat
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    retsub
+
+L.bump_ternary_false@9:
+    b L.bump_ternary_merge@10
+
+L.bump_bool_false@6:
+    intc_3 // 0
+    b L.bump_bool_merge@7
+
+L.bump_ternary_false@2:
+    b L.bump_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.L.get(self: bytes, k: bytes) -> bytes, bytes, bytes:
+L.get:
+    proto 2 3
+    intc_3 // 0
+    frame_dig -2
+    box_get
+    bytec_3 // 0x000000000000000000000000000000000000000000160000
+    cover 2
+    select
+    extract 0 10
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz L.get_ternary_false@2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+    frame_bury 0
+
+L.get_ternary_merge@3:
+    frame_dig -2
+    box_get
+    bytec_3 // 0x000000000000000000000000000000000000000000160000
+    cover 2
+    select
+    extract 10 10
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz L.get_ternary_false@5
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+L.get_ternary_merge@6:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    bytec 9 // "inner"
+    concat
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    frame_dig 0
+    cover 2
+    uncover 3
+    retsub
+
+L.get_ternary_false@5:
+    b L.get_ternary_merge@6
+
+L.get_ternary_false@2:
+    frame_bury 0
+    b L.get_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.L.checkInit(self: bytes) -> void:
+L.checkInit:
+    proto 1 0
+    pushbytes ""
+    frame_dig -1
+    box_get
+    bytec_3 // 0x000000000000000000000000000000000000000000160000
+    cover 2
+    select
+    extract 0 10
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz L.checkInit_ternary_false@2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+L.checkInit_ternary_merge@3:
+    bytec_1 // 0xffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000
+    b>=
+    bz L.checkInit_ternary_false@5
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffff00000000000000000000
+    b+
+
+L.checkInit_ternary_merge@6:
+    intc_3 // 0
+    itob
+    b!=
+    dup
+    frame_bury 0
+    bnz L.checkInit_after_if_else@8
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000084e4f545f494e4954000000000000000000000000000000000000000000000000
+    log
+
+L.checkInit_after_if_else@8:
+    frame_dig 0
+    assert // NOT_INIT
+    retsub
+
+L.checkInit_ternary_false@5:
+    b L.checkInit_ternary_merge@6
+
+L.checkInit_ternary_false@2:
+    b L.checkInit_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_mut.sol.StructStorageRefLocal._getS(id: bytes) -> bytes:
+_getS:
+    proto 1 1
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "_m"
+    concat
+    sha256
+    retsub

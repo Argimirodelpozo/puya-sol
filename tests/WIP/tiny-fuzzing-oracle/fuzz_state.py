@@ -17,6 +17,47 @@ from pathlib import Path
 
 from fuzz_evm import (HERE, REVERT, _oracle, canon, _fmt, _fmt1,
                       gen_rows, _args_to_algo, _apply_addr_canon, Harness, LocalNet)
+from event_diff import decode_avm_logs as _decode_avm_logs, logs_match as _logs_match
+from revert_diff import revert_match as _revert_match
+
+
+import re as _re
+
+
+def _gather_sources(entry):
+    """Transitively collect the .sol closure imported by `entry` (resolving relative
+    import paths on disk), keyed by path relative to their common root so solc's
+    relative-import resolution matches. Unresolvable imports (remappings) are
+    skipped."""
+    seen = {}                                            # abs Path -> content
+    stack = [entry.resolve()]
+    imp_re = _re.compile(r'import\s+(?:[^;"\']*\bfrom\s+)?["\']([^"\']+)["\']')
+    while stack:
+        f = stack.pop()
+        if f in seen:
+            continue
+        try:
+            txt = f.read_text(errors="replace")
+        except Exception:
+            continue
+        seen[f] = txt
+        for m in imp_re.finditer(txt):
+            target = (f.parent / m.group(1)).resolve()
+            if target.exists():
+                stack.append(target)
+    if len(seen) <= 1:
+        return {"fixture.sol": seen.get(entry.resolve(), entry.read_text(errors="replace"))}
+    import os
+    root = Path(os.path.commonpath([str(p) for p in seen]))
+    if root.is_file():
+        root = root.parent
+    out = {}
+    for p, txt in seen.items():
+        try:
+            out[str(p.relative_to(root))] = txt
+        except ValueError:
+            out[p.name] = txt
+    return out
 
 
 def gen_state_calls(fns, max_per_fn):
@@ -41,18 +82,19 @@ def _is_view(mut):
 
 
 def avm_step(h, app, sig, args, is_view):
-    """Returns (value_or_REVERT, fail_reason_str)."""
+    """Returns (value_or_REVERT, fail_reason_str, result_or_None). The Result
+    carries the raw execute response for event-log decoding (mutators only)."""
     args = _args_to_algo(args)                                 # address markers → algosdk base32
     if is_view:
         r = h.call(app, sig, *args, expect_revert=True)        # simulate: read committed state
-        return (REVERT, str(getattr(r, "fail_message", ""))) if r.reverted else (r.abi_return, "")
+        return (REVERT, str(getattr(r, "fail_message", "")), r) if r.reverted else (r.abi_return, "", r)
     try:
         r = h.call(app, sig, *args)                            # execute: commit a real txn
         if getattr(r, "reverted", False):
-            return REVERT, str(getattr(r, "fail_message", "") or getattr(r, "raw_response", ""))
-        return r.abi_return, ""
+            return REVERT, str(getattr(r, "fail_message", "") or getattr(r, "raw_response", "")), r
+        return r.abi_return, "", r
     except Exception as e:
-        return REVERT, str(e)[:200]                            # reverted txn => state unchanged
+        return REVERT, str(e)[:200], None                      # reverted txn => state unchanged
 
 
 # AVM platform limits (opcode budget past the 16-txn pool, box-reference packing):
@@ -84,8 +126,21 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
     base = {"fixture": str(fixture), "solc_version": solc_version, "evm_version": evm_version}
     if entry:
         base["contract"] = entry
+    # Multi-file: pass the TRANSITIVELY-imported project sources so the EVM oracle
+    # resolves `import`s (puya-sol resolves them natively from the real path).
+    # Gathering only the imported closure (not the whole tree) avoids pulling in
+    # unrelated files that don't compile. Keyed relative to the closure's common
+    # root so relative (`./`, `../`) imports resolve. Imports that don't resolve on
+    # disk (remappings like @openzeppelin/…) are skipped → compile-fails cleanly.
+    if _re.search(r'(?m)^\s*import\b', fixture.read_text(errors="replace")):
+        base["sources"] = _gather_sources(fixture)
     say(f"[introspect] {fixture.name}…")
     info = _oracle({**base, "introspect": True})
+    # Pin the EVM-chosen entry contract so both sides deploy the SAME one.
+    if not entry:
+        entry = info.get("contract")
+    if entry:
+        base["contract"] = entry
     mut = {f["sig"]: f.get("mut", "") for f in info["functions"]}
     has_output = {f["sig"]: bool(f["outputs"]) for f in info["functions"]}
     outs_by_sig = {f["sig"]: f["outputs"] for f in info["functions"]}
@@ -119,15 +174,34 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         f"({n_mut} state-changing, {len(seq) - n_mut} reads)")
 
     say(f"[EVM] running stateful sequence…")
-    evm = _oracle({**base, "stateful": True,
-                   "calls": [{"sig": s, "args": a} for s, a in seq]})["results"]
+    evm_resp = _oracle({**base, "stateful": True, "logs": True,
+                        "calls": [{"sig": s, "args": a} for s, a in seq]})
+    evm = evm_resp["results"]
 
     if harness is None:
         ln = LocalNet(); harness = Harness(ln, HERE / "out_state")
     say("[AVM] compiling + deploying…")
     app = harness.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool)
+    avm_events = getattr(app.app_spec, "events", None) or []
+    # msg.sender/deployer AND address(this) differ between the two chains by
+    # construction; map each side's own to a shared sentinel so contracts that
+    # return owner = msg.sender or address(this) don't false-diverge.
+    from algosdk import encoding as _enc
+    _evm_map = {(evm_resp.get("caller") or "").lower(): "0xCALLER",
+                (evm_resp.get("self") or "").lower(): "0xSELF"}
+    _avm_map = {("0x" + _enc.decode_address(harness.localnet.account.address).hex()).lower(): "0xCALLER",
+                ("0x" + _enc.decode_address(app.app_addr).hex()).lower(): "0xSELF"}
+    _evm_map.pop("", None); _avm_map.pop("", None)
+
+    def _sub_addrs(v, m):
+        if isinstance(v, str) and v.lower() in m:
+            return m[v.lower()]
+        if isinstance(v, (list, tuple)):
+            return [_sub_addrs(x, m) for x in v]
+        return v
 
     diverged, avm_errors, evm_skips, limit_fork = [], [], [], None
+    event_div, revert_div = [], []
     for (sig, args), er in zip(seq, evm):
         if er.get("ok"):
             expected = er["value"]
@@ -136,7 +210,7 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         else:
             evm_skips.append((sig, args, er.get("err", "?"))); continue
         try:
-            actual, avm_reason = avm_step(harness, app, sig, args, _is_view(mut.get(sig, "")))
+            actual, avm_reason, avm_res = avm_step(harness, app, sig, args, _is_view(mut.get(sig, "")))
         except Exception as e:
             avm_errors.append((sig, args, type(e).__name__ + ": " + str(e)[:140])); continue
         # AVM platform limit (opcode budget / box-ref packing) where EVM succeeded:
@@ -147,8 +221,10 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
             break
         if has_output.get(sig):
             outs = outs_by_sig.get(sig, [])
-            exp_c = _apply_addr_canon(expected, outs)       # address returns → 32-byte content hex
-            act_c = _apply_addr_canon(actual, outs)
+            # address returns → 32-byte content hex, then map each side's own caller
+            # (msg.sender/deployer) to a shared sentinel.
+            exp_c = _sub_addrs(_apply_addr_canon(expected, outs), _evm_map)
+            act_c = _sub_addrs(_apply_addr_canon(actual, outs), _avm_map)
             if canon(act_c) != canon(exp_c):
                 diverged.append((sig, args, exp_c, act_c))
         else:
@@ -158,6 +234,22 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
                 diverged.append((sig, args,
                                  "REVERT" if expected == REVERT else "ok",
                                  "REVERT" if actual == REVERT else "ok"))
+        # EVENT-LOG diff: only when BOTH sides ran (no revert on either) — a revert
+        # emits nothing, and a revert-status divergence is already reported above.
+        if actual != REVERT and expected != REVERT and "logs" in er:
+            avm_logs = _decode_avm_logs(avm_res, avm_events)
+            if avm_logs is not None:
+                ok, evm_only, avm_only = _logs_match(er["logs"], avm_logs)
+                if not ok:
+                    event_div.append((sig, args, evm_only, avm_only))
+        # REVERT-PAYLOAD diff: only when BOTH reverted (status match already handled
+        # above). Compares revert KIND + Error(string) message; tolerates the
+        # documented keccak/sha512_256 + backing-width + Panic-not-emitted conventions.
+        if actual == REVERT and expected == REVERT and "revert_data" in er:
+            avm_rd = getattr(avm_res, "revert_data", None) if avm_res is not None else None
+            ok, ev_d, av_d = _revert_match(er["revert_data"], avm_rd)
+            if not ok:
+                revert_div.append((sig, args, ev_d, av_d))
 
     diffed = len(seq) - len(avm_errors) - len(evm_skips)
     say(f"\n=== {diffed} sequenced calls diffed (AVM vs live EVM, state persisted) ===")
@@ -172,10 +264,20 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         say(f"\n❌ {len(diverged)} DIVERGENCE(S):")
         for sig, args, exp, act in diverged[:25]:
             say(f"   {sig}{_fmt(args)}  evm={_fmt1(exp)}  avm={_fmt1(act)}")
-    elif not quiet:
-        say("\n✅ no divergences — persisted state matches a live solc+EVM across the sequence")
-    return {"ok": not diverged and not avm_errors, "diffed": diffed,
-            "diverged": diverged, "avm_errors": avm_errors, "evm_skips": evm_skips,
+    if event_div:
+        say(f"\n📣 {len(event_div)} EVENT DIVERGENCE(S):")
+        for sig, args, evm_only, avm_only in event_div[:25]:
+            say(f"   {sig}{_fmt(args)}  evm_only={evm_only}  avm_only={avm_only}")
+    if revert_div:
+        say(f"\n💥 {len(revert_div)} REVERT-PAYLOAD DIVERGENCE(S):")
+        for sig, args, ev_d, av_d in revert_div[:25]:
+            say(f"   {sig}{_fmt(args)}  evm={ev_d}  avm={av_d}")
+    if not diverged and not event_div and not revert_div and not quiet:
+        say("\n✅ no divergences — state + events + revert payloads match a live solc+EVM")
+    return {"ok": not diverged and not event_div and not revert_div and not avm_errors,
+            "diffed": diffed, "diverged": diverged, "event_div": event_div,
+            "revert_div": revert_div,
+            "avm_errors": avm_errors, "evm_skips": evm_skips,
             "limit_fork": limit_fork,
             "contract": info["contract"], "n_calls": len(seq)}
 

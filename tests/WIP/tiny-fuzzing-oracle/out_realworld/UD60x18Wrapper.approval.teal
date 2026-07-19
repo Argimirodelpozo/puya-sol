@@ -1,0 +1,4318 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 256 255 1000000000000000000 4294967296 65536
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000010000000000000000 0x 0x151f7c75 0x01 0x0de0b6b3a7640000 0x0000000000000000000000000000000000000000000000000000000000000002 0x0100 0x010000000000000000000000000000000000000000000000000000000000000002 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000010 0xc097ce7bc90715b34b9f1000000000 0x0000000000000000000000000000000000000000000000000000000000000080 0x010000000000000001 0x0000000000000000000000000000000000000000000000000000000000000004 0x010000000000000000 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000000000000000010000 0x0000000000000000000000000000000000000000000000000000000000000100 0x14057b7ef767814f 0x42fec7f9
+    intc_2 // 0
+    dupn 2
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xef36dab9 0x704b94dd 0x06d93317 0x1c82b4fe 0x4b57d4d9 0x8a26489d 0x1026cc30 0x1bb06d86 0x88d9cdd2 0x5e755b1e 0x3102179b 0x23bcb8a0 0x96028fa4 0xc6fa7dd3 0xe841beb7 0x2b4d0629 0xab699379 0xdcac28f0 0xbef06e58 0x458558be 0x52f1a74e // method "avg(uint256,uint256)uint256", method "ceil(uint256)uint256", method "div(uint256,uint256)uint256", method "exp(uint256)uint256", method "exp2(uint256)uint256", method "floor(uint256)uint256", method "frac(uint256)uint256", method "gm(uint256,uint256)uint256", method "inv(uint256)uint256", method "ln(uint256)uint256", method "log2(uint256)uint256", method "log10(uint256)uint256", method "mul(uint256,uint256)uint256", method "pow(uint256,uint256)uint256", method "powu(uint256,uint256)uint256", method "sqrt(uint256)uint256", method "mulDiv(uint256,uint256,uint256)uint256", method "mulDiv18(uint256,uint256)uint256", method "commonSqrt(uint256)uint256", method "commonExp2(uint256)uint256", method "msb(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_avg_route@5 main_ceil_route@6 main_div_route@7 main_exp_route@8 main_exp2_route@9 main_floor_route@10 main_frac_route@11 main_gm_route@12 main_inv_route@13 main_ln_route@14 main_log2_route@15 main_log10_route@16 main_mul_route@17 main_pow_route@18 main_powu_route@19 main_sqrt_route@20 main_mulDiv_route@21 main_mulDiv18_route@22 main_commonSqrt_route@23 main_commonExp2_route@24 main_msb_route@25
+    err
+
+main_msb_route@25:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    dig 1
+    callsub msb
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@31:
+    intc_2 // 0
+    b main_ternary_merge@32
+
+main_commonExp2_route@24:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    dig 1
+    callsub exp2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@36:
+    intc_2 // 0
+    b main_ternary_merge@37
+
+main_commonSqrt_route@23:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    dig 1
+    callsub sqrt
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@41:
+    intc_2 // 0
+    b main_ternary_merge@42
+
+main_mulDiv18_route@22:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    dup2
+    callsub mulDiv18
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@46:
+    intc_2 // 0
+    b main_ternary_merge@47
+
+main_mulDiv_route@21:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    bury 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    dup2
+    dig 4
+    callsub mulDiv
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@51:
+    intc_2 // 0
+    b main_ternary_merge@52
+
+main_sqrt_route@20:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    dig 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@56:
+    intc_2 // 0
+    b main_ternary_merge@57
+
+main_powu_route@19:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@61
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@62:
+    !
+    assert // not payable
+    dup2
+    callsub powu
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@61:
+    intc_2 // 0
+    b main_ternary_merge@62
+
+main_pow_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@66
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@67:
+    !
+    assert // not payable
+    dup2
+    callsub pow
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@66:
+    intc_2 // 0
+    b main_ternary_merge@67
+
+main_mul_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@71
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@72:
+    !
+    assert // not payable
+    dup2
+    callsub mul
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@71:
+    intc_2 // 0
+    b main_ternary_merge@72
+
+main_log10_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@76
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@77:
+    !
+    assert // not payable
+    dig 1
+    callsub log10
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@76:
+    intc_2 // 0
+    b main_ternary_merge@77
+
+main_log2_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@81
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@82:
+    !
+    assert // not payable
+    dig 1
+    callsub log2
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@81:
+    intc_2 // 0
+    b main_ternary_merge@82
+
+main_ln_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@86
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@87:
+    !
+    assert // not payable
+    dig 1
+    callsub ln
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@86:
+    intc_2 // 0
+    b main_ternary_merge@87
+
+main_inv_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@91
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@92:
+    !
+    assert // not payable
+    dig 1
+    callsub inv
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@91:
+    intc_2 // 0
+    b main_ternary_merge@92
+
+main_gm_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@96
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@97:
+    !
+    assert // not payable
+    dup2
+    callsub gm
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@96:
+    intc_2 // 0
+    b main_ternary_merge@97
+
+main_frac_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@101
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@102:
+    !
+    assert // not payable
+    dig 1
+    callsub frac
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@101:
+    intc_2 // 0
+    b main_ternary_merge@102
+
+main_floor_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@106
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@107:
+    !
+    assert // not payable
+    dig 1
+    callsub floor
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@106:
+    intc_2 // 0
+    b main_ternary_merge@107
+
+main_exp2_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@111
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@112:
+    !
+    assert // not payable
+    dig 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@111:
+    intc_2 // 0
+    b main_ternary_merge@112
+
+main_exp_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@116
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@117:
+    !
+    assert // not payable
+    dig 1
+    callsub exp
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@116:
+    intc_2 // 0
+    b main_ternary_merge@117
+
+main_div_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@121
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@122:
+    !
+    assert // not payable
+    dup2
+    callsub div
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@121:
+    intc_2 // 0
+    b main_ternary_merge@122
+
+main_ceil_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@126
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@127:
+    !
+    assert // not payable
+    dig 1
+    callsub ceil
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@126:
+    intc_2 // 0
+    b main_ternary_merge@127
+
+main_avg_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@131
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@132:
+    !
+    assert // not payable
+    dup2
+    callsub avg
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@131:
+    intc_2 // 0
+    b main_ternary_merge@132
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2(x: bytes) -> bytes:
+exp2:
+    proto 1 1
+    intc_2 // 0
+    dup
+    bytec_2 // ""
+    pushbytes 0x800000000000000000000000000000000000000000000000
+    pushint 18374686479671623680
+    itob
+    frame_dig -1
+    b&
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz exp2_after_if_else@42
+    pushint 9223372036854775808
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@6
+    pushbytes 0xb504f333f9de648480000000000000000000000000000000
+    frame_bury 3
+
+exp2_after_if_else@6:
+    pushint 4611686018427387904
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@11
+    frame_dig 3
+    pushbytes 0x01306fe0a31b7152df
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@11:
+    pushint 2305843009213693952
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@16
+    frame_dig 3
+    pushbytes 0x01172b83c7d517adce
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@16:
+    pushint 1152921504606846976
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@21
+    frame_dig 3
+    pushbytes 0x010b5586cf9890f62a
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@21:
+    pushint 576460752303423488
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@26
+    frame_dig 3
+    pushbytes 0x01059b0d31585743ae
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@26:
+    pushint 288230376151711744
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@31
+    frame_dig 3
+    pushbytes 0x0102c9a3e778060ee7
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@31:
+    pushint 144115188075855872
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@36
+    frame_dig 3
+    pushbytes 0x010163da9fb33356d8
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@36:
+    pushint 72057594037927936
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@42
+    frame_dig 3
+    pushbytes 0x0100b1afa5abcbed61
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@42:
+    pushint 71776119061217280
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@84
+    pushint 36028797018963968
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@48
+    frame_dig 3
+    pushbytes 0x010058c86da1c09ea2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@48:
+    pushint 18014398509481984
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@53
+    frame_dig 3
+    pushbytes 0x01002c605e2e8cec50
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@53:
+    pushint 9007199254740992
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@58
+    frame_dig 3
+    pushbytes 0x0100162f3904051fa1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@58:
+    pushint 4503599627370496
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@63
+    frame_dig 3
+    pushbytes 0x01000b175effdc76ba
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@63:
+    pushint 2251799813685248
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@68
+    frame_dig 3
+    pushbytes 0x0100058ba01fb9f96d
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@68:
+    pushint 1125899906842624
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@73
+    frame_dig 3
+    pushbytes 0x010002c5cc37da9492
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@73:
+    pushint 562949953421312
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@78
+    frame_dig 3
+    pushbytes 0x01000162e525ee0547
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@78:
+    pushint 281474976710656
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@84
+    frame_dig 3
+    pushbytes 0x010000b17255775c04
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@84:
+    pushint 280375465082880
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@126
+    pushint 140737488355328
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@90
+    frame_dig 3
+    pushbytes 0x01000058b91b5bc9ae
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@90:
+    pushint 70368744177664
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@95
+    frame_dig 3
+    pushbytes 0x0100002c5c89d5ec6d
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@95:
+    pushint 35184372088832
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@100
+    frame_dig 3
+    pushbytes 0x010000162e43f4f831
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@100:
+    pushint 17592186044416
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@105
+    frame_dig 3
+    pushbytes 0x0100000b1721bcfc9a
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@105:
+    pushint 8796093022208
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@110
+    frame_dig 3
+    pushbytes 0x010000058b90cf1e6e
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@110:
+    pushint 4398046511104
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@115
+    frame_dig 3
+    pushbytes 0x01000002c5c863b73f
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@115:
+    pushint 2199023255552
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@120
+    frame_dig 3
+    pushbytes 0x0100000162e430e5a2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@120:
+    pushint 1099511627776
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@126
+    frame_dig 3
+    pushbytes 0x01000000b172183551
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@126:
+    pushint 1095216660480
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@168
+    pushint 549755813888
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@132
+    frame_dig 3
+    pushbytes 0x0100000058b90c0b49
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@132:
+    pushint 274877906944
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@137
+    frame_dig 3
+    pushbytes 0x010000002c5c8601cc
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@137:
+    pushint 137438953472
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@142
+    frame_dig 3
+    pushbytes 0x01000000162e42fff0
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@142:
+    pushint 68719476736
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@147
+    frame_dig 3
+    pushbytes 0x010000000b17217fbb
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@147:
+    pushint 34359738368
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@152
+    frame_dig 3
+    pushbytes 0x01000000058b90bfce
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@152:
+    pushint 17179869184
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@157
+    frame_dig 3
+    pushbytes 0x0100000002c5c85fe3
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@157:
+    pushint 8589934592
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@162
+    frame_dig 3
+    pushbytes 0x010000000162e42ff1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@162:
+    intc 6 // 4294967296
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@168
+    frame_dig 3
+    pushbytes 0x0100000000b17217f8
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@168:
+    pushint 4278190080
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@210
+    pushint 2147483648
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@174
+    frame_dig 3
+    pushbytes 0x010000000058b90bfc
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@174:
+    pushint 1073741824
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@179
+    frame_dig 3
+    pushbytes 0x01000000002c5c85fe
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@179:
+    pushint 536870912
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@184
+    frame_dig 3
+    pushbytes 0x0100000000162e42ff
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@184:
+    pushint 268435456
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@189
+    frame_dig 3
+    pushbytes 0x01000000000b17217f
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@189:
+    pushint 134217728
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@194
+    frame_dig 3
+    pushbytes 0x0100000000058b90c0
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@194:
+    pushint 67108864
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@199
+    frame_dig 3
+    pushbytes 0x010000000002c5c860
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@199:
+    pushint 33554432
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@204
+    frame_dig 3
+    pushbytes 0x01000000000162e430
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@204:
+    pushint 16777216
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@210
+    frame_dig 3
+    pushbytes 0x010000000000b17218
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@210:
+    pushint 16711680
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@252
+    pushint 8388608
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@216
+    frame_dig 3
+    pushbytes 0x01000000000058b90c
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@216:
+    pushint 4194304
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@221
+    frame_dig 3
+    pushbytes 0x0100000000002c5c86
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@221:
+    pushint 2097152
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@226
+    frame_dig 3
+    pushbytes 0x010000000000162e43
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@226:
+    pushint 1048576
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@231
+    frame_dig 3
+    pushbytes 0x0100000000000b1721
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@231:
+    pushint 524288
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@236
+    frame_dig 3
+    pushbytes 0x010000000000058b91
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@236:
+    pushint 262144
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@241
+    frame_dig 3
+    pushbytes 0x01000000000002c5c8
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@241:
+    pushint 131072
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@246
+    frame_dig 3
+    pushbytes 0x0100000000000162e4
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@246:
+    intc 7 // 65536
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@252
+    frame_dig 3
+    pushbytes 0x01000000000000b172
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@252:
+    pushint 65280
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@294
+    pushint 32768
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@258
+    frame_dig 3
+    pushbytes 0x0100000000000058b9
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@258:
+    pushint 16384
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@263
+    frame_dig 3
+    pushbytes 0x010000000000002c5d
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@263:
+    pushint 8192
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@268
+    frame_dig 3
+    pushbytes 0x01000000000000162e
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@268:
+    pushint 4096
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@273
+    frame_dig 3
+    pushbytes 0x010000000000000b17
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@273:
+    pushint 2048
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@278
+    frame_dig 3
+    pushbytes 0x01000000000000058c
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@278:
+    pushint 1024
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@283
+    frame_dig 3
+    pushbytes 0x0100000000000002c6
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@283:
+    pushint 512
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@288
+    frame_dig 3
+    pushbytes 0x010000000000000163
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@288:
+    intc_3 // 256
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@294
+    frame_dig 3
+    pushbytes 0x0100000000000000b1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@294:
+    intc 4 // 255
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@336
+    pushint 128
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@300
+    frame_dig 3
+    pushbytes 0x010000000000000059
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@300:
+    pushint 64
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@305
+    frame_dig 3
+    pushbytes 0x01000000000000002c
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@305:
+    intc_0 // 32
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@310
+    frame_dig 3
+    pushbytes 0x010000000000000016
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@310:
+    pushint 16
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@315
+    frame_dig 3
+    pushbytes 0x01000000000000000b
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@315:
+    pushint 8
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@320
+    frame_dig 3
+    pushbytes 0x010000000000000006
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@320:
+    pushint 4
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@325
+    frame_dig 3
+    pushbytes 0x010000000000000003
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@325:
+    pushint 2
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@330
+    frame_dig 3
+    bytec 13 // 0x010000000000000001
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@330:
+    intc_1 // 1
+    itob
+    frame_dig -1
+    b&
+    frame_dig 4
+    b>
+    bz exp2_after_if_else@336
+    frame_dig 3
+    bytec 13 // 0x010000000000000001
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 3
+
+exp2_after_if_else@336:
+    frame_dig 3
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 3
+    intc_0 // 32
+    bzero
+    frame_bury 1
+    frame_dig -1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    pushbytes 0x0100000000000000000000000000000000000000000000000000000000000000bf
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 0
+    bytec 7 // 0x0100
+    b<
+    bz exp2_ternary_false@341
+    pushint 8
+    bzero
+    frame_dig 0
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_bury 2
+
+exp2_ternary_merge@342:
+    frame_dig 2
+    intc_3 // 256
+    <
+    bz exp2_ternary_false@344
+    frame_dig 2
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig 3
+    swap
+    b/
+    frame_bury 3
+
+exp2_ternary_merge@345:
+    frame_dig 3
+    frame_bury 0
+    retsub
+
+exp2_ternary_false@344:
+    bytec_2 // 0x
+    frame_bury 3
+    b exp2_ternary_merge@345
+
+exp2_ternary_false@341:
+    intc_3 // 256
+    frame_bury 2
+    b exp2_ternary_merge@342
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.msb(x: bytes) -> bytes:
+msb:
+    proto 1 1
+    intc_2 // 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_0 // 32
+    bzero
+    swap
+    pushint 8
+    bzero
+    swap
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000080
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@5
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@6:
+    bytec_2 // 0x
+    frame_dig 3
+    b|
+    frame_bury 0
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0xffffffffffffffff
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@11
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@12:
+    frame_dig 0
+    frame_dig 3
+    b|
+    frame_bury 0
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0xffffffff
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@17
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@18:
+    frame_dig 0
+    frame_dig 3
+    b|
+    frame_bury 0
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0xffff
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@23
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@24:
+    frame_dig 0
+    frame_dig 3
+    b|
+    frame_bury 0
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0xff
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@29
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@30:
+    frame_dig 0
+    frame_dig 3
+    b|
+    frame_bury 0
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0x0f
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@35
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@36:
+    frame_dig 0
+    frame_dig 3
+    b|
+    frame_bury 0
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    pushbytes 0x03
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz msb_ternary_false@41
+    frame_dig 2
+    frame_dig 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    frame_dig 1
+    swap
+    intc_1 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+
+msb_ternary_merge@42:
+    frame_dig 0
+    frame_dig 3
+    b|
+    load 0
+    store 0
+    load 0
+    store 0
+    frame_dig -1
+    bytec 4 // 0x01
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b|
+    load 0
+    store 0
+    frame_bury 0
+    retsub
+
+msb_ternary_false@41:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@42
+
+msb_ternary_false@35:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@36
+
+msb_ternary_false@29:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@30
+
+msb_ternary_false@23:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@24
+
+msb_ternary_false@17:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@18
+
+msb_ternary_false@11:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@12
+
+msb_ternary_false@5:
+    bytec_2 // 0x
+    frame_bury -1
+    b msb_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.mulDiv(x: bytes, y: bytes, denominator: bytes) -> bytes:
+mulDiv:
+    proto 3 1
+    intc_2 // 0
+    bytec_2 // ""
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    frame_dig -3
+    frame_dig -2
+    b*
+    dupn 2
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b%
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    uncover 2
+    dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    uncover 2
+    b<
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    load 0
+    store 0
+    intc_2 // 0
+    itob
+    b==
+    bz mulDiv_after_if_else@5
+    frame_dig 4
+    frame_dig -1
+    b/
+    frame_bury 0
+    retsub
+
+mulDiv_after_if_else@5:
+    frame_dig 5
+    frame_dig -1
+    b>=
+    bz mulDiv_after_if_else@7
+    frame_dig -3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -3
+    frame_dig 2
+    dup
+    cover 2
+    b|
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -2
+    dig 2
+    b|
+    concat
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    uncover 2
+    b|
+    concat
+    pushbytes 0x0786a6d6 // method "PRBMath_MulDiv_Overflow(uint256,uint256,uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_MulDiv_Overflow
+
+mulDiv_after_if_else@7:
+    load 0
+    store 0
+    frame_dig -1
+    bytec_2 // 0x
+    b!=
+    bz mulDiv_ternary_false@9
+    frame_dig 3
+    frame_dig -1
+    b%
+
+mulDiv_ternary_merge@10:
+    frame_dig 5
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    frame_dig 4
+    dup
+    cover 3
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 5
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 4
+    load 0
+    store 0
+    frame_dig 2
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b~
+    intc_1 // 1
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b&
+    dup
+    frame_bury 0
+    load 0
+    store 0
+    bytec_2 // 0x
+    b!=
+    dup
+    frame_bury 1
+    bz mulDiv_ternary_false@12
+    frame_dig -1
+    frame_dig 0
+    b/
+    frame_bury -1
+
+mulDiv_ternary_merge@13:
+    frame_dig 1
+    bz mulDiv_ternary_false@15
+    frame_dig 4
+    frame_dig 0
+    b/
+    frame_bury 4
+
+mulDiv_ternary_merge@16:
+    frame_dig 1
+    bz mulDiv_ternary_false@18
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    frame_dig 0
+    dup
+    cover 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    b/
+
+mulDiv_ternary_merge@19:
+    bytec 4 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    store 0
+    frame_dig 5
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 4
+    b|
+    pushint 3
+    itob
+    frame_dig -1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 2
+    itob
+    b^
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+mulDiv_ternary_false@18:
+    bytec_2 // 0x
+    b mulDiv_ternary_merge@19
+
+mulDiv_ternary_false@15:
+    bytec_2 // 0x
+    frame_bury 4
+    b mulDiv_ternary_merge@16
+
+mulDiv_ternary_false@12:
+    bytec_2 // 0x
+    frame_bury -1
+    b mulDiv_ternary_merge@13
+
+mulDiv_ternary_false@9:
+    bytec_2 // 0x
+    b mulDiv_ternary_merge@10
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.mulDiv18(x: bytes, y: bytes) -> bytes:
+mulDiv18:
+    proto 2 1
+    load 0
+    store 0
+    frame_dig -2
+    frame_dig -1
+    b*
+    dupn 2
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b%
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    uncover 2
+    dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    uncover 2
+    b<
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    load 0
+    store 0
+    intc_2 // 0
+    itob
+    b==
+    bz mulDiv18_after_if_else@5
+    frame_dig 1
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    frame_bury 0
+    retsub
+
+mulDiv18_after_if_else@5:
+    intc 5 // 1000000000000000000
+    itob
+    frame_dig 2
+    b<=
+    bz mulDiv18_after_if_else@7
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    dig 1
+    b|
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    uncover 2
+    b|
+    concat
+    pushbytes 0x458db9ff // method "PRBMath_MulDiv18_Overflow(uint256,uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_MulDiv18_Overflow
+
+mulDiv18_after_if_else@7:
+    load 0
+    store 0
+    frame_dig 0
+    bytec 5 // 0x0de0b6b3a7640000
+    b%
+    frame_dig 1
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x040000
+    b/
+    frame_dig 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    uncover 3
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x400000000000000000000000000000000000000000000000000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b|
+    pushbytes 0xaccb18165bd6fe31ae1cf318dc5b51eee0e1ba569b88cd74c1773b91fac10669
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    store 0
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt(x: bytes) -> bytes:
+sqrt:
+    proto 1 1
+    intc_2 // 0
+    dupn 3
+    itob
+    dup
+    frame_dig -1
+    b==
+    bz sqrt_after_if_else@2
+    frame_dig 3
+    frame_bury 0
+    retsub
+
+sqrt_after_if_else@2:
+    intc_1 // 1
+    itob
+    frame_bury 0
+    frame_dig -1
+    pushbytes 0x0100000000000000000000000000000000
+    b>=
+    bnz sqrt_if_body@3
+    frame_dig -1
+    frame_bury 2
+
+sqrt_after_if_else@10:
+    frame_dig 2
+    bytec 15 // 0x010000000000000000
+    b>=
+    bz sqrt_after_if_else@18
+    frame_dig 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 16 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+sqrt_after_if_else@18:
+    intc 6 // 4294967296
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@26
+    frame_dig 2
+    bytec 16 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 17 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+sqrt_after_if_else@26:
+    intc 7 // 65536
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@34
+    frame_dig 2
+    bytec 17 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 18 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+sqrt_after_if_else@34:
+    intc_3 // 256
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@42
+    frame_dig 2
+    bytec 18 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+sqrt_after_if_else@42:
+    pushint 16
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@50
+    frame_dig 2
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+sqrt_after_if_else@50:
+    pushint 4
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@55
+    frame_dig 0
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+
+sqrt_after_if_else@55:
+    frame_dig -1
+    frame_dig 0
+    dup
+    cover 2
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup
+    frame_bury 0
+    frame_dig -1
+    dig 1
+    b/
+    dup
+    frame_bury 1
+    b>=
+    bz sqrt_after_if_else@78
+    frame_dig 1
+    frame_bury 0
+
+sqrt_after_if_else@78:
+    retsub
+
+sqrt_if_body@3:
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    frame_bury 2
+    bytec 15 // 0x010000000000000000
+    frame_bury 0
+    b sqrt_after_if_else@10
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.unwrap_2521(x: bytes) -> bytes:
+unwrap:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.wrap_2538(x: bytes) -> bytes:
+wrap:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.avg_2602(x: bytes, y: bytes) -> bytes:
+avg:
+    proto 2 1
+    frame_dig -2
+    callsub unwrap
+    frame_dig -1
+    callsub unwrap
+    dup2
+    b&
+    cover 2
+    b^
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.ceil_2631(x: bytes) -> bytes:
+ceil:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffff7e52fe5afe40000
+    b>
+    bz ceil_after_if_else@2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    pushbytes 0x4bf91505 // method "PRBMath_UD60x18_Ceil_Overflow(uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Ceil_Overflow
+
+ceil_after_if_else@2:
+    load 0
+    store 0
+    frame_dig -1
+    bytec 5 // 0x0de0b6b3a7640000
+    b%
+    pushbytes 0x010000000000000000000000000000000000000000000000000de0b6b3a7640000
+    dig 1
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    bytec_2 // 0x
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.div_2660(x: bytes, y: bytes) -> bytes:
+div:
+    proto 2 1
+    frame_dig -2
+    callsub unwrap
+    intc 5 // 1000000000000000000
+    itob
+    frame_dig -1
+    callsub unwrap
+    callsub mulDiv
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp_2705(x: bytes) -> bytes:
+exp:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    dup
+    pushbytes 0x0736ea4425c11ac630
+    b>
+    bz exp_after_if_else@2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    pushbytes 0x45be747a // method "PRBMath_UD60x18_Exp_InputTooBig(uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Exp_InputTooBig
+
+exp_after_if_else@2:
+    frame_dig 0
+    bytec 19 // 0x14057b7ef767814f
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    callsub wrap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751(x: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    dup
+    pushbytes 0x0a688906bd8affffff
+    b>
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751_after_if_else@2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    pushbytes 0xef616ea0 // method "PRBMath_UD60x18_Exp2_InputTooBig(uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Exp2_InputTooBig
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751_after_if_else@2:
+    frame_dig 0
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    callsub exp2
+    callsub wrap
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.floor_2763(x: bytes) -> bytes:
+floor:
+    proto 1 1
+    load 0
+    store 0
+    frame_dig -1
+    bytec 5 // 0x0de0b6b3a7640000
+    b%
+    frame_dig -1
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    bytec_2 // 0x
+    b>
+    bytec_2 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    uncover 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    load 0
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.frac_2775(x: bytes) -> bytes:
+frac:
+    proto 1 1
+    load 0
+    store 0
+    frame_dig -1
+    bytec 5 // 0x0de0b6b3a7640000
+    b%
+    load 0
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.gm_2842(x: bytes, y: bytes) -> bytes:
+gm:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -2
+    callsub unwrap
+    dup
+    frame_dig -1
+    callsub unwrap
+    swap
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bnz gm_if_body@2
+    frame_dig 2
+    frame_dig 3
+    b==
+    bz gm_after_if_else@3
+
+gm_if_body@2:
+    frame_dig 3
+    frame_bury 0
+    retsub
+
+gm_after_if_else@3:
+    frame_dig 1
+    dup
+    frame_dig 2
+    dup
+    cover 3
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 0
+    swap
+    b/
+    b!=
+    bz gm_after_if_else@5
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    dig 1
+    b|
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    uncover 2
+    b|
+    concat
+    pushbytes 0x7441840f // method "PRBMath_UD60x18_Gm_Overflow(uint256,uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Gm_Overflow
+
+gm_after_if_else@5:
+    frame_dig 0
+    callsub sqrt
+    callsub wrap
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.inv_2864(x: bytes) -> bytes:
+inv:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    bytec 11 // 0xc097ce7bc90715b34b9f1000000000
+    swap
+    b/
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.ln_2890(x: bytes) -> bytes:
+ln:
+    proto 1 1
+    frame_dig -1
+    callsub log2
+    callsub unwrap
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 19 // 0x14057b7ef767814f
+    b/
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.log10_2941(x: bytes) -> bytes:
+log10:
+    proto 1 1
+    intc_2 // 0
+    frame_dig -1
+    callsub unwrap
+    intc 5 // 1000000000000000000
+    itob
+    b<
+    bz log10_after_if_else@2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    bytec 20 // method "PRBMath_UD60x18_Log_InputTooSmall(uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Log_InputTooSmall
+
+log10_after_if_else@2:
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x000000000000000000000000000000000000000000000000000000000000000a 0x0000000000000000000000000000000000000000000000000000000000000064 0x00000000000000000000000000000000000000000000000000000000000003e8 0x0000000000000000000000000000000000000000000000000000000000002710 0x00000000000000000000000000000000000000000000000000000000000186a0 0x00000000000000000000000000000000000000000000000000000000000f4240 0x0000000000000000000000000000000000000000000000000000000000989680 0x0000000000000000000000000000000000000000000000000000000005f5e100 0x000000000000000000000000000000000000000000000000000000003b9aca00 0x00000000000000000000000000000000000000000000000000000002540be400 0x000000000000000000000000000000000000000000000000000000174876e800 0x000000000000000000000000000000000000000000000000000000e8d4a51000 0x000000000000000000000000000000000000000000000000000009184e72a000 0x00000000000000000000000000000000000000000000000000005af3107a4000 0x00000000000000000000000000000000000000000000000000038d7ea4c68000 0x000000000000000000000000000000000000000000000000002386f26fc10000 0x000000000000000000000000000000000000000000000000016345785d8a0000 0x0000000000000000000000000000000000000000000000000de0b6b3a7640000 0x0000000000000000000000000000000000000000000000008ac7230489e80000 0x0000000000000000000000000000000000000000000000056bc75e2d63100000 0x00000000000000000000000000000000000000000000003635c9adc5dea00000 0x00000000000000000000000000000000000000000000021e19e0c9bab2400000 0x00000000000000000000000000000000000000000000152d02c7e14af6800000 0x00000000000000000000000000000000000000000000d3c21bcecceda1000000 0x000000000000000000000000000000000000000000084595161401484a000000 0x00000000000000000000000000000000000000000052b7d2dcc80cd2e4000000 0x0000000000000000000000000000000000000000033b2e3c9fd0803ce8000000 0x0000000000000000000000000000000000000000204fce5e3e25026110000000 0x0000000000000000000000000000000000000001431e0fae6d7217caa0000000 0x000000000000000000000000000000000000000c9f2c9cd04674edea40000000 0x000000000000000000000000000000000000007e37be2022c0914b2680000000 0x00000000000000000000000000000000000004ee2d6d415b85acef8100000000 0x000000000000000000000000000000000000314dc6448d9338c15b0a00000000 0x000000000000000000000000000000000001ed09bead87c0378d8e6400000000 0x000000000000000000000000000000000013426172c74d822b878fe800000000 0x0000000000000000000000000000000000c097ce7bc90715b34b9f1000000000 0x000000000000000000000000000000000785ee10d5da46d900f436a000000000 0x000000000000000000000000000000004b3b4ca85a86c47a098a224000000000 0x00000000000000000000000000000002f050fe938943acc45f65568000000000 0x0000000000000000000000000000001d6329f1c35ca4bfabb9f5610000000000 0x00000000000000000000000000000125dfa371a19e6f7cb54395ca0000000000 0x00000000000000000000000000000b7abc627050305adf14a3d9e40000000000 0x000000000000000000000000000072cb5bd86321e38cb6ce6682e80000000000 0x00000000000000000000000000047bf19673df52e37f2410011d100000000000 0x000000000000000000000000002cd76fe086b93ce2f768a00b22a00000000000 0x00000000000000000000000001c06a5ec5433c60ddaa16406f5a400000000000 0x000000000000000000000000118427b3b4a05bc8a8a4de845986800000000000 0x000000000000000000000000af298d050e4395d69670b12b7f41000000000000 0x000000000000000000000006d79f82328ea3da61e066ebb2f88a000000000000 0x0000000000000000000000446c3b15f9926687d2c40534fdb564000000000000 0x0000000000000000000002ac3a4edbbfb8014e3ba83411e915e8000000000000 0x000000000000000000001aba4714957d300d0e549208b31adb10000000000000 0x000000000000000000010b46c6cdd6e3e0828f4db456ff0c8ea0000000000000 0x0000000000000000000a70c3c40a64e6c51999090b65f67d9240000000000000 0x0000000000000000006867a5a867f103b2fffa5a71fba0e7b680000000000000 0x000000000000000004140c78940f6a24fdffc78873d4490d2100000000000000 0x000000000000000028c87cb5c89a2571ebfdcb54864ada834a00000000000000 0x000000000000000197d4df19d605767337e9f14d3eec8920e400000000000000 0x000000000000000fee50b7025c36a0802f236d04753d5b48e800000000000000 0x000000000000009f4f2726179a224501d762422c946590d91000000000000000 0x000000000000063917877cec0556b21269d695bdcbf7a87aa000000000000000 0x0000000000003e3aeb4ae1383562f4b82261d969f7ac94ca4000000000000000 0x0000000000026e4d30eccc3215dd8f3157d27e23acbdcfe68000000000000000 0x0000000000184f03e93ff9f4daa797ed6e38ed64bf6a1f010000000000000000 0x0000000000f316271c7fc3908a8bef464e3945ef7a25360a0000000000000000 0x00000000097edd871cfda3a5697758bf0e3cbb5ac5741c640000000000000000 0x000000005ef4a74721e864761ea977768e5f518bb6891be80000000000000000 0x00000003b58e88c75313ec9d329eaaa18fb92f75215b17100000000000000000 0x00000025179157c93ec73e23fa32aa4f9d3bda934d8ee6a00000000000000000 0x00000172ebad6ddc73c86d67c5faa71c245689c1079502400000000000000000 0x00000e7d34c64a9c85d4460dbbca87196b61618a4bd216800000000000000000 0x000090e40fbeea1d3a4abc8955e946fe31cdcf66f634e1000000000000000000 0x0005a8e89d75252446eb5d5d5b1cc5edf20a1a059e10ca000000000000000000 0x003899162693736ac531a5a58f1fbb4b746504382ca7e4000000000000000000 0x0235fadd81c2822bb3f07877973d50f28bf22a31be8ee8000000000000000000 0x161bcca7119915b50764b4abe86529797775a5f1719510000000000000000000 0xdd15fe86affad91249ef0eb713f39ebeaa987b6e6fd2a0000000000000000000
+    uncover 78
+    match log10_switch_case_0@3 log10_switch_case_1@4 log10_switch_case_2@5 log10_switch_case_3@6 log10_switch_case_4@7 log10_switch_case_5@8 log10_switch_case_6@9 log10_switch_case_7@10 log10_switch_case_8@11 log10_switch_case_9@12 log10_switch_case_10@13 log10_switch_case_11@14 log10_switch_case_12@15 log10_switch_case_13@16 log10_switch_case_14@17 log10_switch_case_15@18 log10_switch_case_16@19 log10_switch_case_17@20 log10_switch_case_18@21 log10_switch_case_19@22 log10_switch_case_20@23 log10_switch_case_21@24 log10_switch_case_22@25 log10_switch_case_23@26 log10_switch_case_24@27 log10_switch_case_25@28 log10_switch_case_26@29 log10_switch_case_27@30 log10_switch_case_28@31 log10_switch_case_29@32 log10_switch_case_30@33 log10_switch_case_31@34 log10_switch_case_32@35 log10_switch_case_33@36 log10_switch_case_34@37 log10_switch_case_35@38 log10_switch_case_36@39 log10_switch_case_37@40 log10_switch_case_38@41 log10_switch_case_39@42 log10_switch_case_40@43 log10_switch_case_41@44 log10_switch_case_42@45 log10_switch_case_43@46 log10_switch_case_44@47 log10_switch_case_45@48 log10_switch_case_46@49 log10_switch_case_47@50 log10_switch_case_48@51 log10_switch_case_49@52 log10_switch_case_50@53 log10_switch_case_51@54 log10_switch_case_52@55 log10_switch_case_53@56 log10_switch_case_54@57 log10_switch_case_55@58 log10_switch_case_56@59 log10_switch_case_57@60 log10_switch_case_58@61 log10_switch_case_59@62 log10_switch_case_60@63 log10_switch_case_61@64 log10_switch_case_62@65 log10_switch_case_63@66 log10_switch_case_64@67 log10_switch_case_65@68 log10_switch_case_66@69 log10_switch_case_67@70 log10_switch_case_68@71 log10_switch_case_69@72 log10_switch_case_70@73 log10_switch_case_71@74 log10_switch_case_72@75 log10_switch_case_73@76 log10_switch_case_74@77 log10_switch_case_75@78 log10_switch_case_76@79 log10_switch_case_77@80
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_bury 0
+
+log10_switch_case_next@82:
+    load 0
+    store 0
+    frame_dig 0
+    callsub unwrap
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b==
+    bz log10_after_if_else@84
+    frame_dig -1
+    callsub log2
+    callsub unwrap
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x2e19dc008126bf2b
+    b/
+    callsub wrap
+    frame_bury 0
+
+log10_after_if_else@84:
+    frame_dig 0
+    swap
+    retsub
+
+log10_switch_case_77@80:
+    pushbytes 0x0332ca1b67940c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_76@79:
+    pushbytes 0x0324e964b3eca80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_75@78:
+    pushbytes 0x031708ae0045440000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_74@77:
+    pushbytes 0x030927f74c9de00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_73@76:
+    pushbytes 0x02fb474098f67c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_72@75:
+    pushbytes 0x02ed6689e54f180000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_71@74:
+    pushbytes 0x02df85d331a7b40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_70@73:
+    pushbytes 0x02d1a51c7e00500000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_69@72:
+    pushbytes 0x02c3c465ca58ec0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_68@71:
+    pushbytes 0x02b5e3af16b1880000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_67@70:
+    pushbytes 0x02a802f8630a240000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_66@69:
+    pushbytes 0x029a2241af62c00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_65@68:
+    pushbytes 0x028c418afbbb5c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_64@67:
+    pushbytes 0x027e60d44813f80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_63@66:
+    pushbytes 0x0270801d946c940000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_62@65:
+    pushbytes 0x02629f66e0c5300000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_61@64:
+    pushbytes 0x0254beb02d1dcc0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_60@63:
+    pushbytes 0x0246ddf97976680000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_59@62:
+    pushbytes 0x0238fd42c5cf040000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_58@61:
+    pushbytes 0x022b1c8c1227a00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_57@60:
+    pushbytes 0x021d3bd55e803c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_56@59:
+    pushbytes 0x020f5b1eaad8d80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_55@58:
+    pushbytes 0x02017a67f731740000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_54@57:
+    pushbytes 0x01f399b1438a100000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_53@56:
+    pushbytes 0x01e5b8fa8fe2ac0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_52@55:
+    pushbytes 0x01d7d843dc3b480000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_51@54:
+    pushbytes 0x01c9f78d2893e40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_50@53:
+    pushbytes 0x01bc16d674ec800000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_49@52:
+    pushbytes 0x01ae361fc1451c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_48@51:
+    pushbytes 0x01a055690d9db80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_47@50:
+    pushbytes 0x019274b259f6540000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_46@49:
+    pushbytes 0x018493fba64ef00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_45@48:
+    pushbytes 0x0176b344f2a78c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_44@47:
+    pushbytes 0x0168d28e3f00280000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_43@46:
+    pushbytes 0x015af1d78b58c40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_42@45:
+    pushbytes 0x014d1120d7b1600000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_41@44:
+    pushbytes 0x013f306a2409fc0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_40@43:
+    pushbytes 0x01314fb37062980000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_39@42:
+    pushbytes 0x01236efcbcbb340000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_38@41:
+    pushbytes 0x01158e460913d00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_37@40:
+    pushbytes 0x0107ad8f556c6c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_36@39:
+    pushbytes 0xf9ccd8a1c5080000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_35@38:
+    pushbytes 0xebec21ee1da40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_34@37:
+    pushbytes 0xde0b6b3a76400000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_33@36:
+    pushbytes 0xd02ab486cedc0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_32@35:
+    pushbytes 0xc249fdd327780000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_31@34:
+    pushbytes 0xb469471f80140000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_30@33:
+    pushbytes 0xa688906bd8b00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_29@32:
+    pushbytes 0x98a7d9b8314c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_28@31:
+    pushbytes 0x8ac7230489e80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_27@30:
+    pushbytes 0x7ce66c50e2840000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_26@29:
+    pushbytes 0x6f05b59d3b200000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_25@28:
+    pushbytes 0x6124fee993bc0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_24@27:
+    pushbytes 0x53444835ec580000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_23@26:
+    pushbytes 0x4563918244f40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_22@25:
+    pushbytes 0x3782dace9d900000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_21@24:
+    pushbytes 0x29a2241af62c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_20@23:
+    pushbytes 0x1bc16d674ec80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_19@22:
+    bytec 5 // 0x0de0b6b3a7640000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_18@21:
+    bytec_2 // 0x
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_17@20:
+    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffff21f494c589c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_16@19:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffe43e9298b1380000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_15@18:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffd65ddbe509d40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_14@17:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffc87d253162700000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_13@16:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffba9c6e7dbb0c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_12@15:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffacbbb7ca13a80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_11@14:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff9edb01166c440000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_10@13:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff90fa4a62c4e00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_9@12:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff831993af1d7c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_8@11:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff7538dcfb76180000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_7@10:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff67582647ceb40000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_6@9:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff59776f9427500000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_5@8:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff4b96b8e07fec0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_4@7:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff3db6022cd8880000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_3@6:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff2fd54b7931240000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_2@5:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff21f494c589c00000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_1@4:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff1413de11e25c0000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+log10_switch_case_0@3:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff0633275e3af80000
+    frame_bury 0
+    b log10_switch_case_next@82
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.log2_3045(x: bytes) -> bytes:
+log2:
+    proto 1 1
+    intc_2 // 0
+    dupn 4
+    bytec_2 // ""
+    frame_dig -1
+    callsub unwrap
+    dup
+    intc 5 // 1000000000000000000
+    itob
+    dup
+    cover 2
+    b<
+    bz log2_after_if_else@2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    bytec 20 // method "PRBMath_UD60x18_Log_InputTooSmall(uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Log_InputTooSmall
+
+log2_after_if_else@2:
+    frame_dig 6
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    callsub msb
+    dup
+    frame_bury 2
+    dup
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 3
+    bytec 7 // 0x0100
+    b<
+    bz log2_ternary_false@4
+    pushint 8
+    bzero
+    frame_dig 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_bury 5
+
+log2_ternary_merge@5:
+    frame_dig 5
+    intc_3 // 256
+    <
+    bz log2_ternary_false@7
+    intc_0 // 32
+    bzero
+    frame_dig 5
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    intc_1 // 1
+    setbit
+    frame_dig 6
+    swap
+    b/
+    frame_bury 4
+
+log2_ternary_merge@8:
+    frame_dig 4
+    frame_dig 7
+    b==
+    bz log2_after_if_else@10
+    frame_dig 3
+    callsub wrap
+    frame_bury 0
+    retsub
+
+log2_after_if_else@10:
+    pushint 2000000000000000000
+    itob
+    frame_bury 1
+    pushint 500000000000000000
+    itob
+    frame_bury 0
+
+log2_while_top@11:
+    intc_2 // 0
+    itob
+    frame_dig 0
+    b<
+    bz log2_after_while@21
+    frame_dig 4
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    dup
+    frame_bury 4
+    frame_dig 1
+    b>=
+    bz log2_after_if_else@17
+    frame_dig 3
+    frame_dig 0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 3
+    frame_dig 4
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_bury 4
+
+log2_after_if_else@17:
+    frame_dig 0
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_bury 0
+    b log2_while_top@11
+
+log2_after_while@21:
+    frame_dig 3
+    callsub wrap
+    frame_bury 0
+    retsub
+
+log2_ternary_false@7:
+    bytec_2 // 0x
+    frame_bury 4
+    b log2_ternary_merge@8
+
+log2_ternary_false@4:
+    intc_3 // 256
+    frame_bury 5
+    b log2_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.mul_3073(x: bytes, y: bytes) -> bytes:
+mul:
+    proto 2 1
+    frame_dig -2
+    callsub unwrap
+    frame_dig -1
+    callsub unwrap
+    callsub mulDiv18
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.pow_3180(x: bytes, y: bytes) -> bytes:
+pow:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -2
+    callsub unwrap
+    dup
+    frame_dig -1
+    callsub unwrap
+    swap
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz pow_else_body@5
+    frame_dig 2
+    frame_dig 3
+    b==
+    bz pow_ternary_false@3
+    intc 5 // 1000000000000000000
+    itob
+
+pow_ternary_merge@4:
+    frame_bury 0
+    retsub
+
+pow_ternary_false@3:
+    frame_dig 3
+    b pow_ternary_merge@4
+
+pow_else_body@5:
+    intc 5 // 1000000000000000000
+    itob
+    dup
+    frame_bury 0
+    frame_dig 1
+    b==
+    bz pow_after_if_else@7
+
+pow_if_body@6:
+    retsub
+
+pow_after_if_else@7:
+    frame_dig 2
+    frame_dig 3
+    b==
+    bnz pow_if_body@6
+    frame_dig 2
+    frame_dig 0
+    b==
+    bz pow_after_if_else@12
+    frame_dig -2
+    frame_bury 0
+    retsub
+
+pow_after_if_else@12:
+    frame_dig 1
+    frame_dig 0
+    b>
+    bz pow_else_body@15
+    frame_dig -2
+    callsub log2
+    frame_dig -1
+    callsub mul
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751
+
+pow_after_if_else@16:
+    frame_bury 0
+    retsub
+
+pow_else_body@15:
+    bytec 11 // 0xc097ce7bc90715b34b9f1000000000
+    frame_dig 1
+    b/
+    callsub wrap
+    callsub log2
+    frame_dig -1
+    callsub mul
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.exp2_2751
+    callsub unwrap
+    bytec 11 // 0xc097ce7bc90715b34b9f1000000000
+    swap
+    b/
+    callsub wrap
+    b pow_after_if_else@16
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.powu_3252(x: bytes, y: bytes) -> bytes:
+powu:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -2
+    callsub unwrap
+    intc_1 // 1
+    itob
+    dup
+    frame_dig -1
+    b&
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz powu_ternary_false@2
+    frame_dig 1
+    frame_bury 0
+
+powu_ternary_merge@3:
+    frame_dig -1
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup
+    frame_bury -1
+    frame_dig 3
+    b>
+    bz powu_after_while@14
+    frame_dig 1
+    dup
+    callsub mulDiv18
+    frame_bury 1
+    frame_dig -1
+    frame_dig 2
+    b&
+    frame_dig 3
+    b>
+    bz powu_ternary_merge@3
+    frame_dig 0
+    frame_dig 1
+    callsub mulDiv18
+    frame_bury 0
+    b powu_ternary_merge@3
+
+powu_after_while@14:
+    frame_dig 0
+    callsub wrap
+    frame_bury 0
+    retsub
+
+powu_ternary_false@2:
+    intc 5 // 1000000000000000000
+    itob
+    frame_bury 0
+    b powu_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294(x: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    dup
+    pushbytes 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
+    b>
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294_after_if_else@2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    pushbytes 0x5ccc8429 // method "PRBMath_UD60x18_Sqrt_Overflow(uint256)"
+    swap
+    concat
+    log
+    err // PRBMath_UD60x18_Sqrt_Overflow
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294_after_if_else@2:
+    frame_dig 0
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub sqrt
+    callsub wrap
+    swap
+    retsub

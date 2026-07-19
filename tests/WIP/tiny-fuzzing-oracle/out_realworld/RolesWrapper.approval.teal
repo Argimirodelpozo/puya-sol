@@ -1,0 +1,178 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/WIP/examples/aave-v4/contracts/RolesWrapper.sol.RolesWrapper.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd125873e 0x2cf7c1f4 0x6a53a98a 0x8c7f42cc 0x64614a29 0x3f8ebb5e 0xa80b86b9 // method "DEFAULT_ADMIN_ROLE()uint64", method "HUB_ADMIN_ROLE()uint64", method "SPOKE_ADMIN_ROLE()uint64", method "USER_POSITION_UPDATER_ROLE()uint64", method "HUB_CONFIGURATOR_ROLE()uint64", method "SPOKE_CONFIGURATOR_ROLE()uint64", method "DEFICIT_ELIMINATOR_ROLE()uint64"
+    txna ApplicationArgs 0
+    match main_DEFAULT_ADMIN_ROLE_route@5 main_HUB_ADMIN_ROLE_route@6 main_SPOKE_ADMIN_ROLE_route@7 main_USER_POSITION_UPDATER_ROLE_route@8 main_HUB_CONFIGURATOR_ROLE_route@9 main_SPOKE_CONFIGURATOR_ROLE_route@10 main_DEFICIT_ELIMINATOR_ROLE_route@11
+    err
+
+main_DEFICIT_ELIMINATOR_ROLE_route@11:
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000006
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+main_SPOKE_CONFIGURATOR_ROLE_route@10:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000005
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@22:
+    intc_1 // 0
+    b main_ternary_merge@23
+
+main_HUB_CONFIGURATOR_ROLE_route@9:
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000004
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main_USER_POSITION_UPDATER_ROLE_route@8:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000003
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
+
+main_SPOKE_ADMIN_ROLE_route@7:
+    txn GroupIndex
+    bz main_ternary_false@37
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@38:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@37:
+    intc_1 // 0
+    b main_ternary_merge@38
+
+main_HUB_ADMIN_ROLE_route@6:
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_1 // 0
+    b main_ternary_merge@43
+
+main_DEFAULT_ADMIN_ROLE_route@5:
+    txn GroupIndex
+    bz main_ternary_false@47
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@48:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@47:
+    intc_1 // 0
+    b main_ternary_merge@48
