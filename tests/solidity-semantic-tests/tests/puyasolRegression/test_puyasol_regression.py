@@ -2642,3 +2642,65 @@ def test_fnptr_dispatch_seam(harness):
     r = call("callExt(address,int128)", fake, -7,
              extra_fee=10_000, extra_apps=[target.app_id])
     assert as_signed_int(r) == -8
+
+
+def test_amount_overflow_guard(harness):
+    """puyasolRegression/contracts/amount_overflow_guard.sol — NOT an o.g. test.
+
+    A uint256 monetary amount >= 2^64 can't fit the AVM's 64-bit amount field.
+    Pre-fix, .transfer/.send/{value:} silently sent `amount mod 2^64`
+    microAlgos; now such amounts revert. A fitting amount still transfers.
+    """
+    import algosdk
+
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/amount_overflow_guard.sol", fund_wei=5_000_000
+    )
+    to = harness.localnet.account.address
+    two64 = 1 << 64
+    # fitting amount works
+    assert harness.call(app, "doTransfer(address,uint256)", to, 1000, extra_fee=10_000).reverted is False
+    assert bool(harness.call(app, "doSend(address,uint256)", to, 1000, extra_fee=10_000).abi_return) is True
+    # >= 2^64 reverts instead of sending amount mod 2^64
+    assert harness.call(app, "doTransfer(address,uint256)", to, two64, extra_fee=10_000, expect_revert=True).reverted
+    assert harness.call(app, "doSend(address,uint256)", to, two64, extra_fee=10_000, expect_revert=True).reverted
+    assert harness.call(app, "doValueCall(address,uint256)", to, two64 + 5, extra_fee=10_000, expect_revert=True).reverted
+
+
+def test_postinit_creator_only(harness):
+    """puyasolRegression/contracts/postinit_creator_only.sol — NOT an o.g. test.
+
+    __postInit gained a creator-only guard: the legitimate create+postInit
+    (both from the deployer = app creator) must still deploy and initialize
+    state. A front-runner (different sender) would revert on the guard — not
+    exercised here (single-account harness); the broad postInit corpus covers
+    the positive path.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/postinit_creator_only.sol", ctor_args=[42],
+        postinit_inner_txns=2,
+    )
+    assert as_int(harness.call(app, "len()").abi_return) == 2
+    assert as_int(harness.call(app, "arr(uint256)", 0).abi_return) == 42
+    assert as_int(harness.call(app, "arr(uint256)", 1).abi_return) == 43
+    owner = harness.call(app, "owner()").abi_return
+    creator = harness.localnet.account.address
+    owner_addr = owner if isinstance(owner, str) else algosdk.encoding.encode_address(bytes(owner))
+    assert owner_addr == creator
+
+
+def test_ecpairing_length_guard(harness):
+    """puyasolRegression/contracts/ecpairing_length_guard.sol — NOT an o.g. test.
+
+    ecPairing reshaping hard-codes the 2-pair (384-byte) layout; a wrong-length
+    input previously checked only pairs 0-1 (accepting invalid proofs) or
+    panicked mid-extract. Now anything but exactly 384 bytes reverts at the
+    length assert (before any pairing op — cheap, no budget needed).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/ecpairing_length_guard.sol"
+    )
+    for n in (0, 100, 383, 385, 768):
+        r = harness.call(app, "pairWrongLen(byte[])", b"\x00" * n,
+                         extra_fee=10_000, expect_revert=True)
+        assert r.reverted, f"pairing with {n}-byte input must revert (not 384)"

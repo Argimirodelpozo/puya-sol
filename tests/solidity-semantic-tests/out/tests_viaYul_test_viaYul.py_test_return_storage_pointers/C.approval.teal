@@ -116,6 +116,10 @@ main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec_0 // "__ctor_pending"
     intc_0 // 0
     app_global_put

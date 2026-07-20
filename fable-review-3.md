@@ -296,7 +296,7 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
   copy is ARC4-prefix-shifted vs `returndatasize()` counting the prefix
   (`assembly/PrecompileDispatch.cpp:216-341`). Small **constant** non-precompile addresses fall
   to warn + `success=true` stub (187-194) — the pattern the hard errors were added to kill.
-- **M9 ○ ecPairing hard-codes the 2-pair layout, no length assert**
+- **M9 ✅ FIXED 2026-07-20** (input pinned + asserted == 384 bytes; k-pair loud-reverts). ecPairing hard-codes the 2-pair layout, no length assert
   (`itxn/InnerCallShapes.cpp:416-451`): >2 pairs checks only the first two — a 4-pair Groth16
   verify can accept invalid proofs; <2 pairs runtime-panics. Needs `assert len == 384` minimum.
 - **M10 ○ modExp hard-codes 32/32/32 EIP-198 headers, never asserts them; `mod=0` panics
@@ -319,14 +319,14 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
   (`InnerCallHandlers.cpp:545-551`), and passes args unc coerced; plus the
   `handleCallWithEncodeCall` fallback twin mis-encodes returns (bare itob / unpadded biguint)
   and drops extra return values (`InnerCallShapes.cpp:55-115`).
-- **M17 ○ `.transfer`/`.send`/ASA amounts truncate uint256→uint64 mod 2^64 silently**
+- **M17 ✅ FIXED 2026-07-20** (checkedAmountToUint64 at the 4 money sites; assert < 2^64). `.transfer`/`.send`/ASA amounts truncate uint256→uint64 mod 2^64 silently
   (`AsaIntrinsics.cpp:46-58`, `InnerCallHandlers.cpp:438,446`): `transfer(100 ether)` sends
   `1e20 mod 2^64` microalgos. Needs a high-bits assert.
 - **M18 ○ Overridden base overloads re-emitted as duplicate ABI methods**
   (`ContractBuilder.cpp:574-607` dedup key `name#id` never consults overriddenIds) — currently
   saved by emission order; ordering-dependent landmine (verified: two `f(u256)` methods in
   AWST).
-- **M19 ○ `__postInit` is an unauthenticated ABI method** re-supplying ctor args
+- **M19 ✅ FIXED 2026-07-20** (creator-only assert Txn.Sender==CreatorAddress; pre-init dispatch window still open). `__postInit` is an unauthenticated ABI method re-supplying ctor args
   (`ApprovalProgramBuilder.cpp:375-417`), and regular methods dispatch while `__ctor_pending`
   — deploy front-run / pre-init window unless tooling always groups atomically. Worth
   `assert !__ctor_pending` on regular routes and creator-only postInit.

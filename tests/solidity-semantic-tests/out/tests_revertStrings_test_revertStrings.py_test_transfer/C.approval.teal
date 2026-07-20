@@ -93,6 +93,8 @@ main_h_route@10:
 main_ternary_merge@23:
     !
     assert // not payable
+    intc_1 // 0
+    assert // transfer amount exceeds uint64 (AVM amounts are 64-bit)
     itxn_begin
     intc_1 // 0
     bytec_1 // "a"
@@ -155,6 +157,10 @@ main___postInit_route@7:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put

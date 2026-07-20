@@ -1,0 +1,1049 @@
+bringing up nodes...
+bringing up nodes...
+
+.....x...x..x..x........xxx...XXXXX.X.X...X..X.X..XX..XX.XX.XX...X.Xx.X. [  4%]
+X.XX.X.x.X.............................................................x [  9%]
+.....................................................x...x........x..... [ 14%]
+...................................................xx.x.x..xx..x........ [ 19%]
+.................................xx..........x..............x.x.x....... [ 24%]
+........................................................x........x..X..x [ 28%]
+............x.......x.........x..........................x.............. [ 33%]
+..................x.....................x..................x.........x.. [ 38%]
+.xx.x..........................................................xxF.F..F. [ 43%]
+....x.....x...F....F...F..............F..x................F............. [ 48%]
+........................................................................ [ 52%]
+.....x.............................................................xxx.. [ 57%]
+xxxx.xx................................................................. [ 62%]
+......x.......................x..xxx..x................................. [ 67%]
+..x......x.x.................................F.......................... [ 72%]
+.......................x................................x..........x.... [ 77%]
+...............xxxxxxxxxxxxxxxxxxxx.....................F......x........ [ 81%]
+.........x........................x.........x.........xX................ [ 86%]
+......F.................x.......x...xx..xx.....x.....x.....F............ [ 91%]
+..........x.................xxxx.xx.........x........................... [ 96%]
+..............x.........................................                 [100%]
+=================================== FAILURES ===================================
+_________________________________ test_base64 __________________________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x775cc87f14f0>
+
+    def test_base64(harness):
+        """externalContracts/contracts/base64.sol
+    
+        encode_no_asm (plain-Solidity Base64) is exercised across the full
+        RFC4648 vector set. encode_inline_asm walks raw EVM memory pointers
+        (mload/mstore8) in Yul; only its empty-input case is checked here —
+        non-empty inputs need EVM-memory-model fidelity beyond puya-sol's
+        blob-backed memory model.
+        """
+>       app = harness.compile_and_deploy('externalContracts/contracts/base64.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/externalContracts/test_externalContracts.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/base64.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_externalContracts_test_externalContracts.py_test_base64')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+>               raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+E               framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:464: CompileError
+_____________________ test_keccak_optimization_bug_string ______________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db78d4560f0>
+
+    def test_keccak_optimization_bug_string(harness):  # currently fails
+        """inlineAssembly/contracts/keccak_optimization_bug_string.sol"""
+>       app = harness.compile_and_deploy('inlineAssembly/contracts/keccak_optimization_bug_string.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/inlineAssembly/test_inlineAssembly.py:533: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/keccak_optimization_bug_string.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_inlineAssembly_test_inlineAssembly.py_test_keccak_optimization_bug_string')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+>               raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+E               framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:464: CompileError
+__________________________________ test_mcopy __________________________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db78c62e210>
+
+    def test_mcopy(harness):  # currently fails: asm-referenced memory params/returns
+        # aren't blob-materialized (src/dst resolve to their VALUES, not pointers) —
+        # needs the memory-pointer seam model. Byte-granular mcopy itself is supported.
+        """inlineAssembly/contracts/mcopy.sol"""
+        app = harness.compile_and_deploy('inlineAssembly/contracts/mcopy.sol')
+        # ARC-4 form of solc's raw-calldata expectation: one 32-byte payload in, the
+        # spliced 32-byte payload out (the 0x20/0x20 head words are EVM ABI framing,
+        # carried implicitly by byte[] here).
+        src = bytes.fromhex('ffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff')
+        r = harness.call(app, 'f(bytes)', src)
+>       assert as_bytes(r.abi_return) == bytes.fromhex(
+               ^^^^^^^^^^^^^^^^^^^^^^
+            '0000000000000000776655443322110000112233445566770000000000000000')
+
+tests/inlineAssembly/test_inlineAssembly.py:564: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = None
+
+    def as_bytes(value) -> bytes:
+        """Coerce algosdk's typed return into a bytes object.
+    
+        int → 32-byte big-endian. bytes → unchanged. list[int]/tuple[int] →
+        bytes(...). str → utf-8 encode (for `string` returns).
+        """
+        if isinstance(value, (bytes, bytearray)):
+            return bytes(value)
+        if isinstance(value, (list, tuple)):
+            return bytes(value)
+        if isinstance(value, int):
+            return value.to_bytes(32, "big")
+        if isinstance(value, str):
+            return value.encode("utf-8")
+>       raise TypeError(f"can't coerce {type(value).__name__} to bytes: {value!r}")
+E       TypeError: can't coerce NoneType to bytes: None
+
+framework/values.py:149: TypeError
+____________________ test_transient_storage_low_level_calls ____________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db78c5a1100>
+
+    def test_transient_storage_low_level_calls(harness):  # currently fails
+        """inlineAssembly/contracts/transient_storage_low_level_calls.sol"""
+>       app = harness.compile_and_deploy('inlineAssembly/contracts/transient_storage_low_level_calls.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/inlineAssembly/test_inlineAssembly.py:738: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_low_level_calls.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_inlineAssembly_test_inlineAssembly.py_test_transient_storage_low_level_calls')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+>               raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+E               framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:464: CompileError
+_____________________________ test_prbmath_signed ______________________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x775cc8830320>
+
+    def test_prbmath_signed(harness):  # currently fails
+        """externalContracts/contracts/prbmath_signed.sol"""
+>       app = harness.compile_and_deploy('externalContracts/contracts/prbmath_signed.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/externalContracts/test_externalContracts.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:150: in compile_and_deploy
+    return self.deploy(
+framework/harness.py:118: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+localnet = <framework.localnet.LocalNet object at 0x775cc982bdd0>
+artifacts = {'approval_teal': PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-test...rnalContracts.py_test_prbmath_signed/test.clear.teal'), 'sol_path': PosixPath('/tmp/multisource_s760m1iq/prbmath.sol')}
+
+    def deploy(
+        localnet: "LocalNet",
+        artifacts: dict,
+        *,
+        ctor_args: list | None = None,
+        fund_wei: int = 0,
+        extra_funding_microalgos: int = 0,
+        postinit_args: list | None = None,
+        postinit_budget_pool: int = 0,
+        postinit_inner_txns: int = 0,
+    ) -> DeployedApp:
+        """Deploy the given compiled-contract artifacts. Raises DeployError on failure.
+    
+        artifacts: dict with keys 'arc56', 'approval_teal', 'clear_teal' (Path each).
+        ctor_args: list of Python values matched against the constructor's
+            ARC4 param types (one Python value per param). Passed as
+            ApplicationArgs[0..N-1] to the create txn.
+        fund_wei: extra microAlgos added on top of the default min-balance funding.
+            Maps to Solidity `constructor() payable; new X{value: ...}` semantics.
+        postinit_args: list of Python values for __postInit if your constructor
+            body needs to run after the create txn (boxes, etc.). When None,
+            __postInit is called with no args if present.
+        """
+        app_spec = _load_arc56(artifacts["arc56"])
+        algod = localnet.algod
+    
+        approval_src = _substitute_template_vars(
+            artifacts["approval_teal"].read_text(),
+            artifacts["approval_teal"].parent / "deploy.tmpl.json",
+        )
+        clear_src = _substitute_template_vars(
+            artifacts["clear_teal"].read_text(),
+            artifacts["clear_teal"].parent / "deploy.tmpl.json",
+        )
+        approval_bin = encoding.base64.b64decode(algod.compile(approval_src)["result"])
+        clear_bin = encoding.base64.b64decode(algod.compile(clear_src)["result"])
+    
+        # algod caps the SUM of approval + clear at (1 + extra_pages) * 2048,
+        # not the max of the two individually. snark.sol hits this: approval=6142
+        # + clear=4 = 6146, which needs extra_pages=3 (budget 8192), not 2 (6144).
+        extra_pages = max(0, (len(approval_bin) + len(clear_bin) - 1) // 2048)
+        # AVM hard cap: MaxExtraAppProgramPages = 3 → 8192 bytes total. Fail with a
+        # clear platform-limit message instead of algod's raw txn-dump rejection
+        # (fuzz campaigns misread that as a compiler finding). Splitting oversized
+        # contracts is what --uros-splitter / --fn-split exist for.
+        if extra_pages > 3:
+>           raise DeployError(
+                f"program exceeds AVM 8KB cap: approval={len(approval_bin)}B + "
+                f"clear={len(clear_bin)}B needs extra_pages={extra_pages} (max 3); "
+                "not a compiler bug — split the contract (uros splitter)")
+E           framework.deploy.DeployError: program exceeds AVM 8KB cap: approval=12306B + clear=4B needs extra_pages=6 (max 3); not a compiler bug — split the contract (uros splitter)
+
+framework/deploy.py:132: DeployError
+________________________ test_tstore_hidden_staticcall _________________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db78c357b00>
+
+    def test_tstore_hidden_staticcall(harness):  # currently fails
+        """inlineAssembly/contracts/tstore_hidden_staticcall.sol"""
+        app = harness.compile_and_deploy('inlineAssembly/contracts/tstore_hidden_staticcall.sol')
+        r = harness.call(app, 'test()', expect_revert=True)
+>       assert r.reverted
+E       AssertionError: assert False
+E        +  where False = Result(abi_return=None, logs=[], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message='').reverted
+
+tests/inlineAssembly/test_inlineAssembly.py:825: AssertionError
+____________________________ test_prbmath_unsigned _____________________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x775cc866f2c0>
+
+    def test_prbmath_unsigned(harness):  # currently fails
+        """externalContracts/contracts/prbmath_unsigned.sol"""
+>       app = harness.compile_and_deploy('externalContracts/contracts/prbmath_unsigned.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/externalContracts/test_externalContracts.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:150: in compile_and_deploy
+    return self.deploy(
+framework/harness.py:118: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+localnet = <framework.localnet.LocalNet object at 0x775cc982bdd0>
+artifacts = {'approval_teal': PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-test...alContracts.py_test_prbmath_unsigned/test.clear.teal'), 'sol_path': PosixPath('/tmp/multisource_6i7cj4r3/prbmath.sol')}
+
+    def deploy(
+        localnet: "LocalNet",
+        artifacts: dict,
+        *,
+        ctor_args: list | None = None,
+        fund_wei: int = 0,
+        extra_funding_microalgos: int = 0,
+        postinit_args: list | None = None,
+        postinit_budget_pool: int = 0,
+        postinit_inner_txns: int = 0,
+    ) -> DeployedApp:
+        """Deploy the given compiled-contract artifacts. Raises DeployError on failure.
+    
+        artifacts: dict with keys 'arc56', 'approval_teal', 'clear_teal' (Path each).
+        ctor_args: list of Python values matched against the constructor's
+            ARC4 param types (one Python value per param). Passed as
+            ApplicationArgs[0..N-1] to the create txn.
+        fund_wei: extra microAlgos added on top of the default min-balance funding.
+            Maps to Solidity `constructor() payable; new X{value: ...}` semantics.
+        postinit_args: list of Python values for __postInit if your constructor
+            body needs to run after the create txn (boxes, etc.). When None,
+            __postInit is called with no args if present.
+        """
+        app_spec = _load_arc56(artifacts["arc56"])
+        algod = localnet.algod
+    
+        approval_src = _substitute_template_vars(
+            artifacts["approval_teal"].read_text(),
+            artifacts["approval_teal"].parent / "deploy.tmpl.json",
+        )
+        clear_src = _substitute_template_vars(
+            artifacts["clear_teal"].read_text(),
+            artifacts["clear_teal"].parent / "deploy.tmpl.json",
+        )
+        approval_bin = encoding.base64.b64decode(algod.compile(approval_src)["result"])
+        clear_bin = encoding.base64.b64decode(algod.compile(clear_src)["result"])
+    
+        # algod caps the SUM of approval + clear at (1 + extra_pages) * 2048,
+        # not the max of the two individually. snark.sol hits this: approval=6142
+        # + clear=4 = 6146, which needs extra_pages=3 (budget 8192), not 2 (6144).
+        extra_pages = max(0, (len(approval_bin) + len(clear_bin) - 1) // 2048)
+        # AVM hard cap: MaxExtraAppProgramPages = 3 → 8192 bytes total. Fail with a
+        # clear platform-limit message instead of algod's raw txn-dump rejection
+        # (fuzz campaigns misread that as a compiler finding). Splitting oversized
+        # contracts is what --uros-splitter / --fn-split exist for.
+        if extra_pages > 3:
+>           raise DeployError(
+                f"program exceeds AVM 8KB cap: approval={len(approval_bin)}B + "
+                f"clear={len(clear_bin)}B needs extra_pages={extra_pages} (max 3); "
+                "not a compiler bug — split the contract (uros splitter)")
+E           framework.deploy.DeployError: program exceeds AVM 8KB cap: approval=10764B + clear=4B needs extra_pages=5 (max 3); not a compiler bug — split the contract (uros splitter)
+
+framework/deploy.py:132: DeployError
+_________________________________ test_strings _________________________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x775cc8d484a0>
+
+    def test_strings(harness):  # currently fails
+        """externalContracts/contracts/strings.sol"""
+>       app = harness.compile_and_deploy('externalContracts/contracts/strings.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/externalContracts/test_externalContracts.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/strings.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_externalContracts_test_externalContracts.py_test_strings')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+>               raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+E               framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:464: CompileError
+___________________ test_dce_reverting_subexpr_literal_folds ___________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db78c2869c0>
+
+    def test_dce_reverting_subexpr_literal_folds(harness):
+        """BACKEND half — OPEN BUG, this test FAILS on purpose until it's fixed.
+    
+        With a LITERAL fold (shift>=256, identical-branch ternary, **0, *0, &0) puya's DCE drops
+        the unused div/mod whose zero-divisor panic carries the EVM revert ('/', '%', 'b/', 'b%'
+        are in SIDE_EFFECT_FREE_AVM_OPS) -> AVM returns the folded value where solc+EVM revert.
+        A one-line fork fix exists and was validated (zero-reg, closes all shapes) but was
+        REVERTED by policy: no puya fork changes. Preserved as fork-remote 716e63e44; see
+        puyabug.md #9. Not xfailed: open bugs stay as honest failures (xfail is reserved for
+        by-design/purposely-unsupported behavior).
+        """
+        app = harness.compile_and_deploy("puyasolRegression/contracts/dce_reverting_subexpr.sol")
+        for sig, args in [
+            ("divdivShl(uint256)", (0,)),
+            ("modShl(uint256,uint256)", (7, 0)),
+            ("ternFold(uint256,uint256)", (7, 0)),
+            ("expZero(uint256,uint256)", (7, 0)),
+            ("mulZero(uint256,uint256)", (7, 0)),
+        ]:
+            r = harness.call(app, sig, *args, expect_revert=True)
+>           assert getattr(r, "reverted", False), f"{sig}{args} must revert (divide/mod by zero)"
+E           AssertionError: divdivShl(uint256)(0,) must revert (divide/mod by zero)
+E           assert False
+E            +  where False = getattr(Result(abi_return=0, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...x00\x00\x00\x00\x00\x00\x00'], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message=''), 'reverted', False)
+
+tests/puyasolRegression/test_puyasol_regression.py:2039: AssertionError
+________________________ test_storage_packed_array_copy ________________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x775cc86913a0>
+
+    def test_storage_packed_array_copy(harness):  # currently fails
+        """storage/contracts/storage_packed_array_copy.sol"""
+>       app = harness.compile_and_deploy('storage/contracts/storage_packed_array_copy.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage/test_storage.py:934: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_packed_array_copy.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_storage_test_storage.py_test_storage_packed_array_copy')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+                raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+    
+            # Stage 2 — backend. Reuse cached TEAL if the AWST is unchanged.
+            # On a miss, first try the session-persistent `puya serve` backend
+            # (see puya_serve.py): it runs the same awst_to_teal + artifact
+            # writing on the stage-1 AWST without re-paying the Python import
+            # startup, and ports the deploy.tmpl.json child-template step. On
+            # ANY non-success there, fall back to the full puya-sol run
+            # (frontend+backend+child-tmpl gen, exactly as before) — the
+            # subprocess stays the source of truth for failures. Either way the
+            # backend artifacts land in out_dir and are cached identically
+            # (serve output is byte-identical to subprocess output).
+            bkey = _backend_cache_key(
+                out_dir,
+                _flags_blob(remappings, ensure_budget, via_yul_behavior, evm_version),
+            )
+            if not (bkey and _backend_cache_lookup(bkey, out_dir)):
+                from .puya_serve import compile_via_server
+                if not compile_via_server(out_dir, timeout=timeout):
+                    full = _run(str(PUYA))
+                    if full.returncode != 0:
+>                       raise CompileError(
+                            f"puya-sol exited {full.returncode}",
+                            stdout=full.stdout, stderr=full.stderr,
+                        )
+E                       framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:488: CompileError
+__________________________ test_storage_layout_struct __________________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db787fbc980>
+
+    def test_storage_layout_struct(harness):
+        """userDefinedValueType/contracts/storage_layout_struct.sol"""
+>       app = harness.compile_and_deploy('userDefinedValueType/contracts/storage_layout_struct.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/userDefinedValueType/test_userDefinedValueType.py:544: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/storage_layout_struct.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_userDefinedValueType_test_userDefinedValueType.py_test_storage_layout_struct')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+>               raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+E               framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:464: CompileError
+______________________ test_different_call_type_transient ______________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+
+harness = <framework.harness.Harness object at 0x7db787fdb8f0>
+
+    def test_different_call_type_transient(harness):  # currently fails
+        """various/contracts/different_call_type_transient.sol"""
+>       app = harness.compile_and_deploy('various/contracts/different_call_type_transient.sol')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/various/test_various.py:215: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+framework/harness.py:144: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:102: in compile
+    return compile_sol(resolved, self.out_dir, **opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sol_path = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol')
+out_dir = PosixPath('/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_various_test_various.py_test_different_call_type_transient')
+
+    def compile_sol(
+        sol_path: Path,
+        out_dir: Path,
+        *,
+        ensure_budget: dict[str, int] | None = None,
+        via_yul_behavior: bool = False,
+        evm_version: str | None = None,
+        timeout: int = 120,
+    ) -> CompiledArtifacts:
+        """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
+    
+        Raises CompileError on non-zero exit. The caller is expected to
+        interpret a compile failure as the test's terminal outcome.
+        """
+        from multisource_splitter import split_multisource
+    
+        out_dir.mkdir(parents=True, exist_ok=True)
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    
+        # Cache lookup: hash all source files + flags + compiler-stack signature.
+        # On hit, copy artifacts straight into out_dir and skip the subprocess.
+        cache_key = _compute_cache_key(
+            source_path=source_path,
+            all_sources=all_sources,
+            import_dir=import_dir,
+            remappings=remappings,
+            ensure_budget=ensure_budget,
+            via_yul_behavior=via_yul_behavior,
+            evm_version=evm_version,
+        )
+        cache_hit = _cache_lookup(cache_key, out_dir)
+        main_source_text = ""
+        try:
+            main_source_text = source_path.read_text()
+        except Exception:
+            pass
+        if cache_hit:
+            if import_dir:
+                shutil.rmtree(import_dir, ignore_errors=True)
+            artifacts = CompiledArtifacts(
+                main_source=source_path, main_source_text=main_source_text
+            )
+            for arc56 in out_dir.glob("*.arc56.json"):
+                name = arc56.stem.replace(".arc56", "")
+                artifacts.by_contract[name] = {
+                    "arc56": arc56,
+                    "approval_teal": out_dir / f"{name}.approval.teal",
+                    "clear_teal": out_dir / f"{name}.clear.teal",
+                    "sol_path": source_path,
+                }
+            return artifacts
+    
+        # Strip PYTHONPATH from the env when invoking puya-sol → puya. The
+        # test runner often needs `PYTHONPATH=~/.local/lib/python3.12/site-packages`
+        # set (for algosdk), but that user-site contains an OLDER puya install
+        # which shadows the project's puya/.venv puya when puya-sol spawns the
+        # backend subprocess. Result: missing optimizations like
+        # box_dynamic_array_concat_fixed → unoptimized concat hits the 4KB
+        # stack-value cap on long dynamic arrays.
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    
+        def _run(puya_path: str):
+            return subprocess.run(
+                _puya_sol_cmd(
+                    source_path, all_sources, out_dir, import_dir, remappings,
+                    ensure_budget, via_yul_behavior, evm_version, puya_path,
+                ),
+                capture_output=True, text=True, timeout=timeout, env=env,
+            )
+    
+        try:
+            # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+            # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
+            # compile error (bad Solidity, hard-errored EVM feature) surfaces here
+            # — same terminal outcome as before.
+            front = _run(_NOOP_PUYA)
+            if front.returncode != 0:
+>               raise CompileError(
+                    f"puya-sol exited {front.returncode}",
+                    stdout=front.stdout, stderr=front.stderr,
+                )
+E               framework.compile.CompileError: puya-sol exited 1
+
+framework/compile.py:464: CompileError
+=========================== short test summary info ============================
+FAILED tests/externalContracts/test_externalContracts.py::test_base64 - frame...
+FAILED tests/inlineAssembly/test_inlineAssembly.py::test_keccak_optimization_bug_string
+FAILED tests/inlineAssembly/test_inlineAssembly.py::test_mcopy - TypeError: c...
+FAILED tests/inlineAssembly/test_inlineAssembly.py::test_transient_storage_low_level_calls
+FAILED tests/externalContracts/test_externalContracts.py::test_prbmath_signed
+FAILED tests/inlineAssembly/test_inlineAssembly.py::test_tstore_hidden_staticcall
+FAILED tests/externalContracts/test_externalContracts.py::test_prbmath_unsigned
+FAILED tests/externalContracts/test_externalContracts.py::test_strings - fram...
+FAILED tests/puyasolRegression/test_puyasol_regression.py::test_dce_reverting_subexpr_literal_folds
+FAILED tests/storage/test_storage.py::test_storage_packed_array_copy - framew...
+FAILED tests/userDefinedValueType/test_userDefinedValueType.py::test_storage_layout_struct
+FAILED tests/various/test_various.py::test_different_call_type_transient - fr...
+12 failed, 1347 passed, 109 xfailed, 28 xpassed in 160.16s (0:02:40)

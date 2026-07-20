@@ -1,3 +1,23 @@
+# Semantic Test Status — v456
+
+> **fix: fable-review-3 security mediums M9/M17/M19 (2026-07-20):**
+> **12 failed / 1347 passed / 109 xf / 28 xp** (failure set identical to the canonical baseline = zero
+> regressions; +3 guards). (M17) monetary amounts >= 2^64 now REVERT instead of silently sending
+> `amount mod 2^64`: `.transfer`/`.send`/`{value:}`/ASA-transfer amounts route through the new
+> TypeCoercion::checkedAmountToUint64 (pin + assert < 2^64 before truncating) — the AVM amount field is
+> 64-bit, so `transfer(100 ether)` (1e20) was silently sending 1e20 mod 2^64. Kept OUT of the shared
+> implicitNumericCast (masking/indexing truncate by design) — only the four money sites. (M9) the ecPairing
+> (0x08) precompile reshaping hard-codes the 2-pair 384-byte layout; a longer input (Groth16 uses 3-4
+> pairs) silently checked only pairs 0-1 — accepting invalid proofs — and a shorter one panicked
+> mid-extract. Now the input is pinned once (also fixes the ~12x re-eval) and asserted == 384 bytes;
+> anything else reverts loudly (k-pair pairing stays unsupported, but SAFE). (M19) __postInit gained a
+> CREATOR-ONLY guard (assert Txn.Sender == Global.CreatorAddress): it is a public ABI method that
+> re-supplies ctor args and runs the ctor body — the __ctor_pending flag only blocks a double call, so a
+> front-runner could capture ownership initializers. Deploy tooling groups create+postInit from one
+> sender, so the creator is the legitimate caller. Guards: test_amount_overflow_guard,
+> test_ecpairing_length_guard, test_postinit_creator_only.
+> Full run: RESULTS_review3_sec.txt.
+
 # Semantic Test Status — v455
 
 > **fix: fable-review-3 H14 function-pointer encode/dispatch seam (2026-07-20):**
