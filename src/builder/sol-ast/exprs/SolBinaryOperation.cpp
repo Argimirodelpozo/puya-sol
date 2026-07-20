@@ -256,6 +256,16 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 	auto right = buildExpr(m_binOp.rightExpression());
 	auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
 
+	// Checked `**` references its operands in the 0**0 special case AND the
+	// pow computation (verified: `x ** f()` ran f twice). The signed path
+	// below wraps unconditionally; pin here for the unsigned Exp path too
+	// (makeEvalOnce is idempotent and skips trivially-duplicable leaves).
+	if (m_binOp.getOperator() == Token::Exp)
+	{
+		left = awst::makeEvalOnce(std::move(left), m_loc);
+		right = awst::makeEvalOnce(std::move(right), m_loc);
+	}
+
 	// 4. Signed integer arithmetic (mod 2^N + overflow); must precede sol-eb dispatch.
 	auto const* commonType = m_binOp.annotation().commonType;
 	if (auto const* intType = dynamic_cast<IntegerType const*>(commonType))

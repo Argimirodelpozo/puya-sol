@@ -742,6 +742,13 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 		}
 		if (hasUnaryOp)
 		{
+			// Checked negate references the operand in the overflow assert AND
+			// the negation (verified: -g() ran g 3×); biguint ~ references it
+			// in len + extract. Pin once — the same wrapped node also feeds the
+			// handleNot/handleNegate/handleBitNot fallbacks below. Inc/Dec/
+			// Delete never enter this block (their operand must stay an
+			// lvalue-shaped tree).
+			operand = awst::makeEvalOnce(std::move(operand), m_loc);
 			auto* solType = m_unaryOp.subExpression().annotation().type;
 			auto builder = m_ctx.builderForInstance(solType, operand);
 			if (builder)
