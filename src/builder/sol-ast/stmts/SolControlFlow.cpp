@@ -55,9 +55,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 		? buildBranch(*m_node.falseStatement())
 		: nullptr;
 
+	// BOTH pending kinds precede the IfElse: post-pendings carry effects of
+	// EVALUATING the condition (internal-call storage/memory write-backs,
+	// push/pop box writes) — they must complete before either branch runs.
+	// Emitting them after the IfElse read pre-mutation state in the branches
+	// and LOST the effect entirely when a branch returned/halted.
 	for (auto& p: prePending) result.push_back(std::move(p));
-	result.push_back(awst::makeIfElse(std::move(cond), std::move(ifBranch), std::move(elseBranch), m_loc));
 	for (auto& p: postPending) result.push_back(std::move(p));
+	result.push_back(awst::makeIfElse(std::move(cond), std::move(ifBranch), std::move(elseBranch), m_loc));
 	return result;
 }
 
@@ -81,12 +86,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 
 		auto cond = bc.build(m_node.condition());
+		// Capture the condition build's pendings NOW (bounds asserts, index
+		// temps, write-backs): un-captured they were drained by the first
+		// BODY statement — executing at the TOP of the body while the test
+		// runs at the BOTTOM, one iteration apart (and leaking out of the
+		// loop entirely for bodies that never drain). They re-run with the
+		// test each iteration, bundled in one block so the `continue` splice
+		// (doWhileCondBreak) carries them too.
+		auto condPre = bc.takePrePending();
+		{ auto cp = bc.takePending(); for (auto& p: cp) condPre.push_back(std::move(p)); }
 		auto notCond = awst::makeNot(std::move(cond), m_loc);
 
 		auto breakBlock = awst::makeBlock(m_loc);
 		breakBlock->body.push_back(awst::makeLoopExit(m_loc));
 
-		auto ifBreak = awst::makeIfElse(notCond, breakBlock, nullptr, m_loc);
+		std::shared_ptr<awst::Statement> ifBreak =
+			awst::makeIfElse(notCond, breakBlock, nullptr, m_loc);
+		if (!condPre.empty())
+		{
+			auto testBlock = awst::makeBlock(m_loc);
+			for (auto& p: condPre) testBlock->body.push_back(std::move(p));
+			testBlock->body.push_back(std::move(ifBreak));
+			ifBreak = std::move(testBlock);
+		}
 
 		LoopContext loopCtx;
 		loopCtx.doWhileCondBreak = ifBreak;

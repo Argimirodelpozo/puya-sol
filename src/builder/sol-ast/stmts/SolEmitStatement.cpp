@@ -130,7 +130,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		logCall->stackArgs.push_back(std::move(selector));
 
 		auto stmt = awst::makeExpressionStatement(logCall, m_loc);
-		return {stmt};
+		std::vector<std::shared_ptr<awst::Statement>> result;
+		m_blk.builderCtx().appendPendingTo(result); // defensive: no args, but never leak
+		result.push_back(std::move(stmt));
+		return result;
 	}
 
 	std::vector<std::pair<std::string, awst::WType const*>> structFields;
@@ -148,6 +151,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	auto stmt = awst::makeExpressionStatement(emit, m_loc);
 
 	std::vector<std::shared_ptr<awst::Statement>> result;
+	// Drain the shared pending buffers FIRST: arg builds push pre-statements
+	// (bounds asserts, eval-once temp assignments, hoisted submits) that the
+	// emit's argument values reference. This handler previously never drained
+	// — the leftovers leaked into whichever statement translated next
+	// (potentially in a different function) and temps were read unassigned.
+	m_blk.builderCtx().appendPendingTo(result);
 	for (auto& s: preStatements)
 		result.push_back(std::move(s));
 	result.push_back(std::move(stmt));
