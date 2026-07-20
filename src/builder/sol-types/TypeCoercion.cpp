@@ -194,10 +194,20 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	}
 	if (auto* cond = dynamic_cast<awst::ConditionalExpression*>(_value.get()))
 	{
-		wrapItems(dynamic_cast<awst::TupleExpression*>(cond->trueExpr.get()));
-		wrapItems(dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get()));
-		cond->wtype = makeWireTuple();
-		return _value;
+		auto* trueTuple = dynamic_cast<awst::TupleExpression*>(cond->trueExpr.get());
+		auto* falseTuple = dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get());
+		if (trueTuple && falseTuple)
+		{
+			wrapItems(trueTuple);
+			wrapItems(falseTuple);
+			cond->wtype = makeWireTuple();
+			return _value;
+		}
+		// A branch that is a CALL or nested conditional can't be wrapped in
+		// place — retyping the node while leaving it unencoded shipped raw
+		// native values on the wire (minimal-length biguint where arc4.uint256
+		// is expected). Fall through to the opaque spill, which evaluates the
+		// whole conditional into a temp and rebuilds encoded items.
 	}
 	// Opaque tuple value (e.g. `return f()`): spill to a temp, then rebuild as a
 	// literal tuple of encoded items. (Post-pass used per-signedness temp names;
