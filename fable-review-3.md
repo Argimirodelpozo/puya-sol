@@ -76,7 +76,12 @@ comment at 647-649); the postInit twin never did. Classic C3.
 
 ## Part II — High
 
-### Pending-statement sequencing cluster (sol-ast/stmts) — one invariant, five holes
+### Pending-statement sequencing cluster (sol-ast/stmts) — one invariant, five holes — FIXED (H1/H2/H3/H5) + T1 DETECTOR LANDED
+> **2026-07-20:** if-condition post-pendings precede the IfElse; emit drains; do-while bundles
+> condition pendings with the bottom-of-body test (continue splice included); asm buildBlock
+> drains at block end. T1 statement-boundary leak warning in SolBlock: ZERO hits corpus-wide.
+> Guard test_pending_drain_batch. H4 (write-backs post-pending → same-statement reads stale,
+> statement-form dependent) remains OPEN — needs the temp-spill re-shape of queueStmt sites.
 The ContractContext pre/post-pending buffers are the effect-sequencing backbone, and statement
 handlers disagree about draining them:
 

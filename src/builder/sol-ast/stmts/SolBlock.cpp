@@ -213,6 +213,23 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 			SolStatementVisitor visitor(m_blk);
 			for (auto& s: visitor.visit(*stmt))
 				if (s) awstBlock->body.push_back(std::move(s));
+			// T1 (fable-review-3): every statement handler must drain the
+			// shared pending buffers into its own output — leftovers execute
+			// with the NEXT statement (or leak into another function), the
+			// bug class behind the emit/if/do-while/ctor-arg fixes. Salvage
+			// by draining here, but warn loudly so the hole gets fixed.
+			auto& bcLeak = m_blk.builderCtx();
+			if (!bcLeak.prePendingStatements.empty() || !bcLeak.pendingStatements.empty())
+			{
+				Logger::instance().warning(
+					"internal: statement handler left "
+					+ std::to_string(bcLeak.prePendingStatements.size()
+						+ bcLeak.pendingStatements.size())
+					+ " pending statement(s) undrained — sequencing may be wrong "
+					  "(fable-review-3 T1; report this)",
+					m_blk.makeLoc(stmt->location()));
+				bcLeak.appendPendingTo(awstBlock->body);
+			}
 		}
 	}
 

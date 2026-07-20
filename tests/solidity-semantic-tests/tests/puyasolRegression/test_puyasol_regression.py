@@ -2584,3 +2584,22 @@ def test_asm_semantics_batch(harness):
     assert as_int(harness.call(app, "inlineLocals(uint256)", 100).abi_return) == 106
     r = harness.call(app, "argOrder()").abi_return
     assert (as_int(r[0]), as_int(r[1])) == (8, 2)
+
+
+def test_pending_drain_batch(harness):
+    """puyasolRegression/contracts/pending_drain_batch.sol — NOT an o.g. test.
+
+    Pending-statement drain cluster (T1): if-condition write-backs precede the
+    IfElse (H1); emit drains arg-build pre-statements (H2); do-while condition
+    pendings run with the bottom-of-body test (H3); trailing asm calldatacopy
+    persists (H5).
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/pending_drain_batch.sol")
+    assert as_int(harness.call(app, "condWriteback()").abi_return) == 1
+    # ternary arms: pre-fix the scoped __cond temp's if/else leaked past the
+    # emit (log read an unassigned temp / puya use-before-define). Arm gating
+    # proves the drain: TRUE never runs g(), FALSE runs it exactly once.
+    assert as_int(harness.call(app, "emitTernary(bool)", True).abi_return) == 0
+    assert as_int(harness.call(app, "emitTernary(bool)", False).abi_return) == 1
+    assert as_int(harness.call(app, "doWhileStorage()").abi_return) == 20
+    assert as_int(harness.call(app, "trailingCdc(uint256,byte[])", 12345, b"").abi_return) == 12345

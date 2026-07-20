@@ -1,3 +1,22 @@
+# Semantic Test Status — v454
+
+> **fix: fable-review-3 T1 pending-drain cluster (if/emit/do-while/asm-block) + boundary leak warning (2026-07-20):**
+> **12 failed / 1343 passed / 109 xf / 28 xp** effective (run showed 13f incl. tests/state test_blobhash —
+> the known localnet block-round -n2 flake, passes standalone; failure set otherwise identical to v453).
+> (H1) if-condition POST-pendings (internal-call write-backs — the call spills to a __storage_wb temp
+> pre-pending, write-backs read the temp — and push/pop box writes) now emit BEFORE the IfElse: they are
+> effects of EVALUATING the condition, previously invisible to the branches and LOST when a branch
+> returned. (H2) SolEmitStatement drains the shared buffers (arg-build pre-statements — scoped-ternary
+> temps, bounds asserts — leaked into the NEXT statement, potentially another function). (H3) do-while
+> captures the condition build's pendings and bundles them WITH the bottom-of-body test (one block, so the
+> `continue` splice carries them too); previously they drained into the TOP of the body, one iteration
+> ahead of the test. (H5) asm buildBlock drains m_pendingStatements after the last statement — a trailing
+> bare calldatacopy's queued memory write silently vanished. (T1) NEW: statement-boundary leak detector in
+> SolBlock — any handler leaving the pre/post buffers non-empty triggers a loud "report this" warning and
+> a salvage drain; ZERO hits across the full corpus, so the known drain-hole class is closed and future
+> holes fail loud. Guard: test_pending_drain_batch (all four, E2E).
+> Full run: RESULTS_review3_t1.txt.
+
 # Semantic Test Status — v453
 
 > **fix: fable-review-3 asm/storage semantics batch H12/H13/H16 (2026-07-20):**
