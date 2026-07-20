@@ -485,6 +485,26 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				readPending, method.sourceLocation, "__postInit already called"), method.sourceLocation);
 			postInitBody->body.push_back(std::move(assertStmt));
 
+			// Guard: CREATOR-ONLY. __postInit is a public ABI method that re-supplies
+			// the constructor args and runs the ctor body — an unauthenticated caller
+			// front-running the deployer's postInit could capture ownership-style
+			// initializers. The __ctor_pending flag only prevents a DOUBLE call.
+			// Deploy tooling groups create+postInit from one sender, so the app
+			// creator IS the legitimate postInit caller; anyone else reverts.
+			{
+				auto sender = awst::makeAsBytes(
+					awst::makeTxn("Sender", awst::WType::accountType(), method.sourceLocation),
+					method.sourceLocation);
+				auto creator = awst::makeAsBytes(
+					awst::makeGlobal(std::string("CreatorAddress"), awst::WType::accountType(), method.sourceLocation),
+					method.sourceLocation);
+				auto isCreator = awst::makeBytesComparison(
+					std::move(sender), awst::EqualityComparison::Eq, std::move(creator), method.sourceLocation);
+				postInitBody->body.push_back(awst::makeExpressionStatement(
+					awst::makeAssert(std::move(isCreator), method.sourceLocation,
+						"__postInit callable only by the app creator"), method.sourceLocation));
+			}
+
 			// Clear flag: __ctor_pending = 0
 			auto clearKey = awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation);
 
