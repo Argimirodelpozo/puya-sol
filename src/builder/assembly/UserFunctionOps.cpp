@@ -176,6 +176,41 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			awst::makeBiguintConstant("0", _loc), _loc));
 	}
 
+	// Alpha-rename the body's `let` LOCALS too, not just params/returns: two
+	// helpers sharing a scratch name (`t`, `ptr` — Solady house style) where
+	// one calls the other mid-expression otherwise share ONE runtime var and
+	// the inner call clobbers the outer's live value. The declarations apply
+	// the rename in buildVariableDeclaration; reads via resolveVarRef.
+	{
+		std::function<void(solidity::yul::Block const&)> renameLocals =
+			[&](solidity::yul::Block const& blk)
+		{
+			for (auto const& s: blk.statements)
+			{
+				if (auto const* vd = std::get_if<solidity::yul::VariableDeclaration>(&s))
+					for (auto const& v: vd->variables)
+					{
+						std::string n = v.name.str();
+						pushRename(n, uniqueName(n));
+					}
+				else if (auto const* b = std::get_if<solidity::yul::Block>(&s))
+					renameLocals(*b);
+				else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
+					renameLocals(iff->body);
+				else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
+					for (auto const& c: sw->cases)
+						renameLocals(c.body);
+				else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
+				{
+					renameLocals(fl->pre);
+					renameLocals(fl->post);
+					renameLocals(fl->body);
+				}
+			}
+		};
+		renameLocals(funcDef.body);
+	}
+
 	// Wrap body in `while true { … break; }` when it contains `leave`, so that
 	// leave→LoopExit breaks only the inlined body, not any enclosing loop.
 	bool hasLeave = false;

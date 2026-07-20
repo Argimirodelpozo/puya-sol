@@ -76,11 +76,17 @@ void AssemblyBuilder::buildVariableDeclaration(
 				auto const& funcDef = *m_asmFunctions[callName];
 
 				for (auto const& var: _decl.variables)
-					m_locals[var.name.str()] = awst::WType::biguintType();
+				{
+					std::string n = var.name.str();
+					if (auto rit = m_yulInlineRenames.find(n); rit != m_yulInlineRenames.end())
+						n = rit->second;
+					m_locals[n] = awst::WType::biguintType();
+				}
 
-				std::vector<std::shared_ptr<awst::Expression>> args;
-				for (auto const& arg: call->arguments)
-					args.push_back(buildExpression(arg));
+				// Right-to-left: Yul argument evaluation order.
+				std::vector<std::shared_ptr<awst::Expression>> args(call->arguments.size());
+				for (size_t ai = call->arguments.size(); ai-- > 0; )
+					args[ai] = buildExpression(call->arguments[ai]);
 
 				handleUserFunctionCall(callName, args, loc, _out);
 
@@ -96,6 +102,9 @@ void AssemblyBuilder::buildVariableDeclaration(
 						? m_yulSubReturnTemps[i]
 						: funcDef.returnVariables[i].name.str();
 					std::string varName = _decl.variables[i].name.str();
+					// Inline frames: declare under the frame's unique name.
+					if (auto rit = m_yulInlineRenames.find(varName); rit != m_yulInlineRenames.end())
+						varName = rit->second;
 
 					auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 
@@ -111,15 +120,22 @@ void AssemblyBuilder::buildVariableDeclaration(
 
 	for (auto const& var: _decl.variables)
 	{
-		std::string name = var.name.str();
+		std::string origName = var.name.str();
+		// Inline-expanded bodies: declare under the frame's UNIQUE name so
+		// sibling/nested calls reusing the same bare local don't share one
+		// runtime var (reads already resolve through the same map).
+		std::string name = origName;
+		if (auto rit = m_yulInlineRenames.find(origName); rit != m_yulInlineRenames.end())
+			name = rit->second;
 		m_locals[name] = awst::WType::biguintType();
 
 		// Record the initializer constant only for SINGLE-ASSIGNMENT locals —
 		// the fold is flow-insensitive, so a later `name := …` (loop counter,
 		// pointer bump) would leave this entry stale. Erase on the non-constant
 		// path: a shadowing `let` in a sibling scope must not inherit a stale
-		// entry from an earlier same-named declaration.
-		if (m_reassignedLocals.count(name))
+		// entry from an earlier same-named declaration. (The reassignment scan
+		// keys on ORIGINAL names — check origName, record under name.)
+		if (m_reassignedLocals.count(origName))
 			m_localConstants.erase(name);
 		else if (_decl.value)
 		{
@@ -175,9 +191,10 @@ void AssemblyBuilder::buildAssignment(
 				{
 					auto const& funcDef = *m_asmFunctions[callName];
 
-					std::vector<std::shared_ptr<awst::Expression>> args;
-					for (auto const& arg: call->arguments)
-						args.push_back(buildExpression(arg));
+					// Right-to-left: Yul argument evaluation order.
+					std::vector<std::shared_ptr<awst::Expression>> args(call->arguments.size());
+					for (size_t ai = call->arguments.size(); ai-- > 0; )
+						args[ai] = buildExpression(call->arguments[ai]);
 
 					handleUserFunctionCall(callName, args, loc, _out);
 
@@ -545,9 +562,10 @@ void AssemblyBuilder::buildExpressionStatement(
 		if (funcName == "mcopy" && tryHandleBytesMemoryMcopy(*call, loc, _out))
 			return;
 
-		std::vector<std::shared_ptr<awst::Expression>> args;
-		for (auto const& arg: call->arguments)
-			args.push_back(buildExpression(arg));
+		// Right-to-left: Yul argument evaluation order (see CoreTranslation).
+		std::vector<std::shared_ptr<awst::Expression>> args(call->arguments.size());
+		for (size_t ai = call->arguments.size(); ai-- > 0; )
+			args[ai] = buildExpression(call->arguments[ai]);
 		drainPendingStatements(_out);
 
 		if (funcName == "mstore")

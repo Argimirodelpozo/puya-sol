@@ -343,10 +343,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		if (auto routed = tryHandleStateVarSload(_call, loc))
 			return routed;
 
-	// Translate all arguments (stored in source order by the Yul parser)
-	std::vector<std::shared_ptr<awst::Expression>> args;
-	for (auto const& arg: _call.arguments)
-		args.push_back(buildExpression(arg));
+	// Translate arguments RIGHT-TO-LEFT: Yul evaluates call arguments in
+	// right-to-left order, so side effects of inlined user-function args
+	// (whose bodies land in m_pendingStatements during the build) must be
+	// sequenced right-first — `sub(bump(1), bump(10))` runs bump(10) first.
+	std::vector<std::shared_ptr<awst::Expression>> args(_call.arguments.size());
+	for (size_t ai = _call.arguments.size(); ai-- > 0; )
+		args[ai] = buildExpression(_call.arguments[ai]);
 
 	// Memory writers the content-constant tracker can't model precisely: drop
 	// all "mem_0x*" entries. mstore itself tracks/invalidates per-offset.
