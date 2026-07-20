@@ -315,6 +315,12 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		buildStatement(stmt, result);
 	}
 
+	// Drain any statements still pending after the last statement: a bare
+	// expression-statement builtin whose handler queues its effect (e.g. a
+	// trailing `calldatacopy(...)`) previously left it undrained here and the
+	// memory write silently vanished.
+	drainPendingStatements(result);
+
 	// Flush blob at block end; skip when halt already emitted (trailing store = unreachable).
 	if (!m_haltEmitted)
 	{
