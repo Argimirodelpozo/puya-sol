@@ -584,14 +584,24 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 			getter.body = body;
 
-			// Remap biguint getter params to ARC4UIntN(256): ABI selector "uint256" not "uint512".
+			// Remap biguint getter params to ARC4UIntN at the key's DECLARED
+			// width (not a blanket 256): explicit functions publish declared
+			// bits for >64-bit params (`probe(uint128)`), and the cross-
+			// contract caller derives the selector + arg encoding from the
+			// getter's solc FunctionType — a blanket uint256 made every
+			// keyed getter call revert on selector mismatch.
 			{
 				std::vector<std::shared_ptr<awst::Statement>> decodeStmts;
-				for (auto& garg: getter.args)
+				for (size_t gi = 0; gi < getter.args.size(); ++gi)
 				{
+					auto& garg = getter.args[gi];
 					if (garg.wtype != awst::WType::biguintType())
 						continue;
-					auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(256);
+					unsigned bits = 256;
+					if (gi < solParamTypes.size())
+						if (auto it = builder::SolIntType::fromSol(solParamTypes[gi]))
+							bits = it->bits;
+					auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(bits);
 					std::string origName = garg.name;
 					std::string arc4Name = "__arc4_" + origName;
 					garg.wtype = arc4Type;

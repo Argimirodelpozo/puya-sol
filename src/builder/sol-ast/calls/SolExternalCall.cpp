@@ -47,7 +47,25 @@ std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAcce
 			retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, retParam->type()));
 	}
 	else if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extRefDecl))
-		retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, varDecl->type()));
+	{
+		// Public state-var getter. KEYED getters (mapping/array vars) take
+		// key/index params — derive them from the bound getter FunctionType,
+		// matching what the callee's router publishes; the old return-only
+		// form emitted `m()T` and every keyed cross-contract getter call
+		// reverted on selector mismatch. Param-less getters keep the
+		// var-type return name (byte-identical to the shipped form).
+		auto const* getterType =
+			dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+		if (getterType && !getterType->parameterTypes().empty())
+		{
+			for (auto const& t: getterType->parameterTypes())
+				paramNames.push_back(eb::solTypeToArc4ParamName(m_ctx, t));
+			for (auto const& t: getterType->returnParameterTypes())
+				retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, t));
+		}
+		else
+			retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, varDecl->type()));
+	}
 	// else: no params/returns -> "name()void"
 
 	return builder::TypeCoercion::buildArc4Selector(_memberAccess.memberName(), paramNames, retNames);
@@ -342,8 +360,20 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	auto const* extRefDecl = memberAccess->annotation().referencedDeclaration;
 	std::vector<Type const*> paramSolTypes;
 	if (auto const* fd = dynamic_cast<FunctionDefinition const*>(extRefDecl))
+	{
 		for (auto const& param: fd->parameters())
 			paramSolTypes.push_back(param->type());
+	}
+	else if (dynamic_cast<VariableDeclaration const*>(extRefDecl))
+	{
+		// Keyed public getter: encode key/index args at the getter's declared
+		// param types (a nullptr paramType would encode biguint keys at the
+		// 32-byte backing width while the callee decodes the declared width).
+		if (auto const* getterType =
+				dynamic_cast<FunctionType const*>(memberAccess->annotation().type))
+			for (auto const& t: getterType->parameterTypes())
+				paramSolTypes.push_back(t);
+	}
 
 	// Add call arguments
 	size_t argIdx = 0;
