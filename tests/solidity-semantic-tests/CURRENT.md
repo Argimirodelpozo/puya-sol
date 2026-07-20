@@ -1,3 +1,25 @@
+# Semantic Test Status — v455
+
+> **fix: fable-review-3 H14 function-pointer encode/dispatch seam (2026-07-20):**
+> **12 failed / 1344 passed / 109 xf / 28 xp** effective (run showed 13f incl. functionCall
+> test_send_zero_ether — passes standalone, the -n2 localnet flake family; failure set otherwise
+> identical to v454). (F4) dispatchName now keys on solc Type::identifier() — canonical and injective —
+> so every DISTINCT pointer signature gets its own dispatch group (the old namer collapsed int8/uint8 to
+> "_u8" and all non-int types to "_x", merging signatures into one group typed by whichever registered
+> first). (F3) dispatch-subroutine DEFINITION types now use the same native mapping as the call site
+> (TypeMapper::map for args, computeReturnType for returns — address/enum/array params were biguint vs
+> account/uint64/array at the call; multi-return was a silent void TODO and results were dropped; public
+> targets' wire returns adapt back per entry: arc4.uint256 → biguint → native carrier, signed-narrow
+> included; public MULTI-return targets are skipped with a warning — dispatching to one hits the
+> invalid-pointer assert at runtime, mere .selector/.address registration compiles). (F2) external fn-ptr
+> args go through the ONE shared encoder (InnerCallHandlers::encodeArgToBytes) — the private
+> encodeArgForInnerTxn copy (negative sub-256 signed zero-extended to 32B → callee len-assert revert;
+> aggregates skipped ARC4) is DELETED along with mapDispatchType; the external pointer expression is
+> EvalOnce-pinned (was sliced 4x). BONUS pre-existing fix: `function(...) external p = Other(addr).g;`
+> registered g as a STATIC target and direct-callsub'd across apps (unresolvable reference) — foreign
+> external refs now stay dynamic; `this.f` keeps the shortcut. Guard: test_fnptr_dispatch_seam.
+> Full run: RESULTS_review3_h14.txt.
+
 # Semantic Test Status — v454
 
 > **fix: fable-review-3 T1 pending-drain cluster (if/emit/do-while/asm-block) + boundary leak warning (2026-07-20):**

@@ -2603,3 +2603,42 @@ def test_pending_drain_batch(harness):
     assert as_int(harness.call(app, "emitTernary(bool)", False).abi_return) == 1
     assert as_int(harness.call(app, "doWhileStorage()").abi_return) == 20
     assert as_int(harness.call(app, "trailingCdc(uint256,byte[])", 12345, b"").abi_return) == 12345
+
+
+def test_fnptr_dispatch_seam(harness):
+    """puyasolRegression/contracts/fnptr_dispatch_seam.sol — NOT an o.g. test.
+
+    Function-pointer seam (H14): distinct signatures get distinct dispatch
+    groups (uint8 vs int8, bytes32 vs string); dispatch definition types match
+    the call site (address/enum params, multi-return tuple — was void);
+    external fn-ptr args go through the shared ARC4 encoder (negative int128
+    reached the callee 32-byte-wide and reverted); foreign-contract external
+    fn refs stay dynamic instead of an unresolvable direct callsub.
+    """
+    import algosdk
+
+    arts = harness.compile("puyasolRegression/contracts/fnptr_dispatch_seam.sol")
+    target = harness.deploy(arts, contract_name="FnPtrTarget")
+    app = harness.deploy(arts, contract_name="FnPtrSeam")
+
+    call = lambda sig, *a, **kw: harness.call(app, sig, *a, **kw).abi_return
+    assert as_int(call("pick8(bool,bool,uint8,int8)", True, True, 5, 0)) == 105
+    assert as_int(call("pick8(bool,bool,uint8,int8)", False, True, 7, 0)) == 207
+    assert as_int(call("pick8(bool,bool,uint8,int8)", True, False, 0, -3)) == 1000
+    assert as_int(call("pick8(bool,bool,uint8,int8)", False, False, 0, 5)) == 4000
+    assert as_int(call("pickX(bool)", True)) == 0x2A
+    assert as_int(call("pickX(bool)", False)) == 3
+    zero_addr = algosdk.encoding.encode_address(bytes(32))
+    some_addr = algosdk.encoding.encode_address(bytes([1] * 32))
+    assert as_int(call("pickAddr(bool,address)", True, zero_addr)) == 7
+    assert as_int(call("pickAddr(bool,address)", False, some_addr)) == 80
+    assert as_int(call("pickEnum(bool,uint8)", True, 2)) == 502
+    assert as_int(call("pickEnum(bool,uint8)", False, 1)) == 601
+    r = call("pickPair(bool)", True)
+    assert [as_int(x) for x in r] == [11, 22]
+    r = call("pickPair(bool)", False)
+    assert [as_int(x) for x in r] == [33, 44]
+    fake = algosdk.encoding.encode_address(bytes(24) + target.app_id.to_bytes(8, "big"))
+    r = call("callExt(address,int128)", fake, -7,
+             extra_fee=10_000, extra_apps=[target.app_id])
+    assert as_signed_int(r) == -8

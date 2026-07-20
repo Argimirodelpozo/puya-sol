@@ -3537,11 +3537,11 @@
                       ],
                       "stack_args": [
                         {
-                          "_type": "ARC4Decode",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                             "line": 1010,
-                            "end_line": 1033,
+                            "end_line": 1035,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
@@ -3552,8 +3552,8 @@
                             "immutable": true,
                             "length": 12
                           },
-                          "value": {
-                            "_type": "IndexExpression",
+                          "source": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                               "line": 1010,
@@ -3563,57 +3563,39 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "byte[12]",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 12,
-                              "arc4_alias": "byte[12]",
-                              "source_location": null
+                              "_type": "BytesWType",
+                              "name": "bytes[12]",
+                              "immutable": true,
+                              "length": 12
                             },
-                            "base": {
-                              "_type": "AppStateExpression",
+                            "value": {
+                              "_type": "IndexExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                 "line": 1010,
-                                "end_line": 1030,
+                                "end_line": 1033,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
                                 "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<byte[12], 1>",
+                                "name": "byte[12]",
                                 "immutable": false,
                                 "element_type": {
-                                  "_type": "ARC4StaticArray",
-                                  "name": "byte[12]",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "array_size": 12,
-                                  "arc4_alias": "byte[12]",
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
                                   "source_location": null
                                 },
-                                "array_size": 1,
-                                "arc4_alias": null,
+                                "array_size": 12,
+                                "arc4_alias": "byte[12]",
                                 "source_location": null
                               },
-                              "key": {
-                                "_type": "BytesConstant",
+                              "base": {
+                                "_type": "AppStateExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                   "line": 1010,
@@ -3623,35 +3605,71 @@
                                   "end_column": null
                                 },
                                 "wtype": {
+                                  "_type": "ARC4StaticArray",
+                                  "name": "arc4.static_array<byte[12], 1>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "byte[12]",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 12,
+                                    "arc4_alias": "byte[12]",
+                                    "source_location": null
+                                  },
+                                  "array_size": 1,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                    "line": 1010,
+                                    "end_line": 1030,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": "check externalDefaultArray exists"
+                              },
+                              "index": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                  "line": 1031,
+                                  "end_line": 1032,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
                                   "_type": "WType",
-                                  "name": "state_key",
+                                  "name": "uint64",
                                   "immutable": true
                                 },
-                                "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
-                                "encoding": "utf8"
-                              },
-                              "exists_assertion_message": "check externalDefaultArray exists"
+                                "value": 0,
+                                "teal_alias": null
+                              }
                             },
-                            "index": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                "line": 1031,
-                                "end_line": 1032,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
-                            }
+                            "error_message": null
                           },
-                          "error_message": null
+                          "_id": 1048577
                         }
                       ]
                     }
@@ -3735,7 +3753,7 @@
                       },
                       "target": {
                         "_type": "InstanceMethodTarget",
-                        "member_name": "__funcptr_dispatch_ret_u256"
+                        "member_name": "__funcptr_dispatch_ret_t_uint256"
                       },
                       "args": [
                         {
@@ -3757,7 +3775,7 @@
                             },
                             "target": {
                               "_type": "InstanceMethodTarget",
-                              "member_name": "__sel_to_id___funcptr_dispatch_ret_u256"
+                              "member_name": "__sel_to_id___funcptr_dispatch_ret_t_uint256"
                             },
                             "args": [
                               {
@@ -3785,11 +3803,11 @@
                                   ],
                                   "stack_args": [
                                     {
-                                      "_type": "ARC4Decode",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                         "line": 1010,
-                                        "end_line": 1033,
+                                        "end_line": 1035,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
@@ -3800,8 +3818,8 @@
                                         "immutable": true,
                                         "length": 12
                                       },
-                                      "value": {
-                                        "_type": "IndexExpression",
+                                      "source": {
+                                        "_type": "ARC4Decode",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                           "line": 1010,
@@ -3811,57 +3829,39 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "ARC4StaticArray",
-                                          "name": "byte[12]",
-                                          "immutable": false,
-                                          "element_type": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint8",
-                                            "immutable": true,
-                                            "n": 8,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "array_size": 12,
-                                          "arc4_alias": "byte[12]",
-                                          "source_location": null
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
                                         },
-                                        "base": {
-                                          "_type": "AppStateExpression",
+                                        "value": {
+                                          "_type": "IndexExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                             "line": 1010,
-                                            "end_line": 1030,
+                                            "end_line": 1033,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "ARC4StaticArray",
-                                            "name": "arc4.static_array<byte[12], 1>",
+                                            "name": "byte[12]",
                                             "immutable": false,
                                             "element_type": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "byte[12]",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": "byte[12]",
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint8",
+                                              "immutable": true,
+                                              "n": 8,
+                                              "arc4_alias": null,
                                               "source_location": null
                                             },
-                                            "array_size": 1,
-                                            "arc4_alias": null,
+                                            "array_size": 12,
+                                            "arc4_alias": "byte[12]",
                                             "source_location": null
                                           },
-                                          "key": {
-                                            "_type": "BytesConstant",
+                                          "base": {
+                                            "_type": "AppStateExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                               "line": 1010,
@@ -3871,35 +3871,71 @@
                                               "end_column": null
                                             },
                                             "wtype": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "arc4.static_array<byte[12], 1>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "byte[12]",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint8",
+                                                  "immutable": true,
+                                                  "n": 8,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "array_size": 12,
+                                                "arc4_alias": "byte[12]",
+                                                "source_location": null
+                                              },
+                                              "array_size": 1,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "key": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1010,
+                                                "end_line": 1030,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "state_key",
+                                                "immutable": true
+                                              },
+                                              "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
+                                              "encoding": "utf8"
+                                            },
+                                            "exists_assertion_message": "check externalDefaultArray exists"
+                                          },
+                                          "index": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                              "line": 1031,
+                                              "end_line": 1032,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
                                               "_type": "WType",
-                                              "name": "state_key",
+                                              "name": "uint64",
                                               "immutable": true
                                             },
-                                            "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": "check externalDefaultArray exists"
+                                            "value": 0,
+                                            "teal_alias": null
+                                          }
                                         },
-                                        "index": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1031,
-                                            "end_line": 1032,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 0,
-                                          "teal_alias": null
-                                        }
+                                        "error_message": null
                                       },
-                                      "error_message": null
+                                      "_id": 1048577
                                     }
                                   ]
                                 }
@@ -4018,11 +4054,11 @@
                                   ],
                                   "stack_args": [
                                     {
-                                      "_type": "ARC4Decode",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                         "line": 1010,
-                                        "end_line": 1033,
+                                        "end_line": 1035,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
@@ -4033,167 +4069,7 @@
                                         "immutable": true,
                                         "length": 12
                                       },
-                                      "value": {
-                                        "_type": "IndexExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                          "line": 1010,
-                                          "end_line": 1033,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "ARC4StaticArray",
-                                          "name": "byte[12]",
-                                          "immutable": false,
-                                          "element_type": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint8",
-                                            "immutable": true,
-                                            "n": 8,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "array_size": 12,
-                                          "arc4_alias": "byte[12]",
-                                          "source_location": null
-                                        },
-                                        "base": {
-                                          "_type": "AppStateExpression",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1010,
-                                            "end_line": 1030,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "ARC4StaticArray",
-                                            "name": "arc4.static_array<byte[12], 1>",
-                                            "immutable": false,
-                                            "element_type": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "byte[12]",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": "byte[12]",
-                                              "source_location": null
-                                            },
-                                            "array_size": 1,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "key": {
-                                            "_type": "BytesConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                              "line": 1010,
-                                              "end_line": 1030,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "state_key",
-                                              "immutable": true
-                                            },
-                                            "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": "check externalDefaultArray exists"
-                                        },
-                                        "index": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1031,
-                                            "end_line": 1032,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 0,
-                                          "teal_alias": null
-                                        }
-                                      },
-                                      "error_message": null
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            "ApplicationID": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                "line": 1010,
-                                "end_line": 1035,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "application",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                  "line": 1010,
-                                  "end_line": 1035,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                      "line": 1010,
-                                      "end_line": 1035,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "extract",
-                                    "immediates": [
-                                      0,
-                                      8
-                                    ],
-                                    "stack_args": [
-                                      {
+                                      "source": {
                                         "_type": "ARC4Decode",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
@@ -4309,6 +4185,202 @@
                                           }
                                         },
                                         "error_message": null
+                                      },
+                                      "_id": 1048577
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "ApplicationID": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                "line": 1010,
+                                "end_line": 1035,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "application",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                  "line": 1010,
+                                  "end_line": 1035,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "btoi",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                      "line": 1010,
+                                      "end_line": 1035,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract",
+                                    "immediates": [
+                                      0,
+                                      8
+                                    ],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                          "line": 1010,
+                                          "end_line": 1035,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
+                                        },
+                                        "source": {
+                                          "_type": "ARC4Decode",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                            "line": 1010,
+                                            "end_line": 1033,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes[12]",
+                                            "immutable": true,
+                                            "length": 12
+                                          },
+                                          "value": {
+                                            "_type": "IndexExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                              "line": 1010,
+                                              "end_line": 1033,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "byte[12]",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint8",
+                                                "immutable": true,
+                                                "n": 8,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "array_size": 12,
+                                              "arc4_alias": "byte[12]",
+                                              "source_location": null
+                                            },
+                                            "base": {
+                                              "_type": "AppStateExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1010,
+                                                "end_line": 1030,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "arc4.static_array<byte[12], 1>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4StaticArray",
+                                                  "name": "byte[12]",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint8",
+                                                    "immutable": true,
+                                                    "n": 8,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "array_size": 12,
+                                                  "arc4_alias": "byte[12]",
+                                                  "source_location": null
+                                                },
+                                                "array_size": 1,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "key": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                  "line": 1010,
+                                                  "end_line": 1030,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "state_key",
+                                                  "immutable": true
+                                                },
+                                                "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
+                                                "encoding": "utf8"
+                                              },
+                                              "exists_assertion_message": "check externalDefaultArray exists"
+                                            },
+                                            "index": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1031,
+                                                "end_line": 1032,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 0,
+                                              "teal_alias": null
+                                            }
+                                          },
+                                          "error_message": null
+                                        },
+                                        "_id": 1048577
                                       }
                                     ]
                                   }
@@ -4587,7 +4659,7 @@
                       },
                       "target": {
                         "_type": "InstanceMethodTarget",
-                        "member_name": "__funcptr_dispatch_ret_u256"
+                        "member_name": "__funcptr_dispatch_ret_t_uint256"
                       },
                       "args": [
                         {
@@ -5489,11 +5561,11 @@
                       ],
                       "stack_args": [
                         {
-                          "_type": "ARC4Decode",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                             "line": 1251,
-                            "end_line": 1274,
+                            "end_line": 1276,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
@@ -5504,8 +5576,8 @@
                             "immutable": true,
                             "length": 12
                           },
-                          "value": {
-                            "_type": "IndexExpression",
+                          "source": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                               "line": 1251,
@@ -5515,57 +5587,39 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "byte[12]",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 12,
-                              "arc4_alias": "byte[12]",
-                              "source_location": null
+                              "_type": "BytesWType",
+                              "name": "bytes[12]",
+                              "immutable": true,
+                              "length": 12
                             },
-                            "base": {
-                              "_type": "AppStateExpression",
+                            "value": {
+                              "_type": "IndexExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                 "line": 1251,
-                                "end_line": 1271,
+                                "end_line": 1274,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
                                 "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<byte[12], 1>",
+                                "name": "byte[12]",
                                 "immutable": false,
                                 "element_type": {
-                                  "_type": "ARC4StaticArray",
-                                  "name": "byte[12]",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "array_size": 12,
-                                  "arc4_alias": "byte[12]",
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
                                   "source_location": null
                                 },
-                                "array_size": 1,
-                                "arc4_alias": null,
+                                "array_size": 12,
+                                "arc4_alias": "byte[12]",
                                 "source_location": null
                               },
-                              "key": {
-                                "_type": "BytesConstant",
+                              "base": {
+                                "_type": "AppStateExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                   "line": 1251,
@@ -5575,35 +5629,71 @@
                                   "end_column": null
                                 },
                                 "wtype": {
+                                  "_type": "ARC4StaticArray",
+                                  "name": "arc4.static_array<byte[12], 1>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "byte[12]",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 12,
+                                    "arc4_alias": "byte[12]",
+                                    "source_location": null
+                                  },
+                                  "array_size": 1,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                    "line": 1251,
+                                    "end_line": 1271,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": "check externalDefaultArray exists"
+                              },
+                              "index": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                  "line": 1272,
+                                  "end_line": 1273,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
                                   "_type": "WType",
-                                  "name": "state_key",
+                                  "name": "uint64",
                                   "immutable": true
                                 },
-                                "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
-                                "encoding": "utf8"
-                              },
-                              "exists_assertion_message": "check externalDefaultArray exists"
+                                "value": 0,
+                                "teal_alias": null
+                              }
                             },
-                            "index": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                "line": 1272,
-                                "end_line": 1273,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
-                            }
+                            "error_message": null
                           },
-                          "error_message": null
+                          "_id": 1048578
                         }
                       ]
                     }
@@ -5687,7 +5777,7 @@
                       },
                       "target": {
                         "_type": "InstanceMethodTarget",
-                        "member_name": "__funcptr_dispatch_ret_u256"
+                        "member_name": "__funcptr_dispatch_ret_t_uint256"
                       },
                       "args": [
                         {
@@ -5709,7 +5799,7 @@
                             },
                             "target": {
                               "_type": "InstanceMethodTarget",
-                              "member_name": "__sel_to_id___funcptr_dispatch_ret_u256"
+                              "member_name": "__sel_to_id___funcptr_dispatch_ret_t_uint256"
                             },
                             "args": [
                               {
@@ -5737,11 +5827,11 @@
                                   ],
                                   "stack_args": [
                                     {
-                                      "_type": "ARC4Decode",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                         "line": 1251,
-                                        "end_line": 1274,
+                                        "end_line": 1276,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
@@ -5752,8 +5842,8 @@
                                         "immutable": true,
                                         "length": 12
                                       },
-                                      "value": {
-                                        "_type": "IndexExpression",
+                                      "source": {
+                                        "_type": "ARC4Decode",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                           "line": 1251,
@@ -5763,57 +5853,39 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "ARC4StaticArray",
-                                          "name": "byte[12]",
-                                          "immutable": false,
-                                          "element_type": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint8",
-                                            "immutable": true,
-                                            "n": 8,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "array_size": 12,
-                                          "arc4_alias": "byte[12]",
-                                          "source_location": null
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
                                         },
-                                        "base": {
-                                          "_type": "AppStateExpression",
+                                        "value": {
+                                          "_type": "IndexExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                             "line": 1251,
-                                            "end_line": 1271,
+                                            "end_line": 1274,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "ARC4StaticArray",
-                                            "name": "arc4.static_array<byte[12], 1>",
+                                            "name": "byte[12]",
                                             "immutable": false,
                                             "element_type": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "byte[12]",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": "byte[12]",
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint8",
+                                              "immutable": true,
+                                              "n": 8,
+                                              "arc4_alias": null,
                                               "source_location": null
                                             },
-                                            "array_size": 1,
-                                            "arc4_alias": null,
+                                            "array_size": 12,
+                                            "arc4_alias": "byte[12]",
                                             "source_location": null
                                           },
-                                          "key": {
-                                            "_type": "BytesConstant",
+                                          "base": {
+                                            "_type": "AppStateExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                               "line": 1251,
@@ -5823,35 +5895,71 @@
                                               "end_column": null
                                             },
                                             "wtype": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "arc4.static_array<byte[12], 1>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "byte[12]",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint8",
+                                                  "immutable": true,
+                                                  "n": 8,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "array_size": 12,
+                                                "arc4_alias": "byte[12]",
+                                                "source_location": null
+                                              },
+                                              "array_size": 1,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "key": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1251,
+                                                "end_line": 1271,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "state_key",
+                                                "immutable": true
+                                              },
+                                              "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
+                                              "encoding": "utf8"
+                                            },
+                                            "exists_assertion_message": "check externalDefaultArray exists"
+                                          },
+                                          "index": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                              "line": 1272,
+                                              "end_line": 1273,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
                                               "_type": "WType",
-                                              "name": "state_key",
+                                              "name": "uint64",
                                               "immutable": true
                                             },
-                                            "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": "check externalDefaultArray exists"
+                                            "value": 0,
+                                            "teal_alias": null
+                                          }
                                         },
-                                        "index": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1272,
-                                            "end_line": 1273,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 0,
-                                          "teal_alias": null
-                                        }
+                                        "error_message": null
                                       },
-                                      "error_message": null
+                                      "_id": 1048578
                                     }
                                   ]
                                 }
@@ -5970,11 +6078,11 @@
                                   ],
                                   "stack_args": [
                                     {
-                                      "_type": "ARC4Decode",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                         "line": 1251,
-                                        "end_line": 1274,
+                                        "end_line": 1276,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
@@ -5985,167 +6093,7 @@
                                         "immutable": true,
                                         "length": 12
                                       },
-                                      "value": {
-                                        "_type": "IndexExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                          "line": 1251,
-                                          "end_line": 1274,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "ARC4StaticArray",
-                                          "name": "byte[12]",
-                                          "immutable": false,
-                                          "element_type": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint8",
-                                            "immutable": true,
-                                            "n": 8,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "array_size": 12,
-                                          "arc4_alias": "byte[12]",
-                                          "source_location": null
-                                        },
-                                        "base": {
-                                          "_type": "AppStateExpression",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1251,
-                                            "end_line": 1271,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "ARC4StaticArray",
-                                            "name": "arc4.static_array<byte[12], 1>",
-                                            "immutable": false,
-                                            "element_type": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "byte[12]",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": "byte[12]",
-                                              "source_location": null
-                                            },
-                                            "array_size": 1,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "key": {
-                                            "_type": "BytesConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                              "line": 1251,
-                                              "end_line": 1271,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "state_key",
-                                              "immutable": true
-                                            },
-                                            "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": "check externalDefaultArray exists"
-                                        },
-                                        "index": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1272,
-                                            "end_line": 1273,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 0,
-                                          "teal_alias": null
-                                        }
-                                      },
-                                      "error_message": null
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            "ApplicationID": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                "line": 1251,
-                                "end_line": 1276,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "application",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                  "line": 1251,
-                                  "end_line": 1276,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                      "line": 1251,
-                                      "end_line": 1276,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "extract",
-                                    "immediates": [
-                                      0,
-                                      8
-                                    ],
-                                    "stack_args": [
-                                      {
+                                      "source": {
                                         "_type": "ARC4Decode",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
@@ -6261,6 +6209,202 @@
                                           }
                                         },
                                         "error_message": null
+                                      },
+                                      "_id": 1048578
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "ApplicationID": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                "line": 1251,
+                                "end_line": 1276,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "application",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                  "line": 1251,
+                                  "end_line": 1276,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "btoi",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                      "line": 1251,
+                                      "end_line": 1276,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract",
+                                    "immediates": [
+                                      0,
+                                      8
+                                    ],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                          "line": 1251,
+                                          "end_line": 1276,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
+                                        },
+                                        "source": {
+                                          "_type": "ARC4Decode",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                            "line": 1251,
+                                            "end_line": 1274,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes[12]",
+                                            "immutable": true,
+                                            "length": 12
+                                          },
+                                          "value": {
+                                            "_type": "IndexExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                              "line": 1251,
+                                              "end_line": 1274,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "byte[12]",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint8",
+                                                "immutable": true,
+                                                "n": 8,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "array_size": 12,
+                                              "arc4_alias": "byte[12]",
+                                              "source_location": null
+                                            },
+                                            "base": {
+                                              "_type": "AppStateExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1251,
+                                                "end_line": 1271,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "arc4.static_array<byte[12], 1>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4StaticArray",
+                                                  "name": "byte[12]",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint8",
+                                                    "immutable": true,
+                                                    "n": 8,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "array_size": 12,
+                                                  "arc4_alias": "byte[12]",
+                                                  "source_location": null
+                                                },
+                                                "array_size": 1,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "key": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                  "line": 1251,
+                                                  "end_line": 1271,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "state_key",
+                                                  "immutable": true
+                                                },
+                                                "value": "Wq5RDa&BR4L}g}Sb!>D&a&lpL",
+                                                "encoding": "utf8"
+                                              },
+                                              "exists_assertion_message": "check externalDefaultArray exists"
+                                            },
+                                            "index": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1272,
+                                                "end_line": 1273,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 0,
+                                              "teal_alias": null
+                                            }
+                                          },
+                                          "error_message": null
+                                        },
+                                        "_id": 1048578
                                       }
                                     ]
                                   }
@@ -6539,7 +6683,7 @@
                       },
                       "target": {
                         "_type": "InstanceMethodTarget",
-                        "member_name": "__funcptr_dispatch_ret_u256"
+                        "member_name": "__funcptr_dispatch_ret_t_uint256"
                       },
                       "args": [
                         {
@@ -7441,11 +7585,11 @@
                       ],
                       "stack_args": [
                         {
-                          "_type": "ARC4Decode",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                             "line": 1483,
-                            "end_line": 1503,
+                            "end_line": 1505,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
@@ -7456,8 +7600,8 @@
                             "immutable": true,
                             "length": 12
                           },
-                          "value": {
-                            "_type": "IndexExpression",
+                          "source": {
+                            "_type": "ARC4Decode",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                               "line": 1483,
@@ -7467,57 +7611,39 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "byte[12]",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "array_size": 12,
-                              "arc4_alias": "byte[12]",
-                              "source_location": null
+                              "_type": "BytesWType",
+                              "name": "bytes[12]",
+                              "immutable": true,
+                              "length": 12
                             },
-                            "base": {
-                              "_type": "AppStateExpression",
+                            "value": {
+                              "_type": "IndexExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                 "line": 1483,
-                                "end_line": 1500,
+                                "end_line": 1503,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
                                 "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<byte[12], 1>",
+                                "name": "byte[12]",
                                 "immutable": false,
                                 "element_type": {
-                                  "_type": "ARC4StaticArray",
-                                  "name": "byte[12]",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "array_size": 12,
-                                  "arc4_alias": "byte[12]",
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
                                   "source_location": null
                                 },
-                                "array_size": 1,
-                                "arc4_alias": null,
+                                "array_size": 12,
+                                "arc4_alias": "byte[12]",
                                 "source_location": null
                               },
-                              "key": {
-                                "_type": "BytesConstant",
+                              "base": {
+                                "_type": "AppStateExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                   "line": 1483,
@@ -7527,35 +7653,71 @@
                                   "end_column": null
                                 },
                                 "wtype": {
+                                  "_type": "ARC4StaticArray",
+                                  "name": "arc4.static_array<byte[12], 1>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "byte[12]",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 12,
+                                    "arc4_alias": "byte[12]",
+                                    "source_location": null
+                                  },
+                                  "array_size": 1,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                    "line": 1483,
+                                    "end_line": 1500,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "Wq5RDa&BR4R%vB-L2`0oc>",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": "check externalViewArray exists"
+                              },
+                              "index": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                  "line": 1501,
+                                  "end_line": 1502,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
                                   "_type": "WType",
-                                  "name": "state_key",
+                                  "name": "uint64",
                                   "immutable": true
                                 },
-                                "value": "Wq5RDa&BR4R%vB-L2`0oc>",
-                                "encoding": "utf8"
-                              },
-                              "exists_assertion_message": "check externalViewArray exists"
+                                "value": 0,
+                                "teal_alias": null
+                              }
                             },
-                            "index": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                "line": 1501,
-                                "end_line": 1502,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
-                            }
+                            "error_message": null
                           },
-                          "error_message": null
+                          "_id": 1048579
                         }
                       ]
                     }
@@ -7639,7 +7801,7 @@
                       },
                       "target": {
                         "_type": "InstanceMethodTarget",
-                        "member_name": "__funcptr_dispatch_ret_u256"
+                        "member_name": "__funcptr_dispatch_ret_t_uint256"
                       },
                       "args": [
                         {
@@ -7661,7 +7823,7 @@
                             },
                             "target": {
                               "_type": "InstanceMethodTarget",
-                              "member_name": "__sel_to_id___funcptr_dispatch_ret_u256"
+                              "member_name": "__sel_to_id___funcptr_dispatch_ret_t_uint256"
                             },
                             "args": [
                               {
@@ -7689,11 +7851,11 @@
                                   ],
                                   "stack_args": [
                                     {
-                                      "_type": "ARC4Decode",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                         "line": 1483,
-                                        "end_line": 1503,
+                                        "end_line": 1505,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
@@ -7704,8 +7866,8 @@
                                         "immutable": true,
                                         "length": 12
                                       },
-                                      "value": {
-                                        "_type": "IndexExpression",
+                                      "source": {
+                                        "_type": "ARC4Decode",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                           "line": 1483,
@@ -7715,57 +7877,39 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "ARC4StaticArray",
-                                          "name": "byte[12]",
-                                          "immutable": false,
-                                          "element_type": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint8",
-                                            "immutable": true,
-                                            "n": 8,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "array_size": 12,
-                                          "arc4_alias": "byte[12]",
-                                          "source_location": null
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
                                         },
-                                        "base": {
-                                          "_type": "AppStateExpression",
+                                        "value": {
+                                          "_type": "IndexExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                             "line": 1483,
-                                            "end_line": 1500,
+                                            "end_line": 1503,
                                             "comment_lines": 0,
                                             "column": null,
                                             "end_column": null
                                           },
                                           "wtype": {
                                             "_type": "ARC4StaticArray",
-                                            "name": "arc4.static_array<byte[12], 1>",
+                                            "name": "byte[12]",
                                             "immutable": false,
                                             "element_type": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "byte[12]",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": "byte[12]",
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint8",
+                                              "immutable": true,
+                                              "n": 8,
+                                              "arc4_alias": null,
                                               "source_location": null
                                             },
-                                            "array_size": 1,
-                                            "arc4_alias": null,
+                                            "array_size": 12,
+                                            "arc4_alias": "byte[12]",
                                             "source_location": null
                                           },
-                                          "key": {
-                                            "_type": "BytesConstant",
+                                          "base": {
+                                            "_type": "AppStateExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                               "line": 1483,
@@ -7775,35 +7919,71 @@
                                               "end_column": null
                                             },
                                             "wtype": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "arc4.static_array<byte[12], 1>",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "byte[12]",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint8",
+                                                  "immutable": true,
+                                                  "n": 8,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "array_size": 12,
+                                                "arc4_alias": "byte[12]",
+                                                "source_location": null
+                                              },
+                                              "array_size": 1,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "key": {
+                                              "_type": "BytesConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1483,
+                                                "end_line": 1500,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "state_key",
+                                                "immutable": true
+                                              },
+                                              "value": "Wq5RDa&BR4R%vB-L2`0oc>",
+                                              "encoding": "utf8"
+                                            },
+                                            "exists_assertion_message": "check externalViewArray exists"
+                                          },
+                                          "index": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                              "line": 1501,
+                                              "end_line": 1502,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
                                               "_type": "WType",
-                                              "name": "state_key",
+                                              "name": "uint64",
                                               "immutable": true
                                             },
-                                            "value": "Wq5RDa&BR4R%vB-L2`0oc>",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": "check externalViewArray exists"
+                                            "value": 0,
+                                            "teal_alias": null
+                                          }
                                         },
-                                        "index": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1501,
-                                            "end_line": 1502,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 0,
-                                          "teal_alias": null
-                                        }
+                                        "error_message": null
                                       },
-                                      "error_message": null
+                                      "_id": 1048579
                                     }
                                   ]
                                 }
@@ -7922,11 +8102,11 @@
                                   ],
                                   "stack_args": [
                                     {
-                                      "_type": "ARC4Decode",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
                                         "line": 1483,
-                                        "end_line": 1503,
+                                        "end_line": 1505,
                                         "comment_lines": 0,
                                         "column": null,
                                         "end_column": null
@@ -7937,167 +8117,7 @@
                                         "immutable": true,
                                         "length": 12
                                       },
-                                      "value": {
-                                        "_type": "IndexExpression",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                          "line": 1483,
-                                          "end_line": 1503,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "ARC4StaticArray",
-                                          "name": "byte[12]",
-                                          "immutable": false,
-                                          "element_type": {
-                                            "_type": "ARC4UIntN",
-                                            "name": "arc4.uint8",
-                                            "immutable": true,
-                                            "n": 8,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "array_size": 12,
-                                          "arc4_alias": "byte[12]",
-                                          "source_location": null
-                                        },
-                                        "base": {
-                                          "_type": "AppStateExpression",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1483,
-                                            "end_line": 1500,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "ARC4StaticArray",
-                                            "name": "arc4.static_array<byte[12], 1>",
-                                            "immutable": false,
-                                            "element_type": {
-                                              "_type": "ARC4StaticArray",
-                                              "name": "byte[12]",
-                                              "immutable": false,
-                                              "element_type": {
-                                                "_type": "ARC4UIntN",
-                                                "name": "arc4.uint8",
-                                                "immutable": true,
-                                                "n": 8,
-                                                "arc4_alias": null,
-                                                "source_location": null
-                                              },
-                                              "array_size": 12,
-                                              "arc4_alias": "byte[12]",
-                                              "source_location": null
-                                            },
-                                            "array_size": 1,
-                                            "arc4_alias": null,
-                                            "source_location": null
-                                          },
-                                          "key": {
-                                            "_type": "BytesConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                              "line": 1483,
-                                              "end_line": 1500,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "state_key",
-                                              "immutable": true
-                                            },
-                                            "value": "Wq5RDa&BR4R%vB-L2`0oc>",
-                                            "encoding": "utf8"
-                                          },
-                                          "exists_assertion_message": "check externalViewArray exists"
-                                        },
-                                        "index": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                            "line": 1501,
-                                            "end_line": 1502,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "value": 0,
-                                          "teal_alias": null
-                                        }
-                                      },
-                                      "error_message": null
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            "ApplicationID": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                "line": 1483,
-                                "end_line": 1505,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "application",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                  "line": 1483,
-                                  "end_line": 1505,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
-                                      "line": 1483,
-                                      "end_line": 1505,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "extract",
-                                    "immediates": [
-                                      0,
-                                      8
-                                    ],
-                                    "stack_args": [
-                                      {
+                                      "source": {
                                         "_type": "ARC4Decode",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
@@ -8213,6 +8233,202 @@
                                           }
                                         },
                                         "error_message": null
+                                      },
+                                      "_id": 1048579
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "ApplicationID": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                "line": 1483,
+                                "end_line": 1505,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "application",
+                                "immutable": true
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                  "line": 1483,
+                                  "end_line": 1505,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "btoi",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                      "line": 1483,
+                                      "end_line": 1505,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract",
+                                    "immediates": [
+                                      0,
+                                      8
+                                    ],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                          "line": 1483,
+                                          "end_line": 1505,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes[12]",
+                                          "immutable": true,
+                                          "length": 12
+                                        },
+                                        "source": {
+                                          "_type": "ARC4Decode",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                            "line": 1483,
+                                            "end_line": 1503,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes[12]",
+                                            "immutable": true,
+                                            "length": 12
+                                          },
+                                          "value": {
+                                            "_type": "IndexExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                              "line": 1483,
+                                              "end_line": 1503,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "ARC4StaticArray",
+                                              "name": "byte[12]",
+                                              "immutable": false,
+                                              "element_type": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint8",
+                                                "immutable": true,
+                                                "n": 8,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "array_size": 12,
+                                              "arc4_alias": "byte[12]",
+                                              "source_location": null
+                                            },
+                                            "base": {
+                                              "_type": "AppStateExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1483,
+                                                "end_line": 1500,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "ARC4StaticArray",
+                                                "name": "arc4.static_array<byte[12], 1>",
+                                                "immutable": false,
+                                                "element_type": {
+                                                  "_type": "ARC4StaticArray",
+                                                  "name": "byte[12]",
+                                                  "immutable": false,
+                                                  "element_type": {
+                                                    "_type": "ARC4UIntN",
+                                                    "name": "arc4.uint8",
+                                                    "immutable": true,
+                                                    "n": 8,
+                                                    "arc4_alias": null,
+                                                    "source_location": null
+                                                  },
+                                                  "array_size": 12,
+                                                  "arc4_alias": "byte[12]",
+                                                  "source_location": null
+                                                },
+                                                "array_size": 1,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "key": {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                  "line": 1483,
+                                                  "end_line": 1500,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "state_key",
+                                                  "immutable": true
+                                                },
+                                                "value": "Wq5RDa&BR4R%vB-L2`0oc>",
+                                                "encoding": "utf8"
+                                              },
+                                              "exists_assertion_message": "check externalViewArray exists"
+                                            },
+                                            "index": {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol",
+                                                "line": 1501,
+                                                "end_line": 1502,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 0,
+                                              "teal_alias": null
+                                            }
+                                          },
+                                          "error_message": null
+                                        },
+                                        "_id": 1048579
                                       }
                                     ]
                                   }
@@ -8491,7 +8707,7 @@
                       },
                       "target": {
                         "_type": "InstanceMethodTarget",
-                        "member_name": "__funcptr_dispatch_ret_u256"
+                        "member_name": "__funcptr_dispatch_ret_t_uint256"
                       },
                       "args": [
                         {
@@ -9283,7 +9499,7 @@
         "inline": null,
         "pure": false,
         "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol.C",
-        "member_name": "__funcptr_dispatch_ret_u256",
+        "member_name": "__funcptr_dispatch_ret_t_uint256",
         "arc4_method_config": null
       },
       {
@@ -9927,7 +10143,7 @@
         "inline": null,
         "pure": false,
         "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol.C",
-        "member_name": "__sel_to_id___funcptr_dispatch_ret_u256",
+        "member_name": "__sel_to_id___funcptr_dispatch_ret_t_uint256",
         "arc4_method_config": null
       }
     ],

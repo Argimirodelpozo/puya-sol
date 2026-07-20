@@ -4159,9 +4159,23 @@
           }
         ],
         "return_type": {
-          "_type": "WType",
-          "name": "void",
-          "immutable": true
+          "_type": "WTuple",
+          "name": "tuple",
+          "immutable": true,
+          "types": [
+            {
+              "_type": "WType",
+              "name": "account",
+              "immutable": true
+            },
+            {
+              "_type": "WType",
+              "name": "account",
+              "immutable": true
+            }
+          ],
+          "names": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -4175,7 +4189,7 @@
           },
           "body": [
             {
-              "_type": "IfElse",
+              "_type": "ExpressionStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
                 "line": 1,
@@ -4184,8 +4198,8 @@
                 "column": null,
                 "end_column": null
               },
-              "condition": {
-                "_type": "NumericComparisonExpression",
+              "expr": {
+                "_type": "AssertExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
                   "line": 1,
@@ -4196,11 +4210,11 @@
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "bool",
+                  "name": "void",
                   "immutable": true
                 },
-                "lhs": {
-                  "_type": "VarExpression",
+                "condition": {
+                  "_type": "BoolConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
                     "line": 1,
@@ -4211,151 +4225,14 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "uint64",
+                    "name": "bool",
                     "immutable": true
                   },
-                  "name": "__funcptr_id"
+                  "value": false
                 },
-                "operator": "==",
-                "rhs": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                    "line": 1,
-                    "end_line": 1,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
-                  },
-                  "value": 1,
-                  "teal_alias": null
-                }
-              },
-              "if_branch": {
-                "_type": "Block",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                  "line": 1,
-                  "end_line": 1,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "body": [
-                  {
-                    "_type": "ExpressionStatement",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                      "line": 1,
-                      "end_line": 1,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "expr": {
-                      "_type": "SubroutineCallExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                        "line": 1,
-                        "end_line": 1,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "void",
-                        "immutable": true
-                      },
-                      "target": {
-                        "_type": "InstanceMethodTarget",
-                        "member_name": "f"
-                      },
-                      "args": []
-                    }
-                  },
-                  {
-                    "_type": "ReturnStatement",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                      "line": 1,
-                      "end_line": 1,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "value": null
-                  }
-                ],
-                "label": null,
-                "comment": null
-              },
-              "else_branch": {
-                "_type": "Block",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                  "line": 1,
-                  "end_line": 1,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "body": [
-                  {
-                    "_type": "ExpressionStatement",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                      "line": 1,
-                      "end_line": 1,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "expr": {
-                      "_type": "AssertExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                        "line": 1,
-                        "end_line": 1,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "void",
-                        "immutable": true
-                      },
-                      "condition": {
-                        "_type": "BoolConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol",
-                          "line": 1,
-                          "end_line": 1,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "value": false
-                      },
-                      "error_message": "invalid function pointer",
-                      "comment": "invalid function pointer",
-                      "explicit": true
-                    }
-                  }
-                ],
-                "label": null,
-                "comment": null
+                "error_message": "invalid function pointer",
+                "comment": "invalid function pointer",
+                "explicit": true
               }
             }
           ],
@@ -4370,7 +4247,7 @@
         "inline": null,
         "pure": false,
         "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol.C",
-        "member_name": "__funcptr_dispatch_ret_x_x",
+        "member_name": "__funcptr_dispatch_ret_t_address_t_address",
         "arc4_method_config": null
       },
       {
@@ -4612,7 +4489,7 @@
         "inline": null,
         "pure": false,
         "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/address_member.sol.C",
-        "member_name": "__sel_to_id___funcptr_dispatch_ret_x_x",
+        "member_name": "__sel_to_id___funcptr_dispatch_ret_t_address_t_address",
         "arc4_method_config": null
       }
     ],

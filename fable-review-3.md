@@ -216,7 +216,13 @@ escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
 `floor(len/32)*32` bytes. PoC: `keccak256(0x84, 0x30)` hashes 32 bytes. Kills
 `abi.encodePacked(address, bytes32)`-shaped hash idioms with a wrong-but-plausible hash.
 
-### H14 Function-pointer external-call encode/dispatch drift (itxn/) ○
+### H14 Function-pointer external-call encode/dispatch drift (itxn/) ○ — FIXED
+> **2026-07-20:** dispatchName via Type::identifier() (injective); definition types =
+> call-site native mapping (multi-return tuple works; public wire returns adapt per entry,
+> public multi-return skipped loud); external args via the shared encodeArgToBytes (private
+> encoder + mapDispatchType DELETED); external pointer expr EvalOnce-pinned. Bonus: foreign
+> `Other(addr).g` refs no longer static-shortcut into an unresolvable cross-app callsub.
+> Guard test_fnptr_dispatch_seam.
 - `FunctionPointerDispatchTypes.cpp:78-125`: external fn-ptr args use a private encoder, not
   the consolidated `InnerCallHandlers::encodeArgToBytes` — negative int128 arg produces a
   32-byte wire value where the callee asserts len==16 (revert); arrays/structs skip ARC4

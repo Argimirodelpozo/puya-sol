@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6
-    bytecblock 0x00000000
+    intcblock 0 1
     pushint 4096
     bzero
     dup
@@ -46,13 +45,13 @@ main_k2_route@8:
     -
     gtxns Amount
 
-main_ternary_merge@15:
+main_ternary_merge@28:
     !
     assert // not payable
     global CurrentApplicationID
     assert // unknown function selector in self-call dispatch
     itxn_begin
-    intc_2 // 6
+    pushint 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -60,7 +59,7 @@ main_ternary_merge@15:
     itxn_field Fee
     intc_0 // 0
     itxn_field ApplicationID
-    bytec_0 // 0x00000000
+    pushbytes 0x00000000
     itxn_field ApplicationArgs
     itxn_submit
     intc_1 // 1
@@ -68,7 +67,7 @@ main_ternary_merge@15:
 
 main_ternary_false@14:
     intc_0 // 0
-    b main_ternary_merge@15
+    b main_ternary_merge@28
 
 main_h2_route@7:
     txn GroupIndex
@@ -94,26 +93,7 @@ main_g_route@6:
     intc_1 // 1
     -
     gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    global CurrentApplicationID
-    assert // unknown function selector in self-call dispatch
-    itxn_begin
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    intc_0 // 0
-    itxn_field ApplicationID
-    bytec_0 // 0x00000000
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_1 // 1
-    return
+    b main_ternary_merge@28
 
 main_ternary_false@27:
     intc_0 // 0
