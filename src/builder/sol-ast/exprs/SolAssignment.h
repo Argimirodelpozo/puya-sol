@@ -130,6 +130,14 @@ private:
 		std::shared_ptr<awst::Expression> const& _target,
 		std::shared_ptr<awst::Expression>& _value);
 
+	/// Compound-assign RHS canonicalization: a narrower SIGNED rhs is widened
+	/// to the TARGET type's canonical form (`a op= b` == `a = a op T(b)`)
+	/// before the compound compute — else the target-typed signed-div/mod
+	/// path sign-extends the divisor from the wrong (target) width. Shared
+	/// by every compound site. No-op for non-int/unsigned/non-narrower rhs.
+	std::shared_ptr<awst::Expression> widenSignedCompoundRhs(
+		std::shared_ptr<awst::Expression> _value);
+
 	/// Compound assigns: read current target value, apply op, return new value.
 	/// Simple Assign passes through unchanged.
 	std::shared_ptr<awst::Expression> applyCompoundAssignment(

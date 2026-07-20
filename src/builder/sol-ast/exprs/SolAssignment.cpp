@@ -9,6 +9,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -165,6 +166,10 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 	if (!enumType) return _value;
 
 	unsigned numMembers = enumType->numberOfMembers();
+	// EvalOnce: the value is referenced by the queued assert AND the returned
+	// assignment value — a call-valued RHS ran twice (its twins in
+	// SolExpressionStatement/SolEmitStatement already carry this fix).
+	_value = awst::makeEvalOnce(std::move(_value), m_loc);
 	auto val = builder::TypeCoercion::implicitNumericCast(_value, awst::WType::uint64Type(), m_loc);
 	m_ctx.queuePreStmt(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
 	return val;
@@ -563,6 +568,7 @@ SolAssignment::trySlotBasedScalarWrite(
 		awst::pushCallArg(readCall->args, "__slot", std::move(readSlot));
 
 		auto* targetSolType = m_assignment.leftHandSide().annotation().type;
+		_value = widenSignedCompoundRhs(std::move(_value));
 		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 			m_ctx, _op, targetSolType, readCall, _value, m_loc);
 		if (builderResult)
@@ -657,12 +663,43 @@ SolAssignment::tryStructOrNamedTupleFieldAssignment(
 }
 
 std::shared_ptr<awst::Expression>
+SolAssignment::widenSignedCompoundRhs(std::shared_ptr<awst::Expression> _value)
+{
+	// Solidity `a op= b` is `a = a op T(b)`: the RHS converts to the TARGET
+	// type FIRST. A narrower SIGNED rhs must reach the compound compute in
+	// the target's CANONICAL form — tryComputeCompoundValue builds both
+	// operand builders at the TARGET type, so the signed-div/mod path
+	// sign-extends from the target width and a not-yet-widened negative
+	// divisor read as huge-positive (`int128 x; int16 y=-32768; x /= y`
+	// divided by +1.8e19). uint64-carried rhs into a biguint-backed target
+	// needs promotion + extension to 256-bit TC; same-carrier widens go
+	// through signExtendSignedWiden. Shared by every compound site
+	// (applyCompoundAssignment, transient, slot-scalar) so they can't drift.
+	auto const* rhsSolType = m_assignment.rightHandSide().annotation().type;
+	auto const* tgtSolType = m_assignment.leftHandSide().annotation().type;
+	auto rhsInt = builder::SolIntType::fromSol(rhsSolType);
+	auto tgtInt = builder::SolIntType::fromSol(tgtSolType);
+	if (!_value || !rhsInt || !tgtInt || !rhsInt->isSigned || !tgtInt->isSigned
+		|| rhsInt->bits >= tgtInt->bits)
+		return _value;
+	if (tgtInt->bits > 64 && _value->wtype == awst::WType::uint64Type())
+		return builder::TypeCoercion::signExtendToUint256(
+			builder::TypeCoercion::implicitNumericCast(
+				std::move(_value), awst::WType::biguintType(), m_loc),
+			rhsInt->bits, m_loc);
+	return builder::TypeCoercion::signExtendSignedWiden(
+		std::move(_value), rhsSolType, tgtSolType, m_loc);
+}
+
+std::shared_ptr<awst::Expression>
 SolAssignment::applyCompoundAssignment(
 	Token _op,
 	std::shared_ptr<awst::Expression> const& _target,
 	std::shared_ptr<awst::Expression> _value)
 {
 	if (_op == Token::Assign) return _value;
+
+	_value = widenSignedCompoundRhs(std::move(_value));
 
 	// Reuse the already-built target to avoid re-evaluating a side-effecting
 	// index (e.g. `arr[i++] += 5` gave i==2 when LHS was rebuilt). The built

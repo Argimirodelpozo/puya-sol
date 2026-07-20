@@ -49,6 +49,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	{
 		auto currentValue = sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
+		rhs = widenSignedCompoundRhs(std::move(rhs));
 		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
 			m_ctx, op, solType, currentValue, rhs, m_loc);
 		if (builderResult)
