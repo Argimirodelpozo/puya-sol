@@ -2,6 +2,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/Types.h>
@@ -183,7 +184,16 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 			return awst::makeNumericCompare(
 				std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
 		}
-		return btoi;
+		// Sub-64 signed: the cell holds byteSize-truncated TC (write side
+		// truncates), but the uint64 carrier convention is 64-bit TC —
+		// re-extend from the declared width (same rule as SlotWordCodec;
+		// this branch previously returned the raw btoi, so a transient
+		// int32 x = -1 read back as +4294967295).
+		std::shared_ptr<awst::Expression> result = std::move(btoi);
+		if (auto it = SolIntType::fromSol(info->solType);
+			it && it->isSigned && it->bits < 64)
+			result = TypeCoercion::signExtendToUint64(std::move(result), it->bits, _loc);
+		return result;
 	}
 
 	// biguint: extract sz bytes and reinterpret (leading-zero-invariant).
