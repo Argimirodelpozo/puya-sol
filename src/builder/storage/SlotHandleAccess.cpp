@@ -47,6 +47,44 @@ std::function<std::shared_ptr<awst::Expression>()> bindTemp(
 }
 } // namespace
 
+std::shared_ptr<awst::Expression> SlotHandleAccess::boundsCheckIndex(
+	std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
+	std::shared_ptr<awst::Expression> _idx,
+	solidity::frontend::ArrayType const* _arrType,
+	awst::SourceLocation const& _loc)
+{
+	if (!_idx || !_arrType || _arrType->isDynamicallySized())
+		return _idx;
+	// Pin to a TEMP (not SingleEvaluation): the assert lands in its own
+	// pre-STATEMENT while the index is consumed by a later expression — a
+	// temp var is the established cross-statement idiom
+	// (checkedIndexToUint64, the mapping-chain bounds check); vars and
+	// constants are re-creatable and skip the temp.
+	if (!dynamic_cast<awst::VarExpression const*>(_idx.get())
+		&& !dynamic_cast<awst::IntegerConstant const*>(_idx.get()))
+	{
+		std::string nm = "__shb_idx_"
+			+ std::to_string(awst::NameGen::next("SlotHandleAccess.boundsIdx"));
+		auto const* idxWt = _idx->wtype; // read BEFORE the move (arg eval order)
+		_preStmts.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(nm, idxWt, _loc), std::move(_idx), _loc));
+		_idx = awst::makeVarExpression(nm, idxWt, _loc);
+	}
+	auto idxRef = [&]() -> std::shared_ptr<awst::Expression> {
+		if (auto const* ve = dynamic_cast<awst::VarExpression const*>(_idx.get()))
+			return awst::makeVarExpression(ve->name, ve->wtype, _loc);
+		auto const* ic = static_cast<awst::IntegerConstant const*>(_idx.get());
+		return awst::makeIntegerConstant(ic->value, _loc, ic->wtype);
+	};
+	auto bound = awst::makeIntegerConstant(
+		_arrType->length().str(), _loc, _idx->wtype);
+	auto cmp = awst::makeNumericCompare(
+		idxRef(), awst::NumericComparison::Lt, std::move(bound), _loc);
+	_preStmts.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(std::move(cmp), _loc, "array index out of bounds"), _loc));
+	return _idx;
+}
+
 SlotHandleAccess::ElemLayout SlotHandleAccess::layoutFor(
 	solidity::frontend::Type const* _elemType)
 {

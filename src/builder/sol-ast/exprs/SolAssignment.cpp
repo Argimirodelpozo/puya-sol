@@ -195,9 +195,12 @@ bool rootsInSlotHandle(
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleSlotHandleElemWrite()
 {
-	// `arr[i] = v` on a slot-handle base with PACKED sub-word or STRUCT
-	// elements. Full-word scalars keep the generic slot path.
-	if (m_assignment.assignmentOperator() != Token::Assign) return std::nullopt;
+	// `arr[i] = v` (and, for PACKED scalars, `arr[i] op= v`) on a slot-handle
+	// base with PACKED sub-word or STRUCT elements. Full-word scalars keep the
+	// generic slot path — its whole-word read-modify-write is correct there,
+	// including compound ops. Packed compound MUST intercept: the generic path
+	// addresses slot base+idx unscaled and clobbers a whole neighboring word.
+	bool isCompound = m_assignment.assignmentOperator() != Token::Assign;
 	auto const* lhs = dynamic_cast<IndexAccess const*>(&m_assignment.leftHandSide());
 	if (!lhs || !lhs->indexExpression()) return std::nullopt;
 	auto const* arrType = dynamic_cast<ArrayType const*>(lhs->baseExpression().annotation().type);
@@ -207,17 +210,38 @@ SolAssignment::tryHandleSlotHandleElemWrite()
 	auto const* structElem = dynamic_cast<StructType const*>(elemType);
 	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
 	if (!structElem && layout.perSlot <= 1) return std::nullopt;
+	if (structElem && isCompound) return std::nullopt; // no compound ops on structs
 
 	// Gate on AST shape BEFORE building: the base chain must root in a
 	// slot-handle local (building a side-effecting base twice would double
 	// its effects — e.g. `m[1].push().a = v` box-model writes).
 	if (!rootsInSlotHandle(lhs->baseExpression(), m_scope)) return std::nullopt;
 	auto base = buildExpr(lhs->baseExpression());
-	if (!base || base->wtype != awst::WType::biguintType()) return std::nullopt;
+	if (!base) return std::nullopt;
+	if (base->wtype != awst::WType::biguintType())
+	{
+		// Chained bases (`_x[0]`) and struct-typed locals build as biguint
+		// slot math above. A BARE array-typed local builds as its DECLARED
+		// (arc4 array) type instead — read its HANDLE var directly (mirrors
+		// SolIndexAccess's slot-ref path); without this the intercept never
+		// fired for such locals and packed writes fell to the whole-word
+		// wrong-slot path.
+		auto const* baseId = dynamic_cast<Identifier const*>(&lhs->baseExpression());
+		auto const* baseDecl = baseId
+			? dynamic_cast<VariableDeclaration const*>(baseId->annotation().referencedDeclaration)
+			: nullptr;
+		if (!baseDecl) return std::nullopt;
+		base = awst::makeVarExpression(
+			baseDecl->name(), awst::WType::biguintType(), m_loc);
+	}
 	auto idx = buildExpr(*lhs->indexExpression());
 	if (!idx) return std::nullopt;
 	if (idx->wtype == awst::WType::uint64Type())
 		idx = awst::makeAsBiguint(awst::makeItob(std::move(idx), m_loc), m_loc);
+	// FIXED array (guaranteed by the gate above): assert idx < length before
+	// the address math (EVM Panic 0x32; OOB would clobber a neighboring slot).
+	idx = builder::SlotHandleAccess::boundsCheckIndex(
+		m_ctx.prePendingStatements, std::move(idx), arrType, m_loc);
 
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	if (structElem)
@@ -238,8 +262,35 @@ SolAssignment::tryHandleSlotHandleElemWrite()
 	}
 	else
 	{
-		auto value = buildExpr(m_assignment.rightHandSide());
-		if (!value) return std::nullopt;
+		std::shared_ptr<awst::Expression> value;
+		if (isCompound)
+		{
+			// `p[i] op= v` on a PACKED element: packed-aware read (sign-
+			// extended canonical biguint), compute at the element's Solidity
+			// type, write back sub-word. base/idx are eval-once'd so the read
+			// and the write share one evaluation. The read is cast to the
+			// element's NATIVE carrier first (uint64 for ≤64-bit: low 8 bytes
+			// of the canonical TC = the 64-bit-TC carrier) so the compound
+			// arithmetic keeps checked-overflow semantics at the declared
+			// width (decode-before-arith, as the box-array path does).
+			base = awst::makeEvalOnce(std::move(base), m_loc);
+			idx = awst::makeEvalOnce(std::move(idx), m_loc);
+			auto current = builder::SlotHandleAccess::readScalarElem(
+				base, idx, layout, elemType, m_loc);
+			auto* nativeType = m_ctx.typeMapper.map(elemType);
+			if (nativeType && current->wtype != nativeType)
+				current = builder::TypeCoercion::implicitNumericCast(
+					std::move(current), nativeType, m_loc);
+			auto rhs = buildExpr(m_assignment.rightHandSide());
+			if (!rhs) return std::nullopt;
+			value = applyCompoundAssignment(
+				m_assignment.assignmentOperator(), current, std::move(rhs));
+		}
+		else
+		{
+			value = buildExpr(m_assignment.rightHandSide());
+			if (!value) return std::nullopt;
+		}
 		// canonical biguint value
 		if (value->wtype && value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
 			value = awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), m_loc);

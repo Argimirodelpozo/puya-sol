@@ -157,6 +157,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				auto slotVar = awst::makeVarExpression(varDecl->name(), awst::WType::biguintType(), m_loc);
 
 				auto const* arrType = dynamic_cast<ArrayType const*>(baseType);
+				// FIXED arrays: assert idx < length (EVM Panic 0x32) — an OOB
+				// slot-handle access would silently hit a NEIGHBORING state
+				// variable's slot. Also pins idx for the multi-use math below.
+				indexExpr = builder::SlotHandleAccess::boundsCheckIndex(
+					m_ctx.prePendingStatements, std::move(indexExpr), arrType, m_loc);
 				if (arrType && arrType->baseType()->category() == Type::Category::Array)
 				{
 					// Outer dim: slot ref for the inner array. EVM stride = the
@@ -218,6 +223,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						auto itob = awst::makeItob(std::move(indexExpr), m_loc);
 						indexExpr = awst::makeAsBiguint(std::move(itob), m_loc);
 					}
+
+					// FIXED arrays: assert idx < length (EVM Panic 0x32) —
+					// OOB would silently address a neighboring slot.
+					indexExpr = builder::SlotHandleAccess::boundsCheckIndex(
+						m_ctx.prePendingStatements, std::move(indexExpr), baseArrayType, m_loc);
 
 					bool written = m_indexAccess.annotation().willBeWrittenTo;
 					auto const* elemType = baseArrayType->baseType();

@@ -28,6 +28,17 @@ struct SlotHandleAccess
 	};
 	static ElemLayout layoutFor(solidity::frontend::Type const* _elemType);
 
+	/// FIXED-size arrays: queue `assert(idx < length)` into _preStmts (EVM
+	/// Panic 0x32 shape — OOB slot-handle access would silently read/write a
+	/// NEIGHBORING state variable's slot) and return an eval-once'd idx that
+	/// is safe to reference again in the address math. Dynamic arrays and a
+	/// null _arrType pass through untouched.
+	static std::shared_ptr<awst::Expression> boundsCheckIndex(
+		std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
+		std::shared_ptr<awst::Expression> _idx,
+		solidity::frontend::ArrayType const* _arrType,
+		awst::SourceLocation const& _loc);
+
 	/// Slot of element `idx` (both biguint): base + idx*stride (multi-slot) or
 	/// base + idx/perSlot (packed).
 	static std::shared_ptr<awst::Expression> elemSlot(
