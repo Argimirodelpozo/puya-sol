@@ -8,13 +8,17 @@
 namespace puyasol::builder
 {
 
-/// Walks a function body to find which parameters are assigned to.
+/// Walks a function body to find which parameters are written to.
 ///
 /// A param is "mutated" if it (or a sub-component via index/member/tuple)
-/// appears on the LHS of an Assignment. Used in memory-ref/storage-ref
-/// augmentation: callees that don't mutate a ref param skip the caller-side
-/// write-back, saving a tuple slot. Shared by AWSTBuilder.cpp and
-/// SolInternalCall.cpp to keep semantics identical.
+/// is the target of an Assignment, of `++`/`--`/`delete`, or the receiver of
+/// a mutating array member call (`p.arr.push(x)`, `p.arr.pop()`). Used in
+/// memory-ref/storage-ref augmentation: callees that don't mutate a ref param
+/// skip the caller-side write-back, saving a tuple slot; also gates the
+/// aliased-arg Copy break (Copy is only safe for unmutated params). Shared by
+/// AWSTBuilder.cpp, FunctionBuilder.cpp and SolInternalCall.cpp to keep
+/// semantics identical. Known gap: mutation via passing the param on to
+/// ANOTHER mutating callee is not tracked (needs call-graph closure).
 ///
 /// Usage:
 ///     ParamMutationDetector det;
@@ -31,6 +35,26 @@ public:
 	{
 		recordRoot(&a.leftHandSide());
 		return true;  // recurse so nested assignments on the RHS also count
+	}
+
+	bool visit(solidity::frontend::UnaryOperation const& u) override
+	{
+		using solidity::langutil::Token;
+		auto op = u.getOperator();
+		if (op == Token::Inc || op == Token::Dec || op == Token::Delete)
+			recordRoot(&u.subExpression());
+		return true;
+	}
+
+	bool visit(solidity::frontend::FunctionCall const& c) override
+	{
+		// `p.push(x)` / `p.pop()` mutate the receiver. Match on the member
+		// name only — over-recording is safe (an extra write-back is
+		// redundant, a missed one loses the mutation).
+		if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&c.expression()))
+			if (ma->memberName() == "push" || ma->memberName() == "pop")
+				recordRoot(&ma->expression());
+		return true;
 	}
 
 private:
