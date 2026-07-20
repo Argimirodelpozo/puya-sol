@@ -185,8 +185,12 @@ void ContractBuilder::emitSuperSubroutines(
 	{
 		clearSuperOverrides();
 		applySuperOverridesFor(targetId);
-		auto method = buildFunction(*func, _contractName, superImplName(*func));
-		method.arc4MethodConfig.reset();
+		// Internal copy: the impl is a direct callsub target. Building it as
+		// an ABI method and resetting the config AFTERWARDS left the callee's
+		// entry semantics baked into the body — a payable caller inherited
+		// the base's not-payable group assert and falsely reverted.
+		auto method = buildFunction(
+			*func, _contractName, superImplName(*func), /*_asInternalCopy=*/true);
 		_contractNode.methods.push_back(std::move(method));
 		// A super TARGET with modifiers builds its viaIR modifier chain
 		// (`f__mod{i}_N` subroutines) into m_modifierSubroutines; flush them into the

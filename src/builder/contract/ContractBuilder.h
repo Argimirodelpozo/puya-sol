@@ -278,10 +278,18 @@ private:
 	);
 
 	/// Build a contract method from a function definition.
+	/// _asInternalCopy: build as a plain INTERNAL subroutine even for a
+	/// public/external _func — no ARC4 config, and therefore no ABI entry
+	/// checks, no not-payable group assert, no ARC4 param remap/decodes, no
+	/// wire-return encoding, no opup budget. Used for super/Base.f() impl
+	/// copies: they are direct callsub targets, and baking the callee's
+	/// entry semantics in made a payable caller inherit the base's
+	/// not-payable assert (false revert when grouped with a payment).
 	awst::ContractMethod buildFunction(
 		solidity::frontend::FunctionDefinition const& _func,
 		std::string const& _contractName,
-		std::string const& _nameOverride = ""
+		std::string const& _nameOverride = "",
+		bool _asInternalCopy = false
 	);
 
 	/// Build an ARC4 method config for a public/external function.

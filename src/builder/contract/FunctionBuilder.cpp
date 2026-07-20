@@ -227,41 +227,33 @@ void augmentMethodForMutatedMemoryParams(
 	bool newIsTuple = (dynamic_cast<awst::WTuple const*>(newRetType) != nullptr);
 
 	// Walk existing returns; append the mem-param vars to match the new shape.
-	std::function<void(awst::Block&)> walk = [&](awst::Block& block) {
-		for (auto& stmt : block.body)
+	// forEachReturnStatement covers ALL nesting (if/else, nested blocks,
+	// loops, switch) — the old hand-rolled walk recursed only IfElse, so an
+	// early `return` inside a for loop kept its unaugmented value and puya
+	// rejected valid Solidity with a return-type mismatch.
+	forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+		if (!newIsTuple)
 		{
-			if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-			{
-				if (!newIsTuple)
-				{
-					if (!ret->value && memIdx.size() == 1)
-						ret->value = awst::makeVarExpression(
-							method.args[memIdx[0]].name, method.args[memIdx[0]].wtype,
-							ret->sourceLocation);
-				}
-				else
-				{
-					auto tuple = awst::makeTupleExpression(newRetType, ret->sourceLocation);
-					if (ret->value)
-					{
-						if (auto* ot = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
-							for (auto& it : ot->items) tuple->items.push_back(it);
-						else tuple->items.push_back(ret->value);
-					}
-					for (size_t idx : memIdx)
-						tuple->items.push_back(awst::makeVarExpression(
-							method.args[idx].name, method.args[idx].wtype, ret->sourceLocation));
-					ret->value = std::move(tuple);
-				}
-			}
-			if (auto* ie = dynamic_cast<awst::IfElse*>(stmt.get()))
-			{
-				if (ie->ifBranch) walk(*ie->ifBranch);
-				if (ie->elseBranch) walk(*ie->elseBranch);
-			}
+			if (!ret.value && memIdx.size() == 1)
+				ret.value = awst::makeVarExpression(
+					method.args[memIdx[0]].name, method.args[memIdx[0]].wtype,
+					ret.sourceLocation);
 		}
-	};
-	walk(*method.body);
+		else
+		{
+			auto tuple = awst::makeTupleExpression(newRetType, ret.sourceLocation);
+			if (ret.value)
+			{
+				if (auto* ot = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
+					for (auto& it : ot->items) tuple->items.push_back(it);
+				else tuple->items.push_back(ret.value);
+			}
+			for (size_t idx : memIdx)
+				tuple->items.push_back(awst::makeVarExpression(
+					method.args[idx].name, method.args[idx].wtype, ret.sourceLocation));
+			ret.value = std::move(tuple);
+		}
+	});
 
 	// Fall-through: only void methods reach here un-terminated (buildFunction already synthesised
 	// a return for non-void fall-through, which the walk above augmented). Return the mem param(s).
@@ -287,7 +279,8 @@ void augmentMethodForMutatedMemoryParams(
 awst::ContractMethod ContractBuilder::buildFunction(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::string const& _contractName,
-	std::string const& _nameOverride
+	std::string const& _nameOverride,
+	bool _asInternalCopy
 )
 {
 	awst::ContractMethod method;
@@ -429,8 +422,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// Pure/view
 	method.pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
 
-	// ARC4 method config for public/external functions
-	method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
+	// ARC4 method config for public/external functions. Suppressed for
+	// internal copies (super/Base.f() impls): every ABI-entry behavior below
+	// (entry checks, param remap, wire-return encoding, budget, not-payable
+	// assert) gates on this config.
+	if (!_asInternalCopy)
+		method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
 
 	// uros: chunk-assigned methods must not be inlined (an inlined copy defeats
 	// the split; the uros backend needs to stub it in non-owning chunks).
