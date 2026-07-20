@@ -68,24 +68,10 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
 
 main_ternary_false@17:
     intc_1 // 0

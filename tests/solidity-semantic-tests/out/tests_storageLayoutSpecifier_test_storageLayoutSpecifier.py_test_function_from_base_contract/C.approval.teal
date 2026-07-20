@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32 2
     bytecblock "x" "y" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "z"
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -250,16 +248,6 @@ main_test_route@5:
 main_ternary_merge@42:
     !
     assert // not payable
-    txn GroupIndex
-    bz main_ternary_false@45
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@46:
-    !
-    assert // not payable
     intc_1 // 0
     bytec_1 // "y"
     app_global_get_ex
@@ -274,27 +262,6 @@ main_ternary_merge@46:
     bytec_1 // "y"
     dig 1
     app_global_put
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    dup
-    bury 3
-    b|
-    bury 2
-    txn GroupIndex
-    bz main_ternary_false@50
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@51:
-    !
-    assert // not payable
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -309,16 +276,6 @@ main_ternary_merge@51:
     bytec_0 // "x"
     dig 1
     app_global_put
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    dig 1
-    dup
-    cover 2
-    b|
-    dig 3
     b+
     dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -332,6 +289,8 @@ main_ternary_merge@51:
     intc_2 // 32
     <=
     assert // overflow
+    intc_2 // 32
+    bzero
     b|
     bytec_2 // 0x151f7c75
     swap
@@ -339,14 +298,6 @@ main_ternary_merge@51:
     log
     intc_0 // 1
     return
-
-main_ternary_false@50:
-    intc_1 // 0
-    b main_ternary_merge@51
-
-main_ternary_false@45:
-    intc_1 // 0
-    b main_ternary_merge@46
 
 main_ternary_false@41:
     intc_1 // 0

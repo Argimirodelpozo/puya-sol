@@ -2501,3 +2501,63 @@ def test_eval_once_unary_pow_enum(harness):
     assert (as_int(r[0]), as_int(r[1])) == (8, 1)
     r = harness.call(app, "enumAssign()").abi_return
     assert (as_int(r[0]), as_int(r[1])) == (1, 1)  # E.B == 1
+
+
+def test_super_call_payable_caller(harness):
+    """puyasolRegression/contracts/super_payable_caller.sol — NOT an o.g. test.
+
+    Base.f()/super.f() impl copies were built as ABI methods (config reset
+    only afterwards), baking the base's not-payable group assert into the
+    direct-callsub body: a payable caller grouped with a payment falsely
+    reverted. The impl now builds as a plain internal subroutine.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/super_payable_caller.sol", "B", fund_wei=1_000_000
+    )
+    # payment_wei attaches a preceding PaymentTxn — the pre-fix baked assert fired here
+    assert as_int(harness.call(app, "g(uint256)", 3, payment_wei=1000).abi_return) == 3
+    assert as_int(harness.call(app, "h(uint256)", 4, payment_wei=1000).abi_return) == 7
+    # override still dispatches normally and remains payable-checked
+    assert as_int(harness.call(app, "f(uint256)", 5).abi_return) == 17
+
+
+def test_crosscontract_keyed_getter(harness):
+    """puyasolRegression/contracts/crosscontract_keyed_getter.sol — NOT an o.g. test.
+
+    Cross-contract KEYED public getter calls always reverted: the caller
+    emitted the return-only selector m()byte[] (and 32-byte biguint keys)
+    while the callee published m(<declared-width>)T. Caller now derives
+    selector + arg types from the getter FunctionType; callee publishes
+    declared key widths (matching explicit functions).
+    """
+    import algosdk
+
+    arts = harness.compile("puyasolRegression/contracts/crosscontract_keyed_getter.sol")
+    store = harness.deploy(arts, contract_name="Store")
+    reader = harness.deploy(arts, contract_name="Reader")
+    harness.call(store, "seed()")
+
+    fake = algosdk.encoding.encode_address(bytes(24) + store.app_id.to_bytes(8, "big"))
+    opts = {"extra_fee": 10_000, "extra_apps": [store.app_id]}
+    assert as_int(harness.call(reader, "readMap(address,uint256)", fake, 5, **opts).abi_return) == 500
+    assert as_int(harness.call(reader, "readMap(address,uint256)", fake, 6, **opts).abi_return) == 0
+    assert as_int(harness.call(reader, "readNarrow(address,uint128)", fake, 9, **opts).abi_return) == 900
+    assert as_int(harness.call(reader, "readArr(address,uint256)", fake, 1, **opts).abi_return) == 22
+    assert as_int(harness.call(reader, "readArr(address,uint256)", fake, 0, **opts).abi_return) == 0
+    # param-less getters keep working (pre-existing night-2 fix)
+    assert as_int(harness.call(reader, "readPlain(address)", fake, **opts).abi_return) == 77
+
+
+def test_memparam_return_in_loop(harness):
+    """puyasolRegression/contracts/memparam_return_in_loop.sol — NOT an o.g. test.
+
+    A callee mutating a memory param with an early `return` inside a LOOP
+    failed to compile (augmentation walks recursed only if/else, so the
+    return kept its unaugmented arity). Both twins now share
+    forEachReturnStatement. Mutations before the early return must persist.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/memparam_return_in_loop.sol")
+    r = harness.call(app, "viaLibrary()").abi_return
+    assert [as_int(x) for x in r] == [11, 21, 0]
+    r = harness.call(app, "viaMethod()").abi_return
+    assert [as_int(x) for x in r] == [6, 7]

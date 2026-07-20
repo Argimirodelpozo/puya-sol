@@ -1,3 +1,24 @@
+# Semantic Test Status — v452
+
+> **fix: fable-review-3 dispatch trio H15 (super-impl entry semantics, keyed getters, augmentation walks) (2026-07-20):**
+> **12 failed / 1341 passed / 109 xf / 28 xp** (failure set identical to v451 = zero regressions; +3 guards;
+> one run showed 2 tests/state flakes — localnet `block BlkSeed` round-availability race under -n2, pass
+> standalone and on re-run). (H15a) super/Base.f() impl copies were built as ABI methods with the config
+> reset only AFTERWARDS — the base's not-payable group assert, ABI entry checks, ARC4 param remap and
+> wire-return encoding were already baked into the direct-callsub body, so a payable caller grouped with a
+> payment falsely reverted. buildFunction gained _asInternalCopy (suppresses the ARC4 config BEFORE body
+> build — every entry behavior gates on it); emitSuperSubroutines uses it. (H15b) cross-contract KEYED
+> public getter calls always reverted: caller emitted return-only `m()T` selectors and 32-byte biguint
+> keys while the callee published `m(uint256)T`. Caller now derives selector + arg encoding types from the
+> bound getter FunctionType (param-less getters byte-identical); callee publishes biguint keys at DECLARED
+> width (matching explicit functions — converting a public var to an explicit getter no longer changes the
+> selector). (H15c) both write-back augmentation walks (FunctionBuilder methods + AWSTBuilder library/free
+> fns) recursed only IfElse — an early `return` inside a loop kept its unaugmented arity and puya rejected
+> valid Solidity; both now share forEachReturnStatement, which also learned Switch. NOTE: `new Child()`
+> inside a ctor does NOT sequence the child's __postInit before subsequent parent-ctor calls to the child
+> (pre-existing, surfaced writing the getter fixture; documented in fable-review-3).
+> Full run: RESULTS_review3_h15.txt.
+
 # Semantic Test Status — v451
 
 > **fix: fable-review-3 arith/encode trio H9-H11 (compound signed divisor, ternary return encoding, unary/pow eval-once) (2026-07-20):**

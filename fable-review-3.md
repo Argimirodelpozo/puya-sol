@@ -216,7 +216,16 @@ escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
 - `dispatchName` (364-391) collapses signedness and all non-int types to `_x`, merging distinct
   pointer signatures into one dispatch group typed by whichever was registered first.
 
-### H15 ✅ Contract-dispatch highs (contract/)
+### H15 ✅ Contract-dispatch highs (contract/) — FIXED
+> **2026-07-20:** (a) super-impls build with `_asInternalCopy` (ARC4 config suppressed BEFORE
+> body build) — no baked entry checks/payable assert/wire returns; (b) keyed getters: caller
+> selector+args from the bound getter FunctionType, callee publishes declared key widths;
+> (c) both augmentation walks share forEachReturnStatement (now incl. Switch). Guards
+> test_super_call_payable_caller / test_crosscontract_keyed_getter /
+> test_memparam_return_in_loop. NEW KNOWN GAP surfaced by the getter fixture (pre-existing,
+> unfixed): `new Child()` in a ctor does not run the child's __postInit before later
+> parent-ctor calls into the child — child box/global state vars are uninitialized
+> ("no such box" / app_global assert in the child).
 - **`super`/`Base.f()` targets carry ABI-entry semantics**: `SuperCallResolution.cpp:188`
   resets `arc4MethodConfig` only *after* `buildFunction` has baked in the not-payable assert,
   entry checks, and wire-return encoding. Verified in TEAL: a payable `g()` calling `A.f()`
