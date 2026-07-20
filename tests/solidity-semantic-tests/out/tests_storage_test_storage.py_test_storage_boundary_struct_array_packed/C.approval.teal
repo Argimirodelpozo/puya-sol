@@ -766,15 +766,18 @@ main_while_top@36:
     dig 2
     b>
     bz main_after_while@61
+    dig 1
+    dup
+    pushbytes 0x0a
+    b<
+    assert // array index out of bounds
     intc_2 // 8
     bzero
     pushint 41
     itob
     pushint 4
     itob
-    dig 4
-    dup
-    cover 4
+    dig 3
     b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1181,6 +1184,10 @@ main_while_top@59:
     dig 1
     b>
     bz main_after_while@61
+    dupn 2
+    pushbytes 0x0a
+    b<
+    assert // array index out of bounds
     intc_2 // 8
     bzero
     intc_1 // 1
@@ -1188,8 +1195,6 @@ main_while_top@59:
     pushint 4
     itob
     dig 3
-    dup
-    cover 4
     dig 1
     b*
     dup

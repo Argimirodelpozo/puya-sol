@@ -2349,3 +2349,94 @@ def test_postinit_transitive_ctor_args(harness):
     assert as_int(harness.call(app, "va()").abi_return) == 6
     assert as_int(harness.call(app, "y2()").abi_return) == 5
     assert as_int(harness.call(app, "arr(uint256)", 0).abi_return) == 9
+
+
+def test_param_mutation_incdec_writeback(harness):
+    """puyasolRegression/contracts/param_mutation_incdec.sol — NOT an o.g. test.
+
+    A callee mutating a memory ref param ONLY via ++/--/delete (no plain
+    assignment) was classified non-mutating by ParamMutationDetector, so the
+    caller-side write-back was skipped: inc(arr) with a[0]++ left the caller's
+    arr[0] at 0. The detector now records UnaryOperation Inc/Dec/Delete and
+    push/pop member-call receivers.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/param_mutation_incdec.sol")
+    r = harness.call(app, "run()").abi_return
+    assert [as_int(x) for x in r] == [1, 9, 0]
+    assert as_int(harness.call(app, "runStruct()").abi_return) == 42
+
+
+def test_slot_handle_array_bounds_and_packed_compound(harness):
+    """puyasolRegression/contracts/slot_handle_array_bounds.sol — NOT an o.g. test.
+
+    Slot-handle (.slot-rebound) fixed-array element access: (1) runtime OOB
+    indexes addressed base+idx directly — reading/writing a NEIGHBORING slot
+    where EVM panics 0x32; now asserted idx < length. (2) packed `p[i] += v`
+    (and even plain `p[i] = v` for an array-typed local, whose intercept never
+    fired) did an unscaled whole-word RMW at slot base+i; now routed through
+    the packed-aware sub-word read/replace3/write.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/slot_handle_array_bounds.sol")
+    # seed
+    harness.call(app, "wrPair(uint256,uint256)", 0, 1000)
+    harness.call(app, "wrPair(uint256,uint256)", 1, 2000)
+    for i, v in [(2, 20), (3, 30), (4, 40)]:
+        harness.call(app, "wrPacked(uint256,uint8)", i, v)
+    assert as_int(harness.call(app, "rdPair(uint256)", 1).abi_return) == 2000
+    assert as_int(harness.call(app, "rdPairChained(uint256)", 0).abi_return) == 1000
+    # packed compound: byte 3 bumps; neighbors 2/4 and the pair slots intact
+    harness.call(app, "bump(uint256,uint8)", 3, 5)
+    harness.call(app, "drop(uint256,uint8)", 2, 1)
+    assert as_int(harness.call(app, "rdPacked(uint256)", 3).abi_return) == 35
+    assert as_int(harness.call(app, "rdPacked(uint256)", 2).abi_return) == 19
+    assert as_int(harness.call(app, "rdPacked(uint256)", 4).abi_return) == 40
+    assert as_int(harness.call(app, "rdPair(uint256)", 0).abi_return) == 1000
+    assert as_int(harness.call(app, "rdPair(uint256)", 1).abi_return) == 2000
+    # checked overflow at the ELEMENT width must revert
+    harness.call(app, "wrPacked(uint256,uint8)", 5, 255)
+    r = harness.call(app, "bump(uint256,uint8)", 5, 1, expect_revert=True)
+    assert getattr(r, "reverted", False), "uint8 overflow in packed += must revert"
+    r = harness.call(app, "drop(uint256,uint8)", 6, 1, expect_revert=True)
+    assert getattr(r, "reverted", False), "uint8 underflow in packed -= must revert"
+    # OOB: EVM Panic 0x32 shape — must revert, not touch neighboring slots
+    for sig, args in [
+        ("rdPair(uint256)", (2,)),
+        ("rdPair(uint256)", (255,)),
+        ("rdPairChained(uint256)", (2,)),
+        ("wrPair(uint256,uint256)", (2, 99)),
+        ("rdPacked(uint256)", (8,)),
+        ("wrPacked(uint256,uint8)", (8, 1)),
+        ("bump(uint256,uint8)", (8, 1)),
+    ]:
+        r = harness.call(app, sig, *args, expect_revert=True)
+        assert getattr(r, "reverted", False), f"{sig}{args} must revert (index OOB)"
+
+
+def test_conditional_storage_ptr_reassign_fails_loud(harness):
+    """puyasolRegression/contracts/cond_storage_ptr_reassign.sol — NOT an o.g. test.
+
+    `p = a2` on a storage-pointer local lowers to a COMPILE-TIME alias rebind;
+    inside an if-branch it applied unconditionally (`if (c) p = a2; p.push(1);`
+    always pushed to a2 — verified miscompile). Until a runtime lowering
+    exists, conditional reassignment must be a loud compile error.
+    """
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("puyasolRegression/contracts/cond_storage_ptr_reassign.sol")
+
+
+def test_straightline_storage_ptr_reassign_still_works(harness):
+    """puyasolRegression/contracts/straightline_storage_ptr_reassign.sol.
+
+    The SOUND storage-pointer forms must keep working: straight-line
+    reassignment and ternary selection at initialization (the RHS conditional
+    is a runtime expression; only conditionally-executed ASSIGNMENTS err).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/straightline_storage_ptr_reassign.sol"
+    )
+    r = harness.call(app, "straight()").abi_return
+    assert [as_int(x) for x in r] == [1, 2]
+    # after straight(): a1.length == 1, a2.length == 2 — read through the
+    # ternary-selected pointer must see the right array
+    assert as_int(harness.call(app, "ternaryLen(bool)", True).abi_return) == 1
+    assert as_int(harness.call(app, "ternaryLen(bool)", False).abi_return) == 2

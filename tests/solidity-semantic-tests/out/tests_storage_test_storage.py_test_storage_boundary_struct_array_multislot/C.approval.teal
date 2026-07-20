@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_struct_array_multislot.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 24
-    bytecblock 0x 0x01 0x02 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x03 0x0f 0x06 0x09 0x0c 0x12 0x15 0x18 0x1b 0x10 0x04 0x05 0x07 0x08 0x0a 0x0b 0x0d 0x0e 0x11 0x13 0x14 0x16 0x17 0x19 0x1a 0x1c 0x1d "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    bytecblock 0x 0x01 0x02 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x03 0x0f 0x06 0x09 0x0c 0x12 0x15 0x18 0x1b 0x0a 0x10 0x04 0x05 0x07 0x08 0x0b 0x0d 0x0e 0x11 0x13 0x14 0x16 0x17 0x19 0x1a 0x1c 0x1d "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     intc_2 // 0
     dupn 3
     pushint 4096
@@ -1204,13 +1204,16 @@ main_while_top@36:
     dig 2
     b>
     bz main_after_while@61
+    dig 1
+    dup
+    bytec 13 // 0x0a
+    b<
+    assert // array index out of bounds
     pushint 31
     itob
     pushint 3
     itob
-    dig 3
-    dup
-    cover 3
+    dig 2
     b*
     dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1357,18 +1360,18 @@ main_ternary_merge@43:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 14 // 0x04
+    bytec 15 // 0x04
     b+
     dig 2
-    bytec 14 // 0x04
+    bytec 15 // 0x04
     b+
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 15 // 0x05
+    bytec 16 // 0x05
     b+
     dig 2
-    bytec 15 // 0x05
+    bytec 16 // 0x05
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1381,18 +1384,18 @@ main_ternary_merge@43:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 16 // 0x07
+    bytec 17 // 0x07
     b+
     dig 2
-    bytec 16 // 0x07
+    bytec 17 // 0x07
     b+
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 17 // 0x08
+    bytec 18 // 0x08
     b+
     dig 2
-    bytec 17 // 0x08
+    bytec 18 // 0x08
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1405,10 +1408,10 @@ main_ternary_merge@43:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 18 // 0x0a
+    bytec 13 // 0x0a
     b+
     dig 2
-    bytec 18 // 0x0a
+    bytec 13 // 0x0a
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1453,10 +1456,10 @@ main_ternary_merge@43:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 13 // 0x10
+    bytec 14 // 0x10
     b+
     dig 2
-    bytec 13 // 0x10
+    bytec 14 // 0x10
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1613,18 +1616,18 @@ main_ternary_merge@48:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 14 // 0x04
+    bytec 15 // 0x04
     b+
     dig 2
-    bytec 14 // 0x04
+    bytec 15 // 0x04
     b+
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 15 // 0x05
+    bytec 16 // 0x05
     b+
     dig 2
-    bytec 15 // 0x05
+    bytec 16 // 0x05
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1637,18 +1640,18 @@ main_ternary_merge@48:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 16 // 0x07
+    bytec 17 // 0x07
     b+
     dig 2
-    bytec 16 // 0x07
+    bytec 17 // 0x07
     b+
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 17 // 0x08
+    bytec 18 // 0x08
     b+
     dig 2
-    bytec 17 // 0x08
+    bytec 18 // 0x08
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1661,10 +1664,10 @@ main_ternary_merge@48:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 18 // 0x0a
+    bytec 13 // 0x0a
     b+
     dig 2
-    bytec 18 // 0x0a
+    bytec 13 // 0x0a
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1709,10 +1712,10 @@ main_ternary_merge@48:
     callsub __storage_read
     callsub __storage_write
     dup
-    bytec 13 // 0x10
+    bytec 14 // 0x10
     b+
     dig 2
-    bytec 13 // 0x10
+    bytec 14 // 0x10
     b+
     callsub __storage_read
     callsub __storage_write
@@ -1857,12 +1860,12 @@ main_ternary_merge@53:
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec 14 // 0x04
+    bytec 15 // 0x04
     b+
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec 15 // 0x05
+    bytec 16 // 0x05
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -1872,12 +1875,12 @@ main_ternary_merge@53:
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec 16 // 0x07
+    bytec 17 // 0x07
     b+
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec 17 // 0x08
+    bytec 18 // 0x08
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -1887,7 +1890,7 @@ main_ternary_merge@53:
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec 18 // 0x0a
+    bytec 13 // 0x0a
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -1917,7 +1920,7 @@ main_ternary_merge@53:
     bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec 13 // 0x10
+    bytec 14 // 0x10
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -2015,13 +2018,15 @@ main_while_top@59:
     dig 1
     b>
     bz main_after_while@61
+    dupn 2
+    bytec 13 // 0x0a
+    b<
+    assert // array index out of bounds
     intc_1 // 1
     itob
     pushint 3
     itob
     dig 2
-    dup
-    cover 3
     dig 1
     b*
     dup
@@ -2221,7 +2226,7 @@ getDest:
     store 0
     load 0
     store 0
-    bytec 13 // 0x10
+    bytec 14 // 0x10
     retsub
 
 

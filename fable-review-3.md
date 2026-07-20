@@ -104,13 +104,27 @@ handlers disagree about draining them:
 
 Systemic fix in Part V (T1).
 
-### H6 ✔ `ParamMutationDetector` only sees `Assignment`
+### H6 ✔ `ParamMutationDetector` only sees `Assignment` — FIXED
+> **2026-07-20:** detector now records `++`/`--`/`delete` (UnaryOperation) and `push`/`pop`
+> member-call receivers; both consumers (callee augmentation + caller write-back/Copy guard)
+> share it so they stay in lockstep. Known remaining gap (documented in the header): mutation
+> via passing the param to ANOTHER mutating callee needs call-graph closure. Guard
+> `test_param_mutation_incdec_writeback`.
 `sol-ast/ParamMutationDetector.h:30` — `++`/`--`/`delete` and mutating member calls
 (`p.arr.push(x)`, `pop`) are not recorded. Callee mutating only via `a[0]++` ⇒ classified
 non-mutating ⇒ caller write-back skipped (`SolInternalCall.cpp:471`) *and* the arg-aliasing
 Copy guard misfires. `inc(arr){arr[0]++;}` — mutation silently lost.
 
-### H7 ✔ Storage-pointer reassignment in a conditional branch rebinds unconditionally
+### H7 ✔ Storage-pointer reassignment in a conditional branch rebinds unconditionally — FIXED (fail-loud)
+> **2026-07-20:** conditional reassignment (if/loop bodies, ternary/short-circuit arms — tracked
+> via `ContractContext::conditionalDepth`, bumped by branch/loop builders and
+> `buildScopedOperand`) is now a HARD ERROR; straight-line reassignment keeps working
+> (guards `test_conditional_storage_ptr_reassign_fails_loud` / `..._still_works`). NEW FINDING
+> while testing: **mutating through a ternary-INIT pointer is also broken pre-existing** —
+> `uint[] storage p = c ? a1 : a2; p.push(x);` pushes into a materialized VALUE copy (length
+> read back = 1 regardless of target); reads through the ternary alias are fine. Needs its own
+> fix (runtime-selected handle); noted here, not yet fixed.
+### (original H7 text) Storage-pointer reassignment in a conditional branch rebinds unconditionally
 `exprs/SolAssignmentEarlyOuts.cpp:105-112` — `p = s2` lowers to compile-time
 `setStorageAlias` + `VoidConstant` in the **flat** decl-id-keyed ScopeState; `SolIfStatement`'s
 branch builder saves/restores only `terminated`. `uint[] storage p = a1; if (c) p = a2;
@@ -118,7 +132,14 @@ p.push(1);` always pushes to `a2`. Same property for `memoryAliases`/`funcPtrTar
 tuple variant. (Mapping-key-param locals take the runtime-bytes path and are fine — the
 value-typed alias path is the hole.)
 
-### H8 ✔ Slot-handle fixed arrays: no bounds check + packed compound assign hits the wrong slot
+### H8 ✔ Slot-handle fixed arrays: no bounds check + packed compound assign hits the wrong slot — FIXED
+> **2026-07-20:** `SlotHandleAccess::boundsCheckIndex` (assert idx < length + EvalOnce pin,
+> also closing M3's packed-read double-eval) wired into both SolIndexAccess slot paths and the
+> SolAssignment intercept; the intercept now handles packed COMPOUND ops via packed-aware read
+> → native-carrier checked arithmetic → sub-word write-back. Bonus find: the intercept never
+> fired for ARRAY-typed locals at all (buildExpr(base) maps the declared arc4 type, not the
+> biguint handle) — even PLAIN packed writes took the wrong-slot whole-word path; base is now
+> constructed as the raw handle var. Guard `test_slot_handle_array_bounds_and_packed_compound`.
 - `exprs/SolIndexAccess.cpp:183-274` — slot-handle element read/write emits no `idx < len`
   assert anywhere (the mapping-chain path does, `SolIndexAccessHandlers.cpp:260-308`).
   `uint[2] storage p; p[5] = 1` corrupts a neighboring state slot where EVM panics 0x32.

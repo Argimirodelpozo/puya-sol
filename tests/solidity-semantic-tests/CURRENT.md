@@ -1,3 +1,25 @@
+# Semantic Test Status — v450
+
+> **fix: fable-review-3 storage trio H6-H8 (mutation detector, slot-handle bounds/packed-compound, conditional storage-ptr) (2026-07-20):**
+> **12 failed / 1335 passed / 109 xf / 28 xp** (failure set identical to v449 = zero regressions; +4 guards).
+> (H6) ParamMutationDetector only saw `Assignment` — a callee mutating a memory ref param via `a[0]++`,
+> `--a[i]`, `delete a[i]` or `p.push/pop` was classified non-mutating, so the caller write-back was skipped
+> and the mutation silently vanished; now records UnaryOperation Inc/Dec/Delete + push/pop receivers (both
+> consumers share the detector). (H8) slot-handle fixed-array element access: idx<length asserts (EVM Panic
+> 0x32 shape — OOB previously addressed a NEIGHBORING slot silently) via SlotHandleAccess::boundsCheckIndex
+> (temp-var pin, NOT SingleEvaluation — SE across the assert statement broke; also closes the packed-read
+> idx double-eval), wired into both SolIndexAccess slot paths + the SolAssignment intercept; packed
+> `p[i] op= v` now intercepts (was: unscaled whole-word RMW at slot base+i = wrong slot) with packed read →
+> native-carrier checked arith → sub-word write; the intercept's base is buildExpr-first with a raw-handle
+> fallback for BARE array-typed locals (for which it never fired — even plain packed writes were whole-word;
+> chained `_x[0][i]` bases keep the pre-existing buildExpr shape, which the storage_boundary_* tests pin).
+> (H7) conditional storage-pointer reassignment (`if (c) p = a2;`) rebound the COMPILE-TIME alias
+> unconditionally — now a HARD ERROR (ContractContext::conditionalDepth, bumped by if-branches, loop
+> bodies and buildScopedOperand arms); straight-line reassign + ternary-init reads keep working. NEW
+> KNOWN GAP found while testing: MUTATING through a ternary-INIT pointer (`uint[] storage p = c?a1:a2;
+> p.push(x)`) pushes into a value copy — pre-existing, documented in fable-review-3, not yet fixed.
+> Full run: RESULTS_review3_h678.txt.
+
 # Semantic Test Status — v449
 
 > **fix: the four fable-review-3 criticals (call{value}(data), asm const caches, ctor-arg drain, postInit ordering) (2026-07-19):**

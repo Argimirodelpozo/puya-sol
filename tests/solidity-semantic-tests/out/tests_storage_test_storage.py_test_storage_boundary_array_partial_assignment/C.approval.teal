@@ -360,9 +360,12 @@ main_while_top@31:
     dig 1
     b>
     bz main_after_while@33
-    dup2
-    dup
-    cover 2
+    dupn 2
+    pushbytes 0x0a
+    b<
+    assert // array index out of bounds
+    dig 2
+    dig 1
     b+
     dig 1
     callsub __storage_write
