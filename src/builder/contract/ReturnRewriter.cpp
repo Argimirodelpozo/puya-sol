@@ -30,6 +30,12 @@ void forEachReturnStatement(
 		{
 			if (loop->loopBody) forEachReturnStatement(loop->loopBody->body, _fn);
 		}
+		else if (auto* sw = dynamic_cast<awst::Switch*>(stmt.get()))
+		{
+			for (auto& c: sw->cases)
+				if (c.second) forEachReturnStatement(c.second->body, _fn);
+			if (sw->defaultCase) forEachReturnStatement(sw->defaultCase->body, _fn);
+		}
 	}
 }
 

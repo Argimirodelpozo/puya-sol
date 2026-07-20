@@ -8,6 +8,7 @@
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -699,69 +700,60 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			(dynamic_cast<awst::WTuple const*>(sub->returnType) != nullptr);
 		size_t totalAugmented = storageParamIndices.size() + memoryRefParamIndices.size();
 
-		std::function<void(awst::Block&)> augmentReturns;
-		augmentReturns = [&](awst::Block& block) {
-			for (auto& stmt: block.body)
+		// forEachReturnStatement covers ALL nesting (if/else, nested blocks,
+		// loops, switch) — the old hand-rolled walk recursed only IfElse, so
+		// an early `return` inside a loop kept its unaugmented value (the
+		// FunctionBuilder twin had the same gap).
+		forEachReturnStatement(sub->body->body, [&](awst::ReturnStatement& ret) {
+			if (!returnIsTuple)
 			{
-				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+				// Bare return type: one augmented arg. Only handle bare
+				// `return;` — `return val;` in void+1-aug isn't valid Solidity.
+				if (!ret.value && totalAugmented == 1)
 				{
-					if (!returnIsTuple)
+					size_t idx = !storageParamIndices.empty()
+						? storageParamIndices[0]
+						: memoryRefParamIndices[0];
+					ret.value = awst::makeVarExpression(
+						sub->args[idx].name, sub->args[idx].wtype,
+						ret.sourceLocation);
+				}
+				// else: leave as-is; puya boundary will report the mismatch.
+			}
+			else
+			{
+				auto tuple = awst::makeTupleExpression(sub->returnType, ret.sourceLocation);
+				if (ret.value)
+				{
+					// Flatten existing tuple items (WTuple is flat;
+					// nesting would produce a shape mismatch).
+					if (auto* origTup = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
 					{
-						// Bare return type: one augmented arg. Only handle bare
-						// `return;` — `return val;` in void+1-aug isn't valid Solidity.
-						if (!ret->value && totalAugmented == 1)
-						{
-							size_t idx = !storageParamIndices.empty()
-								? storageParamIndices[0]
-								: memoryRefParamIndices[0];
-							ret->value = awst::makeVarExpression(
-								sub->args[idx].name, sub->args[idx].wtype,
-								ret->sourceLocation);
-						}
-						// else: leave as-is; puya boundary will report the mismatch.
+						for (auto& it: origTup->items)
+							tuple->items.push_back(it);
 					}
 					else
 					{
-						auto tuple = awst::makeTupleExpression(sub->returnType, ret->sourceLocation);
-						if (ret->value)
-						{
-							// Flatten existing tuple items (WTuple is flat;
-							// nesting would produce a shape mismatch).
-							if (auto* origTup = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
-							{
-								for (auto& it: origTup->items)
-									tuple->items.push_back(it);
-							}
-							else
-							{
-								tuple->items.push_back(ret->value);
-							}
-						}
-						for (size_t idx: storageParamIndices)
-						{
-							auto pv = awst::makeVarExpression(
-								sub->args[idx].name, sub->args[idx].wtype,
-								ret->sourceLocation);
-							tuple->items.push_back(std::move(pv));
-						}
-						for (size_t idx: memoryRefParamIndices)
-						{
-							auto pv = awst::makeVarExpression(
-								sub->args[idx].name, sub->args[idx].wtype,
-								ret->sourceLocation);
-							tuple->items.push_back(std::move(pv));
-						}
-						ret->value = std::move(tuple);
+						tuple->items.push_back(ret.value);
 					}
 				}
-				if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+				for (size_t idx: storageParamIndices)
 				{
-					if (ifElse->ifBranch) augmentReturns(*ifElse->ifBranch);
-					if (ifElse->elseBranch) augmentReturns(*ifElse->elseBranch);
+					auto pv = awst::makeVarExpression(
+						sub->args[idx].name, sub->args[idx].wtype,
+						ret.sourceLocation);
+					tuple->items.push_back(std::move(pv));
 				}
+				for (size_t idx: memoryRefParamIndices)
+				{
+					auto pv = awst::makeVarExpression(
+						sub->args[idx].name, sub->args[idx].wtype,
+						ret.sourceLocation);
+					tuple->items.push_back(std::move(pv));
+				}
+				ret.value = std::move(tuple);
 			}
-		};
-		augmentReturns(*sub->body);
+		});
 	}
 
 	// Synthesize body for assembly-only library functions with known semantics.
