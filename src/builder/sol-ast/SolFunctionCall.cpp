@@ -38,8 +38,10 @@ std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 		if (*optNames[i] == "value" && i < optValues.size())
 		{
 			auto val = buildExpr(*optValues[i]);
-			return TypeCoercion::implicitNumericCast(
-				std::move(val), awst::WType::uint64Type(), m_loc);
+			// {value: X}: assert X fits in uint64 before truncating (a >2^64
+			// value would silently send `X mod 2^64` microAlgos).
+			return TypeCoercion::checkedAmountToUint64(
+				m_ctx.prePendingStatements, std::move(val), m_loc);
 		}
 	}
 	return nullptr;

@@ -507,6 +507,35 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
 	return implicitNumericCast(std::move(_idx), awst::WType::uint64Type(), _loc);
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
+	std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
+	std::shared_ptr<awst::Expression> _amount,
+	awst::SourceLocation const& _loc
+)
+{
+	// Monetary amount → uint64 with an overflow PRE-check: a biguint amount
+	// >= 2^64 can't be represented in the AVM amount field, so assert it fits
+	// BEFORE truncating — else `payable(to).transfer(100 ether)` (1e20 > 2^64)
+	// silently sends 1e20 mod 2^64 microAlgos. Pin to a temp so a side-effecting
+	// amount evaluates once.
+	if (_amount && _amount->wtype == awst::WType::biguintType())
+	{
+		static int s_ckAmtCtr = 0;
+		std::string nm = "__ckamt_" + std::to_string(s_ckAmtCtr++);
+		_preStmts.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_amount), _loc));
+		auto fits = awst::makeNumericCompare(
+			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc),
+			awst::NumericComparison::Lt,
+			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
+		_preStmts.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(fits), _loc,
+				"transfer amount exceeds uint64 (AVM amounts are 64-bit)"), _loc));
+		_amount = awst::makeVarExpression(nm, awst::WType::biguintType(), _loc);
+	}
+	return implicitNumericCast(std::move(_amount), awst::WType::uint64Type(), _loc);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedWiden(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _srcSolType,

@@ -218,6 +218,18 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Truncate a MONETARY amount (`.transfer`/`.send`/`{value:}`/ASA amount) to
+	/// uint64 with an overflow PRE-check: a biguint amount >= 2^64 reverts rather
+	/// than silently sending `amount mod 2^64` microAlgos/units — the AVM amount
+	/// field is uint64, so a >2^64 value can't be represented and truncating it
+	/// is a real money bug (`transfer(100 ether)` sent 1e20 mod 2^64). Asserts
+	/// (pushed to `_preStmts`) before truncating; uint64 amounts pass through.
+	static std::shared_ptr<awst::Expression> checkedAmountToUint64(
+		std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
+		std::shared_ptr<awst::Expression> _amount,
+		awst::SourceLocation const& _loc
+	);
+
 	// ── Bytes ────────────────────────────────────────────────────
 
 	/// Convert a StringConstant to a right-padded BytesConstant of length _n.

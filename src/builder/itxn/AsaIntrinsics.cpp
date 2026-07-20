@@ -5,6 +5,7 @@
 #include "builder/itxn/AsaIntrinsics.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -399,7 +400,10 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	auto assetId = std::move(_args[0]);
 	auto from = std::move(_args[1]);
 	auto to = std::move(_args[2]);
-	auto amount = bigUIntToUint64(std::move(_args[3]), _loc);
+	// AVM.asaTransfer declares `uint256 amount`; assert it fits in the
+	// uint64 AssetAmount field instead of silently sending `amount mod 2^64`.
+	auto amount = builder::TypeCoercion::checkedAmountToUint64(
+		_ctx.prePendingStatements, std::move(_args[3]), _loc);
 
 	static awst::WInnerTransactionFields s_axferFieldsType(4);
 	auto create = awst::makeCreateInnerTransaction(&s_axferFieldsType, _loc);

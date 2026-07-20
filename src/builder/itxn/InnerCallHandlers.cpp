@@ -435,7 +435,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "transfer" && _callNode.arguments().size() == 1)
 	{
 		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
-		amount = TypeCoercion::implicitNumericCast(std::move(amount), awst::WType::uint64Type(), _loc);
+		amount = TypeCoercion::checkedAmountToUint64(_ctx.prePendingStatements, std::move(amount), _loc);
 		return handleTransfer(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
@@ -443,7 +443,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "send" && _callNode.arguments().size() == 1)
 	{
 		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
-		amount = TypeCoercion::implicitNumericCast(std::move(amount), awst::WType::uint64Type(), _loc);
+		amount = TypeCoercion::checkedAmountToUint64(_ctx.prePendingStatements, std::move(amount), _loc);
 		return handleSend(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
