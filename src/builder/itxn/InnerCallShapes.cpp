@@ -453,6 +453,28 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	case 8: // ecPairing
 	{
 		Logger::instance().debug("staticcall precompile 0x08: ecPairing → ec_pairing_check BN254g1", _loc);
+		// This reshaping hard-codes the 2-pair (384-byte) layout. The EVM
+		// precompile handles k pairs; a longer input (Groth16 verifiers use
+		// 3-4) would silently check only pairs 0-1 here — accepting invalid
+		// proofs — and a shorter input would panic mid-extract. Pin the input
+		// once (it is embedded ~12 times below) and assert exactly 384 bytes,
+		// so anything else is a loud revert instead of a wrong pairing result.
+		std::string inVar = "__ecpairing_in_"
+			+ std::to_string((awst::NameGen::next("InnerCallShapes.s_ecPairingTmpCounter") + 1));
+		_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(inVar, awst::WType::bytesType(), _loc),
+			std::move(_inputData), _loc));
+		auto inRead = [&]() {
+			return awst::makeVarExpression(inVar, awst::WType::bytesType(), _loc);
+		};
+		auto lenOk = awst::makeNumericCompare(
+			awst::makeLen(inRead(), _loc), awst::NumericComparison::Eq,
+			awst::makeIntegerConstant("384", _loc), _loc);
+		_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(lenOk), _loc,
+				"ecPairing input must be exactly 2 pairs (384 bytes); k-pair "
+				"pairing is not supported on AVM"), _loc));
+		_inputData = inRead();
 		// G1s: pair0[0:64] || pair1[192:256]. G2: swap EVM (im,re) → AVM (re,im).
 		auto g1_0 = makeExtract(_inputData, 0, 64, _loc);
 		auto g1_1 = makeExtract(_inputData, 192, 64, _loc);
