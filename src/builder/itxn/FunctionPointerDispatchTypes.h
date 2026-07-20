@@ -24,21 +24,9 @@ awst::WType const* computeReturnType(ContractContext& _ctx, solidity::frontend::
 awst::WType const* dispatchPublicArgArc4Type(
 	awst::WType const* _nativeType, solidity::frontend::Type const* _paramSolType);
 
-/// Map a Solidity type to the dispatch WType.
-/// _promoteSignedI64Biguint: treat int8..int64 as biguint (for sign-extension
-/// at the ABI boundary); used for return types, not arg types.
-awst::WType const* mapDispatchType(
-	solidity::frontend::Type const* _solType, bool _promoteSignedI64Biguint);
-
-/// Encode an argument to ARC4-raw bytes for an inner-txn ApplicationArgs field:
-///   - uintN (≤64): itob, left-pad to N/8 bytes.
-///   - biguint: reinterpret; if IntegerType, left-pad to N/8 bytes.
-///   - bool: 1 byte, 0x80=true / 0x00=false.
-///   - bytes/string: uint16(length) ++ raw bytes.
-///   - other: reinterpret as bytes.
-std::shared_ptr<awst::Expression> encodeArgForInnerTxn(
-	std::shared_ptr<awst::Expression> _argExpr,
-	solidity::frontend::Type const* _paramSolType,
-	awst::SourceLocation const& _loc);
+// (mapDispatchType and encodeArgForInnerTxn DELETED 2026-07-20: both had
+// drifted from their canonical twins — dispatch types now come from
+// TypeMapper::map / computeReturnType on BOTH sides, and external fn-ptr
+// args go through InnerCallHandlers::encodeArgToBytes. Do not re-add copies.)
 
 } // namespace puyasol::builder::eb

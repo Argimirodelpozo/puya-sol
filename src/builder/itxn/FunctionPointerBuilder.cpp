@@ -9,7 +9,10 @@
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "Logger.h"
+
+#include <cctype>
 #include "builder/itxn/InnerCallHandlers.h"
 
 namespace puyasol::builder::eb
@@ -249,6 +252,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 	if (isExternal)
 	{
+		// The pointer expression is sliced repeatedly below (appId ×2, selector
+		// ×2) — pin it so a side-effecting pointer source evaluates once.
+		_ptrExpr = awst::makeEvalOnce(std::move(_ptrExpr), _loc);
 		// Self-call (appId == CurrentApplicationID) → internal dispatch; else inner txn.
 		auto extractSlice = [&](int _offset, int _length) {
 			return awst::makeExtract(_ptrExpr, _offset, _length, _loc);
@@ -288,7 +294,13 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		{
 			solidity::frontend::Type const* paramSolType =
 				i < _funcType->parameterTypes().size() ? _funcType->parameterTypes()[i] : nullptr;
-			argsTuple->items.push_back(encodeArgForInnerTxn(_args[i], paramSolType, _loc));
+			// THE shared arg encoder (declared-width biguint, sign-correct,
+			// arrays/structs ARC4-encoded). The private encodeArgForInnerTxn
+			// copy had drifted: negative sub-256 signed args zero-extended
+			// (callee len-assert revert) and aggregates skipped ARC4 entirely
+			// — the fourth copy the AbiCodec consolidation missed.
+			argsTuple->items.push_back(
+				InnerCallHandlers::encodeArgToBytes(_ctx, _args[i], paramSolType, _loc));
 		}
 		{
 			std::vector<awst::WType const*> argTypes;
@@ -364,28 +376,28 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 std::string FunctionPointerBuilder::dispatchName(
 	FunctionType const* _funcType)
 {
+	// One dispatch group per DISTINCT signature: solc's Type::identifier()
+	// is canonical and injective (t_uint8 vs t_int8 vs t_address vs
+	// t_string_memory_ptr ...). The old namer collapsed signedness
+	// (int8/uint8 both "_u8") and every non-int type to "_x", merging
+	// distinct pointer signatures into one group typed by whichever
+	// signature registered first.
+	auto typeTag = [](Type const* t) -> std::string {
+		if (!t) return "x";
+		std::string id = t->identifier();
+		for (auto& c: id)
+			if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_')
+				c = '_';
+		return id;
+	};
 	std::string name = "__funcptr_dispatch";
 	if (_funcType)
 	{
 		for (auto const* pt : _funcType->parameterTypes())
-		{
-			if (auto const* intType = dynamic_cast<IntegerType const*>(pt))
-				name += "_u" + std::to_string(intType->numBits());
-			else if (dynamic_cast<BoolType const*>(pt))
-				name += "_bool";
-			else
-				name += "_x";
-		}
+			name += "_" + typeTag(pt);
 		name += "_ret";
 		for (auto const* rt : _funcType->returnParameterTypes())
-		{
-			if (auto const* intType = dynamic_cast<IntegerType const*>(rt))
-				name += "_u" + std::to_string(intType->numBits());
-			else if (dynamic_cast<BoolType const*>(rt))
-				name += "_bool";
-			else
-				name += "_x";
-		}
+			name += "_" + typeTag(rt);
 	}
 	return name;
 }
@@ -459,24 +471,13 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		dispatch.arc4MethodConfig = std::nullopt;
 		dispatch.pure = false;
 
-		// Return type: signed ≤64-bit promoted to biguint only when any entry is
-		// public/external (ARC4 boundary). All-private = native uint64.
-		bool anyPublic = false;
-		for (auto const* entry : entries)
-		{
-			if (entry->funcDef && entry->funcDef->isPartOfExternalInterface())
-			{
-				anyPublic = true;
-				break;
-			}
-		}
-		if (funcType->returnParameterTypes().empty())
-			dispatch.returnType = awst::WType::voidType();
-		else if (funcType->returnParameterTypes().size() == 1)
-			dispatch.returnType = mapDispatchType(
-				funcType->returnParameterTypes()[0], /*_promoteSignedI64Biguint=*/anyPublic);
-		else
-			dispatch.returnType = awst::WType::voidType(); // TODO: tuple returns
+		// Return type: the SAME native mapping the call site uses
+		// (computeReturnType — single native type or WTuple for multi).
+		// The old mapDispatchType drifted from the call site (public signed
+		// ≤64 promoted to biguint vs uint64 at the call; multi-return was a
+		// silent void). Public targets return WIRE-encoded values — the
+		// per-entry body below adapts them back to the native return.
+		dispatch.returnType = computeReturnType(_ctx, funcType);
 
 		// Args: __funcptr_id first, then function params.
 		{
@@ -490,8 +491,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		{
 			awst::SubroutineArgument arg;
 			arg.name = "__arg" + std::to_string(i);
-			arg.wtype = mapDispatchType(
-				funcType->parameterTypes()[i], /*_promoteSignedI64Biguint=*/false);
+			// The SAME native mapping the call site coerces to — the old
+			// mapDispatchType sent address/enum/struct/non-byte-array params
+			// to biguint while the call site passed account/uint64/array
+			// wtypes.
+			arg.wtype = _ctx.typeMapper.map(funcType->parameterTypes()[i]);
 			arg.sourceLocation = _loc;
 			dispatch.args.push_back(arg);
 		}
@@ -510,6 +514,21 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		for (auto const* entry : entries)
 		{
+			// Public multi-return target: the wire-tuple decode is
+			// unimplemented. Merely REGISTERING such a pointer (.selector /
+			// .address accessors) must not fail the compile — skip the entry
+			// so only an actual dynamic dispatch to it hits the
+			// invalid-function-pointer assert (loud at runtime).
+			if (entry->funcDef && entry->funcDef->isPartOfExternalInterface()
+				&& dynamic_cast<awst::WTuple const*>(dispatch.returnType))
+			{
+				Logger::instance().warning(
+					"function pointer to PUBLIC multi-return '" + entry->name
+					+ "' cannot be dispatched (wire tuple decode "
+					  "unimplemented); calls through this pointer will fail "
+					  "at runtime.", _loc);
+				continue;
+			}
 			auto idVar = awst::makeVarExpression("__funcptr_id", awst::WType::uint64Type(), _loc);
 			auto idConst = awst::makeIntegerConstant(entry->id, _loc);
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
@@ -559,19 +578,37 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					call->args.push_back(std::move(arg));
 				}
 
-				// Public target with ARC4 return: decode back to biguint.
+				// Public targets return WIRE-encoded values (build-time
+				// return encoding): adapt back to the native dispatch return.
+				bool retIsSignedNarrow = false;
+				if (funcType->returnParameterTypes().size() == 1)
+					if (auto it = builder::SolIntType::fromSol(
+							funcType->returnParameterTypes()[0]);
+						it && it->isSigned && it->bits <= 64)
+						retIsSignedNarrow = true;
 				if (isPublic && dispatch.returnType == awst::WType::biguintType())
-				{
 					call->wtype = new awst::ARC4UIntN(256); // arc4.uint256
-				}
+				else if (isPublic && retIsSignedNarrow
+					&& dispatch.returnType == awst::WType::uint64Type())
+					// Signed narrow publishes as uint256 on the wire.
+					call->wtype = new awst::ARC4UIntN(256);
+				// (public multi-return handled by the entry skip above)
 
 				if (dispatch.returnType != awst::WType::voidType())
 				{
 					std::shared_ptr<awst::Expression> retValue = std::move(call);
 					if (isPublic && retValue->wtype != dispatch.returnType)
 					{
-						auto decode = awst::makeARC4Decode(std::move(retValue), dispatch.returnType, _loc);
-						retValue = std::move(decode);
+						// ARC4 wire → biguint, then narrow to the native
+						// carrier when needed (canonical 256-bit TC's low 8
+						// bytes ARE the 64-bit-TC carrier for signed narrow).
+						std::shared_ptr<awst::Expression> decoded =
+							awst::makeARC4Decode(std::move(retValue),
+								awst::WType::biguintType(), _loc);
+						if (dispatch.returnType != awst::WType::biguintType())
+							decoded = builder::TypeCoercion::implicitNumericCast(
+								std::move(decoded), dispatch.returnType, _loc);
+						retValue = std::move(decoded);
 					}
 					auto ret = awst::makeReturnStatement(std::move(retValue), _loc);
 					ifBlock->body.push_back(std::move(ret));

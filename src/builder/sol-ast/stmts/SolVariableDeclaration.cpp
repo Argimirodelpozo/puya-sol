@@ -90,12 +90,25 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		{
 			// Track function pointer assignments via ASTNode::referencedDeclaration
 			// (handles Identifier + MemberAccess; super.f safe via findSuperTarget
-			// in SolInternalCall::processFromIdent).
-			if (dynamic_cast<FunctionType const*>(decl.type()))
+			// in SolInternalCall::processFromIdent). EXCEPT a FOREIGN contract's
+			// external fn (`Other(addr).g`): the static shortcut direct-callsubs
+			// the target, which cannot cross apps — those must stay dynamic
+			// (12-byte appId++selector, inner-txn path). `this.f` keeps the
+			// shortcut (self-calls ARE direct subroutine calls by design).
+			if (auto const* declFt = dynamic_cast<FunctionType const*>(decl.type()))
 			{
-				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
-						ASTNode::referencedDeclaration(*initialValue)))
-					m_blk.setFuncPtrTarget(decl.id(), funcDef);
+				bool foreignExternal = false;
+				if (declFt->kind() == FunctionType::Kind::External)
+					if (auto const* ma = dynamic_cast<MemberAccess const*>(initialValue))
+					{
+						auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression());
+						if (!(baseId && baseId->name() == "this"))
+							foreignExternal = true;
+					}
+				if (!foreignExternal)
+					if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
+							ASTNode::referencedDeclaration(*initialValue)))
+						m_blk.setFuncPtrTarget(decl.id(), funcDef);
 			}
 
 			value = m_blk.builderCtx().build(*initialValue);
