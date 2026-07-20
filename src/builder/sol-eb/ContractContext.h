@@ -142,6 +142,25 @@ public:
 	// list (the C1 bug class: short-circuit RHS hoist 5a1f5810ad, ternary operand
 	// SE cd9d91ccfa). These two primitives own that invariant in one place.
 
+	/// Depth of CONDITIONALLY-EXECUTED translation regions (if/else branches,
+	/// loop bodies, ternary/short-circuit arms). Compile-time-only state
+	/// mutations — storage-pointer rebinds resolved via setStorageAlias — are
+	/// UNSOUND inside one (the rebind would apply unconditionally to all
+	/// later uses); producers of such state must fail loud when depth > 0.
+	int conditionalDepth = 0;
+
+	/// RAII marker for a conditionally-executed translation region.
+	class ConditionalRegion
+	{
+	public:
+		explicit ConditionalRegion(ContractContext& _ctx): m_ctx(_ctx) { ++m_ctx.conditionalDepth; }
+		~ConditionalRegion() { --m_ctx.conditionalDepth; }
+		ConditionalRegion(ConditionalRegion const&) = delete;
+		ConditionalRegion& operator=(ConditionalRegion const&) = delete;
+	private:
+		ContractContext& m_ctx;
+	};
+
 	/// Build an operand via `_build` (returns its expression, may push
 	/// pre-statements), then MOVE any pre-statements it pushed out of
 	/// prePendingStatements into `_capturedOut`. The caller gates those behind the
@@ -154,6 +173,7 @@ public:
 		std::vector<std::shared_ptr<awst::Statement>>& _capturedOut)
 		-> decltype(_build())
 	{
+		ConditionalRegion region(*this);
 		auto before = prePendingStatements.size();
 		auto value = _build();
 		if (prePendingStatements.size() > before)

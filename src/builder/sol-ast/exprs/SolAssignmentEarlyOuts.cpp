@@ -11,6 +11,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/Arc4Defaults.h"
+#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -102,6 +103,18 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 		return awst::makeAssignmentExpression(std::move(var), std::move(rhsExpr), m_loc);
 	}
 
+	// The rebind below is COMPILE-TIME-ONLY (flat alias map, no runtime
+	// artifact): inside a conditionally-executed region it would apply
+	// unconditionally to every later use (`if (c) p = a2; p.push(1);`
+	// always pushed to a2). No sound lowering exists yet — fail loud.
+	if (m_ctx.conditionalDepth > 0)
+		Logger::instance().error(
+			"storage-pointer reassignment inside a conditionally-executed "
+			"block (if/else branch, loop body, ternary or short-circuit arm) "
+			"is not supported: the rebind is resolved at compile time and "
+			"would apply unconditionally to all following uses. Hoist the "
+			"reassignment, or select at initialization "
+			"(`T storage p = cond ? a : b;`).", m_loc);
 	auto rhsExpr = buildExpr(m_assignment.rightHandSide());
 	auto aliasExpr = rhsExpr;
 	if (awst::isRawStorageRead(rhsExpr.get()))

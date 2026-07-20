@@ -8,6 +8,8 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/TypeCoercion.h"
 
+#include "Logger.h"
+
 #include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::sol_ast
@@ -253,6 +255,14 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						|| dynamic_cast<awst::StateGet const*>(aliasExpr.get())
 						? StorageAlias::stateRead(std::move(aliasExpr))
 						: StorageAlias::tupleSlice(std::move(aliasExpr));
+					// Same compile-time-only rebind hazard as the scalar
+					// form — fail loud inside conditional regions.
+					if (m_ctx.conditionalDepth > 0)
+						Logger::instance().error(
+							"storage-pointer reassignment inside a "
+							"conditionally-executed block is not supported "
+							"(compile-time rebind would apply unconditionally "
+							"to all following uses).", m_loc);
 					m_scope.setStorageAlias(lhsDecl->id(), std::move(alias));
 					continue;
 				}

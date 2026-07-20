@@ -30,6 +30,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	auto postPending = bc.takePending();
 
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
+		// Conditionally-executed region: compile-time-only rebinds (storage
+		// pointer aliases) must fail loud inside it.
+		eb::ContractContext::ConditionalRegion region(bc);
 		// A halt inside a branch (assembly return() → BlockContext.terminated)
 		// must not leak out — the branch is conditional, so code after the if
 		// is still reachable. Save/restore the flag around each branch.
@@ -69,6 +72,9 @@ SolWhileStatement::SolWhileStatement(
 std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 {
 	auto& bc = m_blk.builderCtx();
+	// Cond and body re-execute per iteration — a conditionally-executed
+	// region for compile-time rebinds (storage-pointer aliases).
+	eb::ContractContext::ConditionalRegion region(bc);
 
 	if (m_node.isDoWhile())
 	{
@@ -179,6 +185,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	}
 
 	auto& bc = m_blk.builderCtx();
+	// Everything from the condition on (cond, post, body) re-executes per
+	// iteration — a conditionally-executed region for compile-time rebinds.
+	// The init above runs once, straight-line, and stays outside it.
+	eb::ContractContext::ConditionalRegion region(bc);
 	auto cond = m_node.condition()
 		? bc.build(*m_node.condition())
 		: std::shared_ptr<awst::Expression>(awst::makeTrue(m_loc));
