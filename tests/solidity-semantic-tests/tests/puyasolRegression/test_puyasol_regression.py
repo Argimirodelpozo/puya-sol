@@ -2561,3 +2561,26 @@ def test_memparam_return_in_loop(harness):
     assert [as_int(x) for x in r] == [11, 21, 0]
     r = harness.call(app, "viaMethod()").abi_return
     assert [as_int(x) for x in r] == [6, 7]
+
+
+def test_asm_semantics_batch(harness):
+    """puyasolRegression/contracts/asm_semantics_batch.sol — NOT an o.g. test.
+
+    Four asm/storage semantics guards: transient sub-64 signed reads
+    sign-extend; keccak256 hashes the exact (unaligned) constant length;
+    inlined Yul fn body locals alpha-rename per frame; Yul call args
+    evaluate right-to-left.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_semantics_batch.sol")
+    r = harness.call(app, "transientSigned()").abi_return
+    assert (as_signed_int(r[0]), bool(r[1])) == (-1, True)
+    # value-dependence on bytes 32..47: pre-fix only the first 32 bytes hashed
+    k1 = as_bytes(harness.call(app, "kec48(uint256,uint256)", 7, 1 << 200).abi_return)
+    k2 = as_bytes(harness.call(app, "kec48(uint256,uint256)", 7, 2 << 200).abi_return)
+    assert k1 != k2, "keccak folded/truncated the unaligned tail"
+    # invariance on bytes 48..63 (outside the hashed 48): low bytes of b differ
+    k3 = as_bytes(harness.call(app, "kec48(uint256,uint256)", 7, (1 << 200) | 5).abi_return)
+    assert k1 == k3, "keccak hashed beyond the requested 48 bytes"
+    assert as_int(harness.call(app, "inlineLocals(uint256)", 100).abi_return) == 106
+    r = harness.call(app, "argOrder()").abi_return
+    assert (as_int(r[0]), as_int(r[1])) == (8, 2)

@@ -187,7 +187,11 @@ embed `_inputData` 4-12× (`itxn/InnerCallShapes.cpp:343-436`), fn-ptr `_ptrExpr
 (`SolAddressBuilder.cpp:112-118`), compound-assign uint64 index / nested-call mapping keys
 escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
 
-### H12 ✅ Yul evaluation-order and inlining bugs (assembly/)
+### H12 ✅ Yul evaluation-order and inlining bugs (assembly/) — PARTIALLY FIXED
+> **2026-07-20:** arg order now RIGHT-to-left at all four build sites; inlined body LOCALS
+> alpha-rename per frame (decls resolve through m_yulInlineRenames). Guard
+> test_asm_semantics_batch. REMAINING from this item: asm `revert(off,len)` still drops the
+> payload (needs the revert-data stack integration).
 - **Arg order**: call arguments translate left-to-right; Yul mandates right-to-left
   (`CoreTranslation.cpp:346-349`). PoC `sub(bump(1), bump(10))` shows left-first sequencing.
   Nested inlining additionally splices an earlier sibling's pending inline body into the later
@@ -200,7 +204,9 @@ escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
   `mstore(0, selector) revert(0x1c, 4)` custom-error idiom loses its payload — inconsistent
   with the project's own revert-payload model (the oracle diffs payloads).
 
-### H13 ✅ Unaligned `keccak256` constant-length silently truncates
+### H13 ✅ Unaligned `keccak256` constant-length silently truncates — FIXED
+> **2026-07-20:** exact-length extract3 (byte-identical for aligned); struct fold gated on
+> word-aligned lengths. Guard test_asm_semantics_batch.
 `assembly/DataOps.cpp:341,427` — `len > 32` and not word-aligned hashes only
 `floor(len/32)*32` bytes. PoC: `keccak256(0x84, 0x30)` hashes 32 bytes. Kills
 `abi.encodePacked(address, bytes32)`-shaped hash idioms with a wrong-but-plausible hash.
@@ -240,7 +246,9 @@ escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
   `AWSTBuilder.cpp:757-761` (library path; also misses Switch). A `return;` inside a `for` in a
   mutating function fails to compile (fail-loud, but rejects valid code).
 
-### H16 ✔ Transient sub-64 signed reads come back unextended
+### H16 ✔ Transient sub-64 signed reads come back unextended — FIXED
+> **2026-07-20:** uint64 read branch sign-extends from declared width via signExtendToUint64
+> (SlotWordCodec rule). Guard test_asm_semantics_batch.
 `storage/TransientStorage.cpp:174-187` — the uint64 branch of `buildRead` does bare
 `btoi(extract(...))`; only the biguint branch sign-extends. The cell convention is 64-bit TC
 (`SlotWordCodec.cpp:109-121` sign-extends; the write side truncates). `int32 transient x = -1;`

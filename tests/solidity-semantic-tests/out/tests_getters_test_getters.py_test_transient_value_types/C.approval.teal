@@ -81,11 +81,11 @@ main_ternary_merge@15:
     dup
     bytec_2 // 0x80
     b>=
-    bz main_ternary_false@17
+    bz main_ternary_false@18
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
-main_ternary_merge@18:
+main_ternary_merge@19:
     dup
     len
     intc_1 // 32
@@ -101,8 +101,8 @@ main_ternary_merge@18:
     intc_0 // 1
     return
 
-main_ternary_false@17:
-    b main_ternary_merge@18
+main_ternary_false@18:
+    b main_ternary_merge@19
 
 main_ternary_false@14:
     intc_2 // 0
@@ -124,17 +124,27 @@ x_ternary_merge@3:
     load 5
     pushint 31
     getbyte
+    pushint 256
+    %
+    dup
+    pushint 128
+    >=
+    bz x_ternary_false@5
+    pushint 18446744073709551360
+    +
+
+x_ternary_merge@6:
     itob
     bytec_0 // 0xff
     b&
     dup
     bytec_2 // 0x80
     b>=
-    bz x_ternary_false@5
+    bz x_ternary_false@8
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
-x_ternary_merge@6:
+x_ternary_merge@9:
     dup
     len
     intc_1 // 32
@@ -144,6 +154,9 @@ x_ternary_merge@6:
     bzero
     b|
     retsub
+
+x_ternary_false@8:
+    b x_ternary_merge@9
 
 x_ternary_false@5:
     b x_ternary_merge@6

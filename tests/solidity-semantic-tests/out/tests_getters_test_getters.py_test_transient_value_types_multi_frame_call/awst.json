@@ -1151,7 +1151,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "IntrinsicCall",
+                "_type": "CommaExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                   "line": 91,
@@ -1165,11 +1165,9 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "op_code": "btoi",
-                "immediates": [],
-                "stack_args": [
+                "expressions": [
                   {
-                    "_type": "IntrinsicCall",
+                    "_type": "AssignmentExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                       "line": 91,
@@ -1179,18 +1177,43 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
                     },
-                    "op_code": "extract",
-                    "immediates": [
-                      31,
-                      1
-                    ],
-                    "stack_args": [
-                      {
+                    "target": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 91,
+                        "end_line": 97,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__signext64_tmp_1"
+                    },
+                    "value": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 91,
+                        "end_line": 97,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
                         "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -1201,18 +1224,218 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
                         },
-                        "op_code": "load",
-                        "immediates": [
-                          5
-                        ],
-                        "stack_args": []
+                        "op_code": "btoi",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                              "line": 91,
+                              "end_line": 97,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "extract",
+                            "immediates": [
+                              31,
+                              1
+                            ],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                  "line": 91,
+                                  "end_line": 97,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "load",
+                                "immediates": [
+                                  5
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "op": "%",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 91,
+                          "end_line": 97,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 256,
+                        "teal_alias": null
                       }
-                    ]
+                    }
+                  },
+                  {
+                    "_type": "ConditionalExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                      "line": 91,
+                      "end_line": 97,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "condition": {
+                      "_type": "NumericComparisonExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 91,
+                        "end_line": 97,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "bool",
+                        "immutable": true
+                      },
+                      "lhs": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 91,
+                          "end_line": 97,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "__signext64_tmp_1"
+                      },
+                      "operator": ">=",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 91,
+                          "end_line": 97,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 128,
+                        "teal_alias": null
+                      }
+                    },
+                    "true_expr": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 91,
+                        "end_line": 97,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 91,
+                          "end_line": 97,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "__signext64_tmp_1"
+                      },
+                      "op": "+",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 91,
+                          "end_line": 97,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": "18446744073709551360",
+                        "teal_alias": null
+                      }
+                    },
+                    "false_expr": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 91,
+                        "end_line": 97,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__signext64_tmp_1"
+                    }
                   }
                 ]
               }
@@ -2762,7 +2985,7 @@
                                     "immutable": true
                                   },
                                   "source": {
-                                    "_type": "IntrinsicCall",
+                                    "_type": "CommaExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                       "line": 168,
@@ -2776,11 +2999,9 @@
                                       "name": "uint64",
                                       "immutable": true
                                     },
-                                    "op_code": "btoi",
-                                    "immediates": [],
-                                    "stack_args": [
+                                    "expressions": [
                                       {
-                                        "_type": "IntrinsicCall",
+                                        "_type": "AssignmentExpression",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                           "line": 168,
@@ -2790,18 +3011,43 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
                                         },
-                                        "op_code": "extract",
-                                        "immediates": [
-                                          31,
-                                          1
-                                        ],
-                                        "stack_args": [
-                                          {
+                                        "target": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "name": "__signext64_tmp_2"
+                                        },
+                                        "value": {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
                                             "_type": "IntrinsicCall",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -2812,18 +3058,218 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
                                             },
-                                            "op_code": "load",
-                                            "immediates": [
-                                              5
-                                            ],
-                                            "stack_args": []
+                                            "op_code": "btoi",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "extract",
+                                                "immediates": [
+                                                  31,
+                                                  1
+                                                ],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                      "line": 168,
+                                                      "end_line": 169,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "load",
+                                                    "immediates": [
+                                                      5
+                                                    ],
+                                                    "stack_args": []
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          "op": "%",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 256,
+                                            "teal_alias": null
                                           }
-                                        ]
+                                        }
+                                      },
+                                      {
+                                        "_type": "ConditionalExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 168,
+                                          "end_line": 169,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "condition": {
+                                          "_type": "NumericComparisonExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "bool",
+                                            "immutable": true
+                                          },
+                                          "lhs": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "name": "__signext64_tmp_2"
+                                          },
+                                          "operator": ">=",
+                                          "rhs": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 128,
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "true_expr": {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "name": "__signext64_tmp_2"
+                                          },
+                                          "op": "+",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": "18446744073709551360",
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "false_expr": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "name": "__signext64_tmp_2"
+                                        }
                                       }
                                     ]
                                   },
@@ -3090,7 +3536,7 @@
                                     "immutable": true
                                   },
                                   "source": {
-                                    "_type": "IntrinsicCall",
+                                    "_type": "CommaExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                       "line": 168,
@@ -3104,11 +3550,9 @@
                                       "name": "uint64",
                                       "immutable": true
                                     },
-                                    "op_code": "btoi",
-                                    "immediates": [],
-                                    "stack_args": [
+                                    "expressions": [
                                       {
-                                        "_type": "IntrinsicCall",
+                                        "_type": "AssignmentExpression",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                           "line": 168,
@@ -3118,18 +3562,43 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
                                         },
-                                        "op_code": "extract",
-                                        "immediates": [
-                                          31,
-                                          1
-                                        ],
-                                        "stack_args": [
-                                          {
+                                        "target": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "name": "__signext64_tmp_2"
+                                        },
+                                        "value": {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
                                             "_type": "IntrinsicCall",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -3140,18 +3609,218 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
                                             },
-                                            "op_code": "load",
-                                            "immediates": [
-                                              5
-                                            ],
-                                            "stack_args": []
+                                            "op_code": "btoi",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "extract",
+                                                "immediates": [
+                                                  31,
+                                                  1
+                                                ],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                      "line": 168,
+                                                      "end_line": 169,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "load",
+                                                    "immediates": [
+                                                      5
+                                                    ],
+                                                    "stack_args": []
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          "op": "%",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 256,
+                                            "teal_alias": null
                                           }
-                                        ]
+                                        }
+                                      },
+                                      {
+                                        "_type": "ConditionalExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 168,
+                                          "end_line": 169,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "condition": {
+                                          "_type": "NumericComparisonExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "bool",
+                                            "immutable": true
+                                          },
+                                          "lhs": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "name": "__signext64_tmp_2"
+                                          },
+                                          "operator": ">=",
+                                          "rhs": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 128,
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "true_expr": {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "name": "__signext64_tmp_2"
+                                          },
+                                          "op": "+",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 168,
+                                              "end_line": 169,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": "18446744073709551360",
+                                            "teal_alias": null
+                                          }
+                                        },
+                                        "false_expr": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                            "line": 168,
+                                            "end_line": 169,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "name": "__signext64_tmp_2"
+                                        }
                                       }
                                     ]
                                   },
@@ -3342,7 +4011,7 @@
                                           "immutable": true
                                         },
                                         "source": {
-                                          "_type": "IntrinsicCall",
+                                          "_type": "CommaExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                             "line": 168,
@@ -3356,11 +4025,9 @@
                                             "name": "uint64",
                                             "immutable": true
                                           },
-                                          "op_code": "btoi",
-                                          "immediates": [],
-                                          "stack_args": [
+                                          "expressions": [
                                             {
-                                              "_type": "IntrinsicCall",
+                                              "_type": "AssignmentExpression",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                                 "line": 168,
@@ -3370,18 +4037,43 @@
                                                 "end_column": null
                                               },
                                               "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
                                               },
-                                              "op_code": "extract",
-                                              "immediates": [
-                                                31,
-                                                1
-                                              ],
-                                              "stack_args": [
-                                                {
+                                              "target": {
+                                                "_type": "VarExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "name": "__signext64_tmp_2"
+                                              },
+                                              "value": {
+                                                "_type": "UInt64BinaryOperation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "left": {
                                                   "_type": "IntrinsicCall",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -3392,18 +4084,218 @@
                                                     "end_column": null
                                                   },
                                                   "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
                                                   },
-                                                  "op_code": "load",
-                                                  "immediates": [
-                                                    5
-                                                  ],
-                                                  "stack_args": []
+                                                  "op_code": "btoi",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                        "line": 168,
+                                                        "end_line": 169,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "op_code": "extract",
+                                                      "immediates": [
+                                                        31,
+                                                        1
+                                                      ],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntrinsicCall",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                            "line": 168,
+                                                            "end_line": 169,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "op_code": "load",
+                                                          "immediates": [
+                                                            5
+                                                          ],
+                                                          "stack_args": []
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                "op": "%",
+                                                "right": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                    "line": 168,
+                                                    "end_line": 169,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 256,
+                                                  "teal_alias": null
                                                 }
-                                              ]
+                                              }
+                                            },
+                                            {
+                                              "_type": "ConditionalExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                "line": 168,
+                                                "end_line": 169,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "condition": {
+                                                "_type": "NumericComparisonExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "bool",
+                                                  "immutable": true
+                                                },
+                                                "lhs": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                    "line": 168,
+                                                    "end_line": 169,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "name": "__signext64_tmp_2"
+                                                },
+                                                "operator": ">=",
+                                                "rhs": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                    "line": 168,
+                                                    "end_line": 169,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 128,
+                                                  "teal_alias": null
+                                                }
+                                              },
+                                              "true_expr": {
+                                                "_type": "UInt64BinaryOperation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "left": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                    "line": 168,
+                                                    "end_line": 169,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "name": "__signext64_tmp_2"
+                                                },
+                                                "op": "+",
+                                                "right": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                    "line": 168,
+                                                    "end_line": 169,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": "18446744073709551360",
+                                                  "teal_alias": null
+                                                }
+                                              },
+                                              "false_expr": {
+                                                "_type": "VarExpression",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 168,
+                                                  "end_line": 169,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "name": "__signext64_tmp_2"
+                                              }
                                             }
                                           ]
                                         },
@@ -3566,7 +4458,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "IntrinsicCall",
+                "_type": "CommaExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                   "line": 164,
@@ -3580,11 +4472,9 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "op_code": "btoi",
-                "immediates": [],
-                "stack_args": [
+                "expressions": [
                   {
-                    "_type": "IntrinsicCall",
+                    "_type": "AssignmentExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                       "line": 164,
@@ -3594,18 +4484,43 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
                     },
-                    "op_code": "extract",
-                    "immediates": [
-                      31,
-                      1
-                    ],
-                    "stack_args": [
-                      {
+                    "target": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 164,
+                        "end_line": 173,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__signext64_tmp_3"
+                    },
+                    "value": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 164,
+                        "end_line": 173,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
                         "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -3616,18 +4531,218 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
                         },
-                        "op_code": "load",
-                        "immediates": [
-                          5
-                        ],
-                        "stack_args": []
+                        "op_code": "btoi",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                              "line": 164,
+                              "end_line": 173,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "extract",
+                            "immediates": [
+                              31,
+                              1
+                            ],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                  "line": 164,
+                                  "end_line": 173,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "load",
+                                "immediates": [
+                                  5
+                                ],
+                                "stack_args": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "op": "%",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 164,
+                          "end_line": 173,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 256,
+                        "teal_alias": null
                       }
-                    ]
+                    }
+                  },
+                  {
+                    "_type": "ConditionalExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                      "line": 164,
+                      "end_line": 173,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "condition": {
+                      "_type": "NumericComparisonExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 164,
+                        "end_line": 173,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "bool",
+                        "immutable": true
+                      },
+                      "lhs": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 164,
+                          "end_line": 173,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "__signext64_tmp_3"
+                      },
+                      "operator": ">=",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 164,
+                          "end_line": 173,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 128,
+                        "teal_alias": null
+                      }
+                    },
+                    "true_expr": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 164,
+                        "end_line": 173,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 164,
+                          "end_line": 173,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "__signext64_tmp_3"
+                      },
+                      "op": "+",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                          "line": 164,
+                          "end_line": 173,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": "18446744073709551360",
+                        "teal_alias": null
+                      }
+                    },
+                    "false_expr": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                        "line": 164,
+                        "end_line": 173,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "__signext64_tmp_3"
+                    }
                   }
                 ]
               }
@@ -3948,7 +5063,7 @@
                                                           "immutable": true
                                                         },
                                                         "source": {
-                                                          "_type": "IntrinsicCall",
+                                                          "_type": "CommaExpression",
                                                           "source_location": {
                                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                                             "line": 168,
@@ -3962,11 +5077,9 @@
                                                             "name": "uint64",
                                                             "immutable": true
                                                           },
-                                                          "op_code": "btoi",
-                                                          "immediates": [],
-                                                          "stack_args": [
+                                                          "expressions": [
                                                             {
-                                                              "_type": "IntrinsicCall",
+                                                              "_type": "AssignmentExpression",
                                                               "source_location": {
                                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                                                 "line": 168,
@@ -3976,18 +5089,43 @@
                                                                 "end_column": null
                                                               },
                                                               "wtype": {
-                                                                "_type": "BytesWType",
-                                                                "name": "bytes",
-                                                                "immutable": true,
-                                                                "length": null
+                                                                "_type": "WType",
+                                                                "name": "uint64",
+                                                                "immutable": true
                                                               },
-                                                              "op_code": "extract",
-                                                              "immediates": [
-                                                                31,
-                                                                1
-                                                              ],
-                                                              "stack_args": [
-                                                                {
+                                                              "target": {
+                                                                "_type": "VarExpression",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                  "line": 168,
+                                                                  "end_line": 169,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "name": "__signext64_tmp_2"
+                                                              },
+                                                              "value": {
+                                                                "_type": "UInt64BinaryOperation",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                  "line": 168,
+                                                                  "end_line": 169,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "left": {
                                                                   "_type": "IntrinsicCall",
                                                                   "source_location": {
                                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -3998,18 +5136,218 @@
                                                                     "end_column": null
                                                                   },
                                                                   "wtype": {
-                                                                    "_type": "BytesWType",
-                                                                    "name": "bytes",
-                                                                    "immutable": true,
-                                                                    "length": null
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
                                                                   },
-                                                                  "op_code": "load",
-                                                                  "immediates": [
-                                                                    5
-                                                                  ],
-                                                                  "stack_args": []
+                                                                  "op_code": "btoi",
+                                                                  "immediates": [],
+                                                                  "stack_args": [
+                                                                    {
+                                                                      "_type": "IntrinsicCall",
+                                                                      "source_location": {
+                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                        "line": 168,
+                                                                        "end_line": 169,
+                                                                        "comment_lines": 0,
+                                                                        "column": null,
+                                                                        "end_column": null
+                                                                      },
+                                                                      "wtype": {
+                                                                        "_type": "BytesWType",
+                                                                        "name": "bytes",
+                                                                        "immutable": true,
+                                                                        "length": null
+                                                                      },
+                                                                      "op_code": "extract",
+                                                                      "immediates": [
+                                                                        31,
+                                                                        1
+                                                                      ],
+                                                                      "stack_args": [
+                                                                        {
+                                                                          "_type": "IntrinsicCall",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                            "line": 168,
+                                                                            "end_line": 169,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "BytesWType",
+                                                                            "name": "bytes",
+                                                                            "immutable": true,
+                                                                            "length": null
+                                                                          },
+                                                                          "op_code": "load",
+                                                                          "immediates": [
+                                                                            5
+                                                                          ],
+                                                                          "stack_args": []
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "op": "%",
+                                                                "right": {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                    "line": 168,
+                                                                    "end_line": 169,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": 256,
+                                                                  "teal_alias": null
                                                                 }
-                                                              ]
+                                                              }
+                                                            },
+                                                            {
+                                                              "_type": "ConditionalExpression",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                "line": 168,
+                                                                "end_line": 169,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "WType",
+                                                                "name": "uint64",
+                                                                "immutable": true
+                                                              },
+                                                              "condition": {
+                                                                "_type": "NumericComparisonExpression",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                  "line": 168,
+                                                                  "end_line": 169,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "bool",
+                                                                  "immutable": true
+                                                                },
+                                                                "lhs": {
+                                                                  "_type": "VarExpression",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                    "line": 168,
+                                                                    "end_line": 169,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "name": "__signext64_tmp_2"
+                                                                },
+                                                                "operator": ">=",
+                                                                "rhs": {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                    "line": 168,
+                                                                    "end_line": 169,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": 128,
+                                                                  "teal_alias": null
+                                                                }
+                                                              },
+                                                              "true_expr": {
+                                                                "_type": "UInt64BinaryOperation",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                  "line": 168,
+                                                                  "end_line": 169,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "left": {
+                                                                  "_type": "VarExpression",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                    "line": 168,
+                                                                    "end_line": 169,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "name": "__signext64_tmp_2"
+                                                                },
+                                                                "op": "+",
+                                                                "right": {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                    "line": 168,
+                                                                    "end_line": 169,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": "18446744073709551360",
+                                                                  "teal_alias": null
+                                                                }
+                                                              },
+                                                              "false_expr": {
+                                                                "_type": "VarExpression",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                  "line": 168,
+                                                                  "end_line": 169,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "name": "__signext64_tmp_2"
+                                                              }
                                                             }
                                                           ]
                                                         },
@@ -4356,7 +5694,7 @@
                                                                   "immutable": true
                                                                 },
                                                                 "source": {
-                                                                  "_type": "IntrinsicCall",
+                                                                  "_type": "CommaExpression",
                                                                   "source_location": {
                                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                                                     "line": 168,
@@ -4370,11 +5708,9 @@
                                                                     "name": "uint64",
                                                                     "immutable": true
                                                                   },
-                                                                  "op_code": "btoi",
-                                                                  "immediates": [],
-                                                                  "stack_args": [
+                                                                  "expressions": [
                                                                     {
-                                                                      "_type": "IntrinsicCall",
+                                                                      "_type": "AssignmentExpression",
                                                                       "source_location": {
                                                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                                                         "line": 168,
@@ -4384,18 +5720,43 @@
                                                                         "end_column": null
                                                                       },
                                                                       "wtype": {
-                                                                        "_type": "BytesWType",
-                                                                        "name": "bytes",
-                                                                        "immutable": true,
-                                                                        "length": null
+                                                                        "_type": "WType",
+                                                                        "name": "uint64",
+                                                                        "immutable": true
                                                                       },
-                                                                      "op_code": "extract",
-                                                                      "immediates": [
-                                                                        31,
-                                                                        1
-                                                                      ],
-                                                                      "stack_args": [
-                                                                        {
+                                                                      "target": {
+                                                                        "_type": "VarExpression",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                          "line": 168,
+                                                                          "end_line": 169,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "uint64",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "name": "__signext64_tmp_2"
+                                                                      },
+                                                                      "value": {
+                                                                        "_type": "UInt64BinaryOperation",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                          "line": 168,
+                                                                          "end_line": 169,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "uint64",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "left": {
                                                                           "_type": "IntrinsicCall",
                                                                           "source_location": {
                                                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -4406,18 +5767,218 @@
                                                                             "end_column": null
                                                                           },
                                                                           "wtype": {
-                                                                            "_type": "BytesWType",
-                                                                            "name": "bytes",
-                                                                            "immutable": true,
-                                                                            "length": null
+                                                                            "_type": "WType",
+                                                                            "name": "uint64",
+                                                                            "immutable": true
                                                                           },
-                                                                          "op_code": "load",
-                                                                          "immediates": [
-                                                                            5
-                                                                          ],
-                                                                          "stack_args": []
+                                                                          "op_code": "btoi",
+                                                                          "immediates": [],
+                                                                          "stack_args": [
+                                                                            {
+                                                                              "_type": "IntrinsicCall",
+                                                                              "source_location": {
+                                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                                "line": 168,
+                                                                                "end_line": 169,
+                                                                                "comment_lines": 0,
+                                                                                "column": null,
+                                                                                "end_column": null
+                                                                              },
+                                                                              "wtype": {
+                                                                                "_type": "BytesWType",
+                                                                                "name": "bytes",
+                                                                                "immutable": true,
+                                                                                "length": null
+                                                                              },
+                                                                              "op_code": "extract",
+                                                                              "immediates": [
+                                                                                31,
+                                                                                1
+                                                                              ],
+                                                                              "stack_args": [
+                                                                                {
+                                                                                  "_type": "IntrinsicCall",
+                                                                                  "source_location": {
+                                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                                    "line": 168,
+                                                                                    "end_line": 169,
+                                                                                    "comment_lines": 0,
+                                                                                    "column": null,
+                                                                                    "end_column": null
+                                                                                  },
+                                                                                  "wtype": {
+                                                                                    "_type": "BytesWType",
+                                                                                    "name": "bytes",
+                                                                                    "immutable": true,
+                                                                                    "length": null
+                                                                                  },
+                                                                                  "op_code": "load",
+                                                                                  "immediates": [
+                                                                                    5
+                                                                                  ],
+                                                                                  "stack_args": []
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        },
+                                                                        "op": "%",
+                                                                        "right": {
+                                                                          "_type": "IntegerConstant",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                            "line": 168,
+                                                                            "end_line": 169,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "uint64",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "value": 256,
+                                                                          "teal_alias": null
                                                                         }
-                                                                      ]
+                                                                      }
+                                                                    },
+                                                                    {
+                                                                      "_type": "ConditionalExpression",
+                                                                      "source_location": {
+                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                        "line": 168,
+                                                                        "end_line": 169,
+                                                                        "comment_lines": 0,
+                                                                        "column": null,
+                                                                        "end_column": null
+                                                                      },
+                                                                      "wtype": {
+                                                                        "_type": "WType",
+                                                                        "name": "uint64",
+                                                                        "immutable": true
+                                                                      },
+                                                                      "condition": {
+                                                                        "_type": "NumericComparisonExpression",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                          "line": 168,
+                                                                          "end_line": 169,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "bool",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "lhs": {
+                                                                          "_type": "VarExpression",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                            "line": 168,
+                                                                            "end_line": 169,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "uint64",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "name": "__signext64_tmp_2"
+                                                                        },
+                                                                        "operator": ">=",
+                                                                        "rhs": {
+                                                                          "_type": "IntegerConstant",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                            "line": 168,
+                                                                            "end_line": 169,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "uint64",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "value": 128,
+                                                                          "teal_alias": null
+                                                                        }
+                                                                      },
+                                                                      "true_expr": {
+                                                                        "_type": "UInt64BinaryOperation",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                          "line": 168,
+                                                                          "end_line": 169,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "uint64",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "left": {
+                                                                          "_type": "VarExpression",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                            "line": 168,
+                                                                            "end_line": 169,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "uint64",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "name": "__signext64_tmp_2"
+                                                                        },
+                                                                        "op": "+",
+                                                                        "right": {
+                                                                          "_type": "IntegerConstant",
+                                                                          "source_location": {
+                                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                            "line": 168,
+                                                                            "end_line": 169,
+                                                                            "comment_lines": 0,
+                                                                            "column": null,
+                                                                            "end_column": null
+                                                                          },
+                                                                          "wtype": {
+                                                                            "_type": "WType",
+                                                                            "name": "uint64",
+                                                                            "immutable": true
+                                                                          },
+                                                                          "value": "18446744073709551360",
+                                                                          "teal_alias": null
+                                                                        }
+                                                                      },
+                                                                      "false_expr": {
+                                                                        "_type": "VarExpression",
+                                                                        "source_location": {
+                                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                                          "line": 168,
+                                                                          "end_line": 169,
+                                                                          "comment_lines": 0,
+                                                                          "column": null,
+                                                                          "end_column": null
+                                                                        },
+                                                                        "wtype": {
+                                                                          "_type": "WType",
+                                                                          "name": "uint64",
+                                                                          "immutable": true
+                                                                        },
+                                                                        "name": "__signext64_tmp_2"
+                                                                      }
                                                                     }
                                                                   ]
                                                                 },
@@ -5968,7 +7529,7 @@
                             "immediates": [],
                             "stack_args": [
                               {
-                                "_type": "IntrinsicCall",
+                                "_type": "CommaExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                   "line": 17,
@@ -5982,11 +7543,9 @@
                                   "name": "uint64",
                                   "immutable": true
                                 },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
+                                "expressions": [
                                   {
-                                    "_type": "IntrinsicCall",
+                                    "_type": "AssignmentExpression",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
                                       "line": 17,
@@ -5996,18 +7555,43 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
                                     },
-                                    "op_code": "extract",
-                                    "immediates": [
-                                      31,
-                                      1
-                                    ],
-                                    "stack_args": [
-                                      {
+                                    "target": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                        "line": 17,
+                                        "end_line": 40,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "name": "__signext64_tmp_4"
+                                    },
+                                    "value": {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                        "line": 17,
+                                        "end_line": 40,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
                                         "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
@@ -6018,18 +7602,218 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
                                         },
-                                        "op_code": "load",
-                                        "immediates": [
-                                          5
-                                        ],
-                                        "stack_args": []
+                                        "op_code": "btoi",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                              "line": 17,
+                                              "end_line": 40,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "extract",
+                                            "immediates": [
+                                              31,
+                                              1
+                                            ],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                                  "line": 17,
+                                                  "end_line": 40,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "load",
+                                                "immediates": [
+                                                  5
+                                                ],
+                                                "stack_args": []
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "op": "%",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 17,
+                                          "end_line": 40,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 256,
+                                        "teal_alias": null
                                       }
-                                    ]
+                                    }
+                                  },
+                                  {
+                                    "_type": "ConditionalExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                      "line": 17,
+                                      "end_line": 40,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "condition": {
+                                      "_type": "NumericComparisonExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                        "line": 17,
+                                        "end_line": 40,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      },
+                                      "lhs": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 17,
+                                          "end_line": 40,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "name": "__signext64_tmp_4"
+                                      },
+                                      "operator": ">=",
+                                      "rhs": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 17,
+                                          "end_line": 40,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 128,
+                                        "teal_alias": null
+                                      }
+                                    },
+                                    "true_expr": {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                        "line": 17,
+                                        "end_line": 40,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 17,
+                                          "end_line": 40,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "name": "__signext64_tmp_4"
+                                      },
+                                      "op": "+",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                          "line": 17,
+                                          "end_line": 40,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": "18446744073709551360",
+                                        "teal_alias": null
+                                      }
+                                    },
+                                    "false_expr": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol",
+                                        "line": 17,
+                                        "end_line": 40,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "name": "__signext64_tmp_4"
+                                    }
                                   }
                                 ]
                               }

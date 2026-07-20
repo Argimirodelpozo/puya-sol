@@ -1,3 +1,21 @@
+# Semantic Test Status — v453
+
+> **fix: fable-review-3 asm/storage semantics batch H12/H13/H16 (2026-07-20):**
+> **12 failed / 1342 passed / 109 xf / 28 xp** (failure set identical to v452 = zero regressions; +1 guard).
+> (H16) transient sub-64 signed reads sign-extend from the declared width (SlotWordCodec rule; a transient
+> int32 x = -1 read back +4294967295 — TransientStorage's uint64 read branch did a bare btoi while only the
+> biguint branch extended). (H13) keccak256(constOff, len) hashes the EXACT length: the constant-length
+> path did numSlots = len/32 + concatSlots, silently truncating an unaligned len>32 to whole words
+> (keccak256(0x84, 0x30) hashed 32 bytes); now a single extract3(off, len) — byte-identical for aligned
+> lengths; the calldata-struct fold gates on word-aligned lengths. (H12a) inlined Yul function BODY locals
+> alpha-rename per frame (params/returns already did): two helpers sharing a scratch name (`t`, `ptr` —
+> Solady style) where one calls the other mid-expression shared ONE runtime var and the inner call
+> clobbered the outer's live value (PoC 110 vs correct 106). Declarations resolve through
+> m_yulInlineRenames; the reassignment scan keys on ORIGINAL names. (H12b) Yul call arguments now
+> translate RIGHT-to-left (Yul's mandated order) at all four build sites — sub(bump(1), bump(10))
+> sequenced the left bump first. Guard: test_asm_semantics_batch (all four, E2E).
+> Full run: RESULTS_review3_asmbatch.txt.
+
 # Semantic Test Status — v452
 
 > **fix: fable-review-3 dispatch trio H15 (super-impl entry semantics, keyed getters, augmentation walks) (2026-07-20):**
