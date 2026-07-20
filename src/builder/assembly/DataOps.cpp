@@ -402,7 +402,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	{
 		auto const& elem = firstSlotIt->second;
 		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(elem.paramType);
-		if (structType && numSlots == static_cast<int>(structType->fields().size()))
+		// Whole-word lengths only: the per-field 32-byte padding below assumes
+		// a word-aligned buffer shape.
+		if (structType && *length % 0x20 == 0
+			&& numSlots == static_cast<int>(structType->fields().size()))
 		{
 			auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
 				? m_locals[elem.paramName] : elem.paramType, _loc);
@@ -423,8 +426,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		}
 	}
 
+	// Hash the EXACT length: the old concatSlots(numSlots) form silently
+	// truncated an unaligned length to whole words (keccak256(0x84, 0x30)
+	// hashed 32 bytes — wrong-but-plausible digests for packed-encoding
+	// idioms). Byte-identical to concatSlots for word-aligned lengths.
 	return awst::makeAsBiguint(
-		awst::makeKeccak256(concatSlots(*offset, 0, numSlots, _loc), _loc), _loc);
+		awst::makeKeccak256(awst::makeExtract3(memoryVar(_loc),
+			awst::makeIntegerConstant(*offset, _loc),
+			awst::makeIntegerConstant(*length, _loc), _loc), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
