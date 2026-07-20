@@ -1,3 +1,23 @@
+# Semantic Test Status — v451
+
+> **fix: fable-review-3 arith/encode trio H9-H11 (compound signed divisor, ternary return encoding, unary/pow eval-once) (2026-07-20):**
+> **12 failed / 1338 passed / 109 xf / 28 xp** (failure set identical to v450 = zero regressions; +3 guards).
+> (H9) `x /= y` with biguint-backed signed LHS and NARROWER signed divisor built the RHS at the TARGET type,
+> so a negative int16 divisor sign-extended from the wrong width read as +1.8e19 (x /= -32768 gave 0, not
+> 256) — the live residual of the "closed" signed-mixedwidth-div family on the compound path. New shared
+> SolAssignment::widenSignedCompoundRhs converts the RHS to the target's canonical form first (uint64-carried
+> → promote + signExtendToUint256 from the RHS width; same-carrier → signExtendSignedWiden), applied at ALL
+> compound sites (applyCompoundAssignment, transient, slot-scalar). (H10) encodeReturnValue retyped a
+> ConditionalExpression to the wire tuple even when a branch was a CALL/nested ternary that wrapItems
+> could not encode in place — raw minimal-length biguint shipped where 32-byte arc4.uint256 was expected;
+> such shapes now fall through to the opaque-tuple spill (both-branches-literal gates the in-place path).
+> (H11) operand pinning: SolUnaryOperation wraps Not/Sub/BitNot operands in makeEvalOnce (checked -g()
+> ran g 3x: overflow assert + negate; ~g() 2x), SolBinaryOperation pins Exp operands on the unsigned
+> path too (x ** f() ran f 2x: 0**0 case + pow; signed path already pinned), and
+> SolAssignment::applyEnumRangeCheck gets the EvalOnce its SolExpressionStatement/SolEmitStatement twins
+> already had (enum-typed call RHS ran 2x: range assert + store).
+> Full run: RESULTS_review3_h91011.txt.
+
 # Semantic Test Status — v450
 
 > **fix: fable-review-3 storage trio H6-H8 (mutation detector, slot-handle bounds/packed-compound, conditional storage-ptr) (2026-07-20):**

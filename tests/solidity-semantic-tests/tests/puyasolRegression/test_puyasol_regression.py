@@ -2440,3 +2440,64 @@ def test_straightline_storage_ptr_reassign_still_works(harness):
     # ternary-selected pointer must see the right array
     assert as_int(harness.call(app, "ternaryLen(bool)", True).abi_return) == 1
     assert as_int(harness.call(app, "ternaryLen(bool)", False).abi_return) == 2
+
+
+def test_compound_signed_mixedwidth_divisor(harness):
+    """puyasolRegression/contracts/compound_signed_mixedwidth.sol — NOT an o.g. test.
+
+    `x /= y` with biguint-backed signed LHS and a NARROWER signed divisor built
+    the RHS at the TARGET type: a negative int16 divisor sign-extended from the
+    wrong (target) width read as +1.8e19 — x /= -32768 gave 0 instead of 256.
+    The RHS is now widened to the target's canonical form first (all compound
+    sites share widenSignedCompoundRhs). plainDiv was already correct.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/compound_signed_mixedwidth.sol")
+    call = lambda sig, *a: as_signed_int(harness.call(app, sig, *a).abi_return)
+    assert call("plainDiv(int128,int16)", -8388609, -32768) == 256
+    assert call("compoundDiv(int128,int16)", -8388609, -32768) == 256
+    assert call("compoundMod(int128,int16)", -8388609, -32768) == -1
+    assert call("compoundDivSmall(int32,int8)", -1000, -125) == 8
+    assert call("compoundSub(int128,int16)", 100, -32768) == 32868
+    assert call("compoundMul(int128,int16)", 3, -32768) == -98304
+    # positive divisors keep working
+    assert call("compoundDiv(int128,int16)", -8388608, 32767) == -256
+
+
+def test_ret_ternary_encode(harness):
+    """puyasolRegression/contracts/ret_ternary_encode.sol — NOT an o.g. test.
+
+    Multi-value return with an encoded (signed) element and a ternary whose
+    branch is a CALL or nested ternary: encodeReturnValue retyped the node to
+    the wire tuple but left the branch unencoded — raw minimal-length biguint
+    where 32-byte arc4.uint256 is expected → corrupt return blob. Now spills
+    through the opaque-tuple path.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/ret_ternary_encode.sol")
+    def pair(sig, *a):
+        r = harness.call(app, sig, *a).abi_return
+        return as_signed_int(r[0]), as_int(r[1])
+    assert pair("callBranch(bool)", True) == (-3, 4)
+    assert pair("callBranch(bool)", False) == (-7, 9)
+    assert pair("nestedTernary(bool,bool)", True, False) == (-3, 4)
+    assert pair("nestedTernary(bool,bool)", False, True) == (-5, 6)
+    assert pair("nestedTernary(bool,bool)", False, False) == (-7, 8)
+
+
+def test_eval_once_unary_pow_enum(harness):
+    """puyasolRegression/contracts/eval_once_unary_pow.sol — NOT an o.g. test.
+
+    Operand pinning: checked -g() evaluated g 3x (overflow assert + negate),
+    ~g() 2x, unsigned x ** f() ran f 2x (0**0 case + pow), enum-assign RHS 2x
+    (range assert + store). Each must run exactly once and compute correctly.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/eval_once_unary_pow.sol")
+    r = harness.call(app, "negWide()").abi_return
+    assert (as_signed_int(r[0]), as_int(r[1])) == (5, 1)
+    r = harness.call(app, "negNarrow()").abi_return
+    assert (as_signed_int(r[0]), as_int(r[1])) == (5, 1)
+    r = harness.call(app, "invWide()").abi_return
+    assert (as_signed_int(r[0]), as_int(r[1])) == (4, 1)  # ~(-5) == 4
+    r = harness.call(app, "powRhs(uint64)", 2).abi_return
+    assert (as_int(r[0]), as_int(r[1])) == (8, 1)
+    r = harness.call(app, "enumAssign()").abi_return
+    assert (as_int(r[0]), as_int(r[1])) == (1, 1)  # E.B == 1

@@ -147,7 +147,10 @@ value-typed alias path is the hole.)
   so `uint8[8] storage p; p[3] += 1` falls to the generic path and read-modify-writes the whole
   word at `base+3` (unscaled) instead of byte 3 of slot `base`.
 
-### H9 ✅ Compound `/=`,`%=` with biguint-backed signed LHS and narrower signed divisor
+### H9 ✅ Compound `/=`,`%=` with biguint-backed signed LHS and narrower signed divisor — FIXED
+> **2026-07-20:** shared `widenSignedCompoundRhs` converts the RHS to the target's canonical
+> form before the compound compute, at ALL compound sites. Guard
+> `test_compound_signed_mixedwidth_divisor` (also covers -=, *=, %=, and the ≤64-bit tier).
 `sol-eb/AssignmentHelper.cpp:55` builds the RHS builder with the *target* type, so
 `SolIntegerBuilder::binary_op` sign-extends the divisor from the **target** width
 (`SolIntegerBuilder.cpp:168`), not its own: `int128 x; int16 y = -32768; x /= y;` reads the
@@ -155,14 +158,23 @@ divisor as +1.8e19. Verified by AWST diff against the plain-division form (which
 from 16). Live residual of the "closed" signed-mixedwidth-div family — the fix assumed
 `otherInt` carries the RHS's own type; on the compound path it carries the target's.
 
-### H10 ✅ `encodeReturnValue` leaves non-literal ternary branches unencoded
+### H10 ✅ `encodeReturnValue` leaves non-literal ternary branches unencoded — FIXED
+> **2026-07-20:** the in-place conditional path now requires BOTH branches to be literal
+> tuples; call/nested-ternary branches fall through to the opaque-tuple spill. Guard
+> `test_ret_ternary_encode`.
 `sol-types/TypeCoercion.cpp:195-201` — for a conditional return value, `wrapItems` silently
 no-ops when a branch is a call or nested ternary, yet the node is retyped to the wire tuple, so
 the opaque-tuple spill fallback (line 205) is unreachable. Verified: raw biguint items flow
 where arc4.uint256 is expected; puya accepts and emits TEAL ⇒ corrupt ABI return blob at
 runtime (minimal-length biguint vs 32-byte word).
 
-### H11 ✅ Unary `-`, `~`, and unsigned `**` duplicate side-effecting operands
+### H11 ✅ Unary `-`, `~`, and unsigned `**` duplicate side-effecting operands — FIXED (core)
+> **2026-07-20:** EvalOnce at the unary builder dispatch (Not/Sub/BitNot; Inc/Dec/Delete keep
+> their lvalue trees), Exp operands pinned on the unsigned binary path, and the enum
+> range-check assert in SolAssignment (its statement twins already had the fix). Guard
+> `test_eval_once_unary_pow_enum`. The "same class ○" tail (slice base, ecrecover/ecPairing
+> inputs, fn-ptr expr, encodePacked, SolAddressBuilder compare, index pins) remains open —
+> T2's builder-entry umbrella.
 `exprs/SolUnaryOperation.cpp:745-751` passes the raw operand; `SolIntegerBuilder` references it
 2-3× (assert + op). Verified by AWST call counts: checked `-g()` ⇒ **3** calls to `g`; `~g()` ⇒
 2; `x ** f()` ⇒ 2 (EvalOnce is applied on the signed binary path only,
