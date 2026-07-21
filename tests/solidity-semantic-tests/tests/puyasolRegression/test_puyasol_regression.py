@@ -2744,3 +2744,34 @@ def test_arc4_bool_default_packing(harness):
     # the untouched neighbor is still all-default
     r = harness.call(app, "readDefaults(uint256)", 2, extra_fee=5_000).abi_return
     assert [bool(r[0]), bool(r[1]), bool(r[2]), as_int(r[3])] == [False, True, False, 1]
+
+
+def test_batchA_correctness(harness):
+    """puyasolRegression/contracts/batchA_correctness.sol — NOT an o.g. test.
+
+    M4: transient assignment-as-expression yields the assigned value (not a
+    stale post-pending re-read). M16: self-call via encodeWithSignature picks
+    the OVERLOAD by full signature and names the overload-suffixed target.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/batchA_correctness.sol")
+    r = harness.call(app, "m4Transient()").abi_return
+    assert [as_int(r[0]), as_int(r[1])] == [5, 5]
+    assert as_int(harness.call(app, "m16Uint()", extra_fee=5_000).abi_return) == 1005
+    assert as_int(harness.call(app, "m16Bool()", extra_fee=5_000).abi_return) == 7
+
+
+def test_inline_array_external(harness):
+    """puyasolRegression/contracts/inline_array_external.sol — NOT an o.g. test.
+
+    Inline array literals as typed external-call args go through the shared
+    ARC4 encoder (arc4.uint8 elements at the right width), not the old
+    32-byte-word hand-encoding that the callee decoded as garbage.
+    """
+    import algosdk
+    arts = harness.compile("puyasolRegression/contracts/inline_array_external.sol")
+    callee = harness.deploy(arts, contract_name="Callee")
+    caller = harness.deploy(arts, contract_name="Caller")
+    fake = algosdk.encoding.encode_address(bytes(24) + callee.app_id.to_bytes(8, "big"))
+    opts = {"extra_fee": 10_000, "extra_apps": [callee.app_id]}
+    assert as_int(harness.call(caller, "callU8(address)", fake, **opts).abi_return) == 7
+    assert as_int(harness.call(caller, "callU256(address)", fake, **opts).abi_return) == 30

@@ -10,6 +10,7 @@
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/OverloadSuffix.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -512,6 +513,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					//   address(this).call(abi.encodeWithSignature("fn(types)", args...))
 					//   address(this).call(abi.encodeWithSelector(this.fn.selector, args...))
 					std::string fnName;
+					// Full signature string from encodeWithSignature ("fn(types)")
+					// — carries the param types for exact overload matching.
+					std::string sigString;
+					// Referenced FunctionDefinition when the encode form names a
+					// SPECIFIC function (encodeCall/encodeWithSelector) — resolves
+					// the exact overload directly instead of name+arity.
+					FunctionDefinition const* refFunc = nullptr;
 					// Method args, normalised across the three encode forms:
 					//   encodeWithSignature("fn(types)", a, b, …) → args spread at indices 1..
 					//   encodeWithSelector(this.fn.selector, a, b, …) → args spread at indices 1..
@@ -522,10 +530,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					{
 						if (auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get()))
 						{
-							std::string sig = sigLit->value();
-							auto parenPos = sig.find('(');
+							sigString = sigLit->value();
+							auto parenPos = sigString.find('(');
 							if (parenPos != std::string::npos)
-								fnName = sig.substr(0, parenPos);
+								fnName = sigString.substr(0, parenPos);
 						}
 						for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
 							resolvedArgs.push_back(encCallExpr->arguments()[i]);
@@ -537,21 +545,34 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 						if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
 							if (selMA->memberName() == "selector")
 								if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
+								{
 									fnName = fnMA->memberName();
+									refFunc = dynamic_cast<FunctionDefinition const*>(
+										fnMA->annotation().referencedDeclaration);
+								}
 						for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
 							resolvedArgs.push_back(encCallExpr->arguments()[i]);
 					}
 					else if (encMA && encMA->memberName() == "encodeCall"
 						&& !encCallExpr->arguments().empty())
 					{
-						// encodeCall(Contract.fn, (args…)): the fn ref is only a SELECTOR source —
-						// dispatch resolves the same-signature method on `this` (name+arity below), so an
-						// inherited/overridden impl + its return type are used. Args are a tuple in index 1.
+						// encodeCall(Contract.fn, (args…)): the fn ref names the exact
+						// function; resolve the same-signature method on `this` by id
+						// (inherited/overridden impl + its return type). Args are a
+						// tuple in index 1.
 						auto const* fref = encCallExpr->arguments()[0].get();
 						if (auto const* m = dynamic_cast<MemberAccess const*>(fref))
+						{
 							fnName = m->memberName();
+							refFunc = dynamic_cast<FunctionDefinition const*>(
+								m->annotation().referencedDeclaration);
+						}
 						else if (auto const* id = dynamic_cast<Identifier const*>(fref))
+						{
 							fnName = id->name();
+							refFunc = dynamic_cast<FunctionDefinition const*>(
+								id->annotation().referencedDeclaration);
+						}
 						if (encCallExpr->arguments().size() >= 2)
 						{
 							auto const& argsExpr = *encCallExpr->arguments()[1];
@@ -568,15 +589,72 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					{
 						size_t nArgs = resolvedArgs.size();
 						FunctionDefinition const* target = nullptr;
+						// Resolve the SAME-signature implemented method on `this`
+						// (the fn ref may point at an interface/base declaration;
+						// dispatch wants the concrete impl by name + full sig).
+						auto sameSig = [&](FunctionDefinition const* a, FunctionDefinition const* b) {
+							if (a->parameters().size() != b->parameters().size())
+								return false;
+							for (size_t k = 0; k < a->parameters().size(); ++k)
+								if (solTypeToArc4ParamName(_ctx, a->parameters()[k]->type())
+									!= solTypeToArc4ParamName(_ctx, b->parameters()[k]->type()))
+									return false;
+							return true;
+						};
 						if (_ctx.currentContract)
 						{
-							forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+							if (!sigString.empty())
 							{
-								if (target) return;
-								if (func->isImplemented() && func->name() == fnName
-									&& func->parameters().size() == nArgs)
-									target = func;
-							});
+								// encodeWithSignature("f(uint256)", ...): match the
+								// candidate whose CANONICAL ARC4 signature equals the
+								// given string exactly — so `f(uint256)` binds
+								// f(uint256), not the first same-arity `f(bool)`.
+								// Exact-only (no alias normalisation): a non-match
+								// simply falls through to the name+arity behaviour,
+								// so this can only fix a wrong bind, never regress.
+								forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+								{
+									if (target) return;
+									if (!func->isImplemented() || func->name() != fnName)
+										return;
+									std::string got = fnName + "(";
+									for (size_t k = 0; k < func->parameters().size(); ++k)
+									{
+										if (k) got += ",";
+										got += solTypeToArc4ParamName(_ctx, func->parameters()[k]->type());
+									}
+									got += ")";
+									if (got == sigString)
+										target = func;
+								});
+							}
+							if (!target && refFunc)
+							{
+								// Exact overload known (encodeCall/encodeWithSelector
+								// name a specific function): match name + full param
+								// signature, not just arity — an f(uint256) ref must
+								// not bind f(bool). Resolves the same-signature impl
+								// on `this` (the ref may point at an interface/base).
+								forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+								{
+									if (target) return;
+									if (func->isImplemented() && func->name() == fnName
+										&& sameSig(func, refFunc))
+										target = func;
+								});
+							}
+							// Fallback: name + arity. Unchanged behaviour, and the
+							// only option for encodeWithSignature (its raw string
+							// sig can't be canonicalised reliably — `uint` vs
+							// `uint256`, etc.); ambiguity there is inherent.
+							if (!target)
+								forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+								{
+									if (target) return;
+									if (func->isImplemented() && func->name() == fnName
+										&& func->parameters().size() == nArgs)
+										target = func;
+								});
 						}
 						if (target)
 						{
@@ -607,11 +685,17 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								return awst::makeAsBytes(std::move(enc), _loc);
 							};
 
+							// Overload-suffixed target name: the emitted method for an
+							// overloaded function is name+suffix, so a bare-name
+							// InstanceMethodTarget is unresolvable by puya.
+							std::string targetName = target->name();
+							if (_ctx.overloadedNames.count(targetName))
+								appendOverloadSuffix(targetName, *target);
 							size_t nReturns = target->returnParameters().size();
 							if (nReturns == 0)
 							{
 								auto call = awst::makeSubroutineCall(
-									awst::InstanceMethodTarget{target->name()},
+									awst::InstanceMethodTarget{targetName},
 									awst::WType::voidType(), _loc);
 								for (auto const& a : resolvedArgs)
 									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
@@ -625,7 +709,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								auto* retType = _ctx.typeMapper.map(target->returnParameters()[0]->type());
 								if (!retType) retType = awst::WType::voidType();
 								auto call = awst::makeSubroutineCall(
-									awst::InstanceMethodTarget{target->name()},
+									awst::InstanceMethodTarget{targetName},
 									retType, _loc);
 								for (auto const& a : resolvedArgs)
 									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
@@ -644,7 +728,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							}
 							auto* tupleTypeOwned = new awst::WTuple(std::move(tupleTypes));
 							auto call = awst::makeSubroutineCall(
-								awst::InstanceMethodTarget{target->name()},
+								awst::InstanceMethodTarget{targetName},
 								tupleTypeOwned, _loc);
 							for (auto const& a : resolvedArgs)
 								awst::pushCallArg(call->args, _ctx.buildExpr(*a));

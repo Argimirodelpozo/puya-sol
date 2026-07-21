@@ -65,6 +65,20 @@ void registerFunctionIds(
 						subroutineId += "_" + std::to_string(seq);
 					}
 				}
+				// Cross-file collision: two libraries with the SAME name in
+				// different source units produce the identical subroutineId
+				// (`_sourceFile` is the constant main source). Disambiguate by
+				// AST id — same rule the free-function path below uses — so two
+				// vendored `Math`/`SafeCast` copies don't map to one subroutine.
+				for (auto const& [otherId, otherSid]: m_freeFunctionById)
+				{
+					if (otherSid == subroutineId && otherId != func->id())
+					{
+						subroutineId += "_" + std::to_string(func->id());
+						qualifiedName += "_" + std::to_string(func->id());
+						break;
+					}
+				}
 				m_libraryFunctionIds[qualifiedName] = subroutineId;
 				// Also index by AST ID for precise overload resolution.
 				m_freeFunctionById[func->id()] = subroutineId;

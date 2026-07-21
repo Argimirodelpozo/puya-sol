@@ -382,31 +382,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		Type const* paramType = (argIdx < paramSolTypes.size()) ? paramSolTypes[argIdx] : nullptr;
 		++argIdx;
 
-		// Handle inline array literals
-		if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(arg.get());
-			tupleExpr && tupleExpr->isInlineArray())
-		{
-			std::shared_ptr<awst::Expression> acc;
-			for (auto const& comp: tupleExpr->components())
-			{
-				if (!comp) continue;
-				auto elem = buildExpr(*comp);
-				elem = builder::TypeCoercion::implicitNumericCast(
-					std::move(elem), awst::WType::biguintType(), m_loc);
-
-				auto cast = awst::makeAsBytes(std::move(elem), m_loc);
-				auto extracted = awst::makeLeftPadToN(std::move(cast), 32, m_loc);
-
-				if (!acc)
-					acc = std::move(extracted);
-				else
-					acc = awst::makeConcat(std::move(acc), std::move(extracted), m_loc);
-			}
-			if (acc)
-				argsTuple->items.push_back(std::move(acc));
-			continue;
-		}
-
+		// Inline array literals (`f([a, b])`) build as a normal array
+		// expression and go through the SAME shared ARC4 encoder as every
+		// other arg — the old hand-rolled 32-byte-word concat was correct only
+		// for uint256/uint>=129 static-array elements: it zero-extended narrow
+		// and signed elements and emitted no uint16 length header for dynamic
+		// (`uint[]`) params, so the callee's ARC4 decode read garbage.
 		auto argExpr = buildExpr(*arg);
 		argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(m_ctx, std::move(argExpr), paramType, m_loc));
 	}

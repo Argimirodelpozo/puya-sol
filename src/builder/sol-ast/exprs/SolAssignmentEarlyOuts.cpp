@@ -60,13 +60,19 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	}
 
 	newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
+	// Eval-once so the same value feeds BOTH the write and the returned
+	// assignment-expression value (the tree is shared by two parents).
+	newValue = awst::makeEvalOnce(std::move(newValue), m_loc);
 
 	auto stmt = sb->emitWriteForVar(*lhsDecl, name, newValue, m_loc);
 	if (stmt)
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 
-	// Re-read to yield the written value (Solidity assignment-as-expression).
-	return sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
+	// Yield the ASSIGNED value directly, not a storage re-read: the write is
+	// queued POST-pending, so `uint a = (t = 5)` re-read t BEFORE the write and
+	// got the stale value. The assignment expression's value in Solidity is the
+	// assigned value regardless.
+	return newValue;
 }
 
 std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStoragePointerReassign()
