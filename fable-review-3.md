@@ -213,9 +213,10 @@ escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
 > **2026-07-21:** asm `revert(off,len)` delivers the payload: log(memory[off..off+len)) +
 > non-explicit assert(false) — the revert-data-stack convention (harness reads the failing
 > txn's last log via simulate). Constant lengths read multi-slot (readMemRangeDirect, capped
-> at the 1024-byte AVM log limit); dynamic lengths single-slot (payload lost if straddling,
-> txn still reverts). Guard test_asm_payload_mem_batch (selector idiom, selector+arg,
-> dynamic, bare — all EVM-verified revert_data).
+> at the 1024-byte AVM log limit); dynamic lengths splice slot tail + slot+1 head at runtime
+> when straddling (a loggable payload is <= 1024 B, so at most ONE boundary — one log either
+> way). Guard test_asm_payload_mem_batch (selector idiom, selector+arg, dynamic, straddle,
+> bare — all EVM-verified revert_data).
 - **Arg order**: call arguments translate left-to-right; Yul mandates right-to-left
   (`CoreTranslation.cpp:346-349`). PoC `sub(bump(1), bump(10))` shows left-first sequencing.
   Nested inlining additionally splices an earlier sibling's pending inline body into the later

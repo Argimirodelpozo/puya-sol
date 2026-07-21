@@ -1,3 +1,12 @@
+# Semantic Test Status — v461
+
+> **fix: dynamic asm revert payloads straddling a 4096-byte slot keep the payload (2026-07-21):**
+> **12 failed / 1357 passed / 109 xf / 28 xp** (canonical set re-verified test-by-test = zero
+> regressions). A loggable payload is <= 1024 bytes (the AVM log cap counts ALL logs of a call,
+> so multiple logs add no capacity) — it straddles at most one slot boundary, so the dynamic
+> revert path splices slot tail + slot+1 head at runtime into the single log; in-slot lengths
+> keep the fast path. Guard: revStraddle (split + in-slot, byte-identical to py-evm).
+
 # Semantic Test Status — v460
 
 > **fix: final fable-review-3 items — H12 payload / M7 / M8 / M12 / M13 / T2 (2026-07-21):**
