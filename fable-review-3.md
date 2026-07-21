@@ -259,10 +259,13 @@ escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
 > selector+args from the bound getter FunctionType, callee publishes declared key widths;
 > (c) both augmentation walks share forEachReturnStatement (now incl. Switch). Guards
 > test_super_call_payable_caller / test_crosscontract_keyed_getter /
-> test_memparam_return_in_loop. NEW KNOWN GAP surfaced by the getter fixture (pre-existing,
-> unfixed): `new Child()` in a ctor does not run the child's __postInit before later
-> parent-ctor calls into the child — child box/global state vars are uninitialized
-> ("no such box" / app_global assert in the child).
+> test_memparam_return_in_loop. NEW KNOWN GAP surfaced by the getter fixture: `new Child()` in a ctor
+> did not run the child's __postInit before later parent-ctor calls into the child.
+> **STALE — verified CLOSED 2026-07-21**: the ctor/postInit sequencing fixes (Criticals 3/4,
+> T1 drains, derived-first arg pass) closed it as a side effect; the child's
+> create → fund → [pay, __postInit(args)] chain completes before later parent-ctor
+> statements, incl. when the parent's own ctor is deferred to __postInit by box state.
+> Guard test_new_in_ctor_postinit (needs harness postinit_inner_txns fee headroom).
 - **`super`/`Base.f()` targets carry ABI-entry semantics**: `SuperCallResolution.cpp:188`
   resets `arc4MethodConfig` only *after* `buildFunction` has baked in the not-payable assert,
   entry checks, and wire-return encoding. Verified in TEAL: a payable `g()` calling `A.f()`

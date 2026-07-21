@@ -1,3 +1,12 @@
+# Semantic Test Status — v462
+
+> **test: new-in-ctor __postInit known-gap verified STALE and closed (2026-07-21):** no compiler
+> change — `new ChildNC(50)` inside a ctor (parent itself deferred to __postInit by box state)
+> already sequences the child's create → fund → [pay, __postInit(arg)] chain before later
+> parent-ctor reads (child mapping/initializer/arg state all correct on-chain). The earlier
+> failures were fee starvation: the deploy needs `postinit_inner_txns` headroom for the child's
+> inner txns. Guard test_new_in_ctor_postinit pins it.
+
 # Semantic Test Status — v461
 
 > **fix: dynamic asm revert payloads straddling a 4096-byte slot keep the payload (2026-07-21):**

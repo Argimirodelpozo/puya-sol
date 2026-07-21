@@ -2919,3 +2919,21 @@ def test_t2_eval_once_tail(harness):
     assert [as_int(r[0]), as_int(r[1])] == [1, 5]
     r = harness.call(app, "ecInput()", extra_fee=20_000).abi_return
     assert [as_int(r[0]), as_int(r[1])] == [1, 1]
+
+
+def test_new_in_ctor_postinit(harness):
+    """puyasolRegression/contracts/new_in_ctor_postinit.sol — NOT an o.g. test.
+
+    `new ChildNC(50)` inside a ctor (itself deferred to the parent's
+    __postInit by box state): the child's create/fund/[pay,__postInit(arg)]
+    chain completes before the parent reads child state. Pins the formerly
+    documented new-in-ctor known-gap as closed.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/new_in_ctor_postinit.sol",
+        contract_name="ParentNC", fund_wei=5_000_000, postinit_inner_txns=10)
+    assert as_int(harness.call(app, "got()").abi_return) == 500
+    assert as_int(harness.call(app, "gotPlain()").abi_return) == 77
+    assert as_int(harness.call(app, "gotArg()").abi_return) == 50
+    assert as_int(harness.call(app, "parrLen()").abi_return) == 2
+    assert as_int(harness.call(app, "parr1()").abi_return) == 500
