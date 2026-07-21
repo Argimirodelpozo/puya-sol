@@ -254,6 +254,24 @@ void AssemblyBuilder::handleModExpRT(
 		return awst::makeAsBiguint(readMemWordDyn(plusConst(baseOff(), slotOff), _loc), _loc);
 	};
 
+	// This implementation only supports the 32/32/32 operand layout. The EVM
+	// precompile handles arbitrary Bsize/Esize/Msize (RSA-2048 uses a 256-byte
+	// modulus); computing on fixed 32-byte windows for any other size would
+	// silently produce a wrong result. Assert the three header words (Bsize at
+	// +0x00, Esize at +0x20, Msize at +0x40) are each 32, so an unsupported
+	// width fails loud instead.
+	auto assertHeader32 = [&](uint64_t slotOff, char const* which) {
+		auto sz = awst::makeAsBiguint(readMemWordDyn(plusConst(baseOff(), slotOff), _loc), _loc);
+		auto ok = awst::makeNumericCompare(std::move(sz), awst::NumericComparison::Eq,
+			awst::makeIntegerConstant("32", _loc, awst::WType::biguintType()), _loc);
+		_out.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(ok), _loc,
+				std::string("modexp precompile only supports 32-byte operands (") + which + ")"), _loc));
+	};
+	assertHeader32(0x00, "Bsize");
+	assertHeader32(0x20, "Esize");
+	assertHeader32(0x40, "Msize");
+
 	auto base = readSlot(0x60);
 	auto exp = readSlot(0x80);
 	auto mod = readSlot(0xa0);

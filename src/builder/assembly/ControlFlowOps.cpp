@@ -26,18 +26,21 @@ void AssemblyBuilder::buildIfStatement(
 {
 	auto loc = makeLoc(_node.debugData);
 
-	// Revert-only body (SafeCast/require pattern): emit assert(!cond) to avoid DCE.
+	// Revert-ONLY body (SafeCast/require pattern): `if cond { revert(...) }`
+	// collapses to assert(!cond) to avoid puya DCE. Require the body to be
+	// EXACTLY a single revert — the old code set the flag if ANY top-level
+	// statement was a revert, dropping everything else (a preceding
+	// conditional `leave`, or the `mstore(selector) mstore(data)` that builds
+	// a custom-error payload), so `if c { if x { leave } revert() }` reverted
+	// even when x was set.
 	bool isRevertBody = false;
-	for (auto const& stmt : _node.body.statements)
+	if (_node.body.statements.size() == 1)
 	{
-		if (auto const* exprStmt = std::get_if<solidity::yul::ExpressionStatement>(&stmt))
-		{
+		if (auto const* exprStmt = std::get_if<solidity::yul::ExpressionStatement>(
+				&_node.body.statements[0]))
 			if (auto const* funcCall = std::get_if<solidity::yul::FunctionCall>(&exprStmt->expression))
-			{
 				if (getFunctionName(funcCall->functionName) == "revert")
 					isRevertBody = true;
-			}
-		}
 	}
 
 	// Condition may produce pending statements; drain before the if (same as buildForLoop).

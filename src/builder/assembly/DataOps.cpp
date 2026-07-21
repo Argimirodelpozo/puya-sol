@@ -24,10 +24,22 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 		// Dynamic offset: read from __cd_blob (EVM-ABI layout) when present.
 		if (m_useSyntheticCalldata)
 		{
-			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc);
-			auto offArg = offsetToUint64(_args[0], _loc);
-			auto lenArg = awst::makeIntegerConstant("32", _loc);
-			auto extractCall = awst::makeExtract3(std::move(blob), std::move(offArg), std::move(lenArg), _loc);
+			// EVM calldataload ZERO-PADS reads at/past calldatasize; a bare
+			// extract3 would panic when off+32 > len(blob) (the standard
+			// tail-word loop `calldataload(off+i)` with a non-word-multiple
+			// length hits this). Append 32 zero bytes and clamp the start to
+			// len: extract3(blob ++ bzero(32), min(off,len), 32) reads real
+			// bytes then the appended zeros — all-zero when off >= len.
+			auto blob = awst::makeEvalOnce(
+				awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc);
+			auto len = awst::makeLen(blob, _loc);
+			auto off = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
+			auto safeOff = awst::makeConditional(
+				awst::makeNumericCompare(off, awst::NumericComparison::Lt, len, _loc),
+				off, awst::makeLen(blob, _loc), awst::WType::uint64Type(), _loc);
+			auto padded = awst::makeConcat(blob, awst::makeBzero(32, _loc), _loc);
+			auto extractCall = awst::makeExtract3(std::move(padded), std::move(safeOff),
+				awst::makeIntegerConstant("32", _loc), _loc);
 			return awst::makeAsBiguint(std::move(extractCall), _loc);
 		}
 		Logger::instance().error(

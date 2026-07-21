@@ -12,6 +12,22 @@
 namespace puyasol::builder
 {
 
+// Assert a transient slot fits the 4096-byte / 128-slot scratch blob. A
+// keccak-derived mapping slot or a slot >= 128 would otherwise panic opaquely
+// (btoi overflow / extract3 OOB). `_slot` must be an eval-once biguint.
+static void emitTransientSlotBound(
+	std::shared_ptr<awst::Expression> const& _slot,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	auto ok = awst::makeNumericCompare(_slot, awst::NumericComparison::Lt,
+		awst::makeIntegerConstant("128", _loc, awst::WType::biguintType()), _loc);
+	_out.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(std::move(ok), _loc,
+			"transient storage slot out of range (only slots 0..127 are "
+			"supported on AVM; transient mappings are not)"), _loc));
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc
@@ -21,8 +37,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	// Scratch slot bzero'd in preamble; persists across callsub within an app call.
 	if (_args.empty()) return nullptr;
 
-	auto slot = ensureBiguint(_args[0], _loc);
-	auto slotU64 = awst::makeBtoi(awst::makeAsBytes(std::move(slot), _loc), _loc);
+	// The transient scratch slot is a fixed 4096-byte blob = 128 slots. A
+	// keccak-derived slot (a transient MAPPING key) is a 32-byte biguint that
+	// overflows btoi, and any slot >= 128 overruns the blob — both would panic
+	// opaquely. Assert slot < 128 (fail loud on the unsupported cases), then
+	// safeBtoi handles the now-bounded value.
+	auto slot = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
+	emitTransientSlotBound(slot, _loc, m_pendingStatements);
+	auto slotU64 = safeBtoi(slot, _loc);
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult,
 		awst::makeIntegerConstant("32", _loc), _loc);
 
@@ -40,9 +62,10 @@ void AssemblyBuilder::handleTstore(
 	// replace3(TRANSIENT_SLOT blob, slot*32, zeroExtend(value, 32)).
 	if (_args.size() < 2) return;
 
-	auto slot = ensureBiguint(_args[0], _loc);
+	auto slot = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
+	emitTransientSlotBound(slot, _loc, _out);
 	auto value = ensureBiguint(_args[1], _loc);
-	auto slotU64 = awst::makeBtoi(awst::makeAsBytes(std::move(slot), _loc), _loc);
+	auto slotU64 = safeBtoi(slot, _loc);
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult,
 		awst::makeIntegerConstant("32", _loc), _loc);
 	auto padded = awst::makeZeroExtendToN(awst::makeAsBytes(std::move(value), _loc), 32, _loc);

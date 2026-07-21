@@ -828,8 +828,17 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				auto tuple = awst::makeTupleExpression(nullptr, loc);
 				for (auto const& rp: returnParams)
 				{
-					auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), loc);
-					tuple->items.push_back(std::move(var));
+					auto const* rpW = m_typeMapper.map(rp->type());
+					// Same blob-backed >4KB handling as the single-return case:
+					// use the __blobagg_off_ uint64 offset var, not the aggregate
+					// name/wtype (which was a nameless/mistyped tuple slot).
+					if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+						&& memoryUsesBlob(rpW))
+						tuple->items.push_back(awst::makeVarExpression(
+							"__blobagg_off_" + std::to_string(rp->id()),
+							awst::WType::uint64Type(), loc));
+					else
+						tuple->items.push_back(awst::makeVarExpression(rp->name(), rpW, loc));
 				}
 				for (size_t idx: storageParamIndices)
 					tuple->items.push_back(awst::makeVarExpression(

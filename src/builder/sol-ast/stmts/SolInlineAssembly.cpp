@@ -452,15 +452,22 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					base = base.substr(0, dot);
 			}
 			auto const* t = m_blk.typeMapper().map(varDecl->type());
+			// A SIZED ReferenceArray (`uint[2] calldata`) is a STATIC pointer
+			// (fixed offset, no length local); only an UNSIZED one is dynamic.
+			// The old unconditional ReferenceArray match in the dynamic branch
+			// swallowed the sized case too, so `uint[2] calldata` got registered
+			// with a nonexistent __cd_len_ (dynamic protocol) — the static
+			// branch's ReferenceArray case was dead.
+			auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(t);
+			bool dynamicRefArr = refArr && !refArr->arraySize();
+			bool sizedRefArr = refArr && refArr->arraySize().has_value();
 			if (t == awst::WType::bytesType() || t == awst::WType::stringType()
 				|| t->kind() == awst::WTypeKind::ARC4DynamicArray
-				|| t->kind() == awst::WTypeKind::ReferenceArray)
+				|| dynamicRefArr)
 				calldataPointerNames.insert(base);
 			else if (t->kind() == awst::WTypeKind::ARC4Struct
 				|| t->kind() == awst::WTypeKind::ARC4StaticArray
-				// sized ReferenceArray (`uint[2] calldata`) — the unsized case
-				// already matched the dynamic branch above
-				|| t->kind() == awst::WTypeKind::ReferenceArray)
+				|| sizedRefArr)
 				calldataStaticPtrNames.insert(base);
 		}
 		if (auto blobOff = m_blk.findBlobAggregate(varDecl->id()); !blobOff.empty())

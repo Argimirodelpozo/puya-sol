@@ -2775,3 +2775,22 @@ def test_inline_array_external(harness):
     opts = {"extra_fee": 10_000, "extra_apps": [callee.app_id]}
     assert as_int(harness.call(caller, "callU8(address)", fake, **opts).abi_return) == 7
     assert as_int(harness.call(caller, "callU256(address)", fake, **opts).abi_return) == 30
+
+
+def test_batchB_asm(harness):
+    """puyasolRegression/contracts/batchB_asm.sol — NOT an o.g. test.
+
+    Batch B asm/Yul: M6 a Yul `if` with a conditional leave before revert
+    doesn't collapse to assert(!cond); M11 transient slot >= 128 reverts,
+    small slot round-trips; M12 dynamic calldataload past the end zero-pads.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/batchB_asm.sol")
+    # M6: c=0 -> 7 (skip); c!=0,x!=0 -> 42 (leave path); c!=0,x=0 -> revert
+    assert as_int(harness.call(app, "m6(uint256,uint256)", 0, 0).abi_return) == 7
+    assert as_int(harness.call(app, "m6(uint256,uint256)", 1, 5).abi_return) == 42
+    assert harness.call(app, "m6(uint256,uint256)", 1, 0, expect_revert=True).reverted
+    # M12: far calldata offset zero-pads (no panic)
+    assert as_int(harness.call(app, "m12(uint256)", 100000).abi_return) == 0
+    # M11: small transient slot round-trips; slot >= 128 reverts
+    assert as_int(harness.call(app, "m11Ok()").abi_return) == 99
+    assert harness.call(app, "m11Bad(uint256)", 200, expect_revert=True).reverted

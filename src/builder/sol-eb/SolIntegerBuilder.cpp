@@ -649,12 +649,14 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 			awst::makeIntegerConstant(std::string(maxValStr), _loc, resType), _loc);
 	};
 
-	// uint256 (m_int.bits==256): emit the check INLINE as a comma expression, not as pre-statements.
-	// uint256 ops first reach emitOverflowCheck in modifier-arg / constructor / return-expression
-	// contexts that don't flush prePendingStatements at the right point, so a pre-statement check
-	// is mis-placed there (regressed g()'s `r+r` modifier args etc.). A comma `(t=res, assert, t)`
-	// is a pure value expression and composes anywhere. (Sub-256 keeps the existing pre-stmt form.)
-	if (m_int.biguintBacked() && m_int.bits == 256)
+	// Biguint-backed (65..256): emit the check INLINE as a comma expression,
+	// not as pre-statements. These ops reach emitOverflowCheck in modifier-arg
+	// / constructor / return-expression contexts that don't flush
+	// prePendingStatements at the right point, so a pre-statement check is
+	// mis-placed there (regressed g()'s `r+r` modifier args etc.). A comma
+	// `(t=res, assert, t)` is a pure value expression and composes anywhere.
+	// Was gated on bits==256 only; uint65..255 had the same mis-placement.
+	if (m_int.biguintBacked())
 	{
 		auto bind = awst::makeAssignmentExpression(
 			awst::makeVarExpression(tmpName, resType, _loc), std::move(_result), _loc, resType);
