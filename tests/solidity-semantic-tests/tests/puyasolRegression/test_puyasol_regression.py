@@ -2963,3 +2963,38 @@ def test_ternary_storage_ptr_mutation(harness):
     assert as_int(harness.call(app, "readThrough(bool)", False, **fee).abi_return) == 2201
     r = harness.call(app, "selectThenFlipCond(uint256)", 5, **fee).abi_return
     assert [as_int(x) for x in r] == [1, 0]
+
+
+def test_ternary_storage_ptr_families(harness):
+    """puyasolRegression/contracts/ternary_storage_ptr_families.sol — NOT an o.g. test.
+
+    Ternary-init storage pointers write through for EVERY storage family
+    (EVM-verified vs solc 0.8.20): box-keyed structs, app-global structs,
+    bytes push, fixed arrays, and mappings (runtime holder name).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/ternary_storage_ptr_families.sol",
+        contract_name="TernaryFamilies")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "structWrite(bool,uint256)", True, 7, **fee).abi_return
+    assert [as_int(x) for x in r] == [7, 0]
+    r = harness.call(app, "structWrite(bool,uint256)", False, 8, **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 8]
+    r = harness.call(app, "plainStructWrite(bool,uint256)", True, 9, **fee).abi_return
+    assert [as_int(x) for x in r] == [9, 0]
+    r = harness.call(app, "bytesPush(bool)", True, **fee).abi_return
+    assert [as_int(x) for x in r] == [1, 0]
+    r = harness.call(app, "bytesPush(bool)", False, **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 1]
+    r = harness.call(app, "fixedWrite(bool,uint256)", True, 5, **fee).abi_return
+    assert [as_int(x) for x in r] == [5, 0]
+    r = harness.call(app, "fixedWrite(bool,uint256)", False, 6, **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 6]
+
+    mapp = harness.compile_and_deploy(
+        "puyasolRegression/contracts/ternary_storage_ptr_families.sol",
+        contract_name="MappingTernary")
+    r = harness.call(mapp, "mapWrite(bool,uint256,uint256)", True, 1, 3, **fee).abi_return
+    assert [as_int(x) for x in r] == [3, 0]
+    r = harness.call(mapp, "mapWrite(bool,uint256,uint256)", False, 2, 4, **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 4]

@@ -1,3 +1,17 @@
+# Semantic Test Status — v464
+
+> **fix: ternary-init storage pointers write through for EVERY storage family (2026-07-21):**
+> **12 failed / 1360 passed / 109 xf / 28 xp** (canonical baseline, zero regressions). v463
+> covered dynamic arrays only; the family probe showed every other family still mutated a lost
+> copy — and `bytes` was wrong even for READS (its ternary branches are the raw box KEY under a
+> cast, so the local held the key). Now the decl classifies both branches (BoxValueExpression /
+> AppStateExpression / box-key constant, after peeling casts) and binds the runtime-selected
+> key: structs (box-keyed AND app-global), fixed arrays, bytes/string, and mappings (runtime
+> holder name via mappingKeyParam). SolArrayMethod gained an alias-aware bytes push/pop path
+> (the state-var twin is name-keyed and never fires for locals). Mixed/unrecognized branch
+> shapes keep the value-copy fallback. Guard test_ternary_storage_ptr_families (9 cases,
+> EVM-verified vs solc 0.8.20).
+
 # Semantic Test Status — v463
 
 > **fix: ternary-init storage pointers write THROUGH to the selected root (2026-07-21):**

@@ -204,38 +204,99 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 
 			// Ternary init `T storage p = c ? a1 : a2;` — no single compile-time
-			// root. Bind a runtime-selected BOX KEY instead: pin
+			// root. Bind a runtime-selected STORAGE KEY instead: pin
 			// `c ? key(a1) : key(a2)` into a bytes local AT DECL TIME (mutating
-			// c's inputs later must not re-select), and alias p to a box read
-			// keyed by that local. Length/index/push/element-write all hit the
-			// SELECTED underlying box — mutations write through instead of into
-			// a materialized copy (formerly a documented known-gap). Branches
-			// that aren't both box-rooted (app-global structs, nested ternaries)
-			// keep the value-copy fallback (reads-only, as before).
+			// c's inputs later must not re-select), and alias p to a state read
+			// keyed by that local. Length/index/push/field/element-write all hit
+			// the SELECTED underlying root — mutations write through instead of
+			// into a materialized copy (formerly a documented known-gap).
+			// Families: box roots (dynamic arrays; bytes/string, whose branches
+			// are the raw box key under a cast), app-global roots (structs,
+			// fixed arrays), and mappings (runtime holder name →
+			// mappingKeyParam). Mixed/unrecognized branch shapes (nested
+			// ternaries, mixed kinds) keep the value-copy fallback.
 			if (auto const* condE = dynamic_cast<awst::ConditionalExpression const*>(value.get()))
 			{
-				auto tSide = awst::unwrapStateGet(condE->trueExpr);
-				auto fSide = awst::unwrapStateGet(condE->falseExpr);
-				auto const* tBox = dynamic_cast<awst::BoxValueExpression const*>(tSide.get());
-				auto const* fBox = dynamic_cast<awst::BoxValueExpression const*>(fSide.get());
-				if (tBox && fBox && tBox->key && fBox->key && tBox->wtype == fBox->wtype)
+				// `mapping storage m = c ? m1 : m2`: branches are holder-NAME
+				// constants — bind the runtime holder via mappingKeyParam (the
+				// same route `m = someMappingFn()` takes).
+				if (decl.type()
+					&& decl.type()->category() == solidity::frontend::Type::Category::Mapping
+					&& dynamic_cast<awst::BytesConstant const*>(condE->trueExpr.get())
+					&& dynamic_cast<awst::BytesConstant const*>(condE->falseExpr.get()))
+				{
+					m_blk.setMappingKeyParam(decl.id(), decl.name());
+					auto var = awst::makeVarExpression(
+						decl.name(), awst::WType::bytesType(), m_loc);
+					result.push_back(awst::makeAssignmentStatement(
+						std::move(var), value, m_loc));
+					m_blk.builderCtx().appendPendingTo(result);
+					return result;
+				}
+
+				// Classify a branch to (key expr, box?/app-global?, value wtype).
+				struct Root
+				{
+					std::shared_ptr<awst::Expression> key;
+					bool isBox = false;
+					awst::WType const* wtype = nullptr;
+				};
+				auto classify = [&](std::shared_ptr<awst::Expression> _e)
+					-> std::optional<Root>
+				{
+					_e = awst::unwrapStateGet(std::move(_e));
+					// bytes/string roots arrive as ReinterpretCast(bytes) of the
+					// raw box-key constant — peel to the key.
+					while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(_e.get()))
+						_e = rc->expr;
+					if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(_e.get()))
+					{
+						if (bv->key)
+							return Root{bv->key, true, bv->wtype};
+						return std::nullopt;
+					}
+					if (auto const* as = dynamic_cast<awst::AppStateExpression const*>(_e.get()))
+					{
+						if (as->key)
+							return Root{as->key, false, as->wtype};
+						return std::nullopt;
+					}
+					if (auto const* kc = dynamic_cast<awst::BytesConstant const*>(_e.get());
+						kc && kc->wtype == awst::WType::boxKeyType())
+						return Root{_e, true, awst::WType::bytesType()};
+					return std::nullopt;
+				};
+				auto tR = classify(condE->trueExpr);
+				auto fR = classify(condE->falseExpr);
+				if (tR && fR && tR->isBox == fR->isBox && tR->wtype == fR->wtype)
 				{
 					std::string keyName = decl.name() + "__selkey" + std::to_string(decl.id());
 					auto keySel = awst::makeConditional(condE->condition,
-						awst::makeReinterpretCast(tBox->key, awst::WType::bytesType(), m_loc),
-						awst::makeReinterpretCast(fBox->key, awst::WType::bytesType(), m_loc),
+						awst::makeReinterpretCast(tR->key, awst::WType::bytesType(), m_loc),
+						awst::makeReinterpretCast(fR->key, awst::WType::bytesType(), m_loc),
 						awst::WType::bytesType(), m_loc);
 					result.push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
 						std::move(keySel), m_loc));
-					auto aliasBox = awst::makeBoxValueExpression(
-						awst::makeReinterpretCast(
-							awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
-							awst::WType::boxKeyType(), m_loc),
-						tBox->wtype, m_loc);
-					m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(
-						StorageMapper::makeStateGetWithDefault(
-							std::move(aliasBox), tBox->wtype, m_loc)));
+					auto keyRead = [&]() {
+						return awst::makeVarExpression(
+							keyName, awst::WType::bytesType(), m_loc);
+					};
+					std::shared_ptr<awst::Expression> aliasExpr;
+					if (tR->isBox)
+						aliasExpr = StorageMapper::makeStateGetWithDefault(
+							awst::makeBoxValueExpression(
+								awst::makeReinterpretCast(
+									keyRead(), awst::WType::boxKeyType(), m_loc),
+								tR->wtype, m_loc),
+							tR->wtype, m_loc);
+					else
+						aliasExpr = awst::makeAppStateExpression(
+							awst::makeReinterpretCast(
+								keyRead(), awst::WType::stateKeyType(), m_loc),
+							tR->wtype, m_loc);
+					m_blk.setStorageAlias(decl.id(),
+						StorageAlias::stateRead(std::move(aliasExpr)));
 					m_blk.builderCtx().appendPendingTo(result);
 					return result;
 				}

@@ -127,6 +127,67 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					&& (memberName == "push" || memberName == "pop"))
 				{
 					auto const* solArrType = dynamic_cast<ArrayType const*>(decl->type());
+					// bytes/string storage alias (ternary-init pointer): concat
+					// push / shrink pop against the aliased BOX (runtime key) —
+					// the state-var twin below is name-keyed and never fires for
+					// locals.
+					if (solArrType && solArrType->isByteArrayOrString())
+					{
+						auto unwrapped = awst::unwrapStateGet(alias->expr);
+						auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(unwrapped.get());
+						if (bv && bv->key)
+						{
+							auto loc = m_loc;
+							auto readVal = alias->expr; // StateGetWithDefault read
+							std::string tmpName = "__bytes_alias_tmp_"
+								+ std::to_string(awst::NameGen::next("SolArrayMethod.tmpCounter"));
+							auto tmpTarget = awst::makeVarExpression(
+								tmpName, awst::WType::bytesType(), loc);
+							if (memberName == "push")
+							{
+								std::shared_ptr<awst::Expression> pushVal;
+								if (!m_call.arguments().empty())
+								{
+									pushVal = buildExpr(*m_call.arguments()[0]);
+									if (pushVal && pushVal->wtype == awst::WType::uint64Type())
+									{
+										auto itob = awst::makeIntrinsicCall(
+											"itob", awst::WType::bytesType(), loc);
+										itob->stackArgs.push_back(std::move(pushVal));
+										auto extr = awst::makeIntrinsicCall(
+											"extract3", awst::WType::bytesType(), loc);
+										extr->stackArgs.push_back(std::move(itob));
+										extr->stackArgs.push_back(awst::makeIntegerConstant("7", loc));
+										extr->stackArgs.push_back(awst::makeOne(loc));
+										pushVal = std::move(extr);
+									}
+									else
+										pushVal = builder::TypeCoercion::stringToBytes(
+											std::move(pushVal), loc);
+								}
+								else
+									pushVal = awst::makeBytesConstant({0}, loc);
+								m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget,
+									awst::makeConcat(std::move(readVal), std::move(pushVal), loc),
+									loc));
+							}
+							else
+							{
+								auto newLen = awst::makeUInt64BinOp(
+									awst::makeLen(readVal, loc),
+									awst::UInt64BinaryOperator::Sub, awst::makeOne(loc), loc);
+								m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget,
+									awst::makeExtract3(readVal, awst::makeZero(loc),
+										std::move(newLen), loc),
+									loc));
+							}
+							m_ctx.queueStmt(awst::makeBoxDel(bv->key, loc), loc);
+							m_ctx.queueStmt(awst::makeBoxPut(bv->key,
+								awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc),
+								loc), loc);
+							return awst::makeVoidConstant(loc);
+						}
+					}
 					if (solArrType && !solArrType->isByteArrayOrString())
 					{
 						std::shared_ptr<awst::Expression> aliasExpr = alias->expr;
