@@ -543,27 +543,61 @@ void AssemblyBuilder::handleRevert(
 			else
 			{
 				// Dynamic length (`revert(ptr, sub(end, ptr))` — Error(string)
-				// tails): single-slot extract3 on the flushed blob. A range
-				// straddling a slot boundary makes extract3 fail — the txn
-				// still reverts, only the payload is lost (documented
-				// degradation; payload buffers live at low offsets).
+				// tails). A loggable payload is <= 1024 bytes (AVM total-log
+				// cap), so it straddles AT MOST one slot boundary: read the
+				// in-slot part, and when len overruns the slot, concat the
+				// remainder from slot+1 — one log either way.
 				static int s_revCtr = 0;
-				std::string offN = "__rev_off_" + std::to_string(s_revCtr++);
+				std::string offN = "__rev_off_" + std::to_string(s_revCtr);
+				std::string lenN = "__rev_len_" + std::to_string(s_revCtr);
+				++s_revCtr;
 				_out.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 					offsetToUint64(_args[0], _loc), _loc));
+				_out.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(lenN, awst::WType::uint64Type(), _loc),
+					offsetToUint64(_args[1], _loc), _loc));
 				auto offR = [&]() {
 					return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc);
+				};
+				auto lenR = [&]() {
+					return awst::makeVarExpression(lenN, awst::WType::uint64Type(), _loc);
 				};
 				auto ss = [&]() {
 					return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc);
 				};
-				auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
-				loadsCall->stackArgs.push_back(awst::makeUInt64BinOp(
-					offR(), awst::UInt64BinaryOperator::FloorDiv, ss(), _loc));
-				payload = awst::makeExtract3(std::move(loadsCall),
-					awst::makeUInt64BinOp(offR(), awst::UInt64BinaryOperator::Mod, ss(), _loc),
-					offsetToUint64(_args[1], _loc), _loc);
+				auto slotE = [&]() {
+					return awst::makeUInt64BinOp(
+						offR(), awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
+				};
+				auto subE = [&]() {
+					return awst::makeUInt64BinOp(
+						offR(), awst::UInt64BinaryOperator::Mod, ss(), _loc);
+				};
+				auto loadsAt = [&](std::shared_ptr<awst::Expression> slot) {
+					auto lc = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
+					lc->stackArgs.push_back(std::move(slot));
+					return lc;
+				};
+				// avail = SLOT_SIZE - off%SLOT_SIZE
+				auto availE = [&]() {
+					return awst::makeUInt64BinOp(
+						ss(), awst::UInt64BinaryOperator::Sub, subE(), _loc);
+				};
+				auto fits = awst::makeNot(awst::makeNumericCompare(
+					availE(), awst::NumericComparison::Lt, lenR(), _loc), _loc);
+				auto whole = awst::makeExtract3(loadsAt(slotE()), subE(), lenR(), _loc);
+				auto part1 = awst::makeExtract3(loadsAt(slotE()), subE(), availE(), _loc);
+				auto part2 = awst::makeExtract3(
+					loadsAt(awst::makeUInt64BinOp(slotE(),
+						awst::UInt64BinaryOperator::Add,
+						awst::makeIntegerConstant("1", _loc), _loc)),
+					awst::makeIntegerConstant("0", _loc),
+					awst::makeUInt64BinOp(lenR(),
+						awst::UInt64BinaryOperator::Sub, availE(), _loc), _loc);
+				auto spliced = awst::makeConcat(std::move(part1), std::move(part2), _loc);
+				payload = awst::makeConditional(std::move(fits),
+					std::move(whole), std::move(spliced), awst::WType::bytesType(), _loc);
 			}
 			auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
 			logCall->stackArgs.push_back(std::move(payload));

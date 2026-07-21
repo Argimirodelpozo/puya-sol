@@ -2860,6 +2860,10 @@ def test_asm_payload_mem_batch(harness):
     assert r.reverted and r.revert_data == bytes.fromhex("11112222333344445555")
     r = harness.call(app, "revBare()", expect_revert=True, **fee)
     assert r.reverted and r.revert_data == b""
+    r = harness.call(app, "revStraddle(uint256)", 32, expect_revert=True, **fee)
+    assert r.reverted and r.revert_data == b"\xaa" * 16 + b"\xbb" * 16
+    r = harness.call(app, "revStraddle(uint256)", 8, expect_revert=True, **fee)
+    assert r.reverted and r.revert_data == b"\xaa" * 8
     data = bytes(range(0x41, 0x61))  # 32 bytes 'A'..'`'
     r = harness.call(app, "cdcTail(bytes)", data, **fee)
     assert as_bytes(r.abi_return) == data[-8:] + bytes(24)

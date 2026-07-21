@@ -33,6 +33,16 @@ contract AsmPayloadMemBatch {
         }
     }
 
+    // H12-e: dynamic-length payload straddling the 4096-byte slot boundary
+    // (spliced from slot 0 tail + slot 1 head into one log).
+    function revStraddle(uint256 len) external pure returns (uint256) {
+        assembly {
+            mstore(0x0fe0, 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
+            mstore(0x1000, 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb)
+            revert(0x0ff0, len)
+        }
+    }
+
     // H12-d: bare revert keeps empty revert data.
     function revBare() external pure returns (uint256) {
         assembly {
