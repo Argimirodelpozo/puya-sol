@@ -1,3 +1,26 @@
+# Semantic Test Status — v457
+
+> **fix: fable-review-3 medium-tail correctness batch M1/M14/M15/M18/M20/M24 (2026-07-20):**
+> **12 failed / 1349 passed / 109 xf / 28 xp** (failure set identical to the canonical baseline = zero
+> regressions; +2 guards). (M1) tuple destructuring now applies per-element coercion + signed widening —
+> extract with the slot's ACTUAL wtype then coerceForAssignment/signExtendSignedWiden; `(int128 a,) =
+> (int8Val,)` bound the raw 0xFF as +255 instead of sign-extending. (M14) the arc4 struct DEFAULT encoder
+> now packs consecutive arc4.bool fields 8/byte (matching computeEncodedElementSize + puya's reader) — a
+> defaulted mapping(K=>S) value with >=2 leading bools + a dynamic field had head offsets that disagreed
+> with the reader, so a read-modify-write spliced at the wrong spot. (M15) internal-call storage-ref
+> write-back drops (non-struct root / >1-deep field path) are now HARD ERRORS not silent: the loop only
+> runs for detector-confirmed-mutated params, so a drop is always a silent miscompile — fail loud (the
+> non-VarExpression memory-arg case stays a silent no-op: a temporary has no caller lvalue, EVM matches).
+> (M18) an overridden overloaded base method is no longer re-emitted as a duplicate ABI method (the
+> name#id dedup key let it through on the differing id); the overriddenIds set from overload-naming is
+> reused to skip it. (M20) `.selector` on a ternary builds the condition ONCE (was a discarded
+> side-effect statement AND the conditional). (M24) mulmod/addmod force x/y to materialize before the
+> modulus zero-check (Solidity is left-to-right). RETRACTED: M2 (bare `return;` with >=2 named returns)
+> is a FALSE POSITIVE — solc itself rejects bare return with ANY return params ("Return arguments
+> required", verified vs solc 0.8.20), so the shape is frontend-guarded and the builder branch is dead
+> code; reverted. Guards: test_mtail_correctness, test_arc4_bool_default_packing.
+> Full run: RESULTS_review3_mtail.txt.
+
 # Semantic Test Status — v456
 
 > **fix: fable-review-3 security mediums M9/M17/M19 (2026-07-20):**

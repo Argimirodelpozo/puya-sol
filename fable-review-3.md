@@ -269,7 +269,7 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 
 ## Part III — Medium
 
-- **M1 ✔ Tuple destructuring applies no per-element coercion**
+- **M1 ✅ FIXED 2026-07-20** (extract slot wtype + coerceForAssignment/signExtendSignedWiden). Tuple destructuring applies no per-element coercion
   (`stmts/SolVariableDeclaration.cpp:377-399`): `makeTupleItem` stamps the *declared* wtype on
   slots holding *RHS* wtypes; no `coerceForAssignment`, no sign-extension (single-decl path has
   both at 126-145). `(int128 a,) = (int8Val,)` binds 0xFF as +255.
@@ -308,11 +308,11 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M13 ○ bytes-local `mcopy` lacks the guarded/truncated write its mstore siblings got;
   blob `mcopy` is copy-forward, not memmove** (`assembly/MemoryOps.cpp:462-544`,
   `StatementOps.cpp:606-672`).
-- **M14 ✅ `arc4DefaultEncoding` doesn't bit-pack consecutive `arc4.bool` fields**
+- **M14 ✅ FIXED 2026-07-20** (default encoder packs bool runs 8/byte). `arc4DefaultEncoding` doesn't bit-pack consecutive `arc4.bool` fields
   (`sol-types/Arc4Defaults.cpp:124-179` vs `computeEncodedElementSize` which packs 8/byte):
   defaulted `mapping(K=>S)` values with ≥2 leading bools + a dynamic field have head offsets
   that disagree with puya's reader — read-then-modify splices at the wrong position.
-- **M15 ○ Internal-call write-back silently dropped** for field paths deeper than 1, non-struct
+- **M15 ✅ FIXED 2026-07-20** (hard error on the two genuine drops; non-lvalue temp stays a no-op). Internal-call write-back silently dropped for field paths deeper than 1, non-struct
   roots, and non-VarExpression memory args (`SolInternalCall.cpp:607-665`) — fail-loud policy
   violation; `Lib.mutate(s.inner.arr)` compiles clean and loses the mutation.
 - **M16 ○ Self-call resolution matches name+arity only**, ignoring the signature's types
@@ -322,7 +322,7 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M17 ✅ FIXED 2026-07-20** (checkedAmountToUint64 at the 4 money sites; assert < 2^64). `.transfer`/`.send`/ASA amounts truncate uint256→uint64 mod 2^64 silently
   (`AsaIntrinsics.cpp:46-58`, `InnerCallHandlers.cpp:438,446`): `transfer(100 ether)` sends
   `1e20 mod 2^64` microalgos. Needs a high-bits assert.
-- **M18 ○ Overridden base overloads re-emitted as duplicate ABI methods**
+- **M18 ✅ FIXED 2026-07-20** (skip overriddenIds in the inherited loop). Overridden base overloads re-emitted as duplicate ABI methods
   (`ContractBuilder.cpp:574-607` dedup key `name#id` never consults overriddenIds) — currently
   saved by emission order; ordering-dependent landmine (verified: two `f(u256)` methods in
   AWST).
@@ -330,7 +330,7 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
   (`ApprovalProgramBuilder.cpp:375-417`), and regular methods dispatch while `__ctor_pending`
   — deploy front-run / pre-init window unless tooling always groups atomically. Worth
   `assert !__ctor_pending` on regular routes and creator-only postInit.
-- **M20 ○ `.selector` on a ternary evaluates the condition twice**
+- **M20 ✅ FIXED 2026-07-20** (build condition once). `.selector` on a ternary evaluates the condition twice
   (`members/SolSelectorAccess.cpp:96,103`).
 - **M21 ○ Sized calldata arrays (`uint[2] calldata`) classified as dynamic pointers in asm**
   (`stmts/SolInlineAssembly.cpp:454-464` — the static ReferenceArray branch is dead code);
@@ -340,7 +340,7 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
   narrow types, no length header for dynamic params, zero- instead of sign-extension.
 - **M23 ○ External call to a public state-var getter omits param types from the selector**
   (`SolExternalCall.cpp:49-50`) — same family as H15's getter mismatch, different site.
-- **M24 ○ `mulmod`/`addmod` evaluate the modulus (and its zero-assert) before x/y**
+- **M24 ✅ FIXED 2026-07-20** (materialize x/y before the check). `mulmod`/`addmod` evaluate the modulus (and its zero-assert) before x/y
   (`sol-eb/BuiltinCallables.cpp:87-124`) — revert-payload divergence the oracle can see.
 - **M25 ○ `emitOverflowCheck` pre-statement placement**: fixed for uint256 via inline comma,
   uint65..uint255 still take the pre-statement form in the same broken contexts

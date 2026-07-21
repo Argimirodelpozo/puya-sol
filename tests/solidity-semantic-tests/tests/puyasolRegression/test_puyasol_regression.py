@@ -2704,3 +2704,43 @@ def test_ecpairing_length_guard(harness):
         r = harness.call(app, "pairWrongLen(byte[])", b"\x00" * n,
                          extra_fee=10_000, expect_revert=True)
         assert r.reverted, f"pairing with {n}-byte input must revert (not 384)"
+
+
+def test_mtail_correctness(harness):
+    """puyasolRegression/contracts/mtail_correctness.sol — NOT an o.g. test.
+
+    Medium-tail correctness batch: M1 tuple destructure signed widen; M18
+    overridden overload not re-emitted; M20 .selector ternary single-eval;
+    M24 mulmod evaluates x before the modulus check.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/mtail_correctness.sol")
+    r = harness.call(app, "tupleSignedWiden()").abi_return
+    assert (as_signed_int(r[0]), as_int(r[1])) == (-1, 2)
+    # M18: f(uint256) resolves to the override (x+100), f(uint256,uint256) works
+    assert as_int(harness.call(app, "f(uint256)", 5).abi_return) == 105
+    assert as_int(harness.call(app, "f(uint256,uint256)", 3, 4).abi_return) == 7
+    assert as_int(harness.call(app, "selectorTernary()").abi_return) == 1
+    r = harness.call(app, "mulmodOrder(uint256)", 5).abi_return
+    assert (as_int(r[0]), as_int(r[1])) == ((6 * 5) % 7, 1)
+
+
+def test_arc4_bool_default_packing(harness):
+    """puyasolRegression/contracts/arc4_bool_default_packing.sol — NOT an o.g. test.
+
+    A defaulted mapping(K=>S) value where S has >=2 leading bools + a dynamic
+    field: puya packs bools 8/byte, but the default encoder gave each its own
+    head byte, so head offsets disagreed with the reader and a read-modify-
+    write spliced at the wrong spot. Reads of the default and a modify-from-
+    default must both be layout-correct.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/arc4_bool_default_packing.sol"
+    )
+    r = harness.call(app, "readDefaults(uint256)", 1, extra_fee=5_000).abi_return
+    assert [bool(r[0]), bool(r[1]), bool(r[2]), as_int(r[3])] == [False, False, False, 0]
+    r = harness.call(app, "modifyFromDefault(uint256)", 2, extra_fee=5_000).abi_return
+    assert [bool(r[0]), bool(r[1]), bool(r[2]), as_int(r[3])] == [False, True, False, 1]
+    assert as_int(harness.call(app, "arrAt(uint256,uint256)", 2, 0, extra_fee=5_000).abi_return) == 42
+    # the untouched neighbor is still all-default
+    r = harness.call(app, "readDefaults(uint256)", 2, extra_fee=5_000).abi_return
+    assert [bool(r[0]), bool(r[1]), bool(r[2]), as_int(r[3])] == [False, True, False, 1]
