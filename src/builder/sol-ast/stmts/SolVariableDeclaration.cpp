@@ -203,6 +203,44 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				return result;
 			}
 
+			// Ternary init `T storage p = c ? a1 : a2;` — no single compile-time
+			// root. Bind a runtime-selected BOX KEY instead: pin
+			// `c ? key(a1) : key(a2)` into a bytes local AT DECL TIME (mutating
+			// c's inputs later must not re-select), and alias p to a box read
+			// keyed by that local. Length/index/push/element-write all hit the
+			// SELECTED underlying box — mutations write through instead of into
+			// a materialized copy (formerly a documented known-gap). Branches
+			// that aren't both box-rooted (app-global structs, nested ternaries)
+			// keep the value-copy fallback (reads-only, as before).
+			if (auto const* condE = dynamic_cast<awst::ConditionalExpression const*>(value.get()))
+			{
+				auto tSide = awst::unwrapStateGet(condE->trueExpr);
+				auto fSide = awst::unwrapStateGet(condE->falseExpr);
+				auto const* tBox = dynamic_cast<awst::BoxValueExpression const*>(tSide.get());
+				auto const* fBox = dynamic_cast<awst::BoxValueExpression const*>(fSide.get());
+				if (tBox && fBox && tBox->key && fBox->key && tBox->wtype == fBox->wtype)
+				{
+					std::string keyName = decl.name() + "__selkey" + std::to_string(decl.id());
+					auto keySel = awst::makeConditional(condE->condition,
+						awst::makeReinterpretCast(tBox->key, awst::WType::bytesType(), m_loc),
+						awst::makeReinterpretCast(fBox->key, awst::WType::bytesType(), m_loc),
+						awst::WType::bytesType(), m_loc);
+					result.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
+						std::move(keySel), m_loc));
+					auto aliasBox = awst::makeBoxValueExpression(
+						awst::makeReinterpretCast(
+							awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
+							awst::WType::boxKeyType(), m_loc),
+						tBox->wtype, m_loc);
+					m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(
+						StorageMapper::makeStateGetWithDefault(
+							std::move(aliasBox), tBox->wtype, m_loc)));
+					m_blk.builderCtx().appendPendingTo(result);
+					return result;
+				}
+			}
+
 			// Storage ref from a function call (typically `.slot :=` in assembly).
 			// Two patterns: (1) bytes return → mappingKeyParam (SolIndexAccess uses
 			// it as box-key prefix, e.g. `Pool.State storage pool = _getPool(id)`);

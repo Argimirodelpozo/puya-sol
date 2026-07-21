@@ -1,3 +1,15 @@
+# Semantic Test Status — v463
+
+> **fix: ternary-init storage pointers write THROUGH to the selected root (2026-07-21):**
+> **12 failed / 1359 passed / 109 xf / 28 xp** (canonical baseline; the 13th -n2 listing was the
+> known test_send_zero_ether localnet race — passes standalone). `T storage p = c ? a1 : a2;`
+> now binds a runtime-selected BOX KEY at declaration (`p__selkey := c ? key(a1) : key(a2)`,
+> selection pinned — flipping c's inputs later must not re-select) and aliases p to a box read
+> keyed by that local; length/index/push/element-write all hit the selected underlying box.
+> Formerly a documented known-gap (mutations went into a materialized value copy). Non-box-rooted
+> branches (app-global structs, nested ternaries) keep the read-only value-copy fallback.
+> Guard test_ternary_storage_ptr_mutation (7 cases, EVM-verified vs solc 0.8.20).
+
 # Semantic Test Status — v462
 
 > **test: new-in-ctor __postInit known-gap verified STALE and closed (2026-07-21):** no compiler

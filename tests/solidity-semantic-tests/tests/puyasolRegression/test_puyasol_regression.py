@@ -2937,3 +2937,29 @@ def test_new_in_ctor_postinit(harness):
     assert as_int(harness.call(app, "gotArg()").abi_return) == 50
     assert as_int(harness.call(app, "parrLen()").abi_return) == 2
     assert as_int(harness.call(app, "parr1()").abi_return) == 500
+
+
+def test_ternary_storage_ptr_mutation(harness):
+    """puyasolRegression/contracts/ternary_storage_ptr_mutation.sol — NOT an o.g. test.
+
+    Ternary-INIT storage pointers write THROUGH to the runtime-selected root
+    (was a documented known-gap: mutations hit a materialized copy). All
+    expectations EVM-verified vs solc 0.8.20. The selection is pinned at
+    declaration — flipping the condition's input afterwards must not
+    re-select.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/ternary_storage_ptr_mutation.sol")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "pushThrough(bool,uint256)", True, 7, **fee).abi_return
+    assert [as_int(x) for x in r] == [2, 0, 8]
+    r = harness.call(app, "pushThrough(bool,uint256)", False, 9, **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 2, 10]
+    r = harness.call(app, "writeThrough(bool,uint256)", True, 42, **fee).abi_return
+    assert [as_int(x) for x in r] == [42, 0]
+    r = harness.call(app, "writeThrough(bool,uint256)", False, 43, **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 43]
+    assert as_int(harness.call(app, "readThrough(bool)", True, **fee).abi_return) == 1101
+    assert as_int(harness.call(app, "readThrough(bool)", False, **fee).abi_return) == 2201
+    r = harness.call(app, "selectThenFlipCond(uint256)", 5, **fee).abi_return
+    assert [as_int(x) for x in r] == [1, 0]

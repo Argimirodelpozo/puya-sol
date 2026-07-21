@@ -70,10 +70,12 @@ main_ternary_merge@14:
     assert // ABI bool validation
     bz main_ternary_false@16
     bytec_1 // "a1"
-    box_get
-    assert // box exists
 
 main_ternary_merge@17:
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     itob
@@ -89,8 +91,6 @@ main_ternary_merge@17:
 
 main_ternary_false@16:
     bytec_0 // "a2"
-    box_get
-    assert // box exists
     b main_ternary_merge@17
 
 main_ternary_false@13:
