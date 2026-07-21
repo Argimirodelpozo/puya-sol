@@ -131,20 +131,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		if (retAnnotation.functionReturnParameters)
 		{
 			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
+			// NOTE: bare `return;` in a function that HAS return parameters is
+			// rejected by solc itself ("Return arguments required"), for both
+			// single and multiple (named or not) returns — verified against
+			// solc 0.8.20. So this branch only runs for a void function (no
+			// return params), where retParams is empty and neither arm below
+			// fires. The size()==1 synthesis is therefore effectively dead;
+			// kept as-is. (fable-review-3 M2 was a false positive: the
+			// frontend guards the shape, no null-value tuple can be emitted.)
 			if (retParams.size() == 1)
 			{
 				auto* retType = m_blk.typeMapper().map(retParams[0]->type());
 				if (!retParams[0]->name().empty())
-				{
-					// Named return: return the variable
-					auto retVar = awst::makeVarExpression(retParams[0]->name(), retType, m_loc);
-					stmt->value = std::move(retVar);
-				}
+					stmt->value = awst::makeVarExpression(retParams[0]->name(), retType, m_loc);
 				else
-				{
-					// Unnamed return: return default value (0/false/empty)
 					stmt->value = builder::StorageMapper::makeDefaultValue(retType, m_loc);
-				}
 			}
 		}
 	}

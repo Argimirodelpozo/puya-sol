@@ -93,16 +93,22 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			std::string falseSig = resolveSignature(cond->falseExpression());
 			if (!trueSig.empty())
 			{
+				// Build the condition ONCE — the old code built it twice (a
+				// discarded side-effect statement AND the conditional), so a
+				// side-effecting `bump() ? this.f : this.g` ran twice.
 				auto condition = buildExpr(cond->condition());
-				auto condStmt = awst::makeExpressionStatement(condition, m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(condStmt));
 
 				if (trueSig == falseSig)
+				{
+					// Selector is branch-independent; run the condition only
+					// for its side effects.
+					m_ctx.prePendingStatements.push_back(
+						awst::makeExpressionStatement(std::move(condition), m_loc));
 					return makeSelectorExpr(trueSig);
+				}
 
-				auto ternCond = buildExpr(cond->condition());
 				return awst::makeConditional(
-					std::move(ternCond),
+					std::move(condition),
 					makeSelectorExpr(trueSig),
 					makeSelectorExpr(falseSig.empty() ? trueSig : falseSig),
 					awst::WType::bytesType(), m_loc);

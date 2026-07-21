@@ -630,11 +630,26 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					}
 					else
 					{
+						// Reached only for a param the mutation detector flagged
+						// as mutated, so dropping the write-back is a guaranteed
+						// silent miscompile — fail loud instead.
+						Logger::instance().error(
+							"callee mutates a field of a non-struct storage-ref "
+							"argument, which cannot be written back on AVM — the "
+							"mutation would be silently lost. Restructure so the "
+							"mutated root is a struct, or pass the field directly.",
+							m_loc);
 						writeValue = nullptr;
 					}
 				}
 				else
 				{
+					Logger::instance().error(
+						"callee mutates a nested (>1-deep) field of a storage-ref "
+						"argument (only single-level field write-back is "
+						"supported); the mutation would be silently lost. Pass the "
+						"inner reference directly (e.g. `f(s.inner)` not `f(s)`).",
+						m_loc);
 					writeValue = nullptr;
 				}
 			}
@@ -661,6 +676,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			size_t pi = memoryRefParamIndices[mi];
 			auto const* argVar = dynamic_cast<awst::VarExpression const*>(
 				call->args[pi].value.get());
+			// A non-VarExpression arg (a temporary like `mut(getArray())`) has
+			// no caller-visible lvalue to write back to — the mutation is
+			// unobservable anyway (EVM matches). Correctly dropped, no warning.
 			if (!argVar || argVar->name.empty())
 				continue;
 

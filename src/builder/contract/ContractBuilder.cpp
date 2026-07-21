@@ -418,8 +418,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// virtual overrides occupy the same slot and don't count.
 	// Must be computed before translator creation so ctor uses correct names.
 	m_overloadedNames.clear();
+	// Function ids that a more-derived contract overrides — computed here for
+	// overload naming, reused below to skip re-emitting overridden inherited
+	// functions.
+	std::set<int64_t> overriddenIds;
 	{
-		std::set<int64_t> overriddenIds;
 		forEachDefinedFunction(_contract, [&](auto const* func)
 		{
 			if (func->isConstructor() || !func->isImplemented())
@@ -579,6 +582,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		for (auto const* func: base->definedFunctions())
 		{
 			if (func->isConstructor())
+				continue;
+
+			// A base function overridden by a more-derived version must NOT be
+			// re-emitted: the derived override already occupies the same ABI
+			// route. The name#id dedup key alone let it through (different id),
+			// producing a duplicate ABI method (stale base body) that routed
+			// on the same selector — safe only by MRO emission order.
+			if (overriddenIds.count(func->id()))
 				continue;
 
 			std::string key = func->name();

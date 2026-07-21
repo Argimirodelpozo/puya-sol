@@ -73,6 +73,29 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSha256(
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(call));
 }
 
+// Force `_e` to evaluate NOW as a pre-statement (returns a var read), unless
+// it is a trivially-duplicable leaf. Used to sequence the left operands of
+// mulmod/addmod before the modulus zero-check — Solidity evaluates the three
+// args left-to-right, but the check (a pre-statement referencing the modulus)
+// would otherwise run before x/y, which are embedded inline in the result.
+static std::shared_ptr<awst::Expression> materializeNow(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _e,
+	awst::SourceLocation const& _loc)
+{
+	if (!_e
+		|| dynamic_cast<awst::VarExpression const*>(_e.get())
+		|| dynamic_cast<awst::IntegerConstant const*>(_e.get())
+		|| dynamic_cast<awst::SingleEvaluation const*>(_e.get()))
+		return _e;
+	std::string nm = "__modarg_"
+		+ std::to_string(awst::NameGen::next("BuiltinCallables.s_modArgCounter") + 1);
+	auto const* wt = _e->wtype;
+	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(nm, wt, _loc), std::move(_e), _loc));
+	return awst::makeVarExpression(nm, wt, _loc);
+}
+
 static void emitModByZeroCheck(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> const& _modulus,
@@ -94,8 +117,11 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 {
 	if (_args.size() != 3) return nullptr;
 
-	auto x = promoteToBiguint(std::move(_args[0]), _loc);
-	auto y = promoteToBiguint(std::move(_args[1]), _loc);
+	// Left-to-right: force x then y to evaluate BEFORE the modulus zero-check
+	// (a pre-statement) — else the check runs first and a side-effecting arg
+	// mis-orders vs Solidity.
+	auto x = materializeNow(_ctx, promoteToBiguint(std::move(_args[0]), _loc), _loc);
+	auto y = materializeNow(_ctx, promoteToBiguint(std::move(_args[1]), _loc), _loc);
 	// Modulus referenced twice (assert + mod); eval-once for side-effecting args.
 	auto z = awst::makeEvalOnce(promoteToBiguint(std::move(_args[2]), _loc), _loc);
 	emitModByZeroCheck(_ctx, z, _loc);
@@ -114,8 +140,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 {
 	if (_args.size() != 3) return nullptr;
 
-	auto x = promoteToBiguint(std::move(_args[0]), _loc);
-	auto y = promoteToBiguint(std::move(_args[1]), _loc);
+	auto x = materializeNow(_ctx, promoteToBiguint(std::move(_args[0]), _loc), _loc);
+	auto y = materializeNow(_ctx, promoteToBiguint(std::move(_args[1]), _loc), _loc);
 	auto z = awst::makeEvalOnce(promoteToBiguint(std::move(_args[2]), _loc), _loc);
 	emitModByZeroCheck(_ctx, z, _loc);
 
