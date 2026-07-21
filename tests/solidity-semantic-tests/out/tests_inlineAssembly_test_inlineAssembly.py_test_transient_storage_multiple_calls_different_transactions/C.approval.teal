@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 42
-    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    intcblock 1 32 0 8
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x80
     intc_2 // 0
     dupn 3
     pushbytes ""
@@ -61,7 +61,7 @@ main_ternary_merge@14:
     callsub get
     b==
     bz main_bool_false@17
-    intc_3 // 42
+    pushint 42
     itob
     callsub get
     dig 4
@@ -92,7 +92,7 @@ main_after_if_else@20:
     callsub get
     b==
     bz main_bool_false@23
-    intc_3 // 42
+    pushint 42
     itob
     callsub get
     dig 4
@@ -110,7 +110,7 @@ main_bool_merge@24:
 main_after_if_else@26:
     dig 1
     assert
-    intc_3 // 42
+    pushint 42
     itob
     dup
     bury 7
@@ -208,9 +208,20 @@ get_ternary_merge@3:
     assert // not payable
     load 0
     store 0
-    load 5
     frame_dig -1
-    btoi
+    bytec_1 // 0x80
+    b<
+    assert // transient storage slot out of range (only slots 0..127 are supported on AVM; transient mappings are not)
+    load 5
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     intc_1 // 32
     *
     intc_1 // 32
@@ -249,9 +260,20 @@ set_ternary_merge@3:
     assert // not payable
     load 0
     store 0
-    load 5
     frame_dig -2
-    btoi
+    bytec_1 // 0x80
+    b<
+    assert // transient storage slot out of range (only slots 0..127 are supported on AVM; transient mappings are not)
+    load 5
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     intc_1 // 32
     *
     intc_1 // 32

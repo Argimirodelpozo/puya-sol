@@ -1,3 +1,27 @@
+# Semantic Test Status — v458
+
+> **fix: remaining fable-review-3 medium tail — Batches A/B/C (2026-07-21, overnight autonomous run):**
+> **12 failed / 1353 passed / 109 xf / 28 xp** (failure set identical to the canonical baseline throughout =
+> zero regressions across all three batches; +6 guards). Landed 15 fixes over three batches, each with its
+> own full-suite run:
+> - Batch A (43932a5812) correctness cluster: M4 transient assign-as-expression yields the assigned value
+>   (not a stale post-pending re-read); M16 self-call resolves the overload by full signature +
+>   overload-suffixed target (was name+arity, unresolvable target); M22 inline-array external args go
+>   through the shared ARC4 encoder (narrow/signed widths, length headers); M23 already subsumed by the
+>   keyed-getter fix; M26 cross-file same-name libraries disambiguate the subroutine id by AST id.
+> - Batch B (1a2a302860) asm/Yul: M25 uint65..255 overflow-check uses the inline comma form (was
+>   mis-placed pre-statement); M21 sized calldata arrays are static pointers in asm; M12 dynamic
+>   calldataload past calldatasize zero-pads; M10 modexp asserts 32-byte operands; M11 transient
+>   tload/tstore asserts slot < 128; M6 Yul if-body collapses to assert only for a lone revert; M27
+>   blob-backed multi-return tuple uses the offset var.
+> - Batch C (c1635b098e) larger asm: M7-partial mstore8 multi-slot routing; M8-partial asm call inSize<4
+>   crash guard.
+> DEFERRED (documented, too large for a safe single pass): H4 same-statement write-back staleness (needs
+> operand sequencing), M5 LHS-before-RHS eval order (global swap risk), M13 mcopy memmove, H12 asm revert
+> payload, and the rest of the M7 slot-0-only memory family. M2 stays a retracted false positive.
+> Guards: test_batchA_correctness, test_inline_array_external, test_batchB_asm, test_mstore8_multislot.
+> Full runs: RESULTS_batchA/B/C.txt.
+
 # Semantic Test Status — v457
 
 > **fix: fable-review-3 medium-tail correctness batch M1/M14/M15/M18/M20/M24 (2026-07-20):**

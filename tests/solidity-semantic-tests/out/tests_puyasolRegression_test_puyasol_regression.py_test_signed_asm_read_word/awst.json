@@ -10772,7 +10772,7 @@
               }
             },
             {
-              "_type": "ExpressionStatement",
+              "_type": "IfElse",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
                 "line": 1619,
@@ -10781,8 +10781,8 @@
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "AssertExpression",
+              "condition": {
+                "_type": "NumericComparisonExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
                   "line": 1619,
@@ -10793,30 +10793,30 @@
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "void",
+                  "name": "bool",
                   "immutable": true
                 },
-                "condition": {
-                  "_type": "Not",
+                "lhs": {
+                  "_type": "ConditionalExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                    "line": 1619,
-                    "end_line": 1744,
+                    "line": 1622,
+                    "end_line": 1633,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "bool",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "expr": {
+                  "condition": {
                     "_type": "NumericComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                      "line": 1619,
-                      "end_line": 1744,
+                      "line": 1622,
+                      "end_line": 1633,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
@@ -10827,7 +10827,26 @@
                       "immutable": true
                     },
                     "lhs": {
-                      "_type": "ConditionalExpression",
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                        "line": 1626,
+                        "end_line": 1629,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "value": 128,
+                      "teal_alias": null
+                    },
+                    "operator": "<",
+                    "rhs": {
+                      "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
                         "line": 1622,
@@ -10841,61 +10860,60 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "condition": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                          "line": 1622,
-                          "end_line": 1633,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                            "line": 1626,
-                            "end_line": 1629,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 128,
-                          "teal_alias": null
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                            "line": 1622,
-                            "end_line": 1633,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 256,
-                          "teal_alias": null
-                        }
+                      "value": 256,
+                      "teal_alias": null
+                    }
+                  },
+                  "true_expr": {
+                    "_type": "BigUIntBinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                      "line": 1622,
+                      "end_line": 1633,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                        "line": 1631,
+                        "end_line": 1632,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      "true_expr": {
-                        "_type": "BigUIntBinaryOperation",
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "__asmsx_z"
+                    },
+                    "op": "//",
+                    "right": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                        "line": 1622,
+                        "end_line": 1633,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
                           "line": 1622,
@@ -10905,44 +10923,15 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
                         },
-                        "left": {
-                          "_type": "VarExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                            "line": 1631,
-                            "end_line": 1632,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "name": "__asmsx_z"
-                        },
-                        "op": "//",
-                        "right": {
-                          "_type": "ReinterpretCast",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                            "line": 1622,
-                            "end_line": 1633,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "expr": {
+                        "op_code": "setbit",
+                        "immediates": [],
+                        "stack_args": [
+                          {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
@@ -10958,458 +10947,9 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "setbit",
+                            "op_code": "bzero",
                             "immediates": [],
                             "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                  "line": 1622,
-                                  "end_line": 1633,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                      "line": 1622,
-                                      "end_line": 1633,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 32,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              },
-                              {
-                                "_type": "UInt64BinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                  "line": 1622,
-                                  "end_line": 1633,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "left": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                    "line": 1622,
-                                    "end_line": 1633,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 255,
-                                  "teal_alias": null
-                                },
-                                "op": "-",
-                                "right": {
-                                  "_type": "UInt64BinaryOperation",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                    "line": 1622,
-                                    "end_line": 1633,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "left": {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                      "line": 1622,
-                                      "end_line": 1633,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "btoi",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntrinsicCall",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                          "line": 1622,
-                                          "end_line": 1633,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "op_code": "extract3",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "SingleEvaluation",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                              "line": 1622,
-                                              "end_line": 1633,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "source": {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                "line": 1622,
-                                                "end_line": 1633,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "concat",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntrinsicCall",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                    "line": 1622,
-                                                    "end_line": 1633,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "op_code": "bzero",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "IntegerConstant",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                        "line": 1622,
-                                                        "end_line": 1633,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "uint64",
-                                                        "immutable": true
-                                                      },
-                                                      "value": 8,
-                                                      "teal_alias": null
-                                                    }
-                                                  ]
-                                                },
-                                                {
-                                                  "_type": "ReinterpretCast",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                    "line": 1622,
-                                                    "end_line": 1633,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "expr": {
-                                                    "_type": "IntegerConstant",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                      "line": 1626,
-                                                      "end_line": 1629,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "biguint",
-                                                      "immutable": true
-                                                    },
-                                                    "value": 128,
-                                                    "teal_alias": null
-                                                  }
-                                                }
-                                              ]
-                                            },
-                                            "_id": 1048583
-                                          },
-                                          {
-                                            "_type": "UInt64BinaryOperation",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                              "line": 1622,
-                                              "end_line": 1633,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "left": {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                "line": 1622,
-                                                "end_line": 1633,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "op_code": "len",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "SingleEvaluation",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                    "line": 1622,
-                                                    "end_line": 1633,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "source": {
-                                                    "_type": "IntrinsicCall",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                      "line": 1622,
-                                                      "end_line": 1633,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "op_code": "concat",
-                                                    "immediates": [],
-                                                    "stack_args": [
-                                                      {
-                                                        "_type": "IntrinsicCall",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                          "line": 1622,
-                                                          "end_line": 1633,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "BytesWType",
-                                                          "name": "bytes",
-                                                          "immutable": true,
-                                                          "length": null
-                                                        },
-                                                        "op_code": "bzero",
-                                                        "immediates": [],
-                                                        "stack_args": [
-                                                          {
-                                                            "_type": "IntegerConstant",
-                                                            "source_location": {
-                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                              "line": 1622,
-                                                              "end_line": 1633,
-                                                              "comment_lines": 0,
-                                                              "column": null,
-                                                              "end_column": null
-                                                            },
-                                                            "wtype": {
-                                                              "_type": "WType",
-                                                              "name": "uint64",
-                                                              "immutable": true
-                                                            },
-                                                            "value": 8,
-                                                            "teal_alias": null
-                                                          }
-                                                        ]
-                                                      },
-                                                      {
-                                                        "_type": "ReinterpretCast",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                          "line": 1622,
-                                                          "end_line": 1633,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "BytesWType",
-                                                          "name": "bytes",
-                                                          "immutable": true,
-                                                          "length": null
-                                                        },
-                                                        "expr": {
-                                                          "_type": "IntegerConstant",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                            "line": 1626,
-                                                            "end_line": 1629,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "biguint",
-                                                            "immutable": true
-                                                          },
-                                                          "value": 128,
-                                                          "teal_alias": null
-                                                        }
-                                                      }
-                                                    ]
-                                                  },
-                                                  "_id": 1048583
-                                                }
-                                              ]
-                                            },
-                                            "op": "-",
-                                            "right": {
-                                              "_type": "IntegerConstant",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                                "line": 1622,
-                                                "end_line": 1633,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "value": 8,
-                                              "teal_alias": null
-                                            }
-                                          },
-                                          {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                              "line": 1622,
-                                              "end_line": 1633,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 8,
-                                            "teal_alias": null
-                                          }
-                                        ]
-                                      }
-                                    ]
-                                  },
-                                  "op": "%",
-                                  "right": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                                      "line": 1622,
-                                      "end_line": 1633,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 256,
-                                    "teal_alias": null
-                                  }
-                                }
-                              },
                               {
                                 "_type": "IntegerConstant",
                                 "source_location": {
@@ -11425,57 +10965,959 @@
                                   "name": "uint64",
                                   "immutable": true
                                 },
-                                "value": 1,
+                                "value": 32,
                                 "teal_alias": null
                               }
                             ]
+                          },
+                          {
+                            "_type": "UInt64BinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                              "line": 1622,
+                              "end_line": 1633,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                "line": 1622,
+                                "end_line": 1633,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 255,
+                              "teal_alias": null
+                            },
+                            "op": "-",
+                            "right": {
+                              "_type": "UInt64BinaryOperation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                "line": 1622,
+                                "end_line": 1633,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "left": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                  "line": 1622,
+                                  "end_line": 1633,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "btoi",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                      "line": 1622,
+                                      "end_line": 1633,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "extract3",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                          "line": 1622,
+                                          "end_line": 1633,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "source": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                            "line": 1622,
+                                            "end_line": 1633,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "concat",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                "line": 1622,
+                                                "end_line": 1633,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "bzero",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                    "line": 1622,
+                                                    "end_line": 1633,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 8,
+                                                  "teal_alias": null
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                "line": 1622,
+                                                "end_line": 1633,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                  "line": 1626,
+                                                  "end_line": 1629,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "biguint",
+                                                  "immutable": true
+                                                },
+                                                "value": 128,
+                                                "teal_alias": null
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "_id": 1048583
+                                      },
+                                      {
+                                        "_type": "UInt64BinaryOperation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                          "line": 1622,
+                                          "end_line": 1633,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "left": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                            "line": 1622,
+                                            "end_line": 1633,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "op_code": "len",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "SingleEvaluation",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                "line": 1622,
+                                                "end_line": 1633,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "source": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                  "line": 1622,
+                                                  "end_line": 1633,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "concat",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                      "line": 1622,
+                                                      "end_line": 1633,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "bzero",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntegerConstant",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                          "line": 1622,
+                                                          "end_line": 1633,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "WType",
+                                                          "name": "uint64",
+                                                          "immutable": true
+                                                        },
+                                                        "value": 8,
+                                                        "teal_alias": null
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_type": "ReinterpretCast",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                      "line": 1622,
+                                                      "end_line": 1633,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "expr": {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                        "line": 1626,
+                                                        "end_line": 1629,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "biguint",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 128,
+                                                      "teal_alias": null
+                                                    }
+                                                  }
+                                                ]
+                                              },
+                                              "_id": 1048583
+                                            }
+                                          ]
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                            "line": 1622,
+                                            "end_line": 1633,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 8,
+                                          "teal_alias": null
+                                        }
+                                      },
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                          "line": 1622,
+                                          "end_line": 1633,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 8,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "op": "%",
+                              "right": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                  "line": 1622,
+                                  "end_line": 1633,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 256,
+                                "teal_alias": null
+                              }
+                            }
+                          },
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                              "line": 1622,
+                              "end_line": 1633,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 1,
+                            "teal_alias": null
                           }
-                        }
-                      },
-                      "false_expr": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                          "line": 1622,
-                          "end_line": 1633,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
+                        ]
                       }
+                    }
+                  },
+                  "false_expr": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                      "line": 1622,
+                      "end_line": 1633,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    "operator": "!=",
-                    "rhs": {
-                      "_type": "IntegerConstant",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
+                },
+                "operator": "!=",
+                "rhs": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                    "line": 1619,
+                    "end_line": 1744,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "value": 0,
+                  "teal_alias": null
+                }
+              },
+              "if_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                  "line": 1619,
+                  "end_line": 1744,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                      "line": 1652,
+                      "end_line": 1673,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
-                        "line": 1619,
-                        "end_line": 1744,
+                        "line": 1652,
+                        "end_line": 1673,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "biguint",
+                        "name": "void",
                         "immutable": true
                       },
-                      "value": 0,
-                      "teal_alias": null
+                      "op_code": "store",
+                      "immediates": [
+                        0
+                      ],
+                      "stack_args": [
+                        {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                            "line": 1652,
+                            "end_line": 1673,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "replace3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                "line": 1652,
+                                "end_line": 1673,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "load",
+                              "immediates": [
+                                0
+                              ],
+                              "stack_args": []
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                "line": 1652,
+                                "end_line": 1673,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                "line": 1652,
+                                "end_line": 1673,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "extract3",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "SingleEvaluation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                    "line": 1652,
+                                    "end_line": 1673,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                      "line": 1652,
+                                      "end_line": 1673,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                          "line": 1652,
+                                          "end_line": 1673,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                              "line": 1652,
+                                              "end_line": 1673,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                          "line": 1652,
+                                          "end_line": 1673,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                            "line": 1662,
+                                            "end_line": 1672,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "value": 2480602609,
+                                          "teal_alias": null
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "_id": 1048584
+                                },
+                                {
+                                  "_type": "UInt64BinaryOperation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                    "line": 1652,
+                                    "end_line": 1673,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "left": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                      "line": 1652,
+                                      "end_line": 1673,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "op_code": "len",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "SingleEvaluation",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                          "line": 1652,
+                                          "end_line": 1673,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "source": {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                            "line": 1652,
+                                            "end_line": 1673,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "concat",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                "line": 1652,
+                                                "end_line": 1673,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "bzero",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                    "line": 1652,
+                                                    "end_line": 1673,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 32,
+                                                  "teal_alias": null
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                "line": 1652,
+                                                "end_line": 1673,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                                  "line": 1662,
+                                                  "end_line": 1672,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "biguint",
+                                                  "immutable": true
+                                                },
+                                                "value": 2480602609,
+                                                "teal_alias": null
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "_id": 1048584
+                                      }
+                                    ]
+                                  },
+                                  "op": "-",
+                                  "right": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                      "line": 1652,
+                                      "end_line": 1673,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 32,
+                                    "teal_alias": null
+                                  }
+                                },
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                                    "line": 1652,
+                                    "end_line": 1673,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 32,
+                                  "teal_alias": null
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                      "line": 1712,
+                      "end_line": 1730,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "AssertExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                        "line": 1712,
+                        "end_line": 1730,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "condition": {
+                        "_type": "BoolConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_asm_read_word.sol",
+                          "line": 1712,
+                          "end_line": 1730,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "value": false
+                      },
+                      "error_message": "revert",
+                      "comment": "revert",
+                      "explicit": true
                     }
                   }
-                },
-                "error_message": "revert",
-                "comment": "revert",
-                "explicit": true
-              }
+                ],
+                "label": null,
+                "comment": null
+              },
+              "else_branch": null
             },
             {
               "_type": "ExpressionStatement",

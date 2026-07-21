@@ -94,23 +94,24 @@ main_ternary_merge@9:
     b<=
     assert // overflow
     load 5
+    extract 0 32
+    swap
+    uncover 2
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    load 5
     intc_0 // 32
     bzero
-    load 5
-    extract 0 32
+    dup
     uncover 3
-    uncover 4
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 1
     b|
     extract 0 32
     uncover 2
@@ -127,12 +128,13 @@ main_ternary_merge@9:
     b<=
     assert // overflow
     dig 2
+    dig 1
     b|
     extract 0 32
+    uncover 2
+    swap
     replace2 0
     store 5
-    load 5
-    extract 0 32
     dup
     len
     intc_0 // 32

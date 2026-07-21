@@ -99,7 +99,7 @@ handlers disagree about draining them:
   first *body* statement — they execute at the TOP of the body while the test runs at the
   BOTTOM, one iteration apart. A body that never drains (e.g. bare `continue;`) leaks them out
   of the loop.
-- **H4 ○ write-backs are post-pending, flushed after the statement**
+- **H4 ❌ DEFERRED 2026-07-21 (same-statement read staleness needs operand sequencing / OperandPlan; a queue swap trades one wrong intra-expression order for another). write-backs are post-pending, flushed after the statement**
   (`SolInternalCall.cpp:651,674` + `SolExpressionStatement.cpp:56`): `x = Lib.mutate(st) + st.f;`
   reads stale `st.f`; the identical initializer form flushes first
   (`SolVariableDeclaration.cpp:329`) — the two statement forms disagree.
@@ -278,20 +278,20 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M3 ✔ Packed slot-handle element *read* double-evaluates the index**
   (`storage/SlotHandleAccess.cpp:154-156` — same `_idx` node in slot math and `packedBEPos`;
   the write path binds a temp for exactly this reason at 176-179).
-- **M4 ○ Assignment-as-expression yields stale/sentinel values** when the write is queued
+- **M4 ✅ FIXED 2026-07-21** (transient case: return the eval-once assigned value). Assignment-as-expression yields stale/sentinel values when the write is queued
   pending (transient: `SolAssignmentEarlyOuts.cpp:62-67`; slot-handle elem/field writes return
   `makeZero` sentinels, `SolAssignment.cpp:258,338`). `uint a = (t = 5);` reads t's old value.
-- **M5 ○ Assignment builds LHS before RHS** (`SolAssignment.cpp:54-55`); solc (both pipelines)
+- **M5 ❌ DEFERRED (global build-order swap = high regression risk without OperandPlan). Assignment builds LHS before RHS (`SolAssignment.cpp:54-55`); solc (both pipelines)
   is RHS-first. `arr[i++] = i;` diverges. Formally unspecified in Solidity, but the
   differential oracle compares against real solc.
-- **M6 ○ Yul `if` revert-body detection over-collapses** (`assembly/ControlFlowOps.cpp:29-52`):
+- **M6 ✅ FIXED 2026-07-21** (collapse only a lone-revert body). Yul `if` revert-body detection over-collapses (`assembly/ControlFlowOps.cpp:29-52`):
   any top-level `revert` in the body replaces the *whole body* with `assert(!cond)` — dropping
   a preceding conditional `leave` (falsely reverts) and payload-building mstores.
-- **M7 ○ Slot-0-only legacy memory paths** (mstore8, readMemSlot, storeResultToMemory, keccak
+- **M7 🟡 PARTIAL 2026-07-21** (mstore8 now multi-slot; keccak-reads/precompile-IO/calldatacopy-write remain). Slot-0-only legacy memory paths (mstore8, readMemSlot, storeResultToMemory, keccak
   reads, calldatacopy write, precompile I/O — `assembly/MemoryOps.cpp:583` et al.) bypass
   multi-slot routing: offset ≥4096 panics or reads the wrong slot in `--evm-memory-slots`
   contracts (honk FMP reaches ~18KB).
-- **M8 ○ asm `call`/`staticcall` runtime-address path**: `value` silently ignored (no payment);
+- **M8 🟡 PARTIAL 2026-07-21** (inSize<4 crash guarded; value/prefix semantics remain). asm `call`/`staticcall` runtime-address path: `value` silently ignored (no payment);
   `inSize < 4` underflow-panics (plain value-transfer `call(g,to,amt,0,0,0,0)` crashes); output
   copy is ARC4-prefix-shifted vs `returndatasize()` counting the prefix
   (`assembly/PrecompileDispatch.cpp:216-341`). Small **constant** non-precompile addresses fall
@@ -299,13 +299,13 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M9 ✅ FIXED 2026-07-20** (input pinned + asserted == 384 bytes; k-pair loud-reverts). ecPairing hard-codes the 2-pair layout, no length assert
   (`itxn/InnerCallShapes.cpp:416-451`): >2 pairs checks only the first two — a 4-pair Groth16
   verify can accept invalid proofs; <2 pairs runtime-panics. Needs `assert len == 384` minimum.
-- **M10 ○ modExp hard-codes 32/32/32 EIP-198 headers, never asserts them; `mod=0` panics
+- **M10 ✅ FIXED 2026-07-21** (assert 32-byte operands; mod=0 remains). modExp hard-codes 32/32/32 EIP-198 headers, never asserts them; `mod=0` panics
   instead of returning zero** (`assembly/PrecompileHandlers.cpp:229-283`).
-- **M11 ○ transient asm `tload/tstore`**: keccak-derived slots (any transient mapping) panic in
+- **M11 ✅ FIXED 2026-07-21** (assert slot<128, fail loud). transient asm `tload/tstore`: keccak-derived slots (any transient mapping) panic in
   `btoi` (>8 bytes); slots ≥128 overrun the 4096-byte blob (`assembly/SignedOps.cpp:15-54`).
-- **M12 ○ Dynamic-offset `calldataload`/`calldatacopy` panic past calldata end** where EVM
+- **M12 🟡 PARTIAL 2026-07-21** (calldataload zero-pads; calldatacopy remains). Dynamic-offset `calldataload`/`calldatacopy` panic past calldata end where EVM
   zero-pads (`assembly/DataOps.cpp:24-32`) — the standard tail-word read loop reverts.
-- **M13 ○ bytes-local `mcopy` lacks the guarded/truncated write its mstore siblings got;
+- **M13 ❌ DEFERRED (memmove + guarded write, larger). bytes-local `mcopy` lacks the guarded/truncated write its mstore siblings got;
   blob `mcopy` is copy-forward, not memmove** (`assembly/MemoryOps.cpp:462-544`,
   `StatementOps.cpp:606-672`).
 - **M14 ✅ FIXED 2026-07-20** (default encoder packs bool runs 8/byte). `arc4DefaultEncoding` doesn't bit-pack consecutive `arc4.bool` fields
@@ -315,7 +315,7 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M15 ✅ FIXED 2026-07-20** (hard error on the two genuine drops; non-lvalue temp stays a no-op). Internal-call write-back silently dropped for field paths deeper than 1, non-struct
   roots, and non-VarExpression memory args (`SolInternalCall.cpp:607-665`) — fail-loud policy
   violation; `Lib.mutate(s.inner.arr)` compiles clean and loses the mutation.
-- **M16 ○ Self-call resolution matches name+arity only**, ignoring the signature's types
+- **M16 ✅ FIXED 2026-07-21** (encodeWithSignature exact sig match + encodeCall/Selector refFunc + overload-suffixed target). Self-call resolution matches name+arity only, ignoring the signature's types
   (`InnerCallHandlers.cpp:545-551`), and passes args unc coerced; plus the
   `handleCallWithEncodeCall` fallback twin mis-encodes returns (bare itob / unpadded biguint)
   and drops extra return values (`InnerCallShapes.cpp:55-115`).
@@ -332,24 +332,24 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
   `assert !__ctor_pending` on regular routes and creator-only postInit.
 - **M20 ✅ FIXED 2026-07-20** (build condition once). `.selector` on a ternary evaluates the condition twice
   (`members/SolSelectorAccess.cpp:96,103`).
-- **M21 ○ Sized calldata arrays (`uint[2] calldata`) classified as dynamic pointers in asm**
+- **M21 ✅ FIXED 2026-07-21** (sized ReferenceArray -> static pointer). Sized calldata arrays (`uint[2] calldata`) classified as dynamic pointers in asm
   (`stmts/SolInlineAssembly.cpp:454-464` — the static ReferenceArray branch is dead code);
   asm reads then follow the offset+length protocol though only the offset local exists.
-- **M22 ○ Inline array literals as external-call args hand-encode 32-byte words**
+- **M22 ✅ FIXED 2026-07-21** (route through encodeArgToBytes). Inline array literals as external-call args hand-encode 32-byte words
   (`SolExternalCall.cpp:356-378`), bypassing `encodeArgToBytes`: wrong element width for
   narrow types, no length header for dynamic params, zero- instead of sign-extension.
-- **M23 ○ External call to a public state-var getter omits param types from the selector**
+- **M23 ✅ FIXED 2026-07-21** (subsumed by H15b keyed-getter fix). External call to a public state-var getter omits param types from the selector
   (`SolExternalCall.cpp:49-50`) — same family as H15's getter mismatch, different site.
 - **M24 ✅ FIXED 2026-07-20** (materialize x/y before the check). `mulmod`/`addmod` evaluate the modulus (and its zero-assert) before x/y
   (`sol-eb/BuiltinCallables.cpp:87-124`) — revert-payload divergence the oracle can see.
-- **M25 ○ `emitOverflowCheck` pre-statement placement**: fixed for uint256 via inline comma,
+- **M25 ✅ FIXED 2026-07-21** (comma form for all biguint-backed widths). `emitOverflowCheck` pre-statement placement: fixed for uint256 via inline comma,
   uint65..uint255 still take the pre-statement form in the same broken contexts
   (`SolIntegerBuilder.cpp:652-674`).
 - **M26 ✔ Cross-file same-name libraries collide on subroutine id**
   (`FunctionIdRegistry.cpp:38-70` — `_sourceFile` is the constant main source; two vendored
   `Math` libraries in different files map to one id; `subMap` keeps one arbitrarily). Free
   functions got AST-id disambiguation (85-96); libraries didn't.
-- **M27 ○ `augmentReturns` sibling gaps in AWSTBuilder**: >4KB blob-backed named returns in
+- **M27 ✅ FIXED 2026-07-21** (blob-backed multi-return uses offset var). `augmentReturns` sibling gaps in AWSTBuilder: >4KB blob-backed named returns in
   the implicit multi-return tuple use the aggregate name/wtype instead of `__blobagg_off_<id>`
   /uint64 (`AWSTBuilder.cpp:834-850`); mixed named/unnamed fall-through builds a nameless
   VarExpression.

@@ -312,12 +312,12 @@ main_ternary_merge@30:
     dup
     intc 4 // 2147483648
     >=
-    bz main_ternary_false@33
+    bz main_ternary_false@32
     intc 5 // 18446744069414584320
     +
     bury 1
 
-main_ternary_merge@34:
+main_ternary_merge@33:
     load 5
     pushint 28
     extract_uint32
@@ -326,21 +326,21 @@ main_ternary_merge@34:
     dup
     intc 4 // 2147483648
     >=
-    bz main_ternary_false@36
+    bz main_ternary_false@35
     intc 5 // 18446744069414584320
     +
 
-main_ternary_merge@37:
+main_ternary_merge@36:
     intc_3 // 4294967296
     %
     dup
     intc 4 // 2147483648
     >=
-    bz main_ternary_false@39
+    bz main_ternary_false@38
     intc 5 // 18446744069414584320
     +
 
-main_ternary_merge@40:
+main_ternary_merge@39:
     intc 6 // 9223372036854775808
     ^
     intc 6 // 9223372036854775808
@@ -353,11 +353,11 @@ main_ternary_merge@40:
     dup
     pushbytes 0x80000000
     b>=
-    bz main_ternary_false@42
+    bz main_ternary_false@41
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
 
-main_ternary_merge@43:
+main_ternary_merge@42:
     dup
     len
     intc_0 // 32
@@ -378,18 +378,18 @@ main_ternary_merge@43:
     intc_1 // 1
     return
 
-main_ternary_false@42:
-    b main_ternary_merge@43
+main_ternary_false@41:
+    b main_ternary_merge@42
 
-main_ternary_false@39:
-    b main_ternary_merge@40
+main_ternary_false@38:
+    b main_ternary_merge@39
 
-main_ternary_false@36:
-    b main_ternary_merge@37
+main_ternary_false@35:
+    b main_ternary_merge@36
 
-main_ternary_false@33:
+main_ternary_false@32:
     bury 1
-    b main_ternary_merge@34
+    b main_ternary_merge@33
 
 main_ternary_false@29:
     intc_2 // 0

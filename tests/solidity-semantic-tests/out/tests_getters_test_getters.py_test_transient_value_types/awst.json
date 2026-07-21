@@ -1151,7 +1151,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "CommaExpression",
+                "_type": "SingleEvaluation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
                   "line": 91,
@@ -1165,24 +1165,26 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "expressions": [
-                  {
-                    "_type": "AssignmentExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                      "line": 91,
-                      "end_line": 97,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "target": {
-                      "_type": "VarExpression",
+                "source": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                    "line": 91,
+                    "end_line": 97,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "op_code": "btoi",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
                         "line": 91,
@@ -1192,46 +1194,31 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "name": "__signext64_tmp_1"
-                    },
-                    "value": {
-                      "_type": "UInt64BinaryOperation",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                        "line": 91,
-                        "end_line": 97,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "left": {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                          "line": 91,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "op_code": "btoi",
-                        "immediates": [],
-                        "stack_args": [
-                          {
+                      "op_code": "extract3",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "SingleEvaluation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                            "line": 91,
+                            "end_line": 97,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "source": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
@@ -1247,11 +1234,8 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "extract",
-                            "immediates": [
-                              31,
-                              1
-                            ],
+                            "op_code": "concat",
+                            "immediates": [],
                             "stack_args": [
                               {
                                 "_type": "IntrinsicCall",
@@ -1269,175 +1253,259 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "op_code": "load",
-                                "immediates": [
-                                  5
-                                ],
-                                "stack_args": []
+                                "op_code": "bzero",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                      "line": 91,
+                                      "end_line": 97,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 8,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              },
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                  "line": 91,
+                                  "end_line": 97,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                    "line": 95,
+                                    "end_line": 97,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                  "teal_alias": null
+                                }
                               }
                             ]
+                          },
+                          "_id": 1048577
+                        },
+                        {
+                          "_type": "UInt64BinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                            "line": 91,
+                            "end_line": 97,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                              "line": 91,
+                              "end_line": 97,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "len",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "SingleEvaluation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                  "line": 91,
+                                  "end_line": 97,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                    "line": 91,
+                                    "end_line": 97,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                        "line": 91,
+                                        "end_line": 97,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "bzero",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                            "line": 91,
+                                            "end_line": 97,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 8,
+                                          "teal_alias": null
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                        "line": 91,
+                                        "end_line": 97,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                          "line": 95,
+                                          "end_line": 97,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                        "teal_alias": null
+                                      }
+                                    }
+                                  ]
+                                },
+                                "_id": 1048577
+                              }
+                            ]
+                          },
+                          "op": "-",
+                          "right": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                              "line": 91,
+                              "end_line": 97,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 8,
+                            "teal_alias": null
                           }
-                        ]
-                      },
-                      "op": "%",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                          "line": 91,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 256,
-                        "teal_alias": null
-                      }
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                            "line": 91,
+                            "end_line": 97,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 8,
+                          "teal_alias": null
+                        }
+                      ]
                     }
-                  },
-                  {
-                    "_type": "ConditionalExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                      "line": 91,
-                      "end_line": 97,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "condition": {
-                      "_type": "NumericComparisonExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                        "line": 91,
-                        "end_line": 97,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
-                      },
-                      "lhs": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                          "line": 91,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "name": "__signext64_tmp_1"
-                      },
-                      "operator": ">=",
-                      "rhs": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                          "line": 91,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 128,
-                        "teal_alias": null
-                      }
-                    },
-                    "true_expr": {
-                      "_type": "UInt64BinaryOperation",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                        "line": 91,
-                        "end_line": 97,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "left": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                          "line": 91,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "name": "__signext64_tmp_1"
-                      },
-                      "op": "+",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                          "line": 91,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": "18446744073709551360",
-                        "teal_alias": null
-                      }
-                    },
-                    "false_expr": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                        "line": 91,
-                        "end_line": 97,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "name": "__signext64_tmp_1"
-                    }
-                  }
-                ]
+                  ]
+                },
+                "_id": 1048578
               }
             },
             {
@@ -1555,7 +1623,7 @@
                             "immediates": [],
                             "stack_args": [
                               {
-                                "_type": "IntrinsicCall",
+                                "_type": "SingleEvaluation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
                                   "line": 91,
@@ -1569,46 +1637,45 @@
                                   "name": "uint64",
                                   "immutable": true
                                 },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                      "line": 91,
-                                      "end_line": 97,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "extract3",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "SingleEvaluation",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                          "line": 91,
-                                          "end_line": 97,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "source": {
-                                          "_type": "IntrinsicCall",
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                    "line": 91,
+                                    "end_line": 97,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "btoi",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                        "line": 91,
+                                        "end_line": 97,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "extract3",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "SingleEvaluation",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
                                             "line": 91,
@@ -1623,137 +1690,26 @@
                                             "immutable": true,
                                             "length": null
                                           },
-                                          "op_code": "concat",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                "line": 91,
-                                                "end_line": 97,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "bzero",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntegerConstant",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                    "line": 91,
-                                                    "end_line": 97,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "value": 8,
-                                                  "teal_alias": null
-                                                }
-                                              ]
+                                          "source": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                              "line": 91,
+                                              "end_line": 97,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
                                             },
-                                            {
-                                              "_type": "ReinterpretCast",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                "line": 91,
-                                                "end_line": 97,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "expr": {
-                                                "_type": "IntegerConstant",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                  "line": 95,
-                                                  "end_line": 97,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "WType",
-                                                  "name": "biguint",
-                                                  "immutable": true
-                                                },
-                                                "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-                                                "teal_alias": null
-                                              }
-                                            }
-                                          ]
-                                        },
-                                        "_id": 1048577
-                                      },
-                                      {
-                                        "_type": "UInt64BinaryOperation",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                          "line": 91,
-                                          "end_line": 97,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "left": {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                            "line": 91,
-                                            "end_line": 97,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "op_code": "len",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "SingleEvaluation",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                "line": 91,
-                                                "end_line": 97,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "source": {
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "concat",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
                                                 "_type": "IntrinsicCall",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
@@ -1769,11 +1725,11 @@
                                                   "immutable": true,
                                                   "length": null
                                                 },
-                                                "op_code": "concat",
+                                                "op_code": "bzero",
                                                 "immediates": [],
                                                 "stack_args": [
                                                   {
-                                                    "_type": "IntrinsicCall",
+                                                    "_type": "IntegerConstant",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
                                                       "line": 91,
@@ -1783,19 +1739,182 @@
                                                       "end_column": null
                                                     },
                                                     "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
                                                     },
-                                                    "op_code": "bzero",
-                                                    "immediates": [],
-                                                    "stack_args": [
-                                                      {
+                                                    "value": 8,
+                                                    "teal_alias": null
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "_type": "ReinterpretCast",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                  "line": 91,
+                                                  "end_line": 97,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "expr": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                    "line": 95,
+                                                    "end_line": 97,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                                  "teal_alias": null
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          "_id": 1048577
+                                        },
+                                        {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                            "line": 91,
+                                            "end_line": 97,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                              "line": 91,
+                                              "end_line": 97,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "op_code": "len",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "SingleEvaluation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                  "line": 91,
+                                                  "end_line": 97,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "source": {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                    "line": 91,
+                                                    "end_line": 97,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "op_code": "concat",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                        "line": 91,
+                                                        "end_line": 97,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "op_code": "bzero",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntegerConstant",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                            "line": 91,
+                                                            "end_line": 97,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "uint64",
+                                                            "immutable": true
+                                                          },
+                                                          "value": 8,
+                                                          "teal_alias": null
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "_type": "ReinterpretCast",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                                        "line": 91,
+                                                        "end_line": 97,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "expr": {
                                                         "_type": "IntegerConstant",
                                                         "source_location": {
                                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                          "line": 91,
+                                                          "line": 95,
                                                           "end_line": 97,
                                                           "comment_lines": 0,
                                                           "column": null,
@@ -1803,57 +1922,40 @@
                                                         },
                                                         "wtype": {
                                                           "_type": "WType",
-                                                          "name": "uint64",
+                                                          "name": "biguint",
                                                           "immutable": true
                                                         },
-                                                        "value": 8,
+                                                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
                                                         "teal_alias": null
                                                       }
-                                                    ]
-                                                  },
-                                                  {
-                                                    "_type": "ReinterpretCast",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                      "line": 91,
-                                                      "end_line": 97,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "expr": {
-                                                      "_type": "IntegerConstant",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                                        "line": 95,
-                                                        "end_line": 97,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "biguint",
-                                                        "immutable": true
-                                                      },
-                                                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-                                                      "teal_alias": null
                                                     }
-                                                  }
-                                                ]
-                                              },
-                                              "_id": 1048577
-                                            }
-                                          ]
+                                                  ]
+                                                },
+                                                "_id": 1048577
+                                              }
+                                            ]
+                                          },
+                                          "op": "-",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
+                                              "line": 91,
+                                              "end_line": 97,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
                                         },
-                                        "op": "-",
-                                        "right": {
+                                        {
                                           "_type": "IntegerConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
@@ -1871,28 +1973,11 @@
                                           "value": 8,
                                           "teal_alias": null
                                         }
-                                      },
-                                      {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types.sol",
-                                          "line": 91,
-                                          "end_line": 97,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "value": 8,
-                                        "teal_alias": null
-                                      }
-                                    ]
-                                  }
-                                ]
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "_id": 1048578
                               }
                             ]
                           }
@@ -2179,7 +2264,7 @@
                                             }
                                           ]
                                         },
-                                        "_id": 1048578
+                                        "_id": 1048579
                                       },
                                       {
                                         "_type": "UInt64BinaryOperation",
@@ -2328,7 +2413,7 @@
                                                   }
                                                 ]
                                               },
-                                              "_id": 1048578
+                                              "_id": 1048579
                                             }
                                           ]
                                         },
@@ -3009,7 +3094,7 @@
                                         "name": "uint64",
                                         "immutable": true
                                       },
-                                      "name": "__signext64_tmp_2"
+                                      "name": "__signext64_tmp_1"
                                     },
                                     "value": {
                                       "_type": "UInt64BinaryOperation",
@@ -3158,7 +3243,7 @@
                                           "name": "uint64",
                                           "immutable": true
                                         },
-                                        "name": "__signext64_tmp_2"
+                                        "name": "__signext64_tmp_1"
                                       },
                                       "operator": ">=",
                                       "rhs": {
@@ -3210,7 +3295,7 @@
                                           "name": "uint64",
                                           "immutable": true
                                         },
-                                        "name": "__signext64_tmp_2"
+                                        "name": "__signext64_tmp_1"
                                       },
                                       "op": "+",
                                       "right": {
@@ -3247,7 +3332,7 @@
                                         "name": "uint64",
                                         "immutable": true
                                       },
-                                      "name": "__signext64_tmp_2"
+                                      "name": "__signext64_tmp_1"
                                     }
                                   }
                                 ]

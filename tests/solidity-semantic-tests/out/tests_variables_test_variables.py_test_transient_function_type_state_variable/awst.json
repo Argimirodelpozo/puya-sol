@@ -2013,7 +2013,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "ReinterpretCast",
+                "_type": "SingleEvaluation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
                   "line": 167,
@@ -2028,8 +2028,8 @@
                   "immutable": true,
                   "length": 12
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "source": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
                     "line": 167,
@@ -2040,40 +2040,104 @@
                   },
                   "wtype": {
                     "_type": "BytesWType",
-                    "name": "bytes",
+                    "name": "bytes[12]",
                     "immutable": true,
-                    "length": null
+                    "length": 12
                   },
-                  "op_code": "extract",
-                  "immediates": [
-                    20,
-                    12
-                  ],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
-                        "line": 167,
-                        "end_line": 177,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                      "line": 171,
+                      "end_line": 177,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes[12]",
+                      "immutable": true,
+                      "length": 12
+                    },
+                    "op_code": "concat",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                          "line": 171,
+                          "end_line": 177,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                              "line": 171,
+                              "end_line": 177,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "global",
+                            "immediates": [
+                              "CurrentApplicationID"
+                            ],
+                            "stack_args": []
+                          }
+                        ]
                       },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "load",
-                      "immediates": [
-                        5
-                      ],
-                      "stack_args": []
-                    }
-                  ]
-                }
+                      {
+                        "_type": "MethodConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                          "line": 171,
+                          "end_line": 177,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "value": {
+                          "_type": "MethodSignatureString",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                            "line": 171,
+                            "end_line": 177,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "value": "g()void"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "_id": 1048578
               }
             },
             {
@@ -2166,7 +2230,7 @@
                           "length": null
                         },
                         "expr": {
-                          "_type": "ReinterpretCast",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
                             "line": 167,
@@ -2181,11 +2245,11 @@
                             "immutable": true,
                             "length": 12
                           },
-                          "expr": {
-                            "_type": "IntrinsicCall",
+                          "source": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
-                              "line": 171,
+                              "line": 167,
                               "end_line": 177,
                               "comment_lines": 0,
                               "column": null,
@@ -2197,69 +2261,27 @@
                               "immutable": true,
                               "length": 12
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
-                                  "line": 171,
-                                  "end_line": 177,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
-                                      "line": 171,
-                                      "end_line": 177,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CurrentApplicationID"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                ]
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                                "line": 171,
+                                "end_line": 177,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "MethodConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
-                                  "line": 171,
-                                  "end_line": 177,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": {
-                                  "_type": "MethodSignatureString",
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes[12]",
+                                "immutable": true,
+                                "length": 12
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
                                     "line": 171,
@@ -2268,11 +2290,71 @@
                                     "column": null,
                                     "end_column": null
                                   },
-                                  "value": "g()void"
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                                        "line": 171,
+                                        "end_line": 177,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "global",
+                                      "immediates": [
+                                        "CurrentApplicationID"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "MethodConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                                    "line": 171,
+                                    "end_line": 177,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "value": {
+                                    "_type": "MethodSignatureString",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_function_type_state_variable.sol",
+                                      "line": 171,
+                                      "end_line": 177,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "value": "g()void"
+                                  }
                                 }
-                              }
-                            ]
-                          }
+                              ]
+                            }
+                          },
+                          "_id": 1048578
                         }
                       }
                     ]

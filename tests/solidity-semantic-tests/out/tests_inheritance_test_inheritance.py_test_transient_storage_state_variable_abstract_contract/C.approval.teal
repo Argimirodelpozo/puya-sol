@@ -65,11 +65,6 @@ main_ternary_merge@13:
     !
     assert // not payable
     load 5
-    intc_2 // 32
-    bzero
-    dup
-    bury 4
-    load 5
     extract 0 32
     bytec 5 // 0x01
     b+
@@ -77,6 +72,12 @@ main_ternary_merge@13:
     bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    load 5
+    intc_2 // 32
+    bzero
+    dup
+    bury 5
+    uncover 2
     b|
     extract 0 32
     replace2 0
@@ -246,14 +247,15 @@ g_bool_true@5:
 
 g_bool_merge@7:
     assert // signed arithmetic overflow
-    load 5
-    intc_2 // 32
-    bzero
     frame_dig 0
     bytec 6 // 0x02
     b+
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    load 5
+    intc_2 // 32
+    bzero
+    uncover 2
     b|
     extract 0 32
     replace2 32

@@ -1,0 +1,146 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mstore8_multislot.sol.Mstore8Multislot.approval_program() -> uint64:
+main:
+    intcblock 32 4096 1 8
+    pushint 0
+    pushbytes ""
+    intc_1 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xa871e390 // method "writeHigh(uint256,uint64)uint256"
+    txna ApplicationArgs 0
+    match main_writeHigh_route@4
+    err
+
+main_writeHigh_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    dupn 2
+    pushint 255
+    <=
+    assert // ABI validation
+    pushint 255
+    &
+    load 0
+    store 0
+    intc_3 // 8
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_1 // 4096
+    %
+    intc_0 // 32
+    bzero
+    uncover 4
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 31 1
+    uncover 3
+    dig 3
+    uncover 2
+    replace3
+    dig 3
+    swap
+    stores
+    uncover 2
+    loads
+    uncover 2
+    intc_0 // 32
+    extract3
+    pushbytes 0x0100000000000000000000000000000000000000000000000000000000000000
+    b/
+    load 0
+    store 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    pushint 0
+    b main_ternary_merge@9

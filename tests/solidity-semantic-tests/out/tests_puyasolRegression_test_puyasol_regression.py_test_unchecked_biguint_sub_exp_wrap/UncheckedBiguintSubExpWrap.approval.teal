@@ -210,12 +210,14 @@ main_after_if_else@35:
     b main_while_top@32
 
 main_after_while@36:
-    dupn 2
+    intc_0 // 16
+    bzero
+    dig 1
+    dup
+    cover 2
     bytec 6 // 0xffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    intc_0 // 16
-    bzero
     dup
     uncover 2
     concat
@@ -274,9 +276,12 @@ main_ternary_merge@41:
     cover 3
     b>=
     assert // underflow
+    intc_0 // 16
+    bzero
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    swap
+    uncover 2
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -284,10 +289,8 @@ main_ternary_merge@41:
     bytec 6 // 0xffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    intc_0 // 16
-    bzero
-    dup
-    uncover 2
+    dig 1
+    swap
     concat
     dup
     len

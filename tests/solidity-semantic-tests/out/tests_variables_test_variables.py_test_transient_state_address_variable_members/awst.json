@@ -1150,7 +1150,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "ReinterpretCast",
+                "_type": "SingleEvaluation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_address_variable_members.sol",
                   "line": 87,
@@ -1164,52 +1164,28 @@
                   "name": "account",
                   "immutable": true
                 },
-                "expr": {
+                "source": {
                   "_type": "IntrinsicCall",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_address_variable_members.sol",
-                    "line": 87,
+                    "line": 91,
                     "end_line": 101,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "account",
+                    "immutable": true
                   },
-                  "op_code": "extract",
+                  "op_code": "txn",
                   "immediates": [
-                    0,
-                    32
+                    "Sender"
                   ],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_address_variable_members.sol",
-                        "line": 87,
-                        "end_line": 101,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "load",
-                      "immediates": [
-                        5
-                      ],
-                      "stack_args": []
-                    }
-                  ]
-                }
+                  "stack_args": []
+                },
+                "_id": 1048577
               }
             },
             {
@@ -1302,10 +1278,10 @@
                           "length": null
                         },
                         "expr": {
-                          "_type": "IntrinsicCall",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_address_variable_members.sol",
-                            "line": 91,
+                            "line": 87,
                             "end_line": 101,
                             "comment_lines": 0,
                             "column": null,
@@ -1316,11 +1292,28 @@
                             "name": "account",
                             "immutable": true
                           },
-                          "op_code": "txn",
-                          "immediates": [
-                            "Sender"
-                          ],
-                          "stack_args": []
+                          "source": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_address_variable_members.sol",
+                              "line": 91,
+                              "end_line": 101,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "account",
+                              "immutable": true
+                            },
+                            "op_code": "txn",
+                            "immediates": [
+                              "Sender"
+                            ],
+                            "stack_args": []
+                          },
+                          "_id": 1048577
                         }
                       }
                     ]

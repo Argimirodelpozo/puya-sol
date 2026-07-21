@@ -75,10 +75,9 @@ main_f_route@5:
 main_ternary_merge@21:
     !
     assert // not payable
-    load 5
     intc_1 // 8
     bzero
-    swap
+    load 5
     bytec_2 // 0xff
     replace2 31
     store 5
@@ -95,11 +94,11 @@ main_ternary_merge@21:
     dup
     bytec_0 // 0x80
     b>=
-    bz main_ternary_false@24
+    bz main_ternary_false@23
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
-main_ternary_merge@25:
+main_ternary_merge@24:
     dup
     len
     intc_3 // 32
@@ -115,8 +114,8 @@ main_ternary_merge@25:
     intc_0 // 1
     return
 
-main_ternary_false@24:
-    b main_ternary_merge@25
+main_ternary_false@23:
+    b main_ternary_merge@24
 
 main_ternary_false@20:
     intc_2 // 0
@@ -181,7 +180,6 @@ g_bool_true@8:
 
 g_bool_merge@10:
     assert // signed arithmetic overflow
-    load 5
     intc_1 // 8
     bzero
     frame_dig 0
@@ -196,6 +194,8 @@ g_bool_merge@10:
     len
     intc_1 // 8
     -
+    load 5
+    cover 2
     intc_1 // 8
     extract3
     extract 7 1

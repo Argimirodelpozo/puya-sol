@@ -6,7 +6,7 @@ main:
     intcblock 16 1 0
     bytecblock 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     intc_2 // 0
-    dupn 2
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -43,14 +43,14 @@ main_addDelta_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 4
+    bury 5
     len
     intc_0 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 3
+    bury 4
     len
     intc_0 // 16
     ==
@@ -65,7 +65,7 @@ main_addDelta_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 1
+    dig 2
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -78,10 +78,10 @@ main_ternary_merge@9:
 main_ternary_merge@12:
     load 0
     store 0
-    dig 3
+    dig 4
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
-    bury 2
+    bury 3
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
@@ -98,22 +98,29 @@ main_ternary_merge@12:
     b|
 
 main_ternary_merge@21:
-    dig 1
+    dig 2
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
+    bury 2
     bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
     pushbytes 0x
     b!=
-    !
-    assert // revert
+    bz main_after_if_else@24
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000093dafdf1
+    replace2 0
+    store 0
+    err // revert
+
+main_after_if_else@24:
     load 0
     store 0
     intc_0 // 16
     bzero
-    swap
+    dig 1
     pushbytes 0x0100000000000000000000000000000000
     b%
     dig 1
