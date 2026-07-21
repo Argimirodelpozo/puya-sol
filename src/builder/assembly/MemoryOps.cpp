@@ -3,6 +3,7 @@
 /// Uses scratch-slot-backed bytes blob for EVM memory simulation.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 
 #include <sstream>
@@ -593,14 +594,31 @@ void AssemblyBuilder::handleMstore8(
 	if (!checkArity(_args, 2, "mstore8", _loc))
 		return;
 
-	// Write the low 8 bits of value as one byte at memory[ptr].
-	// pad32(value)[31] = the low byte; replace3 one byte at the offset.
-	auto offsetU64 = offsetToUint64(_args[0], _loc);
+	// Write the low 8 bits of value as one byte at memory[ptr]. The byte never
+	// straddles a slot, so route through the SAME runtime slot math the
+	// slot-aware `mstore` uses (offset -> slot=off/SLOT_SIZE, sub=off%SLOT_SIZE)
+	// instead of the old slot-0-only replace3, which panicked / mis-wrote for
+	// any offset >= 4096 in an --evm-memory-slots contract (FMP reaches ~18KB).
+	auto offsetU64 = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
+	_out.push_back(memBoundsAssert(offsetU64, _loc));
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 	auto lowByte = awst::makeExtract3(
 		std::move(padded), awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);
-	assignMemoryVar(
-		awst::makeReplace3(memoryVar(_loc), std::move(offsetU64), std::move(lowByte), _loc), _loc, _out);
+	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
+	std::string slotN = "__mstore8_slot_"
+		+ std::to_string(awst::NameGen::next("MemoryOps.mstore8Slot"));
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(slotN, awst::WType::uint64Type(), _loc),
+		awst::makeUInt64BinOp(offsetU64, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc), _loc));
+	auto slotR = [&]() { return awst::makeVarExpression(slotN, awst::WType::uint64Type(), _loc); };
+	auto sub = awst::makeUInt64BinOp(std::move(offsetU64), awst::UInt64BinaryOperator::Mod, ss(), _loc);
+	auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
+	loadsCall->stackArgs.push_back(slotR());
+	auto rep = awst::makeReplace3(std::move(loadsCall), std::move(sub), std::move(lowByte), _loc);
+	auto storesCall = awst::makeIntrinsicCall("stores", awst::WType::voidType(), _loc);
+	storesCall->stackArgs.push_back(slotR());
+	storesCall->stackArgs.push_back(std::move(rep));
+	_out.push_back(awst::makeExpressionStatement(std::move(storesCall), _loc));
 }
 
 void AssemblyBuilder::handleReturn(

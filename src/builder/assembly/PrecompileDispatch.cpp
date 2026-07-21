@@ -261,6 +261,20 @@ void AssemblyBuilder::handleAppCall(
 	if (inSizeAwst->wtype != awst::WType::uint64Type())
 		inSizeAwst = awst::makeReinterpretCast(std::move(inSizeAwst), awst::WType::uint64Type(), _loc);
 
+	// Clamp inSize to >= 4 so `bodyLen = inSize - 4` can't underflow into a
+	// huge uint64 (extract3 OOB panic) for inSize < 4 — a plain value-transfer
+	// `call(g, to, amt, 0, 0, 0, 0)` (Solady safeTransferETH) has inSize 0.
+	// The resulting empty-body app call is not a faithful ETH transfer (asm
+	// value transfers are a known gap), but it no longer crashes opaquely.
+	{
+		auto eoInSize = awst::makeEvalOnce(std::move(inSizeAwst), _loc);
+		inSizeAwst = awst::makeConditional(
+			awst::makeNumericCompare(eoInSize, awst::NumericComparison::Gte,
+				awst::makeIntegerConstant("4", _loc), _loc),
+			eoInSize, awst::makeIntegerConstant("4", _loc),
+			awst::WType::uint64Type(), _loc);
+	}
+
 	// args[0] = first 4 bytes (selector)
 	auto selector = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	selector->stackArgs.push_back(memoryVar(_loc));

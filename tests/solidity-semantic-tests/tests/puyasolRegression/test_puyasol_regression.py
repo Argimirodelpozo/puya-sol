@@ -2794,3 +2794,16 @@ def test_batchB_asm(harness):
     # M11: small transient slot round-trips; slot >= 128 reverts
     assert as_int(harness.call(app, "m11Ok()").abi_return) == 99
     assert harness.call(app, "m11Bad(uint256)", 200, expect_revert=True).reverted
+
+
+def test_mstore8_multislot(harness):
+    """puyasolRegression/contracts/mstore8_multislot.sol — NOT an o.g. test.
+
+    mstore8 at an offset >= 4096 used a slot-0-only replace3 and
+    panicked/mis-wrote; it now uses runtime slot math like the slot-aware
+    mstore. Write a byte low (slot 0) and high (slot 1), read each back.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/mstore8_multislot.sol")
+    assert as_int(harness.call(app, "writeHigh(uint256,uint8)", 100, 0xAB).abi_return) == 0xAB
+    assert as_int(harness.call(app, "writeHigh(uint256,uint8)", 5000, 0xCD).abi_return) == 0xCD
+    assert as_int(harness.call(app, "writeHigh(uint256,uint8)", 9000, 0x42).abi_return) == 0x42
