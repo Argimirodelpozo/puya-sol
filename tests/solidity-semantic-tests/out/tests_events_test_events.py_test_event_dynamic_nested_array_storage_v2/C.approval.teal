@@ -6,7 +6,7 @@ main:
     intcblock 2 0 1 32
     bytecblock "arr" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 0
-    dupn 3
+    dupn 6
     pushint 4096
     bzero
     dup
@@ -46,7 +46,7 @@ main_after_if_else@2:
 main_createEvent_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
+    bury 8
     len
     intc_3 // 32
     ==
@@ -139,8 +139,17 @@ main_after_if_else@21:
     +
     bytec_0 // "arr"
     swap
-    dig 5
+    dig 8
+    dup
+    cover 3
     box_replace // on error: index out of bounds
+    dig 2
+    b+
+    dup
+    bury 7
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "arr"
     box_len
     bury 1
@@ -175,13 +184,7 @@ main_ternary_merge@27:
     pop
 
 main_after_if_else@29:
-    dig 3
-    dig 2
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
+    dig 5
     dup
     len
     intc_3 // 32
@@ -213,6 +216,14 @@ main_after_if_else@29:
     swap
     uncover 2
     box_replace // on error: index out of bounds
+    dig 6
+    dig 3
+    b+
+    dup
+    bury 6
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "arr"
     box_len
     bury 1
@@ -251,13 +262,7 @@ main_ternary_merge@35:
     pop
 
 main_after_if_else@37:
-    dig 3
-    dig 3
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
+    dig 4
     dup
     len
     intc_3 // 32
@@ -284,6 +289,15 @@ main_after_if_else@37:
     swap
     uncover 2
     box_replace // on error: index out of bounds
+    pushint 3
+    itob
+    dig 7
+    b+
+    dup
+    bury 5
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     bytec_0 // "arr"
     box_len
     bury 1
@@ -322,14 +336,7 @@ main_ternary_merge@43:
     pop
 
 main_after_if_else@45:
-    pushint 3
-    itob
-    dig 4
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
+    dig 3
     dup
     len
     intc_3 // 32

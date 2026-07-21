@@ -73,12 +73,6 @@ main_ternary_merge@14:
     assert // ABI validation
     intc_3 // 16777215
     &
-    dig 3
-    dup
-    cover 2
-    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b!=
-    assert // signed negation overflow
     intc 4 // 1000000
     swap
     -
@@ -86,10 +80,15 @@ main_ternary_merge@14:
     intc_3 // 16777215
     <=
     assert // overflow
+    dig 3
+    dup
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b!=
+    assert // signed negation overflow
     intc_0 // 32
     bzero
     dup
-    uncover 3
+    uncover 2
     concat
     dup
     len

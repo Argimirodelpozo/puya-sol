@@ -99,10 +99,24 @@ handlers disagree about draining them:
   first *body* statement — they execute at the TOP of the body while the test runs at the
   BOTTOM, one iteration apart. A body that never drains (e.g. bare `continue;`) leaks them out
   of the loop.
-- **H4 ❌ DEFERRED 2026-07-21 (same-statement read staleness needs operand sequencing / OperandPlan; a queue swap trades one wrong intra-expression order for another). write-backs are post-pending, flushed after the statement**
-  (`SolInternalCall.cpp:651,674` + `SolExpressionStatement.cpp:56`): `x = Lib.mutate(st) + st.f;`
-  reads stale `st.f`; the identical initializer form flushes first
-  (`SolVariableDeclaration.cpp:329`) — the two statement forms disagree.
+- **H4 ✅ FIXED 2026-07-21 (OperandPlan sequencing slice).** Write-backs were post-pending,
+  flushed after the statement (`SolInternalCall.cpp:651,674`): `x = Lib.mutate(st) + st.f;`
+  read stale `st.f`. Fix: per-operand pre/post delta capture (`buildScopedOperand` both-buffer
+  mode) + `emitSequencedOperand` (pre → value pin → hoisted write-backs) re-emits operands in
+  LEGACY solc evaluation order — binop RIGHT-first, assignment RHS-first with the store winning
+  over the callee write-back, call args left-to-right with each arg's write-back visible to
+  later args and the callee. Direct-state-writing calls (handle model — no queued write-back)
+  are covered by a conservative static scan (`EffectScan.h` mayWrite/onlyLocalPure). Under
+  `--via-yul-behavior` build order is kept untouched (via-IR is left-to-right; the viaYul
+  corpus pins it — `unary_operations.sol` `a-- + a`). Ternary/short-circuit conditions pin +
+  hoist their write-backs before the branches; branch/RHS write-backs are gated INSIDE the
+  conditional block (they previously leaked and ran unconditionally). All 14 guard cases
+  verified against real solc 0.8.20 legacy + py-evm (guard `test_effect_sequencing`).
+  ⚠️ Residual: in legacy mode a re-sequenced dead local decrement (`return a-- + a;` where `a`
+  dies) loses its uint64-underflow panic to backend DCE — the known
+  backend-dce-drops-reverting-subexpr theme (puya-side fix forbidden by policy); no corpus
+  test hits it. Residual: tuple assignments and the pre-buildExpr assignment early-outs
+  (transient/slot-handle/boxed/blob writes) keep build order; fn-ptr call args unsequenced.
 - **H5 ✅ trailing bare `calldatacopy` in asm is dropped** (`assembly/StatementOps.cpp:520-696`
   generic fall-through queues the write on `m_pendingStatements`; `buildBlock` never drains at
   block end). PoC: the memory write is absent from the AWST. Args also built twice.
@@ -281,9 +295,11 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M4 ✅ FIXED 2026-07-21** (transient case: return the eval-once assigned value). Assignment-as-expression yields stale/sentinel values when the write is queued
   pending (transient: `SolAssignmentEarlyOuts.cpp:62-67`; slot-handle elem/field writes return
   `makeZero` sentinels, `SolAssignment.cpp:258,338`). `uint a = (t = 5);` reads t's old value.
-- **M5 ❌ DEFERRED (global build-order swap = high regression risk without OperandPlan). Assignment builds LHS before RHS (`SolAssignment.cpp:54-55`); solc (both pipelines)
-  is RHS-first. `arr[i++] = i;` diverges. Formally unspecified in Solidity, but the
-  differential oracle compares against real solc.
+- **M5 ✅ FIXED 2026-07-21 (with H4's OperandPlan sequencing slice — no build-order swap
+  needed).** Assignment still BUILDS LHS before RHS, but the captured deltas re-emit RHS-first
+  (RHS pre → value pin → RHS write-backs → LHS effects → store): `arr[i++] = i;` now stores the
+  pre-increment value (`m5a`/`m5f` in `test_effect_sequencing`, oracle-verified). Gated off
+  under `--via-yul-behavior` (build order kept).
 - **M6 ✅ FIXED 2026-07-21** (collapse only a lone-revert body). Yul `if` revert-body detection over-collapses (`assembly/ControlFlowOps.cpp:29-52`):
   any top-level `revert` in the body replaces the *whole body* with `assert(!cond)` — dropping
   a preceding conditional `leave` (falsely reverts) and payload-building mstores.

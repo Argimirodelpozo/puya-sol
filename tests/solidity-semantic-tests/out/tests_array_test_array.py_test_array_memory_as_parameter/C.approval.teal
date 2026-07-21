@@ -152,34 +152,35 @@ main_while_top@19:
     dig 5
     b>
     bz main_after_while@21
-    dig 4
+    intc_2 // 1
+    itob
+    dig 5
     dup
+    uncover 2
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 3
-    dig 1
+    dig 4
+    dig 2
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    dig 7
+    dig 8
     extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    intc_2 // 1
-    itob
-    dig 2
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
     b==
     assert
     bytec_3 // 0x01
@@ -239,19 +240,20 @@ receiver_while_top@4:
     frame_dig 0
     b>
     bz receiver_after_while@8
-    frame_dig 0
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     intc_2 // 1
     itob
-    dig 1
+    frame_dig 0
+    dup
+    uncover 2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     dup
     len
     intc_0 // 32

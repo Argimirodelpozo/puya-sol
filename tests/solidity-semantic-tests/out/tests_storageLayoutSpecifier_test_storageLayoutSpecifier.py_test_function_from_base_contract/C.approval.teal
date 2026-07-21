@@ -249,20 +249,6 @@ main_ternary_merge@42:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "y"
-    app_global_get_ex
-    assert // check y exists
-    intc_3 // 2
-    itob
-    b+
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bytec_1 // "y"
-    dig 1
-    app_global_put
-    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -274,6 +260,20 @@ main_ternary_merge@42:
     b<=
     assert // overflow
     bytec_0 // "x"
+    dig 1
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    intc_3 // 2
+    itob
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "y"
     dig 1
     app_global_put
     b+

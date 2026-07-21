@@ -1,3 +1,25 @@
+# Semantic Test Status — v459
+
+> **fix: H4 + M5 via OperandPlan intra-expression effect sequencing (2026-07-21):**
+> **12 failed / 1354 passed / 109 xf / 28 xp** (failure set identical to the canonical baseline = zero
+> regressions; +1 guard; the 13th listed failure in the -n2 run was the known test_send_zero_ether
+> localnet-race flake — passes standalone).
+> Ground truth established against REAL solc 0.8.20 legacy + py-evm (tests/WIP/tiny-fuzzing-oracle
+> evm_oracle.py): legacy evaluates a binop's RIGHT operand first; assignments RHS-first with the store
+> winning over a callee write-back; call args left-to-right with each arg's write-back visible to later
+> args and the callee; &&/ternary condition write-backs visible to the RHS/branches. via-IR is
+> left-to-right instead — sequencing is gated OFF under --via-yul-behavior (the viaYul corpus pins it).
+> Mechanism (ContractContext): buildScopedOperand captures each operand's pre+post pending deltas;
+> emitSequencedOperand re-emits them at evaluation position (pre → __seq_N value pin → hoisted
+> write-backs); EffectScan.h adds a conservative static mayWrite/onlyLocalPure scan for handle-model
+> callees that write state directly (nothing queued, invisible to deltas). Applied at: binop main path,
+> && || (left hoist + RHS write-backs gated INSIDE the conditional block — they previously leaked
+> unconditionally), ternary (condition + both branches), assignment main path (tuple LHS keeps build
+> order), and the internal-call arg loop (mutable-wtype args never pinned to keep the aliasing guard).
+> Guard: test_effect_sequencing (14 oracle-verified cases). Residuals documented in fable-review-3.md:
+> legacy-mode dead-local-decrement loses its underflow panic to backend DCE (known theme, no corpus
+> hit); assignment early-outs/tuple/fn-ptr args keep build order.
+
 # Semantic Test Status — v458
 
 > **fix: remaining fable-review-3 medium tail — Batches A/B/C (2026-07-21, overnight autonomous run):**

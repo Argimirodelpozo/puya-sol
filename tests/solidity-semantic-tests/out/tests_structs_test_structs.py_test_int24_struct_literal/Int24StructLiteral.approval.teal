@@ -362,177 +362,9 @@ main_ternary_false@17:
 Lib.sconsume:
     proto 1 2
     intc_3 // 0
-    dupn 5
+    dupn 7
     pushbytes ""
     dupn 2
-    frame_dig -1
-    extract 38 16
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_0 // 0x80000000000000000000000000000000
-    b>=
-    bz Lib.sconsume_ternary_false@2
-    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
-
-Lib.sconsume_ternary_merge@3:
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dup
-    frame_bury 1
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_bury 7
-    frame_dig -1
-    extract 32 3
-    btoi
-    intc 4 // 16777216
-    %
-    dup
-    intc 5 // 8388608
-    >=
-    bz Lib.sconsume_ternary_false@5
-    intc 6 // 18446744073692774400
-    +
-
-Lib.sconsume_ternary_merge@6:
-    itob
-    bytec 4 // 0xffffff
-    b&
-    dup
-    bytec 5 // 0x800000
-    b>=
-    bz Lib.sconsume_ternary_false@8
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
-    b+
-
-Lib.sconsume_ternary_merge@9:
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dup
-    frame_bury 0
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_dig 7
-    !=
-    bnz Lib.sconsume_bool_true@11
-    frame_dig 1
-    frame_dig 0
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_dig 7
-    ==
-    bz Lib.sconsume_bool_false@12
-
-Lib.sconsume_bool_true@11:
-    intc_2 // 1
-
-Lib.sconsume_bool_merge@13:
-    assert // signed arithmetic overflow
-    frame_dig 1
-    frame_dig 0
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_0 // 0x80000000000000000000000000000000
-    b>=
-    bz Lib.sconsume_ternary_false@15
-    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
-
-Lib.sconsume_ternary_merge@16:
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dup
-    frame_bury 2
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_bury 6
-    frame_dig -1
-    extract 35 3
-    btoi
-    intc 4 // 16777216
-    %
-    dup
-    intc 5 // 8388608
-    >=
-    bz Lib.sconsume_ternary_false@18
-    intc 6 // 18446744073692774400
-    +
-
-Lib.sconsume_ternary_merge@19:
-    itob
-    bytec 4 // 0xffffff
-    b&
-    dup
-    bytec 5 // 0x800000
-    b>=
-    bz Lib.sconsume_ternary_false@21
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
-    b+
-
-Lib.sconsume_ternary_merge@22:
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dup
-    frame_bury 3
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_dig 6
-    !=
-    bnz Lib.sconsume_bool_true@24
-    frame_dig 2
-    frame_dig 3
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_dig 6
-    ==
-    bz Lib.sconsume_bool_false@25
-
-Lib.sconsume_bool_true@24:
-    intc_2 // 1
-
-Lib.sconsume_bool_merge@26:
-    assert // signed arithmetic overflow
-    frame_dig 2
-    frame_dig 3
-    b+
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_0 // 0x80000000000000000000000000000000
-    b>=
-    bz Lib.sconsume_ternary_false@28
-    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
-
-Lib.sconsume_ternary_merge@29:
-    bytec_1 // 0x0100000000000000000000000000000000
-    b%
-    dup
-    frame_bury 4
-    bytec_0 // 0x80000000000000000000000000000000
-    b<
-    !
-    frame_bury 8
     frame_dig -1
     extract 54 3
     btoi
@@ -541,34 +373,104 @@ Lib.sconsume_ternary_merge@29:
     dup
     intc 5 // 8388608
     >=
-    bz Lib.sconsume_ternary_false@31
+    bz Lib.sconsume_ternary_false@2
     intc 6 // 18446744073692774400
     +
 
-Lib.sconsume_ternary_merge@32:
+Lib.sconsume_ternary_merge@3:
     itob
     bytec 4 // 0xffffff
     b&
     dup
     bytec 5 // 0x800000
     b>=
-    bz Lib.sconsume_ternary_false@34
+    bz Lib.sconsume_ternary_false@5
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
+    frame_bury 1
 
-Lib.sconsume_ternary_merge@35:
+Lib.sconsume_ternary_merge@6:
+    frame_dig -1
+    extract 35 3
+    btoi
+    intc 4 // 16777216
+    %
+    dup
+    intc 5 // 8388608
+    >=
+    bz Lib.sconsume_ternary_false@8
+    intc 6 // 18446744073692774400
+    +
+
+Lib.sconsume_ternary_merge@9:
+    itob
+    bytec 4 // 0xffffff
+    b&
+    dup
+    bytec 5 // 0x800000
+    b>=
+    bz Lib.sconsume_ternary_false@11
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b+
+    frame_bury 0
+
+Lib.sconsume_ternary_merge@12:
+    frame_dig -1
+    extract 38 16
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000000000000000
+    b>=
+    bz Lib.sconsume_ternary_false@14
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+Lib.sconsume_ternary_merge@15:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 5
+    frame_bury 2
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    frame_bury 8
+    frame_dig -1
+    extract 32 3
+    btoi
+    intc 4 // 16777216
+    %
+    dup
+    intc 5 // 8388608
+    >=
+    bz Lib.sconsume_ternary_false@17
+    intc 6 // 18446744073692774400
+    +
+
+Lib.sconsume_ternary_merge@18:
+    itob
+    bytec 4 // 0xffffff
+    b&
+    dup
+    bytec 5 // 0x800000
+    b>=
+    bz Lib.sconsume_ternary_false@20
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b+
+
+Lib.sconsume_ternary_merge@21:
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    dup
+    frame_bury 3
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     frame_dig 8
     !=
-    bnz Lib.sconsume_bool_true@37
-    frame_dig 4
-    frame_dig 5
+    bnz Lib.sconsume_bool_true@23
+    frame_dig 2
+    frame_dig 3
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -577,6 +479,108 @@ Lib.sconsume_ternary_merge@35:
     !
     frame_dig 8
     ==
+    bz Lib.sconsume_bool_false@24
+
+Lib.sconsume_bool_true@23:
+    intc_2 // 1
+
+Lib.sconsume_bool_merge@25:
+    assert // signed arithmetic overflow
+    frame_dig 2
+    frame_dig 3
+    b+
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000000000000000
+    b>=
+    bz Lib.sconsume_ternary_false@27
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+Lib.sconsume_ternary_merge@28:
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    dup
+    frame_bury 4
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    dup
+    frame_bury 9
+    frame_dig 0
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    dup
+    frame_bury 5
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    !=
+    bnz Lib.sconsume_bool_true@30
+    frame_dig 4
+    frame_dig 5
+    b+
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    frame_dig 9
+    ==
+    bz Lib.sconsume_bool_false@31
+
+Lib.sconsume_bool_true@30:
+    intc_2 // 1
+
+Lib.sconsume_bool_merge@32:
+    assert // signed arithmetic overflow
+    frame_dig 4
+    frame_dig 5
+    b+
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_0 // 0x80000000000000000000000000000000
+    b>=
+    bz Lib.sconsume_ternary_false@34
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+Lib.sconsume_ternary_merge@35:
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    dup
+    frame_bury 6
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    dup
+    frame_bury 10
+    frame_dig 1
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    dup
+    frame_bury 7
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    !=
+    bnz Lib.sconsume_bool_true@37
+    frame_dig 6
+    frame_dig 7
+    b+
+    bytec_1 // 0x0100000000000000000000000000000000
+    b%
+    bytec_0 // 0x80000000000000000000000000000000
+    b<
+    !
+    frame_dig 10
+    ==
     bz Lib.sconsume_bool_false@38
 
 Lib.sconsume_bool_true@37:
@@ -584,8 +588,8 @@ Lib.sconsume_bool_true@37:
 
 Lib.sconsume_bool_merge@39:
     assert // signed arithmetic overflow
-    frame_dig 4
-    frame_dig 5
+    frame_dig 6
+    frame_dig 7
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -614,33 +618,35 @@ Lib.sconsume_bool_false@38:
 Lib.sconsume_ternary_false@34:
     b Lib.sconsume_ternary_merge@35
 
-Lib.sconsume_ternary_false@31:
-    b Lib.sconsume_ternary_merge@32
-
-Lib.sconsume_ternary_false@28:
-    b Lib.sconsume_ternary_merge@29
-
-Lib.sconsume_bool_false@25:
+Lib.sconsume_bool_false@31:
     intc_3 // 0
-    b Lib.sconsume_bool_merge@26
+    b Lib.sconsume_bool_merge@32
 
-Lib.sconsume_ternary_false@21:
-    b Lib.sconsume_ternary_merge@22
+Lib.sconsume_ternary_false@27:
+    b Lib.sconsume_ternary_merge@28
 
-Lib.sconsume_ternary_false@18:
-    b Lib.sconsume_ternary_merge@19
-
-Lib.sconsume_ternary_false@15:
-    b Lib.sconsume_ternary_merge@16
-
-Lib.sconsume_bool_false@12:
+Lib.sconsume_bool_false@24:
     intc_3 // 0
-    b Lib.sconsume_bool_merge@13
+    b Lib.sconsume_bool_merge@25
+
+Lib.sconsume_ternary_false@20:
+    b Lib.sconsume_ternary_merge@21
+
+Lib.sconsume_ternary_false@17:
+    b Lib.sconsume_ternary_merge@18
+
+Lib.sconsume_ternary_false@14:
+    b Lib.sconsume_ternary_merge@15
+
+Lib.sconsume_ternary_false@11:
+    frame_bury 0
+    b Lib.sconsume_ternary_merge@12
 
 Lib.sconsume_ternary_false@8:
     b Lib.sconsume_ternary_merge@9
 
 Lib.sconsume_ternary_false@5:
+    frame_bury 1
     b Lib.sconsume_ternary_merge@6
 
 Lib.sconsume_ternary_false@2:

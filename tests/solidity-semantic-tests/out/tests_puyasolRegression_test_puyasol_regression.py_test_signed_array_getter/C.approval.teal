@@ -6,7 +6,7 @@ main:
     intcblock 1 0 32 2
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000 0xffffffffffffffffff 0x800000000000000000 0x151f7c75 "a32" "a128" "a72" "small" "__ctor_pending" "scalar72" 0x0000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     intc_1 // 0
-    dupn 13
+    dupn 11
     pushbytes ""
     dupn 6
     pushint 4096
@@ -95,7 +95,7 @@ main_ternary_false@18:
 main_a32_route@11:
     txna ApplicationArgs 1
     dup
-    bury 22
+    bury 20
     len
     intc_2 // 32
     ==
@@ -112,7 +112,7 @@ main_ternary_merge@27:
     assert // not payable
     pushint 8
     bzero
-    dig 21
+    dig 19
     concat
     dup
     len
@@ -164,7 +164,7 @@ main_ternary_false@26:
 main_a128_route@10:
     txna ApplicationArgs 1
     dup
-    bury 22
+    bury 20
     len
     intc_2 // 32
     ==
@@ -181,7 +181,7 @@ main_ternary_merge@35:
     assert // not payable
     pushint 8
     bzero
-    dig 21
+    dig 19
     concat
     dup
     len
@@ -231,7 +231,7 @@ main_ternary_false@34:
 main_a72_route@9:
     txna ApplicationArgs 1
     dup
-    bury 22
+    bury 20
     len
     intc_2 // 32
     ==
@@ -248,7 +248,7 @@ main_ternary_merge@43:
     assert // not payable
     pushint 8
     bzero
-    dig 21
+    dig 19
     concat
     dup
     len
@@ -298,7 +298,7 @@ main_ternary_false@42:
 main_small_route@8:
     txna ApplicationArgs 1
     dup
-    bury 22
+    bury 20
     len
     intc_2 // 32
     ==
@@ -315,7 +315,7 @@ main_ternary_merge@51:
     assert // not payable
     pushint 8
     bzero
-    dig 21
+    dig 19
     concat
     dup
     len
@@ -365,7 +365,7 @@ main_ternary_false@50:
 main_setScalar_route@7:
     txna ApplicationArgs 1
     dup
-    bury 21
+    bury 19
     len
     pushint 9
     ==
@@ -380,7 +380,7 @@ main_setScalar_route@7:
 main_ternary_merge@59:
     !
     assert // not payable
-    dig 19
+    dig 17
     bytec_1 // 0xffffffffffffffffff
     b&
     dup
@@ -433,9 +433,9 @@ main_ternary_merge@67:
     assert // not payable
     intc_1 // 0
     itob
-    bury 13
+    bury 11
     bytec 10 // 0x0000
-    bury 19
+    bury 17
     intc_1 // 0
     bury 7
 
@@ -444,7 +444,7 @@ main_while_top@68:
     dig 4
     <
     bz main_after_while@70
-    dig 18
+    dig 16
     dup
     intc_1 // 0
     extract_uint16
@@ -455,7 +455,7 @@ main_while_top@68:
     replace2 0
     pushbytes 0x000000000000000000
     concat
-    bury 19
+    bury 17
     dig 6
     intc_0 // 1
     +
@@ -464,7 +464,7 @@ main_while_top@68:
 
 main_after_while@70:
     bytec 10 // 0x0000
-    bury 18
+    bury 16
     intc_1 // 0
     bury 6
 
@@ -473,7 +473,7 @@ main_while_top@71:
     dig 4
     <
     bz main_after_while@73
-    dig 17
+    dig 15
     dup
     intc_1 // 0
     extract_uint16
@@ -484,7 +484,7 @@ main_while_top@71:
     replace2 0
     pushbytes 0x00000000000000000000000000000000
     concat
-    bury 18
+    bury 16
     dig 5
     intc_0 // 1
     +
@@ -493,7 +493,7 @@ main_while_top@71:
 
 main_after_while@73:
     bytec 10 // 0x0000
-    bury 17
+    bury 15
     intc_1 // 0
     bury 5
 
@@ -502,7 +502,7 @@ main_while_top@74:
     dig 4
     <
     bz main_after_while@76
-    dig 16
+    dig 14
     dup
     intc_1 // 0
     extract_uint16
@@ -513,7 +513,7 @@ main_while_top@74:
     replace2 0
     pushbytes 0x00000000
     concat
-    bury 17
+    bury 15
     dig 4
     intc_0 // 1
     +
@@ -521,31 +521,28 @@ main_while_top@74:
     b main_while_top@74
 
 main_after_while@76:
+    dig 14
+    bury 12
+    dig 15
+    bury 13
     dig 16
-    bury 14
-    dig 17
-    bury 15
-    dig 18
     bury 8
 
 main_while_top@77:
     dig 3
     itob
-    dig 13
+    dig 11
     b>
     bz main_after_while@94
-    dig 12
+    dig 10
     dup
     pushbytes 0x010000000000000000
     b<
     assert // array index out of bounds
-    pushint 9
-    bzero
-    bury 13
     pushint 8
     bzero
     dup
-    bury 13
+    bury 12
     swap
     concat
     dup
@@ -567,18 +564,19 @@ main_while_top@77:
     bytec_1 // 0xffffffffffffffffff
     b&
     dup
-    bury 17
+    bury 15
     bytec_2 // 0x800000000000000000
     b>=
     dup
     bury 2
     bz main_ternary_false@80
-    dig 15
+    dig 13
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000
     b+
 
 main_ternary_merge@81:
-    dig 12
+    pushint 9
+    bzero
     dup
     uncover 2
     concat
@@ -602,12 +600,9 @@ main_ternary_merge@81:
     uncover 2
     replace3 // on error: index access is out of bounds
     bury 8
-    pushint 16
-    bzero
-    bury 10
     dup
     bz main_ternary_false@83
-    dig 15
+    dig 13
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000
     b+
 
@@ -622,7 +617,8 @@ main_ternary_merge@84:
     b+
 
 main_ternary_merge@87:
-    dig 10
+    pushint 16
+    bzero
     dup
     uncover 2
     concat
@@ -643,19 +639,19 @@ main_ternary_merge@87:
     *
     intc_3 // 2
     +
-    dig 16
+    dig 14
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    bury 15
+    bury 13
     dup
     bz main_ternary_false@89
-    dig 15
+    dig 13
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffff000000000000000000
     b+
 
 main_ternary_merge@90:
-    dig 11
+    dig 10
     swap
     concat
     dup
@@ -682,37 +678,37 @@ main_ternary_merge@93:
     *
     intc_3 // 2
     +
-    dig 15
+    dig 13
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    bury 14
-    dig 12
+    bury 12
+    dig 10
     pushbytes 0x01
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 13
+    bury 11
     b main_while_top@77
 
 main_ternary_false@92:
     b main_ternary_merge@93
 
 main_ternary_false@89:
-    dig 15
+    dig 13
     b main_ternary_merge@90
 
 main_ternary_false@86:
     b main_ternary_merge@87
 
 main_ternary_false@83:
-    dig 15
+    dig 13
     b main_ternary_merge@84
 
 main_ternary_false@80:
-    dig 15
+    dig 13
     b main_ternary_merge@81
 
 main_after_while@94:
@@ -732,13 +728,13 @@ main_after_while@94:
     box_del
     pop
     bytec 5 // "a128"
-    dig 15
+    dig 13
     box_put
     bytec 4 // "a32"
     box_del
     pop
     bytec 4 // "a32"
-    dig 14
+    dig 12
     box_put
     intc_0 // 1
     return

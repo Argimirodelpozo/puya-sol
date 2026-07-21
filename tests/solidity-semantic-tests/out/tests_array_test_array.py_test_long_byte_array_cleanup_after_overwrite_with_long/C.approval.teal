@@ -105,29 +105,14 @@ main_while_top@21:
     itob
     b<
     bz main_after_while@24
-    dig 5
+    dig 7
     dup
     bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 8
-    dup
-    cover 2
-    bytec 5 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 2
-    dup
-    cover 2
     dig 1
-    concat
     dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
     uncover 2
-    uncover 3
     concat
     dup
     len
@@ -138,8 +123,22 @@ main_while_top@21:
     swap
     intc_1 // 1
     box_extract
+    dig 7
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 2
+    dig 1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     dig 4
-    cover 2
+    swap
+    uncover 3
     replace3
     bury 3
     bytec 6 // 0x01
@@ -332,30 +331,19 @@ main_while_top@47:
     dig 4
     b>
     bz main_after_while@49
-    dig 3
-    dup
-    bytec 5 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     intc_3 // 8
     bzero
-    dup
-    dig 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
     pushint 2
     itob
-    dig 3
+    dig 5
+    dup
+    cover 3
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    uncover 2
+    dig 1
     swap
     concat
     dup
@@ -367,8 +355,21 @@ main_while_top@47:
     &
     itob
     extract 7 1
+    dig 2
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     dig 5
-    cover 2
+    swap
+    uncover 2
     replace3
     bury 4
     bytec 6 // 0x01

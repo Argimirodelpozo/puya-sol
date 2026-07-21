@@ -69,10 +69,10 @@ main_ternary_merge@17:
     bz main_ternary_false@19
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 9
+    bury 8
 
 main_ternary_merge@20:
-    dig 8
+    dig 7
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -100,7 +100,7 @@ main_ternary_false@28:
     b main_ternary_merge@29
 
 main_ternary_false@19:
-    bury 9
+    bury 8
     b main_ternary_merge@20
 
 main_ternary_false@16:
@@ -110,7 +110,7 @@ main_ternary_false@16:
 main_sum2_route@9:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -134,14 +134,12 @@ main_sum2_route@9:
 main_ternary_merge@34:
     !
     assert // not payable
-    dig 1
-    dup
-    assert // array index out of bounds
     intc_1 // 1
-    >
+    dig 2
+    <
     assert // array index out of bounds
-    dig 9
-    extract 2 16
+    dig 8
+    extract 18 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -150,16 +148,13 @@ main_ternary_merge@34:
     bz main_ternary_false@36
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
+    bury 10
 
 main_ternary_merge@37:
-    dig 7
-    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    bury 1
-    dig 9
-    extract 18 16
+    dig 1
+    assert // array index out of bounds
+    dig 8
+    extract 2 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -175,11 +170,16 @@ main_ternary_merge@40:
     bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 1
+    dup
+    bury 2
+    dig 10
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
     !=
     bnz main_bool_true@42
-    dig 7
-    dig 7
+    dig 6
+    dig 10
     b+
     bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -195,8 +195,8 @@ main_bool_true@42:
 
 main_bool_merge@44:
     assert // signed arithmetic overflow
-    dig 7
-    dig 7
+    dig 6
+    dig 10
     b+
     bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -224,7 +224,7 @@ main_ternary_false@39:
     b main_ternary_merge@40
 
 main_ternary_false@36:
-    bury 8
+    bury 10
     b main_ternary_merge@37
 
 main_ternary_false@33:
@@ -234,7 +234,7 @@ main_ternary_false@33:
 main_gt0_route@8:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -260,7 +260,7 @@ main_ternary_merge@49:
     assert // not payable
     dig 2
     assert // array index out of bounds
-    dig 9
+    dig 8
     extract 2 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
@@ -270,10 +270,8 @@ main_ternary_merge@49:
     bz main_ternary_false@51
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
 
 main_ternary_merge@52:
-    dig 7
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -306,7 +304,6 @@ main_ternary_false@54:
     b main_ternary_merge@55
 
 main_ternary_false@51:
-    bury 8
     b main_ternary_merge@52
 
 main_ternary_false@48:
@@ -316,7 +313,7 @@ main_ternary_false@48:
 main_eq0_route@7:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -356,12 +353,12 @@ main_ternary_merge@60:
     bz main_ternary_false@62
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 9
+    bury 8
 
 main_ternary_merge@63:
     dig 3
     assert // array index out of bounds
-    dig 9
+    dig 8
     extract 2 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
@@ -386,7 +383,7 @@ main_ternary_merge@66:
     bury 6
 
 main_ternary_merge@69:
-    dig 8
+    dig 7
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -422,7 +419,7 @@ main_ternary_false@65:
     b main_ternary_merge@66
 
 main_ternary_false@62:
-    bury 9
+    bury 8
     b main_ternary_merge@63
 
 main_ternary_false@59:
@@ -432,7 +429,7 @@ main_ternary_false@59:
 main_get0_route@6:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -458,7 +455,7 @@ main_ternary_merge@77:
     assert // not payable
     dig 4
     assert // array index out of bounds
-    dig 9
+    dig 8
     extract 2 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
@@ -468,10 +465,8 @@ main_ternary_merge@77:
     bz main_ternary_false@79
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 8
 
 main_ternary_merge@80:
-    dig 7
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -504,7 +499,6 @@ main_ternary_false@82:
     b main_ternary_merge@83
 
 main_ternary_false@79:
-    bury 8
     b main_ternary_merge@80
 
 main_ternary_false@76:

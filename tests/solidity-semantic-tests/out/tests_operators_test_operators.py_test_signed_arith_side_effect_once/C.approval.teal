@@ -95,9 +95,9 @@ main_ternary_merge@20:
     bytec_2 // "cnt"
     swap
     app_global_put
-    callsub a
-    bury 3
     callsub b
+    callsub a
+    bury 4
     itob
     bytec_0 // 0x0100
     b%
@@ -120,7 +120,7 @@ main_ternary_merge@20:
     bytec_1 // 0x80
     b<
     dup
-    bury 5
+    bury 4
     !
     ==
     bz main_ternary_false@29
@@ -131,7 +131,7 @@ main_ternary_merge@20:
     bury 8
 
 main_ternary_merge@25:
-    dig 1
+    dup
     bnz main_ternary_false@27
     bytec_0 // 0x0100
     dig 4
@@ -231,7 +231,7 @@ main_ternary_false@29:
     bury 7
 
 main_ternary_merge@32:
-    dig 1
+    dup
     bnz main_ternary_false@34
     bytec_0 // 0x0100
     dig 4
@@ -274,18 +274,19 @@ main_ternary_merge@47:
     bytec_2 // "cnt"
     swap
     app_global_put
+    callsub a
     callsub b
     itob
     bytec_0 // 0x0100
     b%
     dup
-    bury 5
+    bury 6
     bytec_1 // 0x80
     b<
     !
     dup
-    bury 2
-    callsub a
+    bury 4
+    swap
     itob
     bytec_0 // 0x0100
     b%
@@ -306,7 +307,7 @@ main_ternary_merge@47:
     bytec_1 // 0x80
     b<
     !
-    dig 1
+    dig 2
     ==
     bz main_bool_false@50
 
@@ -397,18 +398,19 @@ main_ternary_merge@59:
     bytec_2 // "cnt"
     swap
     app_global_put
+    callsub b
     callsub a
     itob
     bytec_0 // 0x0100
     b%
     dup
-    bury 5
+    bury 6
     bytec_1 // 0x80
     b<
     !
     dup
-    bury 2
-    callsub b
+    bury 4
+    swap
     itob
     bytec_0 // 0x0100
     b%
@@ -427,7 +429,7 @@ main_ternary_merge@59:
     bytec_1 // 0x80
     b<
     !
-    dig 1
+    dig 2
     ==
     bz main_bool_false@62
 

@@ -126,10 +126,6 @@ main_while_top@19:
     dig 25
     b<
     bz main_after_while@24
-    dig 15
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     dig 12
     dig 26
     concat
@@ -168,10 +164,13 @@ main_while_top@21:
     b main_while_top@21
 
 main_after_while@23:
-    dig 12
-    dig 16
+    dig 15
     dup
-    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 13
+    dig 1
     concat
     dup
     len
@@ -472,10 +471,6 @@ main_while_top@47:
     dig 25
     b<
     bz main_after_while@52
-    dig 14
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     dig 12
     dig 26
     concat
@@ -514,10 +509,13 @@ main_while_top@49:
     b main_while_top@49
 
 main_after_while@51:
-    dig 12
-    dig 15
+    dig 14
     dup
-    cover 2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 13
+    dig 1
     concat
     dup
     len

@@ -6,6 +6,7 @@ main:
     intcblock 1 0 32 640
     bytecblock "data" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x
     intc_1 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -83,7 +84,17 @@ main_while_top@20:
     pushbytes 0x14
     b<
     bz main_after_while@24
+    intc_0 // 1
+    itob
+    dig 1
     dup
+    uncover 2
+    b+
+    dup
+    bury 4
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
     pushbytes 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -97,16 +108,7 @@ main_while_top@20:
     pop
 
 main_after_if_else@23:
-    intc_0 // 1
-    itob
     dig 1
-    dup
-    uncover 2
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
     dup
     len
     intc_2 // 32
@@ -118,6 +120,8 @@ main_after_if_else@23:
     pushint 8
     bzero
     dig 2
+    dup
+    cover 2
     concat
     dup
     len
@@ -128,7 +132,7 @@ main_after_if_else@23:
     *
     bytec_0 // "data"
     swap
-    uncover 2
+    uncover 3
     box_replace // on error: index out of bounds
     pushbytes 0x01
     b+

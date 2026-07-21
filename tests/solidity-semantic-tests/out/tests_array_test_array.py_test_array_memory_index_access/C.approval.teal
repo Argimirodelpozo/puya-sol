@@ -119,19 +119,20 @@ main_while_top@17:
     dig 16
     b<
     bz main_after_while@19
-    dig 7
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     intc_1 // 1
     itob
-    dig 1
+    dig 8
+    dup
+    uncover 2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     dup
     len
     intc_0 // 32
@@ -270,19 +271,20 @@ main_while_top@28:
     dig 16
     b<
     bz main_after_while@30
-    dig 9
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     intc_1 // 1
     itob
-    dig 1
+    dig 10
+    dup
+    uncover 2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
     dup
     len
     intc_0 // 32
@@ -326,13 +328,22 @@ main_while_top@31:
     dig 16
     b<
     bz main_after_while@35
-    dig 8
+    intc_1 // 1
+    itob
+    dig 9
     dup
+    uncover 2
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 7
-    dig 1
+    dig 8
+    uncover 2
     concat
     dup
     len
@@ -346,14 +357,6 @@ main_while_top@31:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    intc_1 // 1
-    itob
-    uncover 2
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
     b==
     dup
     bury 2

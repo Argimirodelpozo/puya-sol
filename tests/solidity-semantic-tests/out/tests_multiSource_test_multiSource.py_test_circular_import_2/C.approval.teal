@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_6udisv00/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_oj49w4cn/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -49,8 +49,9 @@ main_foo_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
+    callsub g
     callsub f
-    callsub /tmp/multisource_6udisv00/s2.sol.f_28
+    callsub /tmp/multisource_oj49w4cn/s2.sol.f_28
     dup2
     b>=
     assert // underflow
@@ -65,11 +66,10 @@ main_ternary_merge@9:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    callsub g
-    dup2
+    dup
+    dig 2
     b>=
     assert // underflow
-    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
@@ -100,11 +100,11 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /tmp/multisource_6udisv00/s2.sol.f() -> bytes:
+// /tmp/multisource_oj49w4cn/s2.sol.f() -> bytes:
 f:
     pushint 1000
     itob
-    callsub /tmp/multisource_6udisv00/s2.sol.f_28
+    callsub /tmp/multisource_oj49w4cn/s2.sol.f_28
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -128,14 +128,14 @@ f:
     retsub
 
 
-// /tmp/multisource_6udisv00/s2.sol.f_28() -> bytes:
-/tmp/multisource_6udisv00/s2.sol.f_28:
+// /tmp/multisource_oj49w4cn/s2.sol.f_28() -> bytes:
+/tmp/multisource_oj49w4cn/s2.sol.f_28:
     pushint 2
     itob
     retsub
 
 
-// /tmp/multisource_6udisv00/s2.sol.g() -> bytes:
+// /tmp/multisource_oj49w4cn/s2.sol.g() -> bytes:
 g:
     pushint 4
     itob

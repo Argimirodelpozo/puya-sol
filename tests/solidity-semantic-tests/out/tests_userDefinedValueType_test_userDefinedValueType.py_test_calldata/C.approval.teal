@@ -380,22 +380,20 @@ test_equality_while_top@4:
     pushint 8
     -
     extract_uint64
-    frame_dig -1
-    extract 2 0
-    swap
     intc_2 // 32
     *
-    swap
-    dig 1
-    intc_2 // 32
-    extract3 // on error: index access is out of bounds
     intc_3 // 2
-    uncover 2
+    dig 1
     +
     bytec_0 // "addresses"
     swap
     intc_2 // 32
     box_extract // on error: index out of bounds
+    frame_dig -1
+    extract 2 0
+    uncover 2
+    intc_2 // 32
+    extract3 // on error: index access is out of bounds
     ==
     assert
     bytec_3 // 0x01

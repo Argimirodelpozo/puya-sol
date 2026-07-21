@@ -6,7 +6,7 @@ main:
     intcblock 8 1 0 32 160 320
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 "dest" "source" 0x01 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "canary" 0x151f7c75
     intc_2 // 0
-    dupn 4
+    dupn 7
     pushint 4096
     bzero
     dup
@@ -89,7 +89,7 @@ main_ternary_merge@25:
     !
     assert // not payable
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 1
+    bury 2
     load 0
     pushint 24
     bzero
@@ -104,29 +104,16 @@ main_ternary_merge@25:
     store 0
     intc_2 // 0
     itob
-    bury 4
+    bury 5
 
 main_while_top@26:
     pushint 10
     itob
-    dig 4
+    dig 5
     b>
     bz main_after_while@36
-    pushint 4
-    itob
     dig 4
     dup
-    uncover 2
-    b*
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 1
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -138,7 +125,7 @@ main_while_top@26:
     intc_0 // 8
     bzero
     dup
-    dig 4
+    dig 3
     concat
     dup
     len
@@ -153,24 +140,10 @@ main_while_top@26:
     extract3 // on error: index access is out of bounds
     dup
     extract 0 8
-    dig 2
-    dig 4
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    dig 6
-    swap
-    uncover 2
-    replace3 // on error: index access is out of bounds
-    intc_1 // 1
+    pushint 4
     itob
     dig 4
-    b+
+    b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -179,10 +152,36 @@ main_while_top@26:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    dig 7
+    swap
+    uncover 3
+    replace3 // on error: index access is out of bounds
     dig 2
     extract 8 8
-    dig 4
-    uncover 2
+    intc_1 // 1
+    itob
+    dig 3
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 5
+    swap
     concat
     dup
     len
@@ -193,35 +192,11 @@ main_while_top@26:
     *
     swap
     replace3 // on error: index access is out of bounds
-    pushint 2
-    itob
-    dig 4
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     dig 2
     extract 16 8
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    pushint 3
+    pushint 2
     itob
-    uncover 4
+    dig 3
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -231,10 +206,8 @@ main_while_top@26:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    uncover 2
-    extract 24 8
-    uncover 3
-    uncover 2
+    dig 5
+    swap
     concat
     dup
     len
@@ -245,19 +218,45 @@ main_while_top@26:
     *
     swap
     replace3 // on error: index access is out of bounds
-    bury 2
+    uncover 2
+    extract 24 8
+    pushint 3
+    itob
+    uncover 3
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bury 3
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 4
+    bury 5
     b main_while_top@26
 
 main_after_while@36:
     bytec 9 // 0x151f7c75
-    dig 1
+    dig 2
     concat
     log
     intc_1 // 1
@@ -279,7 +278,7 @@ main_ternary_merge@33:
     !
     assert // not payable
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 1
+    bury 2
     load 0
     pushint 24
     bzero
@@ -294,29 +293,16 @@ main_ternary_merge@33:
     store 0
     intc_2 // 0
     itob
-    bury 5
+    bury 6
 
 main_while_top@34:
     pushint 5
     itob
-    dig 5
+    dig 6
     b>
     bz main_after_while@36
-    pushint 4
-    itob
     dig 5
     dup
-    uncover 2
-    b*
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 1
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -328,7 +314,7 @@ main_while_top@34:
     intc_0 // 8
     bzero
     dup
-    dig 4
+    dig 3
     concat
     dup
     len
@@ -343,24 +329,10 @@ main_while_top@34:
     extract3 // on error: index access is out of bounds
     dup
     extract 0 8
-    dig 2
-    dig 4
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    dig 6
-    swap
-    uncover 2
-    replace3 // on error: index access is out of bounds
-    intc_1 // 1
+    pushint 4
     itob
     dig 4
-    b+
+    b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -369,10 +341,36 @@ main_while_top@34:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    dig 7
+    swap
+    uncover 3
+    replace3 // on error: index access is out of bounds
     dig 2
     extract 8 8
-    dig 4
-    uncover 2
+    intc_1 // 1
+    itob
+    dig 3
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 5
+    swap
     concat
     dup
     len
@@ -383,35 +381,11 @@ main_while_top@34:
     *
     swap
     replace3 // on error: index access is out of bounds
-    pushint 2
-    itob
-    dig 4
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
     dig 2
     extract 16 8
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_0 // 8
-    *
-    swap
-    replace3 // on error: index access is out of bounds
-    pushint 3
+    pushint 2
     itob
-    uncover 4
+    dig 3
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -421,10 +395,8 @@ main_while_top@34:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    uncover 2
-    extract 24 8
-    uncover 3
-    uncover 2
+    dig 5
+    swap
     concat
     dup
     len
@@ -435,14 +407,40 @@ main_while_top@34:
     *
     swap
     replace3 // on error: index access is out of bounds
-    bury 2
+    uncover 2
+    extract 24 8
+    pushint 3
+    itob
+    uncover 3
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bury 3
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 5
+    bury 6
     b main_while_top@34
 
 main_ternary_false@32:
@@ -533,35 +531,23 @@ main_ternary_merge@56:
     assert // not payable
     intc_2 // 0
     itob
-    bury 2
+    bury 3
 
 main_while_top@57:
     pushint 10
     itob
-    dig 2
+    dig 3
     b>
     bz main_after_while@71
-    dig 1
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    bytec_2 // "dest"
-    box_len
-    bury 1
-    bnz main_after_if_else@60
-    bytec_2 // "dest"
-    intc 5 // 320
-    box_create
-    pop
-
-main_after_if_else@60:
     intc_0 // 8
     bzero
+    dup
+    bury 2
     pushint 100
     itob
     pushint 4
     itob
-    dig 4
+    dig 5
     dup
     cover 4
     b*
@@ -627,7 +613,7 @@ main_after_if_else@60:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 4
+    uncover 4
     swap
     concat
     dup
@@ -643,8 +629,24 @@ main_after_if_else@60:
     concat
     swap
     concat
-    swap
-    dig 2
+    bury 8
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_2 // "dest"
+    box_len
+    bury 1
+    bnz main_after_if_else@60
+    bytec_2 // "dest"
+    intc 5 // 320
+    box_create
+    pop
+
+main_after_if_else@60:
+    dup
+    dig 3
+    dup
+    cover 2
     concat
     dup
     len
@@ -655,7 +657,7 @@ main_after_if_else@60:
     *
     bytec_2 // "dest"
     swap
-    uncover 2
+    dig 9
     box_replace // on error: index out of bounds
     bytec 4 // 0x01
     b+
@@ -663,7 +665,7 @@ main_after_if_else@60:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 2
+    bury 3
     b main_while_top@57
 
 main_after_while@71:
@@ -687,35 +689,23 @@ main_ternary_merge@66:
     assert // not payable
     intc_2 // 0
     itob
-    bury 3
+    bury 4
 
 main_while_top@67:
     pushint 5
     itob
-    dig 3
+    dig 4
     b>
     bz main_after_while@71
-    dig 2
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    bytec_3 // "source"
-    box_len
-    bury 1
-    bnz main_after_if_else@70
-    bytec_3 // "source"
-    intc 4 // 160
-    box_create
-    pop
-
-main_after_if_else@70:
     intc_0 // 8
     bzero
+    dup
+    bury 2
     intc_1 // 1
     itob
     pushint 4
     itob
-    dig 5
+    dig 6
     dup
     cover 4
     dig 1
@@ -781,7 +771,7 @@ main_after_if_else@70:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 4
+    uncover 4
     swap
     concat
     dup
@@ -797,8 +787,24 @@ main_after_if_else@70:
     concat
     swap
     concat
-    swap
-    dig 2
+    bury 9
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_3 // "source"
+    box_len
+    bury 1
+    bnz main_after_if_else@70
+    bytec_3 // "source"
+    intc 4 // 160
+    box_create
+    pop
+
+main_after_if_else@70:
+    dup
+    dig 4
+    dup
+    cover 2
     concat
     dup
     len
@@ -809,7 +815,7 @@ main_after_if_else@70:
     *
     bytec_3 // "source"
     swap
-    uncover 2
+    dig 10
     box_replace // on error: index out of bounds
     bytec 4 // 0x01
     b+
@@ -817,7 +823,7 @@ main_after_if_else@70:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 3
+    bury 4
     b main_while_top@67
 
 main_ternary_false@65:

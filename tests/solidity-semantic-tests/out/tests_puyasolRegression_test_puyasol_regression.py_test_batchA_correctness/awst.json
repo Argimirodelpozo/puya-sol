@@ -1250,7 +1250,7 @@
               }
             },
             {
-              "_type": "ExpressionStatement",
+              "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
                 "line": 658,
@@ -1259,8 +1259,8 @@
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "AssignmentExpression",
+              "target": {
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
                   "line": 658,
@@ -1274,25 +1274,25 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "target": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
-                    "line": 658,
-                    "end_line": 659,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "name": "a"
+                "name": "__seq_0"
+              },
+              "value": {
+                "_type": "SingleEvaluation",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
+                  "line": 663,
+                  "end_line": 668,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
                 },
-                "value": {
-                  "_type": "SingleEvaluation",
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "source": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
                     "line": 663,
@@ -1306,8 +1306,8 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "source": {
-                    "_type": "ReinterpretCast",
+                  "expr": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
                       "line": 663,
@@ -1317,52 +1317,36 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    "expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
-                        "line": 663,
-                        "end_line": 668,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "itob",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
-                            "line": 667,
-                            "end_line": 668,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 5,
-                          "teal_alias": null
-                        }
-                      ]
-                    }
-                  },
-                  "_id": 1048577
-                }
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
+                          "line": 667,
+                          "end_line": 668,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 5,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
+                },
+                "_id": 1048577
               }
             },
             {
@@ -1614,6 +1598,67 @@
                     ]
                   }
                 ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
+                "line": 658,
+                "end_line": 669,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssignmentExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
+                  "line": 658,
+                  "end_line": 669,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "target": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
+                    "line": 658,
+                    "end_line": 659,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "name": "a"
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol",
+                    "line": 658,
+                    "end_line": 669,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "name": "__seq_0"
+                }
               }
             },
             {

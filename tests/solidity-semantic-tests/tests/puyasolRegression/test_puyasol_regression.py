@@ -2807,3 +2807,35 @@ def test_mstore8_multislot(harness):
     assert as_int(harness.call(app, "writeHigh(uint256,uint8)", 100, 0xAB).abi_return) == 0xAB
     assert as_int(harness.call(app, "writeHigh(uint256,uint8)", 5000, 0xCD).abi_return) == 0xCD
     assert as_int(harness.call(app, "writeHigh(uint256,uint8)", 9000, 0x42).abi_return) == 0x42
+
+
+def test_effect_sequencing(harness):
+    """puyasolRegression/contracts/effect_sequencing.sol — NOT an o.g. test.
+
+    OperandPlan intra-expression effect sequencing (fable-review-3 H4 + M5).
+    Every expected value verified against real solc 0.8.20 legacy + py-evm:
+    binops evaluate RIGHT operand first; assignments RHS-first with the store
+    winning over callee write-backs; call args left-to-right with write-backs
+    visible to later args; &&/ternary conditions' write-backs visible to the
+    RHS/branches.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/effect_sequencing.sol")
+    fee = {"extra_fee": 10_000}
+    assert as_int(harness.call(app, "h4a()", **fee).abi_return) == 105
+    assert as_int(harness.call(app, "h4b()", **fee).abi_return) == 106
+    assert as_int(harness.call(app, "h4c()", **fee).abi_return) == 1
+    assert as_int(harness.call(app, "h4d()", **fee).abi_return) == 6
+    assert as_int(harness.call(app, "h4e()", **fee).abi_return) == 205
+    assert as_int(harness.call(app, "h4h()", **fee).abi_return) == 111
+    assert as_int(harness.call(app, "h4f()", **fee).abi_return) == 100006
+    assert as_int(harness.call(app, "h4g()", **fee).abi_return) == 5100
+    r = harness.call(app, "m5a()", **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 0, 1]
+    r = harness.call(app, "m5b()", **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 1, 1]
+    r = harness.call(app, "m5c()", **fee).abi_return
+    assert [as_int(x) for x in r] == [105, 6]
+    assert as_int(harness.call(app, "m5d()", **fee).abi_return) == 100
+    assert as_int(harness.call(app, "m5e()", **fee).abi_return) == 106
+    r = harness.call(app, "m5f()", **fee).abi_return
+    assert [as_int(x) for x in r] == [0, 0, 1]

@@ -181,18 +181,18 @@ main_while_top@37:
     dig 5
     b>
     bz main_after_while@39
-    dig 4
-    dup
-    pushbytes 0x010000000000000000
-    b<
-    assert // array index out of bounds
     global CurrentApplicationID
     itob
     bytec 5 // method "h()byte[12]"
     concat
+    dig 5
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
     pushint 8
     bzero
-    dig 2
+    dig 1
     concat
     dup
     len
@@ -205,7 +205,7 @@ main_while_top@37:
     +
     dig 6
     swap
-    uncover 2
+    uncover 3
     replace3 // on error: index access is out of bounds
     bury 5
     pushbytes 0x01
