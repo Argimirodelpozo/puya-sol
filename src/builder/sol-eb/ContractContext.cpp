@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "awst/NameGen.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-eb/BinaryOpBuilder.h"
@@ -78,6 +79,35 @@ void ContractContext::appendPendingTo(
 		_out.push_back(std::move(p));
 	for (auto& p: takePending())
 		_out.push_back(std::move(p));
+}
+
+std::shared_ptr<awst::Expression> ContractContext::emitSequencedOperand(
+	OperandDeltas&& _d,
+	std::shared_ptr<awst::Expression> _value,
+	bool _pin,
+	awst::SourceLocation const& _loc)
+{
+	for (auto& s: _d.pre)
+		prePendingStatements.push_back(std::move(s));
+	bool isConstant = !_value
+		|| dynamic_cast<awst::IntegerConstant const*>(_value.get())
+		|| dynamic_cast<awst::BoolConstant const*>(_value.get())
+		|| dynamic_cast<awst::BytesConstant const*>(_value.get())
+		|| dynamic_cast<awst::StringConstant const*>(_value.get())
+		|| dynamic_cast<awst::VoidConstant const*>(_value.get());
+	if (_pin && !isConstant && _value->wtype
+		&& _value->wtype != awst::WType::voidType())
+	{
+		auto var = awst::makeVarExpression(
+			"__seq_" + std::to_string(awst::NameGen::next("ContractContext.seqCounter")),
+			_value->wtype, _loc);
+		prePendingStatements.push_back(
+			awst::makeAssignmentStatement(var, std::move(_value), _loc));
+		_value = var;
+	}
+	for (auto& s: _d.post)
+		prePendingStatements.push_back(std::move(s));
+	return _value;
 }
 
 } // namespace puyasol::builder::eb

@@ -457,6 +457,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
 	m_exprBuilder->currentContract = &_contract;
+	m_exprBuilder->viaIRSequencing = m_viaIR;
 
 	// Pre-populate internalized library func map before translation so the call
 	// resolver routes them as InstanceMethodTargets.

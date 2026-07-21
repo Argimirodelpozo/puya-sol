@@ -6,6 +6,7 @@
 #include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -250,6 +251,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		return awst::makeUtf8BytesConstant(name, m_loc);
 	};
 
+	// Args evaluate left-to-right on EVM (verified vs 0.8.20 + py-evm), with
+	// each arg's write-backs landing before the NEXT arg — and before the call
+	// itself executes. Capture each arg's queued effects; re-emitted in order
+	// below once all args are built.
+	std::vector<eb::ContractContext::OperandDeltas> argDeltas;
+	std::vector<bool> argMayWrite, argLocalPure;
+
 	// For using-for calls, prepend receiver as first arg
 	if (_isUsingForCall)
 	{
@@ -257,15 +265,19 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
 		{
 			awst::CallArg ca;
-			if (mappingStorageParamIndices.count(0))
-				ca.value = extractMappingKeyPrefix(memberAccess->expression());
-			else
-			{
-				ca.value = buildExpr(memberAccess->expression());
+			eb::ContractContext::OperandDeltas d;
+			ca.value = m_ctx.buildScopedOperand([&]() -> std::shared_ptr<awst::Expression> {
+				if (mappingStorageParamIndices.count(0))
+					return extractMappingKeyPrefix(memberAccess->expression());
+				auto v = buildExpr(memberAccess->expression());
 				if (!paramTypes.empty())
-					ca.value = builder::TypeCoercion::implicitNumericCast(
-						std::move(ca.value), paramTypes[0], m_loc);
-			}
+					v = builder::TypeCoercion::implicitNumericCast(
+						std::move(v), paramTypes[0], m_loc);
+				return v;
+			}, d, /*_conditional=*/false);
+			argDeltas.push_back(std::move(d));
+			argMayWrite.push_back(builder::EffectScan::mayWrite(memberAccess->expression()));
+			argLocalPure.push_back(builder::onlyLocalPure(memberAccess->expression()));
 			call->args.push_back(std::move(ca));
 		}
 	}
@@ -276,22 +288,49 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		awst::CallArg ca;
 		size_t paramIdx = _isUsingForCall ? (i + 1) : i;
-		if (mappingStorageParamIndices.count(paramIdx))
-			ca.value = extractMappingKeyPrefix(*sortedArgs[i]);
-		else
-		{
-			ca.value = buildExpr(*sortedArgs[i]);
+		eb::ContractContext::OperandDeltas d;
+		ca.value = m_ctx.buildScopedOperand([&]() -> std::shared_ptr<awst::Expression> {
+			if (mappingStorageParamIndices.count(paramIdx))
+				return extractMappingKeyPrefix(*sortedArgs[i]);
+			auto v = buildExpr(*sortedArgs[i]);
 			if (paramIdx < paramTypes.size())
-				ca.value = builder::TypeCoercion::implicitNumericCast(
-					std::move(ca.value), paramTypes[paramIdx], m_loc);
+				v = builder::TypeCoercion::implicitNumericCast(
+					std::move(v), paramTypes[paramIdx], m_loc);
 			// Signed sub-word → wider-signed implicit widen (e.g. `f(someInt8)` into int16 param):
 			// implicitNumericCast is a uint64→uint64 no-op that drops the sign. Re-extend.
 			if (_funcDef && paramIdx < _funcDef->parameters().size())
-				ca.value = builder::TypeCoercion::signExtendSignedWiden(
-					std::move(ca.value), sortedArgs[i]->annotation().type,
+				v = builder::TypeCoercion::signExtendSignedWiden(
+					std::move(v), sortedArgs[i]->annotation().type,
 					_funcDef->parameters()[paramIdx]->type(), m_loc);
-		}
+			return v;
+		}, d, /*_conditional=*/false);
+		argDeltas.push_back(std::move(d));
+		argMayWrite.push_back(builder::EffectScan::mayWrite(*sortedArgs[i]));
+		argLocalPure.push_back(builder::onlyLocalPure(*sortedArgs[i]));
 		call->args.push_back(std::move(ca));
+	}
+
+	// Re-emit captured arg effects in arg order. With no write-backs and no
+	// direct-state-writing args this restores the pre-statements
+	// byte-identically. Otherwise each arg's write-backs hoist to pre-position
+	// (so later args and the callee observe them), and an earlier arg whose
+	// value a LATER arg's effects could disturb is pinned first (locals-only
+	// values are immune and skip it). Mutable-wtype values are never pinned —
+	// a pin temp would defeat the aliasing guard below.
+	{
+		for (size_t ai = 0; ai < argDeltas.size(); ++ai)
+		{
+			bool laterEffects = false;
+			for (size_t aj = ai + 1; aj < argDeltas.size(); ++aj)
+				laterEffects = laterEffects
+					|| !argDeltas[aj].post.empty() || argMayWrite[aj];
+			bool pin = laterEffects && !argLocalPure[ai]
+				&& call->args[ai].value
+				&& call->args[ai].value->wtype
+				&& call->args[ai].value->wtype->immutable();
+			call->args[ai].value = m_ctx.emitSequencedOperand(
+				std::move(argDeltas[ai]), std::move(call->args[ai].value), pin, m_loc);
+		}
 	}
 
 	// Handle-model dual handle: append a uint64 OFFSET arg for each offset-convention struct-ref

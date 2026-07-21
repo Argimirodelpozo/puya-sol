@@ -2,6 +2,7 @@
 
 #include "builder/sol-types/SolcConstFold.h"
 #include "awst/NameGen.h"
+#include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-ast/exprs/SolBinaryOperation.h"
@@ -79,19 +80,27 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	if (op != Token::And && op != Token::Or)
 		return nullptr;
 
-	auto left = buildExpr(m_binOp.leftExpression());
+	// Left evaluates unconditionally and FIRST: hoist its write-backs (post-
+	// pendings) so the RHS observes them (`bump(s) > 0 && s.f == 6` — the RHS
+	// runs at call-return state on EVM, not pre-write-back). Pin the left value
+	// before the hoist so it keeps its pre-write-back reads.
+	eb::ContractContext::OperandDeltas leftD;
+	auto left = m_ctx.buildScopedOperand(
+		[&] { return buildExpr(m_binOp.leftExpression()); }, leftD, /*_conditional=*/false);
+	bool leftHadPost = !leftD.post.empty();
+	left = m_ctx.emitSequencedOperand(std::move(leftD), std::move(left), leftHadPost, m_loc);
 
 	// Build the RHS, capturing any side effects it pushes (a checked op's overflow/zero assert, a
-	// `**` square-and-multiply loop, a nested short-circuit). They must run ONLY when the RHS is
-	// evaluated, else `b != 0 && a / b > x` divides by zero when b == 0 (EVM short-circuits).
-	// buildScopedOperand owns the capture (OperandPlan, fable-review item 7).
-	std::vector<std::shared_ptr<awst::Statement>> rhsSideEffects;
+	// `**` square-and-multiply loop, a nested short-circuit, a call's write-back). They must run
+	// ONLY when the RHS is evaluated, else `b != 0 && a / b > x` divides by zero when b == 0
+	// (EVM short-circuits). buildScopedOperand owns the capture (OperandPlan, fable-review item 7).
+	eb::ContractContext::OperandDeltas rhsD;
 	auto right = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_binOp.rightExpression()); }, rhsSideEffects);
+		[&] { return buildExpr(m_binOp.rightExpression()); }, rhsD);
 
 	auto boolOp = (op == Token::And)
 		? awst::BinaryBooleanOperator::And : awst::BinaryBooleanOperator::Or;
-	if (rhsSideEffects.empty())
+	if (rhsD.empty())
 		return awst::makeBoolBinOp(std::move(left), boolOp, std::move(right), m_loc);
 
 	// RHS has side effects -> gate them behind the condition (mirror the ternary, SolConditional):
@@ -101,9 +110,10 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	auto* boolType = awst::WType::boolType();
 	auto tempVar = [&] { return awst::makeVarExpression(tempName, boolType, m_loc); };
 
-	// RHS: its captured pre-statements run, then temp = right (OperandPlan block).
+	// RHS: its captured pre-statements run, then temp = right, then its
+	// write-backs — all gated with the operand (OperandPlan block).
 	auto rhsBlock = eb::ContractContext::makeScopedResultBlock(
-		std::move(rhsSideEffects), tempVar(), std::move(right), m_loc);
+		std::move(rhsD.pre), tempVar(), std::move(right), m_loc, std::move(rhsD.post));
 	// Short-circuit branch: temp = the constant that skips the RHS.
 	auto shortBlock = eb::ContractContext::makeScopedResultBlock(
 		{}, tempVar(), awst::makeBoolConstant(op == Token::Or, m_loc), m_loc);
@@ -251,9 +261,45 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 	if (auto result = trySolShortCircuit())
 		return result;
 
-	// 3. Build operands
-	auto left = buildExpr(m_binOp.leftExpression());
-	auto right = buildExpr(m_binOp.rightExpression());
+	// 3. Build operands. Legacy solc evaluates the RIGHT operand first
+	// (verified vs 0.8.20 + py-evm: `bump(s) + s.f` reads the PRE-call s.f,
+	// `s.f + bump(s)` the post-call one). Capture each side's queued effects
+	// and re-emit in that order: right's pre, a pin of right's value, right's
+	// write-backs (hoisted), then left's pre — so left's inline reads see
+	// right's effects and right's pinned value predates left's. Effect-free
+	// operands re-emit byte-identically with no pin.
+	eb::ContractContext::OperandDeltas ld, rd;
+	auto left = m_ctx.buildScopedOperand(
+		[&] { return buildExpr(m_binOp.leftExpression()); }, ld, /*_conditional=*/false);
+	auto right = m_ctx.buildScopedOperand(
+		[&] { return buildExpr(m_binOp.rightExpression()); }, rd, /*_conditional=*/false);
+	if (m_ctx.viaIRSequencing)
+	{
+		// via-IR evaluates left-to-right == build order: keep everything put.
+		m_ctx.restoreOperandDeltas(std::move(ld));
+		m_ctx.restoreOperandDeltas(std::move(rd));
+	}
+	else
+	{
+		// Static scan: calls that write state DIRECTLY (handle-model storage
+		// params) execute inline and queue nothing — pin the right operand so
+		// it still evaluates before them. Skipped when the other side only
+		// reads locals (nothing inline effects can disturb).
+		bool staticNeed =
+			(builder::EffectScan::mayWrite(m_binOp.leftExpression())
+				&& !builder::onlyLocalPure(m_binOp.rightExpression()))
+			|| (builder::EffectScan::mayWrite(m_binOp.rightExpression())
+				&& !builder::onlyLocalPure(m_binOp.leftExpression()));
+		bool reorder = !ld.empty() || !rd.post.empty() || staticNeed;
+		right = m_ctx.emitSequencedOperand(std::move(rd), std::move(right), reorder, m_loc);
+		// Left evaluates inline after all re-emitted effects; its own
+		// write-backs stay at the statement boundary (nothing later in this
+		// expression).
+		for (auto& s: ld.pre)
+			m_ctx.prePendingStatements.push_back(std::move(s));
+		for (auto& s: ld.post)
+			m_ctx.pendingStatements.push_back(std::move(s));
+	}
 	auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
 
 	// Checked `**` references its operands in the 0**0 special case AND the

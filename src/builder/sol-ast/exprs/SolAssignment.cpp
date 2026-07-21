@@ -14,6 +14,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "Logger.h"
@@ -52,8 +53,57 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleSlotHandleFieldWrite())    return std::move(*r);
 
 	// (2) Build target + value (if tryHandlePushAssignRewrite claimed, it already returned).
-	auto target = buildExpr(m_assignment.leftHandSide());
-	auto value = buildExpr(m_assignment.rightHandSide());
+	// Legacy solc evaluates the RHS fully FIRST (verified vs 0.8.20 + py-evm:
+	// `arr[j++] = j` stores the pre-increment j; `s.f = bump(s)` — the STORE
+	// wins over the callee's write-back). Capture both sides' queued effects
+	// and re-emit RHS-first: RHS pre, a pin of the RHS value, RHS write-backs
+	// (hoisted before the store), then the LHS effects. Effect-free sides
+	// re-emit byte-identically with no pin. Tuple assignments keep the plain
+	// build (their element-wise handler owns sequencing).
+	std::shared_ptr<awst::Expression> target, value;
+	if (dynamic_cast<TupleType const*>(m_assignment.leftHandSide().annotation().type))
+	{
+		target = buildExpr(m_assignment.leftHandSide());
+		value = buildExpr(m_assignment.rightHandSide());
+	}
+	else
+	{
+		eb::ContractContext::OperandDeltas lhsD, rhsD;
+		target = m_ctx.buildScopedOperand(
+			[&] { return buildExpr(m_assignment.leftHandSide()); }, lhsD, /*_conditional=*/false);
+		value = m_ctx.buildScopedOperand(
+			[&] { return buildExpr(m_assignment.rightHandSide()); }, rhsD, /*_conditional=*/false);
+		if (m_ctx.viaIRSequencing)
+		{
+			// via-IR keeps build order (LHS then RHS effects).
+			m_ctx.restoreOperandDeltas(std::move(lhsD));
+			m_ctx.restoreOperandDeltas(std::move(rhsD));
+		}
+		else
+		{
+			// Static scan: a directly-state-writing RHS call must execute (and
+			// the store still win) before the target's key/index reads;
+			// skipped for a plain local-value target. Symmetrically a
+			// side-effecting LHS index needs the RHS value frozen first —
+			// unless it only reads locals.
+			bool lhsPlainLocal = false;
+			if (auto const* lid = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide()))
+				if (auto const* lvd = dynamic_cast<VariableDeclaration const*>(
+						lid->annotation().referencedDeclaration))
+					lhsPlainLocal = lvd->isLocalVariable()
+						&& !lvd->type()->dataStoredIn(DataLocation::Storage);
+			bool staticNeed =
+				(builder::EffectScan::mayWrite(m_assignment.rightHandSide()) && !lhsPlainLocal)
+				|| (builder::EffectScan::mayWrite(m_assignment.leftHandSide())
+					&& !builder::onlyLocalPure(m_assignment.rightHandSide()));
+			bool reorder = !lhsD.empty() || !rhsD.post.empty() || staticNeed;
+			value = m_ctx.emitSequencedOperand(std::move(rhsD), std::move(value), reorder, m_loc);
+			for (auto& s: lhsD.pre)
+				m_ctx.prePendingStatements.push_back(std::move(s));
+			for (auto& s: lhsD.post)
+				m_ctx.pendingStatements.push_back(std::move(s));
+		}
+	}
 
 	// (3) Per-shape early-outs.
 	value = applyEnumRangeCheck(std::move(value), op);

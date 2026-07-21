@@ -11,6 +11,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -161,46 +162,96 @@ public:
 		ContractContext& m_ctx;
 	};
 
-	/// Build an operand via `_build` (returns its expression, may push
-	/// pre-statements), then MOVE any pre-statements it pushed out of
-	/// prePendingStatements into `_capturedOut`. The caller gates those behind the
-	/// operand's execution condition instead of letting them run unconditionally.
-	/// `_capturedOut` is left empty when the operand pushed nothing (the common,
-	/// effect-free case — the caller can then skip all gating).
+	/// Solidity's two codegen pipelines disagree on intra-expression
+	/// evaluation order (unspecified by the language): legacy evaluates a
+	/// binop's RIGHT operand first, via-IR LEFT-to-right. false (default) =
+	/// legacy order; true (--via-yul-behavior) keeps build order untouched.
+	bool viaIRSequencing = false;
+
+	/// The pre- and post-pending statements one operand's build queued
+	/// (OperandPlan). `pre` must run before the operand's value is produced,
+	/// `post` right after (write-backs) — i.e. before any LATER-evaluated
+	/// sibling operand, not at the statement boundary.
+	struct OperandDeltas
+	{
+		std::vector<std::shared_ptr<awst::Statement>> pre, post;
+		bool empty() const { return pre.empty() && post.empty(); }
+	};
+
+	/// Put a captured operand's deltas back exactly where they came from
+	/// (pre → prePending, post → pending) — the no-reorder path.
+	void restoreOperandDeltas(OperandDeltas&& _d)
+	{
+		for (auto& s: _d.pre)
+			prePendingStatements.push_back(std::move(s));
+		for (auto& s: _d.post)
+			pendingStatements.push_back(std::move(s));
+	}
+
+	/// Build an operand via `_build`, then MOVE the pre/post pending statements
+	/// it pushed into `_out` so the caller controls their placement. Pass
+	/// `_conditional = true` when the operand executes conditionally (ternary
+	/// branch, short-circuit RHS) — it marks a ConditionalRegion and the caller
+	/// gates the effects behind the condition. `false` for pure re-ORDERING to
+	/// legacy-solc evaluation order (binop right-before-left, assignment
+	/// RHS-first, call args left-to-right), where effects still run
+	/// unconditionally. `_out` stays empty in the common effect-free case.
 	template <class BuildFn>
 	auto buildScopedOperand(
 		BuildFn&& _build,
-		std::vector<std::shared_ptr<awst::Statement>>& _capturedOut)
+		OperandDeltas& _out,
+		bool _conditional = true)
 		-> decltype(_build())
 	{
-		ConditionalRegion region(*this);
-		auto before = prePendingStatements.size();
+		std::optional<ConditionalRegion> region;
+		if (_conditional)
+			region.emplace(*this);
+		auto preBefore = prePendingStatements.size();
+		auto postBefore = pendingStatements.size();
 		auto value = _build();
-		if (prePendingStatements.size() > before)
-		{
-			_capturedOut.assign(
-				std::make_move_iterator(prePendingStatements.begin() + before),
-				std::make_move_iterator(prePendingStatements.end()));
-			prePendingStatements.erase(
-				prePendingStatements.begin() + before, prePendingStatements.end());
-		}
+		auto moveTail = [](auto& _buf, size_t _from, auto& _outVec) {
+			if (_buf.size() <= _from)
+				return;
+			_outVec.insert(_outVec.end(),
+				std::make_move_iterator(_buf.begin() + _from),
+				std::make_move_iterator(_buf.end()));
+			_buf.erase(_buf.begin() + _from, _buf.end());
+		};
+		moveTail(prePendingStatements, preBefore, _out.pre);
+		moveTail(pendingStatements, postBefore, _out.post);
 		return value;
 	}
 
-	/// A block that runs `_preStmts` (the operand's captured pre-statements) then
-	/// assigns `_value` to `_resultTarget` — the shape both the ternary branches
+	/// Re-emit a captured operand at its evaluation position: its pre-effects,
+	/// then (when `_pin`) a temp pinning the value, then its post-effects
+	/// HOISTED to run before any later-evaluated sibling. Constants skip the
+	/// pin. With empty deltas and no pin this is a byte-identical no-op.
+	/// Returns the (possibly pinned) value.
+	std::shared_ptr<awst::Expression> emitSequencedOperand(
+		OperandDeltas&& _d,
+		std::shared_ptr<awst::Expression> _value,
+		bool _pin,
+		awst::SourceLocation const& _loc);
+
+	/// A block that runs `_preStmts` (the operand's captured pre-statements),
+	/// assigns `_value` to `_resultTarget`, then runs `_postStmts` (the
+	/// operand's captured write-backs — gated WITH the operand, not left to
+	/// leak to the statement boundary) — the shape both the ternary branches
 	/// and the short-circuit RHS wrap their gated operand in.
 	static std::shared_ptr<awst::Block> makeScopedResultBlock(
 		std::vector<std::shared_ptr<awst::Statement>> _preStmts,
 		std::shared_ptr<awst::Expression> _resultTarget,
 		std::shared_ptr<awst::Expression> _value,
-		awst::SourceLocation const& _loc)
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>> _postStmts = {})
 	{
 		auto block = awst::makeBlock(_loc);
 		for (auto& s: _preStmts)
 			block->body.push_back(std::move(s));
 		block->body.push_back(
 			awst::makeAssignmentStatement(std::move(_resultTarget), std::move(_value), _loc));
+		for (auto& s: _postStmts)
+			block->body.push_back(std::move(s));
 		return block;
 	}
 

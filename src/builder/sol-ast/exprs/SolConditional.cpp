@@ -21,7 +21,15 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	auto e = std::make_shared<awst::ConditionalExpression>();
 	e->sourceLocation = m_loc;
 
-	e->condition = buildExpr(m_conditional.condition());
+	// The condition evaluates unconditionally and FIRST: hoist its write-backs
+	// (post-pendings) so both branches observe them (`bump(s) > 0 ? s.f : 0`
+	// reads the post-call s.f on EVM). Pin the condition value before the hoist.
+	eb::ContractContext::OperandDeltas condD;
+	e->condition = m_ctx.buildScopedOperand(
+		[&] { return buildExpr(m_conditional.condition()); }, condD, /*_conditional=*/false);
+	bool condHadPost = !condD.post.empty();
+	e->condition = m_ctx.emitSequencedOperand(
+		std::move(condD), std::move(e->condition), condHadPost, m_loc);
 	if (dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
 	{
 		// Side-effecting condition `(x=f()) ? a : b`: emit as pre-statement so
@@ -35,16 +43,16 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 
 	// Each branch only executes conditionally, so its pre-statements (a `**`
 	// square-and-multiply loop, `new C()` inner txns, `arr.push()=x`, checked-op
-	// asserts) must be gated behind the condition, not flushed unconditionally.
-	// buildScopedOperand captures them out of the flat list (OperandPlan,
-	// fable-review item 7); gated into if/else blocks below.
-	std::vector<std::shared_ptr<awst::Statement>> trueSideEffects;
+	// asserts) AND its write-backs must be gated behind the condition, not
+	// flushed unconditionally. buildScopedOperand captures them out of the flat
+	// lists (OperandPlan, fable-review item 7); gated into if/else blocks below.
+	eb::ContractContext::OperandDeltas trueD;
 	e->trueExpr = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_conditional.trueExpression()); }, trueSideEffects);
+		[&] { return buildExpr(m_conditional.trueExpression()); }, trueD);
 
-	std::vector<std::shared_ptr<awst::Statement>> falseSideEffects;
+	eb::ContractContext::OperandDeltas falseD;
 	e->falseExpr = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_conditional.falseExpression()); }, falseSideEffects);
+		[&] { return buildExpr(m_conditional.falseExpression()); }, falseD);
 
 	e->wtype = m_ctx.typeMapper.map(m_conditional.annotation().type);
 
@@ -73,16 +81,16 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 
 	// Either branch had side effects: materialise the result in a temp var
 	// and gate the side effects behind the branch condition.
-	if (!trueSideEffects.empty() || !falseSideEffects.empty())
+	if (!trueD.empty() || !falseD.empty())
 	{
 		std::string tempName = "__cond_" + std::to_string(awst::NameGen::next("SolConditional.s_counter"));
 		auto resultType = e->wtype ? e->wtype : awst::WType::biguintType();
 		auto tempVar = [&] { return awst::makeVarExpression(tempName, resultType, m_loc); };
 
 		auto trueBlock = eb::ContractContext::makeScopedResultBlock(
-			std::move(trueSideEffects), tempVar(), e->trueExpr, m_loc);
+			std::move(trueD.pre), tempVar(), e->trueExpr, m_loc, std::move(trueD.post));
 		auto falseBlock = eb::ContractContext::makeScopedResultBlock(
-			std::move(falseSideEffects), tempVar(), e->falseExpr, m_loc);
+			std::move(falseD.pre), tempVar(), e->falseExpr, m_loc, std::move(falseD.post));
 
 		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
 			e->condition, std::move(trueBlock), std::move(falseBlock), m_loc));
