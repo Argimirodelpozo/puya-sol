@@ -124,28 +124,64 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
-		// Pre-compute field defaults and head size for dynamic offset embedding.
-		struct FieldEnc { bool dynamic; std::vector<uint8_t> bytes; };
+		// Field kinds: BOOL (packed 8/byte, MSB-first), static, dynamic.
+		// Consecutive arc4.bool fields share a byte — the same packing
+		// computeEncodedElementSize / puya's reader use; the old code gave
+		// each bool its own head byte, so head offsets disagreed with puya
+		// and a read-modify-write of the default spliced at the wrong spot.
+		enum Kind { Bool, Static, Dynamic };
+		struct FieldEnc { Kind kind; std::vector<uint8_t> bytes; };
 		std::vector<FieldEnc> encs;
 		encs.reserve(st->fields().size());
 		int64_t headSize = 0;
+		int boolRun = 0;
+		auto flushBoolRun = [&]() {
+			if (boolRun > 0)
+			{
+				headSize += (boolRun + 7) / 8;
+				boolRun = 0;
+			}
+		};
 		for (auto const& [name, ft]: st->fields())
 		{
+			if (ft == awst::WType::arc4BoolType())
+			{
+				encs.push_back({Bool, {}});
+				boolRun++;
+				continue;
+			}
+			flushBoolRun();
 			auto fd = arc4DefaultEncoding(ft);
 			if (!fd)
 				return std::nullopt;
 			bool dyn = arc4IsDynamic(ft);
 			headSize += dyn ? 2 : static_cast<int64_t>(fd->size());
-			encs.push_back({dyn, std::move(*fd)});
+			encs.push_back({dyn ? Dynamic : Static, std::move(*fd)});
 		}
+		flushBoolRun();
 
 		std::vector<uint8_t> head;
 		std::vector<uint8_t> tail;
 		head.reserve(static_cast<size_t>(headSize));
 		int64_t tailOff = headSize;
+		int pendingBools = 0;
+		auto emitBoolByteFlush = [&]() {
+			// All-default bools are false → the packed byte(s) are zero.
+			if (pendingBools > 0)
+			{
+				head.insert(head.end(), static_cast<size_t>((pendingBools + 7) / 8), 0);
+				pendingBools = 0;
+			}
+		};
 		for (auto const& fe: encs)
 		{
-			if (fe.dynamic)
+			if (fe.kind == Bool)
+			{
+				pendingBools++;
+				continue;
+			}
+			emitBoolByteFlush();
+			if (fe.kind == Dynamic)
 			{
 				head.push_back(static_cast<uint8_t>((tailOff >> 8) & 0xFF));
 				head.push_back(static_cast<uint8_t>(tailOff & 0xFF));
@@ -157,6 +193,7 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 				head.insert(head.end(), fe.bytes.begin(), fe.bytes.end());
 			}
 		}
+		emitBoolByteFlush();
 		head.insert(head.end(), tail.begin(), tail.end());
 		return head;
 	}

@@ -394,6 +394,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			std::move(tempTarget), std::move(rhsExpr), m_loc);
 		result.push_back(std::move(tempAssign));
 
+		// Per-element SOURCE Solidity types (RHS tuple / multi-return call),
+		// for signed sub-word widening below.
+		auto const* rhsSolTuple = dynamic_cast<solidity::frontend::TupleType const*>(
+			initialValue->annotation().type);
+		auto const* wtupleType = dynamic_cast<awst::WTuple const*>(tupleType);
+
 		for (size_t i = 0; i < declarations.size(); ++i)
 		{
 			if (!declarations[i]) continue;
@@ -405,8 +411,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			auto target = awst::makeVarExpression(
 				m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
 
+			// Extract with the slot's ACTUAL wtype (the RHS element type), then
+			// coerce to the declared type. Extracting with the declared type
+			// mislabels the slot and skipped all coercion — `(int128 a,) =
+			// (int8Val,)` bound the raw uint64-backed 0xFF as +255 instead of
+			// sign-extending to -1.
+			auto const* slotType = (wtupleType && i < wtupleType->types().size())
+				? wtupleType->types()[i] : type;
 			auto baseRef = awst::makeVarExpression(tempName, tupleType, m_loc);
-			auto itemExpr = awst::makeTupleItem(std::move(baseRef), static_cast<int>(i), type, m_loc);
+			std::shared_ptr<awst::Expression> itemExpr = awst::makeTupleItem(
+				std::move(baseRef), static_cast<int>(i), slotType, m_loc);
+
+			itemExpr = builder::TypeCoercion::coerceForAssignment(std::move(itemExpr), type, m_loc);
+			if (rhsSolTuple && i < rhsSolTuple->components().size())
+				itemExpr = builder::TypeCoercion::signExtendSignedWiden(
+					std::move(itemExpr), rhsSolTuple->components()[i], decl.type(), m_loc);
 
 			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(itemExpr), m_loc);
 			result.push_back(assign);
