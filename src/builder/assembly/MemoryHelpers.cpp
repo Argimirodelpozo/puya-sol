@@ -13,10 +13,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 	awst::SourceLocation const& _loc
 )
 {
+	// Slot-routed (M7): offsets ≥ SLOT_SIZE read the right scratch slot
+	// instead of running off the end of slot 0.
 	return awst::makeAsBiguint(
-		awst::makeExtract3(memoryVar(_loc),
-			awst::makeIntegerConstant(_offset, _loc),
-			awst::makeIntegerConstant("32", _loc), _loc), _loc);
+		readMemWordDirect(awst::makeIntegerConstant(_offset, _loc), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
@@ -34,11 +34,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 	awst::SourceLocation const& _loc
 )
 {
+	// Slot-routed range read (M7): words straddling SLOT_SIZE are handled.
 	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
-	uint64_t byteLen = static_cast<uint64_t>(_count) * 0x20;
-	return awst::makeExtract3(memoryVar(_loc),
-		awst::makeIntegerConstant(byteOffset, _loc),
-		awst::makeIntegerConstant(byteLen, _loc), _loc);
+	int byteLen = _count * 0x20;
+	return readMemRangeDirect(
+		awst::makeIntegerConstant(byteOffset, _loc), byteLen, _loc);
 }
 
 void AssemblyBuilder::storeResultToMemory(
@@ -49,14 +49,15 @@ void AssemblyBuilder::storeResultToMemory(
 	bool _isBoolResult
 )
 {
+	// All writes slot-routed via writeMemWordDirect (M7): output offsets
+	// ≥ SLOT_SIZE land in the right scratch slot.
 	if (_isBoolResult)
 	{
 		auto cond = awst::makeConditional(std::move(_result),
 			awst::makeBiguintConstant("1", _loc), awst::makeBiguintConstant("0", _loc),
 			awst::WType::biguintType(), _loc);
-		assignMemoryVar(awst::makeReplace3(memoryVar(_loc),
-			awst::makeIntegerConstant(_outputOffset, _loc),
-			padTo32Bytes(std::move(cond), _loc), _loc), _loc, _out);
+		writeMemWordDirect(awst::makeIntegerConstant(_outputOffset, _loc),
+			padTo32Bytes(std::move(cond), _loc), _loc, _out);
 		return;
 	}
 
@@ -65,9 +66,8 @@ void AssemblyBuilder::storeResultToMemory(
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
 			storeVal = awst::makeAsBiguint(std::move(storeVal), _loc);
-		assignMemoryVar(awst::makeReplace3(memoryVar(_loc),
-			awst::makeIntegerConstant(_outputOffset, _loc),
-			padTo32Bytes(std::move(storeVal), _loc), _loc), _loc, _out);
+		writeMemWordDirect(awst::makeIntegerConstant(_outputOffset, _loc),
+			padTo32Bytes(std::move(storeVal), _loc), _loc, _out);
 		return;
 	}
 
@@ -86,8 +86,8 @@ void AssemblyBuilder::storeResultToMemory(
 			awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc),
 			awst::makeIntegerConstant(i * 32, _loc),
 			awst::makeIntegerConstant("32", _loc), _loc);
-		assignMemoryVar(awst::makeReplace3(memoryVar(_loc),
-			awst::makeIntegerConstant(outOff, _loc), std::move(extractSlot), _loc), _loc, _out);
+		writeMemWordDirect(awst::makeIntegerConstant(outOff, _loc),
+			std::move(extractSlot), _loc, _out);
 	}
 }
 
@@ -140,6 +140,8 @@ void AssemblyBuilder::storeResultToMemoryRT(
 	using O = awst::UInt64BinaryOperator;
 	auto baseOff = offsetToUint64(std::move(_outputOffset), _loc);
 
+	// All writes slot-routed via writeMemWordDyn (M7): runtime output offsets
+	// ≥ SLOT_SIZE land in the right scratch slot.
 	if (_isBoolResult)
 	{
 		auto one = awst::makeBiguintConstant("1", _loc);
@@ -148,9 +150,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 			std::move(_result), std::move(one), std::move(zero),
 			awst::WType::biguintType(), _loc);
 		auto padded = padTo32Bytes(std::move(cond), _loc);
-
-		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(baseOff), std::move(padded), _loc);
-		assignMemoryVar(std::move(replace), _loc, _out);
+		writeMemWordDyn(std::move(baseOff), std::move(padded), _loc, _out);
 		return;
 	}
 
@@ -160,9 +160,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 		if (storeVal->wtype == awst::WType::bytesType())
 			storeVal = awst::makeAsBiguint(std::move(storeVal), _loc);
 		auto padded = padTo32Bytes(std::move(storeVal), _loc);
-
-		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(baseOff), std::move(padded), _loc);
-		assignMemoryVar(std::move(replace), _loc, _out);
+		writeMemWordDyn(std::move(baseOff), std::move(padded), _loc, _out);
 		return;
 	}
 
@@ -191,9 +189,7 @@ void AssemblyBuilder::storeResultToMemoryRT(
 			: std::shared_ptr<awst::Expression>(awst::makeUInt64BinOp(
 				std::move(offBase), O::Add,
 				awst::makeIntegerConstant(i * 32, _loc), _loc));
-
-		auto replace = awst::makeReplace3(memoryVar(_loc), std::move(outOff), std::move(extractSlot), _loc);
-		assignMemoryVar(std::move(replace), _loc, _out);
+		writeMemWordDyn(std::move(outOff), std::move(extractSlot), _loc, _out);
 	}
 }
 

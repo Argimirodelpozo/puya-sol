@@ -368,6 +368,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	std::shared_ptr<awst::Expression> _inputData,
 	awst::SourceLocation const& _loc)
 {
+	// T2: every precompile shape slices _inputData several times (ecrecover
+	// 4×, ecAdd/ecMul 2-3×) — pin so a call-valued input evaluates once.
+	_inputData = awst::makeEvalOnce(std::move(_inputData), _loc);
+
 	std::shared_ptr<awst::Expression> resultBytes;
 
 	switch (_precompileAddr)

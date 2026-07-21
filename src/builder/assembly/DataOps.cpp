@@ -292,9 +292,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 		if (length)
 		{
-			auto offsetU64 = offsetToUint64(_args[0], _loc);
-			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64),
-				awst::makeIntegerConstant(*length, _loc), _loc);
+			// Slot-routed exact-length read (M7); offset pinned — the range
+			// read references it once per word.
+			auto offsetU64 = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
+			auto data = readMemRangeDirect(
+				std::move(offsetU64), static_cast<int>(*length), _loc);
 			return awst::makeAsBiguint(awst::makeKeccak256(std::move(data), _loc), _loc);
 		}
 
@@ -336,16 +338,25 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (!offset || !length)
 	{
-		// Runtime offset or length: read slice via extract3 then hash.
-		// Solady EIP-712 (PermissionedRamp.witnessed*) hits this path.
-		auto offsetU64 = offset
+		// Runtime offset or length: read slice then hash. Solady EIP-712
+		// (PermissionedRamp.witnessed*) hits this path. Slot-routed on the
+		// base (M7); a range straddling SLOT_SIZE still fails extract3
+		// (dynamic length — no compile-time word count), same documented
+		// limitation as the dynamic revert payload.
+		auto offsetU64 = awst::makeEvalOnce(offset
 			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*offset, _loc))
-			: offsetToUint64(_args[0], _loc);
+			: offsetToUint64(_args[0], _loc), _loc);
 		auto lengthU64 = length
 			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*length, _loc))
 			: offsetToUint64(_args[1], _loc);
 
-		auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(lengthU64), _loc);
+		auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
+		auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
+		loadsCall->stackArgs.push_back(awst::makeUInt64BinOp(
+			offsetU64, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc));
+		auto data = awst::makeExtract3(std::move(loadsCall),
+			awst::makeUInt64BinOp(offsetU64, awst::UInt64BinaryOperator::Mod, ss(), _loc),
+			std::move(lengthU64), _loc);
 		auto keccak = awst::makeKeccak256(std::move(data), _loc);
 		return awst::makeAsBiguint(std::move(keccak), _loc);
 	}
@@ -362,11 +373,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		// Non-zero but <32 bytes — partial slot; read exact length from blob.
 		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
 		{
-			auto offsetConst = awst::makeIntegerConstant(*offset, _loc);
-
-			auto lenConst = awst::makeIntegerConstant(*length, _loc);
-
-			auto data = awst::makeExtract3(memoryVar(_loc), std::move(offsetConst), std::move(lenConst), _loc);
+			// Slot-routed exact-length read (M7).
+			auto data = readMemRangeDirect(
+				awst::makeIntegerConstant(*offset, _loc),
+				static_cast<int>(*length), _loc);
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
 			return awst::makeAsBiguint(std::move(keccak), _loc);
 		}
@@ -441,19 +451,42 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	// Hash the EXACT length: the old concatSlots(numSlots) form silently
 	// truncated an unaligned length to whole words (keccak256(0x84, 0x30)
 	// hashed 32 bytes — wrong-but-plausible digests for packed-encoding
-	// idioms). Byte-identical to concatSlots for word-aligned lengths.
+	// idioms). Slot-routed (M7): offsets ≥ SLOT_SIZE read the right slot.
 	return awst::makeAsBiguint(
-		awst::makeKeccak256(awst::makeExtract3(memoryVar(_loc),
+		awst::makeKeccak256(readMemRangeDirect(
 			awst::makeIntegerConstant(*offset, _loc),
-			awst::makeIntegerConstant(*length, _loc), _loc), _loc), _loc);
+			static_cast<int>(*length), _loc), _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::returndataBytes(
+	awst::SourceLocation const& _loc
+)
+{
+	// The app-call return log is 0x151f7c75 ++ ARC4(value); EVM returndata is
+	// the raw payload. Strip the prefix when present so size/copy consumers
+	// see EVM-shaped data (M8). Non-prefixed logs (event as last log, empty)
+	// pass through unchanged.
+	auto log = awst::makeEvalOnce(
+		awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc);
+	auto lenOk = awst::makeNumericCompare(awst::makeLen(log, _loc),
+		awst::NumericComparison::Gte, awst::makeIntegerConstant("4", _loc), _loc);
+	auto prefixEq = awst::makeBytesComparison(
+		awst::makeExtract3(log, awst::makeIntegerConstant("0", _loc),
+			awst::makeIntegerConstant("4", _loc), _loc),
+		awst::EqualityComparison::Eq,
+		awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc), _loc);
+	auto isPrefixed = awst::makeConditional(std::move(lenOk), std::move(prefixEq),
+		awst::makeBoolConstant(false, _loc), awst::WType::boolType(), _loc);
+	return awst::makeConditional(std::move(isPrefixed),
+		awst::makeExtract(log, 4, 0, _loc), log, awst::WType::bytesType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
 	awst::SourceLocation const& _loc
 )
 {
-	// itxn LastLog length; returned as uint64 (consumer coerces when needed).
-	return awst::makeLen(awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc);
+	// Prefix-stripped length; returned as uint64 (consumer coerces when needed).
+	return awst::makeLen(returndataBytes(_loc), _loc);
 }
 
 void AssemblyBuilder::emitReturndatacopy(
@@ -464,26 +497,85 @@ void AssemblyBuilder::emitReturndatacopy(
 {
 	if (!checkArity(_args, 3, "returndatacopy", _loc, "destOffset, offset, size"))
 		return;
-	// Copy size bytes of itxn LastLog[offset..] into memory at destOffset.
+	// Copy size bytes of returndata[offset..] into memory at destOffset.
 	// extract3 reverts on OOB, matching EVM returndatacopy semantics.
+	// returndataBytes strips the ARC4 return prefix (M8) so offsets index the
+	// EVM-shaped payload, consistent with returndatasize().
 	auto destOff = offsetToUint64(_args[0], _loc);
 	auto srcOff = offsetToUint64(_args[1], _loc);
 	auto size = offsetToUint64(_args[2], _loc);
 
-	auto log = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
-	auto slice = awst::makeExtract3(std::move(log), std::move(srcOff), std::move(size), _loc);
+	auto slice = awst::makeExtract3(returndataBytes(_loc), std::move(srcOff), std::move(size), _loc);
 	// writeMemWordDyn is length-driven (replace3 writes len(slice) bytes), so it
 	// handles the slot-0/slot-1+ conditional and bounds assert for the full slice.
 	writeMemWordDyn(std::move(destOff), std::move(slice), _loc, _out);
 }
 
 void AssemblyBuilder::handleRevert(
-	std::vector<std::shared_ptr<awst::Expression>> const& /* _args */,
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	_out.push_back(awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(_loc), _loc, "revert"), _loc));
+	// revert(off, len): EVM returns memory[off..off+len) as the revert data.
+	// Lower as log(payload) + assert(false) — the project's revert-data
+	// convention (the harness reads the failing txn's last log via simulate).
+	// `revert(0, 0)` / missing args keep the bare assert (empty revert data).
+	if (_args.size() == 2 && _args[0] && _args[1])
+	{
+		auto const* lenC = dynamic_cast<awst::IntegerConstant const*>(_args[1].get());
+		bool constZeroLen = lenC && lenC->value == "0";
+		// AVM caps logs at 1024 bytes — an oversize constant payload can't be
+		// delivered; keep the bare assert instead of pathological codegen.
+		bool constOversize = lenC && !constZeroLen
+			&& (lenC->value.size() > 4 || std::stoull(lenC->value) > 1024);
+		if (!constZeroLen && !constOversize)
+		{
+			flushMemoryToScratch(_loc, _out);
+			std::shared_ptr<awst::Expression> payload;
+			if (lenC)
+			{
+				// Constant length: exact multi-slot range read.
+				payload = readMemRangeDirect(
+					offsetToUint64(_args[0], _loc),
+					static_cast<int>(std::stoull(lenC->value)), _loc);
+			}
+			else
+			{
+				// Dynamic length (`revert(ptr, sub(end, ptr))` — Error(string)
+				// tails): single-slot extract3 on the flushed blob. A range
+				// straddling a slot boundary makes extract3 fail — the txn
+				// still reverts, only the payload is lost (documented
+				// degradation; payload buffers live at low offsets).
+				static int s_revCtr = 0;
+				std::string offN = "__rev_off_" + std::to_string(s_revCtr++);
+				_out.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
+					offsetToUint64(_args[0], _loc), _loc));
+				auto offR = [&]() {
+					return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc);
+				};
+				auto ss = [&]() {
+					return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc);
+				};
+				auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
+				loadsCall->stackArgs.push_back(awst::makeUInt64BinOp(
+					offR(), awst::UInt64BinaryOperator::FloorDiv, ss(), _loc));
+				payload = awst::makeExtract3(std::move(loadsCall),
+					awst::makeUInt64BinOp(offR(), awst::UInt64BinaryOperator::Mod, ss(), _loc),
+					offsetToUint64(_args[1], _loc), _loc);
+			}
+			auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
+			logCall->stackArgs.push_back(std::move(payload));
+			_out.push_back(awst::makeExpressionStatement(std::move(logCall), _loc));
+		}
+	}
+	// Non-explicit: the LOG carries the user-visible contract; the assert is
+	// plumbing puya's TEAL passes may strip when unreachable (see the
+	// explicit-assert accounting trap around emitArc4ReturnHalt).
+	auto failAssert = awst::makeAssert(awst::makeFalse(_loc), _loc, "revert");
+	failAssert->isExplicit = false;
+	_out.push_back(awst::makeExpressionStatement(std::move(failAssert), _loc));
 	// Mark halted: assert(false) is unconditional; trailing blob writeback
 	// would be unreachable — puya's IR validator rejects it.
 	m_haltEmitted = true;

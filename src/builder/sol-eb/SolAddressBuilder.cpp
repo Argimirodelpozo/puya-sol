@@ -109,8 +109,9 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		// Second copy for the !=0 guard (both copies are identical IntrinsicCall → same TEAL).
 		auto appIdForCompare = detectAppIdIntrinsic(intrinSlot.get(), _loc);
 
-		// storedSlot shared across two BytesComparisons: AWST nodes are immutable,
-		// re-using the same shared_ptr in two parents is safe.
+		// storedSlot feeds two BytesComparisons: pin so a call-valued side
+		// evaluates once (T2; a shared shared_ptr still re-emits per parent).
+		storedSlot = awst::makeEvalOnce(std::move(storedSlot), _loc);
 		auto convention = makeConventionFormAddress(std::move(appId), _loc);
 		auto direct = makeBytesEq(
 			std::move(intrinSlot), storedSlot, awst::EqualityComparison::Eq, _loc);

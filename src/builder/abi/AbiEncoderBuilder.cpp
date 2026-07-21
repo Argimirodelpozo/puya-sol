@@ -238,7 +238,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 
 		if (arrType && !arrType->isByteArrayOrString())
 		{
-			auto arrayExpr = _ctx.buildExpr(*args[argIdx]);
+			// T2: pinned — indexed once per element below; a call-valued
+			// array expression must evaluate once.
+			auto arrayExpr = awst::makeEvalOnce(_ctx.buildExpr(*args[argIdx]), _loc);
 			auto const* elemSolType = arrType->baseType();
 
 			if (!arrType->isDynamicallySized())
@@ -290,7 +292,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					else
 						packed = awst::makeConcat(std::move(packed), std::move(elemBytes), _loc);
 				}
-				return packed ? packed : toPackedBytes(_ctx, _ctx.buildExpr(*args[argIdx]), solType, _isPacked, _loc);
+				// len==0: reuse the already-built expression — a second
+				// buildExpr would run its side effects twice (T2).
+				return packed ? packed : toPackedBytes(_ctx, arrayExpr, solType, _isPacked, _loc);
 			}
 			else
 			{

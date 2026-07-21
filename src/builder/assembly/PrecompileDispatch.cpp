@@ -2,6 +2,7 @@
 /// EVM precompile dispatch: routes call/staticcall to specific precompile handlers.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <sstream>
@@ -185,12 +186,15 @@ void AssemblyBuilder::handlePrecompileCall(
 		break;
 
 	default:
-		Logger::instance().warning(
+		// Fail-loud policy (M8): a success=true no-op stub makes `require(ok)`
+		// pass spuriously with all-zero returndata.
+		Logger::instance().error(
 			(_isCall ? std::string("call") : std::string("staticcall")) +
-			" to non-precompile address " + std::to_string(*precompileAddr) +
-			" not implemented — stubbing as no-op", _loc
+			" to constant non-precompile address " + std::to_string(*precompileAddr) +
+			" is not supported on AVM (no app lives at a small constant "
+			"address); stubbing it as a no-op would silently drop the call.", _loc
 		);
-		success = true;
+		success = false;
 		break;
 	}
 
@@ -229,7 +233,10 @@ void AssemblyBuilder::handleAppCall(
 
 	// 1) Address → ApplicationID: puya-sol encodes as (\x00*24 ++ itob(app_id));
 	//    casting to uint64 recovers app_id (high bytes are zero).
-	auto addrAwst = buildExpression(_call.arguments[1]);
+	auto addrAwst = awst::makeEvalOnce(buildExpression(_call.arguments[1]), _loc);
+	// Shared with the payment leg below — same SingleEvaluation, one runtime
+	// evaluation; the appId branches std::move addrAwst.
+	auto addrShared = addrAwst;
 
 	std::shared_ptr<awst::Expression> appIdExpr;
 	if (addrAwst->wtype == awst::WType::applicationType())
@@ -248,18 +255,19 @@ void AssemblyBuilder::handleAppCall(
 	}
 	else
 	{
-		// Numeric value: low 64 bits = app_id.
-		auto asU64 = awst::makeReinterpretCast(std::move(addrAwst), awst::WType::uint64Type(), _loc);
+		// Numeric value: low 64 bits = app_id. implicitNumericCast, not a raw
+		// ReinterpretCast — puya rejects biguint→uint64 reinterprets (asm
+		// address values are biguint).
+		auto asU64 = builder::TypeCoercion::implicitNumericCast(
+			std::move(addrAwst), awst::WType::uint64Type(), _loc);
 		appIdExpr = awst::makeReinterpretCast(std::move(asU64), awst::WType::applicationType(), _loc);
 	}
 
 	// 2) Split calldata: args[0]=selector(4B), args[1]=rest (EVM-ABI layout).
-	auto inOffAwst = buildExpression(_call.arguments[argBase]);
-	if (inOffAwst->wtype != awst::WType::uint64Type())
-		inOffAwst = awst::makeReinterpretCast(std::move(inOffAwst), awst::WType::uint64Type(), _loc);
-	auto inSizeAwst = buildExpression(_call.arguments[argBase + 1]);
-	if (inSizeAwst->wtype != awst::WType::uint64Type())
-		inSizeAwst = awst::makeReinterpretCast(std::move(inSizeAwst), awst::WType::uint64Type(), _loc);
+	// offsetToUint64, not raw ReinterpretCast: puya rejects biguint→uint64
+	// reinterprets (asm values are biguint).
+	auto inOffAwst = offsetToUint64(buildExpression(_call.arguments[argBase]), _loc);
+	auto inSizeAwst = offsetToUint64(buildExpression(_call.arguments[argBase + 1]), _loc);
 
 	// Clamp inSize to >= 4 so `bodyLen = inSize - 4` can't underflow into a
 	// huge uint64 (extract3 OOB panic) for inSize < 4 — a plain value-transfer
@@ -295,6 +303,48 @@ void AssemblyBuilder::handleAppCall(
 	body->stackArgs.push_back(std::move(bodyOff));
 	body->stackArgs.push_back(std::move(bodyLen));
 
+	// 2b) call's `value` (arguments[2]): attach a grouped payment (M8 — it was
+	// silently dropped). Receiver mirrors the high-level `.call{value:}` leg:
+	// the address value as an account. Constant 0 (the common
+	// `call(g,to,0,...)`) skips the leg entirely.
+	std::shared_ptr<awst::Expression> payTxn;
+	if (_isCall)
+	{
+		auto constVal = resolveConstantYulValue(_call.arguments[2]);
+		if (!constVal || *constVal != 0)
+		{
+			std::shared_ptr<awst::Expression> receiver;
+			if (addrShared->wtype == awst::WType::accountType())
+				receiver = addrShared;
+			else if (addrShared->wtype == awst::WType::applicationType())
+			{
+				auto* tupleType = m_typeMapper.createType<awst::WTuple>(
+					std::vector<awst::WType const*>{
+						awst::WType::bytesType(), awst::WType::boolType()});
+				auto appParams = awst::makeAppParamsGet("AppAddress",
+					awst::makeReinterpretCast(addrShared, awst::WType::uint64Type(), _loc),
+					tupleType, _loc);
+				receiver = awst::makeAsAccount(awst::makeTupleItem(
+					std::move(appParams), 0, awst::WType::bytesType(), _loc), _loc);
+			}
+			else
+				receiver = awst::makeAsAccount(
+					padTo32Bytes(addrShared, _loc), _loc);
+
+			static constexpr int TxnTypePay = 1;
+			static awst::WInnerTransactionFields s_payFieldsType(TxnTypePay);
+			auto payCreate = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
+			payCreate->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypePay), _loc);
+			payCreate->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
+			payCreate->fields["Receiver"] = std::move(receiver);
+			// checkedAmountToUint64, not safeBtoi: silent low-8-byte
+			// truncation of a payment amount is a money bug (M17 policy).
+			payCreate->fields["Amount"] = builder::TypeCoercion::checkedAmountToUint64(
+				_out, buildExpression(_call.arguments[2]), _loc);
+			payTxn = std::move(payCreate);
+		}
+	}
+
 	// 3) Build inner app-call transaction.
 	static constexpr int TxnTypeAppl = 6;
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
@@ -319,21 +369,26 @@ void AssemblyBuilder::handleAppCall(
 	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
 	submit->sourceLocation = _loc;
 	submit->wtype = &s_applTxnType;
+	if (payTxn)
+		submit->itxns.push_back(std::move(payTxn));
 	submit->itxns.push_back(std::move(create));
 
 	_out.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 
-	// 4) Copy itxn LastLog into memory[outOff..outOff+outSize) if size > 0.
+	// 4) Copy returndata into memory[outOff..outOff+outSize) if size > 0.
+	// returndataBytes strips the ARC4 return prefix (M8: the copy was
+	// prefix-shifted vs what the callee returned); zero-pad so a shorter
+	// returndata still fills outSize (EVM copies min(outSize, rds); the
+	// zero-fill beyond rds is the documented approximation).
 	auto outOffOpt = resolveConstantYulValue(_call.arguments[argBase + 2]);
 	auto outSizeOpt = resolveConstantYulValue(_call.arguments[argBase + 3]);
 	if (outOffOpt && outSizeOpt && *outSizeOpt > 0)
 	{
-		auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
-		readLog->immediates = {std::string("LastLog")};
-		auto sliced = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-		sliced->stackArgs.push_back(std::move(readLog));
-		sliced->stackArgs.push_back(awst::makeIntegerConstant("0", _loc));
-		sliced->stackArgs.push_back(awst::makeIntegerConstant(std::to_string(*outSizeOpt), _loc));
+		auto padded = awst::makeConcat(returndataBytes(_loc),
+			awst::makeBzero(static_cast<int>(*outSizeOpt), _loc), _loc);
+		auto sliced = awst::makeExtract3(std::move(padded),
+			awst::makeIntegerConstant("0", _loc),
+			awst::makeIntegerConstant(std::to_string(*outSizeOpt), _loc), _loc);
 		int slots = static_cast<int>((*outSizeOpt + 31) / 32);
 		if (slots > 0)
 			storeResultToMemory(std::move(sliced), *outOffOpt, slots, _loc, _out);

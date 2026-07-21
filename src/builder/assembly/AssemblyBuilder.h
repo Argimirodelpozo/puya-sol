@@ -579,7 +579,14 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// EVM returndatasize() → len(itxn LastLog) as uint64.
+	/// EVM-shaped returndata: itxn LastLog with the ARC4 return prefix
+	/// (0x151f7c75) stripped when present (M8) — what returndatasize /
+	/// returndatacopy / call-output copies index into.
+	std::shared_ptr<awst::Expression> returndataBytes(
+		awst::SourceLocation const& _loc
+	);
+
+	/// EVM returndatasize() → len(returndataBytes()) as uint64.
 	std::shared_ptr<awst::Expression> handleReturndatasize(
 		awst::SourceLocation const& _loc
 	);

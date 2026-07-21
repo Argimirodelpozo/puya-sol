@@ -525,21 +525,37 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 	Logger::instance().debug(
 		"mcopy bytes memory: replace3(" + dstVar + ", dstOff, extract3(" + srcVar + ", srcOff, len))", _loc);
 
-	// Translate offsets and length from Yul
-	auto dstOffExpr = offsetToUint64(buildExpression(*dstOffYul), _loc);
-	auto srcOffExpr = offsetToUint64(buildExpression(*srcOffYul), _loc);
-	auto lenExpr    = offsetToUint64(buildExpression(_call.arguments[2]), _loc);
+	// Translate offsets and length from Yul; pinned — each is referenced
+	// several times in the guards below.
+	auto dstOffExpr = awst::makeEvalOnce(offsetToUint64(buildExpression(*dstOffYul), _loc), _loc);
+	auto srcOffExpr = awst::makeEvalOnce(offsetToUint64(buildExpression(*srcOffYul), _loc), _loc);
+	auto lenExpr    = awst::makeEvalOnce(offsetToUint64(buildExpression(_call.arguments[2]), _loc), _loc);
 
-	// src_bytes = extract3(src_var, srcOff, len)
-	auto srcVarRef = awst::makeVarExpression(srcVar, srcIt->second, _loc);
-	auto srcBytes  = awst::makeExtract3(std::move(srcVarRef), std::move(srcOffExpr), std::move(lenExpr), _loc);
+	auto srcRef = [&]() { return awst::makeVarExpression(srcVar, srcIt->second, _loc); };
+	auto dstRef = [&]() { return awst::makeVarExpression(dstVar, dstIt->second, _loc); };
+	auto minU64 = [&](std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b) {
+		return awst::makeConditional(
+			awst::makeNumericCompare(a, awst::NumericComparison::Lt, b, _loc),
+			a, b, awst::WType::uint64Type(), _loc);
+	};
 
-	// dst_var = replace3(dst_var, dstOff, src_bytes)
-	auto dstVarRef  = awst::makeVarExpression(dstVar, dstIt->second, _loc);
-	auto replaced   = awst::makeReplace3(std::move(dstVarRef), std::move(dstOffExpr), std::move(srcBytes), _loc);
+	// GUARDED copy (M13, matching the mstore siblings): reads past the src
+	// end yield zeros (src ++ bzero(len), clamped start); the write is
+	// truncated to the dst capacity instead of failing replace3. Overlap
+	// (dst == src) is inherently safe: the slice materialises before the write.
+	auto safeSrcOff = minU64(srcOffExpr, awst::makeLen(srcRef(), _loc));
+	auto srcPadded  = awst::makeConcat(srcRef(), awst::makeBzero(lenExpr, _loc), _loc);
+	auto srcBytes   = awst::makeExtract3(std::move(srcPadded), std::move(safeSrcOff), lenExpr, _loc);
 
-	auto dstTarget  = awst::makeVarExpression(dstVar, dstIt->second, _loc);
-	auto assign     = awst::makeAssignmentStatement(std::move(dstTarget), std::move(replaced), _loc);
+	auto safeDstOff = awst::makeEvalOnce(minU64(dstOffExpr, awst::makeLen(dstRef(), _loc)), _loc);
+	auto avail = awst::makeUInt64BinOp(awst::makeLen(dstRef(), _loc),
+		awst::UInt64BinaryOperator::Sub, safeDstOff, _loc);
+	auto effLen = minU64(lenExpr, std::move(avail));
+	auto value = awst::makeExtract3(std::move(srcBytes),
+		awst::makeIntegerConstant("0", _loc), std::move(effLen), _loc);
+
+	auto replaced = awst::makeReplace3(dstRef(), safeDstOff, std::move(value), _loc);
+	auto assign = awst::makeAssignmentStatement(dstRef(), std::move(replaced), _loc);
 	_out.push_back(std::move(assign));
 	return true;
 }

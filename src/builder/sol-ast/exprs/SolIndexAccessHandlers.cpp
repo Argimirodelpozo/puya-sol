@@ -109,9 +109,20 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 
 	// puya evaluates the index twice (bounds check + access); a side-effecting
 	// index `arr[f()]` ran f() twice (verified cnt==2). makeEvalOnce prevents it.
-	// Write path returns a bare lvalue — leave unwrapped to keep it assignable.
+	// Write path returns a bare lvalue — keep the tree assignable by pinning a
+	// side-effecting index to a TEMP VAR instead (T2: `arr[f()] += 1` escaped).
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 		idx = awst::makeEvalOnce(std::move(idx), m_loc);
+	else if (dynamic_cast<awst::SubroutineCallExpression const*>(idx.get())
+		|| dynamic_cast<awst::AssignmentExpression const*>(idx.get()))
+	{
+		std::string tempName = "__sol_widx_" + std::to_string(
+			awst::NameGen::next("SolIndexAccessHandlers.writeIdxCounter"));
+		auto tempVar = awst::makeVarExpression(tempName, idx->wtype, m_loc);
+		m_ctx.prePendingStatements.push_back(
+			awst::makeAssignmentStatement(tempVar, std::move(idx), m_loc));
+		idx = tempVar;
+	}
 
 	// bytes/string storage: puya rejects IndexExpression on bytes; use extract3.
 	// Write path unsupported (needs replace3-based lvalue handler).
@@ -628,9 +639,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 	if (index && index->wtype == awst::WType::biguintType())
 	{
 		// biguint→uint64 cast duplicates its operand (slices concat(bzero(8),idx)
-		// and takes its length), so side-effecting idx like `a[--i]` runs twice.
-		// Pin to temp first.
-		if (dynamic_cast<awst::AssignmentExpression const*>(index.get()))
+		// and takes its length), so side-effecting idx like `a[--i]` or
+		// `a[f()]` runs twice. Pin to temp first (T2: call-valued escaped).
+		if (dynamic_cast<awst::AssignmentExpression const*>(index.get())
+			|| dynamic_cast<awst::SubroutineCallExpression const*>(index.get()))
 		{
 			static int idxCoerceTemp = 0;
 			std::string tempName = "__sol_ixc_" + std::to_string(idxCoerceTemp++);

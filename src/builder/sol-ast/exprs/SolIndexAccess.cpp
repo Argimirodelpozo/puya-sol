@@ -426,7 +426,10 @@ SolIndexRangeAccess::SolIndexRangeAccess(
 
 std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 {
-	auto base = buildExpr(m_rangeAccess.baseExpression());
+	// T2: the slice lowering references the base several times (length assert,
+	// start/end scaling, the substring itself) — pin so a call-valued base
+	// evaluates once. Pure leaves pass through.
+	auto base = awst::makeEvalOnce(buildExpr(m_rangeAccess.baseExpression()), m_loc);
 
 	std::shared_ptr<awst::Expression> start;
 	if (m_rangeAccess.startExpression())

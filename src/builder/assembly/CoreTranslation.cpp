@@ -786,16 +786,25 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	{
 		if (m_useSyntheticCalldata && args.size() == 3)
 		{
-			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc);
-			auto srcOff = offsetToUint64(args[1], loc);
-			auto sz = offsetToUint64(args[2], loc);
-			auto extractCall = awst::makeExtract3(std::move(blob), std::move(srcOff), std::move(sz), loc);
-			// Now write into memory blob via replace3. The handler is in
-			// expression-context, so route the assignment through
-			// m_pendingStatements (drained by the outer statement boundary).
-			auto destOff = offsetToUint64(args[0], loc);
-			auto replaceCall = awst::makeReplace3(memoryVar(loc), std::move(destOff), std::move(extractCall), loc);
-			assignMemoryVar(std::move(replaceCall), loc, m_pendingStatements);
+			// EVM calldatacopy ZERO-PADS past calldatasize (same convention as
+			// the calldataload fix above): extract3(blob ++ bzero(sz),
+			// min(off,len), sz) — real bytes then appended zeros.
+			auto blob = awst::makeEvalOnce(
+				awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc), loc);
+			auto srcOff = awst::makeEvalOnce(offsetToUint64(args[1], loc), loc);
+			auto sz = awst::makeEvalOnce(offsetToUint64(args[2], loc), loc);
+			auto len = awst::makeLen(blob, loc);
+			auto safeOff = awst::makeConditional(
+				awst::makeNumericCompare(srcOff, awst::NumericComparison::Lt, len, loc),
+				srcOff, awst::makeLen(blob, loc), awst::WType::uint64Type(), loc);
+			auto padded = awst::makeConcat(blob, awst::makeBzero(sz, loc), loc);
+			auto extractCall = awst::makeExtract3(
+				std::move(padded), std::move(safeOff), sz, loc);
+			// Write via the slot-routed length-driven primitive (M7): destOff
+			// ≥ SLOT_SIZE lands in the right slot instead of clobbering slot 0.
+			// Expression-context: route through m_pendingStatements (drained
+			// at the outer statement boundary).
+			writeMemWordDyn(args[0], std::move(extractCall), loc, m_pendingStatements);
 			auto zero = awst::makeZero(loc, awst::WType::biguintType());
 			return zero;
 		}

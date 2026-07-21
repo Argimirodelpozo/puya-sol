@@ -676,26 +676,52 @@ void AssemblyBuilder::buildExpressionStatement(
 						awst::makeBiguintConstant(std::to_string(delta), loc), loc);
 				};
 				auto nwords = (lenVal / 32).convert_to<unsigned long long>();
+				auto r = (lenVal % 32).convert_to<unsigned>();
+				// Memmove semantics (M13): snapshot ALL source words into
+				// temps BEFORE any write — the interleaved mload/mstore
+				// forward loop corrupted overlapping ranges (dst inside src).
+				static int s_mcopyCtr = 0;
+				std::vector<std::pair<unsigned long long, std::string>> srcWords;
 				for (unsigned long long w = 0; w < nwords; ++w)
 				{
 					auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{atOff(args[1], 32 * w)};
 					auto loadedVal = handleMload(mloadArgs, loc);
-					if (loadedVal)
-					{
-						auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{atOff(args[0], 32 * w), loadedVal};
-						handleMstore(storeArgs, loc, _out);
-					}
+					if (!loadedVal)
+						continue;
+					std::string vn = "__mcopy_w_" + std::to_string(s_mcopyCtr++);
+					auto const* wt = loadedVal->wtype;
+					_out.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(vn, wt, loc), std::move(loadedVal), loc));
+					srcWords.emplace_back(w, vn);
+					m_locals[vn] = wt;
 				}
-				// Sub-word tail: splice the first r bytes of the src word over the
-				// dst word (single write — safe under the same overlap caveat as
-				// the word loop above).
-				auto r = (lenVal % 32).convert_to<unsigned>();
+				std::string tailVn;
 				if (r != 0)
 				{
+					tailVn = "__mcopy_w_" + std::to_string(s_mcopyCtr++);
 					auto srcWord = readMemWordDyn(atOff(args[1], 32 * nwords), loc);
+					_out.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(tailVn, awst::WType::bytesType(), loc),
+						std::move(srcWord), loc));
+					m_locals[tailVn] = awst::WType::bytesType();
+				}
+				for (auto const& [w, vn]: srcWords)
+				{
+					auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{
+						atOff(args[0], 32 * w),
+						awst::makeVarExpression(vn, m_locals[vn], loc)};
+					handleMstore(storeArgs, loc, _out);
+				}
+				// Sub-word tail: splice the first r bytes of the snapshotted
+				// src word over the dst word (read after the full-word writes
+				// — the dst tail word lies beyond them).
+				if (r != 0)
+				{
 					auto dstWord = readMemWordDyn(atOff(args[0], 32 * nwords), loc);
 					auto stitched = awst::makeConcat(
-						awst::makeExtract(std::move(srcWord), 0, static_cast<int>(r), loc),
+						awst::makeExtract(
+							awst::makeVarExpression(tailVn, awst::WType::bytesType(), loc),
+							0, static_cast<int>(r), loc),
 						awst::makeExtract(std::move(dstWord), static_cast<int>(r),
 							static_cast<int>(32 - r), loc),
 						loc);
