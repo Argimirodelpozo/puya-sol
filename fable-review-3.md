@@ -206,11 +206,16 @@ embed `_inputData` 4-12× (`itxn/InnerCallShapes.cpp:343-436`), fn-ptr `_ptrExpr
 (`SolAddressBuilder.cpp:112-118`), compound-assign uint64 index / nested-call mapping keys
 escape the existing pins (`SolIndexAccessHandlers.cpp:110-114, 245-254, 633`).
 
-### H12 ✅ Yul evaluation-order and inlining bugs (assembly/) — PARTIALLY FIXED
+### H12 ✅ Yul evaluation-order and inlining bugs (assembly/) — FIXED
 > **2026-07-20:** arg order now RIGHT-to-left at all four build sites; inlined body LOCALS
 > alpha-rename per frame (decls resolve through m_yulInlineRenames). Guard
-> test_asm_semantics_batch. REMAINING from this item: asm `revert(off,len)` still drops the
-> payload (needs the revert-data stack integration).
+> test_asm_semantics_batch.
+> **2026-07-21:** asm `revert(off,len)` delivers the payload: log(memory[off..off+len)) +
+> non-explicit assert(false) — the revert-data-stack convention (harness reads the failing
+> txn's last log via simulate). Constant lengths read multi-slot (readMemRangeDirect, capped
+> at the 1024-byte AVM log limit); dynamic lengths single-slot (payload lost if straddling,
+> txn still reverts). Guard test_asm_payload_mem_batch (selector idiom, selector+arg,
+> dynamic, bare — all EVM-verified revert_data).
 - **Arg order**: call arguments translate left-to-right; Yul mandates right-to-left
   (`CoreTranslation.cpp:346-349`). PoC `sub(bump(1), bump(10))` shows left-first sequencing.
   Nested inlining additionally splices an earlier sibling's pending inline body into the later
@@ -303,11 +308,11 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
 - **M6 ✅ FIXED 2026-07-21** (collapse only a lone-revert body). Yul `if` revert-body detection over-collapses (`assembly/ControlFlowOps.cpp:29-52`):
   any top-level `revert` in the body replaces the *whole body* with `assert(!cond)` — dropping
   a preceding conditional `leave` (falsely reverts) and payload-building mstores.
-- **M7 🟡 PARTIAL 2026-07-21** (mstore8 now multi-slot; keccak-reads/precompile-IO/calldatacopy-write remain). Slot-0-only legacy memory paths (mstore8, readMemSlot, storeResultToMemory, keccak
+- **M7 ✅ FIXED 2026-07-21** (mstore8, then the remainder same day: readMemSlot/concatSlots/storeResultToMemory(RT)/keccak reads/calldatacopy write all routed via readMemWordDirect/readMemRangeDirect/writeMemWordDirect-Dyn; guard test_asm_payload_mem_batch keccakHigh/memHighRoundtrip). Slot-0-only legacy memory paths (mstore8, readMemSlot, storeResultToMemory, keccak
   reads, calldatacopy write, precompile I/O — `assembly/MemoryOps.cpp:583` et al.) bypass
   multi-slot routing: offset ≥4096 panics or reads the wrong slot in `--evm-memory-slots`
   contracts (honk FMP reaches ~18KB).
-- **M8 🟡 PARTIAL 2026-07-21** (inSize<4 crash guarded; value/prefix semantics remain). asm `call`/`staticcall` runtime-address path: `value` silently ignored (no payment);
+- **M8 ✅ FIXED 2026-07-21** (inSize<4 crash guarded; then value/prefix same day: `value` attaches a grouped [Payment, AppCall] — receiver mirrors the high-level `.call{value:}` leg, amount via checkedAmountToUint64; returndatasize/returndatacopy/output copies index the PREFIX-STRIPPED payload (shared returndataBytes); small-constant-address stub is now a HARD ERROR; two latent biguint→uint64 ReinterpretCasts made the whole runtime-address path uncompilable — offsetToUint64/implicitNumericCast instead; guard test_asm_call_value). asm `call`/`staticcall` runtime-address path: `value` silently ignored (no payment);
   `inSize < 4` underflow-panics (plain value-transfer `call(g,to,amt,0,0,0,0)` crashes); output
   copy is ARC4-prefix-shifted vs `returndatasize()` counting the prefix
   (`assembly/PrecompileDispatch.cpp:216-341`). Small **constant** non-precompile addresses fall
@@ -319,11 +324,14 @@ reads back as 4294967295. int8..int56 affected; int64/int128+ fine.
   instead of returning zero** (`assembly/PrecompileHandlers.cpp:229-283`).
 - **M11 ✅ FIXED 2026-07-21** (assert slot<128, fail loud). transient asm `tload/tstore`: keccak-derived slots (any transient mapping) panic in
   `btoi` (>8 bytes); slots ≥128 overrun the 4096-byte blob (`assembly/SignedOps.cpp:15-54`).
-- **M12 🟡 PARTIAL 2026-07-21** (calldataload zero-pads; calldatacopy remains). Dynamic-offset `calldataload`/`calldatacopy` panic past calldata end where EVM
+- **M12 ✅ FIXED 2026-07-21** (calldataload zero-pads; calldatacopy same day: extract3(blob ++ bzero(sz), min(off,len), sz) + slot-routed write; guard test_asm_payload_mem_batch cdcTail). Dynamic-offset `calldataload`/`calldatacopy` panic past calldata end where EVM
   zero-pads (`assembly/DataOps.cpp:24-32`) — the standard tail-word read loop reverts.
-- **M13 ❌ DEFERRED (memmove + guarded write, larger). bytes-local `mcopy` lacks the guarded/truncated write its mstore siblings got;
-  blob `mcopy` is copy-forward, not memmove** (`assembly/MemoryOps.cpp:462-544`,
-  `StatementOps.cpp:606-672`).
+- **M13 ✅ FIXED 2026-07-21.** Blob `mcopy` snapshots ALL source words into temps before any
+  write (memmove semantics — the interleaved forward loop corrupted overlapping ranges);
+  bytes-local `mcopy` got the guarded/truncated write of its mstore siblings (src reads
+  zero-pad past the end, the write truncates to dst capacity; overlap inherently safe — the
+  slice materialises before the write). Guard test_asm_payload_mem_batch
+  mcopyOverlap/mcopyOverlapTail (EVM-verified).
 - **M14 ✅ FIXED 2026-07-20** (default encoder packs bool runs 8/byte). `arc4DefaultEncoding` doesn't bit-pack consecutive `arc4.bool` fields
   (`sol-types/Arc4Defaults.cpp:124-179` vs `computeEncodedElementSize` which packs 8/byte):
   defaulted `mapping(K=>S)` values with ≥2 leading bools + a dynamic field have head offsets
@@ -447,6 +455,12 @@ compile-time failure on the test corpus; (b) fold drain-and-emit into a single h
 expression-side half of this; the statement side never got its equivalent).
 
 **T2 — EvalOnce at builder entry, not call sites** (H11 + M3, M20, M24 tail; ~12 findings).
+> **CLOSED 2026-07-21:** the remaining tail sites are pinned — slice base (SolIndexAccess),
+> precompile staticcall `_inputData` (InnerCallShapes), encodePacked fixed-array loop + its
+> len==0 double-build (AbiEncoderBuilder), address-compare stored side (SolAddressBuilder),
+> write-path array index + call-valued biguint index coercion (SolIndexAccessHandlers). Guard
+> test_t2_eval_once_tail (cnt==1, EVM-verified). The builder-entry umbrella (pin centrally in
+> builderForInstance) remains an option for future churn, not a live bug class.
 The sol-eb builders receive raw operand trees and reference them 2-12×. The signed binary path
 pins; nothing else does. Pin once in `builderForInstance`/`unary_op` dispatch (or assert
 "operands must be trivially-duplicable" there) instead of chasing call sites forever.

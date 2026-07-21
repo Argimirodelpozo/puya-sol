@@ -6,6 +6,7 @@ main:
     intcblock 0 1 24
     bytecblock "owner" "__ctor_pending"
     intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -83,6 +84,10 @@ main_ternary_merge@20:
     intc_0 // 0
     bytec_0 // "owner"
     app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 5
     assert // check owner exists
     ==
     bnz main_after_if_else@30
@@ -93,10 +98,7 @@ main_ternary_merge@20:
     global CallerApplicationID
     itob
     concat
-    intc_0 // 0
-    bytec_0 // "owner"
-    app_global_get_ex
-    assert // check owner exists
+    dig 2
     ==
     bz main_if_body@35
 
@@ -138,6 +140,10 @@ main_ternary_merge@25:
     intc_0 // 0
     bytec_0 // "owner"
     app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 5
     assert // check owner exists
     ==
     bnz main_after_if_else@36
@@ -148,10 +154,7 @@ main_ternary_merge@25:
     global CallerApplicationID
     itob
     concat
-    intc_0 // 0
-    bytec_0 // "owner"
-    app_global_get_ex
-    assert // check owner exists
+    dig 2
     ==
     bnz main_after_if_else@36
     b main_if_body@35

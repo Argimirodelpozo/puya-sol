@@ -2839,3 +2839,79 @@ def test_effect_sequencing(harness):
     assert as_int(harness.call(app, "m5e()", **fee).abi_return) == 106
     r = harness.call(app, "m5f()", **fee).abi_return
     assert [as_int(x) for x in r] == [0, 0, 1]
+
+
+def test_asm_payload_mem_batch(harness):
+    """puyasolRegression/contracts/asm_payload_mem_batch.sol — NOT an o.g. test.
+
+    Final fable-review-3 asm batch, all expectations verified against real
+    solc 0.8.26 + py-evm (cancun): H12 asm revert(off,len) delivers the
+    payload via the revert-data stack; M12 calldatacopy zero-pads past
+    calldatasize; M13 mcopy is memmove for overlapping ranges; M7 keccak /
+    mload/mstore are slot-routed at offsets >= 4096.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_payload_mem_batch.sol")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "revSelector()", expect_revert=True, **fee)
+    assert r.reverted and r.revert_data == bytes.fromhex("12345678")
+    r = harness.call(app, "revWithArg(uint256)", 77, expect_revert=True, **fee)
+    assert r.reverted and r.revert_data == bytes.fromhex("deadbeef" + "00" * 31 + "4d")
+    r = harness.call(app, "revDyn(uint256)", 10, expect_revert=True, **fee)
+    assert r.reverted and r.revert_data == bytes.fromhex("11112222333344445555")
+    r = harness.call(app, "revBare()", expect_revert=True, **fee)
+    assert r.reverted and r.revert_data == b""
+    data = bytes(range(0x41, 0x61))  # 32 bytes 'A'..'`'
+    r = harness.call(app, "cdcTail(bytes)", data, **fee)
+    assert as_bytes(r.abi_return) == data[-8:] + bytes(24)
+    r = harness.call(app, "mcopyOverlap()", **fee).abi_return
+    assert [as_bytes(x) for x in r] == [b"\x01" * 32, b"\x01" * 32, b"\x02" * 32]
+    r = harness.call(app, "mcopyOverlapTail()", **fee).abi_return
+    assert [as_bytes(x) for x in r] == [b"\x11" * 32, b"\x11" * 16 + b"\x22" * 16]
+    r = harness.call(app, "keccakHigh(uint256)", 7, **fee).abi_return
+    assert as_bytes(r[0]) == bytes.fromhex(
+        "a66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688")
+    assert as_bytes(r[1]) == bytes.fromhex(
+        "3c334a49ed0139fdcb7e40998c11886b23e8d6599a7bf995c0e92eb4b8b558db")
+    assert as_int(harness.call(app, "memHighRoundtrip(uint256)", 123456, **fee).abi_return) == 123456
+
+
+def test_asm_call_value(harness):
+    """puyasolRegression/contracts/asm_call_value.sol — NOT an o.g. test.
+
+    M8 remainders: asm call's `value` attaches a grouped [Payment, AppCall]
+    (msg.value in the callee sees it; was silently dropped), and the output
+    copy / returndatasize strip the ARC4 return prefix (r = raw value, rds =
+    EVM-shaped size).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_call_value.sol",
+        contract_name="AsmCallValueCaller", fund_wei=2_000_000)
+    r = harness.call(app, "run(uint256,uint256)", 150_000, 41, extra_fee=30_000).abi_return
+    ok, hits1, got1, ret, rds = (as_int(x) for x in r)
+    assert ok == 1
+    assert hits1 == 100, "fallback did not run"
+    assert got1 == 150_000, f"msg.value did not see the grouped payment (got={got1})"
+    assert ret == 1041, f"returndata prefix not stripped (ret={ret})"
+    assert rds == 32, f"returndatasize includes the prefix (rds={rds})"
+
+
+def test_t2_eval_once_tail(harness):
+    """puyasolRegression/contracts/t2_eval_once_tail.sol — NOT an o.g. test.
+
+    T2 EvalOnce tail: call-valued operands referenced more than once by the
+    builders evaluate exactly once (cnt == 1, EVM-verified vs solc 0.8.20):
+    encodePacked fixed-array loop, address-compare stored side, write-path
+    array index, precompile staticcall input.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/t2_eval_once_tail.sol")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "packedArr()", **fee).abi_return
+    assert as_int(r[0]) == 1
+    assert as_bytes(r[1]) == bytes.fromhex(
+        "6e0c627900b24bd432fe7b1f713f1b0744091a646a9fe4a65a18dfed21f2949c")
+    r = harness.call(app, "addrCmp()", **fee).abi_return
+    assert [as_int(r[0]), as_int(r[1])] == [1, 1]
+    r = harness.call(app, "writeIdx()", **fee).abi_return
+    assert [as_int(r[0]), as_int(r[1])] == [1, 5]
+    r = harness.call(app, "ecInput()", extra_fee=20_000).abi_return
+    assert [as_int(r[0]), as_int(r[1])] == [1, 1]

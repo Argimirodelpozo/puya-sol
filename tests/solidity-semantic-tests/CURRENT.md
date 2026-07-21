@@ -1,3 +1,30 @@
+# Semantic Test Status — v460
+
+> **fix: final fable-review-3 items — H12 payload / M7 / M8 / M12 / M13 / T2 (2026-07-21):**
+> **12 failed / 1357 passed / 109 xf / 28 xp** (failure set identical to the canonical baseline =
+> zero regressions; +3 guards).
+> - H12: asm `revert(off,len)` delivers the payload — log(memory slice) + non-explicit
+>   assert(false), the revert-data-stack convention (constant lens multi-slot via
+>   readMemRangeDirect, 1024-byte log cap; dynamic lens single-slot). All revert_data values
+>   EVM-verified.
+> - M12: asm `calldatacopy` zero-pads past calldatasize (blob ++ bzero, clamped start) and its
+>   write is slot-routed.
+> - M13: blob `mcopy` = memmove (all source words snapshotted before any write; overlapping
+>   ranges EVM-verified); bytes-local mcopy got the guarded/truncated write (zero-pad src reads,
+>   truncate to dst capacity).
+> - M7 remainder: readMemSlot / concatSlots / storeResultToMemory(RT) / keccak memory reads /
+>   calldatacopy write are slot-routed — offsets >= 4096 land in the right scratch slot
+>   (keccakHigh/memHighRoundtrip guards).
+> - M8 remainder: asm `call` `value` attaches a grouped [Payment, AppCall] (msg.value visible;
+>   amount via checkedAmountToUint64); returndatasize/returndatacopy/output copies index the
+>   ARC4-prefix-STRIPPED payload (shared returndataBytes); constant non-precompile address stub
+>   is now a hard error; fixed two latent biguint→uint64 ReinterpretCasts that made the whole
+>   runtime-address asm-call path uncompilable.
+> - T2 tail: slice base, precompile staticcall input, encodePacked fixed-array (+ len==0
+>   double-build), address-compare stored side, write-path/coerce array indexes all pinned —
+>   call-valued operands evaluate exactly once (cnt==1 guards, EVM-verified).
+> Guards: test_asm_payload_mem_batch, test_asm_call_value, test_t2_eval_once_tail.
+
 # Semantic Test Status — v459
 
 > **fix: H4 + M5 via OperandPlan intra-expression effect sequencing (2026-07-21):**
