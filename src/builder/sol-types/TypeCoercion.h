@@ -198,6 +198,20 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Defense-in-depth tripwire (possible_solc.md item 6): at sites lowering a
+	/// SOLIDITY implicit conversion, hard-error when solc's own
+	/// `isImplicitlyConvertibleTo` disagrees the pair is legal. The source
+	/// program type-checked, so a trip means OUR plumbing picked the wrong
+	/// src/target types (the annotation-mixup class behind past sign-extend /
+	/// widening bugs) — fail at compile time, not as a runtime divergence.
+	/// No-op when either type is null. `_site` tags the caller for the message.
+	static void assertImplicitlyConvertible(
+		solidity::frontend::Type const* _srcSolType,
+		solidity::frontend::Type const* _tgtSolType,
+		awst::SourceLocation const& _loc,
+		char const* _site
+	);
+
 	/// Sign-extend a signed intN value widened to a wider signed intM (re-fills the sign the
 	/// uint64-backed / zero-extending value model drops). No-op unless both Solidity types are
 	/// signed ints with srcBits < tgtBits. Handles both target tiers (≤64 uint64, >64 biguint).

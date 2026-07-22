@@ -289,6 +289,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		awst::CallArg ca;
 		size_t paramIdx = _isUsingForCall ? (i + 1) : i;
 		eb::ContractContext::OperandDeltas d;
+		// Tripwire (possible_solc item 6): each arg→param pair must be a
+		// solc-legal implicit conversion; a trip = wrong annotation plumbing.
+		if (_funcDef && paramIdx < _funcDef->parameters().size()
+			&& sortedArgs[i]->annotation().type)
+			builder::TypeCoercion::assertImplicitlyConvertible(
+				sortedArgs[i]->annotation().type,
+				_funcDef->parameters()[paramIdx]->type(), m_loc, "internal-call arg");
 		ca.value = m_ctx.buildScopedOperand([&]() -> std::shared_ptr<awst::Expression> {
 			if (mappingStorageParamIndices.count(paramIdx))
 				return extractMappingKeyPrefix(*sortedArgs[i]);

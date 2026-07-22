@@ -2,7 +2,11 @@
 /// Centralised type coercion / conversion utilities for AWST expressions.
 
 #include "builder/sol-types/TypeCoercion.h"
+#include "Logger.h"
 #include "awst/NameGen.h"
+#include "builder/sol-ast/StorageRefPointer.h"
+
+#include <libsolidity/ast/TypeProvider.h>
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
 
@@ -536,6 +540,45 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
 	return implicitNumericCast(std::move(_amount), awst::WType::uint64Type(), _loc);
 }
 
+void TypeCoercion::assertImplicitlyConvertible(
+	solidity::frontend::Type const* _srcSolType,
+	solidity::frontend::Type const* _tgtSolType,
+	awst::SourceLocation const& _loc,
+	char const* _site
+)
+{
+	if (!_srcSolType || !_tgtSolType)
+		return;
+	using namespace solidity::frontend;
+	// Function types have call-site special cases (external calldata/memory
+	// param equivalence) looser than bare convertibility — skip.
+	if (dynamic_cast<FunctionType const*>(_srcSolType)
+		|| dynamic_cast<FunctionType const*>(_tgtSolType))
+		return;
+	// Accept when EITHER the raw pair OR the memory-normalized pair converts.
+	// Raw-only: storage→storage array copies convert element types, their
+	// memory forms don't. Normalized-only: internal calls to public fns with
+	// CALLDATA params legally take MEMORY args. The mixup class this tripwire
+	// targets (sign/width/kind) fails BOTH forms. Mapping-containing types
+	// can't be re-located (storage-only) — raw check only.
+	if (_srcSolType->isImplicitlyConvertibleTo(*_tgtSolType))
+		return;
+	if (!containsMappingType(_srcSolType) && !containsMappingType(_tgtSolType))
+	{
+		_srcSolType = TypeProvider::withLocationIfReference(DataLocation::Memory, _srcSolType);
+		_tgtSolType = TypeProvider::withLocationIfReference(DataLocation::Memory, _tgtSolType);
+	}
+	if (!_srcSolType->isImplicitlyConvertibleTo(*_tgtSolType))
+		Logger::instance().error(
+			std::string("internal type-plumbing error at ") + _site
+				+ ": lowering an implicit conversion solc says is ILLEGAL ("
+				+ _srcSolType->humanReadableName() + " -> "
+				+ _tgtSolType->humanReadableName()
+				+ "). The source type-checked, so the compiler picked the wrong "
+				  "source/target types here — report this.",
+			_loc);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedWiden(
 	std::shared_ptr<awst::Expression> _value,
 	solidity::frontend::Type const* _srcSolType,
@@ -552,6 +595,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedWiden(
 	if (!_value || !srcInt || !tgtInt) return _value;
 	if (!srcInt->isSigned || !tgtInt->isSigned) return _value;
 	if (srcInt->bits >= tgtInt->bits) return _value;
+	assertImplicitlyConvertible(_srcSolType, _tgtSolType, _loc, "signExtendSignedWiden");
 	if (tgtInt->bits > 64 && _value->wtype == awst::WType::biguintType())
 		return signExtendToUint256(std::move(_value), srcInt->bits, _loc);
 	if (_value->wtype == awst::WType::uint64Type())

@@ -105,6 +105,18 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}
 	}
 
+	// Tripwire (possible_solc item 6): a plain `=` must be a solc-legal
+	// implicit conversion; a trip = wrong src/target annotation plumbing.
+	// Compound ops follow binaryOperatorResult rules instead — skip; tuples
+	// compare element-wise — skip.
+	if (op == Token::Assign
+		&& m_assignment.rightHandSide().annotation().type
+		&& !dynamic_cast<TupleType const*>(m_assignment.rightHandSide().annotation().type)
+		&& !dynamic_cast<TupleType const*>(m_assignment.leftHandSide().annotation().type))
+		builder::TypeCoercion::assertImplicitlyConvertible(
+			m_assignment.rightHandSide().annotation().type,
+			m_assignment.leftHandSide().annotation().type, m_loc, "assignment");
+
 	// (3) Per-shape early-outs.
 	value = applyEnumRangeCheck(std::move(value), op);
 	if (auto r = trySlotBasedArrayWrite(op, target, value))                     return std::move(*r);

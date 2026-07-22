@@ -79,6 +79,12 @@ names as reserved/externallyUsed identifiers, then RE-RESOLVE externalReferences
 post-optimisation. Scope as its own multi-session project.
 
 ### 6. `Type::isImplicitlyConvertibleTo` asserts inside TypeCoercion
+> **✅ ADOPTED 2026-07-22 (v466)** as `TypeCoercion::assertImplicitlyConvertible` at the five
+> sites holding both solc types (signExtendSignedWiden, var-decl init, plain assignment,
+> internal-call args, binop commonType). Lesson: bare isImplicitlyConvertibleTo is stricter
+> than solc's CALL-SITE rules — acceptance is raw-pair OR memory-normalized-pair (storage
+> copies convert elements raw-only; calldata params take memory args normalized-only);
+> FunctionType pairs skipped. Zero corpus trips.
 At every `implicitNumericCast` / `coerceForAssignment`, assert solc agrees the conversion is
 legal. Several past bugs (dropped sign-extends, wrong widening) would have failed at COMPILE
 time instead of surfacing as runtime divergences. ~One day; pure defense-in-depth.

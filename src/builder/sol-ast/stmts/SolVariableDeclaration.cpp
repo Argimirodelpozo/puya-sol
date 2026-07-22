@@ -136,6 +136,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				}
 			}
 
+			// Tripwire (possible_solc item 6): the init must be a solc-legal
+			// implicit conversion; a trip = wrong src/target annotation
+			// plumbing. Tuple inits (destructure) compare element-wise — skip.
+			if (initialValue && initialValue->annotation().type
+				&& !dynamic_cast<solidity::frontend::TupleType const*>(
+					initialValue->annotation().type))
+				builder::TypeCoercion::assertImplicitlyConvertible(
+					initialValue->annotation().type, decl.type(), m_loc,
+					"variable-declaration init");
 			value = builder::TypeCoercion::coerceForAssignment(std::move(value), type, m_loc);
 
 			// Signed sub-word → wider-int implicit widen (e.g. `int128 x = someInt24;`).

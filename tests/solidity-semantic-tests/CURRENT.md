@@ -1,3 +1,19 @@
+# Semantic Test Status — v466
+
+> **feat: solc-convertibility tripwire in TypeCoercion (possible_solc item 6, 2026-07-22):**
+> **12 failed / 1360 passed / 109 xf / 28 xp** (canonical baseline; 13th -n2 listing =
+> test_blobhash block-props race, green standalone). New
+> `TypeCoercion::assertImplicitlyConvertible(src, tgt, loc, site)` hard-errors when solc's
+> `isImplicitlyConvertibleTo` rejects a pair being lowered as an implicit conversion — wired at
+> signExtendSignedWiden, variable-declaration inits (tuples skipped), plain `=` assignments
+> (compound/tuple skipped), internal-call arg→param pairs, and both binop commonType blocks
+> (`**` excluded: solc's commonType is the base type). Acceptance = EITHER the raw pair OR the
+> memory-normalized pair converts (storage→storage copies convert elements raw-only; internal
+> calls to public fns with calldata params take memory args normalized-only; the targeted
+> mixup class — sign/width/kind — fails both). FunctionType pairs and mapping-located pairs
+> handled apart. Zero trips across the whole corpus = armed with no false positives; any
+> future trip is wrong src/target annotation plumbing caught at COMPILE time.
+
 # Semantic Test Status — v465
 
 > **refactor: asm memory-clobber classification via solc's SemanticInformation (2026-07-22):**
