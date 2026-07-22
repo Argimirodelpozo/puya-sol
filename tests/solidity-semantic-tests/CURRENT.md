@@ -1,3 +1,22 @@
+# Semantic Test Status — v467
+
+> **fix: solc-derived EVM-ABI synthetic-calldata layout (possible_solc item 2, 2026-07-22):**
+> **12 failed / 1361 passed / 109 xf / 28 xp** (canonical baseline, zero regressions). The
+> `__cd_blob` and the constant-offset calldata map are the EVM-32-byte-word views over our
+> ARC4-packed values; both now derive from the DECLARED solc types (plumbed
+> FunctionBuilder → FunctionContext.paramSolTypes → AssemblyBuilder):
+> - head offsets accumulate Type::calldataHeadSize() — statics inline their FULL encoded size
+>   (`f(uint8[3] a, uint x)` puts x at 0x64; the blob previously assumed one word per param and
+>   DISAGREED with the map); tail patches use per-param prefix sums;
+> - signed sub-word params SIGN-extend into their head word (sliced from the declared width —
+>   the uint64 carrier is zero-extended, the signed-shadow model only covers Yul reads);
+> - bytesN left-aligns; static aggregates emit one EVM word per leaf (flat-element reader);
+> - sub-word-element dynamic arrays re-encode per element in a runtime loop — element words,
+>   .length AND calldatasize() now match EVM (uint8[2] tail = 64 B, cds 132 not 100);
+> - the CONSTANT-offset map path applies the same word semantics (calldataload(4) of an int8
+>   param sign-extends — where the first guard run actually failed).
+> Guard test_asm_cd_layout (5 shapes, EVM-verified vs solc 0.8.20).
+
 # Semantic Test Status — v466
 
 > **feat: solc-convertibility tripwire in TypeCoercion (possible_solc item 6, 2026-07-22):**

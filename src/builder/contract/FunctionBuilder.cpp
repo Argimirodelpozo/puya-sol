@@ -514,11 +514,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 			std::map<std::string, unsigned> bitWidths;
+			std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
 			for (auto const& arg: method.args)
 				paramContext.emplace_back(arg.name, arg.wtype);
 			// Collect sub-64-bit widths from function params and return params
 			for (auto const& p: _func.parameters())
 			{
+				paramSolTypes[p->name()] = p->annotation().type;
 				if (auto it = builder::SolIntType::fromSol(p->annotation().type);
 					it && it->bits < 64)
 					bitWidths[p->name()] = it->bits;
@@ -529,7 +531,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					it && it->bits < 64)
 					bitWidths[rp->name()] = it->bits;
 			}
-			setFunctionContext(paramContext, method.returnType, bitWidths);
+			setFunctionContext(paramContext, method.returnType, bitWidths, paramSolTypes);
 		}
 
 

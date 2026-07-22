@@ -2998,3 +2998,28 @@ def test_ternary_storage_ptr_families(harness):
     assert [as_int(x) for x in r] == [3, 0]
     r = harness.call(mapp, "mapWrite(bool,uint256,uint256)", False, 2, 4, **fee).abi_return
     assert [as_int(x) for x in r] == [0, 4]
+
+
+def test_asm_cd_layout(harness):
+    """puyasolRegression/contracts/asm_cd_layout.sol — NOT an o.g. test.
+
+    solc-derived EVM-ABI synthetic-calldata layout (possible_solc item 2),
+    EVM-verified vs solc 0.8.20: signed sub-word head words sign-extend;
+    static aggregates inline in the head shifting later params; sub-word
+    dynamic arrays re-encode to padded words (count + calldatasize match);
+    bytes4 left-aligns.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/asm_cd_layout.sol")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "f1(int8,uint256)", -1, 777, **fee).abi_return
+    assert as_bytes(r[0]) == b"\xff" * 32
+    assert as_int(r[1]) == 777
+    r = harness.call(app, "f2(uint8[3],uint256)", [7, 8, 9], 555, **fee).abi_return
+    assert [as_int(x) for x in r] == [7, 9, 555]
+    r = harness.call(app, "f3(uint8[])", [65, 66], **fee).abi_return
+    assert [as_int(x) for x in r] == [2, 65, 66, 132]
+    r = harness.call(app, "f4(bytes4,uint256)", bytes.fromhex("deadbeef"), 333, **fee).abi_return
+    assert as_bytes(r[0]) == bytes.fromhex("deadbeef") + bytes(28)
+    assert as_int(r[1]) == 333
+    r = harness.call(app, "f5(int16[])", [-2], **fee).abi_return
+    assert as_bytes(r) == b"\xff" * 31 + b"\xfe"

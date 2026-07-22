@@ -82,7 +82,10 @@ void AssemblyBuilder::initializeCalldataMap(
 			elem.paramType = type;
 			m_calldataMap[offset + static_cast<uint64_t>(i) * 32] = elem;
 		}
-		offset += static_cast<uint64_t>(elementCount) * 32;
+		// Advance by the solc-derived EVM head size (possible_solc item 2) —
+		// equals flatCount*32 for word-leaf statics, 32 for dynamics; keeps
+		// the map and the synthetic blob on ONE layout.
+		offset += calldataHeadSizeOf(name, type);
 	}
 }
 

@@ -888,7 +888,53 @@ private:
 	std::set<std::string> m_calldataPointerNames;
 	std::set<std::string> m_calldataStaticPtrNames;
 	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;
+	/// Declared solc types of the function's calldata params, by BARE name
+	/// (possible_solc item 2): the EVM-ABI head layout (calldataHeadSize) and
+	/// value widening (sign extension, static-aggregate leaf words) derive
+	/// from these; absent entries fall back to the WType-based heuristics.
+	std::map<std::string, solidity::frontend::Type const*> m_calldataSolTypes;
 	static constexpr char const* CD_BLOB_VAR = "__cd_blob";
+
+public:
+	void setCalldataSolTypes(std::map<std::string, solidity::frontend::Type const*> _m)
+	{
+		m_calldataSolTypes = std::move(_m);
+	}
+
+private:
+	solidity::frontend::Type const* calldataSolType(std::string const& _name) const
+	{
+		auto it = m_calldataSolTypes.find(_name);
+		return it == m_calldataSolTypes.end() ? nullptr : it->second;
+	}
+
+	/// EVM-ABI head size of one calldata param: solc's calldataHeadSize when
+	/// the declared type is known (statics inline their FULL encoded size in
+	/// the head — `f(uint8[3] a, uint b)` puts b at 0x64, not 0x24), else the
+	/// legacy flat-count heuristic.
+	uint64_t calldataHeadSizeOf(std::string const& _name, awst::WType const* _type);
+
+	/// EVM-ABI head bytes for a STATIC param: per-leaf 32-byte words with
+	/// proper sign extension / bytesN right-alignment, driven by the declared
+	/// solc type; falls back to the WType-based single-word heuristics.
+	std::shared_ptr<awst::Expression> evmStaticHeadBytes(
+		std::string const& _name, awst::WType const* _type,
+		awst::SourceLocation const& _loc);
+
+	/// One EVM-ABI 32-byte word for a scalar leaf value (sign extension for
+	/// signed ints, left-alignment for bytesN — driven by the solc leaf type).
+	static std::shared_ptr<awst::Expression> evmCalldataWord(
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::Type const* _solLeaf,
+		awst::SourceLocation const& _loc);
+
+	/// The solc scalar leaf type at flat index `_i` of calldata param `_name`
+	/// (statics flatten in EVM head order); nullptr when unknown.
+	solidity::frontend::Type const* calldataSolLeaf(std::string const& _name, int _i);
+
+	/// True when the leaf type changes the word VALUE vs the raw zero-padded
+	/// native value (signed ints sign-extend; bytesN left-aligns).
+	static bool leafNeedsEvmWord(solidity::frontend::Type const* _solLeaf);
 
 	/// True iff any calldataload/copy/size in the block has a non-constant offset.
 	bool detectDynamicCalldataAccess(solidity::yul::Block const& _block);

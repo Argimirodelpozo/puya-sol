@@ -496,6 +496,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
 	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
 	asmTranslator.setSeededCalldataPointers(m_blk.fn.seededCalldataPointers);
+	asmTranslator.setCalldataSolTypes(m_blk.fn.paramSolTypes);
 	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));

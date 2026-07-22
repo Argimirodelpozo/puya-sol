@@ -27,6 +27,11 @@ const-cache kill rules (`invalidateMemConstants`), and parts of AsmScan gating.
 the hand lists drift). Every future builtin handler becomes effect-correct automatically.
 
 ### 2. `Type::calldataEncodedSize()/calldataHeadSize()` — derive the `__cd_blob` layout
+> **✅ ADOPTED 2026-07-22 (v467).** Head layout + value widening from declared solc types
+> (paramSolTypes plumbed through FunctionContext). Found live bugs: blob assumed one head word
+> per param (disagreeing with the map for static aggregates); signed sub-word head words
+> zero-extended; bytesN right-aligned; sub-word dynamic elements kept ARC4 width. The
+> CONSTANT-offset map path needed the same word semantics. Guard test_asm_cd_layout.
 The synthetic-calldata blob must be byte-identical to EVM ABI encoding; we hand-compute the
 head/tail offsets today.
 

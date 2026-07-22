@@ -73,8 +73,25 @@ main_ternary_merge@9:
 
 main_ternary_merge@12:
     dig 2
-    concat
+    extract 0 32
+    intc_0 // 32
+    bzero
+    swap
     dig 1
+    b|
+    uncover 2
+    swap
+    concat
+    dig 2
+    dup
+    extract 0 32
+    dig 3
+    b|
+    swap
+    extract 32 32
+    dig 3
+    b|
+    concat
     concat
     load 0
     store 0
@@ -90,12 +107,9 @@ main_ternary_merge@12:
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
+    dig 2
     b|
-    uncover 2
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup

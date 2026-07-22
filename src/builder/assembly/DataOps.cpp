@@ -76,7 +76,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			return cast;
 		}
 
-		return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
+		auto value = accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
+		// EVM word semantics where the raw native value diverges (possible_solc
+		// item 2): signed leaves SIGN-extend to the 32-byte word (the carrier
+		// is zero-extended), bytesN LEFT-aligns. Unsigned/bool/address words
+		// equal the zero-padded native value — keep the cheap path.
+		if (auto const* leaf = calldataSolLeaf(elem.paramName, elem.flatIndex);
+			leafNeedsEvmWord(leaf))
+			return awst::makeAsBiguint(
+				evmCalldataWord(std::move(value), leaf, _loc), _loc);
+		return value;
 	}
 
 	// Stubbing 0 would silently zero a real input word; hard-error instead.

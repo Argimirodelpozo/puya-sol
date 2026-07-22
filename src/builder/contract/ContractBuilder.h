@@ -73,6 +73,11 @@ struct FunctionTranslationCtx
 	// assembly return() halts the program). Appended at struct end like
 	// inConstructor — mid-struct insertion breaks aggregate init.
 	bool frameIsProgram = false;
+	/// Declared solc param types by BARE name (possible_solc item 2): the
+	/// synthetic-calldata blob derives the EVM-ABI head layout + value
+	/// widening (sign extension, static-aggregate inlining) from these.
+	/// Appended at struct end (aggregate init) — assigned explicitly.
+	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
 	// Build-time ABI return encoding (D2) — mirror FunctionContext's fields.
 	// Appended (assigned explicitly, not positional) like inConstructor/frameIsProgram.
 	bool encodeReturnsAtBuildTime = false;
@@ -167,6 +172,7 @@ private:
 	bool m_currentInConstructor = false;
 	bool m_currentFrameIsProgram = false;
 	std::vector<std::pair<std::string, awst::WType const*>> m_currentParams;
+	std::map<std::string, solidity::frontend::Type const*> m_currentParamSolTypes;
 	awst::WType const* m_currentReturnType = nullptr;
 	std::map<std::string, unsigned> m_currentBitWidths;
 	std::shared_ptr<awst::Block> m_currentPlaceholder;
@@ -196,7 +202,8 @@ private:
 	void setFunctionContext(
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		awst::WType const* _returnType,
-		std::map<std::string, unsigned> const& _bitWidths = {});
+		std::map<std::string, unsigned> const& _bitWidths = {},
+		std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes = {});
 
 	/// Set/clear placeholder body for modifier inlining.
 	void setPlaceholderBody(std::shared_ptr<awst::Block> _body);

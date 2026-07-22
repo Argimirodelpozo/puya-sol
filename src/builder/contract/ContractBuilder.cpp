@@ -237,6 +237,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	std::shared_ptr<awst::Block> _placeholder)
 {
 	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
+	fn.paramSolTypes = _ctx.paramSolTypes;
 	fn.inConstructor = _ctx.inConstructor;
 	fn.frameIsProgram = _ctx.frameIsProgram;
 	fn.encodeReturnsAtBuildTime = _ctx.encodeReturnsAtBuildTime;
@@ -322,6 +323,7 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 	ctx.returnAsmWrap = m_currentReturnAsmWrap;
 	ctx.returnWirePlan = m_currentReturnWirePlan;
 	ctx.seededCalldataPointers = &m_currentSeededCalldataPointers;
+	ctx.paramSolTypes = m_currentParamSolTypes;
 	return ctx;
 }
 
@@ -335,11 +337,13 @@ std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 void ContractBuilder::setFunctionContext(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	awst::WType const* _returnType,
-	std::map<std::string, unsigned> const& _bitWidths)
+	std::map<std::string, unsigned> const& _bitWidths,
+	std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes)
 {
 	m_currentParams = _params;
 	m_currentReturnType = _returnType;
 	m_currentBitWidths = _bitWidths;
+	m_currentParamSolTypes = _paramSolTypes;
 	// Per-function reset: build-time return encoding is opt-in per function
 	// (setReturnWirePlan). Clear here so a function that does NOT opt in never
 	// inherits the previous function's plan.

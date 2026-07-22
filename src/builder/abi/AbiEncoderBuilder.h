@@ -102,16 +102,20 @@ private:
 		std::shared_ptr<awst::Expression> _expr, int _n,
 		awst::SourceLocation const& _loc);
 
+public:
 	/// Sign-extend a <=32-byte big-endian two's-complement value to a 32-byte
 	/// ABI word: the high bytes are filled with the sign (0xff when byte 0's
 	/// top bit is set, else 0x00) and the low `len` bytes keep the value, via
 	/// `replace3` so it is robust to the value's runtime width AND idempotent
 	/// on an already-32-byte input. Used by abi.encode for signed integers
 	/// whose canonical form is two's-complement but whose plain leftpad would
-	/// zero-fill the high bytes (0x00…00fffd instead of 0xff…fffd).
+	/// zero-fill the high bytes (0x00…00fffd instead of 0xff…fffd). Public:
+	/// the synthetic-calldata blob widens signed sub-word params with it.
 	static std::shared_ptr<awst::Expression> signExtendBytesTo32(
 		std::shared_ptr<awst::Expression> _bytes,
 		awst::SourceLocation const& _loc);
+
+private:
 
 	// ── Individual handlers ──
 

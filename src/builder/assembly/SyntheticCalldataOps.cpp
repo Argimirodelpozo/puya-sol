@@ -2,8 +2,19 @@
 /// Synthetic EVM-ABI calldata blob: when Yul accesses calldata at a non-constant
 /// offset, stand up `__cd_blob` at the assembly-block entry so dynamic calldataload
 /// becomes `extract3(__cd_blob, off, 32)`.
+///
+/// Layout + value widening are driven by the DECLARED solc types when available
+/// (possible_solc item 2): head sizes from `Type::calldataHeadSize()` (statics
+/// inline their full encoded size in the head), signed sub-word params
+/// sign-extend to the 32-byte word, static aggregates emit one word per leaf,
+/// and sub-word-element dynamic arrays re-encode per element at runtime.
+/// The blob is deliberately EVM-32-byte-word-shaped — ARC4 packing is the VALUE
+/// transport; this is the offset-faithful view Yul arithmetic needs.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+
+#include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder
 {
@@ -154,7 +165,170 @@ std::shared_ptr<awst::Expression> padTo32Multiple(
 	return awst::makeRightPadTo32Multiple(std::move(_bytes), _loc);
 }
 
+// True when the declared solc type is trustworthy for EVM-ABI layout math:
+// value types, and reference types actually located in calldata. Storage-ref
+// params (V4 handle-model) travel as box keys — their solc types would hit
+// calldataEncodedSize solAsserts.
+bool solTypeUsable(solidity::frontend::Type const* _t)
+{
+	using namespace solidity::frontend;
+	if (!_t) return false;
+	if (_t->isValueType()) return true;
+	if (auto const* rt = dynamic_cast<ReferenceType const*>(_t))
+		return rt->location() == DataLocation::CallData;
+	return false;
+}
+
+// Flatten a STATIC solc type to its scalar leaves in EVM head order.
+void flattenSolLeaves(
+	solidity::frontend::Type const* _t,
+	std::vector<solidity::frontend::Type const*>& _out)
+{
+	using namespace solidity::frontend;
+	if (auto const* at = dynamic_cast<ArrayType const*>(_t))
+	{
+		if (!at->isDynamicallySized())
+		{
+			auto n = at->length().convert_to<size_t>();
+			for (size_t i = 0; i < n; ++i)
+				flattenSolLeaves(at->baseType(), _out);
+			return;
+		}
+	}
+	if (auto const* st = dynamic_cast<StructType const*>(_t))
+	{
+		for (auto const& m: st->structDefinition().members())
+			flattenSolLeaves(m->type(), _out);
+		return;
+	}
+	_out.push_back(_t);
+}
+
 } // anonymous
+
+// One EVM-ABI 32-byte word for a scalar leaf value. Signedness comes from the
+// solc type (the WType erases it): signed sub-word sign-extends; bytesN
+// left-aligns; everything else zero-pads left.
+std::shared_ptr<awst::Expression> AssemblyBuilder::evmCalldataWord(
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::Type const* _solLeaf,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	auto const* wt = _value->wtype;
+	auto u64c = [&](uint64_t v) {
+		return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type());
+	};
+	auto const* intT = dynamic_cast<IntegerType const*>(_solLeaf);
+	if (intT && intT->isSigned() && wt == awst::WType::uint64Type())
+	{
+		// The uint64 carrier may hold the narrow value ZERO-extended (the
+		// signed-shadow model extends on Yul reads, which the blob bypasses):
+		// slice the DECLARED-width low bytes, then sign-extend from there.
+		unsigned nbytes = intT->numBits() / 8;
+		auto full = awst::makeItob(std::move(_value), _loc);
+		std::shared_ptr<awst::Expression> low = nbytes >= 8
+			? std::move(full)
+			: std::static_pointer_cast<awst::Expression>(awst::makeExtract3(
+				std::move(full), u64c(8 - nbytes), u64c(nbytes), _loc));
+		return eb::AbiEncoderBuilder::signExtendBytesTo32(std::move(low), _loc);
+	}
+	if (wt == awst::WType::uint64Type())
+		return pad32BE(std::move(_value), _loc);
+	if (wt == awst::WType::biguintType())
+		// Canonical 256-bit TC for signed biguints is already sign-extended;
+		// unsigned shorter values left-pad via the OR-with-zeros trick.
+		return awst::makeBytesOr(
+			awst::makeAsBytes(std::move(_value), _loc),
+			awst::makeBzero(32, _loc), _loc);
+	if (wt == awst::WType::boolType())
+	{
+		auto castU64 = awst::makeAsUInt64(std::move(_value), _loc);
+		auto byteByVal = awst::makeItob(std::move(castU64), _loc);
+		auto lastByte = awst::makeExtract3(std::move(byteByVal), u64c(7), u64c(1), _loc);
+		return awst::makeConcat(awst::makeBzero(31, _loc), std::move(lastByte), _loc);
+	}
+	if (wt == awst::WType::accountType())
+		return awst::makeAsBytes(std::move(_value), _loc);
+	if (dynamic_cast<FixedBytesType const*>(_solLeaf))
+		// bytesN is LEFT-aligned in its word.
+		return padTo32Multiple(awst::makeAsBytes(std::move(_value), _loc), _loc);
+	if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(wt))
+	{
+		// ARC4-typed leaf (aggregate element): decode-free left-pad; signed
+		// leaves sign-extend from their ARC4 width.
+		auto bytes = awst::makeAsBytes(std::move(_value), _loc);
+		if (intT && intT->isSigned())
+			return eb::AbiEncoderBuilder::signExtendBytesTo32(std::move(bytes), _loc);
+		(void) uintN;
+		return awst::makeBytesOr(std::move(bytes), awst::makeBzero(32, _loc), _loc);
+	}
+	return awst::makeAsBytes(std::move(_value), _loc); // best-effort
+}
+
+bool AssemblyBuilder::leafNeedsEvmWord(solidity::frontend::Type const* _solLeaf)
+{
+	using namespace solidity::frontend;
+	if (auto const* it = dynamic_cast<IntegerType const*>(_solLeaf))
+		return it->isSigned();
+	return dynamic_cast<FixedBytesType const*>(_solLeaf) != nullptr;
+}
+
+solidity::frontend::Type const* AssemblyBuilder::calldataSolLeaf(
+	std::string const& _name, int _i)
+{
+	auto const* solT = calldataSolType(_name);
+	if (!solTypeUsable(solT))
+		return nullptr;
+	std::vector<solidity::frontend::Type const*> leaves;
+	flattenSolLeaves(solT, leaves);
+	if (_i >= 0 && static_cast<size_t>(_i) < leaves.size())
+		return leaves[_i];
+	return nullptr;
+}
+
+uint64_t AssemblyBuilder::calldataHeadSizeOf(
+	std::string const& _name, awst::WType const* _type)
+{
+	if (auto const* solT = calldataSolType(_name); solTypeUsable(solT))
+		return solT->calldataHeadSize();
+	if (isDynamicCalldataType(_type))
+		return 32;
+	return static_cast<uint64_t>(computeFlatElementCount(_type)) * 32;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::evmStaticHeadBytes(
+	std::string const& _name, awst::WType const* _type,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	auto paramVar = awst::makeVarExpression(_name, _type, _loc);
+	auto const* solT = calldataSolType(_name);
+	if (!solTypeUsable(solT))
+		solT = nullptr;
+
+	// Static aggregate: one 32-byte word per leaf, EVM head order.
+	bool solAggregate = solT
+		&& (dynamic_cast<ArrayType const*>(solT) || dynamic_cast<StructType const*>(solT));
+	if (solAggregate)
+	{
+		std::vector<Type const*> leaves;
+		flattenSolLeaves(solT, leaves);
+		int flat = computeFlatElementCount(_type);
+		std::shared_ptr<awst::Expression> acc;
+		for (int i = 0; i < flat; ++i)
+		{
+			auto leafVal = accessFlatElement(paramVar, _type, i, _loc);
+			auto word = evmCalldataWord(std::move(leafVal),
+				static_cast<size_t>(i) < leaves.size() ? leaves[i] : nullptr, _loc);
+			acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc)
+					  : std::move(word);
+		}
+		if (acc)
+			return acc;
+	}
+	return evmCalldataWord(std::move(paramVar), solT, _loc);
+}
 
 bool AssemblyBuilder::isDynamicCalldataType(awst::WType const* _type) const
 {
@@ -266,9 +440,18 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		return awst::makeLen(std::move(b), _loc);
 	};
 
-	// Layout: 4-byte selector (zeros) + N×32 head + tail.
-	// __cd_tail_off = running tail offset (relative to args start = 0x04); starts at N*32.
-	uint64_t headWords = _params.size();
+	// Layout: 4-byte selector + head area + tail. Head sizes are per-param
+	// (solc calldataHeadSize: statics inline their FULL encoded size — a
+	// `uint8[3]` occupies 96 head bytes, shifting every later param), not the
+	// old one-word-per-param assumption. __cd_tail_off = running tail offset
+	// (relative to args start = 0x04); starts at the total head size.
+	std::vector<uint64_t> headSizes;
+	uint64_t headTotal = 0;
+	for (auto const& [pname, ptype]: _params)
+	{
+		headSizes.push_back(calldataHeadSizeOf(pname, ptype));
+		headTotal += headSizes.back();
+	}
 
 	// __cd_blob selector slot: the RUNTIME selector that routed this call —
 	// txna ApplicationArgs 0, the 4-byte sha512_256-based ARC-4 selector. AVM
@@ -287,11 +470,11 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 	_out.push_back(awst::makeAssignmentStatement(
 		bytesVar(CD_BLOB_VAR), std::move(selectorBytes), _loc));
 
-	// __cd_tail_off = headWords * 32  — running offset of next tail entry
+	// __cd_tail_off = total head size — running offset of next tail entry
 	_out.push_back(awst::makeAssignmentStatement(
-		u64Var("__cd_tail_off"), u64Const(headWords * 32), _loc));
+		u64Var("__cd_tail_off"), u64Const(headTotal), _loc));
 
-	// Pass 1: append head words; pass 2: append tail bodies for dynamic params.
+	// Pass 1: append head areas; pass 2: append tail bodies for dynamic params.
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
@@ -305,123 +488,120 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		}
 		else
 		{
-			// Static head: encode as 32 BE bytes.
-			auto paramVar = awst::makeVarExpression(name, type, _loc);
-			std::shared_ptr<awst::Expression> headWord;
-			if (type == awst::WType::uint64Type())
-				headWord = pad32BE(std::move(paramVar), _loc);
-			else if (type == awst::WType::biguintType())
-			{
-				// biguint as bytes; left-pad to 32 if shorter.
-				auto orOp = awst::makeBytesOr(
-					awst::makeAsBytes(std::move(paramVar), _loc),
-					bzeroOf(u64Const(32)), _loc);
-				headWord = std::move(orOp);
-			}
-			else if (type == awst::WType::boolType())
-			{
-				// 31 zero bytes + low byte of bool.
-				auto bz = bzeroOf(u64Const(31));
-				auto castU64 = awst::makeAsUInt64(std::move(paramVar), _loc);
-				auto byteByVal = awst::makeItob(std::move(castU64), _loc);
-				// itob produces 8 bytes BE; take last byte
-				auto extract = awst::makeExtract3(std::move(byteByVal), u64Const(7), u64Const(1), _loc);
-				headWord = concatBytes(std::move(bz), std::move(extract));
-			}
-			else if (type == awst::WType::accountType())
-			{
-				headWord = awst::makeAsBytes(std::move(paramVar), _loc);
-			}
-			else
-			{
-				headWord = awst::makeAsBytes(std::move(paramVar), _loc); // best-effort
-			}
+			// Static head: per-leaf EVM words (sign-extended / right-aligned
+			// per the declared solc type).
 			_out.push_back(awst::makeAssignmentStatement(
 				bytesVar(CD_BLOB_VAR),
-				concatBytes(bytesVar(CD_BLOB_VAR), std::move(headWord)),
+				concatBytes(bytesVar(CD_BLOB_VAR), evmStaticHeadBytes(name, type, _loc)),
 				_loc));
 		}
 	}
 
-	// Tail pass: for each dynamic param, emit length word + padded data, then
-	// advance __cd_tail_off and patch any subsequent dynamic heads via replace3.
-	// MVP: handles <=1 dynamic OR multiple where subsequent heads get patched
-	// (e.g. honk verify(bytes, bytes32[]) needs the second head = 0x40+32+paddedLen(proof)).
+	// Head byte offset of param j within the blob: 4 + Σ headSizes[0..j).
+	std::vector<uint64_t> headPos(_params.size(), 4);
+	for (size_t j = 1; j < _params.size(); ++j)
+		headPos[j] = headPos[j - 1] + headSizes[j - 1];
+
+	// Tail pass: for each dynamic param, emit length word + EVM-encoded data,
+	// then advance __cd_tail_off and patch the next dynamic head via replace3.
+	static int s_cdBodyCtr = 0;
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
 		if (!isDynamicCalldataType(type)) continue;
 
+		int bodyId = s_cdBodyCtr++;
+		std::string cntN = "__cd_cnt_" + std::to_string(bodyId);
+		std::string bodyN = "__cd_body_" + std::to_string(bodyId);
+		auto cntVar = [&]() { return u64Var(cntN); };
+		auto bodyVar = [&]() { return bytesVar(bodyN); };
+
+		// EVM length word: BYTE length for bytes/string, ELEMENT COUNT for
+		// arrays (the ARC4 2-byte header — universal for any element size).
 		auto var = awst::makeVarExpression(name, type, _loc);
-		// EVM length word: BYTE length for bytes/string, ELEMENT COUNT for arrays.
-		// An ARC4 dynamic array carries its element count in its 2-byte header —
-		// read that (universal for any element size) instead of len(bytes), which
-		// gave the byte length (2 + n*elemSize) and broke `l := x.length` on
-		// `uint[2][] calldata` (130 instead of 2).
 		std::shared_ptr<awst::Expression> lenExpr;
 		if (type == awst::WType::bytesType() || type == awst::WType::stringType())
 			lenExpr = lenOf(std::move(var));
 		else
 			lenExpr = awst::makeBtoi(awst::makeExtract3(
 				awst::makeAsBytes(std::move(var), _loc), u64Const(0), u64Const(2), _loc), _loc);
+		_out.push_back(awst::makeAssignmentStatement(cntVar(), std::move(lenExpr), _loc));
 		_out.push_back(awst::makeAssignmentStatement(
 			bytesVar(CD_BLOB_VAR),
-			concatBytes(bytesVar(CD_BLOB_VAR), pad32BE(std::move(lenExpr), _loc)),
+			concatBytes(bytesVar(CD_BLOB_VAR), pad32BE(cntVar(), _loc)),
 			_loc));
 
-		// Param data padded to 32-byte multiple.
-		// ARC4 dynamic arrays have a 2-byte length header; strip it for calldata.
+		// Body → __cd_body_N. bytes/string: raw padded. Arrays whose ARC4
+		// element bytes already equal the EVM element encoding (uint256[],
+		// uint[2][]): strip the 2-byte header, pad. Otherwise (sub-word /
+		// signed / bool elements): re-encode PER ELEMENT at runtime — each
+		// leaf widened to its EVM 32-byte word (possible_solc item 2; the old
+		// strip emitted 1-byte uint8[] elements where EVM has padded words).
 		auto var2 = awst::makeVarExpression(name, type, _loc);
-		std::shared_ptr<awst::Expression> body;
-		if (type == awst::WType::bytesType() || type == awst::WType::stringType())
-			body = awst::makeAsBytes(std::move(var2), _loc);
-		else
+		bool isByteish = (type == awst::WType::bytesType() || type == awst::WType::stringType());
+		awst::WType const* elemW = nullptr;
+		if (auto const* dyn = dynamic_cast<awst::ARC4DynamicArray const*>(type))
+			elemW = dyn->elementType();
+		solidity::frontend::Type const* solElem = nullptr;
+		if (auto const* solT = calldataSolType(name); solTypeUsable(solT))
+			if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(solT))
+				solElem = at->baseType();
+		int arc4Elem = elemW ? computeARC4ByteSize(elemW) : 32;
+		bool elemIsBool = elemW
+			&& (elemW == awst::WType::boolType() || elemW->name() == "arc4.bool");
+		bool reencode = !isByteish && elemW
+			&& (elemIsBool || arc4Elem != 32)
+			&& solElem && solElem->isValueType();
+		if (isByteish)
+			_out.push_back(awst::makeAssignmentStatement(bodyVar(),
+				padTo32Multiple(awst::makeAsBytes(std::move(var2), _loc), _loc), _loc));
+		else if (!reencode)
 		{
-			// ARC4 dynamic array: extract everything after the 2-byte length header.
 			auto bytes = awst::makeAsBytes(std::move(var2), _loc);
 			auto lenCall = awst::makeLen(bytes, _loc);
-			auto sub2 = awst::makeUInt64BinOp(
-				std::move(lenCall), O::Sub, u64Const(2), _loc);
+			auto sub2 = awst::makeUInt64BinOp(std::move(lenCall), O::Sub, u64Const(2), _loc);
 			auto extract = awst::makeExtract3(std::move(bytes), u64Const(2), std::move(sub2), _loc);
-			body = std::move(extract);
+			_out.push_back(awst::makeAssignmentStatement(bodyVar(),
+				padTo32Multiple(std::move(extract), _loc), _loc));
 		}
-		auto paddedBody = padTo32Multiple(std::move(body), _loc);
+		else
+		{
+			std::string idxN = "__cd_i_" + std::to_string(bodyId);
+			auto idxVar = [&]() { return u64Var(idxN); };
+			_out.push_back(awst::makeAssignmentStatement(bodyVar(),
+				awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown), _loc));
+			_out.push_back(awst::makeAssignmentStatement(idxVar(), u64Const(0), _loc));
+			auto body = awst::makeBlock(_loc);
+			auto elem = awst::makeIndexExpression(std::move(var2), idxVar(), elemW, _loc);
+			body->body.push_back(awst::makeAssignmentStatement(bodyVar(),
+				concatBytes(bodyVar(), evmCalldataWord(std::move(elem), solElem, _loc)), _loc));
+			body->body.push_back(awst::makeAssignmentStatement(idxVar(),
+				awst::makeUInt64BinOp(idxVar(), O::Add, u64Const(1), _loc), _loc));
+			auto cond = awst::makeNumericCompare(
+				idxVar(), awst::NumericComparison::Lt, cntVar(), _loc);
+			_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), _loc));
+		}
 		_out.push_back(awst::makeAssignmentStatement(
 			bytesVar(CD_BLOB_VAR),
-			concatBytes(bytesVar(CD_BLOB_VAR), std::move(paddedBody)),
+			concatBytes(bytesVar(CD_BLOB_VAR), bodyVar()),
 			_loc));
 
-		// Advance tail offset: __cd_tail_off += 32 + paddedLen(param).
-		auto var3 = awst::makeVarExpression(name, type, _loc);
-		auto rawLen = lenOf(var3);
-		auto modVal = awst::makeUInt64BinOp(
-			rawLen, O::Mod, u64Const(32), _loc);
-		auto padBytes = awst::makeUInt64BinOp(
-			awst::makeUInt64BinOp(u64Const(32), O::Sub, std::move(modVal), _loc),
-			O::Mod, u64Const(32), _loc);
-		auto var4 = awst::makeVarExpression(name, type, _loc);
-		auto rawLen2 = lenOf(var4);
-		auto paddedLen = awst::makeUInt64BinOp(
-			std::move(rawLen2), O::Add, std::move(padBytes), _loc);
-
+		// Advance tail offset: __cd_tail_off += 32 + len(body).
 		auto advance = awst::makeUInt64BinOp(
 			awst::makeUInt64BinOp(u64Var("__cd_tail_off"), O::Add, u64Const(32), _loc),
-			O::Add, std::move(paddedLen), _loc);
+			O::Add, lenOf(bodyVar()), _loc);
 		_out.push_back(awst::makeAssignmentStatement(u64Var("__cd_tail_off"), advance, _loc));
 
-		// PATCH later dynamic heads with the now-correct __cd_tail_off.
-		// Each later dynamic param's head sits at byte offset
-		// 4 + (its_index * 32) within the blob. Overwrite with the
-		// current __cd_tail_off (which still points at the NEXT tail
-		// entry, i.e. exactly the value that head should hold).
+		// PATCH the next dynamic head (at its per-param head offset — statics
+		// shift it) with the now-correct __cd_tail_off; subsequent iterations
+		// chain the rest.
 		for (size_t j = i + 1; j < _params.size(); ++j)
 		{
 			if (!isDynamicCalldataType(_params[j].second)) continue;
-			uint64_t headByteOffset = 4 + j * 32;
-			auto patch = awst::makeReplace3(bytesVar(CD_BLOB_VAR), u64Const(headByteOffset), pad32BE(u64Var("__cd_tail_off"), _loc), _loc);
+			auto patch = awst::makeReplace3(bytesVar(CD_BLOB_VAR),
+				u64Const(headPos[j]), pad32BE(u64Var("__cd_tail_off"), _loc), _loc);
 			_out.push_back(awst::makeAssignmentStatement(bytesVar(CD_BLOB_VAR), std::move(patch), _loc));
-			break;  // only patch the very next dynamic; updating
-			        // __cd_tail_off in subsequent iterations chains them.
+			break;
 		}
 	}
 
