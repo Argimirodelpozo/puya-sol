@@ -13,6 +13,9 @@ optimisers — all EVM-opcode-coupled) are not repeated here.
 ## Tier 1 — direct bug-class killers, cheap (~a day each)
 
 ### 1. `evmasm::SemanticInformation` + `yul::SideEffectsCollector` — effect tables for asm
+> **✅ ADOPTED 2026-07-22 (v465)** for the memory-clobber classification: `s_memClobberers`
+> hand-list replaced by `SemanticInformation::memory(instr) == Write` (CoreTranslation.cpp).
+> `SideEffectsCollector` remains available for future Yul-expression-level uses.
 `solidity/libevmasm/SemanticInformation.h` — authoritative per-opcode
 `memory/storage/transientStorage/otherState(Instruction)` read/write classification.
 `solidity/libyul/optimiser/Semantics.h` — `SideEffectsCollector` classifies whole Yul

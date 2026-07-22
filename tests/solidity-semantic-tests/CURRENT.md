@@ -1,3 +1,14 @@
+# Semantic Test Status — v465
+
+> **refactor: asm memory-clobber classification via solc's SemanticInformation (2026-07-22):**
+> **12 failed / 1359 passed / 109 xf / 28 xp** (canonical baseline; 13th -n2 listing =
+> known test_send_zero_ether race, passes standalone). possible_solc.md item 1: the
+> hand-maintained `s_memClobberers` opcode list (13 names, the N1 stale-cache drift source) is
+> replaced by `evmasm::SemanticInformation::memory(instruction) == Write` via the
+> `c_instructions` name lookup. Special cases kept: `mstore` (self-tracks per-offset),
+> `datacopy` (Yul-object builtin, no EVM opcode). Future builtin handlers become
+> effect-correct automatically.
+
 # Semantic Test Status — v464
 
 > **fix: ternary-init storage pointers write through for EVERY storage family (2026-07-21):**

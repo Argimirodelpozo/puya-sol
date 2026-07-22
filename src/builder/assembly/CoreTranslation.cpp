@@ -4,6 +4,11 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
+#include <libevmasm/Instruction.h>
+#include <libevmasm/SemanticInformation.h>
+
+#include <algorithm>
+#include <cctype>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
@@ -352,14 +357,28 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		args[ai] = buildExpression(_call.arguments[ai]);
 
 	// Memory writers the content-constant tracker can't model precisely: drop
-	// all "mem_0x*" entries. mstore itself tracks/invalidates per-offset.
-	// (After arg translation, so entries recorded by inlined arg builds die too.)
+	// all "mem_0x*" entries. Classified by solc's own per-instruction effect
+	// table (SemanticInformation::memory == Write) instead of a hand-list
+	// that drifts as builtins gain handlers. mstore itself tracks/invalidates
+	// per-offset; Yul-object builtins with no EVM opcode (datacopy) keep a
+	// one-entry supplement. (After arg translation, so entries recorded by
+	// inlined arg builds die too.)
 	{
-		static std::set<std::string> const s_memClobberers = {
-			"mstore8", "mcopy", "calldatacopy", "returndatacopy", "codecopy",
-			"extcodecopy", "datacopy", "call", "staticcall", "delegatecall",
-			"callcode", "create", "create2"};
-		if (s_memClobberers.count(funcName))
+		bool clobbersMemory = false;
+		if (funcName == "datacopy")
+			clobbersMemory = true;
+		else if (funcName != "mstore")
+		{
+			std::string upper = funcName;
+			std::transform(upper.begin(), upper.end(), upper.begin(),
+				[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+			auto it = solidity::evmasm::c_instructions.find(upper);
+			if (it != solidity::evmasm::c_instructions.end())
+				clobbersMemory =
+					solidity::evmasm::SemanticInformation::memory(it->second)
+						== solidity::evmasm::SemanticInformation::Write;
+		}
+		if (clobbersMemory)
 			invalidateMemConstants();
 	}
 
