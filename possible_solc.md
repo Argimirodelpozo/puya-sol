@@ -119,14 +119,17 @@ assignments against solc's canonical layout JSON in the harness (instead of hand
 transient storage slots.
 
 ### 8. `CFG` / `ControlFlowGraph::functionFlow()` — one true walker (review theme T5)
-> **⚠️ PARTIALLY DONE / MOSTLY RETIRED 2026-07-23 (v470).** Closed the concrete gap:
-> forEachReturnStatement now handles ForInLoop (the last missing AWST container; T5 class). But
-> the CFG-consolidation premise DOESN'T HOLD: our return/mutation walkers operate on AWST
-> (post-lowering), where solc's Solidity-AST CFG can't substitute. A CFG termination-tripwire
-> was attempted and reverted — solc's FunctionFlow.exit is where explicit returns ALSO land, so
-> exit-reachability can't tell fall-off-end from a normal return (solc never needs that
-> distinction — falling off a value-returning function is legal Solidity, zero-inited). Item 3
-> already showed the right move: extend the shared walker in-place, don't consume the callgraph.
+> **✅ RESOLVED 2026-07-23 (v470+v471, reassessed).** The T5 goal — kill walker drift — is
+> achieved WITHOUT solc's CFG: all five hand-rolled AWST statement walkers (forEachReturn,
+> dropUnreachableStatements, replaceReturns, fixReturns, rewriteRet) now recurse through ONE
+> shared `awst::forEachChildBlock` (StatementWalk.h). The census found live drift: rewriteRet
+> missed WhileLoop — `return stateVar[i]` inside a loop skipped the storage-ref index rewrite
+> (guard test_storage_ref_return_loop); the modifier inliners missed Switch+ForInLoop (latent).
+> CFG-consolidation itself stays retired, re-verified: walkers run on AWST (post-lowering);
+> FunctionFlow.exit merges returns and fall-through (Kind::Return occurrences attach to the
+> shared node, resolvable only by reimplementing the analyzer's dataflow). The solidity
+> submodule carries NO source patches — a solc fall-through-marker patch is AVAILABLE but would
+> be a new policy decision.
 `constructFlow(root)` then per-function CFG with `variableOccurrences` (run
 `ControlFlowRevertPruner` first for revert edges). Could consolidate the four partial
 tree-walkers onto solc's canonical answers. (Superseded — see note above.)

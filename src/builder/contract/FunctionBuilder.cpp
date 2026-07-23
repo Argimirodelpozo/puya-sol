@@ -1,5 +1,6 @@
 #include "builder/contract/ContractBuilder.h"
 #include "awst/Termination.h"
+#include "awst/StatementWalk.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/NatSpecTags.h"
 #include "builder/sol-ast/AsmScan.h"
@@ -688,13 +689,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 								ix->index, awst::WType::uint64Type(),
 								ret->value->sourceLocation);
 					}
-					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-					{
-						if (ifElse->ifBranch) rewriteRet(ifElse->ifBranch->body);
-						if (ifElse->elseBranch) rewriteRet(ifElse->elseBranch->body);
-					}
-					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-						rewriteRet(block->body);
+					else
+						// awst::forEachChildBlock: the old hand list missed
+						// WhileLoop/Switch/ForInLoop — `return stateArr;` inside
+						// a loop skipped the storage-ref index rewrite.
+						awst::forEachChildBlock(*stmt, [&](awst::Block& b, bool) {
+							rewriteRet(b.body);
+						});
 				}
 			};
 			rewriteRet(method.body->body);

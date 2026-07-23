@@ -3061,3 +3061,18 @@ def test_denomination_array_layout(harness):
     assert as_int(harness.call(app, "getFirst()").abi_return) == 1
     assert as_int(harness.call(app, "getAfter()").abi_return) == 99
     assert as_int(harness.call(app, "bigLen()").abi_return) == 2 * 10**18
+
+
+def test_storage_ref_return_loop(harness):
+    """puyasolRegression/contracts/storage_ref_return_loop.sol — NOT an o.g. test.
+
+    Storage-ref-pointer return INSIDE a while loop gets the index rewrite
+    (the old hand-rolled walker missed loop/switch containers —
+    awst::forEachChildBlock consolidation). EVM-verified vs solc 0.8.20.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/storage_ref_return_loop.sol")
+    harness.call(app, "seed()", extra_fee=10_000)
+    assert as_int(harness.call(app, "firstOfLen(uint256)", 2).abi_return) == 2
+    assert as_int(harness.call(app, "firstOfLen(uint256)", 1).abi_return) == 1
+    assert as_int(harness.call(app, "firstOfLen(uint256)", 99).abi_return) == 1

@@ -6,6 +6,7 @@
 /// ModifierInliner.cpp::buildModifierChain.
 
 #include "builder/contract/ContractBuilder.h"
+#include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
@@ -77,16 +78,11 @@ void dropUnreachableStatements(awst::Block* b)
 	for (size_t i = 0; i < b->body.size(); ++i)
 	{
 		awst::Statement* s = b->body[i].get();
-		// Recurse into nested control flow before judging this statement.
-		if (auto* nb = dynamic_cast<awst::Block*>(s))
-			dropUnreachableStatements(nb);
-		else if (auto* wl = dynamic_cast<awst::WhileLoop*>(s))
-			dropUnreachableStatements(wl->loopBody.get());
-		else if (auto* ie = dynamic_cast<awst::IfElse*>(s))
-		{
-			dropUnreachableStatements(ie->ifBranch.get());
-			dropUnreachableStatements(ie->elseBranch.get());
-		}
+		// Recurse into nested control flow before judging this statement
+		// (awst::forEachChildBlock — the single container enumeration, T5).
+		awst::forEachChildBlock(*s, [&](awst::Block& b, bool) {
+			dropUnreachableStatements(&b);
+		});
 		// Everything after an unconditional terminator is unreachable.
 		if (stmtTerminates(s) && i + 1 < b->body.size())
 		{
@@ -481,18 +477,10 @@ void inlineModifiers(
 						s = std::move(block);
 						if (inLoop) hasReturnInLoop = true;
 					}
-					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(s.get()))
-					{
-						if (ifElse->ifBranch) replaceReturns(ifElse->ifBranch->body, inLoop);
-						if (ifElse->elseBranch) replaceReturns(ifElse->elseBranch->body, inLoop);
-					}
-					else if (auto* block = dynamic_cast<awst::Block*>(s.get()))
-						replaceReturns(block->body, inLoop);
-					else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(s.get()))
-					{
-						if (whileLoop->loopBody)
-							replaceReturns(whileLoop->loopBody->body, /*inLoop=*/true);
-					}
+					else
+						awst::forEachChildBlock(*s, [&](awst::Block& b, bool isLoopBody) {
+							replaceReturns(b.body, inLoop || isLoopBody);
+						});
 				}
 			};
 			replaceReturns(translatedModBody->body, false);

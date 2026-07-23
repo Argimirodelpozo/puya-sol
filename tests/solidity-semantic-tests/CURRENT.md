@@ -1,3 +1,20 @@
+# Semantic Test Status — v471
+
+> **fix: item-8 reassessment — awst::forEachChildBlock walker consolidation (2026-07-23):**
+> **12 failed / 1364 passed / 109 xf / 28 xp** (exact canonical set, no flakes, zero
+> regressions). The walker census found the container recursion hand-copied in FIVE places with
+> three distinct gap sets: ModifierBodyInliner (dropUnreachableStatements + replaceReturns) and
+> ModifierInliner (fixReturns) missing Switch+ForInLoop (latent), and FunctionBuilder's
+> storage-ref return rewrite (rewriteRet) missing WhileLoop/Switch/ForInLoop — LIVE:
+> `return stateVar[i];` inside a while loop silently skipped the index rewrite. All five
+> walkers now recurse through ONE shared `awst::forEachChildBlock(stmt, fn(Block&, isLoopBody))`
+> (src/awst/StatementWalk.h) — any future container is a one-line, one-place addition, which is
+> the T5 kill achieved WITHOUT solc's CFG. CFG retirement re-verified rigorously: returns and
+> fall-through share FunctionFlow.exit; Kind::Return occurrences attach to that shared node and
+> need the analyzer's in-traversal dataflow to resolve; the solidity submodule carries no source
+> patches, so a fall-through marker patch would be a new policy decision (noted as available).
+> Guard test_storage_ref_return_loop (EVM-verified).
+
 # Semantic Test Status — v470
 
 > **fix: storage-layout differential tripwire (possible_solc item 7) + ForInLoop return walker

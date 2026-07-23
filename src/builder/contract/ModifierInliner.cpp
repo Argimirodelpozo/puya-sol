@@ -8,6 +8,7 @@
 /// share the same implementation.
 
 #include "builder/contract/ContractBuilder.h"
+#include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
@@ -303,15 +304,10 @@ void ContractBuilder::buildModifierChain(
 							if (!ret->value)
 								stmt = makeThreadedReturn(ret->sourceLocation);
 						}
-						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-						{
-							if (ifElse->ifBranch) fixReturns(ifElse->ifBranch->body);
-							if (ifElse->elseBranch) fixReturns(ifElse->elseBranch->body);
-						}
-						else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-							fixReturns(block->body);
-						else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-							if (loop->loopBody) fixReturns(loop->loopBody->body);
+						else
+							awst::forEachChildBlock(*stmt, [&](awst::Block& b, bool) {
+								fixReturns(b.body);
+							});
 					}
 				};
 				fixReturns(translatedBody->body);

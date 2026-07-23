@@ -1,4 +1,5 @@
 #include "builder/contract/ReturnRewriter.h"
+#include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
@@ -15,33 +16,15 @@ void forEachReturnStatement(
 	std::vector<std::shared_ptr<awst::Statement>>& _stmts,
 	std::function<void(awst::ReturnStatement&)> const& _fn)
 {
+	// Containers via awst::forEachChildBlock — THE single enumeration (T5).
 	for (auto& stmt: _stmts)
 	{
 		if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
 			_fn(*ret);
-		else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
-		{
-			if (ifElse->ifBranch) forEachReturnStatement(ifElse->ifBranch->body, _fn);
-			if (ifElse->elseBranch) forEachReturnStatement(ifElse->elseBranch->body, _fn);
-		}
-		else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
-			forEachReturnStatement(block->body, _fn);
-		else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
-		{
-			if (loop->loopBody) forEachReturnStatement(loop->loopBody->body, _fn);
-		}
-		else if (auto* sw = dynamic_cast<awst::Switch*>(stmt.get()))
-		{
-			for (auto& c: sw->cases)
-				if (c.second) forEachReturnStatement(c.second->body, _fn);
-			if (sw->defaultCase) forEachReturnStatement(sw->defaultCase->body, _fn);
-		}
-		else if (auto* fl = dynamic_cast<awst::ForInLoop*>(stmt.get()))
-		{
-			// The last AWST container the walker missed (T5 walker-gap class —
-			// Switch was learned in H15c, ForInLoop closes the set).
-			if (fl->loopBody) forEachReturnStatement(fl->loopBody->body, _fn);
-		}
+		else
+			awst::forEachChildBlock(*stmt, [&](awst::Block& b, bool) {
+				forEachReturnStatement(b.body, _fn);
+			});
 	}
 }
 
