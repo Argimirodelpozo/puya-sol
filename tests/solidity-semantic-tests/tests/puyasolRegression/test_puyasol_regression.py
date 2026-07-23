@@ -3076,3 +3076,31 @@ def test_storage_ref_return_loop(harness):
     assert as_int(harness.call(app, "firstOfLen(uint256)", 2).abi_return) == 2
     assert as_int(harness.call(app, "firstOfLen(uint256)", 1).abi_return) == 1
     assert as_int(harness.call(app, "firstOfLen(uint256)", 99).abi_return) == 1
+
+
+def test_asm_cd_static_arrays(harness):
+    """puyasolRegression/contracts/asm_cd_static_arrays.sol — NOT an o.g. test.
+
+    Static-array calldata-layout bugs found by the fuzz_cd campaign in item 2:
+    bytesN array elements are ONE left-aligned word each (bytes4[2] was
+    emitting 8 byte-granular words, shifting the tail); signed sub-word array
+    elements sign-extend (int16[2] was zero-padding). Constant-offset map
+    path; every value EVM-verified vs solc 0.8.20.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_cd_static_arrays.sol")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "bytesArr(bytes4[2],uint256)",
+                     [bytes.fromhex("aabbccdd"), bytes.fromhex("11223344")], 777, **fee).abi_return
+    assert as_bytes(r[0]) == bytes.fromhex("aabbccdd") + bytes(28)
+    assert as_bytes(r[1]) == bytes.fromhex("11223344") + bytes(28)
+    assert as_int(r[2]) == 777          # tail landed at offset 68 (2-word head)
+    assert as_int(r[3]) == 100          # calldatasize: 4 + 64 + 32
+    r = harness.call(app, "intArr(int16[2],uint256)", [-2, 32767], 555, **fee).abi_return
+    assert as_bytes(r[0]) == b"\xff" * 30 + b"\xff\xfe"   # -2 sign-extended
+    assert as_bytes(r[1]) == bytes(30) + b"\x7f\xff"      # 32767 positive
+    assert as_int(r[2]) == 555
+    r = harness.call(app, "u8Arr(uint8[3],uint256)", [7, 8, 9], 333, **fee).abi_return
+    assert as_int(as_bytes(r[0]).hex() and int.from_bytes(as_bytes(r[0]), "big")) == 7
+    assert int.from_bytes(as_bytes(r[1]), "big") == 9
+    assert as_int(r[2]) == 333          # tail at offset 100 (3-word head)

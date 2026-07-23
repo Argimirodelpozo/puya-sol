@@ -1630,7 +1630,7 @@
                           "length": null
                         },
                         "expr": {
-                          "_type": "ARC4Decode",
+                          "_type": "FieldExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
                             "line": 1,
@@ -1640,12 +1640,15 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
-                          "value": {
-                            "_type": "FieldExpression",
+                          "base": {
+                            "_type": "VarExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
                               "line": 1,
@@ -1655,51 +1658,31 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint256",
+                                    "immutable": true,
+                                    "n": 256,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
                               "arc4_alias": null,
-                              "source_location": null
+                              "source_location": null,
+                              "desc": null
                             },
-                            "base": {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
-                                "line": 1,
-                                "end_line": 1,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "S",
-                                "immutable": false,
-                                "fields": [
-                                  {
-                                    "name": "x",
-                                    "wtype": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint256",
-                                      "immutable": true,
-                                      "n": 256,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "description": null
-                                  }
-                                ],
-                                "frozen": false,
-                                "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
-                              },
-                              "name": "s"
-                            },
-                            "name": "x"
+                            "name": "s"
                           },
-                          "error_message": null
+                          "name": "x"
                         }
                       },
                       {
@@ -1866,7 +1849,7 @@
                               "length": null
                             },
                             "expr": {
-                              "_type": "ARC4Decode",
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
                                 "line": 1,
@@ -1876,12 +1859,15 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
                               },
-                              "value": {
-                                "_type": "FieldExpression",
+                              "base": {
+                                "_type": "VarExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
                                   "line": 1,
@@ -1891,63 +1877,43 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint256",
-                                  "immutable": true,
-                                  "n": 256,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "base": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
-                                    "line": 1,
-                                    "end_line": 1,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4Struct",
-                                    "name": "S2",
-                                    "immutable": false,
-                                    "fields": [
-                                      {
-                                        "name": "x",
-                                        "wtype": {
-                                          "_type": "ARC4UIntN",
-                                          "name": "arc4.uint256",
-                                          "immutable": true,
-                                          "n": 256,
-                                          "arc4_alias": null,
-                                          "source_location": null
-                                        },
-                                        "description": null
+                                  "_type": "ARC4Struct",
+                                  "name": "S2",
+                                  "immutable": false,
+                                  "fields": [
+                                    {
+                                      "name": "x",
+                                      "wtype": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint256",
+                                        "immutable": true,
+                                        "n": 256,
+                                        "arc4_alias": null,
+                                        "source_location": null
                                       },
-                                      {
-                                        "name": "y",
-                                        "wtype": {
-                                          "_type": "ARC4UIntN",
-                                          "name": "arc4.uint256",
-                                          "immutable": true,
-                                          "n": 256,
-                                          "arc4_alias": null,
-                                          "source_location": null
-                                        },
-                                        "description": null
-                                      }
-                                    ],
-                                    "frozen": false,
-                                    "arc4_alias": null,
-                                    "source_location": null,
-                                    "desc": null
-                                  },
-                                  "name": "s2"
+                                      "description": null
+                                    },
+                                    {
+                                      "name": "y",
+                                      "wtype": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint256",
+                                        "immutable": true,
+                                        "n": 256,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "description": null
+                                    }
+                                  ],
+                                  "frozen": false,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
                                 },
-                                "name": "x"
+                                "name": "s2"
                               },
-                              "error_message": null
+                              "name": "x"
                             }
                           },
                           {
@@ -2027,7 +1993,7 @@
                               "length": null
                             },
                             "expr": {
-                              "_type": "ARC4Decode",
+                              "_type": "FieldExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
                                 "line": 1,
@@ -2037,12 +2003,15 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
                               },
-                              "value": {
-                                "_type": "FieldExpression",
+                              "base": {
+                                "_type": "VarExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
                                   "line": 1,
@@ -2052,63 +2021,43 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint256",
-                                  "immutable": true,
-                                  "n": 256,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "base": {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/calldata_struct_assign.sol",
-                                    "line": 1,
-                                    "end_line": 1,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "ARC4Struct",
-                                    "name": "S2",
-                                    "immutable": false,
-                                    "fields": [
-                                      {
-                                        "name": "x",
-                                        "wtype": {
-                                          "_type": "ARC4UIntN",
-                                          "name": "arc4.uint256",
-                                          "immutable": true,
-                                          "n": 256,
-                                          "arc4_alias": null,
-                                          "source_location": null
-                                        },
-                                        "description": null
+                                  "_type": "ARC4Struct",
+                                  "name": "S2",
+                                  "immutable": false,
+                                  "fields": [
+                                    {
+                                      "name": "x",
+                                      "wtype": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint256",
+                                        "immutable": true,
+                                        "n": 256,
+                                        "arc4_alias": null,
+                                        "source_location": null
                                       },
-                                      {
-                                        "name": "y",
-                                        "wtype": {
-                                          "_type": "ARC4UIntN",
-                                          "name": "arc4.uint256",
-                                          "immutable": true,
-                                          "n": 256,
-                                          "arc4_alias": null,
-                                          "source_location": null
-                                        },
-                                        "description": null
-                                      }
-                                    ],
-                                    "frozen": false,
-                                    "arc4_alias": null,
-                                    "source_location": null,
-                                    "desc": null
-                                  },
-                                  "name": "s2"
+                                      "description": null
+                                    },
+                                    {
+                                      "name": "y",
+                                      "wtype": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint256",
+                                        "immutable": true,
+                                        "n": 256,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "description": null
+                                    }
+                                  ],
+                                  "frozen": false,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
                                 },
-                                "name": "y"
+                                "name": "s2"
                               },
-                              "error_message": null
+                              "name": "y"
                             }
                           },
                           {

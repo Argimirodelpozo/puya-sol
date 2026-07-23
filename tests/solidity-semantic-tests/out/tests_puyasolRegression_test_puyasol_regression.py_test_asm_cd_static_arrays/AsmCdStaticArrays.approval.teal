@@ -1,0 +1,397 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_cd_static_arrays.sol.AsmCdStaticArrays.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 4
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_2 // 0
+    dupn 5
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6c741faf 0x4bc039bb 0x0f0bea29 // method "bytesArr(byte[4][2],uint256)(byte[32],byte[32],uint256,uint256)", method "intArr(int16[2],uint256)(byte[32],byte[32],uint256)", method "u8Arr(uint8[3],uint256)(byte[32],byte[32],uint256)"
+    txna ApplicationArgs 0
+    match main_bytesArr_route@5 main_intArr_route@6 main_u8Arr_route@7
+    err
+
+main_u8Arr_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    pushint 3
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    dig 5
+    dup
+    cover 2
+    extract 0 1 // on error: index access is out of bounds
+    dig 1
+    b|
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    uncover 2
+    extract 2 1 // on error: index access is out of bounds
+    dig 2
+    b|
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    load 0
+    store 0
+    dig 8
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_intArr_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint16, 2>
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    bury 1
+    dig 4
+    extract 0 2 // on error: index access is out of bounds
+    dup
+    bury 5
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@21
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@22:
+    dig 4
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    bury 2
+    dig 4
+    extract 2 2 // on error: index access is out of bounds
+    dup
+    bury 4
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@24
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@25:
+    dig 3
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    dig 1
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    load 0
+    store 0
+    dig 7
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    dig 3
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    dup
+    b main_ternary_merge@25
+
+main_ternary_false@21:
+    dup
+    b main_ternary_merge@22
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main_bytesArr_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint8, 4>, 2>
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    load 0
+    store 0
+    txn NumAppArgs
+    bz main_ternary_false@32
+    txna ApplicationArgs 0
+
+main_ternary_merge@33:
+    dig 5
+    dup
+    extract 0 4 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    concat
+    swap
+    extract 4 4 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    concat
+    dup2
+    concat
+    uncover 3
+    swap
+    concat
+    intc_0 // 32
+    bzero
+    dig 9
+    dup
+    cover 5
+    dig 1
+    b|
+    uncover 2
+    swap
+    concat
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    dig 2
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    uncover 2
+    len
+    itob
+    load 0
+    store 0
+    uncover 4
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@32:
+    intc_3 // 4
+    bzero
+    b main_ternary_merge@33
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30

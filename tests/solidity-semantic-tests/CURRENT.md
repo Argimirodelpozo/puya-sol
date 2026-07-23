@@ -1,3 +1,20 @@
+# Semantic Test Status — v472
+
+> **fix: static-array calldata layout (item-2 bugs found by fuzz_cd campaign), 2026-07-23:**
+> **12 failed / 1364 passed / 109 xf / 28 xp** (canonical baseline; 13th -n2 listing =
+> test_asm_call_value localnet-race flake, green standalone). A calldata-layout differential
+> campaign (fuzz_cd.py: random param-type mixes read back through asm at ABI head offsets,
+> diffed vs live solc+py-evm) found 25 divergent seeds, all two item-2 static-array bugs:
+> - bytesN array elements were emitted as N BYTE-granular words (computeFlatElementCount counts
+>   a bytes4 as 4 leaves → bytes4[2] made 8 words, shifting every following param + inflating
+>   calldatasize); now ONE left-aligned EVM word per element.
+> - signed sub-word array elements ZERO-padded instead of sign-extending (accessFlatElement
+>   ARC4-decoded them to biguint, dropping the sign); now sign-extended.
+> Both present in BOTH paths, both fixed by navigating the SOLC structure: the blob via new
+> emitEvmHeadWords, the constant-offset map via word-granular entries + accessEvmLeaf (direct
+> leaf navigation, no head reconstruction). 120-contract re-run: ZERO divergences (~6000 calls).
+> Guard test_asm_cd_static_arrays (EVM-verified). uint8[3]/uint256[2] were already correct.
+
 # Semantic Test Status — v471
 
 > **fix: item-8 reassessment — awst::forEachChildBlock walker consolidation (2026-07-23):**

@@ -76,11 +76,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			return cast;
 		}
 
+		// STATIC AGGREGATE param: navigate the solc structure to the WORD-index
+		// leaf and emit its EVM word (bytesN left-aligned, signed sign-extended)
+		// — decoupled from ARC4-flat indexing (the bytes4[2] map bug).
+		if (auto const* solT = calldataSolType(elem.paramName);
+			solTypeUsable(solT)
+			&& (dynamic_cast<solidity::frontend::ArrayType const*>(solT)
+				|| dynamic_cast<solidity::frontend::StructType const*>(solT)))
+		{
+			auto [leafVal, leafSol] =
+				accessEvmLeaf(std::move(base), elem.paramType, solT, elem.flatIndex, _loc);
+			return awst::makeAsBiguint(
+				evmCalldataWord(std::move(leafVal), leafSol, _loc), _loc);
+		}
+
+		// VALUE-TYPE param (single word): raw value, EVM-widened if the leaf
+		// diverges from the zero-padded native (signed / bytesN).
 		auto value = accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
-		// EVM word semantics where the raw native value diverges (possible_solc
-		// item 2): signed leaves SIGN-extend to the 32-byte word (the carrier
-		// is zero-extended), bytesN LEFT-aligns. Unsigned/bool/address words
-		// equal the zero-padded native value — keep the cheap path.
 		if (auto const* leaf = calldataSolLeaf(elem.paramName, elem.flatIndex);
 			leafNeedsEvmWord(leaf))
 			return awst::makeAsBiguint(

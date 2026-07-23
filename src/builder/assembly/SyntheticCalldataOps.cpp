@@ -165,19 +165,7 @@ std::shared_ptr<awst::Expression> padTo32Multiple(
 	return awst::makeRightPadTo32Multiple(std::move(_bytes), _loc);
 }
 
-// True when the declared solc type is trustworthy for EVM-ABI layout math:
-// value types, and reference types actually located in calldata. Storage-ref
-// params (V4 handle-model) travel as box keys — their solc types would hit
-// calldataEncodedSize solAsserts.
-bool solTypeUsable(solidity::frontend::Type const* _t)
-{
-	using namespace solidity::frontend;
-	if (!_t) return false;
-	if (_t->isValueType()) return true;
-	if (auto const* rt = dynamic_cast<ReferenceType const*>(_t))
-		return rt->location() == DataLocation::CallData;
-	return false;
-}
+
 
 // Flatten a STATIC solc type to its scalar leaves in EVM head order.
 void flattenSolLeaves(
@@ -205,6 +193,20 @@ void flattenSolLeaves(
 }
 
 } // anonymous
+
+// True when the declared solc type is trustworthy for EVM-ABI layout math:
+// value types, and reference types actually located in calldata. Storage-ref
+// params (V4 handle-model) travel as box keys — their solc types would hit
+// calldataEncodedSize solAsserts.
+bool AssemblyBuilder::solTypeUsable(solidity::frontend::Type const* _t)
+{
+	using namespace solidity::frontend;
+	if (!_t) return false;
+	if (_t->isValueType()) return true;
+	if (auto const* rt = dynamic_cast<ReferenceType const*>(_t))
+		return rt->location() == DataLocation::CallData;
+	return false;
+}
 
 // One EVM-ABI 32-byte word for a scalar leaf value. Signedness comes from the
 // solc type (the WType erases it): signed sub-word sign-extends; bytesN
@@ -297,6 +299,111 @@ uint64_t AssemblyBuilder::calldataHeadSizeOf(
 	return static_cast<uint64_t>(computeFlatElementCount(_type)) * 32;
 }
 
+namespace
+{
+
+// Element/field wtype of an array/struct wtype (native ReferenceArray or ARC4).
+awst::WType const* arrayElementWtype(awst::WType const* _w)
+{
+	if (auto const* ra = dynamic_cast<awst::ReferenceArray const*>(_w))
+		return ra->elementType();
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_w))
+		return sa->elementType();
+	if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(_w))
+		return da->elementType();
+	return _w;
+}
+
+} // anonymous
+
+void AssemblyBuilder::emitEvmHeadWords(
+	std::shared_ptr<awst::Expression> _value,
+	awst::WType const* _wtype,
+	solidity::frontend::Type const* _solType,
+	std::vector<std::shared_ptr<awst::Expression>>& _words,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	// Navigate the SOLC structure — ONE EVM word per scalar leaf, EVM head
+	// order. Decoupled from computeFlatElementCount / accessFlatElement, whose
+	// ARC4-flat indexing is byte-granular for bytesN (a bytes4 element counted
+	// as 4 leaves) and ARC4-decodes signed elements to biguint (dropping the
+	// sign) — the two static-array calldata-layout bugs the fuzzer found.
+	if (auto const* at = dynamic_cast<ArrayType const*>(_solType);
+		at && !at->isDynamicallySized())
+	{
+		auto n = at->length().convert_to<size_t>();
+		auto const* elemW = arrayElementWtype(_wtype);
+		for (size_t i = 0; i < n; ++i)
+		{
+			auto elem = awst::makeIndexExpression(
+				_value, awst::makeIntegerConstant(i, _loc), elemW, _loc);
+			emitEvmHeadWords(std::move(elem), elemW, at->baseType(), _words, _loc);
+		}
+		return;
+	}
+	if (auto const* st = dynamic_cast<StructType const*>(_solType))
+	{
+		auto const* arc4St = dynamic_cast<awst::ARC4Struct const*>(_wtype);
+		auto const& members = st->structDefinition().members();
+		for (size_t i = 0; i < members.size(); ++i)
+		{
+			awst::WType const* fieldW = arc4St && i < arc4St->fields().size()
+				? arc4St->fields()[i].second : nullptr;
+			auto field = awst::makeFieldExpression(
+				_value, members[i]->name(), fieldW, _loc);
+			emitEvmHeadWords(std::move(field), fieldW, members[i]->type(), _words, _loc);
+		}
+		return;
+	}
+	// Scalar leaf: one EVM word (evmCalldataWord sign-extends signed ints,
+	// left-aligns bytesN, per the solc leaf type).
+	_words.push_back(evmCalldataWord(std::move(_value), _solType, _loc));
+}
+
+std::pair<std::shared_ptr<awst::Expression>, solidity::frontend::Type const*>
+AssemblyBuilder::accessEvmLeaf(
+	std::shared_ptr<awst::Expression> _value,
+	awst::WType const* _wtype,
+	solidity::frontend::Type const* _solType,
+	int _wordIndex,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	if (auto const* at = dynamic_cast<ArrayType const*>(_solType);
+		at && !at->isDynamicallySized())
+	{
+		int perElem = static_cast<int>(at->baseType()->calldataHeadSize() / 32);
+		if (perElem < 1) perElem = 1;
+		int elemIdx = _wordIndex / perElem;
+		int inner = _wordIndex % perElem;
+		auto const* elemW = arrayElementWtype(_wtype);
+		auto elem = awst::makeIndexExpression(
+			std::move(_value), awst::makeIntegerConstant(elemIdx, _loc), elemW, _loc);
+		return accessEvmLeaf(std::move(elem), elemW, at->baseType(), inner, _loc);
+	}
+	if (auto const* st = dynamic_cast<StructType const*>(_solType))
+	{
+		auto const* arc4St = dynamic_cast<awst::ARC4Struct const*>(_wtype);
+		auto const& members = st->structDefinition().members();
+		for (size_t i = 0; i < members.size(); ++i)
+		{
+			int mw = static_cast<int>(members[i]->type()->calldataHeadSize() / 32);
+			if (mw < 1) mw = 1;
+			if (_wordIndex < mw)
+			{
+				awst::WType const* fieldW = arc4St && i < arc4St->fields().size()
+					? arc4St->fields()[i].second : nullptr;
+				auto field = awst::makeFieldExpression(
+					std::move(_value), members[i]->name(), fieldW, _loc);
+				return accessEvmLeaf(std::move(field), fieldW, members[i]->type(), _wordIndex, _loc);
+			}
+			_wordIndex -= mw;
+		}
+	}
+	return {std::move(_value), _solType};
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::evmStaticHeadBytes(
 	std::string const& _name, awst::WType const* _type,
 	awst::SourceLocation const& _loc)
@@ -307,23 +414,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::evmStaticHeadBytes(
 	if (!solTypeUsable(solT))
 		solT = nullptr;
 
-	// Static aggregate: one 32-byte word per leaf, EVM head order.
 	bool solAggregate = solT
 		&& (dynamic_cast<ArrayType const*>(solT) || dynamic_cast<StructType const*>(solT));
 	if (solAggregate)
 	{
-		std::vector<Type const*> leaves;
-		flattenSolLeaves(solT, leaves);
-		int flat = computeFlatElementCount(_type);
+		std::vector<std::shared_ptr<awst::Expression>> words;
+		emitEvmHeadWords(paramVar, _type, solT, words, _loc);
 		std::shared_ptr<awst::Expression> acc;
-		for (int i = 0; i < flat; ++i)
-		{
-			auto leafVal = accessFlatElement(paramVar, _type, i, _loc);
-			auto word = evmCalldataWord(std::move(leafVal),
-				static_cast<size_t>(i) < leaves.size() ? leaves[i] : nullptr, _loc);
-			acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc)
-					  : std::move(word);
-		}
+		for (auto& w: words)
+			acc = acc ? awst::makeConcat(std::move(acc), std::move(w), _loc)
+					  : std::move(w);
 		if (acc)
 			return acc;
 	}

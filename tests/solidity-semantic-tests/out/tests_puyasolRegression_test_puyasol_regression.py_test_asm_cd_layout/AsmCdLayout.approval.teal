@@ -554,8 +554,15 @@ main_ternary_merge@55:
     dig 20
     dup
     extract 0 1 // on error: index access is out of bounds
+    intc_0 // 32
+    bzero
     swap
+    dig 1
+    b|
+    uncover 2
     extract 2 1 // on error: index access is out of bounds
+    dig 2
+    b|
     load 0
     store 0
     swap
@@ -566,12 +573,9 @@ main_ternary_merge@55:
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
+    dig 2
     b|
-    uncover 2
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup

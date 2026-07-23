@@ -932,6 +932,33 @@ private:
 	/// (statics flatten in EVM head order); nullptr when unknown.
 	solidity::frontend::Type const* calldataSolLeaf(std::string const& _name, int _i);
 
+	/// Append one EVM-ABI 32-byte head word per scalar leaf of a STATIC
+	/// aggregate, navigating the SOLC structure (array elements / struct
+	/// fields) so bytesN stays one left-aligned word and signed sub-word
+	/// elements sign-extend — decoupled from the ARC4-flat indexing.
+	void emitEvmHeadWords(
+		std::shared_ptr<awst::Expression> _value,
+		awst::WType const* _wtype,
+		solidity::frontend::Type const* _solType,
+		std::vector<std::shared_ptr<awst::Expression>>& _words,
+		awst::SourceLocation const& _loc);
+
+	/// The raw ARC4 value + solc type of the `_wordIndex`-th EVM head word of
+	/// a static aggregate, navigating the SOLC structure DIRECTLY (no head
+	/// reconstruction). Same word granularity as emitEvmHeadWords; used by the
+	/// constant-offset calldataload map hit.
+	/// True when a declared solc param type is usable for EVM-ABI layout math
+	/// (value type, or a calldata-located reference). Shared by the blob + map.
+	static bool solTypeUsable(solidity::frontend::Type const* _t);
+
+	std::pair<std::shared_ptr<awst::Expression>, solidity::frontend::Type const*>
+	accessEvmLeaf(
+		std::shared_ptr<awst::Expression> _value,
+		awst::WType const* _wtype,
+		solidity::frontend::Type const* _solType,
+		int _wordIndex,
+		awst::SourceLocation const& _loc);
+
 	/// True when the leaf type changes the word VALUE vs the raw zero-padded
 	/// native value (signed ints sign-extend; bytesN left-aligns).
 	static bool leafNeedsEvmWord(solidity::frontend::Type const* _solLeaf);

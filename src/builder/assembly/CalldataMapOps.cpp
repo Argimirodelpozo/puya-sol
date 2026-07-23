@@ -71,10 +71,17 @@ void AssemblyBuilder::initializeCalldataMap(
 	uint64_t offset = 4; // skip 4-byte selector
 	for (auto const& [name, type]: _params)
 	{
-		int elementCount = computeFlatElementCount(type);
+		uint64_t headBytes = calldataHeadSizeOf(name, type);
+		// ONE entry per EVM head WORD (bug the fuzzer found: computeFlatElementCount
+		// counts a bytes4 element as 4 leaves, so bytes4[2] made 8 byte-granular
+		// entries where the head is 2 words — offsets past the head aliased the
+		// next param and word-index retrieval mis-navigated). flatIndex is the
+		// WORD index; the retrieval navigates the solc structure (accessEvmLeaf).
+		int words = static_cast<int>(headBytes / 32);
+		if (words < 1) words = 1;
 		m_localConstants[name] = offset;
 		m_calldataParamNames.insert(name);
-		for (int i = 0; i < elementCount; ++i)
+		for (int i = 0; i < words; ++i)
 		{
 			CalldataElement elem;
 			elem.paramName = name;
@@ -82,10 +89,7 @@ void AssemblyBuilder::initializeCalldataMap(
 			elem.paramType = type;
 			m_calldataMap[offset + static_cast<uint64_t>(i) * 32] = elem;
 		}
-		// Advance by the solc-derived EVM head size (possible_solc item 2) —
-		// equals flatCount*32 for word-leaf statics, 32 for dynamics; keeps
-		// the map and the synthetic blob on ONE layout.
-		offset += calldataHeadSizeOf(name, type);
+		offset += headBytes;
 	}
 }
 
