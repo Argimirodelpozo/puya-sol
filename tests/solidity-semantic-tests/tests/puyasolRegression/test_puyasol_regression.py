@@ -2935,6 +2935,8 @@ def test_new_in_ctor_postinit(harness):
     assert as_int(harness.call(app, "got()").abi_return) == 500
     assert as_int(harness.call(app, "gotPlain()").abi_return) == 77
     assert as_int(harness.call(app, "gotArg()").abi_return) == 50
+    assert as_int(harness.call(app, "gotMode()").abi_return) == 2
+    assert as_bytes(harness.call(app, "gotTag()").abi_return) == bytes.fromhex("abcdef01")
     assert as_int(harness.call(app, "parrLen()").abi_return) == 2
     assert as_int(harness.call(app, "parr1()").abi_return) == 500
 

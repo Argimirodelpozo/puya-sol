@@ -55,6 +55,14 @@ drop. A transitive walk over the solc edges closes it.
 internal-function pruning → program size.
 
 ### 4. `FunctionType::externalIdentifier()` + `ContractDefinition::interfaceFunctionList()`
+> **✅ RESOLVED 2026-07-22 (v469) — mostly already adopted; scoped down.** externalSignature /
+> interfaceFunctionList were already in use where sound (.selector, error selectors,
+> interfaceId, getter FunctionType on BOTH sides via H15b). SCOPING CORRECTION: ARC4 wire
+> signatures are derived by puya from WTypes — caller-side strings must mirror puya's naming
+> (eb::solTypeToArc4ParamName), and solc's EVM-canonical spelling there would INTRODUCE drift.
+> Landed: SolNewExpression's __postInit-signature twin consolidated onto the shared namer
+> (guard caught enum uint8-vs-uint64 on the wrong namer), plus a live bytesN ctor-arg
+> encoding bug (numeric 32-byte encode vs the callee's exact-N assert).
 Canonical external-interface enumeration + selector math.
 
 **Replaces:** hand-assembled signatures (the `__postInit(...)` string built in

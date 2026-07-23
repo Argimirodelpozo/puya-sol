@@ -7,13 +7,20 @@ pragma solidity ^0.8.0;
 // the child (was a documented known-gap, since closed by the ctor/postInit
 // sequencing fixes — this pins it).
 contract ChildNC {
+    enum Mode { Off, On, Auto }
     mapping(uint256 => uint256) public m;
     uint256 public plain = 77;
     uint256 public fromArg;
+    uint256 public modeVal;
+    bytes4 public tag;
 
-    constructor(uint256 a) {
+    // enum + bytes4 ctor params pin the caller/callee __postInit signature
+    // agreement for the drift-prone type spellings (shared nestedArc4Name).
+    constructor(uint256 a, Mode mo, bytes4 t) {
         fromArg = a;
         m[5] = a * 10;
+        modeVal = uint256(mo);
+        tag = t;
     }
 }
 
@@ -22,13 +29,17 @@ contract ParentNC {
     uint256 public got;
     uint256 public gotPlain;
     uint256 public gotArg;
+    uint256 public gotMode;
+    bytes4 public gotTag;
 
     constructor() {
         parr.push(1);
-        ChildNC c = new ChildNC(50);
+        ChildNC c = new ChildNC(50, ChildNC.Mode.Auto, 0xabcdef01);
         got = c.m(5);
         gotPlain = c.plain();
         gotArg = c.fromArg();
+        gotMode = c.modeVal();
+        gotTag = c.tag();
         parr.push(got);
     }
 

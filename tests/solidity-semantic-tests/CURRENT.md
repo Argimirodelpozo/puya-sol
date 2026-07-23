@@ -1,3 +1,19 @@
+# Semantic Test Status — v469
+
+> **fix: __postInit signature via THE shared param namer + bytesN ctor-arg encoding
+> (possible_solc item 4, 2026-07-22):** **12 failed / 1362 passed / 109 xf / 28 xp** (canonical
+> baseline; 13th -n2 listing = builtinFunctions test_blobhash block-props race, green
+> standalone). Item 4 scoping outcome: externalSignature/interfaceFunctionList were ALREADY
+> adopted where sound (.selector, error selectors, interfaceId, getter FunctionType both
+> sides); wire signatures must mirror PUYA's wtype-derived naming, never solc's EVM-canonical
+> spelling — using solc there would introduce drift. The real leftover was a T4 twin:
+> SolNewExpression's local __postInit-signature lambda now uses eb::solTypeToArc4ParamName
+> (enums = uint64 carrier; a first attempt with nestedArc4Name mis-selectored enums as uint8 —
+> exactly the drift class the shared namer's comment warns about). The hardened guard also
+> exposed a live pre-existing bug: bytesN ctor args to `new Child(...)` encoded numerically
+> (32 bytes) where the callee asserts exactly N — fixed with a fixed-bytes branch
+> (itob/pad/trim to N). Guard test_new_in_ctor_postinit extended with enum + bytes4 ctor args.
+
 # Semantic Test Status — v468
 
 > **fix: call-graph closure for transitive param mutation (possible_solc item 3, 2026-07-22):**

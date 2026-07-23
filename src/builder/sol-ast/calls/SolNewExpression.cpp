@@ -8,6 +8,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/itxn/InnerCallHandlers.h"
 #include "builder/contract/PostInitTriggers.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/StorageMapper.h"
@@ -327,7 +328,23 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 					argVal = builder::TypeCoercion::implicitNumericCast(
 						std::move(argVal), paramWType, m_loc);
 
-					if (argVal->wtype == awst::WType::biguintType())
+					if (auto const* fixedB = dynamic_cast<FixedBytesType const*>(paramSolType))
+					{
+						// bytesN param: the callee decodes exactly N bytes (its
+						// reader asserts the length). A hex-literal arg arrives
+						// NUMERIC (uint64/biguint, leading zero bytes stripped)
+						// — to bytes, then left-pad/trim to N.
+						std::shared_ptr<awst::Expression> asB;
+						if (argVal->wtype == awst::WType::uint64Type())
+							asB = awst::makeItob(std::move(argVal), m_loc);
+						else
+							asB = awst::makeAsBytes(std::move(argVal), m_loc);
+						argVal = awst::makeExtractLastN(
+							awst::makeLeftPadToN(std::move(asB),
+								static_cast<int>(fixedB->numBytes()), m_loc),
+							static_cast<int>(fixedB->numBytes()), m_loc);
+					}
+					else if (argVal->wtype == awst::WType::biguintType())
 					{
 						unsigned bits = 256;
 						if (auto it = builder::SolIntType::fromSol(paramSolType); it && !it->isSigned)
@@ -493,17 +510,14 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 			if (childHasPostInit)
 			{
-				// Build __postInit(t1,t2,...)void signature.
-				auto solTypeToARC4Name = [this](Type const* _type) -> std::string {
-					auto* mapped = m_ctx.typeMapper.map(_type);
-					if (mapped == awst::WType::accountType())
-						return "address";
-					if (auto const* intT = dynamic_cast<IntegerType const*>(_type))
-						return (intT->isSigned() ? "int" : "uint") + std::to_string(intT->numBits());
-					auto* arc4Type = m_ctx.typeMapper.mapToARC4Type(mapped);
-					return builder::TypeCoercion::wtypeToABIName(arc4Type);
-				};
-
+				// Build __postInit(t1,t2,...)void signature via THE shared
+				// top-level param namer (eb::solTypeToArc4ParamName — enums
+				// collapse to their uint64 carrier, exactly what the callee
+				// publishes; nestedArc4Name would say uint8 and mis-selector).
+				// Replaces a local twin lacking enum/UDVT/bytesN/aggregate
+				// handling (T4 twin drift; possible_solc item 4 scope: wire
+				// sigs must mirror PUYA's wtype-derived naming, never solc's
+				// EVM-canonical spelling).
 				std::string postInitSig = "__postInit(";
 				bool first = true;
 				// ctor-less child can still need __postInit (box state-var initializers).
@@ -511,7 +525,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				for (auto const& p: childCtor ? childCtor->parameters() : noParams)
 				{
 					if (!first) postInitSig += ",";
-					postInitSig += solTypeToARC4Name(p->type());
+					postInitSig += eb::solTypeToArc4ParamName(m_ctx, p->type());
 					first = false;
 				}
 				postInitSig += ")void";
