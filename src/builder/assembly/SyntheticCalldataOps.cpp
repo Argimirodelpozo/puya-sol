@@ -74,9 +74,11 @@ bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _b
 				}
 				else if (n == "calldatacopy" && call->arguments.size() == 3)
 				{
-					if (!resolveConstantYulValue(call->arguments[1])
-						|| !resolveConstantYulValue(call->arguments[2]))
-						found = true;
+					// ANY calldatacopy needs the blob to source calldata bytes —
+					// even fully CONSTANT offsets (the handler is a silent no-op
+					// without the blob; a constant-offset copy in a function with
+					// no other dynamic-calldata trigger was dropped, fuzz_mem).
+					found = true;
 				}
 			}
 			for (auto const& a: call->arguments)

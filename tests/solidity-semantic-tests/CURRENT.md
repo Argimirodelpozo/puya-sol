@@ -1,3 +1,19 @@
+# Semantic Test Status — v473
+
+> **fix: constant-offset calldatacopy silent no-op (found by fuzz_mem), 2026-07-23:**
+> **12 failed / 1366 passed / 109 xf / 28 xp** (canonical baseline, zero regressions). A
+> memory-ops differential campaign (fuzz_mem: mstore/mstore8/mload/mcopy/calldatacopy at
+> aligned/unaligned/slot-crossing offsets, diffed vs live solc+py-evm) found that a CONSTANT-
+> offset calldatacopy in a function with no OTHER dynamic-calldata trigger (calldatasize /
+> non-const calldataload / a dynamic param's .offset) never stood up the synthetic __cd_blob:
+> detectDynamicCalldataAccess only triggered on a NON-const calldatacopy offset/length, so a
+> const-offset copy fell through to the "no AVM equivalent (skipped)" branch — memory stayed
+> zero, the read returned zero where EVM returned the copied bytes. Pre-existing, missed by the
+> suite. Fix: ANY calldatacopy now triggers the blob (it always sources calldata). Triage note:
+> the initial finding value was a function SELECTOR — reading calldata[0:4] is keccak-vs-
+> sha512_256 divergent BY DESIGN, so the generator skips src=0; the real bug reproduced from an
+> ARG offset. Guard test_asm_calldatacopy_const (slot-0 / slot-crossing / partial, EVM-verified).
+
 # Semantic Test Status — v472
 
 > **fix: static-array calldata layout (item-2 bugs found by fuzz_cd campaign), 2026-07-23:**

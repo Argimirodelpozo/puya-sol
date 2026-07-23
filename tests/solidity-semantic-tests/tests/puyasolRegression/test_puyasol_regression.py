@@ -3104,3 +3104,24 @@ def test_asm_cd_static_arrays(harness):
     assert as_int(as_bytes(r[0]).hex() and int.from_bytes(as_bytes(r[0]), "big")) == 7
     assert int.from_bytes(as_bytes(r[1]), "big") == 9
     assert as_int(r[2]) == 333          # tail at offset 100 (3-word head)
+
+
+def test_asm_calldatacopy_const(harness):
+    """puyasolRegression/contracts/asm_calldatacopy_const.sol — NOT an o.g. test.
+
+    calldatacopy no-op bug (fuzz_mem): a CONSTANT-offset calldatacopy in a
+    function with no other dynamic-calldata trigger never stood up the
+    synthetic __cd_blob, so the copy was silently skipped and memory read
+    zero. Now the blob is always built when any calldatacopy appears. Slot 0
+    and slot-crossing (0x1800) destinations + a partial copy, EVM-verified.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_calldatacopy_const.sol")
+    fee = {"extra_fee": 10_000}
+    r = harness.call(app, "toLow(uint256,uint256)", 0x11223344, 0, **fee).abi_return
+    assert as_bytes(r) == bytes(28) + bytes.fromhex("11223344")
+    r = harness.call(app, "toHigh(uint256,uint256)", 0, 0xdeadbeef, **fee).abi_return
+    assert as_bytes(r) == bytes(28) + bytes.fromhex("deadbeef")
+    r = harness.call(app, "partCopy(uint256)", 0x11223344, **fee).abi_return
+    # low 8 bytes of arg a (0x11223344) = 0000000011223344, left-aligned, + 24 zeros
+    assert as_bytes(r) == bytes.fromhex("0000000011223344") + bytes(24)
