@@ -49,6 +49,7 @@ main_ternary_merge@9:
     assert // not payable
     pushbytes 0x00070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     callsub L.f
+    pop
     extract 98 32
     pushbytes 0x151f7c75
     swap
@@ -73,11 +74,11 @@ L.g:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_calling_private.sol.L.f(_data: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_calling_private.sol.L.f(_data: bytes) -> bytes, bytes:
 L.f:
-    proto 1 1
+    proto 1 2
     frame_dig -1
     callsub L.g
-    dup
+    dupn 2
     frame_bury -1
     retsub

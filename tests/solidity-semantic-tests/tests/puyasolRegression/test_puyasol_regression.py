@@ -3023,3 +3023,20 @@ def test_asm_cd_layout(harness):
     assert as_int(r[1]) == 333
     r = harness.call(app, "f5(int16[])", [-2], **fee).abi_return
     assert as_bytes(r) == b"\xff" * 31 + b"\xfe"
+
+
+def test_transitive_param_mutation(harness):
+    """puyasolRegression/contracts/transitive_param_mutation.sol — NOT an o.g. test.
+
+    Call-graph closure (possible_solc item 3): params passed on to mutating
+    callees count as mutated, so the caller-side write-back chain survives
+    one-hop, two-hop, using-for-bound and memory-ref shapes (EVM-verified).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/transitive_param_mutation.sol",
+        contract_name="TransParamMut")
+    fee = {"extra_fee": 10_000}
+    assert as_int(harness.call(app, "goStorage()", **fee).abi_return) == 6
+    assert as_int(harness.call(app, "goDeep()", **fee).abi_return) == 11
+    assert as_int(harness.call(app, "goBound()", **fee).abi_return) == 27
+    assert as_int(harness.call(app, "goMemory()", **fee).abi_return) == 42

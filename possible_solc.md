@@ -41,6 +41,11 @@ offsets from solc's own ABI type math removes the class. Note: ARC4 sizes differ
 this applies ONLY to the EVM-faithful calldata transport, not ARC4 encoding.
 
 ### 3. `FunctionCallGraph` — transitive param-mutation closure
+> **✅ ADOPTED 2026-07-22 (v468)** — implemented as a memoized recursive closure INSIDE
+> ParamMutationDetector (simpler than consuming the contract-level callgraph annotation, and it
+> keeps all three consumers in lockstep). Cycles over-approximate; virtual dispatch resolves to
+> the declared target (residual). Splitter-reachability bonus intentionally dropped (splitter
+> slated for deprecation). Guard test_transitive_param_mutation.
 `annotation().creationCallGraph/deployedCallGraph` are computed by solc per contract.
 
 **Closes:** `ParamMutationDetector`'s documented residual ("mutation via passing the param on

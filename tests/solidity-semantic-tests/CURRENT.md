@@ -1,3 +1,20 @@
+# Semantic Test Status — v468
+
+> **fix: call-graph closure for transitive param mutation (possible_solc item 3, 2026-07-22):**
+> **12 failed / 1362 passed / 109 xf / 28 xp** (canonical baseline, zero regressions, no
+> flakes). ParamMutationDetector now marks a param mutated when it is PASSED ON to an internal
+> callee whose corresponding REFERENCE param is (transitively) mutated — via a memoized
+> `transitivelyMutated(FunctionDefinition)` closure the detector consults at every FunctionCall
+> (using-for bound receivers map to param 0; sortedArguments handles named args). This was the
+> detector's documented residual: `outer(S storage p){ inner(p); }` silently dropped the
+> caller-side write-back. Extending the SHARED class keeps all three consumers (callee
+> augmentation, caller write-back, aliasing Copy guard) in lockstep. Cycles over-approximate to
+> all reference params (extra write-backs are redundant-but-correct; an over-declined aliasing
+> Copy fails loud in puya). Residual: virtual dispatch resolves to the DECLARED target.
+> Splitter reachability (the item's bonus) intentionally NOT pursued — splitter slated for
+> deprecation. Guard test_transitive_param_mutation (one-hop, two-hop, using-for bound,
+> memory-ref chains — EVM-verified vs solc 0.8.20).
+
 # Semantic Test Status — v467
 
 > **fix: solc-derived EVM-ABI synthetic-calldata layout (possible_solc item 2, 2026-07-22):**
