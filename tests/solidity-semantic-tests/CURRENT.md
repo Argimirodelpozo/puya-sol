@@ -1,3 +1,21 @@
+# Semantic Test Status — v470
+
+> **fix: storage-layout differential tripwire (possible_solc item 7) + ForInLoop return walker
+> (item 8 partial), 2026-07-23:** **12 failed / 1361 passed / 109 xf / 28 xp** (canonical
+> baseline; 13th -n2 listing = send_zero_ether race, green standalone).
+> - Item 7: StorageLayout::computeLayout now compares every var's (slot, byteOffset) against
+>   solc's own `linearizedStateVariables` and HARD-ERRORS on drift — every fixture compile is a
+>   layout differential. On its FIRST corpus run it caught a live bug: a denomination-sized
+>   fixed array (`uint[2 ether]`, ~2e18 slots) saturated the walk's `unsigned` slot counter at
+>   2^32-1 and shifted every FOLLOWING state var to a wrong slot; fixed by carrying slotsSpanned
+>   as u256. Guard test_denomination_array_layout.
+> - Item 8: ForInLoop was the last AWST container missing from forEachReturnStatement (T5
+>   walker-gap class, Switch was learned earlier) — closed. The item's bigger CFG-consolidation
+>   premise was RETIRED: the return/mutation walkers run on AWST (post-lowering) where solc's
+>   Solidity-AST CFG can't substitute, and a CFG termination-tripwire attempt false-positived en
+>   masse (solc's FunctionFlow.exit is also where explicit returns land, so exit-reachability
+>   can't distinguish fall-off-end from normal return — solc never needs that split).
+
 # Semantic Test Status — v469
 
 > **fix: __postInit signature via THE shared param namer + bytesN ctor-arg encoding

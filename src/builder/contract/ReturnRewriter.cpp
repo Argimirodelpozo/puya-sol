@@ -36,6 +36,12 @@ void forEachReturnStatement(
 				if (c.second) forEachReturnStatement(c.second->body, _fn);
 			if (sw->defaultCase) forEachReturnStatement(sw->defaultCase->body, _fn);
 		}
+		else if (auto* fl = dynamic_cast<awst::ForInLoop*>(stmt.get()))
+		{
+			// The last AWST container the walker missed (T5 walker-gap class —
+			// Switch was learned in H15c, ForInLoop closes the set).
+			if (fl->loopBody) forEachReturnStatement(fl->loopBody->body, _fn);
+		}
 	}
 }
 

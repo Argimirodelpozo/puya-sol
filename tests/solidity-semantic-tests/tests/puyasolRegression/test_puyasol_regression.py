@@ -3042,3 +3042,22 @@ def test_transitive_param_mutation(harness):
     assert as_int(harness.call(app, "goDeep()", **fee).abi_return) == 11
     assert as_int(harness.call(app, "goBound()", **fee).abi_return) == 27
     assert as_int(harness.call(app, "goMemory()", **fee).abi_return) == 42
+
+
+def test_denomination_array_layout(harness):
+    """puyasolRegression/contracts/denomination_array_layout.sol — NOT an o.g. test.
+
+    Storage-layout drift caught by the item-7 solc-layout tripwire: a
+    denomination-sized fixed array (uint[2 ether], ~2e18 slots) no longer
+    saturates the slot counter to 2^32-1 and shifts later state vars. `after_`
+    keeps its own slot, uncorrupted by the giant array before it.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/denomination_array_layout.sol")
+    harness.call(app, "setFirst(uint256)", 1)
+    harness.call(app, "setAfter(uint256)", 99)
+    # first and after_ read back their OWN slots — the ~2e18-slot array between
+    # them must not alias either (pre-fix, the saturated span collided them).
+    assert as_int(harness.call(app, "getFirst()").abi_return) == 1
+    assert as_int(harness.call(app, "getAfter()").abi_return) == 99
+    assert as_int(harness.call(app, "bigLen()").abi_return) == 2 * 10**18

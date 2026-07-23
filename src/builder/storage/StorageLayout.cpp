@@ -7,6 +7,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder
@@ -58,17 +59,17 @@ void StorageLayout::computeLayout(
 	{
 		auto const* solType = var->type();
 		unsigned byteSize = 32; // default for unknown types
-		unsigned slotsSpanned = 1;
+		// FULL-width span: a denomination-sized array (`uint[2 ether]`) spans
+		// ~2e18 slots — the old `unsigned` clamp saturated it at 2^32-1 and
+		// shifted every FOLLOWING var to a wrong slot (caught by the item-7
+		// solc-layout tripwire on its first corpus run).
+		solidity::u256 slotsSpanned = 1;
 
 		// storageBytes() = byte width within a slot; storageSize() = slot count.
 		if (solType)
 		{
 			byteSize = solType->storageBytes();
-			solidity::u256 size = solType->storageSize();
-			if (size > std::numeric_limits<unsigned>::max())
-				slotsSpanned = std::numeric_limits<unsigned>::max();
-			else
-				slotsSpanned = static_cast<unsigned>(size);
+			slotsSpanned = solType->storageSize();
 			if (slotsSpanned == 0)
 				slotsSpanned = 1;
 		}
@@ -146,6 +147,33 @@ void StorageLayout::computeLayout(
 		+ std::to_string(m_totalSlots) + " slots",
 		awst::SourceLocation{}
 	);
+
+	// Differential tripwire (possible_solc item 7): our packing mirrors
+	// Solidity's StorageOffsets rules BY HAND — compare every var's
+	// (slot, byteOffset) against solc's own canonical assignment and
+	// hard-error on drift. Every compile of every fixture is now a layout
+	// differential; a trip means OUR packing walk diverged — report it.
+	{
+		auto const* ct = solidity::frontend::TypeProvider::contract(_contract);
+		for (auto const& [decl, slot, offset]:
+			ct->linearizedStateVariables(solidity::frontend::DataLocation::Storage))
+		{
+			if (!decl)
+				continue;
+			auto const* ours = getVarInfoById(decl->id());
+			if (!ours)
+				continue; // vars we place elsewhere (boxes) — skip, not a drift
+			if (ours->slot != slot || ours->byteOffset != offset)
+				Logger::instance().error(
+					"internal storage-layout drift for `" + decl->name()
+						+ "`: puya-sol computed slot " + ours->slot.str()
+						+ " offset " + std::to_string(ours->byteOffset)
+						+ " but solc's canonical layout says slot " + slot.str()
+						+ " offset " + std::to_string(offset)
+						+ " — the hand-mirrored packing walk diverged; report this.",
+					awst::SourceLocation{});
+		}
+	}
 }
 
 SlotVariable const* StorageLayout::getVarInfo(std::string const& _name) const

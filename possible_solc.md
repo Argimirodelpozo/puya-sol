@@ -108,18 +108,28 @@ legal. Several past bugs (dropped sign-extends, wrong widening) would have faile
 time instead of surfacing as runtime divergences. ~One day; pure defense-in-depth.
 
 ### 7. `StorageLayout::generate(contract, location)` differential in the test harness
+> **✅ ADOPTED 2026-07-23 (v470), STRONGER than proposed** — wired as a COMPILE-TIME tripwire in
+> StorageLayout::computeLayout (compares against `linearizedStateVariables`), so every fixture
+> compile is the differential, not just the harness. Caught a live bug on the first run:
+> `uint[2 ether]` (~2e18 slots) saturated an `unsigned` slot counter and shifted later vars.
+> Guard test_denomination_array_layout.
 Our slot model mirrors Solidity layout for packed/fixed arrays. Auto-compare our slot
 assignments against solc's canonical layout JSON in the harness (instead of hand-written
 `storage_boundary_*` expectations) — a standing tripwire for layout drift. Also covers
 transient storage slots.
 
 ### 8. `CFG` / `ControlFlowGraph::functionFlow()` — one true walker (review theme T5)
+> **⚠️ PARTIALLY DONE / MOSTLY RETIRED 2026-07-23 (v470).** Closed the concrete gap:
+> forEachReturnStatement now handles ForInLoop (the last missing AWST container; T5 class). But
+> the CFG-consolidation premise DOESN'T HOLD: our return/mutation walkers operate on AWST
+> (post-lowering), where solc's Solidity-AST CFG can't substitute. A CFG termination-tripwire
+> was attempted and reverted — solc's FunctionFlow.exit is where explicit returns ALSO land, so
+> exit-reachability can't tell fall-off-end from a normal return (solc never needs that
+> distinction — falling off a value-returning function is legal Solidity, zero-inited). Item 3
+> already showed the right move: extend the shared walker in-place, don't consume the callgraph.
 `constructFlow(root)` then per-function CFG with `variableOccurrences` (run
 `ControlFlowRevertPruner` first for revert edges). Could consolidate the four partial
-tree-walkers (`ParamMutationDetector`, `augmentReturns`,
-`augmentMethodForMutatedMemoryParams`, `forEachReturnStatement`) onto solc's canonical
-"where are the exits / what is assigned" answers. Medium effort; kills the walker-drift class
-(H6, H15c, M27 gaps all came from partial walks).
+tree-walkers onto solc's canonical answers. (Superseded — see note above.)
 
 ---
 
