@@ -83,12 +83,41 @@ def decode_avm_logs(raw_response, events):
     return out
 
 
+def _norm_cmp(v):
+    """Normalise an arg to a form where the backing-width convention and the
+    address/bytes representation don't false-diverge — applied IDENTICALLY to
+    both sides, so equality is preserved regardless of signedness. Ints in the
+    64-/256-bit signed range fold to their two's-complement negative (EVM -128
+    and AVM 2^64-128 both → -128; a genuine large uint folds the same on both
+    sides). Bytes / byte-lists / 0x-hex-strings all fold to one lowercase hex
+    string (address hex-vs-bytelist repr gap)."""
+    if isinstance(v, bool):
+        return int(v)
+    if isinstance(v, int):
+        if (1 << 63) <= v < (1 << 64):
+            return v - (1 << 64)
+        if (1 << 255) <= v < (1 << 256):
+            return v - (1 << 256)
+        return v
+    if isinstance(v, str) and v.startswith(("0x", "0X")):
+        return "0x" + v[2:].lower()
+    if isinstance(v, (bytes, bytearray)):
+        return "0x" + bytes(v).hex()
+    if isinstance(v, (list, tuple)):
+        # a list of small ints that is really a byte string (address/bytesN
+        # decoded to bytes on one side) → hex; otherwise recurse per element.
+        if v and all(isinstance(x, int) and 0 <= x < 256 for x in v):
+            return "0x" + bytes(v).hex()
+        return [_norm_cmp(x) for x in v]
+    return v
+
+
 def logs_match(evm_logs, avm_logs):
     """Compare two [{name,args}] lists as multisets (emission order can differ; a
     NAME+args multiset is the semantically meaningful invariant). Returns
     (ok, evm_only, avm_only)."""
     def key(l):
-        return (l["name"], repr(l["args"]))
+        return (l["name"], repr([_norm_cmp(a) for a in l["args"]]))
     from collections import Counter
     ce, ca = Counter(key(l) for l in evm_logs), Counter(key(l) for l in avm_logs)
     evm_only = list((ce - ca).elements())

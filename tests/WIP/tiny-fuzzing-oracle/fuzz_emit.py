@@ -19,8 +19,8 @@ from pathlib import Path
 
 from fuzz_state import run_stateful_diff, Harness, LocalNet, HERE
 
-SCALARS = ["uint8", "uint16", "uint32", "uint64", "uint128", "uint256",
-           "bool", "bytes4", "bytes8", "bytes32"]  # signed-scalar + address = differ-canon gaps, not compiler bugs
+SCALARS = ["uint8", "int8", "uint16", "int16", "uint32", "int64", "uint128",
+           "uint256", "int256", "bool", "bytes4", "bytes32", "address"]
 STATIC_AGGS = ["uint8[3]", "int16[2]", "uint256[2]", "bytes4[2]"]
 
 

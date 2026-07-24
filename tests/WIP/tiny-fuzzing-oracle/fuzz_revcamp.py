@@ -4,11 +4,12 @@
 The standalone fuzz_revert differs ONE hand-written fixture; there's no campaign.
 This generates random contracts with custom errors carrying scalar args
 (signed/unsigned ints of many widths, bool, bytesN) and functions that revert
-with them, then reuses fuzz_revert's decoder: strip the 4-byte selector,
-ARC4/backing-width-decode the args, and check they ROUND-TRIP the fuzzed inputs
-(sidesteps the sha512_256-vs-keccak selector divergence — the AVM payload must
-decode back to what was passed). Scalar args only (aggregate custom-error args
-use a mixed ARC4-element / backing-width encoding — a separate decoder TODO).
+with them, then decodes: strip the 4-byte selector, decode the args, and check
+they ROUND-TRIP the fuzzed inputs (sidesteps the sha512_256-vs-keccak selector
+divergence — the AVM payload must decode back to what was passed). Handles the
+MIXED encoding (probed 2026-07-24): scalars at BACKING width (int/uint<=64 → 8B,
+>64 → 32B; reused from fuzz_revert), STATIC ARRAYS at ARC4 element width
+(int16[2] elem = 2B, uint256[2] = 32B, bytes4[2] = 4B — NOT backing).
 
 Usage: python fuzz_revcamp.py [--contracts N] [--seed S] [--max-per-fn N]
 """
@@ -17,11 +18,56 @@ import sys
 from pathlib import Path
 
 from fuzz_evm import HERE, _oracle, gen_rows, _args_to_algo, Harness, LocalNet
+import re
 from fuzz_revert import _decode_arg, _INT, _BYTESN
+
+_ARR = re.compile(r"^(\w+)\[(\d+)\]$")
+
+
+def _decode_elem_arc4(t, raw, off):
+    """One STATIC-ARRAY element at its ARC4 declared width (NOT the scalar
+    backing width — arrays encode elements ARC4-exact: int16 elem = 2B, uint256
+    = 32B, bytesN = N B; probed 2026-07-24). bool elements pack 8/byte → skip."""
+    m = _INT.match(t)
+    if m:
+        signed = (m.group(1) == "")
+        bits = int(m.group(2)); n = bits // 8
+        if off + n > len(raw):
+            return None, -1
+        v = int.from_bytes(raw[off:off + n], "big")
+        if signed and v >= (1 << (bits - 1)):
+            v -= (1 << bits)
+        return v, off + n
+    mb = _BYTESN.match(t)
+    if mb:
+        n = int(mb.group(1))
+        if off + n > len(raw):
+            return None, -1
+        return raw[off:off + n], off + n
+    return None, -1
+
+
+def _decode_arg_ext(sol_type, raw, off):
+    """Scalar → backing width (fuzz_revert._decode_arg); static array → N ARC4
+    elements."""
+    ma = _ARR.match(sol_type)
+    if ma:
+        elem, cnt = ma.group(1), int(ma.group(2))
+        out = []
+        for _ in range(cnt):
+            v, off = _decode_elem_arc4(elem, raw, off)
+            if off < 0:
+                return None, -1
+            out.append(v)
+        return out, off
+    return _decode_arg(sol_type, raw, off)
 
 SCALARS = ["uint8", "int8", "uint16", "int16", "uint24", "int24", "uint32",
            "int40", "uint64", "int64", "uint128", "int128", "uint256", "int256",
            "bool", "bytes1", "bytes4", "bytes8", "bytes16", "bytes32"]
+# static-array error args (ARC4 element widths; no bool[] — arc4.bool packs 8/byte)
+ARRAYS = ["uint8[3]", "int16[2]", "uint32[2]", "int128[2]", "uint256[2]",
+          "bytes4[2]", "bytes1[4]"]
 
 
 def gen_contract(seed):
@@ -29,8 +75,9 @@ def gen_contract(seed):
     errs, fns = [], []
     for i in range(rng.randrange(4, 9)):
         n = rng.randrange(1, 4)
-        types = [rng.choice(SCALARS) for _ in range(n)]
-        params = ", ".join(f"{t} v{j}" for j, t in enumerate(types))
+        types = [rng.choice(SCALARS + ARRAYS) for _ in range(n)]
+        params = ", ".join((f"{t} calldata v{j}" if t.endswith("]") else f"{t} v{j}")
+                           for j, t in enumerate(types))
         args = ", ".join(f"v{j}" for j in range(n))
         errs.append(f"    error E{i}({', '.join(types)});")
         fns.append(f"""
@@ -57,8 +104,9 @@ def check_fixture(h, fixture):
     for f in info["functions"]:
         ins = f.get("inputs", [])
         types = [i["type"] for i in ins]
-        if not ins or any(_INT.match(t) is None and t != "bool" and _BYTESN.match(t) is None
-                          for t in types):
+        def _ok(t):
+            return (_INT.match(t) or t == "bool" or _BYTESN.match(t) or _ARR.match(t))
+        if not ins or any(not _ok(t) for t in types):
             continue
         rows = gen_rows(ins, 20)
         if rows is None:
@@ -73,7 +121,7 @@ def check_fixture(h, fixture):
             payload = r.revert_data[4:]
             off, decoded, ok = 0, [], True
             for t in types:
-                v, off = _decode_arg(t, payload, off)
+                v, off = _decode_arg_ext(t, payload, off)
                 if off < 0:
                     ok = False; break
                 decoded.append(v)
