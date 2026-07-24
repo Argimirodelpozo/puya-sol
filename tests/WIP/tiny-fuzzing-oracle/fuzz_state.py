@@ -237,7 +237,12 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         # EVENT-LOG diff: only when BOTH sides ran (no revert on either) — a revert
         # emits nothing, and a revert-status divergence is already reported above.
         if actual != REVERT and expected != REVERT and "logs" in er:
-            avm_logs = _decode_avm_logs(avm_res, avm_events)
+            # abi_results lives on the AtomicTransactionResponse (avm_res is a
+            # Result wrapping it) — pass the raw_response, else decode_avm_logs
+            # silently returns None and EVENT DIFFING IS SKIPPED (was: always
+            # skipped, so event divergences went invisible).
+            avm_logs = _decode_avm_logs(
+                getattr(avm_res, "raw_response", avm_res), avm_events)
             if avm_logs is not None:
                 ok, evm_only, avm_only = _logs_match(er["logs"], avm_logs)
                 if not ok:
