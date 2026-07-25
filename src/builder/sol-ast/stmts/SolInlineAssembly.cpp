@@ -521,7 +521,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			m_node.dialect(),
 			*annotation.analysisInfo,
 			annotation.externalReferences,
-			/*_stepAbbreviations=*/"");
+			// Stage 1: ExpressionSimplifier + StructuralSimplifier (canonicalise
+			// expressions/structure). No pruning/LoadResolver/SSA yet.
+			/*_stepAbbreviations=*/"st");
 		asmRoot = prePass->block.get();
 		asmExternalRefs = &prePass->externalRefs;
 	}
