@@ -34,6 +34,8 @@ void printUsage(char const* _progName)
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
+		<< "  --yul-prepass          EXPERIMENTAL: canonicalise inline-assembly via a Yul\n"
+		<< "                         OptimiserSuite subset before AWST lowering (item 5)\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
 		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
@@ -120,6 +122,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.outputLogs = false;
 		else if (arg == "--via-yul-behavior")
 			opts.viaYulBehavior = true;
+		else if (arg == "--yul-prepass")
+			opts.yulPrepass = true;
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--deploy-pure-helpers")

@@ -28,6 +28,9 @@ struct Options
 	bool outputIr = false;
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
+	// --yul-prepass (EXPERIMENTAL, possible_solc item 5): run a Yul OptimiserSuite
+	// subset to canonicalise inline-assembly blocks before AWST lowering.
+	bool yulPrepass = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
 	// --evm-memory-slots <N>: sets MEMORY_SLOT_LAST=N-1. 0=default (5 slots=20KB).
 	// UltraHonk needs 32.

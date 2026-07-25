@@ -9,11 +9,23 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/YulString.h>
 
+#include <cstdlib>
 #include <set>
 #include <variant>
 
 using namespace solidity;
 using namespace solidity::yul;
+
+namespace puyasol::builder
+{
+static bool g_yulPrePass = false;
+void setYulPrePass(bool _on) { g_yulPrePass = _on; }
+bool yulPrePassEnabled()
+{
+	static bool const env = std::getenv("PUYA_SOL_YUL_PREPASS") != nullptr;
+	return g_yulPrePass || env;
+}
+} // namespace puyasol::builder
 
 namespace
 {

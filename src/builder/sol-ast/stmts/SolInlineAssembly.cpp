@@ -21,7 +21,6 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
 
-#include <cstdlib>
 #include <optional>
 
 #include <algorithm>
@@ -506,15 +505,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
 	// EXPERIMENTAL Yul optimiser pre-pass (possible_solc item 5). Off unless
-	// PUYA_SOL_YUL_PREPASS is set (spike gate; promotes to --yul-prepass later).
-	// Prelude-only for now (pure canonicalisation). The pre-pass OWNS the new tree
-	// and the rebuilt external-ref map, both of which must outlive buildBlock — the
-	// walker holds Identifier pointers into them.
-	static bool const yulPrePassEnabled = std::getenv("PUYA_SOL_YUL_PREPASS") != nullptr;
+	// --yul-prepass / PUYA_SOL_YUL_PREPASS. The pre-pass OWNS the new tree and the
+	// rebuilt external-ref map, both of which must outlive buildBlock — the walker
+	// holds Identifier pointers into them.
 	std::optional<YulPrePassResult> prePass;
 	solidity::yul::Block const* asmRoot = &m_node.operations().root();
 	auto const* asmExternalRefs = &annotation.externalReferences;
-	if (yulPrePassEnabled && annotation.analysisInfo)
+	if (yulPrePassEnabled() && annotation.analysisInfo)
 	{
 		prePass = runYulPrePass(
 			m_node.operations().root(),

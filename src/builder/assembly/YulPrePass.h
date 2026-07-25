@@ -16,6 +16,11 @@ namespace solidity::yul { class Dialect; struct AsmAnalysisInfo; }
 namespace puyasol::builder
 {
 
+/// Enable/disable the pre-pass (set once at startup from main.cpp via --yul-prepass).
+void setYulPrePass(bool _on);
+/// True if the pre-pass is enabled — by --yul-prepass OR the PUYA_SOL_YUL_PREPASS env var.
+bool yulPrePassEnabled();
+
 /// Product of the Yul optimiser pre-pass on one inline-assembly block. `block`
 /// OWNS the new (disambiguated/optimised) tree; `externalRefs` is the original
 /// external-reference map REBUILT against the new tree's identifier pointers,

@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/assembly/YulPrePass.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "cli/AwstPostPasses.h"
 #include "cli/CliOptions.h"
@@ -122,6 +123,7 @@ int main(int _argc, char* _argv[])
 	auto evmVer = resolveEvmVersion(opts.evmVersion);
 	compiler.setEVMVersion(evmVer);
 	puyasol::builder::setCompileEVMVersion(evmVer);
+	puyasol::builder::setYulPrePass(opts.yulPrepass);
 	logger.info("EVM version set to: " + evmVer.name() + " (hasChainID=" + (evmVer.hasChainID() ? "true" : "false") + ")");
 
 	// Apply import remappings (Foundry-style: prefix=target)
