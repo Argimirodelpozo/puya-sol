@@ -5,6 +5,7 @@
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/assembly/YulPrePass.h"
 #include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/StorageLayout.h"
@@ -19,6 +20,9 @@
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
+
+#include <cstdlib>
+#include <optional>
 
 #include <algorithm>
 #include "builder/sol-types/SolIntType.h"
@@ -501,8 +505,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
+	// EXPERIMENTAL Yul optimiser pre-pass (possible_solc item 5). Off unless
+	// PUYA_SOL_YUL_PREPASS is set (spike gate; promotes to --yul-prepass later).
+	// Prelude-only for now (pure canonicalisation). The pre-pass OWNS the new tree
+	// and the rebuilt external-ref map, both of which must outlive buildBlock — the
+	// walker holds Identifier pointers into them.
+	static bool const yulPrePassEnabled = std::getenv("PUYA_SOL_YUL_PREPASS") != nullptr;
+	std::optional<YulPrePassResult> prePass;
+	solidity::yul::Block const* asmRoot = &m_node.operations().root();
+	auto const* asmExternalRefs = &annotation.externalReferences;
+	if (yulPrePassEnabled && annotation.analysisInfo)
+	{
+		prePass = runYulPrePass(
+			m_node.operations().root(),
+			m_node.dialect(),
+			*annotation.analysisInfo,
+			annotation.externalReferences,
+			/*_stepAbbreviations=*/"");
+		asmRoot = prePass->block.get();
+		asmExternalRefs = &prePass->externalRefs;
+	}
+
 	auto stmts = asmTranslator.buildBlock(
-		m_node.operations().root(),
+		*asmRoot,
 		augmentedParams,
 		m_blk.fn.returnType,
 		constants,
@@ -512,7 +537,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		blobOffsetVars,
 		structRefSlotLocals,
 		stateVarSlots,
-		annotation.externalReferences,
+		*asmExternalRefs,
 		declNameFn,
 		// Only the function's own params are real calldata args; externalReferences appended
 		// to augmentedParams above (return vars, outer locals) are NOT in the EVM calldata buffer.

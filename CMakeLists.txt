@@ -64,6 +64,7 @@ set(SOURCES
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp
 	src/builder/assembly/CoreTranslation.cpp
+	src/builder/assembly/YulPrePass.cpp
 	src/builder/assembly/ArithmeticOps.cpp
 	src/builder/assembly/BitwiseShiftOps.cpp
 	src/builder/assembly/CalldataMapOps.cpp
