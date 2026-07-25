@@ -562,6 +562,23 @@ void AssemblyBuilder::buildExpressionStatement(
 		if (funcName == "mcopy" && tryHandleBytesMemoryMcopy(*call, loc, _out))
 			return;
 
+		// pop(call(...)) / pop(staticcall(...)): the discarded value is the call's
+		// success flag, but the call's SIDE EFFECTS (inner txn + returndata
+		// output-copy) must still happen. Route to the full app-call lowering with
+		// NO assign target (its output-copy is not gated on the target). This is
+		// exactly the shape UnusedPruner produces from `let unused := call(...)`,
+		// and the common `pop(call(...))` idiom for calls whose success is ignored.
+		if (funcName == "pop" && call->arguments.size() == 1)
+			if (auto const* inner = std::get_if<solidity::yul::FunctionCall>(&call->arguments[0]))
+			{
+				std::string innerName = getFunctionName(inner->functionName);
+				if (innerName == "call" || innerName == "staticcall")
+				{
+					handlePrecompileCall(*inner, "", loc, _out, /*_isCall=*/innerName == "call");
+					return;
+				}
+			}
+
 		// Right-to-left: Yul argument evaluation order (see CoreTranslation).
 		std::vector<std::shared_ptr<awst::Expression>> args(call->arguments.size());
 		for (size_t ai = call->arguments.size(); ai-- > 0; )

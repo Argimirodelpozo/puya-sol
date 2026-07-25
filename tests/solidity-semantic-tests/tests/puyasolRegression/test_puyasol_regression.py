@@ -2899,6 +2899,21 @@ def test_asm_call_value(harness):
     assert rds == 32, f"returndatasize includes the prefix (rds={rds})"
 
 
+def test_asm_pop_call_output(harness):
+    """puyasolRegression/contracts/asm_pop_call_output.sol — NOT an o.g. test.
+
+    pop(call(...)) — the call's success flag is discarded, but the inner txn +
+    returndata output-copy must still happen. Was a silent no-op (r read stale
+    0x80 = 128). Also the shape UnusedPruner produces (--yul-prepass) from
+    `let unused := call(...)`.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_pop_call_output.sol",
+        contract_name="PopCallCaller")
+    r = harness.call(app, "h(uint256)", 41).abi_return
+    assert as_int(r) == 1041, f"pop(call) output not copied (r={as_int(r)})"
+
+
 def test_t2_eval_once_tail(harness):
     """puyasolRegression/contracts/t2_eval_once_tail.sol — NOT an o.g. test.
 
