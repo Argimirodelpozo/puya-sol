@@ -518,8 +518,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			m_node.dialect(),
 			*annotation.analysisInfo,
 			annotation.externalReferences,
-			// Stage 2: + UnusedPruner (u) + DeadCodeEliminator (D). No LoadResolver/SSA yet.
-			/*_stepAbbreviations=*/"stuD");
+			// Stage 3: + LoadResolver (L) — flow-sensitive mload/sload/keccak-of-known
+			// -content folding. No SSA yet.
+			/*_stepAbbreviations=*/"stuDL");
 		asmRoot = prePass->block.get();
 		asmExternalRefs = &prePass->externalRefs;
 	}
