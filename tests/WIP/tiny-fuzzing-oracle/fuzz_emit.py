@@ -8,8 +8,11 @@ events with mixed arg types — scalars (signed/unsigned sub-word, bool, bytesN,
 address) AND static aggregates (fixed arrays, structs), the documented gap —
 driven by fuzzed inputs, and diffs the emitted logs against live solc+py-evm via
 run_stateful_diff (event_diff decodes the ARC4 tuple body; static aggregates
-tuple-decode, dynamic ones it skips). Non-indexed only (indexed event params are
-a separate known parse gap in puya-sol).
+tuple-decode, dynamic ones it skips). Now also generates VALUE-type `indexed`
+params (up to 3/event): the indexed keyword is a no-op on topic-less AVM, so all
+args ride in the ARC-28 tuple and match EVM (which stores value types in the
+topic). Indexed DYNAMIC types are a documented divergence (EVM keccak-hashes them;
+puya-sol keeps the value) and are NOT generated — see indexed-event-params memory.
 
 Usage: python fuzz_emit.py [--contracts N] [--seed S] [--max-per-fn N]
 """
@@ -34,8 +37,19 @@ def gen_contract(seed):
         n = rng.randrange(1, 4)
         pool = SCALARS + STATIC_AGGS
         types = [rng.choice(pool) for _ in range(n)]
-        # event def
-        ev_params = ", ".join(f"{t} v{j}" for j, t in enumerate(types))
+        # event def — mark up to 3 VALUE-TYPE scalar params `indexed` (EVM stores
+        # value types directly in the topic → matches AVM's all-in-tuple emit; the
+        # `indexed` keyword is a no-op on topic-less AVM). Indexed DYNAMIC/aggregate
+        # types are a documented divergence (EVM keccak-hashes them into the topic;
+        # puya-sol keeps the value) and are deliberately NOT generated here.
+        idx_left = 3
+        ev_parts = []
+        for j, t in enumerate(types):
+            ix = ""
+            if t in SCALARS and idx_left > 0 and rng.random() < 0.5:
+                ix = " indexed"; idx_left -= 1
+            ev_parts.append(f"{t}{ix} v{j}")
+        ev_params = ", ".join(ev_parts)
         events.append(f"    event E{i}({ev_params});")
         # emit fn: aggregate/struct args come in as calldata/memory params
         fn_params, emit_args = [], []

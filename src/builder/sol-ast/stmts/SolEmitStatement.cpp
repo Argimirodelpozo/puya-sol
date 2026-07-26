@@ -77,6 +77,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		: std::vector<std::shared_ptr<VariableDeclaration>>{};
 	std::vector<std::shared_ptr<awst::Statement>> preStatements;
 
+	// `indexed` is intentionally NOT special-cased: AVM logs have no topic
+	// structure, so ALL args (indexed or not) go into the ARC-28 tuple in
+	// declaration order — this is the AVM-native mapping and matches EVM for
+	// VALUE-type indexed params (EVM stores those directly in the topic).
+	// DOCUMENTED DIVERGENCE: for indexed DYNAMIC params (string/bytes/array/
+	// struct) EVM stores keccak256(value) in the topic; puya-sol keeps the raw
+	// value (more useful for AVM indexers, consistent with the ARC-28-native /
+	// sha512_256-selector model). See memory asm/indexed-event-params.
 	for (size_t i = 0; i < callArgs.size(); ++i)
 	{
 		auto translated = m_blk.builderCtx().build(*callArgs[i]);
