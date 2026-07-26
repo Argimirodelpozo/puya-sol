@@ -193,12 +193,31 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
                 ("0x" + _enc.decode_address(app.app_addr).hex()).lower(): "0xSELF"}
     _evm_map.pop("", None); _avm_map.pop("", None)
 
+    def _addr_key(v):
+        # A scalar address-shaped value → its "0x"+hex key for the sentinel map,
+        # from EITHER the EVM 0x-hex string OR the AVM byte-list form (an address
+        # event arg not registered literally as "address" decodes to [int,...]).
+        if isinstance(v, str) and v.startswith(("0x", "0X")):
+            return v.lower()
+        if isinstance(v, (list, tuple)) and v and all(
+                isinstance(x, int) and 0 <= x < 256 for x in v):
+            return "0x" + bytes(v).hex()
+        return None
+
     def _sub_addrs(v, m):
-        if isinstance(v, str) and v.lower() in m:
-            return m[v.lower()]
+        k = _addr_key(v)
+        if k is not None:
+            return m.get(k, v)                       # caller/self → sentinel; else unchanged
         if isinstance(v, (list, tuple)):
-            return [_sub_addrs(x, m) for x in v]
+            return [_sub_addrs(x, m) for x in v]      # nested tuple/struct/address[]
         return v
+
+    def _sub_log_addrs(logs, m):
+        # Map each side's own caller/self inside event ARGS to the shared sentinel
+        # (same mapping returns get), so an event carrying msg.sender/address(this)
+        # — e.g. ENS ApprovalForAll(owner=msg.sender,...) — doesn't false-diverge on
+        # the two chains' distinct caller addresses.
+        return [{"name": l["name"], "args": _sub_addrs(l["args"], m)} for l in logs]
 
     diverged, avm_errors, evm_skips, limit_fork = [], [], [], None
     event_div, revert_div = [], []
@@ -244,7 +263,9 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
             avm_logs = _decode_avm_logs(
                 getattr(avm_res, "raw_response", avm_res), avm_events)
             if avm_logs is not None:
-                ok, evm_only, avm_only = _logs_match(er["logs"], avm_logs)
+                ok, evm_only, avm_only = _logs_match(
+                    _sub_log_addrs(er["logs"], _evm_map),
+                    _sub_log_addrs(avm_logs, _avm_map))
                 if not ok:
                     event_div.append((sig, args, evm_only, avm_only))
         # REVERT-PAYLOAD diff: only when BOTH reverted (status match already handled
