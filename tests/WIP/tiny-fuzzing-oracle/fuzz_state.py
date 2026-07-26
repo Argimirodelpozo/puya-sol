@@ -17,7 +17,9 @@ from pathlib import Path
 
 from fuzz_evm import (HERE, REVERT, _oracle, canon, _fmt, _fmt1,
                       gen_rows, _args_to_algo, _apply_addr_canon, Harness, LocalNet)
-from event_diff import decode_avm_logs as _decode_avm_logs, logs_match as _logs_match
+from event_diff import (decode_avm_logs as _decode_avm_logs,
+                        decode_raw_evm_logs as _decode_raw_evm_logs,
+                        logs_match as _logs_match)
 from revert_diff import revert_match as _revert_match
 
 
@@ -183,6 +185,7 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
     say("[AVM] compiling + deploying…")
     app = harness.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool)
     avm_events = getattr(app.app_spec, "events", None) or []
+    solc_events = info.get("events", [])   # for AVM raw-log3 (asm-log) events (Solady-style)
     # msg.sender/deployer AND address(this) differ between the two chains by
     # construction; map each side's own to a shared sentinel so contracts that
     # return owner = msg.sender or address(this) don't false-diverge.
@@ -260,12 +263,16 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
             # Result wrapping it) — pass the raw_response, else decode_avm_logs
             # silently returns None and EVENT DIFFING IS SKIPPED (was: always
             # skipped, so event divergences went invisible).
-            avm_logs = _decode_avm_logs(
-                getattr(avm_res, "raw_response", avm_res), avm_events)
-            if avm_logs is not None:
+            raw = getattr(avm_res, "raw_response", avm_res)
+            avm_logs = _decode_avm_logs(raw, avm_events)
+            # ALSO decode Solady-style asm-log3 (keccak-topic) events, which are not
+            # ARC-28 registered — the union covers both `emit` and raw-asm log paths.
+            raw_logs = _decode_raw_evm_logs(raw, solc_events)
+            if avm_logs is not None or raw_logs is not None:
+                combined = (avm_logs or []) + (raw_logs or [])
                 ok, evm_only, avm_only = _logs_match(
                     _sub_log_addrs(er["logs"], _evm_map),
-                    _sub_log_addrs(avm_logs, _avm_map))
+                    _sub_log_addrs(combined, _avm_map))
                 if not ok:
                     event_div.append((sig, args, evm_only, avm_only))
         # REVERT-PAYLOAD diff: only when BOTH reverted (status match already handled

@@ -135,8 +135,15 @@ def main():
                 "outputs": [o["type"] for o in e["outputs"]],
                 "mut": e.get("stateMutability", ""),
             })
+        from eth_utils import event_abi_to_log_topic as _evt_topic
+        def _topic0(e):
+            try:
+                return "0x" + _evt_topic(e).hex()      # keccak256(canonical event sig)
+            except Exception:
+                return None
         evs = [{"name": e["name"], "inputs": e["inputs"],
-                "anonymous": e.get("anonymous", False)}
+                "anonymous": e.get("anonymous", False),
+                "topic0": _topic0(e)}                   # for AVM raw-log3 (asm log) matching
                for e in abi if e.get("type") == "event"]
         errs = [{"name": e["name"], "inputs": e["inputs"]}
                 for e in abi if e.get("type") == "error"]

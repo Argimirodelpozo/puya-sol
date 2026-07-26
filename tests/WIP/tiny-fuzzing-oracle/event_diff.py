@@ -14,6 +14,7 @@ documented backing-width registration convention.
 """
 import base64
 import hashlib
+import re
 
 from algosdk import abi
 
@@ -80,6 +81,86 @@ def decode_avm_logs(raw_response, events):
             except Exception:
                 continue                          # dynamic/opaque layout we can't tuple-decode
             out.append({"name": name, "args": [_canon(v, t) for v, t in zip(vals, types)]})
+    return out
+
+
+_VALUE_TYPE_RE = re.compile(r"^(address|bool|(u?int)(\d+)?|bytes([0-9]|[12][0-9]|3[0-2]))$")
+
+
+def _is_value_type(t):
+    """A type stored as ONE 32-byte word (indexed topic or non-indexed data word)."""
+    return bool(_VALUE_TYPE_RE.match(t))
+
+
+def _decode_evm_word(word, t):
+    """Decode a 32-byte EVM log word to the same canon shape as evm_oracle._canon_log_val."""
+    if len(word) < 32:
+        word = word.rjust(32, b"\x00")
+    if t == "address":
+        return "0x" + word.hex()                          # 32-byte content hex (account / padded addr)
+    if t == "bool":
+        return 1 if int.from_bytes(word, "big") else 0
+    m = re.match(r"^bytes(\d+)$", t)
+    if m:
+        return list(word[: int(m.group(1))])              # bytesN: left-aligned, first N bytes
+    m = re.match(r"^(u?)int(\d*)$", t)
+    if m:
+        bits = int(m.group(2) or 256)
+        signed = m.group(1) == ""
+        v = int.from_bytes(word, "big")
+        if signed and v >= (1 << (bits - 1)):
+            v -= 1 << bits                                 # two's complement (topic is sign-extended)
+        return v
+    return int.from_bytes(word, "big")
+
+
+def decode_raw_evm_logs(raw_response, solc_events):
+    """Decode AVM raw EVM-STYLE logs (asm logN: `log(topic0 ++ indexed-topics(32B each)
+    ++ data)`) — as emitted by Solady-style assembly events — into [{name, args}] in the
+    same canon shape as the EVM oracle. Uses the solc event ABIs (name/inputs/indexed +
+    keccak topic0 from introspect). VALUE-TYPE events only (each arg one 32-byte word);
+    events with dynamic/aggregate args are skipped (like the ARC-28 decoder). Returns None
+    if no decodable logs container (mirrors decode_avm_logs)."""
+    results = getattr(raw_response, "abi_results", None)
+    if results is None:
+        return None
+    reg = {}
+    for e in solc_events or []:
+        t0 = (e.get("topic0") or "").lower()
+        if not t0 or e.get("anonymous"):
+            continue
+        if all(_is_value_type(i["type"]) for i in e["inputs"]):
+            reg[t0] = e
+    out = []
+    for res in results:
+        ti = getattr(res, "tx_info", None)
+        if not isinstance(ti, dict):
+            continue
+        for b64 in ti.get("logs", []) or []:
+            data = base64.b64decode(b64)
+            if len(data) < 32:
+                continue
+            ev = reg.get(("0x" + data[:32].hex()).lower())
+            if not ev:
+                continue                                  # not one of our (value-type) events
+            inputs = ev["inputs"]
+            nidx = sum(1 for i in inputs if i.get("indexed"))
+            body = data[32:]
+            idx_words = [body[i * 32:(i + 1) * 32] for i in range(nidx)]
+            rest = body[nidx * 32:]
+            non_words = [rest[i * 32:(i + 1) * 32] for i in range(len(inputs) - nidx)]
+            args, ii, jj = [], 0, 0
+            ok = True
+            for i in inputs:
+                if i.get("indexed"):
+                    if ii >= len(idx_words): ok = False; break
+                    w = idx_words[ii]; ii += 1
+                else:
+                    if jj >= len(non_words): ok = False; break
+                    w = non_words[jj]; jj += 1
+                args.append(_decode_evm_word(w, i["type"]))
+            if ok:
+                out.append({"name": ev["name"], "args": args})
     return out
 
 
