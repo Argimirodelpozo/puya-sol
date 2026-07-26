@@ -100,6 +100,20 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 				auto padded = awst::makeLeftPadToN(std::move(toBytes), n, _loc);
 				return awst::makeReinterpretCast(std::move(padded), _targetType, _loc);
 			}
+			// uint64 → bytes[N]: itob (8-byte big-endian) then LEFT-pad to N,
+			// same shape as the biguint case above. A small integer/hex literal
+			// like `records[0x0]` (key type bytes32) is an IntegerConstant of
+			// wtype uint64; without this it flowed through unchanged and the
+			// key-bytes step (makeKeyBytes fallback) reinterpret-cast a scalar
+			// uint64 to bytes — an invalid cast puya rejects ("unsupported type
+			// cast from uint64 to bytes"). itob+leftPad yields the same 32-byte
+			// value as `bytes32(0)` / a `bytes32` key param, so keys byte-match.
+			if (_expr->wtype == awst::WType::uint64Type())
+			{
+				auto itob = awst::makeItob(std::move(_expr), _loc);
+				auto padded = awst::makeLeftPadToN(std::move(itob), n, _loc);
+				return awst::makeReinterpretCast(std::move(padded), _targetType, _loc);
+			}
 		}
 	}
 

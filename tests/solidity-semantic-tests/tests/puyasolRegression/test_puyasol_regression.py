@@ -3188,3 +3188,29 @@ def test_asm_calldatacopy_const(harness):
     r = harness.call(app, "partCopy(uint256)", 0x11223344, **fee).abi_return
     # low 8 bytes of arg a (0x11223344) = 0000000011223344, left-aligned, + 24 zeros
     assert as_bytes(r) == bytes.fromhex("0000000011223344") + bytes(24)
+
+
+def test_bare_literal_mapping_key(harness):
+    """puyasolRegression/contracts/mapping_literal_key.sol — NOT an o.g. semantic test.
+
+    A bare integer literal as a bytes32 mapping key (`records[0x0]`, the ENS
+    ENSRegistry ctor idiom) is an IntegerConstant of wtype uint64. The
+    mapping-key coercion had no uint64->bytesN case, so makeKeyBytes fell to its
+    fallback reinterpretCast(uint64 -> bytes) — invalid, rejected by puya
+    ("unsupported type cast from uint64 to bytes"). Fixed in
+    TypeCoercion::implicitNumericCast (uint64 -> bytes[N] via itob+leftPad), so
+    the literal encodes to the same 32-byte key as bytes32(0). This asserts the
+    ctor literal-key write and the bytes32-param read hit the SAME box (a key
+    mismatch would read 0), in BOTH directions.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/mapping_literal_key.sol")
+    z = bytes(32)  # bytes32(0)
+    # ctor wrote records[0x0].ttl = 42 via a bare literal; readable via literal...
+    assert as_int(harness.call(app, "ttlLit()").abi_return) == 42
+    # ...AND via a bytes32(0) param — proves literal-key == param-key encoding.
+    assert as_int(harness.call(app, "ttlVia(bytes32)", z).abi_return) == 42
+    # write via param, read via literal — proves the match holds both ways.
+    harness.call(app, "setViaParam(bytes32,uint64)", z, 99)
+    assert as_int(harness.call(app, "ttlLit()").abi_return) == 99
+    assert as_int(harness.call(app, "ttlVia(bytes32)", z).abi_return) == 99
