@@ -358,6 +358,17 @@ void AssemblyBuilder::handleBoxKeyedStructSlotStore(
 	auto packedBytes = awst::makeLeftPadToN(
 		awst::makeAsBytes(ensureBiguint(_packed, _loc), _loc), 32, _loc);
 
+	// Single 32-byte field (solady Uint8Set/Heap): the box content IS the slot
+	// word. Low-level box_put (create-or-replace) — this works for a RUNTIME box
+	// key from a storage-ref param, where the high-level box-value assignment
+	// below needs a static box declaration and otherwise asserts in puya.
+	if (fields.size() == 1 && fields[0].byteW == 32 && fields[0].evmSlot == 0)
+	{
+		_out.push_back(awst::makeExpressionStatement(
+			awst::makeBoxPut(_slotBox->key, std::move(packedBytes), _loc), _loc));
+		return;
+	}
+
 	// Existing box value as bytes (zero struct when the box is absent).
 	auto existing = awst::makeAsBytes(
 		builder::StorageMapper::makeStateGetWithDefault(
@@ -398,6 +409,62 @@ void AssemblyBuilder::handleBoxKeyedStructSlotStore(
 	auto newVal = awst::makeReinterpretCast(std::move(rebuilt), _slotBox->wtype, _loc);
 	auto assign = awst::makeAssignmentExpression(std::move(target), std::move(newVal), _loc);
 	_out.push_back(awst::makeExpressionStatement(std::move(assign), _loc));
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleBoxKeyedStructSlotLoad(
+	std::shared_ptr<awst::BoxValueExpression> const& _slotBox,
+	awst::SourceLocation const& _loc
+)
+{
+	// Inverse of handleBoxKeyedStructSlotStore: `sload(s.slot)` reads the EVM
+	// slot-0 packed word from the ARC4 box — each slot-0 field placed at its EVM
+	// byte position within a 32-byte word. Single-uint256-field structs (solady
+	// Uint8Set/Heap) → the box's 32 bytes ARE the word.
+	auto const* st = dynamic_cast<awst::ARC4Struct const*>(_slotBox->wtype);
+	if (!st) return nullptr;
+
+	struct FieldInfo { int arc4Off; int byteW; int evmSlot; int evmBit; };
+	std::vector<FieldInfo> fields;
+	int arc4Off = 0, curSlot = 0, curBit = 0;
+	for (auto const& [fname, fwt]: st->fields())
+	{
+		(void)fname;
+		auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(fwt);
+		if (!uintN || (uintN->n() % 8) != 0)
+		{
+			Logger::instance().error(
+				"sload from a box-keyed struct slot requires byte-aligned integer "
+				"fields", _loc);
+			return nullptr;
+		}
+		int const bits = uintN->n();
+		if (curBit + bits > 256) { curSlot++; curBit = 0; }
+		fields.push_back({arc4Off, bits / 8, curSlot, curBit});
+		curBit += bits;
+		if (curBit == 256) { curSlot++; curBit = 0; }
+		arc4Off += bits / 8;
+	}
+
+	int const targetSlot = 0; // bare `s.slot`; add(s.slot,k) arrives as a binop, not here
+	auto existing = awst::makeAsBytes(
+		builder::StorageMapper::makeStateGetWithDefault(
+			awst::makeBoxValueExpression(_slotBox->key, _slotBox->wtype, _loc),
+			_slotBox->wtype, _loc),
+		_loc);
+
+	std::shared_ptr<awst::Expression> word = awst::makeBzero(32, _loc);
+	for (auto const& fi: fields)
+	{
+		if (fi.evmSlot != targetSlot) continue;
+		int const byteOffInSlot = (256 - fi.evmBit - fi.byteW * 8) / 8;
+		auto chunk = awst::makeExtract3(existing,
+			awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Off), _loc),
+			awst::makeIntegerConstant(static_cast<uint64_t>(fi.byteW), _loc), _loc);
+		word = awst::makeReplace3(std::move(word),
+			awst::makeIntegerConstant(static_cast<uint64_t>(byteOffInSlot), _loc),
+			std::move(chunk), _loc);
+	}
+	return awst::makeAsBiguint(std::move(word), _loc);
 }
 
 

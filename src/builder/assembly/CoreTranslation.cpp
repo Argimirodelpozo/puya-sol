@@ -188,6 +188,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			if (srit != m_structRefSlotLocals.end())
 				return awst::makeVarExpression(
 					srit->second, awst::WType::biguintType(), loc);
+			// Struct storage-ref PARAM passed as a box-key handle (bytes): `s.slot`
+			// is a BoxValueExpression over the param's box key — handleSload/handleSstore
+			// do the field-aware box read/write, exactly like m_boxKeyedStructSlots.
+			// (solady storage-lib idiom; see setBoxKeyStructParams.)
+			auto bkp = m_boxKeyStructParams.find(baseName);
+			if (bkp != m_boxKeyStructParams.end())
+				return awst::makeBoxValueExpression(
+					awst::makeReinterpretCast(
+						awst::makeVarExpression(baseName, awst::WType::bytesType(), loc),
+						awst::WType::boxKeyType(), loc),
+					bkp->second, loc);
 		}
 		else if (suffix == "offset")
 		{

@@ -386,6 +386,12 @@ struct FunctionContext: Context
 	/// AssemblyBuilder's EVM-ABI calldata layout. Assigned after construction.
 	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
 
+	/// Struct storage-ref params passed as a box-key handle (bytes) because the
+	/// body uses `param.slot` in asm (solady storage-lib idiom). name → the ARC4
+	/// struct wtype, so `param.slot` resolves to a BoxValueExpression over the
+	/// param's box key. Assigned after construction (buildFreestandingSubroutine).
+	std::map<std::string, awst::WType const*> boxKeyStructParams;
+
 	/// True iff this function is a constructor body (or is being inlined
 	/// into one). Set by ApprovalProgramBuilder around constructor inlining.
 	bool inConstructor = false;

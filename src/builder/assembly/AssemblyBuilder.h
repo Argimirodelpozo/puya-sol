@@ -531,6 +531,13 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// `sload(s.slot)` on a box-keyed struct slot: read the EVM slot-0 packed
+	/// word from the ARC4 box (inverse of handleBoxKeyedStructSlotStore).
+	std::shared_ptr<awst::Expression> handleBoxKeyedStructSlotLoad(
+		std::shared_ptr<awst::BoxValueExpression> const& _slotBox,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Lower `sstore(v.slot, value)` where `v` is a scalar app-global state var by
 	/// writing `v`'s own app-global state (so a later high-level read of `v` sees it),
 	/// instead of the generic __dyn_storage blob. Returns true if handled; false
@@ -910,7 +917,17 @@ public:
 		m_calldataSolTypes = std::move(_m);
 	}
 
+	/// Struct storage-ref params passed as a box-key handle (bytes) whose body
+	/// uses `param.slot` in asm: name → ARC4 struct wtype. `param.slot` resolves
+	/// to a BoxValueExpression over the param's box key. See asm-slot-storage-ref-param.
+	void setBoxKeyStructParams(std::map<std::string, awst::WType const*> _m)
+	{
+		m_boxKeyStructParams = std::move(_m);
+	}
+
 private:
+	std::map<std::string, awst::WType const*> m_boxKeyStructParams;
+
 	solidity::frontend::Type const* calldataSolType(std::string const& _name) const
 	{
 		auto it = m_calldataSolTypes.find(_name);

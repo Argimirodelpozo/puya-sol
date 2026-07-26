@@ -6,6 +6,7 @@
 #include "builder/builtin/Ripemd160Builder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/ReturnRewriter.h"
@@ -374,6 +375,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// Parameters — mapping storage refs become bytes (runtime key prefix).
 	std::set<size_t> mappingStorageParams;
 	std::set<size_t> blobAggParams;
+	// Struct storage-ref params used via `.slot` in asm (solady storage libs):
+	// travel as a box-key handle so `s.slot` resolves (see SolInlineAssembly).
+	auto slotParams = structRefParamsUsedAsAsmSlot(_func);
 	for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
 	{
 		auto const& param = _func.parameters()[pi];
@@ -391,7 +395,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		// array-of-mapping params encode as their own "state var" and box
 		// keys diverge from the auto-getter's reads.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& isBoxKeyedStorageRef(param->type())) // widened: plain structs too
+			&& (isBoxKeyedStorageRef(param->type()) || slotParams.count(pi))) // widened: plain structs + asm .slot refs
 		{
 			arg.wtype = awst::WType::bytesType();
 			mappingStorageParams.insert(pi);
@@ -506,6 +510,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	{
 		std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 		std::map<std::string, unsigned> bitWidths;
+		std::map<std::string, awst::WType const*> boxKeyStructParams;
 		for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
 		{
 			auto const& param = _func.parameters()[pi];
@@ -516,6 +521,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				: blobAggParams.count(pi) ? awst::WType::uint64Type()
 				: m_typeMapper.map(param->type());
 			paramContext.emplace_back(pname, ptype);
+			// Struct storage-ref param used via `.slot` in asm: record the ARC4
+			// struct wtype so `param.slot` resolves to a BoxValueExpression over
+			// the box-key handle (the bytes param value).
+			if (slotParams.count(pi))
+				boxKeyStructParams[pname] = m_typeMapper.map(param->type());
 			if (auto it = builder::SolIntType::fromSol(param->annotation().type); it && it->bits < 64)
 				bitWidths[pname] = it->bits;
 		}
@@ -527,6 +537,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		fnCtx.params = paramContext;
 		fnCtx.returnType = sub->returnType;
 		fnCtx.paramBitWidths = bitWidths;
+		fnCtx.boxKeyStructParams = std::move(boxKeyStructParams);
 	}
 
 	// Construct the function-body block context for the body.

@@ -277,6 +277,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	if (auto routed = tryRouteConstSlotLoad(_args[0], _loc))
 		return routed;
 
+	// Box-keyed ARC4 struct slot sentinel (`sload(s.slot)` where `s` is a struct
+	// storage-ref param/alias): read the EVM slot-0 packed word from the box.
+	if (auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(_args[0]))
+		if (dynamic_cast<awst::ARC4Struct const*>(box->wtype))
+			return handleBoxKeyedStructSlotLoad(box, _loc);
+
 	// Full-width slot: __storage_read takes the 256-bit slot (no truncation).
 	auto slotArg = ensureBiguintSlotArg(_args[0], _loc);
 

@@ -149,11 +149,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	std::set<size_t> mappingStorageParamIndices;
 	if (_funcDef)
 	{
+		// Struct storage-ref params used via `.slot` in asm travel as a box-key
+		// handle (mirror buildFreestandingSubroutine); pass the arg's box key.
+		auto slotParams = builder::structRefParamsUsedAsAsmSlot(*_funcDef);
 		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
 		{
 			auto const& param = _funcDef->parameters()[pi];
 			if (param->referenceLocation() == VariableDeclaration::Location::Storage
-				&& builder::isBoxKeyedStorageRef(param->type())) // widened: plain structs too
+				&& (builder::isBoxKeyedStorageRef(param->type()) || slotParams.count(pi))) // widened: plain structs + asm .slot refs
 			{
 				paramTypes.push_back(awst::WType::bytesType());
 				mappingStorageParamIndices.insert(pi);
@@ -470,6 +473,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		&& _funcDef->stateMutability() != StateMutability::View
 		&& _funcDef->stateMutability() != StateMutability::Pure)
 	{
+		// Same asm-.slot widening as the box-key param type (above / AWSTBuilder):
+		// such params travel as a box-key handle and write directly to the box, so
+		// they get NO write-back slot — the callee is void, and a write-back
+		// assignment of a void call asserts in puya.
+		auto wbSlotParams = builder::structRefParamsUsedAsAsmSlot(*_funcDef);
 		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < call->args.size(); ++pi)
 		{
 			auto const& p = _funcDef->parameters()[pi];
@@ -479,7 +487,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			// plain structs like `Pool.State`): travel as bytes key-prefix,
 			// write directly to box, no write-back slot. Must match callee
 			// predicate (AWSTBuilder.cpp `isBoxKeyedStorageRef`) or arity diverges.
-			if (builder::isBoxKeyedStorageRef(p->type())) // widened: plain structs too
+			if (builder::isBoxKeyedStorageRef(p->type()) || wbSlotParams.count(pi)) // widened: plain structs + asm .slot refs
 				continue;
 			storageParamIndices.push_back(pi);
 		}

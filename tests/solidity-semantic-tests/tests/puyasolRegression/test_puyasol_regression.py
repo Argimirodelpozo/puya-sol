@@ -2914,6 +2914,27 @@ def test_asm_pop_call_output(harness):
     assert as_int(r) == 1041, f"pop(call) output not copied (r={as_int(r)})"
 
 
+def test_asm_slot_storage_ref_param(harness):
+    """puyasolRegression/contracts/asm_slot_storage_ref_param.sol — NOT an o.g. test.
+
+    asm `.slot` on a struct storage-ref PARAMETER (solady storage-library idiom):
+    `library L { function op(S storage s) { assembly { sload(s.slot) } } }`. The
+    param travels as a box-key handle so `s.slot` resolves to the box; sload/sstore
+    read/write the slot-0 word. Was a hard error ("unmodeled .slot reference").
+    Single uint256-field struct (Uint8Set shape).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_slot_storage_ref_param.sol",
+        contract_name="AsmSlotStorageRefParam")
+    harness.call(app, "set(uint256)", 3)
+    harness.call(app, "set(uint256)", 5)
+    assert as_int(harness.call(app, "get(uint256)", 3).abi_return) == 1, "bit 3 not set"
+    assert as_int(harness.call(app, "get(uint256)", 5).abi_return) == 1, "bit 5 not set"
+    assert as_int(harness.call(app, "get(uint256)", 4).abi_return) == 0, "bit 4 wrongly set"
+    assert as_int(harness.call(app, "rawWord()").abi_return) == (1 << 3) | (1 << 5), \
+        "raw slot word mismatch (sload/sstore through the param .slot)"
+
+
 def test_asm_log_emission(harness):
     """puyasolRegression/contracts/asm_log_emit.sol — NOT an o.g. test.
 
