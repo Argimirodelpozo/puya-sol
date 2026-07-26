@@ -2914,6 +2914,33 @@ def test_asm_pop_call_output(harness):
     assert as_int(r) == 1041, f"pop(call) output not copied (r={as_int(r)})"
 
 
+def test_asm_log_emission(harness):
+    """puyasolRegression/contracts/asm_log_emit.sol — NOT an o.g. test.
+
+    asm logN (log0..log4) → a single AVM `log` = topic1++…++topicN (32B each) ++
+    memory data. log2/log3/log4 previously hard-errored ("unsupported Yul
+    builtin"), blocking real event-emitting contracts (solady Ownable). Verifies
+    the flat log bytes for a 2-topic and a 0-topic case.
+    """
+    import base64
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_log_emit.sol", contract_name="AsmLogEmit")
+
+    def raw_logs(r):
+        out = []
+        for res in (getattr(r.raw_response, "abi_results", None) or []):
+            for b in (getattr(res, "tx_info", None) or {}).get("logs", []) or []:
+                out.append(base64.b64decode(b))
+        return out
+
+    r = harness.call(app, "emit2(uint256,uint256,uint256)", 111, 222, 333)
+    exp = (111).to_bytes(32, "big") + (222).to_bytes(32, "big") + (333).to_bytes(32, "big")
+    assert any(l == exp for l in raw_logs(r)), "log2 flat bytes (t0++t1++data) mismatch"
+
+    r0 = harness.call(app, "emit0(uint256)", 777)
+    assert any(l == (777).to_bytes(32, "big") for l in raw_logs(r0)), "log0 data bytes mismatch"
+
+
 def test_t2_eval_once_tail(harness):
     """puyasolRegression/contracts/t2_eval_once_tail.sol — NOT an o.g. test.
 

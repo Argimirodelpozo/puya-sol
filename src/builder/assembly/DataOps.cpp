@@ -510,6 +510,70 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
 	return awst::makeLen(returndataBytes(_loc), _loc);
 }
 
+void AssemblyBuilder::handleLog(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	int _numTopics,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// logN(offset, length, topic1, …, topicN) — EVM event emission. The AVM `log`
+	// op has no topic structure, so flatten to ONE log:
+	//   topic1 ++ … ++ topicN ++ memory[offset : offset+length]
+	// Topics pass through as-is (topic0 is typically the keccak event-signature
+	// hash), each padded to 32 bytes. Length must be constant (as for keccak256/
+	// return); offset may be runtime. NB: this mirrors the raw `log` op used by
+	// high-level `emit` — asm logN carries no event signature, so it can't route
+	// through the ARC-28 Emit path (no arc56 registration → oracle won't decode it).
+	if (_args.size() != static_cast<size_t>(2 + _numTopics))
+	{
+		Logger::instance().error("log" + std::to_string(_numTopics) + " requires "
+			+ std::to_string(2 + _numTopics) + " arguments (offset, length, "
+			+ std::to_string(_numTopics) + " topics)", _loc);
+		return;
+	}
+
+	auto lenConst = resolveConstantOffset(_args[1]);
+	if (!lenConst)
+	{
+		Logger::instance().error("log" + std::to_string(_numTopics)
+			+ " with a non-constant data length has no AVM translation", _loc);
+		return;
+	}
+	if (*lenConst > 8192) // guard against readMemRangeDirect unrolling millions of words
+	{
+		Logger::instance().error("log" + std::to_string(_numTopics)
+			+ " data length " + std::to_string(*lenConst) + " exceeds the 8192-byte cap", _loc);
+		return;
+	}
+
+	// Topics first (EVM order), each 32 bytes.
+	std::shared_ptr<awst::Expression> logBytes;
+	for (int i = 0; i < _numTopics; ++i)
+	{
+		auto topic = padTo32Bytes(ensureBiguint(_args[2 + i], _loc), _loc);
+		logBytes = logBytes ? awst::makeConcat(std::move(logBytes), std::move(topic), _loc)
+			: std::move(topic);
+	}
+
+	// Then the data slice memory[offset : offset+length].
+	if (*lenConst > 0)
+	{
+		auto off = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
+		auto data = readMemRangeDirect(std::move(off), static_cast<int>(*lenConst), _loc);
+		logBytes = logBytes ? awst::makeConcat(std::move(logBytes), std::move(data), _loc)
+			: std::move(data);
+	}
+
+	if (!logBytes) // log0(_, 0): empty log
+		logBytes = awst::makeBytesConstant({}, _loc);
+
+	drainPendingStatements(_out);
+	auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
+	logCall->stackArgs.push_back(std::move(logBytes));
+	_out.push_back(awst::makeExpressionStatement(std::move(logCall), _loc));
+}
+
 void AssemblyBuilder::emitReturndatacopy(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc,

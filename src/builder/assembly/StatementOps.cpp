@@ -621,6 +621,12 @@ void AssemblyBuilder::buildExpressionStatement(
 				handleSstore(args, loc, _out);
 			return;
 		}
+		if (funcName.size() == 4 && funcName.compare(0, 3, "log") == 0
+			&& funcName[3] >= '0' && funcName[3] <= '4')
+		{
+			handleLog(args, funcName[3] - '0', loc, _out);
+			return;
+		}
 		if (funcName == "invalid")
 		{
 			auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeFalse(loc), loc, "invalid"), loc);

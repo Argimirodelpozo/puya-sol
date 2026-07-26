@@ -598,6 +598,15 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// Handle logN(offset, length, topic1..topicN): flatten topics ++ memory data
+	/// into a single AVM `log`. _numTopics is 0..4.
+	void handleLog(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		int _numTopics,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	/// Handle revert(offset, length): fail the transaction.
 	void handleRevert(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
