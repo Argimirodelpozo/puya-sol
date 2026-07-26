@@ -340,6 +340,10 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
 	);
+	std::shared_ptr<awst::Expression> handleExp(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
 	std::shared_ptr<awst::Expression> handleMod(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
@@ -830,6 +834,15 @@ private:
 		int _sliceLen, // 32 = mstore (MSB-first), 1 = mstore8 (low byte)
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Inverse of emitGuardedBytesDataWrite: read a 32-byte word at `_m.dataOff`
+	/// from the bytes/string VALUE local (mirrors the write's backing so an asm
+	/// mstore then mload of the same `new bytes` buffer round-trips). Bounds-safe:
+	/// bytes at/past len read as 0 (EVM mload of fresh/adjacent memory).
+	std::shared_ptr<awst::Expression> emitGuardedBytesDataRead(
+		BytesDataPtrMatch _m,
+		awst::SourceLocation const& _loc
 	);
 
 	/// Match mstore(<data ptr>, value) → guarded word write on the var (no blob write).

@@ -4,6 +4,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
+#include <boost/multiprecision/cpp_int.hpp>
 #include <string>
 
 namespace puyasol::builder
@@ -118,6 +119,43 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMul(
 		_args[0], awst::BigUIntBinaryOperator::Mult, _args[1], _loc
 	);
 	return wrapMod256(std::move(product), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleExp(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	if (!checkArity(_args, 2, "exp", _loc))
+		return nullptr;
+	// AVM has no exp opcode. Fold when BOTH operands are compile-time constants
+	// (the idiomatic Yul use is byte-shifting by a power of a literal, e.g.
+	// `exp(256, 12)` = 2^96 in ENS AddrResolver's asm addr<->bytes). EVM exp
+	// wraps mod 2^256; compute via modular exponentiation to avoid huge
+	// intermediates. Non-constant exponents stay a hard error (no silent 0).
+	auto const* baseC = dynamic_cast<awst::IntegerConstant const*>(_args[0].get());
+	auto const* expC = dynamic_cast<awst::IntegerConstant const*>(_args[1].get());
+	if (baseC && expC)
+	{
+		using boost::multiprecision::cpp_int;
+		cpp_int const mod = cpp_int(1) << 256;
+		cpp_int base(baseC->value);
+		cpp_int e(expC->value);
+		base %= mod;
+		if (base < 0) base += mod;
+		cpp_int result = 1;
+		while (e > 0)
+		{
+			if ((e & 1) != 0) result = (result * base) % mod;
+			base = (base * base) % mod;
+			e >>= 1;
+		}
+		return awst::makeIntegerConstant(result.str(), _loc, awst::WType::biguintType());
+	}
+	Logger::instance().error(
+		"unsupported Yul builtin `exp` with a non-constant operand: no AVM exp "
+		"opcode exists (only compile-time-constant exponentiation is folded).", _loc);
+	return awst::makeZero(_loc, awst::WType::biguintType());
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleMod(

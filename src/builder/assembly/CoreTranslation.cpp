@@ -430,6 +430,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	static std::unordered_map<std::string_view, ArgsHandler> const kArgsBuiltins = {
 		{"mulmod", &AssemblyBuilder::handleMulmod}, {"addmod", &AssemblyBuilder::handleAddmod},
 		{"add", &AssemblyBuilder::handleAdd}, {"mul", &AssemblyBuilder::handleMul},
+		{"exp", &AssemblyBuilder::handleExp},
 		{"mod", &AssemblyBuilder::handleMod}, {"sub", &AssemblyBuilder::handleSub},
 		{"mload", &AssemblyBuilder::handleMload}, {"iszero", &AssemblyBuilder::handleIszero},
 		{"eq", &AssemblyBuilder::handleEq}, {"lt", &AssemblyBuilder::handleLt},

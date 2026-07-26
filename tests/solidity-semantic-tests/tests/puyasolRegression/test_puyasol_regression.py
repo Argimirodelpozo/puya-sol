@@ -3214,3 +3214,24 @@ def test_bare_literal_mapping_key(harness):
     harness.call(app, "setViaParam(bytes32,uint64)", z, 99)
     assert as_int(harness.call(app, "ttlLit()").abi_return) == 99
     assert as_int(harness.call(app, "ttlVia(bytes32)", z).abi_return) == 99
+
+
+def test_asm_mem_ptr_roundtrip(harness):
+    """puyasolRegression/contracts/asm_mem_ptr_roundtrip.sol — NOT an o.g. semantic test.
+
+    An asm mstore into a `new bytes` buffer must be visible to a later asm mload
+    of the same buffer. The buffer is blob-backed (scratch slots via an offset
+    var), but the write was mis-routed to an uninitialised value local while the
+    read used the scratch blob, so mload returned 0 (silent wrong value; broke
+    ENS AddrResolver bytesToAddress(addressToBytes(a))). Fixed by routing
+    blob-backed aggregates through the generic scratch path for both mstore and
+    mload. Also exercises the exp(256,N) constant-fold. See ens-compile memory.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_mem_ptr_roundtrip.sol")
+    MAX = (1 << 256) - 1
+    for v in (0, 1, 42, 0x1122334455, MAX):
+        assert as_int(harness.call(app, "rt(uint256)", v).abi_return) == v
+        assert as_int(harness.call(app, "rt2(uint256)", v).abi_return) == v
+    for v in (0, 1, 0xdeadbeef, (1 << 160) - 1):
+        assert as_int(harness.call(app, "expRt(uint160)", v).abi_return) == v

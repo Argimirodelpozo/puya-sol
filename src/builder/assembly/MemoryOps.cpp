@@ -233,78 +233,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	awst::SourceLocation const& _loc
 )
 {
-	// Match: mload(add(add(bytes_param, 32), offset)) or add commuted.
-	// EVM: data_ptr+32 (skip length header)+offset → mload.
-	// AVM: extract3(data, offset, 32) — bytes have no length header.
-
-	auto* outerAdd = std::get_if<solidity::yul::FunctionCall>(&_addrExpr);
-	if (!outerAdd || getFunctionName(outerAdd->functionName) != "add"
-		|| outerAdd->arguments.size() != 2)
+	// mload of a bytes/string memory local's DATA region. Use the SAME matcher as
+	// the write path (matchBytesMemoryDataPtr) so an asm mstore then mload of the
+	// same `new bytes` buffer round-trips. Previously this only matched the nested
+	// add(add(m,32),k) form, so a plain mload(add(m,32)) fell through to the
+	// scratch-blob path — which the value-local mstore(add(m,32)) never wrote, so
+	// the read returned 0 (ENS AddrResolver bytesToAddress(addressToBytes(a))).
+	auto m = matchBytesMemoryDataPtr(_addrExpr, _loc);
+	if (!m)
 		return nullptr;
-
-	// One arg of outer add should be add(bytes_param, 32), the other is the offset
-	solidity::yul::FunctionCall const* innerAdd = nullptr;
-	solidity::yul::Expression const* offsetExprYul = nullptr;
-
-	auto* call0 = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[0]);
-	auto* call1 = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[1]);
-
-	if (call0 && getFunctionName(call0->functionName) == "add" && call0->arguments.size() == 2)
-	{
-		innerAdd = call0;
-		offsetExprYul = &outerAdd->arguments[1];
-	}
-	else if (call1 && getFunctionName(call1->functionName) == "add" && call1->arguments.size() == 2)
-	{
-		innerAdd = call1;
-		offsetExprYul = &outerAdd->arguments[0];
-	}
-
-	if (!innerAdd)
-		return nullptr;
-
-	// Inner add should have: (bytes_param, 32) or (32, bytes_param)
-	solidity::yul::Expression const* paramExpr = nullptr;
-
-	auto val1 = resolveConstantYulValue(innerAdd->arguments[1]);
-	if (val1 && *val1 == 32)
-	{
-		paramExpr = &innerAdd->arguments[0];
-	}
-	else
-	{
-		auto val0 = resolveConstantYulValue(innerAdd->arguments[0]);
-		if (val0 && *val0 == 32)
-			paramExpr = &innerAdd->arguments[1];
-	}
-
-	if (!paramExpr)
-		return nullptr;
-
-	// param must be an Identifier referencing a bytes/string parameter
-	auto* paramId = std::get_if<solidity::yul::Identifier>(paramExpr);
-	if (!paramId)
-		return nullptr;
-
-	std::string paramName = resolveVarRef(*paramId);
-	auto paramIt = m_locals.find(paramName);
-	if (paramIt == m_locals.end())
-		return nullptr;
-
-	auto* paramType = paramIt->second;
-	if (paramType != awst::WType::bytesType() && paramType != awst::WType::stringType())
-		return nullptr;
-
 	Logger::instance().debug(
-		"mload bytes memory read: extract3(" + paramName + ", offset, 32)", _loc
-	);
-
-	auto offsetExpr = buildExpression(*offsetExprYul);
-	auto offsetU64 = awst::makeBtoi(awst::makeAsBytes(offsetExpr, _loc), _loc);
-	auto extract = awst::makeExtract3(
-		awst::makeVarExpression(paramName, paramType, _loc),
-		std::move(offsetU64), awst::makeIntegerConstant("32", _loc), _loc);
-	return awst::makeAsBiguint(std::move(extract), _loc);
+		"mload bytes memory read: guarded value-local read of " + m->name, _loc);
+	return emitGuardedBytesDataRead(std::move(*m), _loc);
 }
 
 std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMemoryDataPtr(
@@ -323,6 +263,15 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 		if (it == m_locals.end())
 			return std::nullopt;
 		if (it->second != awst::WType::bytesType() && it->second != awst::WType::stringType())
+			return std::nullopt;
+		// A BLOB-BACKED aggregate (`bytes memory b = new bytes(n)` whose pointer
+		// escapes into asm) lives in the scratch blob addressed by its offset var,
+		// NOT in a value local. Its value local is never initialised, so routing
+		// mstore/mload here would read/write an uninitialised bytes local (len on a
+		// uint64). Let it fall through to the generic scratch path, which resolves
+		// the offset var so mstore and mload hit the SAME scratch bytes and an asm
+		// write is visible to a later asm read.
+		if (m_blobOffsetVars.count(name))
 			return std::nullopt;
 		return std::make_pair(name, it->second);
 	};
@@ -411,6 +360,37 @@ void AssemblyBuilder::emitGuardedBytesDataWrite(
 	auto merged = awst::makeConditional(
 		std::move(guard), std::move(written), varRef(), _m.type, _loc);
 	_out.push_back(awst::makeAssignmentStatement(varRef(), std::move(merged), _loc));
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::emitGuardedBytesDataRead(
+	BytesDataPtrMatch _m,
+	awst::SourceLocation const& _loc
+)
+{
+	// Inverse of emitGuardedBytesDataWrite. The local is a VALUE (raw bytes, no
+	// length header); read a 32-byte MSB-first word at data offset `off`. Clamp
+	// so extract3 stays in-bounds even past the buffer end (EVM mload of fresh /
+	// adjacent memory reads zeros): safeOff = min(off,len), wlen = min(32, len−safeOff);
+	// the wlen real bytes sit in the high positions, the rest are zero.
+	auto u64 = awst::WType::uint64Type();
+	auto varRef = [&]() { return awst::makeVarExpression(_m.name, _m.type, _loc); };
+	auto k32 = [&]() { return awst::makeIntegerConstant("32", _loc); };
+	auto len = awst::makeEvalOnce(awst::makeLen(varRef(), _loc), _loc);
+	auto off = awst::makeEvalOnce(std::move(_m.dataOff), _loc);
+	auto safeOff = awst::makeEvalOnce(awst::makeConditional(
+		awst::makeNumericCompare(off, awst::NumericComparison::Lt, len, _loc),
+		off, len, u64, _loc), _loc);
+	auto rem = awst::makeEvalOnce(
+		awst::makeUInt64BinOp(len, awst::UInt64BinaryOperator::Sub, safeOff, _loc), _loc);
+	auto wlen = awst::makeConditional(
+		awst::makeNumericCompare(rem, awst::NumericComparison::Lt, k32(), _loc),
+		rem, k32(), u64, _loc);
+	auto slice = awst::makeExtract3(varRef(), safeOff, std::move(wlen), _loc);
+	// Right-pad the ≤32 data bytes to a full word: extract3(slice ++ bzero(32), 0, 32).
+	auto word = awst::makeExtract3(
+		awst::makeConcat(std::move(slice), awst::makeBzero(32, _loc), _loc),
+		awst::makeIntegerConstant("0", _loc), k32(), _loc);
+	return awst::makeAsBiguint(std::move(word), _loc);
 }
 
 bool AssemblyBuilder::tryHandleBytesMemoryWrite(
