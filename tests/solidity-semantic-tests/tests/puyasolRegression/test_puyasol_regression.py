@@ -3321,3 +3321,28 @@ def test_asm_byte_oob(harness):
     # out-of-range indices → 0 (the bug: huge n truncated to a small in-range index)
     for n in (32, 33, 255, 256, (1 << 128) + 5, (1 << 200) + 31, (1 << 256) - 1):
         assert as_int(harness.call(app, "tbyte(uint256,uint256)", n, x).abi_return) == 0, f"byte({n}) should be 0"
+
+
+def test_bool_array_condition(harness):
+    """puyasolRegression/contracts/bool_array_condition.sol — NOT an o.g. semantic test.
+
+    A bool[] element used directly as a condition (`if (flags[i])`) tripped the
+    puya backend ("IfElse.condition expected bool"): arc4.bool is an
+    ARC4BasicWType of kind `Basic` (same as native bool), so SolArrayBuilder's
+    kind-based needsDecode missed it and the element stayed arc4.bool. Fixed by
+    decoding arc4.bool array elements to native bool. Found via OZ
+    MerkleProof.multiProofVerify (bool[] proofFlags).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/bool_array_condition.sol")
+    f = [False, True, False, True]
+    assert as_int(harness.call(app, "ifElem(bool[],uint256)", f, 1).abi_return) == 1
+    assert as_int(harness.call(app, "ifElem(bool[],uint256)", f, 0).abi_return) == 0
+    assert as_int(harness.call(app, "ternElem(bool[],uint256)", f, 3).abi_return) == 7
+    assert as_int(harness.call(app, "ternElem(bool[],uint256)", f, 2).abi_return) == 9
+    assert as_int(harness.call(app, "reqElem(bool[],uint256)", f, 1).abi_return) == 3
+    assert harness.call(app, "reqElem(bool[],uint256)", f, 0, expect_revert=True).reverted
+    assert as_int(harness.call(app, "andElem(bool[],uint256,uint256)", f, 1, 3).abi_return) == 1
+    assert as_int(harness.call(app, "andElem(bool[],uint256,uint256)", f, 0, 1).abi_return) == 0
+    assert as_int(harness.call(app, "retElem(bool[],uint256)", f, 1).abi_return) == 1
+    assert as_int(harness.call(app, "retElem(bool[],uint256)", f, 0).abi_return) == 0
