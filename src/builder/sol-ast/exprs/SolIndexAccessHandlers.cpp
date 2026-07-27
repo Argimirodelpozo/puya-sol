@@ -702,6 +702,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			elemIsArc4 = true; break;
 		default: break;
 		}
+		// arc4.bool has kind `Basic` — same arc4.bool-slips-past-kind-switch family
+		// as the bool[] read/write/tuple fixes (shadowed here by the sol-eb
+		// SolArrayBuilder path, but hardened for symmetry).
+		if (actualElemType == awst::WType::arc4BoolType())
+			elemIsArc4 = true;
 		bool expectedIsNative = true;
 		switch (expectedType->kind())
 		{
@@ -806,6 +811,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 			elemIsArc4 = true; break;
 		default: break;
 		}
+		if (elemArc4 == awst::WType::arc4BoolType())   // Basic-kind arc4.bool (see above)
+			elemIsArc4 = true;
 		bool expectedIsNative = expectedType->kind() != awst::WTypeKind::ARC4UIntN
 			&& expectedType->kind() != awst::WTypeKind::ARC4StaticArray
 			&& expectedType->kind() != awst::WTypeKind::ARC4DynamicArray

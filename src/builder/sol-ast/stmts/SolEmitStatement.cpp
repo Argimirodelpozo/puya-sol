@@ -112,8 +112,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		auto* arc4Type = m_blk.typeMapper().mapToARC4Type(translated->wtype);
 
 		std::shared_ptr<awst::Expression> arc4Value;
-		if (translated->wtype->kind() >= awst::WTypeKind::ARC4UIntN
-			&& translated->wtype->kind() <= awst::WTypeKind::ARC4Struct)
+		// `>= ARC4UIntN` excludes Basic-kind arc4.bool (a native bool arg encodes
+		// correctly below, but an already-encoded arc4.bool would otherwise be
+		// double-encoded). Pass a pre-encoded arc4.bool through as-is.
+		if ((translated->wtype->kind() >= awst::WTypeKind::ARC4UIntN
+				&& translated->wtype->kind() <= awst::WTypeKind::ARC4Struct)
+			|| translated->wtype == awst::WType::arc4BoolType())
 			arc4Value = std::move(translated);
 		else
 		{

@@ -3369,3 +3369,34 @@ def test_bool_array_write(harness):
     # toggle: write `first` then `!first` → result is !first
     assert harness.call(app, "toggle(uint256,bool)", 2, True).abi_return is False
     assert harness.call(app, "toggle(uint256,bool)", 2, False).abi_return is True
+
+
+def test_bool_array_tuple(harness):
+    """puyasolRegression/contracts/bool_array_tuple.sol — NOT an o.g. semantic test.
+
+    Two tuple-assignment fixes:
+    1. arc4.bool tuple target: `(m[0], m[1]) = (m[1], m[0])` over a bool[] left the
+       RHS native bool — handleTupleAssignment's kind-based targetIsArc4 switch
+       missed arc4.bool (kind Basic) → puya "assignment target type differs".
+       Exercised via memBoolSwap (storage bool[] element store is blocked by a
+       separate puya backend bug, puyabug.md #10).
+    2. Array-element parallel swap: `(arr[i], arr[j]) = (arr[j], arr[i])` collapsed
+       to sequential writes (both elements took one source value) because the lazy
+       RHS was not snapshotted when the LHS is an array element. Fixed by
+       snapshotting the RHS into temps for array-element LHS (storage AND memory).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/bool_array_tuple.sol")
+    # bug 2: storage value-type element swaps (must be a REAL swap, not collapse)
+    assert harness.call(app, "suSwap(uint256,uint256)", 1, 0).abi_return == [0, 1]
+    assert harness.call(app, "suSwap(uint256,uint256)", 5, 9).abi_return == [9, 5]
+    assert harness.call(app, "suRot3(uint256,uint256,uint256)", 1, 2, 3).abi_return == [3, 1, 2]
+    _si = harness.call(app, "siSwap(int128,int128)", -7, 42).abi_return
+    assert [as_signed_int(_si[0]), as_signed_int(_si[1])] == [42, -7]
+    assert harness.call(app, "mixLocal(uint256,uint256)", 3, 8).abi_return == [8, 3]
+    # bug 2 + bug 1: memory element swaps, incl. bool[] (arc4.bool tuple encode)
+    assert harness.call(app, "memUSwap(uint256,uint256)", 1, 0).abi_return == [0, 1]
+    assert harness.call(app, "memBoolSwap(bool,bool)", True, False).abi_return == [False, True]
+    assert harness.call(app, "memBoolSwap(bool,bool)", False, True).abi_return == [True, False]
+    # memory bool 3-way rotate: (m0,m1,m2) = (m2,m0,m1) over [T,F,F] → [F,T,F]
+    assert harness.call(app, "memBoolRot3(bool,bool,bool)", True, False, False).abi_return == [False, True, False]

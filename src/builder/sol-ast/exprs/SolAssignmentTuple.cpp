@@ -167,7 +167,34 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				}
 			}
 		}
-		if (allLocalVars || allScalars || (hasSideEffectingRhs && lhsHasStateIndex))
+		// Array-element LHS (`(arr[i], arr[j]) = (arr[j], arr[i])`): a parallel
+		// tuple assignment must evaluate the whole RHS BEFORE any store, but the
+		// lazy RHS instead reduces a swap to sequential `arr[j]=arr[i];
+		// arr[i]=arr[j]` — both elements collapse to one source value (memory:
+		// the element write reassigns the whole backing blob local; storage: the
+		// in-place box write is read back by the next element's lazy RHS). Snapshot
+		// the RHS into temps to restore EVM parallel semantics. Applies to storage
+		// AND memory arrays. Whole storage state-var/struct tuples KEEP the EVM
+		// sequential-overwrite quirk (swap_in_storage_overwrite) — their LHS
+		// components are Identifiers (not IndexAccess), so the ArrayType gate below
+		// naturally excludes them.
+		bool hasArrayElementLhs = false;
+		if (_sourceLhs)
+		{
+			for (auto const& comp : _sourceLhs->components())
+			{
+				if (!comp) continue;
+				auto const* ia = dynamic_cast<solidity::frontend::IndexAccess const*>(comp.get());
+				if (!ia) continue;
+				if (dynamic_cast<solidity::frontend::ArrayType const*>(
+						ia->baseExpression().annotation().type))
+				{
+					hasArrayElementLhs = true;
+					break;
+				}
+			}
+		}
+		if (allLocalVars || allScalars || hasArrayElementLhs || (hasSideEffectingRhs && lhsHasStateIndex))
 		{
 			std::vector<awst::WType const*> tmpTypes;
 			auto newTuple = awst::makeTupleExpression(nullptr, _value->sourceLocation);
@@ -313,6 +340,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				targetIsArc4 = true; break;
 			default: break;
 			}
+			// arc4.bool has kind `Basic` (same as native bool), so the switch misses
+			// it — a tuple/multi-return write into an arc4.bool slot (`(flags[0],
+			// flags[1]) = (b, a)` over a bool[]) would leave the RHS native bool and
+			// puya rejects it ("target type differs"). Twin of the scalar fix in
+			// SolAssignment::applyArc4EncodeIfNeeded / the bool[] read+write fixes.
+			if (assignTarget->wtype == awst::WType::arc4BoolType())
+				targetIsArc4 = true;
 			if (targetIsArc4)
 			{
 				assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
