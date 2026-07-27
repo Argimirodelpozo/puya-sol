@@ -852,6 +852,13 @@ SolAssignment::applyArc4EncodeIfNeeded(
 		targetIsArc4 = true; break;
 	default: break;
 	}
+	// arc4.bool is an ARC4BasicWType of kind `Basic` (same kind as native bool),
+	// so the switch misses it — assigning a native bool into an arc4.bool slot
+	// (a `bool[]` element write `flags[i] = v`, or an arc4.bool struct field)
+	// then leaves the value native bool and puya rejects it ("target type differs
+	// from expression value type"). Encode it. (Read side fixed in 19d7e1ba32.)
+	if (_target->wtype == awst::WType::arc4BoolType())
+		targetIsArc4 = true;
 	if (!targetIsArc4) return _value;
 
 	// Skip encode if types match structurally (TypeMapper may not intern pointers;

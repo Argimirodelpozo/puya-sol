@@ -3346,3 +3346,26 @@ def test_bool_array_condition(harness):
     assert as_int(harness.call(app, "andElem(bool[],uint256,uint256)", f, 0, 1).abi_return) == 0
     assert as_int(harness.call(app, "retElem(bool[],uint256)", f, 1).abi_return) == 1
     assert as_int(harness.call(app, "retElem(bool[],uint256)", f, 0).abi_return) == 0
+
+
+def test_bool_array_write(harness):
+    """puyasolRegression/contracts/bool_array_write.sol — NOT an o.g. semantic test.
+
+    Writing a bool[] element (`f[i] = v`) failed with "assignment target type
+    differs from expression value type": the write target is the raw arc4.bool
+    element, so the RHS native bool must be ARC4-encoded, but
+    applyArc4EncodeIfNeeded's kind-based targetIsArc4 check missed arc4.bool
+    (kind Basic). Fixed by encoding native bool → arc4.bool. Companion to the
+    read fix (test_bool_array_condition).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/bool_array_write.sol")
+    for i in (0, 3, 7):
+        assert harness.call(app, "writeRead(uint256,bool)", i, True).abi_return is True
+        assert harness.call(app, "writeRead(uint256,bool)", i, False).abi_return is False
+    assert harness.call(app, "writeMulti(bool,bool,bool,uint256)", True, False, True, 0).abi_return is True
+    assert harness.call(app, "writeMulti(bool,bool,bool,uint256)", True, False, True, 1).abi_return is False
+    assert harness.call(app, "writeMulti(bool,bool,bool,uint256)", True, False, True, 2).abi_return is True
+    # toggle: write `first` then `!first` → result is !first
+    assert harness.call(app, "toggle(uint256,bool)", 2, True).abi_return is False
+    assert harness.call(app, "toggle(uint256,bool)", 2, False).abi_return is True
