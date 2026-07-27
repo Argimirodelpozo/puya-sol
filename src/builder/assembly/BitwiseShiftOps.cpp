@@ -427,18 +427,20 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 		return nullptr;
 
 	auto padded = padTo32Bytes(_args[1], _loc);
-	auto nExpr = _args[0];
-	if (nExpr->wtype != awst::WType::uint64Type())
-		nExpr = safeBtoi(std::move(nExpr), _loc);
 
-	// n >= 32: EVM byte() returns 0 (out of range); the AVM extract3 at offset n would revert. Guard
-	// with `n < 32 ? byte : 0` — the conditional only evaluates the extract on the taken branch. n is
-	// used by both the bound check and the extract, so single-evaluate it.
-	auto nSE = awst::makeEvalOnce(std::move(nExpr), _loc);
+	// n >= 32: EVM byte() returns 0 (out of range). Range-check the ORIGINAL n as a
+	// biguint — checking the btoi-truncated value is wrong: a huge n (>= 2^64)
+	// truncates to a small in-range index and wrongly extracts a byte (found
+	// fuzzing Solady DateTimeLib.daysInMonth: byte(2^128+5, ...) returned 31, not
+	// 0). The conditional only evaluates the extract on the taken branch (n < 32),
+	// so the btoi used there is always in range and never OOB-reverts.
+	auto nBig = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
 	auto inRange = awst::makeNumericCompare(
-		nSE, awst::NumericComparison::Lt, awst::makeIntegerConstant("32", _loc), _loc);
+		nBig, awst::NumericComparison::Lt,
+		awst::makeIntegerConstant("32", _loc, awst::WType::biguintType()), _loc);
+	auto nU64 = safeBtoi(nBig, _loc);
 	auto extracted = awst::makeAsBiguint(
-		awst::makeExtract3(std::move(padded), nSE, awst::makeOne(_loc), _loc), _loc);
+		awst::makeExtract3(std::move(padded), std::move(nU64), awst::makeOne(_loc), _loc), _loc);
 	return awst::makeConditional(
 		std::move(inRange), std::move(extracted),
 		awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);

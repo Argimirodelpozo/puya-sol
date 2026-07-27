@@ -3302,3 +3302,22 @@ def test_asm_signed_div_min(harness):
     # sanity: ordinary signed values still correct
     assert as_signed_int(harness.call(app, "sdiv_(int256,int256)", -20, 3).abi_return) == -6
     assert as_signed_int(harness.call(app, "smod_(int256,int256)", -20, 3).abi_return) == -2
+
+
+def test_asm_byte_oob(harness):
+    """puyasolRegression/contracts/asm_byte_oob.sol — NOT an o.g. semantic test.
+
+    asm byte(n, x) must return 0 for n >= 32 (EVM out-of-range). The handler
+    range-checked the btoi-TRUNCATED index, so a huge n (>= 2^64) truncated to a
+    small in-range index (2^128+5 -> low 64 bits = 5) and wrongly extracted byte
+    5 instead of 0. Fixed by checking the original biguint index. Found fuzzing
+    Solady DateTimeLib.daysInMonth.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_byte_oob.sol")
+    x = int.from_bytes(bytes(range(32)), "big")   # byte i == i for i in 0..31
+    for i in (0, 1, 15, 31):
+        assert as_int(harness.call(app, "tbyte(uint256,uint256)", i, x).abi_return) == i
+    # out-of-range indices → 0 (the bug: huge n truncated to a small in-range index)
+    for n in (32, 33, 255, 256, (1 << 128) + 5, (1 << 200) + 31, (1 << 256) - 1):
+        assert as_int(harness.call(app, "tbyte(uint256,uint256)", n, x).abi_return) == 0, f"byte({n}) should be 0"
