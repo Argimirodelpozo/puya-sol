@@ -103,7 +103,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
 
 	auto one = awst::makeBiguintConstant("1", _loc);
 
-	return makeBigUIntBinOp(sub, awst::BigUIntBinaryOperator::Add, one, _loc);
+	// Wrap mod 2^256: negate256(0) = (2^256-1)+1 = 2^256 must reduce to 0 (two's
+	// complement of 0 is 0), else the out-of-range 2^256 reverts. This is hit
+	// whenever a signed asm op (sdiv/smod) produces a zero result with a negative
+	// sign, e.g. sdiv(x, int256.min) or smod(int256.min, y) — EVM returns 0.
+	// No-op for every val>=1 (2^256-val is already in range).
+	auto sum = makeBigUIntBinOp(sub, awst::BigUIntBinaryOperator::Add, one, _loc);
+	return wrapMod256(std::move(sum), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(

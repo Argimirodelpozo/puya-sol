@@ -3273,3 +3273,32 @@ def test_ens_core_resolver(harness):
     assert as_bytes(harness.call(app, "getName(bytes32)", node).abi_return) == b""
     pk2 = harness.call(app, "pubkey(bytes32)", node).abi_return
     assert as_bytes(pk2[0]) == bytes(32) and as_bytes(pk2[1]) == bytes(32)
+
+
+def test_asm_signed_div_min(harness):
+    """puyasolRegression/contracts/asm_signed_div_min.sol — NOT an o.g. semantic test.
+
+    asm sdiv/smod reverted when the signed result was a NEGATIVE ZERO (e.g.
+    sdiv(x, int256.min) → quotient 0 with opposite signs; smod(int256.min, y) →
+    remainder 0 with negative dividend), because negate256(0) computed 2^256
+    (out of range) instead of 0. EVM returns 0. Fixed by wrapping negate256 mod
+    2^256. Found fuzzing Solady FixedPointMathLib (sMulWad/sDivWad).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_signed_div_min.sol")
+    MIN = -(1 << 255)
+    MAXP = (1 << 255) - 1
+    # sdiv: negative-zero quotient must be 0, not a revert
+    assert as_signed_int(harness.call(app, "sdiv_(int256,int256)", 5, MIN).abi_return) == 0
+    assert as_signed_int(harness.call(app, "sdiv_(int256,int256)", MAXP, MIN).abi_return) == 0
+    assert as_signed_int(harness.call(app, "sdiv_(int256,int256)", MIN, 1).abi_return) == MIN
+    # sdiv(int256.min, -1) overflows mathematically; EVM sdiv wraps to int256.min
+    assert as_signed_int(harness.call(app, "sdiv_(int256,int256)", MIN, -1).abi_return) == MIN
+    # smod: negative-zero remainder must be 0, not a revert
+    assert as_signed_int(harness.call(app, "smod_(int256,int256)", MIN, 1).abi_return) == 0
+    assert as_signed_int(harness.call(app, "smod_(int256,int256)", MIN, 2).abi_return) == 0
+    assert as_signed_int(harness.call(app, "smod_(int256,int256)", MIN, MIN).abi_return) == 0
+    assert as_signed_int(harness.call(app, "smod_(int256,int256)", 5, MIN).abi_return) == 5
+    # sanity: ordinary signed values still correct
+    assert as_signed_int(harness.call(app, "sdiv_(int256,int256)", -20, 3).abi_return) == -6
+    assert as_signed_int(harness.call(app, "smod_(int256,int256)", -20, 3).abi_return) == -2
