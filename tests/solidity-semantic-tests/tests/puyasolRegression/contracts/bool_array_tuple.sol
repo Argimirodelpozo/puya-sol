@@ -61,4 +61,25 @@ contract BoolArrTuple {
         (su[0], x) = (x, su[0]);
         return (su[0], x);
     }
+
+    // --- siblings of the array fix: struct value-field + mapping-element swaps
+    // (same lazy-RHS collapse; LHS is MemberAccess / IndexAccess-on-MappingType) ---
+    struct P { uint256 a; uint256 b; uint256 c; }
+    P sp;
+    mapping(uint256 => uint256) sm;
+    function structSwap(uint256 a, uint256 b) external returns (uint256, uint256) {
+        sp.a = a; sp.b = b;
+        (sp.a, sp.b) = (sp.b, sp.a);
+        return (sp.a, sp.b);
+    }
+    function structRot3(uint256 a, uint256 b, uint256 c) external returns (uint256, uint256, uint256) {
+        sp.a = a; sp.b = b; sp.c = c;
+        (sp.a, sp.b, sp.c) = (sp.c, sp.a, sp.b);
+        return (sp.a, sp.b, sp.c);
+    }
+    function mapSwap(uint256 a, uint256 b) external returns (uint256, uint256) {
+        sm[0] = a; sm[1] = b;
+        (sm[0], sm[1]) = (sm[1], sm[0]);
+        return (sm[0], sm[1]);
+    }
 }

@@ -3400,3 +3400,7 @@ def test_bool_array_tuple(harness):
     assert harness.call(app, "memBoolSwap(bool,bool)", False, True).abi_return == [True, False]
     # memory bool 3-way rotate: (m0,m1,m2) = (m2,m0,m1) over [T,F,F] → [F,T,F]
     assert harness.call(app, "memBoolRot3(bool,bool,bool)", True, False, False).abi_return == [False, True, False]
+    # bug 2 siblings: struct value-field + mapping-element swaps (MemberAccess / mapping index LHS)
+    assert harness.call(app, "structSwap(uint256,uint256)", 1, 0).abi_return == [0, 1]
+    assert harness.call(app, "structRot3(uint256,uint256,uint256)", 1, 2, 3).abi_return == [3, 1, 2]
+    assert harness.call(app, "mapSwap(uint256,uint256)", 5, 9).abi_return == [9, 5]

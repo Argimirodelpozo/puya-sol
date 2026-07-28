@@ -167,34 +167,42 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				}
 			}
 		}
-		// Array-element LHS (`(arr[i], arr[j]) = (arr[j], arr[i])`): a parallel
-		// tuple assignment must evaluate the whole RHS BEFORE any store, but the
-		// lazy RHS instead reduces a swap to sequential `arr[j]=arr[i];
-		// arr[i]=arr[j]` — both elements collapse to one source value (memory:
-		// the element write reassigns the whole backing blob local; storage: the
-		// in-place box write is read back by the next element's lazy RHS). Snapshot
-		// the RHS into temps to restore EVM parallel semantics. Applies to storage
-		// AND memory arrays. Whole storage state-var/struct tuples KEEP the EVM
+		// Compound-lvalue LHS (`(arr[i],arr[j])=(arr[j],arr[i])`, `(s.a,s.b)=
+		// (s.b,s.a)`, `(m[k1],m[k2])=(m[k2],m[k1])`): a parallel tuple assignment
+		// must evaluate the whole RHS BEFORE any store, but the lazy RHS instead
+		// reduces a swap to sequential `t2=t1; t1=t2` — both targets collapse to
+		// one source value (memory element: the write reassigns the whole backing
+		// blob local; storage element/field/mapping: the in-place box write is read
+		// back by the next lazy RHS read). Snapshot the RHS into temps to restore
+		// EVM parallel semantics. Covers array elements (ArrayType index), struct
+		// value fields (MemberAccess), and mapping elements (MappingType index),
+		// storage AND memory. Whole storage state-var/struct tuples KEEP the EVM
 		// sequential-overwrite quirk (swap_in_storage_overwrite) — their LHS
-		// components are Identifiers (not IndexAccess), so the ArrayType gate below
+		// components are Identifiers (not Index/MemberAccess), so the gate below
 		// naturally excludes them.
-		bool hasArrayElementLhs = false;
+		bool hasCompoundLvalueLhs = false;
 		if (_sourceLhs)
 		{
 			for (auto const& comp : _sourceLhs->components())
 			{
 				if (!comp) continue;
+				if (dynamic_cast<solidity::frontend::MemberAccess const*>(comp.get()))
+				{
+					hasCompoundLvalueLhs = true;
+					break;
+				}
 				auto const* ia = dynamic_cast<solidity::frontend::IndexAccess const*>(comp.get());
 				if (!ia) continue;
-				if (dynamic_cast<solidity::frontend::ArrayType const*>(
-						ia->baseExpression().annotation().type))
+				auto const* baseType = ia->baseExpression().annotation().type;
+				if (dynamic_cast<solidity::frontend::ArrayType const*>(baseType)
+					|| dynamic_cast<solidity::frontend::MappingType const*>(baseType))
 				{
-					hasArrayElementLhs = true;
+					hasCompoundLvalueLhs = true;
 					break;
 				}
 			}
 		}
-		if (allLocalVars || allScalars || hasArrayElementLhs || (hasSideEffectingRhs && lhsHasStateIndex))
+		if (allLocalVars || allScalars || hasCompoundLvalueLhs || (hasSideEffectingRhs && lhsHasStateIndex))
 		{
 			std::vector<awst::WType const*> tmpTypes;
 			auto newTuple = awst::makeTupleExpression(nullptr, _value->sourceLocation);
