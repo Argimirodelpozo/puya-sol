@@ -3404,3 +3404,32 @@ def test_bool_array_tuple(harness):
     assert harness.call(app, "structSwap(uint256,uint256)", 1, 0).abi_return == [0, 1]
     assert harness.call(app, "structRot3(uint256,uint256,uint256)", 1, 2, 3).abi_return == [3, 1, 2]
     assert harness.call(app, "mapSwap(uint256,uint256)", 5, 9).abi_return == [9, 5]
+
+
+def test_address_literal(harness):
+    """puyasolRegression/contracts/address_literal.sol — NOT an o.g. semantic test.
+
+    A bare 40-hex-digit address literal (`0x9BA1...`) is typed `address` by solc
+    but SolLiteral built it as a biguint IntegerConstant; nothing coerced
+    biguint→account, so any assignment/param/return into an `address` failed the
+    puya backend with "assignment target type differs from expression value type"
+    (real deployed tokens hardcode router/multisig/dead addresses). Fixed by a
+    biguint/uint64→account case in TypeCoercion::implicitNumericCast. Relational
+    asserts (repr-independent); exact-value correctness vs EVM is covered by the
+    differential fuzz.
+    """
+    # compile+deploy succeeding is the core guard (the bug was a compile error).
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/address_literal.sol")
+    router = harness.call(app, "getRouter()").abi_return   # state-var-init literal
+    dead = harness.call(app, "dead()").abi_return          # constant literal
+    local = harness.call(app, "localLit()").abi_return     # bare local literal
+    # each bare literal produces a distinct, non-empty address value
+    assert router and dead and local
+    assert router != dead and router != local and dead != local
+    # two literals through a ternary differ (and each is non-empty)
+    a = harness.call(app, "pick(bool)", True).abi_return
+    b = harness.call(app, "pick(bool)", False).abi_return
+    assert a and b and a != b
+    # (exact-value correctness vs EVM — isRouter/eqDead compares — covered by the
+    # tiny-fuzzing-oracle differential run on the same contract shape.)

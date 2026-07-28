@@ -46,6 +46,26 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 	}
 
+	// biguint/uint64 → account: a bare address literal (`0x9BA1…`, 40 hex digits)
+	// type-maps to biguint, but the assignment/param target is `account`; nothing
+	// coerced it, so puya rejected the store ("assignment target type differs").
+	// Right-align the integer into a 32-byte address (12 zero bytes ++ 20-byte
+	// value), mirroring the explicit `address(uint)` cast. Ubiquitous in real
+	// contracts (hardcoded router/multisig/fee/dead addresses).
+	if (_targetType == awst::WType::accountType()
+		&& (_expr->wtype == awst::WType::biguintType()
+			|| _expr->wtype == awst::WType::uint64Type()))
+	{
+		std::shared_ptr<awst::Expression> asBytes;
+		if (_expr->wtype == awst::WType::uint64Type())
+			asBytes = awst::makeItob(std::move(_expr), _loc);
+		else
+			asBytes = awst::makeAsBytes(std::move(_expr), _loc);
+		auto padded = awst::makeLeftPad(std::move(asBytes), 32, _loc);   // prepend 32 zero bytes
+		auto last32 = awst::makeExtractLastN(std::move(padded), 32, _loc);
+		return awst::makeReinterpretCast(std::move(last32), awst::WType::accountType(), _loc);
+	}
+
 	// uint64 → biguint: itob then reinterpret as biguint
 	if (_expr->wtype == awst::WType::uint64Type() && _targetType == awst::WType::biguintType())
 	{
