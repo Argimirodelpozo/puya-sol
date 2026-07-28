@@ -70,6 +70,18 @@ def _make_w3():
     return Web3(EthereumTesterProvider())
 
 
+def _rebytes(o):  # rebuild driver-tagged args: {"__b__":hex}→bytes, {"__addr__":i}→EVM addr
+    if isinstance(o, dict):
+        if set(o) == {"__b__"}:
+            return bytes.fromhex(o["__b__"])
+        if set(o) == {"__addr__"}:
+            return "0x" + int(o["__addr__"]).to_bytes(20, "big").hex()   # slot i → 20-byte addr
+        return {k: _rebytes(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [_rebytes(x) for x in o]
+    return o
+
+
 def main():
     req = json.load(sys.stdin)
     ver = req.get("solc_version", "0.8.26")
@@ -147,14 +159,17 @@ def main():
                for e in abi if e.get("type") == "event"]
         errs = [{"name": e["name"], "inputs": e["inputs"]}
                 for e in abi if e.get("type") == "error"]
-        json.dump({"contract": name, "functions": fns, "events": evs, "errors": errs},
+        ctor = next((e for e in abi if e.get("type") == "constructor"), None)
+        ctor_inputs = ctor["inputs"] if ctor else []      # so the driver can deploy with args
+        json.dump({"contract": name, "functions": fns, "events": evs, "errors": errs,
+                   "ctor_inputs": ctor_inputs},
                   sys.stdout)
         return
 
     w3 = _make_w3()
     acct = w3.eth.accounts[0]
     C = w3.eth.contract(abi=abi, bytecode=bytecode)
-    txh = C.constructor(*req.get("ctor_args", [])).transact({"from": acct})
+    txh = C.constructor(*_rebytes(req.get("ctor_args", []))).transact({"from": acct})
     addr = w3.eth.get_transaction_receipt(txh)["contractAddress"]
     inst = w3.eth.contract(address=addr, abi=abi)
 
@@ -249,17 +264,6 @@ def main():
                 vals.append(_canon_log_val(v, inp["type"]))
             out.append({"name": ev["name"], "args": vals})
         return out
-
-    def _rebytes(o):  # rebuild driver-tagged args: {"__b__":hex}→bytes, {"__addr__":i}→EVM addr
-        if isinstance(o, dict):
-            if set(o) == {"__b__"}:
-                return bytes.fromhex(o["__b__"])
-            if set(o) == {"__addr__"}:
-                return "0x" + int(o["__addr__"]).to_bytes(20, "big").hex()   # slot i → 20-byte addr
-            return {k: _rebytes(v) for k, v in o.items()}
-        if isinstance(o, list):
-            return [_rebytes(x) for x in o]
-        return o
 
     results = []
     for call in req["calls"]:

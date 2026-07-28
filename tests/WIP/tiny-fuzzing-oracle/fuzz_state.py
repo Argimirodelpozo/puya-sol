@@ -110,6 +110,42 @@ def _is_platform_limit(reason: str) -> bool:
             or "exceed" in m and "group" in m)
 
 
+def _ctor_deploy_args(inputs):
+    """One sensible deploy-time value per constructor param (address→marker), so
+    any real contract with a constructor deploys. NOT fuzzed — just a working
+    deployment. uint→large-but-valid (good for token supplies), int→moderate,
+    string→'T', bytes→zero, arrays→empty/defaults, tuple→recurse. The SAME values
+    go to both the EVM oracle (via ctor_args, _rebytes'd) and the AVM harness
+    (via _args_to_algo), so the two instances are constructed identically."""
+    def one(inp):
+        t = inp["type"]
+        m = _re.match(r'^(.*)\[(\d*)\]$', t)
+        if m:
+            elem = {**inp, "type": m.group(1)}
+            n = int(m.group(2)) if m.group(2) else 0     # T[]→[], T[N]→N defaults
+            return [one(elem) for _ in range(n)]
+        if t == "tuple":
+            return [one(c) for c in inp.get("components", [])]
+        if t == "address":
+            return {"__addr__": 1}
+        if t == "bool":
+            return False
+        if t == "string":
+            return "T"
+        if t == "bytes":
+            return {"__b__": ""}
+        mb = _re.match(r'^bytes(\d+)$', t)
+        if mb:
+            return {"__b__": "00" * int(mb.group(1))}
+        mi = _re.match(r'^(u?)int(\d*)$', t)
+        if mi:
+            bits = int(mi.group(2)) if mi.group(2) else 256
+            return min(2 ** bits - 1, 10 ** 24) if mi.group(1) == "u" \
+                else min(2 ** (bits - 1) - 1, 10 ** 24)
+        return 0
+    return [one(i) for i in inputs]
+
+
 def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
                       harness=None, quiet=False, solc_version="0.8.26",
                       evm_version="paris"):
@@ -146,6 +182,7 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
     mut = {f["sig"]: f.get("mut", "") for f in info["functions"]}
     has_output = {f["sig"]: bool(f["outputs"]) for f in info["functions"]}
     outs_by_sig = {f["sig"]: f["outputs"] for f in info["functions"]}
+    ctor_args = _ctor_deploy_args(info.get("ctor_inputs", []))   # deploy real contracts w/ constructor params
     calls, skipped = gen_state_calls(info["functions"], max_per_fn)
     if not calls:
         sys.exit("no fuzzable functions")
@@ -176,14 +213,15 @@ def run_stateful_diff(fixture, entry=None, max_per_fn=24, budget_pool=0,
         f"({n_mut} state-changing, {len(seq) - n_mut} reads)")
 
     say(f"[EVM] running stateful sequence…")
-    evm_resp = _oracle({**base, "stateful": True, "logs": True,
+    evm_resp = _oracle({**base, "stateful": True, "logs": True, "ctor_args": ctor_args,
                         "calls": [{"sig": s, "args": a} for s, a in seq]})
     evm = evm_resp["results"]
 
     if harness is None:
         ln = LocalNet(); harness = Harness(ln, HERE / "out_state")
     say("[AVM] compiling + deploying…")
-    app = harness.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool)
+    app = harness.compile_and_deploy(fixture, contract_name=entry, postinit_budget_pool=budget_pool,
+                                     ctor_args=_args_to_algo(ctor_args) or None)
     avm_events = getattr(app.app_spec, "events", None) or []
     solc_events = info.get("events", [])   # for AVM raw-log3 (asm-log) events (Solady-style)
     # msg.sender/deployer AND address(this) differ between the two chains by
