@@ -236,10 +236,13 @@ def main():
         w3 = Web3(Web3.EthereumTesterProvider(tester))
         a0 = w3.eth.accounts[0]
         _deployer[0] = a0
+        # 1 ETH per sender: they only ever pay gas (value-bearing txns are
+        # skipped). At 1000 ETH each the deployer's ~1M ETH ran dry past ~1000
+        # distinct senders, which killed every deep (>1500 txn) replay.
         for i, (addr, priv) in sender_acct.items():
             tester.add_account(priv)
             w3.eth.send_transaction({"from": a0, "to": addr,
-                                     "value": 10**21, "gas": 21000})
+                                     "value": 10**18, "gas": 21000})
 
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
