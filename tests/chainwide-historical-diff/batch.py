@@ -36,6 +36,11 @@ CANDIDATES = [
     ("eth.blockscout.com",      "0x4d224452801ACEd8B2F0aebE155379bb5D594381", "ape"),
     ("eth.blockscout.com",      "0x5026F006B85729a8b14553FAE6af249aD16c9aaB", "kizuna"),
     ("base.blockscout.com",     "0x6921B130D297cc43754afba22e5EAc0FBf8Db75b", "doginme"),
+    ("eth.blockscout.com",      "0x7D8146cf21e8D7cbe46054e01588207b51198729", "boba"),
+    ("eth.blockscout.com",      "0x12970E6868f88f6557B76120662c1B3E50A646bf", "ladys"),
+    ("base.blockscout.com",     "0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe", "higher"),
+    ("eth.blockscout.com",      "0xB90B2A35C65dBC466b04240097Ca756ad2005295", "bobo"),
+    ("eth.blockscout.com",      "0x6c22910c6F75F828B305e57c6a54855D8adeAbf8", "sats"),
 ]
 
 
