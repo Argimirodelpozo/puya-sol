@@ -75,8 +75,11 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
     if creation is None:
         # creation may pre-date the window only if pagination missed it — for
         # sort=asc page 1 it's always first; fall back to v2 address info.
-        ai = http_json(f"https://{host}/api/v2/addresses/{address}")
-        creation = {"creator": (ai.get("creator_address_hash") or "").lower(),
+        try:
+            ai = http_json(f"https://{host}/api/v2/addresses/{address}")
+        except Exception:
+            ai = {}
+        creation = {"creator": (ai.get("creator_address_hash") or "").lower() or None,
                     "hash": ai.get("creation_tx_hash"), "ts": 0, "block": 0}
 
     case = {
@@ -93,7 +96,7 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
     (case_dir / "prepared.sol").write_text(relax_pragma(sc["source_code"]))
     dump_json(case_dir / "case.json", case)
     print(f"[fetch] {tag}: {sc.get('name')} solc={comp[:12]} "
-          f"creator={creation['creator'][:10]}… txns={len(txns)} "
+          f"creator={(creation['creator'] or '?')[:10]}… txns={len(txns)} "
           f"ctor_hex={len(ctor_hex)//2}B → {case_dir}")
     return case
 

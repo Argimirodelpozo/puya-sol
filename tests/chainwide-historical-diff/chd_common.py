@@ -78,7 +78,10 @@ ZERO = "0x" + "00" * 20
 
 def build_registry(creator: str, sender_addrs: list[str], arg_addrs: list[str]) -> dict:
     """addr(lower) → symbol index. creator → 'C'; zero-addr → 'Z' (implicit)."""
-    creator = creator.lower()
+    # Creator can be unknown (creation txn outside the window / not exposed by
+    # the explorer); fall back to the first sender so `owner = msg.sender`
+    # contracts still line up, else the zero address.
+    creator = (creator or (sender_addrs[0] if sender_addrs else ZERO)).lower()
     reg = {"creator": creator, "senders": {}, "args": {}}
     i = 0
     for a in sender_addrs:
