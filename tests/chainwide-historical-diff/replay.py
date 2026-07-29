@@ -26,9 +26,15 @@ def _run(cmd, tag) -> str:
         if ln.startswith(("[evm]", "[avm]")):
             print("  " + ln)
     if p.returncode != 0:
+        lines = [l for l in out.strip().splitlines() if l.strip()]
         print(f"  !! {tag} leg failed (rc={p.returncode}):")
-        print("     " + "\n     ".join(out.strip().splitlines()[-6:]))
-        raise SystemExit(1)
+        print("     " + "\n     ".join(lines[-6:]))
+        # Carry the real cause into the batch summary (a bare exit code there is
+        # useless when triaging a whole sweep in the morning).
+        why = next((l for l in reversed(lines)
+                    if any(k in l for k in ("Error", "error", "revert", "assert",
+                                            "Exception", "failed"))), lines[-1] if lines else "")
+        raise SystemExit(f"{tag} leg failed: {why.strip()[:160]}")
     return out
 
 

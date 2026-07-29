@@ -64,7 +64,11 @@ def is_platform_limit(reason: str) -> bool:
             or "invalid box reference" in m or "unavailable box" in m
             or "unavailable resource" in m or "max_group_size" in m
             or ("exceed" in m and "group" in m)
-            or "extra_pages" in m or "8kb" in m)
+            or "extra_pages" in m or "8kb" in m
+            # app-account min-balance grows with box count on long replays;
+            # a resource shortfall, never a miscompile (avm_leg tops up, this
+            # is the backstop so it can never masquerade as a finding)
+            or "below min" in m or "min balance" in m or "overspend" in m)
 
 
 # ── Address registry (pure data; each leg derives its concrete forms) ──────

@@ -46,6 +46,29 @@ class _Acct:
         self.signer = None
 
 
+def ensure_app_funded(algod, dispenser, app_addr, min_spare=20_000_000,
+                      add=200_000_000):
+    """Top the app account up when its spendable margin runs low.
+
+    Every mapping entry the contract writes becomes a box, and each box RAISES
+    the app account's minimum balance. On long historical replays the MBR
+    eventually exceeds the deploy-time funding and every subsequent txn fails
+    with "balance N below min M" — which looks exactly like a mass miscompile
+    in the diff (it produced 664 bogus 'divergences' on a 1200-txn PEPE run
+    before this existed)."""
+    try:
+        info = algod.account_info(app_addr)
+    except Exception:
+        return False
+    if info.get("amount", 0) - info.get("min-balance", 0) >= min_spare:
+        return False
+    sp = algod.suggested_params()
+    txid = algod.send_transaction(
+        PaymentTxn(dispenser.address, sp, app_addr, add).sign(dispenser.private_key))
+    wait_for_confirmation(algod, txid, 6)
+    return True
+
+
 def algo_account(i: int) -> _Acct:
     seed = algo_sender_seed(i)
     sk = SigningKey(seed)
@@ -116,6 +139,8 @@ def main():
     app = h.deploy(artifacts, case["name"],
                    ctor_args=[resolve(m) for m in meta["ctor_args"]] or None)
     print(f"[avm] deployed {case['name']} app_id={app.app_id}")
+    ensure_app_funded(algod, dispenser, app.app_addr)     # headroom for box MBR
+    topups = 0
 
     # inverse fold: 32-byte content hex → registry symbol
     inv = {encoding.decode_address(dispenser.address).hex(): symbol("C"),
@@ -165,6 +190,8 @@ def main():
     snapshot_at = set(meta["snapshot_at"])
     for c in calls:
         i = c["i"]
+        if i % 25 == 0 and ensure_app_funded(algod, dispenser, app.app_addr):
+            topups += 1
         if not c.get("skip") and i not in ext_skips:
             sig, args = c["sig"], [resolve(a) for a in c["args"]]
             is_view = mut.get(sig, "") in ("view", "pure")
@@ -223,7 +250,7 @@ def main():
     n = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[avm] replayed {n} txns ({n_ok} ok, {n-n_ok} reverted, "
-          f"{len(platform_limits)} platform-limit)")
+          f"{len(platform_limits)} platform-limit, {topups} app top-up(s))")
 
 
 def _ctype(inp):
