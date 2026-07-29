@@ -30,6 +30,12 @@ CANDIDATES = [
     ("base.blockscout.com",     "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed", "degen"),
     ("eth.blockscout.com",      "0x163f8C2467924be0ae7B5347228CABF260318753", "wld"),
     ("gnosis.blockscout.com",   "0x177127622c4A00F3d409B75571e12cB3c8973d3c", "gno_cow"),
+    # probed eligible: single-file, ^0.8.x, verified
+    ("eth.blockscout.com",      "0xA35923162C49cF95e6BF26623385eb431ad920D3", "turbo"),
+    ("eth.blockscout.com",      "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", "bitcoin_hpos"),
+    ("eth.blockscout.com",      "0x4d224452801ACEd8B2F0aebE155379bb5D594381", "ape"),
+    ("eth.blockscout.com",      "0x5026F006B85729a8b14553FAE6af249aD16c9aaB", "kizuna"),
+    ("base.blockscout.com",     "0x6921B130D297cc43754afba22e5EAc0FBf8Db75b", "doginme"),
 ]
 
 
@@ -41,6 +47,9 @@ def main():
         i = argv.index("--max-txns"); max_txns = int(argv[i + 1]); del argv[i:i + 2]
     if "--only" in argv:
         i = argv.index("--only"); only = set(argv[i + 1].split(",")); del argv[i:i + 2]
+    refetch = "--refetch" in argv        # re-pull history (e.g. for a deeper window)
+    if refetch:
+        argv.remove("--refetch")
 
     summary = []
     for host, addr, tag in CANDIDATES:
@@ -49,7 +58,7 @@ def main():
         print(f"\n{'='*70}\n[batch] {tag}  ({host} {addr})\n{'='*70}", flush=True)
         entry = {"tag": tag, "host": host, "address": addr}
         try:
-            if not (CASES / tag / "case.json").exists():
+            if refetch or not (CASES / tag / "case.json").exists():
                 fetch_case(host, addr, tag, max_txns)
             rep = replay(tag, max_txns)
             print_report(rep)
