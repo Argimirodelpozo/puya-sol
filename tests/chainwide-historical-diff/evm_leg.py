@@ -1,0 +1,372 @@
+#!/usr/bin/env python
+"""EVM leg — runs under the tiny-fuzzing-oracle .evmvenv python.
+
+  .evmvenv/bin/python evm_leg.py <case_dir> '<json opts>'
+
+opts: {"max_txns": N, "skips": {"12": "reason"}, "snapshot_every": K,
+       "pin_time": true}
+
+Decodes the historical calldata via the verified ABI, builds the address
+registry, replays the sequence on a fresh eth-tester chain (multi-sender, real
+constructor args, best-effort historical timestamps), and converges the
+closed-world filter: any txn whose local status disagrees with its historical
+receipt status is skipped and the replay restarts (fast, in-process).
+
+Writes: registry.json, calls.json, evm_results.json into the case dir.
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from chd_common import (ZERO, arg_content20, build_registry, canon_value,
+                        dump_json, evm_sender_privkey, load_json, marker_for,
+                        symbol)
+
+import solcx
+from eth_abi import decode as abi_decode
+from eth_account import Account
+from eth_utils import event_abi_to_log_topic, function_abi_to_4byte_selector
+from web3 import Web3
+
+
+# ── ABI helpers ────────────────────────────────────────────────────────────
+
+def canonical_type(inp) -> str:
+    t = inp["type"]
+    if t.startswith("tuple"):
+        inner = "(" + ",".join(canonical_type(c) for c in inp.get("components", [])) + ")"
+        return inner + t[len("tuple"):]          # tuple[] / tuple[2] suffixes
+    return t
+
+
+def fn_sig(entry) -> str:
+    return entry["name"] + "(" + ",".join(canonical_type(i) for i in entry["inputs"]) + ")"
+
+
+def walk_addresses(value, inp, sink):
+    """Collect every address-typed leaf value into sink."""
+    t = inp["type"]
+    if t.endswith("]"):
+        elem = {**inp, "type": t[: t.rindex("[")]}
+        for x in value or []:
+            walk_addresses(x, elem, sink)
+    elif t == "tuple":
+        for x, c in zip(list(value), inp.get("components", [])):
+            walk_addresses(x, c, sink)
+    elif t == "address":
+        sink.append(value.lower())
+
+
+def markerize(value, inp, reg):
+    t = inp["type"]
+    if t.endswith("]"):
+        elem = {**inp, "type": t[: t.rindex("[")]}
+        return [markerize(x, elem, reg) for x in (value or [])]
+    if t == "tuple":
+        return [markerize(x, c, reg) for x, c in zip(list(value), inp.get("components", []))]
+    if t == "address":
+        return marker_for(reg, value)
+    if isinstance(value, (bytes, bytearray)):
+        return {"__b__": bytes(value).hex()}
+    return value
+
+
+# ── main ───────────────────────────────────────────────────────────────────
+
+def main():
+    case_dir = Path(sys.argv[1]).resolve()
+    opts = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+    max_txns = int(opts.get("max_txns", 10**9))
+    ext_skips = {int(k): v for k, v in (opts.get("skips") or {}).items()}
+    snap_every = int(opts.get("snapshot_every", 25))
+    pin_time = bool(opts.get("pin_time", True))
+
+    case = load_json(case_dir / "case.json")
+    abi = case["abi"]
+    txns = case["txns"][:max_txns]
+    creator = case["creation"]["creator"]
+
+    # function tables
+    sel_map, fns = {}, {}
+    for e in abi:
+        if e.get("type") == "function":
+            sig = fn_sig(e)
+            fns[sig] = e
+            sel_map[function_abi_to_4byte_selector(e).hex()] = (sig, e)
+    ctor = next((e for e in abi if e.get("type") == "constructor"), None)
+    ctor_inputs = (ctor or {}).get("inputs", [])
+    ctor_vals = []
+    if ctor_inputs and case["ctor_args_hex"]:
+        ctor_vals = list(abi_decode([canonical_type(i) for i in ctor_inputs],
+                                    bytes.fromhex(case["ctor_args_hex"])))
+
+    # ── decode pass + base skips ──────────────────────────────────────────
+    decoded = []                          # idx-aligned: (sig, entry, values) | None
+    base_skip = {}
+    for i, t in enumerate(txns):
+        if t["value"] > 0:
+            base_skip[i] = "value"; decoded.append(None); continue
+        inp = (t["input"] or "0x").removeprefix("0x")
+        if len(inp) < 8:
+            base_skip[i] = "no-calldata"; decoded.append(None); continue
+        hit = sel_map.get(inp[:8])
+        if not hit:
+            base_skip[i] = f"unknown-selector:{inp[:8]}"; decoded.append(None); continue
+        sig, entry = hit
+        try:
+            vals = list(abi_decode([canonical_type(x) for x in entry["inputs"]],
+                                   bytes.fromhex(inp[8:])))
+        except Exception as e:
+            base_skip[i] = f"decode-error:{str(e)[:40]}"; decoded.append(None); continue
+        decoded.append((sig, entry, vals))
+
+    # ── registry (stable across convergence: built from the whole window) ──
+    senders = []
+    for i, t in enumerate(txns):
+        if i not in base_skip:
+            senders.append(t["from"])
+    arg_addrs = []
+    for i, d in enumerate(decoded):
+        if d:
+            for v, inp in zip(d[2], d[1]["inputs"]):
+                walk_addresses(v, inp, arg_addrs)
+    for v, inp in zip(ctor_vals, ctor_inputs):
+        walk_addresses(v, inp, arg_addrs)
+    reg = build_registry(creator, senders, arg_addrs)
+    dump_json(case_dir / "registry.json", reg)
+
+    # ── concrete EVM forms + inverse fold ─────────────────────────────────
+    sender_acct = {}                                  # registry idx -> (addr, priv)
+    for a, i in reg["senders"].items():
+        acct = Account.from_key(evm_sender_privkey(i))
+        sender_acct[i] = (acct.address, evm_sender_privkey(i))
+
+    def concrete(marker):                             # marker -> EVM 0x address
+        # web3.py REQUIRES checksummed addresses — synthetic ones are built
+        # lowercase, so every produced address goes through to_checksum_address.
+        m = marker["__addr__"]
+        if m == "Z":
+            return Web3.to_checksum_address(ZERO)
+        if m == "C":
+            return None                               # filled per-run (accounts[0])
+        if isinstance(m, int) and m in sender_acct:
+            return Web3.to_checksum_address(sender_acct[m][0])
+        if isinstance(m, int):
+            return Web3.to_checksum_address("0x" + arg_content20(m).hex())
+        return Web3.to_checksum_address(ZERO)         # '?…' unmapped — shouldn't occur
+
+    def resolve(v):
+        if isinstance(v, dict) and set(v) == {"__addr__"}:
+            c = concrete(v)
+            return c if c is not None else _deployer[0]
+        if isinstance(v, dict) and set(v) == {"__b__"}:
+            return bytes.fromhex(v["__b__"])
+        if isinstance(v, list):
+            return [resolve(x) for x in v]
+        return v
+
+    # ── calls.json (transportable, marker-ised) ───────────────────────────
+    calls = []
+    for i, t in enumerate(txns):
+        d = decoded[i]
+        calls.append({
+            "i": i, "hash": t["hash"], "ts": t["ts"], "hist_ok": t["hist_ok"],
+            "sender": marker_for(reg, t["from"]) if d else None,
+            "sig": d[0] if d else None,
+            "args": [markerize(v, inp, reg) for v, inp in zip(d[2], d[1]["inputs"])] if d else None,
+            "skip": base_skip.get(i),
+        })
+    getters = [{"sig": fn_sig(e), "outputs": e["outputs"]}
+               for e in abi if e.get("type") == "function"
+               and not e["inputs"] and e["outputs"]
+               and e.get("stateMutability") in ("view", "pure")]
+    snapshot_at = sorted({i for i in range(len(txns)) if (i + 1) % snap_every == 0}
+                         | ({len(txns) - 1} if txns else set()))
+    meta = {"ctor_args": [markerize(v, inp, reg) for v, inp in zip(ctor_vals, ctor_inputs)],
+            "ctor_inputs": ctor_inputs,
+            "getters": getters, "snapshot_at": snapshot_at,
+            "fns": {s: {"inputs": e["inputs"], "outputs": e["outputs"]} for s, e in fns.items()},
+            "n": len(txns)}
+
+    # ── compile once with solcx ───────────────────────────────────────────
+    solcx.set_solc_version("0.8.26")
+    src = (case_dir / "prepared.sol").read_text()
+    out = solcx.compile_standard({
+        "language": "Solidity",
+        "sources": {"prepared.sol": {"content": src}},
+        "settings": {"evmVersion": "paris",
+                     "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object"]}}},
+    })
+    target = None
+    for by_name in out["contracts"].values():
+        for cname, cdata in by_name.items():
+            if cname == case["name"]:
+                target = cdata
+    assert target, f"contract {case['name']} not in solc output"
+    bytecode = target["evm"]["bytecode"]["object"]
+
+    # event topic map for log decoding
+    from web3._utils.events import get_event_data
+    topic_map = {}
+    for e in abi:
+        if e.get("type") == "event" and not e.get("anonymous"):
+            try:
+                topic_map["0x" + event_abi_to_log_topic(e).hex()] = e
+            except Exception:
+                pass
+
+    _deployer = [None]                                 # set per run
+
+    # ── one replay run ────────────────────────────────────────────────────
+    def run_once(skips):
+        from eth_tester import EthereumTester, PyEVMBackend
+        genesis = None
+        if pin_time and txns:
+            try:
+                from eth_tester.backends.pyevm.main import get_default_genesis_params
+                genesis = get_default_genesis_params(
+                    {"timestamp": max(1, case["creation"]["ts"] or txns[0]["ts"]) - 60})
+            except Exception:
+                genesis = None
+        tester = EthereumTester(PyEVMBackend(genesis_parameters=genesis)
+                                if genesis else PyEVMBackend())
+        w3 = Web3(Web3.EthereumTesterProvider(tester))
+        a0 = w3.eth.accounts[0]
+        _deployer[0] = a0
+        for i, (addr, priv) in sender_acct.items():
+            tester.add_account(priv)
+            w3.eth.send_transaction({"from": a0, "to": addr,
+                                     "value": 10**21, "gas": 21000})
+
+        C = w3.eth.contract(abi=abi, bytecode=bytecode)
+        txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
+            {"from": a0, "gas": 12_000_000})
+        caddr = w3.eth.get_transaction_receipt(txh)["contractAddress"]
+        inst = w3.eth.contract(address=caddr, abi=abi)
+
+        inv = {a0.lower(): symbol("C"), caddr.lower(): symbol("self"),
+               ZERO: symbol("Z")}
+        for a, i in reg["senders"].items():
+            inv[sender_acct[i][0].lower()] = symbol(i)
+        for a, i in reg["args"].items():
+            inv[("0x" + arg_content20(i).hex()).lower()] = symbol(i)
+
+        def fold(addr):
+            if addr is None:
+                return None
+            return inv.get(str(addr).lower(), f"?{str(addr).lower()}")
+
+        def decode_logs(receipt):
+            outl = []
+            for lg in receipt.get("logs", []):
+                topics = lg.get("topics", [])
+                if not topics:
+                    continue
+                t0 = topics[0]
+                t0 = "0x" + (t0.hex() if hasattr(t0, "hex") else str(t0)).removeprefix("0x")
+                ev = topic_map.get(t0) or topic_map.get(t0.lower())
+                if not ev:
+                    continue
+                try:
+                    data = get_event_data(w3.codec, ev, lg)["args"]
+                except Exception:
+                    continue
+                outl.append({"name": ev["name"],
+                             "args": [canon_value(data[i2["name"]], i2["type"], fold,
+                                                  i2.get("components"))
+                                      for i2 in ev["inputs"]]})
+            return outl
+
+        results, snapshots, mismatches = {}, {}, []
+        for c in calls:
+            i = c["i"]
+            if c["skip"] or i in skips:
+                pass
+            else:
+                sender = resolve(c["sender"])
+                if pin_time:
+                    try:
+                        head = w3.eth.get_block("latest")["timestamp"]
+                        if c["ts"] > head:
+                            tester.time_travel(c["ts"])
+                    except Exception:
+                        pass
+                fn_abi = fns[c["sig"]]
+                fn = inst.get_function_by_signature(c["sig"])
+                args = [resolve(a) for a in c["args"]]
+                try:
+                    ret = fn(*args).call({"from": sender, "gas": 8_000_000})
+                except Exception as e:
+                    results[i] = {"ok": False, "revert": str(e)[:160]}
+                    if c["hist_ok"]:
+                        # Historically succeeded but reverts locally => it read
+                        # state we don't have (external contract / balance).
+                        mismatches.append((i, "local-revert-but-hist-ok",
+                                           f"{c['sig']} {str(e)[:110]}"))
+                    continue
+                if not c["hist_ok"]:
+                    mismatches.append((i, "local-ok-but-hist-revert", c["sig"]))
+                    continue
+                txh2 = fn(*args).transact({"from": sender, "gas": 8_000_000})
+                rcpt = w3.eth.get_transaction_receipt(txh2)
+                if rcpt["status"] != 1:
+                    mismatches.append((i, "call-ok-transact-fail", c["sig"]))
+                    continue
+                outs = fn_abi["outputs"]
+                rets = list(ret) if len(outs) > 1 else ([ret] if outs else [])
+                results[i] = {"ok": True,
+                              "ret": [canon_value(v, o["type"], fold, o.get("components"))
+                                      for v, o in zip(rets, outs)],
+                              "logs": decode_logs(dict(rcpt))}
+            if i in meta["snapshot_at"]:
+                snap = {}
+                for g in meta["getters"]:
+                    try:
+                        gv = inst.get_function_by_signature(g["sig"])().call({"from": a0})
+                        vs = list(gv) if len(g["outputs"]) > 1 else [gv]
+                        snap[g["sig"]] = [canon_value(v, o["type"], fold, o.get("components"))
+                                          for v, o in zip(vs, g["outputs"])]
+                    except Exception as e:
+                        snap[g["sig"]] = f"REVERT:{str(e)[:60]}"
+                snapshots[str(i)] = snap
+        return results, snapshots, mismatches
+
+    # ── closed-world convergence ──────────────────────────────────────────
+    # BATCH convergence: one pass collects every mismatch, all get skipped at
+    # once, repeat until a pass is clean. (Per-mismatch restart was O(N) runs.)
+    # Results after the first mismatch in a pass may be state-forked, so we
+    # always take the results of the FINAL clean pass.
+    skips = dict(ext_skips)
+    iterations = 0
+    while True:
+        iterations += 1
+        results, snapshots, mismatches = run_once(skips)
+        if not mismatches or iterations >= 8:
+            break
+        for idx, why, detail in mismatches:
+            skips[idx] = f"closed-world:{why}"
+        shown = "; ".join(f"#{i}:{w}:{d[:70]}" for i, w, d in mismatches[:3])
+        print(f"[evm] converge pass {iterations}: +{len(mismatches)} skip(s)  {shown}",
+              file=sys.stderr)
+
+    for c in calls:                                    # persist final skip set
+        if c["i"] in skips and not c["skip"]:
+            c["skip"] = skips[c["i"]]
+    dump_json(case_dir / "calls.json", {"meta": meta, "calls": calls})
+    dump_json(case_dir / "evm_results.json",
+              {"iterations": iterations,
+               "skips": {str(k): v for k, v in skips.items()},
+               "results": {str(k): v for k, v in results.items()},
+               "snapshots": snapshots})
+    n_exec = len(results)
+    n_ok = sum(1 for r in results.values() if r["ok"])
+    print(f"[evm] replayed {n_exec}/{len(calls)} txns "
+          f"({n_ok} ok, {n_exec-n_ok} reverted, {len(calls)-n_exec} skipped, "
+          f"{iterations} iteration(s))")
+
+
+if __name__ == "__main__":
+    main()
