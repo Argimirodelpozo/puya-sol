@@ -247,7 +247,17 @@ def main():
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
             {"from": a0, "gas": 12_000_000})
-        caddr = w3.eth.get_transaction_receipt(txh)["contractAddress"]
+        rc = w3.eth.get_transaction_receipt(txh)
+        caddr = rc["contractAddress"]
+        if not caddr:
+            # No contract address => the constructor reverted or ran out of gas.
+            # Almost always an external dependency the ctor calls (router,
+            # oracle) that doesn't exist on a bare local chain. Report it as a
+            # scope skip rather than crashing on None downstream.
+            raise SystemExit(
+                f"constructor failed to deploy (status={rc.get('status')}, "
+                f"gasUsed={rc.get('gasUsed')}) — ctor likely calls an external "
+                f"contract; not replayable standalone")
         inst = w3.eth.contract(address=caddr, abi=abi)
 
         inv = {a0.lower(): symbol("C"), caddr.lower(): symbol("self"),
