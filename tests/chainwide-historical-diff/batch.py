@@ -41,6 +41,13 @@ CANDIDATES = [
     ("base.blockscout.com",     "0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe", "higher"),
     ("eth.blockscout.com",      "0xB90B2A35C65dBC466b04240097Ca756ad2005295", "bobo"),
     ("eth.blockscout.com",      "0x6c22910c6F75F828B305e57c6a54855D8adeAbf8", "sats"),
+    # ERC-721s (harvested): richer state than ERC-20 — ownership + per-token and
+    # operator approvals, tokenURI strings, and safeTransferFrom's receiver hook
+    # is a genuine external call.
+    ("base.blockscout.com",     "0x3b916B8f6A710e9240FF08c1dD646dD8E8ED9e1e", "e741"),
+    ("base.blockscout.com",     "0xa25e0AF7Dd580fcE7121FD78E95c3f3beE258e8f", "berries"),
+    ("base.blockscout.com",     "0x0982B3A5B24B2BD8eF74126E15Fca2DeCfD75A28", "heronft"),
+    ("base.blockscout.com",     "0x8DC80A209A3362f0586e6C116973Bb6908170c84", "builder"),
 ]
 
 

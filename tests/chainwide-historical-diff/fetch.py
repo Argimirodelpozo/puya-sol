@@ -10,6 +10,7 @@ Sources:
 """
 from __future__ import annotations
 
+import shutil
 import sys
 import time
 
@@ -24,10 +25,6 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
     sc = http_json(f"https://{host}/api/v2/smart-contracts/{address}")
     if not sc.get("source_code"):
         sys.exit(f"[fetch] {tag}: contract not verified on {host}")
-    if sc.get("additional_sources"):
-        sys.exit(f"[fetch] {tag}: MULTI-FILE verified source "
-                 f"({len(sc['additional_sources'])} extra files) — v1 supports "
-                 f"single-file only")
     comp = sc.get("compiler_version") or ""
     if "0.8." not in comp:
         sys.exit(f"[fetch] {tag}: compiler {comp} — v1 supports ^0.8.x only")
@@ -91,11 +88,36 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
         "abi": abi,
         "txns": txns,
     }
+    # Source layout. Single-file → prepared.sol. Multi-file (the majority of
+    # modern verifications: ~86% of Base's popular ERC-20s) → materialise the
+    # real file TREE plus the verification's remappings, which both legs can
+    # consume natively (solc standard-json sources+remappings; puya-sol
+    # --source per file + --import-path + --remapping).
     case_dir.mkdir(parents=True, exist_ok=True)
     (case_dir / "source.sol").write_text(sc["source_code"])
     (case_dir / "prepared.sol").write_text(relax_pragma(sc["source_code"]))
+    extra = sc.get("additional_sources") or []
+    if extra:
+        main_rel = sc.get("file_path") or "Main.sol"
+        tree = {main_rel: relax_pragma(sc["source_code"])}
+        for f in extra:
+            tree[f["file_path"]] = relax_pragma(f.get("source_code", ""))
+        src_root = case_dir / "src"
+        shutil.rmtree(src_root, ignore_errors=True)
+        for rel, content in tree.items():
+            p = src_root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content)
+        case["multifile"] = {
+            "main": main_rel,
+            "files": sorted(tree),
+            "remappings": [r.lstrip(":") for r in
+                           (sc.get("compiler_settings") or {}).get("remappings") or []],
+        }
     dump_json(case_dir / "case.json", case)
+    mf = case.get("multifile")
     print(f"[fetch] {tag}: {sc.get('name')} solc={comp[:12]} "
+          f"{'MULTI-FILE('+str(len(mf['files']))+' files)' if mf else 'single-file'} "
           f"creator={(creation['creator'] or '?')[:10]}… txns={len(txns)} "
           f"ctor_hex={len(ctor_hex)//2}B → {case_dir}")
     return case

@@ -193,13 +193,20 @@ def main():
 
     # ── compile once with solcx ───────────────────────────────────────────
     solcx.set_solc_version("0.8.26")
-    src = (case_dir / "prepared.sol").read_text()
-    out = solcx.compile_standard({
-        "language": "Solidity",
-        "sources": {"prepared.sol": {"content": src}},
-        "settings": {"evmVersion": "paris",
-                     "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object"]}}},
-    })
+    mf = case.get("multifile")
+    settings = {"evmVersion": "paris",
+                "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object"]}}}
+    if mf:
+        # Real file tree + the verification's own remappings — solc consumes
+        # both natively via standard-json.
+        root = case_dir / "src"
+        sources = {rel: {"content": (root / rel).read_text()} for rel in mf["files"]}
+        if mf["remappings"]:
+            settings["remappings"] = mf["remappings"]
+    else:
+        sources = {"prepared.sol": {"content": (case_dir / "prepared.sol").read_text()}}
+    out = solcx.compile_standard({"language": "Solidity", "sources": sources,
+                                  "settings": settings})
     target = None
     for by_name in out["contracts"].values():
         for cname, cdata in by_name.items():

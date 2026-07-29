@@ -392,6 +392,9 @@ def compile_sol(
     via_yul_behavior: bool = False,
     evm_version: str | None = None,
     timeout: int = 120,
+    extra_sources: list[Path] | None = None,
+    extra_import_dir: Path | None = None,
+    extra_remappings: list[str] | None = None,
 ) -> CompiledArtifacts:
     """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
 
@@ -401,7 +404,16 @@ def compile_sol(
     from multisource_splitter import split_multisource
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
+    if extra_sources is not None:
+        # Caller supplied a REAL multi-file tree (e.g. a verified on-chain
+        # contract fetched with its own remappings) rather than an upstream
+        # inline `==== Source: ====` fixture — use it as-is.
+        source_path = sol_path
+        all_sources = list(extra_sources)
+        import_dir = extra_import_dir
+        remappings = list(extra_remappings or [])
+    else:
+        source_path, all_sources, import_dir, remappings = split_multisource(sol_path)
 
     # Cache lookup: hash all source files + flags + compiler-stack signature.
     # On hit, copy artifacts straight into out_dir and skip the subprocess.

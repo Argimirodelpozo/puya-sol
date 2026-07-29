@@ -141,7 +141,15 @@ def main():
         return v
 
     # ── compile + deploy ──────────────────────────────────────────────────
-    artifacts = h.compile(case_dir / "prepared.sol")
+    mf = case.get("multifile")
+    if mf:
+        root = case_dir / "src"
+        artifacts = h.compile(root / mf["main"],
+                              extra_sources=[root / r for r in mf["files"]],
+                              extra_import_dir=root,
+                              extra_remappings=mf["remappings"])
+    else:
+        artifacts = h.compile(case_dir / "prepared.sol")
     app = h.deploy(artifacts, case["name"],
                    ctor_args=[resolve(m) for m in meta["ctor_args"]] or None)
     print(f"[avm] deployed {case['name']} app_id={app.app_id}")
