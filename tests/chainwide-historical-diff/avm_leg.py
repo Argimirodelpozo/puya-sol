@@ -102,15 +102,21 @@ def main():
     used = {c["sender"]["__addr__"] for c in calls
             if c.get("sender") and isinstance(c["sender"].get("__addr__"), int)}
     algod = ln.algod
+    # LocalNet mines a block PER TXN, so a once-fetched suggested_params goes
+    # stale after ~1000 payments ("txn dead: round X outside of Y--Z") — which
+    # broke every deep replay with >1000 senders. Refresh periodically.
     sp = algod.suggested_params()
-    last = None
+    last, sent = None, 0
     for i, a in accts.items():
         if i not in used:
             continue
+        if sent and sent % 200 == 0:
+            sp = algod.suggested_params()
         txn = PaymentTxn(dispenser.address, sp, a.address, 5_000_000)
         last = algod.send_transaction(txn.sign(dispenser.private_key))
+        sent += 1
     if last:
-        wait_for_confirmation(algod, last, 6)
+        wait_for_confirmation(algod, last, 8)
     print(f"[avm] funded {len(used)} sender account(s)")
 
     # ── marker → AVM concrete value ───────────────────────────────────────
