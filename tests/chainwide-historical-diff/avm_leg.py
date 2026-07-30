@@ -125,7 +125,7 @@ def read_avm_storage(algod, app_id, arc56, fold):
     return {"scalars": scalars}
 
 
-def read_avm_maps(algod, app_id, arc56, syms):
+def read_avm_maps(algod, app_id, arc56, syms, fold):
     """Box-backed mappings → {mapname: {symbol: value}}, KEY-ALIGNED with the
     EVM side so entries compare one-for-one.
 
@@ -147,21 +147,29 @@ def read_avm_maps(algod, app_id, arc56, syms):
     except Exception as e:
         return {"__error__": str(e)[:80]}
 
-    def val_of(name_b):
+    def val_of(name_b, vtype):
         try:
             raw = base64.b64decode(
                 (algod.application_box_by_name(app_id, name_b) or {}).get("value") or "")
         except Exception:
             return None
-        return int.from_bytes(raw, "big") if raw else 0
+        if not raw:
+            return 0
+        # An address-valued mapping must fold to a registry SYMBOL, or it reads
+        # as a huge raw integer and every entry looks divergent against the EVM
+        # side (which folds). Numeric types stay integers.
+        if str(vtype or "") in ("address", "account") and len(raw) == 32:
+            return fold(raw)
+        return int.from_bytes(raw, "big")
 
-    for mapname in bmaps:
+    for mapname, mspec in bmaps.items():
+        vtype = mspec.get("valueType")
         m = mapname.encode()
         got = {}
         for sym, k in syms.items():                       # depth 1
             nm = hashlib.sha256(k + m).digest()
             if nm in have:
-                v = val_of(nm)
+                v = val_of(nm, vtype)
                 if v:
                     got[sym] = v
         if not got:                                       # depth 2 (nested)
@@ -170,7 +178,7 @@ def read_avm_maps(algod, app_id, arc56, syms):
                 for s2, k2 in syms.items():
                     nm = hashlib.sha256(k2 + inner).digest()
                     if nm in have:
-                        v = val_of(nm)
+                        v = val_of(nm, vtype)
                         if v:
                             got[f"{s1}->{s2}"] = v
         if got:
@@ -379,7 +387,7 @@ def main():
         syms[symbol(_i)] = encoding.decode_address(_a.address)
     for _ad, _i in reg["args"].items():
         syms[symbol(_i)] = bytes(12) + arg_content20(_i)
-    storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms)
+    storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold)
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,

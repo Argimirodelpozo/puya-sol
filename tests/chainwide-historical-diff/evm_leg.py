@@ -191,6 +191,27 @@ def main():
             "fns": {s: {"inputs": e["inputs"], "outputs": e["outputs"]} for s, e in fns.items()},
             "n": len(txns)}
 
+    # Candidate nested-mapping pairs (owner -> spender), taken from what the
+    # replay actually does: each call's sender paired with its address args (plus
+    # itself). Bounds the nested probe to O(txns) reads instead of O(symbols^2).
+    pair_partners: dict = {}
+    def _syms_in(v):
+        if isinstance(v, dict) and set(v) == {"__addr__"}:
+            yield symbol(v["__addr__"])
+        elif isinstance(v, list):
+            for x in v:
+                yield from _syms_in(x)
+    for c in calls:
+        if not c.get("sender") or not c.get("args"):
+            continue
+        s_sym = symbol(c["sender"]["__addr__"])
+        partners = pair_partners.setdefault(s_sym, set())
+        partners.add(s_sym)
+        for a in c["args"]:
+            for t in _syms_in(a):
+                partners.add(t)
+                pair_partners.setdefault(t, set()).add(s_sym)
+
     # ── compile once with solcx ───────────────────────────────────────────
     solcx.set_solc_version("0.8.26")
     mf = case.get("multifile")
@@ -362,6 +383,7 @@ def main():
             syms = [(symbol("C"), a0), (symbol("Z"), ZERO)]
             syms += [(symbol(i), sender_acct[i][0]) for i in sender_acct]
             syms += [(symbol(i), "0x" + arg_content20(i).hex()) for i in reg["args"].values()]
+            sym_addr = dict(syms)
             out = {}
             for name, slot, depth, vlabel in maps:
                 got = {}
@@ -370,17 +392,28 @@ def main():
                     s1 = keccak(k + slot.to_bytes(32, "big"))
                     if depth == 1:
                         raw = bytes(w3.eth.get_storage_at(caddr, int.from_bytes(s1, "big")))
-                        v = _decode_slot_bytes(raw.rjust(32, b"\0"), vlabel, fold)
-                        if v:                              # mappings default 0/empty
-                            got[sym] = v
+                        # An unset entry is an all-zero slot. Test the RAW word,
+                        # not the decoded value: an address decodes to the SYMBOL
+                        # string "«Z»" for the zero address, which is truthy, so
+                        # truthiness reported every unset entry as a divergence
+                        # against the AVM side (which simply has no box).
+                        if any(raw):
+                            got[sym] = _decode_slot_bytes(
+                                raw.rjust(32, b"\0"), vlabel, fold)
                     else:                                  # nested: owner => spender
-                        for sym2, addr2 in syms:
+                        # Only pairs the replay actually touched. The full
+                        # cartesian product is O(n^2) STORAGE READS (450 symbols
+                        # => 200k reads), which made deep windows unrunnable.
+                        for sym2 in pair_partners.get(sym, ()):
+                            addr2 = sym_addr.get(sym2)
+                            if addr2 is None:
+                                continue
                             k2 = bytes.fromhex(str(addr2)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
                             s2 = keccak(k2 + s1)
                             raw = bytes(w3.eth.get_storage_at(caddr, int.from_bytes(s2, "big")))
-                            v = _decode_slot_bytes(raw.rjust(32, b"\0"), vlabel, fold)
-                            if v:
-                                got[f"{sym}->{sym2}"] = v
+                            if any(raw):       # unset slot => no entry
+                                got[f"{sym}->{sym2}"] = _decode_slot_bytes(
+                                    raw.rjust(32, b"\0"), vlabel, fold)
                 if got:
                     out[name] = got
             return out
