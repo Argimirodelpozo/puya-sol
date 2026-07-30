@@ -1402,6 +1402,26 @@ inline std::shared_ptr<Expression> makeKeyBytes(
 		auto cat = makeLeftPad(std::move(reinterpret), 32, loc);
 		return makeExtractLastN(std::move(cat), 32, std::move(loc));
 	}
+	// DYNAMIC keys (string/bytes) are the only variable-length key encoding, and a
+	// variable-length key sitting next to a variable-length prefix makes the hash
+	// preimage AMBIGUOUS:
+	//     sha256("xb" ++ "a") == sha256("x" ++ "ba")
+	// so `mapping(string=>..) a` and `.. ba` ALIASED THE SAME BOX — with keys the
+	// caller chooses, i.e. attacker-controlled (reproduced on LocalNet: writing
+	// ba["x"] changed a["xb"]). Hashing the key to a fixed 32 bytes makes EVERY key
+	// encoding fixed-width (8 or 32), so the field boundary can no longer be
+	// shifted and the split is unique — the same property that makes Solidity's
+	// `keccak256(h(k) . p)` safe with its fixed-width trailing slot.
+	// Fixed-width keys (uint64 → 8 B, biguint/address/bytesN → 32 B) were already
+	// unambiguous and are left untouched, so only string/bytes-keyed mappings pay
+	// the extra hash.
+	if (encType == WType::stringType() || encType == WType::bytesType())
+	{
+		auto raw = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
+		auto hashed = makeIntrinsicCall("sha256", WType::bytesType(), std::move(loc));
+		hashed->stackArgs.push_back(std::move(raw));
+		return hashed;
+	}
 	return makeReinterpretCast(std::move(value), WType::bytesType(), std::move(loc));
 }
 

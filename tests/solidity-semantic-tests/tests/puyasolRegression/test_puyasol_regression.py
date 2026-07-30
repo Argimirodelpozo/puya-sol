@@ -3433,3 +3433,33 @@ def test_address_literal(harness):
     assert a and b and a != b
     # (exact-value correctness vs EVM — isRouter/eqDead compares — covered by the
     # tiny-fuzzing-oracle differential run on the same contract shape.)
+
+
+def test_mapping_key_collision(harness):
+    """puyasolRegression/contracts/mapping_key_collision.sol — NOT an o.g. semantic test.
+
+    STORAGE ALIASING: mapping box keys are `sha256(keyBytes ++ prefix)`. A
+    string/bytes key encodes to RAW variable-length bytes and the prefix (mapping
+    name) is variable-length too, so the preimage had two valid splits —
+    `sha256("xb" ++ "a") == sha256("x" ++ "ba")` — and mappings `a` and `ba`
+    shared ONE box: writing ba["x"] changed a["xb"]. EVM keys these by distinct
+    slot numbers, so it was silent storage corruption, with the colliding key
+    chosen by the caller. Fixed by hashing DYNAMIC keys to a fixed 32 bytes in
+    awst::makeKeyBytes, making every key encoding fixed-width.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/mapping_key_collision.sol")
+    # string keys: "a"/"ba" with keys "xb"/"x" is the colliding pair
+    harness.call(app, "setA(string,uint256)", "xb", 42)
+    assert harness.call(app, "getA(string)", "xb").abi_return == 42
+    assert harness.call(app, "getBa(string)", "x").abi_return == 0, "a/ba aliased"
+    harness.call(app, "setBa(string,uint256)", "x", 7)
+    assert harness.call(app, "getA(string)", "xb").abi_return == 42, "ba write hit a"
+    assert harness.call(app, "getBa(string)", "x").abi_return == 7
+    # same shape with bytes keys ("c" is a suffix of "bc")
+    harness.call(app, "setC(bytes,uint256)", b"\x01\x02", 5)
+    assert harness.call(app, "getC(bytes)", b"\x01\x02").abi_return == 5
+    assert harness.call(app, "getBc(bytes)", b"\x02").abi_return == 0, "c/bc aliased"
+    harness.call(app, "setBc(bytes,uint256)", b"\x02", 9)
+    assert harness.call(app, "getC(bytes)", b"\x01\x02").abi_return == 5
+    assert harness.call(app, "getBc(bytes)", b"\x02").abi_return == 9
