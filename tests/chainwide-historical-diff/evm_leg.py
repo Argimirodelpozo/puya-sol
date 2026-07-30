@@ -195,7 +195,8 @@ def main():
     solcx.set_solc_version("0.8.26")
     mf = case.get("multifile")
     settings = {"evmVersion": "paris",
-                "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object"]}}}
+                "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object",
+                                               "storageLayout"]}}}
     if mf:
         # Real file tree + the verification's own remappings — solc consumes
         # both natively via standard-json.
@@ -224,6 +225,54 @@ def main():
                 topic_map["0x" + event_abi_to_log_topic(e).hex()] = e
             except Exception:
                 pass
+
+    layout = target.get("storageLayout") or {"storage": [], "types": {}}
+
+    def _decode_slot_bytes(raw: bytes, label: str, fold):
+        if label == "address" or label.startswith("contract "):
+            return fold("0x" + raw[-20:].hex())
+        if label == "bool":
+            return bool(raw[-1] if raw else 0)
+        if label.startswith("uint"):
+            return int.from_bytes(raw, "big")
+        if label.startswith("int"):
+            return int.from_bytes(raw, "big", signed=True)
+        if label.startswith("bytes"):
+            return "0x" + raw.hex()
+        if label.startswith("enum"):
+            return int.from_bytes(raw, "big")
+        return "0x" + raw.hex()
+
+    # SCALAR state vars: bounded (a handful of slots), so reading them after
+    # every txn is cheap and yields true per-txn DELTAS — which localise a
+    # divergence to the exact txn that caused it, and catch corruption in
+    # variables that have NO public getter (invisible to getter snapshots).
+    scalars = []
+    for e in layout.get("storage") or []:
+        t = (layout.get("types") or {}).get(e["type"], {})
+        label = t.get("label", "")
+        if t.get("encoding") != "inplace":
+            continue                                   # string/bytes/dynamic
+        if label.startswith(("mapping", "struct")) or label.endswith("]"):
+            continue                                   # handled as maps below
+        scalars.append((e["label"], int(e["slot"]), int(e.get("offset", 0)),
+                        int(t.get("numberOfBytes", 32)), label))
+
+    # MAPPINGS with scalar values: read only the keys the registry knows about
+    # (bounded by the window's senders/args) — never an enumeration.
+    maps = []
+    for e in layout.get("storage") or []:
+        t = (layout.get("types") or {}).get(e["type"], {})
+        label = t.get("label", "")
+        if not label.startswith("mapping(address =>"):
+            continue
+        vt = (layout.get("types") or {}).get(t.get("value"), {})
+        inner = vt.get("label", "")
+        if inner.startswith("mapping(address =>"):
+            vt2 = (layout.get("types") or {}).get(vt.get("value"), {})
+            maps.append((e["label"], int(e["slot"]), 2, vt2.get("label", "uint256")))
+        elif not inner.startswith(("mapping", "struct")) and not inner.endswith("]"):
+            maps.append((e["label"], int(e["slot"]), 1, inner))
 
     _deployer = [None]                                 # set per run
 
@@ -300,7 +349,44 @@ def main():
                                       for i2 in ev["inputs"]]})
             return outl
 
+        def read_scalars():
+            out = {}
+            for name, slot, off, nb, label in scalars:
+                w = bytes(w3.eth.get_storage_at(caddr, slot)).rjust(32, b"\0")
+                out[name] = _decode_slot_bytes(w[32 - off - nb:32 - off], label, fold)
+            return out
+
+        def read_maps():
+            """{mapname: {symbol: value}} over registry-known address keys only."""
+            from eth_utils import keccak
+            syms = [(symbol("C"), a0), (symbol("Z"), ZERO)]
+            syms += [(symbol(i), sender_acct[i][0]) for i in sender_acct]
+            syms += [(symbol(i), "0x" + arg_content20(i).hex()) for i in reg["args"].values()]
+            out = {}
+            for name, slot, depth, vlabel in maps:
+                got = {}
+                for sym, addr in syms:
+                    k = bytes.fromhex(str(addr)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
+                    s1 = keccak(k + slot.to_bytes(32, "big"))
+                    if depth == 1:
+                        raw = bytes(w3.eth.get_storage_at(caddr, int.from_bytes(s1, "big")))
+                        v = _decode_slot_bytes(raw.rjust(32, b"\0"), vlabel, fold)
+                        if v:                              # mappings default 0/empty
+                            got[sym] = v
+                    else:                                  # nested: owner => spender
+                        for sym2, addr2 in syms:
+                            k2 = bytes.fromhex(str(addr2)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
+                            s2 = keccak(k2 + s1)
+                            raw = bytes(w3.eth.get_storage_at(caddr, int.from_bytes(s2, "big")))
+                            v = _decode_slot_bytes(raw.rjust(32, b"\0"), vlabel, fold)
+                            if v:
+                                got[f"{sym}->{sym2}"] = v
+                if got:
+                    out[name] = got
+            return out
+
         results, snapshots, mismatches = {}, {}, []
+        storage_delta, prev_scalars = {}, read_scalars()
         for c in calls:
             i = c["i"]
             if c["skip"] or i in skips:
@@ -352,7 +438,15 @@ def main():
                     except Exception as e:
                         snap[g["sig"]] = f"REVERT:{str(e)[:60]}"
                 snapshots[str(i)] = snap
-        return results, snapshots, mismatches
+            if i in results:                        # only executed txns can change state
+                cur = read_scalars()
+                d = {k: [prev_scalars.get(k), v] for k, v in cur.items()
+                     if prev_scalars.get(k) != v}
+                if d:
+                    storage_delta[str(i)] = d
+                prev_scalars = cur
+        return (results, snapshots, mismatches, storage_delta,
+                {"scalars": read_scalars(), "maps": read_maps()})
 
     # ── closed-world convergence ──────────────────────────────────────────
     # BATCH convergence: one pass collects every mismatch, all get skipped at
@@ -363,7 +457,7 @@ def main():
     iterations = 0
     while True:
         iterations += 1
-        results, snapshots, mismatches = run_once(skips)
+        results, snapshots, mismatches, sdelta, smaps = run_once(skips)
         if not mismatches or iterations >= 8:
             break
         for idx, why, detail in mismatches:
@@ -380,7 +474,9 @@ def main():
               {"iterations": iterations,
                "skips": {str(k): v for k, v in skips.items()},
                "results": {str(k): v for k, v in results.items()},
-               "snapshots": snapshots})
+               "snapshots": snapshots,
+               "storage_delta": sdelta,
+               "storage": smaps})
     n_exec = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[evm] replayed {n_exec}/{len(calls)} txns "

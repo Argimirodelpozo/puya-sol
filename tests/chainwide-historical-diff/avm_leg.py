@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import base64
 import json
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -67,6 +69,88 @@ def ensure_app_funded(algod, dispenser, app_addr, min_spare=20_000_000,
         PaymentTxn(dispenser.address, sp, app_addr, add).sign(dispenser.private_key))
     wait_for_confirmation(algod, txid, 6)
     return True
+
+
+def _dec_avm(raw, vtype, fold):
+    """Decode an AVM state value using the arc56-declared Solidity type."""
+    t = str(vtype or "")
+    if isinstance(raw, int):
+        return raw
+    b = raw or b""
+    if t in ("address", "account"):
+        return fold(b)
+    if t in ("AVMString", "string"):
+        return b.decode("utf-8", "replace")
+    if t in ("bool",):
+        return bool(int.from_bytes(b, "big")) if b else False
+    if t.startswith(("uint", "int", "AVMUint", "biguint")):
+        return int.from_bytes(b, "big") if b else 0
+    if len(b) <= 32:
+        # AVMBytes-declared numerics (the common case for puya-sol state): a
+        # short blob is the big-endian value, so decode it as an int to be
+        # comparable with the EVM slot read.
+        return int.from_bytes(b, "big") if b else 0
+    return "0x" + b.hex()
+
+
+def read_avm_storage(algod, app_id, arc56, fold):
+    """AVM state → {scalars: {var: value}, maps: {mapname: {symbol: value}}}.
+
+    The arc56 spec declares state BY SOLIDITY VARIABLE NAME (global keys and box
+    map prefixes), which is what makes name-keyed diffing against solc's
+    storageLayout possible across two totally different storage models.
+    Reading it also covers variables with NO public getter."""
+    st = (arc56 or {}).get("state") or {}
+    gkeys = (st.get("keys") or {}).get("global") or {}
+    bmaps = (st.get("maps") or {}).get("box") or {}
+    by_key = {base64.b64decode(v["key"]): (name, v.get("valueType"))
+              for name, v in gkeys.items() if v.get("key")}
+
+    scalars = {}
+    try:
+        info = algod.application_info(app_id)
+        for kv in (info.get("params") or {}).get("global-state") or []:
+            k = base64.b64decode(kv["key"])
+            if k not in by_key:
+                continue
+            name, vt = by_key[k]
+            val = kv.get("value") or {}
+            raw = (val.get("uint") if val.get("type") == 2
+                   else base64.b64decode(val.get("bytes") or ""))
+            scalars[name] = _dec_avm(raw, vt, fold)
+    except Exception as e:
+        scalars["__error__"] = str(e)[:80]
+
+    # Box-backed mappings: enumerate once (not per txn) and split each box key
+    # into declared prefix + key suffix, so entries align with the EVM side by
+    # registry SYMBOL without needing to know puya-sol's key encoding upfront.
+    maps = {}
+    pref = {base64.b64decode(v["prefix"]): name
+            for name, v in bmaps.items() if v.get("prefix")}
+    try:
+        for bx in (algod.application_boxes(app_id).get("boxes") or []):
+            name_b = base64.b64decode(bx["name"])
+            hit = next(((p, n) for p, n in pref.items() if name_b.startswith(p)), None)
+            if not hit:
+                continue
+            p, mapname = hit
+            try:
+                v = algod.application_box_by_name(app_id, name_b)
+                raw = base64.b64decode(v.get("value") or "")
+            except Exception:
+                continue
+            val = int.from_bytes(raw, "big") if raw else 0
+            if val:
+                # puya-sol derives box names by HASHING the mapping key, so the
+                # suffix can't be folded back to a registry symbol — key-by-key
+                # alignment with EVM slots needs that derivation replicated
+                # (TODO). Record the map's shape, which is still checkable.
+                e = maps.setdefault(mapname, {"entries": 0, "sum": 0})
+                e["entries"] += 1
+                e["sum"] += val
+    except Exception as e:
+        maps["__error__"] = str(e)[:80]
+    return {"scalars": scalars, "maps": maps}
 
 
 def algo_account(i: int) -> _Acct:
@@ -143,10 +227,14 @@ def main():
     # ── compile + deploy ──────────────────────────────────────────────────
     mf = case.get("multifile")
     if mf:
-        root = case_dir / "src"
-        artifacts = h.compile(root / mf["main"],
-                              extra_sources=[root / r for r in mf["files"]],
-                              extra_import_dir=root,
+        # compile_sol REMOVES import_dir when it finishes (normally a temp dir
+        # made by the upstream splitter), so hand it a throwaway COPY — passing
+        # cases/<tag>/src directly makes the compiler delete the fetched sources.
+        tmp_root = Path(tempfile.mkdtemp(prefix="chd_src_"))
+        shutil.copytree(case_dir / "src", tmp_root, dirs_exist_ok=True)
+        artifacts = h.compile(tmp_root / mf["main"],
+                              extra_sources=[tmp_root / r for r in mf["files"]],
+                              extra_import_dir=tmp_root,
                               extra_remappings=mf["remappings"])
     else:
         artifacts = h.compile(case_dir / "prepared.sol")
@@ -256,9 +344,14 @@ def main():
                     snap[g["sig"]] = f"ERROR:{str(e)[:60]}"
             snapshots[str(i)] = snap
 
+    arc56 = {}
+    for cand in sorted((case_dir / "out_avm").glob(f"{case['name']}.arc56.json")):
+        arc56 = load_json(cand)
+    storage = read_avm_storage(algod, app.app_id, arc56, fold)
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,
+               "storage": storage,
                "platform_limits": {str(k): v for k, v in platform_limits.items()},
                "app_id": app.app_id})
     n = len(results)

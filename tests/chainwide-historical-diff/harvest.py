@@ -78,8 +78,11 @@ def main():
                 sc = http_json(f"https://{host}/api/v2/smart-contracts/{addr}", timeout=30)
             except Exception:
                 continue
-            if sc.get("additional_sources") or not sc.get("source_code"):
-                continue                                  # multi-file: v1 unsupported
+            if not sc.get("source_code"):
+                continue
+            nfiles = 1 + len(sc.get("additional_sources") or [])
+            if nfiles > 1 and "--multifile" not in argv:
+                continue          # multi-file now supported; opt in explicitly
             comp = sc.get("compiler_version") or comp
             if "0.8." not in comp:
                 continue
@@ -121,9 +124,9 @@ def main():
                 n = 0
             if n < min_txns:
                 continue
-            hits.append((addr, sc.get("name"), comp, n, dep_args, calls_out))
+            hits.append((addr, sc.get("name"), comp, n, dep_args, nfiles))
             print(f"  {addr} {str(sc.get('name'))[:22]:<22} solc={comp[:10]} "
-                  f"txns={n:<7} ctor_addr={dep_args} calls_out={calls_out}", flush=True)
+                  f"txns={n:<7} files={nfiles} ctor_addr={dep_args}", flush=True)
         npp = d.get("next_page_params")
         if not npp:
             break
@@ -134,9 +137,9 @@ def main():
         time.sleep(0.4)
 
     print(f"\n[harvest] {len(hits)} candidate(s) from {len(seen)} listed\n")
-    for addr, name, comp, n, dep, out in sorted(hits, key=lambda h: -h[3]):
+    for addr, name, comp, n, dep, nf in sorted(hits, key=lambda h: -h[3]):
         print(f'    ("{host}", "{addr}", "{str(name).lower()[:14]}"),'
-              f'   # {n} txns, ctor_addr={dep}, calls_out={out}')
+              f'   # {n} txns, {nf} files, ctor_addr={dep}')
 
 
 if __name__ == "__main__":

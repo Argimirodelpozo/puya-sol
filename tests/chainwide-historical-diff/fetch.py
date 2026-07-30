@@ -99,9 +99,12 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
     extra = sc.get("additional_sources") or []
     if extra:
         main_rel = sc.get("file_path") or "Main.sol"
+        def _rel(p):                     # may be absolute in the API payload
+            return str(p).lstrip("/") or "Main.sol"
+        main_rel = _rel(main_rel)
         tree = {main_rel: relax_pragma(sc["source_code"])}
         for f in extra:
-            tree[f["file_path"]] = relax_pragma(f.get("source_code", ""))
+            tree[_rel(f["file_path"])] = relax_pragma(f.get("source_code", ""))
         src_root = case_dir / "src"
         shutil.rmtree(src_root, ignore_errors=True)
         for rel, content in tree.items():

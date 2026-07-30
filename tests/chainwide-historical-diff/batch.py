@@ -48,6 +48,16 @@ CANDIDATES = [
     ("base.blockscout.com",     "0xa25e0AF7Dd580fcE7121FD78E95c3f3beE258e8f", "berries"),
     ("base.blockscout.com",     "0x0982B3A5B24B2BD8eF74126E15Fca2DeCfD75A28", "heronft"),
     ("base.blockscout.com",     "0x8DC80A209A3362f0586e6C116973Bb6908170c84", "builder"),
+    # MULTI-FILE (harvested, 3→41 files): the class that was unsupported until
+    # the tree+remappings path landed. ~86% of popular Base ERC-20s look like this.
+    ("base.blockscout.com",     "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf", "venice"),   # 3 files
+    ("base.blockscout.com",     "0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C", "bridgetok"), # 7
+    ("base.blockscout.com",     "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c", "opmint9"),   # 9
+    ("base.blockscout.com",     "0x98d0baa52b2D063E780DE12F615f963Fe8537553", "kaito"),     # 16
+    ("base.blockscout.com",     "0xC96dE26018A54D51c097160568752c4E3BD6C364", "fbtc"),      # 21
+    ("base.blockscout.com",     "0x3055913c90Fcc1A6CE9a358911721eEb942013A1", "cakeoft"),   # 23
+    ("base.blockscout.com",     "0x6985884C4392D348587B19cb9eAAf157F13271cd", "zro"),       # 39
+    ("base.blockscout.com",     "0x58538e6A46E07434d7E7375Bc268D3cb839C0133", "enaoft"),    # 41
 ]
 
 

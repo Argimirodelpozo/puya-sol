@@ -37,7 +37,8 @@ def diff_case(case_dir: Path) -> dict:
 
     er, ar = evm["results"], avm["results"]
     findings = {"status_div": [], "value_div": [], "event_div": [],
-                "event_noise": [], "snapshot_div": [], "snapshot_noise": []}
+                "event_noise": [], "snapshot_div": [], "snapshot_noise": [],
+                "storage_noise": []}
 
     by_i = {c["i"]: c for c in calls}
     for k in sorted(set(er) | set(ar), key=int):
@@ -80,6 +81,51 @@ def diff_case(case_dir: Path) -> dict:
             findings[bucket].append({"after_txn": int(k), "getter": sig,
                                      "evm": ev_, "avm": av_})
 
+    # ── storage diffing (by Solidity variable NAME, across two storage models) ──
+    es, as_ = evm.get("storage") or {}, avm.get("storage") or {}
+    findings["storage_div"], findings["storage_map_div"] = [], []
+    delta = evm.get("storage_delta") or {}
+
+    def _last_change(var):
+        """Localise: the last txn whose EVM delta touched this variable."""
+        hits = [int(i) for i, d in delta.items() if var in d]
+        return max(hits) if hits else None
+
+    e_sc, a_sc = es.get("scalars") or {}, as_.get("scalars") or {}
+    for var in sorted(set(e_sc) | set(a_sc)):
+        if var.startswith("__"):
+            continue
+        ev_, av_ = e_sc.get(var), a_sc.get(var)
+        if ev_ == av_:
+            continue
+        # A var only the EVM side reports is usually a puya-sol representation
+        # choice (e.g. immutables/constants not materialised as app state), not
+        # a value divergence — flag separately from a genuine value mismatch.
+        bucket = "storage_div" if (var in e_sc and var in a_sc) else "storage_noise"
+        findings.setdefault(bucket, []).append(
+            {"var": var, "evm": ev_, "avm": av_, "last_changed_txn": _last_change(var)})
+
+    e_m, a_m = es.get("maps") or {}, as_.get("maps") or {}
+    # Guard against a VACUOUS pass: if the EVM side found mapping state but the
+    # AVM side reported none, the comparison did not happen — surface that
+    # explicitly instead of silently counting zero divergences.
+    if e_m and not {k for k in a_m if not k.startswith("__")}:
+        findings["storage_maps_unavailable"] = [
+            {"evm_maps": sorted(e_m), "avm_maps": sorted(a_m),
+             "note": "AVM box enumeration returned nothing — mapping storage NOT compared"}]
+    for m in sorted(set(e_m) & set(a_m)):
+        if m.startswith("__"):
+            continue
+        ee, aa = e_m.get(m) or {}, a_m.get(m) or {}
+        # EVM side is keyed by symbol; AVM side can only report shape (its box
+        # names are hashed). Compare the shared invariants: entry count + sum.
+        e_shape = {"entries": len(ee), "sum": sum(v for v in ee.values()
+                                                 if isinstance(v, int))}
+        a_shape = {"entries": aa.get("entries", 0), "sum": aa.get("sum", 0)}
+        if e_shape != a_shape:
+            findings["storage_map_div"].append({"map": m, "evm": e_shape,
+                                               "avm": a_shape})
+
     skips = {}
     for c in calls:
         if c.get("skip"):
@@ -99,16 +145,23 @@ def diff_case(case_dir: Path) -> dict:
 
 def print_report(rep: dict):
     c = rep["counts"]
-    real = c["status_div"] + c["value_div"] + c["event_div"] + c["snapshot_div"]
+    real = sum(c.get(k, 0) for k in ("status_div", "value_div", "event_div",
+                                     "snapshot_div", "storage_div", "storage_map_div"))
     print(f"\n=== {rep['tag']} ({rep['name']}) — {rep['replayed']}/{rep['txns_in_window']} "
           f"txns replayed on both legs ===")
     print(f"  skips: {rep['skips'] or '{}'}  | avm platform-limits: {rep['platform_limits']}")
-    for k in ("status_div", "value_div", "event_div", "snapshot_div"):
+    for k in ("status_div", "value_div", "event_div", "snapshot_div",
+              "storage_div", "storage_map_div"):
         if c[k]:
             print(f"  ❌ {k}: {c[k]}")
             for f in rep["findings"][k][:5]:
                 print(f"       {f}")
-    for k in ("event_noise", "snapshot_noise"):
+    for k in ("event_noise", "snapshot_noise", "storage_noise"):
+        pass
+    for k in ("storage_maps_unavailable",):
+        if c.get(k):
+            print(f"  ⚠️  {k}: mapping storage was NOT diffed (see report)")
+    for k in ("event_noise", "snapshot_noise", "storage_noise"):
         if c[k]:
             print(f"  · {k} (known EVM/AVM difference): {c[k]}")
     print("  ✅ no divergences" if real == 0 else f"  ❌ {real} REAL divergence(s)")
