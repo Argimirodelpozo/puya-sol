@@ -106,6 +106,17 @@ def diff_case(case_dir: Path) -> dict:
             {"var": var, "evm": ev_, "avm": av_, "last_changed_txn": _last_change(var)})
 
     e_m, a_m = es.get("maps") or {}, as_.get("maps") or {}
+    declared = set(a_m.pop("__declared__", []) or [])
+    # COVERAGE, not correctness: a mapping the contract declares but that the EVM
+    # side never read is compared against NOTHING, which would otherwise be
+    # indistinguishable from "clean". op_gov/_balances and opmint9/_balances were
+    # silently skipped this way (namespaced ERC-7201 storage / non-address keys /
+    # array-or-struct values, which the EVM storageLayout walk doesn't cover).
+    uncompared = sorted(declared - (set(e_m) & set(a_m)))
+    if uncompared:
+        findings["storage_maps_uncompared"] = [
+            {"maps": uncompared,
+             "note": "declared by the contract but NOT diffed — no coverage here"}]
     # Guard against a VACUOUS pass: if the EVM side found mapping state but the
     # AVM side reported none, the comparison did not happen — surface that
     # explicitly instead of silently counting zero divergences.
@@ -156,9 +167,10 @@ def print_report(rep: dict):
                 print(f"       {f}")
     for k in ("event_noise", "snapshot_noise", "storage_noise"):
         pass
-    for k in ("storage_maps_unavailable",):
+    for k in ("storage_maps_unavailable", "storage_maps_uncompared"):
         if c.get(k):
-            print(f"  ⚠️  {k}: mapping storage was NOT diffed (see report)")
+            det = rep["findings"][k][0]
+            print(f"  ⚠️  {k}: {det.get('maps', 'mapping storage')} not diffed (see report)")
     for k in ("event_noise", "snapshot_noise", "storage_noise"):
         if c[k]:
             print(f"  · {k} (known EVM/AVM difference): {c[k]}")

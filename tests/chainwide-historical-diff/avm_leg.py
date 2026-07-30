@@ -140,7 +140,9 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
     `syms` is {symbol: 32-byte AVM content} for every registry address.
     """
     bmaps = ((arc56 or {}).get("state") or {}).get("maps", {}).get("box") or {}
-    out = {}
+    # Report what the contract DECLARES, so the differ can flag any mapping that
+    # ends up uncompared instead of silently counting it as clean.
+    out = {"__declared__": sorted(bmaps)}
     try:
         have = {base64.b64decode(b["name"])
                 for b in (algod.application_boxes(app_id).get("boxes") or [])}
@@ -181,8 +183,7 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
                         v = val_of(nm, vtype)
                         if v:
                             got[f"{s1}->{s2}"] = v
-        if got:
-            out[mapname] = got
+        out[mapname] = got          # keep empty maps: see evm_leg read_maps
     return out
 
 

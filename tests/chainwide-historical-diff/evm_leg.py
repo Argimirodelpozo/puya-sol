@@ -414,8 +414,11 @@ def main():
                             if any(raw):       # unset slot => no entry
                                 got[f"{sym}->{sym2}"] = _decode_slot_bytes(
                                     raw.rjust(32, b"\0"), vlabel, fold)
-                if got:
-                    out[name] = got
+                # Record even when empty: an empty map that WAS read is a real
+                # comparison (both sides empty), whereas a missing entry means no
+                # coverage at all. Conflating them hid that op_gov/_balances was
+                # never diffed.
+                out[name] = got
             return out
 
         results, snapshots, mismatches = {}, {}, []
