@@ -62,7 +62,33 @@ int main(int _argc, char* _argv[])
 	logger.info("Source: " + sourceFile);
 
 	fs::path sourceDir = sourceAbsPath.parent_path();
+	// solc's BASE PATH: it decides the main file's source-unit name, and hence
+	// what its own relative imports resolve against. The `contracts/Foo.sol →
+	// parent` guess only holds for a flat layout; a real verified source tree
+	// nests the entry point deep (e.g. src/solc_0.8/polygon/child/sand/X.sol),
+	// and guessing there truncates the unit name so `../../../a/B.sol`
+	// overshoots the root and the import is "not found". When an explicit
+	// --import-path CONTAINS the source, that root is the answer — prefer the
+	// shallowest such path. Falls back to the old guess when none applies.
 	fs::path projectRoot = sourceDir.parent_path(); // contracts/ → project root
+	for (auto const& ip: opts.importPaths)
+	{
+		fs::path absIp = fs::absolute(ip).lexically_normal();
+		auto rel = sourceAbsPath.lexically_normal().lexically_relative(absIp);
+		if (rel.empty() || *rel.begin() == "..")
+			continue;                                  // source is not under it
+		// Only override when the guess would actually TRUNCATE, i.e. the source
+		// sits more than one directory below the root. When it is at the root or
+		// one level down (the flat temp tree the multisource splitter writes),
+		// the old derivation is already right and changing it would renumber
+		// every source-unit name for no gain.
+		if (std::distance(rel.begin(), rel.end()) <= 2)
+			continue;
+		if (projectRoot == sourceDir.parent_path()
+			|| std::distance(absIp.begin(), absIp.end())
+				< std::distance(projectRoot.begin(), projectRoot.end()))
+			projectRoot = absIp;
+	}
 	auto fileReader = setupFileReader(opts, sourceDir, projectRoot);
 
 	auto rawMainSourceOpt = readSourceFile(sourceFile);

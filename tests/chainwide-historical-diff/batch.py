@@ -58,9 +58,36 @@ CANDIDATES = [
     ("base.blockscout.com",     "0x3055913c90Fcc1A6CE9a358911721eEb942013A1", "cakeoft"),   # 23
     ("base.blockscout.com",     "0x6985884C4392D348587B19cb9eAAf157F13271cd", "zro"),       # 39
     ("base.blockscout.com",     "0x58538e6A46E07434d7E7375Bc268D3cb839C0133", "enaoft"),    # 41
+    # ── batch 2 (harvested 2026-07-30 from the ERC-20 token listings, which are
+    # ranked by holders — established contracts with real history, unlike the
+    # verified-contracts listing which is newest-first and mostly empty).
+    # Chosen for SHAPE DIVERSITY: optimism returns a dozen near-identical
+    # L2StandardERC20/OptimismMintableERC20 clones, and replaying eight copies
+    # of the same contract buys nothing over the one already covered.
+    ("eth.blockscout.com",      "0x4c9EDD5852cd905f086C759E8383e09bff1E68B3", "usde"),
+    ("eth.blockscout.com",      "0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3", "ondo"),
+    ("eth.blockscout.com",      "0x56072C95FAA701256059aa122697B133aDEd9279", "sky"),
+    ("eth.blockscout.com",      "0x54D2252757e1672EEaD234D27B1270728fF90581", "bgb"),
+    ("eth.blockscout.com",      "0x925206b8a707096Ed26ae47C84747fE0bb734F59", "wbt"),
+    ("eth.blockscout.com",      "0x80ac24aA929eaF5013f6436cdA2a7ba190f5Cc0b", "maplepool"),
+    ("eth.blockscout.com",      "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497", "susde"),   # ERC-4626 vault
+    ("eth.blockscout.com",      "0x8d010bf9C26881788b4e6bf5Fd1bdC358c8F90b8", "erc6160"),
+    ("optimism.blockscout.com", "0x4a971e87ad1F61f7f3081645f52a99277AE917cF", "xvs"),
+    ("optimism.blockscout.com", "0x2E3D870790dC77A83DD1d18184Acc7439A53f475", "ccfrax"),
+    ("optimism.blockscout.com", "0x76FB31fb4af56892A25e32cFC43De717950c9278", "l2custom"),
+    ("optimism.blockscout.com", "0x23ee2343B892b1BB63503a4FAbc840E0e2C6810f", "burnmint"),
+    # ── batch 3: gnosis / polygon / arbitrum. Same diversity rule — the
+    # LayerZero OFT and CrossChainCanonical clones repeat on every chain, so
+    # only one of each shape is worth a slot here.
+    ("gnosis.blockscout.com",   "0xaf204776c7245bF4147c2612BF6e5972Ee483701", "sdai"),      # ERC-4626
+    ("gnosis.blockscout.com",   "0xcB444e90D8198415266c6a2724b7900fb12FC56E", "eure"),
+    ("gnosis.blockscout.com",   "0x1509706a6c66CA549ff0cB464de88231DDBe213B", "auraoft"),
+    ("polygon.blockscout.com",  "0xBbba073C31bF03b8ACf7c28EF0738DeCF3695683", "sand"),      # meta-tx
+    ("polygon.blockscout.com",  "0xA3f751662e282E83EC3cBc387d225Ca56dD63D3A", "apepe"),
+    ("polygon.blockscout.com",  "0xAC0F66379A6d7801D7726d5a943356A172549Adb", "xtoken"),
+    ("arbitrum.blockscout.com", "0x41CA7586cC1311807B4605fBB748a3B8862b42b5", "burnminterc20"),
+    ("arbitrum.blockscout.com", "0x25d887Ce7a35172C62FeBFD67a1856F20FaEbB00", "pepeoft"),
 ]
-
-
 def main():
     argv = list(sys.argv[1:])
     max_txns = 200
