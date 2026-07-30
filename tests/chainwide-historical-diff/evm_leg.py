@@ -324,6 +324,36 @@ def main():
 
     _deployer = [None]                                 # set per run
 
+    # ── SSTORE TRACE (the in-process answer to debug_traceTransaction) ────
+    # eth-tester exposes no tracer, but the EVM runs IN-PROCESS and every
+    # SSTORE funnels through AccountDB.set_storage, so patching that one method
+    # is cheaper and far more robust than decoding an opcode stream.
+    # Caveat, stated honestly: a write made inside a frame that later REVERTS is
+    # journalled away by py-evm but still seen here, so the trace OVER-reports.
+    # That is the safe direction — it can only over-state a blind spot, never
+    # hide one.
+    _trace = {"sink": None, "addr": None, "txn": None}
+
+    def _install_sstore_trace():
+        from eth.db.account import AccountDB
+        if getattr(AccountDB, "_chd_traced", False):
+            return
+        _orig = AccountDB.set_storage
+
+        def traced(self, address, slot, value):
+            t, sink = _trace["txn"], _trace["sink"]
+            # `txn` is only set around .transact(), so the read-only .call()
+            # preflight (which also hits set_storage on a throwaway state)
+            # cannot pollute the trace.
+            if t is not None and sink is not None and (
+                    _trace["addr"] is None or bytes(address) == _trace["addr"]):
+                sink.setdefault(t, {})[slot] = value
+            return _orig(self, address, slot, value)
+
+        AccountDB.set_storage = traced
+        AccountDB._chd_traced = True
+
+
     # ── one replay run ────────────────────────────────────────────────────
     def run_once(skips):
         from eth_tester import EthereumTester, PyEVMBackend
@@ -363,6 +393,9 @@ def main():
                 f"gasUsed={rc.get('gasUsed')}) — ctor likely calls an external "
                 f"contract; not replayable standalone")
         inst = w3.eth.contract(address=caddr, abi=abi)
+        sstore_trace: dict = {}
+        _install_sstore_trace()
+        _trace.update(sink=sstore_trace, addr=bytes.fromhex(caddr[2:]), txn=None)
 
         inv = {a0.lower(): symbol("C"), caddr.lower(): symbol("self"),
                ZERO: symbol("Z")}
@@ -397,9 +430,15 @@ def main():
                                       for i2 in ev["inputs"]]})
             return outl
 
+        # Slots the readers actually LOOK AT. Any slot the trace saw written but
+        # that never appears here is, by definition, state the differ is blind
+        # to — reported rather than silently ignored.
+        seen_slots: dict = {}
+
         def read_scalars():
             out = {}
             for name, slot, off, nb, label in scalars:
+                seen_slots[slot] = name
                 w = bytes(w3.eth.get_storage_at(caddr, slot)).rjust(32, b"\0")
                 out[name] = _decode_slot_bytes(w[32 - off - nb:32 - off], label, fold)
             return out
@@ -408,7 +447,10 @@ def main():
             """{mapname: {symbol: value}} over registry-known address keys only."""
             from eth_utils import keccak
 
+            cur_name = [""]
+
             def word(slot_int):
+                seen_slots[slot_int] = cur_name[0]
                 return bytes(w3.eth.get_storage_at(caddr, slot_int)).rjust(32, b"\0")
 
             def read_at(slot_int, shape):
@@ -456,6 +498,7 @@ def main():
             sym_addr = dict(syms)
             out = {}
             for name, slot, depth, vshape in maps:
+                cur_name[0] = name
                 got = {}
                 for sym, addr in syms:
                     k = bytes.fromhex(str(addr)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
@@ -518,7 +561,11 @@ def main():
                 if not c["hist_ok"]:
                     mismatches.append((i, "local-ok-but-hist-revert", c["sig"]))
                     continue
-                txh2 = fn(*args).transact({"from": sender, "gas": 8_000_000})
+                _trace["txn"] = i
+                try:
+                    txh2 = fn(*args).transact({"from": sender, "gas": 8_000_000})
+                finally:
+                    _trace["txn"] = None
                 rcpt = w3.eth.get_transaction_receipt(txh2)
                 if rcpt["status"] != 1:
                     mismatches.append((i, "call-ok-transact-fail", c["sig"]))
@@ -547,8 +594,23 @@ def main():
                 if d:
                     storage_delta[str(i)] = d
                 prev_scalars = cur
-        return (results, snapshots, mismatches, storage_delta,
-                {"scalars": read_scalars(), "maps": read_maps()})
+        storage = {"scalars": read_scalars(), "maps": read_maps()}
+        # Attribute every traced write. Executed-txn writes only: a skipped txn
+        # never ran, and a reverted one is journalled back.
+        writes, blind = {}, {}
+        for t, slots in sstore_trace.items():
+            if t not in results or not results[t].get("ok"):
+                continue
+            names = sorted({seen_slots[sl] for sl in slots if sl in seen_slots})
+            unknown = [sl for sl in slots if sl not in seen_slots]
+            writes[str(t)] = {"n": len(slots), "names": names,
+                              "unattributed": len(unknown)}
+            for sl in unknown:
+                blind.setdefault(str(sl), []).append(t)
+        storage["writes"] = writes
+        storage["blind_slots"] = {k: v[:5] for k, v in list(blind.items())[:40]}
+        storage["blind_slot_count"] = len(blind)
+        return (results, snapshots, mismatches, storage_delta, storage)
 
     # ── closed-world convergence ──────────────────────────────────────────
     # BATCH convergence: one pass collects every mismatch, all get skipped at

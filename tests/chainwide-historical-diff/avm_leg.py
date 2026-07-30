@@ -207,6 +207,19 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
                 pass
         return int.from_bytes(raw, "big")
 
+    def _nonempty(v):
+        """Mirror the EVM reader's `any(raw)` test.
+
+        A struct decodes to a LIST, and `[0]` is truthy while the EVM side
+        reports an all-zero struct as absent — that asymmetry alone would
+        manufacture a divergence for every zero-valued struct entry."""
+        if v is None or v == 0 or v == "":
+            return False
+        if isinstance(v, list):
+            return any(_nonempty(x) for x in v)
+        return True
+
+    matched = set()
     for mapname, mspec in bmaps.items():
         vtype = mspec.get("valueType")
         m = mapname.encode()
@@ -214,8 +227,9 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
         for sym, k in syms.items():                       # depth 1
             nm = hashlib.sha256(k + m).digest()
             if nm in have:
+                matched.add(nm)
                 v = val_of(nm, vtype)
-                if v:
+                if _nonempty(v):
                     got[sym] = v
         if not got:                                       # depth 2 (nested)
             for s1, k1 in syms.items():
@@ -223,10 +237,20 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
                 for s2, k2 in syms.items():
                     nm = hashlib.sha256(k2 + inner).digest()
                     if nm in have:
+                        matched.add(nm)
                         v = val_of(nm, vtype)
-                        if v:
+                        if _nonempty(v):
                             got[f"{s1}->{s2}"] = v
         out[mapname] = got          # keep empty maps: see evm_leg read_maps
+
+    # COVERAGE, mirroring the EVM leg's blind-slot trace: boxes that exist on
+    # chain but that NO forward-derived candidate name matched. Root boxes named
+    # after a state variable are legitimate non-mapping state, so exclude them.
+    roots = {k.encode() for k in
+             (((arc56 or {}).get("state") or {}).get("keys", {}).get("box") or {})}
+    roots |= {k.encode() for k in bmaps}
+    stray = [b for b in have - matched if b not in roots]
+    out["__unattributed_boxes__"] = len(stray)
     return out
 
 

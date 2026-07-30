@@ -107,6 +107,7 @@ def diff_case(case_dir: Path) -> dict:
 
     e_m, a_m = es.get("maps") or {}, as_.get("maps") or {}
     declared = set(a_m.pop("__declared__", []) or [])
+    stray_boxes = a_m.pop("__unattributed_boxes__", 0) or 0
     # COVERAGE, not correctness: a mapping the contract declares but that the EVM
     # side never read is compared against NOTHING, which would otherwise be
     # indistinguishable from "clean". op_gov/_balances and opmint9/_balances were
@@ -124,6 +125,32 @@ def diff_case(case_dir: Path) -> dict:
         findings["storage_maps_unavailable"] = [
             {"evm_maps": sorted(e_m), "avm_maps": sorted(a_m),
              "note": "AVM box enumeration returned nothing — mapping storage NOT compared"}]
+    # SSTORE trace: the EVM leg records every slot each txn actually wrote and
+    # marks the ones no reader looked at. Those are state the differ is BLIND to
+    # — a mapping with non-address keys, a nested struct, an ERC-7201 namespace.
+    # Without this, "0 divergences" cannot be distinguished from "0 compared".
+    # The AVM mirror of a blind slot: a box that EXISTS but that no forward-
+    # derived candidate name matched. This is the only check that can catch a
+    # WRONG key derivation — get the hash wrong and both legs find nothing for a
+    # map, which is indistinguishable from a genuinely empty map.
+    if stray_boxes:
+        findings["storage_boxes_unattributed"] = [
+            {"boxes": stray_boxes,
+             "note": "boxes on chain that no derived mapping key matched — "
+                     "either a shape the reader skips or a wrong key derivation"}]
+    writes = es.get("writes") or {}
+    if es.get("blind_slot_count"):
+        findings["storage_blind_slots"] = [
+            {"slots": es["blind_slot_count"],
+             "sample": list((es.get("blind_slots") or {}).items())[:5],
+             "note": "written by the contract but read by NO differ probe — "
+                     "not compared on either leg"}]
+
+    def _last_write(mapname):
+        """Localise a map divergence to the last txn that wrote that map."""
+        hits = [int(i) for i, w in writes.items() if mapname in (w.get("names") or ())]
+        return max(hits) if hits else None
+
     for m in sorted(set(e_m) & set(a_m)):
         if m.startswith("__"):
             continue
@@ -133,7 +160,8 @@ def diff_case(case_dir: Path) -> dict:
         for k in sorted(set(ee) | set(aa)):
             if ee.get(k) != aa.get(k):
                 findings["storage_map_div"].append(
-                    {"map": m, "key": k, "evm": ee.get(k), "avm": aa.get(k)})
+                    {"map": m, "key": k, "evm": ee.get(k), "avm": aa.get(k),
+                     "last_write_txn": _last_write(m)})
 
     skips = {}
     for c in calls:
@@ -165,12 +193,18 @@ def print_report(rep: dict):
             print(f"  ❌ {k}: {c[k]}")
             for f in rep["findings"][k][:5]:
                 print(f"       {f}")
-    for k in ("event_noise", "snapshot_noise", "storage_noise"):
-        pass
     for k in ("storage_maps_unavailable", "storage_maps_uncompared"):
         if c.get(k):
             det = rep["findings"][k][0]
             print(f"  ⚠️  {k}: {det.get('maps', 'mapping storage')} not diffed (see report)")
+    if c.get("storage_boxes_unattributed"):
+        det = rep["findings"]["storage_boxes_unattributed"][0]
+        print(f"  ⚠️  storage_boxes_unattributed: {det['boxes']} box(es) matched "
+              f"no derived mapping key")
+    if c.get("storage_blind_slots"):
+        det = rep["findings"]["storage_blind_slots"][0]
+        print(f"  ⚠️  storage_blind_slots: {det['slots']} slot(s) written but "
+              f"never probed — not compared")
     for k in ("event_noise", "snapshot_noise", "storage_noise"):
         if c[k]:
             print(f"  · {k} (known EVM/AVM difference): {c[k]}")

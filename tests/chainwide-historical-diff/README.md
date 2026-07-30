@@ -119,5 +119,37 @@ chain-specific addresses.
 - `value_div` — both succeeded, return values differ.
 - `event_div` — emitted events differ (count, name, or args).
 - `snapshot_div` — zero-arg getter state drifted between legs.
+- `storage_div` / `storage_map_div` — state differs by Solidity variable name.
+  Mapping divergences carry `last_write_txn`, the last txn that wrote that map,
+  so the cause is localised instead of just "the end states differ".
 - `skips` — per-reason counts (value / no-calldata / unknown-selector /
   closed-world / avm-platform-limit / unmapped-sender).
+
+Coverage warnings (⚠️) matter as much as divergences here: a comparison that
+never happened reports as zero divergences, which looks exactly like a pass.
+
+- `storage_maps_uncompared` — declared by the contract, not diffed.
+- `storage_maps_unavailable` — EVM found mapping state, AVM found none.
+- `storage_blind_slots` — slots the EVM leg *saw written* that no probe reads.
+- `storage_boxes_unattributed` — boxes on chain that no derived key matched.
+
+## Storage tracing
+
+There is no `debug_traceTransaction` on eth-tester, but the EVM runs
+**in-process**, so every SSTORE funnels through `AccountDB.set_storage` and
+patching that one method gives an exact per-txn written-slot set — cheaper and
+more robust than decoding an opcode stream. Two things fall out of it:
+
+1. **Localisation** — a mapping divergence names the txn that last wrote it.
+2. **Honest coverage** — every traced slot is checked against the set of slots
+   the readers actually looked at. A slot written but never read is state the
+   differ is *blind* to, and it says so rather than counting it clean.
+
+The AVM leg mirrors (2) by enumerating the app's real boxes and reporting any
+that no forward-derived key matched. That is the only check that can catch a
+**wrong key derivation**: get the hash wrong and both legs find nothing for a
+mapping, which is indistinguishable from a mapping that is genuinely empty.
+
+Caveat, stated plainly: a write inside a frame that later reverts is journalled
+away by py-evm but still appears in the trace, so the trace over-approximates.
+That is the safe direction — it can over-state a blind spot, never hide one.
