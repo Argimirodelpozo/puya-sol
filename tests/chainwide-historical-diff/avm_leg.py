@@ -16,6 +16,7 @@ Writes avm_results.json into the case dir.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import shutil
 import sys
@@ -121,36 +122,60 @@ def read_avm_storage(algod, app_id, arc56, fold):
     except Exception as e:
         scalars["__error__"] = str(e)[:80]
 
-    # Box-backed mappings: enumerate once (not per txn) and split each box key
-    # into declared prefix + key suffix, so entries align with the EVM side by
-    # registry SYMBOL without needing to know puya-sol's key encoding upfront.
-    maps = {}
-    pref = {base64.b64decode(v["prefix"]): name
-            for name, v in bmaps.items() if v.get("prefix")}
+    return {"scalars": scalars}
+
+
+def read_avm_maps(algod, app_id, arc56, syms):
+    """Box-backed mappings → {mapname: {symbol: value}}, KEY-ALIGNED with the
+    EVM side so entries compare one-for-one.
+
+    puya-sol derives a mapping entry's box name by hashing, mirroring EVM's
+    keccak layout:   m[k]    -> sha256(k ‖ name)
+                     m[a][b] -> sha256(b ‖ sha256(a ‖ name))
+    (verified empirically against a deployed app's box set). So the names are
+    computed FORWARD from the registry's known keys — the hash is one-way, but
+    it never needs inverting. Candidates are tested against the enumerated box
+    set first, so only real hits cost an API read.
+
+    `syms` is {symbol: 32-byte AVM content} for every registry address.
+    """
+    bmaps = ((arc56 or {}).get("state") or {}).get("maps", {}).get("box") or {}
+    out = {}
     try:
-        for bx in (algod.application_boxes(app_id).get("boxes") or []):
-            name_b = base64.b64decode(bx["name"])
-            hit = next(((p, n) for p, n in pref.items() if name_b.startswith(p)), None)
-            if not hit:
-                continue
-            p, mapname = hit
-            try:
-                v = algod.application_box_by_name(app_id, name_b)
-                raw = base64.b64decode(v.get("value") or "")
-            except Exception:
-                continue
-            val = int.from_bytes(raw, "big") if raw else 0
-            if val:
-                # puya-sol derives box names by HASHING the mapping key, so the
-                # suffix can't be folded back to a registry symbol — key-by-key
-                # alignment with EVM slots needs that derivation replicated
-                # (TODO). Record the map's shape, which is still checkable.
-                e = maps.setdefault(mapname, {"entries": 0, "sum": 0})
-                e["entries"] += 1
-                e["sum"] += val
+        have = {base64.b64decode(b["name"])
+                for b in (algod.application_boxes(app_id).get("boxes") or [])}
     except Exception as e:
-        maps["__error__"] = str(e)[:80]
-    return {"scalars": scalars, "maps": maps}
+        return {"__error__": str(e)[:80]}
+
+    def val_of(name_b):
+        try:
+            raw = base64.b64decode(
+                (algod.application_box_by_name(app_id, name_b) or {}).get("value") or "")
+        except Exception:
+            return None
+        return int.from_bytes(raw, "big") if raw else 0
+
+    for mapname in bmaps:
+        m = mapname.encode()
+        got = {}
+        for sym, k in syms.items():                       # depth 1
+            nm = hashlib.sha256(k + m).digest()
+            if nm in have:
+                v = val_of(nm)
+                if v:
+                    got[sym] = v
+        if not got:                                       # depth 2 (nested)
+            for s1, k1 in syms.items():
+                inner = hashlib.sha256(k1 + m).digest()
+                for s2, k2 in syms.items():
+                    nm = hashlib.sha256(k2 + inner).digest()
+                    if nm in have:
+                        v = val_of(nm)
+                        if v:
+                            got[f"{s1}->{s2}"] = v
+        if got:
+            out[mapname] = got
+    return out
 
 
 def algo_account(i: int) -> _Acct:
@@ -348,6 +373,13 @@ def main():
     for cand in sorted((case_dir / "out_avm").glob(f"{case['name']}.arc56.json")):
         arc56 = load_json(cand)
     storage = read_avm_storage(algod, app.app_id, arc56, fold)
+    syms = {symbol("C"): encoding.decode_address(dispenser.address),
+            symbol("Z"): bytes(32)}
+    for _i, _a in accts.items():
+        syms[symbol(_i)] = encoding.decode_address(_a.address)
+    for _ad, _i in reg["args"].items():
+        syms[symbol(_i)] = bytes(12) + arg_content20(_i)
+    storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms)
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,

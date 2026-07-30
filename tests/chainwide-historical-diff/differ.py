@@ -117,14 +117,12 @@ def diff_case(case_dir: Path) -> dict:
         if m.startswith("__"):
             continue
         ee, aa = e_m.get(m) or {}, a_m.get(m) or {}
-        # EVM side is keyed by symbol; AVM side can only report shape (its box
-        # names are hashed). Compare the shared invariants: entry count + sum.
-        e_shape = {"entries": len(ee), "sum": sum(v for v in ee.values()
-                                                 if isinstance(v, int))}
-        a_shape = {"entries": aa.get("entries", 0), "sum": aa.get("sum", 0)}
-        if e_shape != a_shape:
-            findings["storage_map_div"].append({"map": m, "evm": e_shape,
-                                               "avm": a_shape})
+        # Both sides are keyed by registry SYMBOL (the AVM leg computes box
+        # names forward through puya-sol's hash), so entries compare 1:1.
+        for k in sorted(set(ee) | set(aa)):
+            if ee.get(k) != aa.get(k):
+                findings["storage_map_div"].append(
+                    {"map": m, "key": k, "evm": ee.get(k), "avm": aa.get(k)})
 
     skips = {}
     for c in calls:
