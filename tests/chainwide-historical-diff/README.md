@@ -34,7 +34,18 @@ python3 replay.py pepe --host eth.blockscout.com \
 # pieces
 python3 fetch.py eth.blockscout.com 0x6982...1933 pepe --max-txns 300
 python3 replay.py pepe            # uses cases/pepe/
+
+# self-test the STORAGE DIFFER on a synthetic contract (no network)
+../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python selftest.py
 ```
+
+`selftest.py` exists because a real history only exercises the storage shapes
+that contract happens to use, and a map both legs read as *empty* looks
+identical to a map both legs read *correctly*. It replays a synthetic contract
+whose calls are guaranteed to populate every shape the readers claim to
+support — scalar, nested, struct- and array-valued mappings — and fails if any
+of them comes back empty. It found two real defects the day it was written (an
+undecoded nested map, and array/struct maps that were never discovered at all).
 
 Requires: LocalNet running, `build/puya-sol` built, and the
 `tests/WIP/tiny-fuzzing-oracle/.evmvenv` venv (web3/eth-tester/py-solc-x) —

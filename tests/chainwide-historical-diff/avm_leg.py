@@ -125,6 +125,38 @@ def read_avm_storage(algod, app_id, arc56, fold):
     return {"scalars": scalars}
 
 
+
+def _canon_abi(v):
+    """algosdk decode -> plain JSON-able lists/ints for cross-leg comparison."""
+    if isinstance(v, (list, tuple)):
+        return [_canon_abi(x) for x in v]
+    if isinstance(v, (bytes, bytearray)):
+        return "0x" + bytes(v).hex()
+    return v
+
+
+def _abi_type_for(vtype, arc56):
+    """arc56 valueType -> an ABI type string, resolving NAMED structs.
+
+    Returns None for plain scalars (handled directly) and anything unresolvable.
+    """
+    t = str(vtype or "")
+    if not t or t in ("AVMBytes", "AVMString", "AVMUint64", "address", "account"):
+        return None
+    structs = (arc56 or {}).get("structs") or {}
+    if t in structs:
+        fields = structs[t]
+        def one(f):
+            ft = f.get("type")
+            return _abi_type_for(ft, arc56) or ft
+        return "(" + ",".join(one(f) for f in fields) + ")"
+    # already an ABI type (possibly with [] / [N] suffixes)
+    base = t.rstrip("[]0123456789")
+    if base in structs:
+        return _abi_type_for(base, arc56) + t[len(base):]
+    return t
+
+
 def read_avm_maps(algod, app_id, arc56, syms, fold):
     """Box-backed mappings → {mapname: {symbol: value}}, KEY-ALIGNED with the
     EVM side so entries compare one-for-one.
@@ -160,8 +192,19 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
         # An address-valued mapping must fold to a registry SYMBOL, or it reads
         # as a huge raw integer and every entry looks divergent against the EVM
         # side (which folds). Numeric types stay integers.
-        if str(vtype or "") in ("address", "account") and len(raw) == 32:
+        t = str(vtype or "")
+        if t in ("address", "account") and len(raw) == 32:
             return fold(raw)
+        # STRUCT / ARRAY values: arc56 gives a real ABI type ("(uint32,uint224)[]")
+        # or a named struct resolved via arc56["structs"]. Decoding yields the
+        # same member/element LIST the EVM reader produces, so they compare.
+        abi_t = _abi_type_for(t, arc56)
+        if abi_t is not None:
+            try:
+                from algosdk import abi as _abi
+                return _canon_abi(_abi.ABIType.from_string(abi_t).decode(raw))
+            except Exception:
+                pass
         return int.from_bytes(raw, "big")
 
     for mapname, mspec in bmaps.items():

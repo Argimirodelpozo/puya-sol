@@ -17,6 +17,7 @@ Writes: registry.json, calls.json, evm_results.json into the case dir.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -205,12 +206,16 @@ def main():
         if not c.get("sender") or not c.get("args"):
             continue
         s_sym = symbol(c["sender"]["__addr__"])
-        partners = pair_partners.setdefault(s_sym, set())
-        partners.add(s_sym)
-        for a in c["args"]:
-            for t in _syms_in(a):
+        seen_args = [t for a in c["args"] for t in _syms_in(a)]
+        # sender <-> each address arg (covers approve/transferFrom, where the
+        # owner IS the sender) AND arg <-> arg: `permit(owner, spender, ...)`
+        # writes allow[owner][spender] with NEITHER as the sender, so pairing
+        # only against the sender silently skipped every permit-created entry.
+        for a_sym in [s_sym] + seen_args:
+            partners = pair_partners.setdefault(a_sym, set())
+            partners.add(a_sym)
+            for t in [s_sym] + seen_args:
                 partners.add(t)
-                pair_partners.setdefault(t, set()).add(s_sym)
 
     # ── compile once with solcx ───────────────────────────────────────────
     solcx.set_solc_version("0.8.26")
@@ -279,21 +284,43 @@ def main():
         scalars.append((e["label"], int(e["slot"]), int(e.get("offset", 0)),
                         int(t.get("numberOfBytes", 32)), label))
 
-    # MAPPINGS with scalar values: read only the keys the registry knows about
-    # (bounded by the window's senders/args) — never an enumeration.
+    # MAPPINGS: read only the keys the registry knows about (bounded by the
+    # window's senders/args) — never an enumeration. Value shapes handled:
+    # scalar, nested mapping, STRUCT (inplace members) and dynamic ARRAY.
+    _TY = layout.get("types") or {}
+
+    def _is_addr_mapping(label):
+        # Solidity >=0.8.18 allows NAMED mapping params, so the label can be
+        # "mapping(address account => uint256)" — matching on "mapping(address =>"
+        # silently skipped those maps (op_gov/_nonces).
+        return bool(re.match(r"^mapping\(address\b", label or ""))
+
+    def _value_shape(tid):
+        """Classify a mapping's value type into something the reader can decode."""
+        vt = _TY.get(tid, {})
+        label, enc = vt.get("label", ""), vt.get("encoding")
+        if _is_addr_mapping(label):
+            return ("mapping", vt)
+        if enc == "inplace" and vt.get("members"):
+            return ("struct", vt)
+        if enc == "dynamic_array":
+            return ("array", vt)
+        if enc == "inplace":
+            return ("scalar", vt)
+        return (None, vt)                    # string/bytes/other: not covered
+
     maps = []
     for e in layout.get("storage") or []:
-        t = (layout.get("types") or {}).get(e["type"], {})
-        label = t.get("label", "")
-        if not label.startswith("mapping(address =>"):
+        t = _TY.get(e["type"], {})
+        if not _is_addr_mapping(t.get("label", "")):
             continue
-        vt = (layout.get("types") or {}).get(t.get("value"), {})
-        inner = vt.get("label", "")
-        if inner.startswith("mapping(address =>"):
-            vt2 = (layout.get("types") or {}).get(vt.get("value"), {})
-            maps.append((e["label"], int(e["slot"]), 2, vt2.get("label", "uint256")))
-        elif not inner.startswith(("mapping", "struct")) and not inner.endswith("]"):
-            maps.append((e["label"], int(e["slot"]), 1, inner))
+        kind, vt = _value_shape(t.get("value"))
+        if kind == "mapping":
+            k2, vt2 = _value_shape(vt.get("value"))
+            if k2 == "scalar":
+                maps.append((e["label"], int(e["slot"]), 2, ("scalar", vt2)))
+        elif kind in ("scalar", "struct", "array"):
+            maps.append((e["label"], int(e["slot"]), 1, (kind, vt)))
 
     _deployer = [None]                                 # set per run
 
@@ -380,26 +407,66 @@ def main():
         def read_maps():
             """{mapname: {symbol: value}} over registry-known address keys only."""
             from eth_utils import keccak
+
+            def word(slot_int):
+                return bytes(w3.eth.get_storage_at(caddr, slot_int)).rjust(32, b"\0")
+
+            def read_at(slot_int, shape):
+                """Decode a mapping VALUE living at `slot_int`.
+
+                scalar -> value | struct -> [members] | array -> [elements].
+                Returns None when the slot is untouched, so an absent entry is
+                distinguishable from a present zero."""
+                kind, vt = shape
+                if kind == "scalar":
+                    raw = word(slot_int)
+                    if not any(raw):
+                        return None
+                    return _decode_slot_bytes(raw, vt.get("label", "uint256"), fold)
+                if kind == "struct":
+                    vals, seen = [], False
+                    for m in vt.get("members") or []:
+                        mt = _TY.get(m["type"], {})
+                        nb, off = int(mt.get("numberOfBytes", 32)), int(m.get("offset", 0))
+                        w = word(slot_int + int(m.get("slot", 0)))
+                        if any(w):
+                            seen = True
+                        vals.append(_decode_slot_bytes(
+                            w[32 - off - nb:32 - off], mt.get("label", "uint256"), fold))
+                    return vals if seen else None
+                if kind == "array":
+                    n = int.from_bytes(word(slot_int), "big")
+                    if not n or n > 512:            # sanity bound
+                        return None if not n else f"<{n} elements>"
+                    base = int.from_bytes(keccak(slot_int.to_bytes(32, "big")), "big")
+                    et = _TY.get(vt.get("base"), {})
+                    esz = int(et.get("numberOfBytes", 32))
+                    ekind = ("struct" if et.get("members") else "scalar", et)
+                    out_l = []
+                    for i in range(n):
+                        # elements pack only when the element fits a word
+                        per = max(1, (esz + 31) // 32)
+                        out_l.append(read_at(base + i * per, ekind))
+                    return out_l
+                return None
+
             syms = [(symbol("C"), a0), (symbol("Z"), ZERO)]
             syms += [(symbol(i), sender_acct[i][0]) for i in sender_acct]
             syms += [(symbol(i), "0x" + arg_content20(i).hex()) for i in reg["args"].values()]
             sym_addr = dict(syms)
             out = {}
-            for name, slot, depth, vlabel in maps:
+            for name, slot, depth, vshape in maps:
                 got = {}
                 for sym, addr in syms:
                     k = bytes.fromhex(str(addr)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
                     s1 = keccak(k + slot.to_bytes(32, "big"))
                     if depth == 1:
-                        raw = bytes(w3.eth.get_storage_at(caddr, int.from_bytes(s1, "big")))
-                        # An unset entry is an all-zero slot. Test the RAW word,
-                        # not the decoded value: an address decodes to the SYMBOL
-                        # string "«Z»" for the zero address, which is truthy, so
-                        # truthiness reported every unset entry as a divergence
-                        # against the AVM side (which simply has no box).
-                        if any(raw):
-                            got[sym] = _decode_slot_bytes(
-                                raw.rjust(32, b"\0"), vlabel, fold)
+                        # An unset entry is an all-zero slot; read_at returns None
+                        # for that. (Testing the DECODED value would be wrong: an
+                        # address folds to the symbol "«Z»", which is truthy.)
+                        v = read_at(int.from_bytes(s1, "big"), vshape)
+                        if v is not None:
+                            got[sym] = v
                     else:                                  # nested: owner => spender
                         # Only pairs the replay actually touched. The full
                         # cartesian product is O(n^2) STORAGE READS (450 symbols
@@ -410,10 +477,9 @@ def main():
                                 continue
                             k2 = bytes.fromhex(str(addr2)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
                             s2 = keccak(k2 + s1)
-                            raw = bytes(w3.eth.get_storage_at(caddr, int.from_bytes(s2, "big")))
-                            if any(raw):       # unset slot => no entry
-                                got[f"{sym}->{sym2}"] = _decode_slot_bytes(
-                                    raw.rjust(32, b"\0"), vlabel, fold)
+                            v = read_at(int.from_bytes(s2, "big"), vshape)
+                            if v is not None:
+                                got[f"{sym}->{sym2}"] = v
                 # Record even when empty: an empty map that WAS read is a real
                 # comparison (both sides empty), whereas a missing entry means no
                 # coverage at all. Conflating them hid that op_gov/_balances was
