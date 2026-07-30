@@ -393,6 +393,66 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::emitGuardedBytesDataRead(
 	return awst::makeAsBiguint(std::move(word), _loc);
 }
 
+bool AssemblyBuilder::tryHandleBytesMemoryLengthWrite(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// mstore(<bare bytes/string local>, n): the address is the buffer POINTER
+	// itself, so EVM writes the LENGTH WORD — it resizes the buffer in place.
+	// The OZ ShortStrings.toString idiom does exactly this:
+	//     string memory str = new string(32);
+	//     mstore(str, len); mstore(add(str, 0x20), sstr)
+	// Only the add(...) form was matched, so a bare pointer fell through to the
+	// generic path and hard-errored coercing a `string` to biguint.
+	//
+	// In the value model the local IS the raw bytes with no length header, so
+	// "set the length" is a resize:  n <= len(m) ? extract3(m,0,n)
+	//                                            : m ++ bzero(n − len(m))
+	// Growing zero-fills; EVM would expose adjacent memory, which has no AVM
+	// analogue and is not observable in the idioms this serves.
+	if (_call.arguments.size() != 2)
+		return false;
+	auto* id = std::get_if<solidity::yul::Identifier>(&_call.arguments[0]);
+	if (!id)
+		return false;
+	std::string name = resolveVarRef(*id);
+	auto it = m_locals.find(name);
+	if (it == m_locals.end())
+		return false;
+	if (it->second != awst::WType::bytesType() && it->second != awst::WType::stringType())
+		return false;
+	if (m_blobOffsetVars.count(name))
+		return false;                 // blob-backed: generic scratch path owns it
+
+	auto* ty = it->second;
+	auto varRef = [&]() { return awst::makeVarExpression(name, ty, _loc); };
+	auto n = awst::makeEvalOnce(
+		offsetToUint64(buildExpression(_call.arguments[1]), _loc), _loc);
+	auto curLen = awst::makeEvalOnce(awst::makeLen(varRef(), _loc), _loc);
+	drainPendingStatements(_out);
+
+	std::shared_ptr<awst::Expression> shrunk =
+		awst::makeExtract3(varRef(), awst::makeZero(_loc), n, _loc);
+	std::shared_ptr<awst::Expression> grown = awst::makeConcat(
+		varRef(),
+		awst::makeBzero(
+			awst::makeUInt64BinOp(n, awst::UInt64BinaryOperator::Sub, curLen, _loc), _loc),
+		_loc);
+	if (ty == awst::WType::stringType())
+	{
+		shrunk = awst::makeReinterpretCast(std::move(shrunk), awst::WType::stringType(), _loc);
+		grown = awst::makeReinterpretCast(std::move(grown), awst::WType::stringType(), _loc);
+	}
+	auto resized = awst::makeConditional(
+		awst::makeNumericCompare(n, awst::NumericComparison::Lt, curLen, _loc),
+		std::move(shrunk), std::move(grown), ty, _loc);
+	_out.push_back(awst::makeAssignmentStatement(varRef(), std::move(resized), _loc));
+	Logger::instance().debug("mstore length-word write: resized bytes local " + name, _loc);
+	return true;
+}
+
 bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	solidity::yul::FunctionCall const& _call,
 	awst::SourceLocation const& _loc,
@@ -403,6 +463,8 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	// local at any data offset (see emitGuardedBytesDataWrite for semantics).
 	if (_call.arguments.size() != 2)
 		return false;
+	if (tryHandleBytesMemoryLengthWrite(_call, _loc, _out))
+		return true;
 	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
 	if (!m)
 		return false;

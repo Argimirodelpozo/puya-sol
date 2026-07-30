@@ -846,6 +846,12 @@ private:
 	);
 
 	/// Match mstore(<data ptr>, value) → guarded word write on the var (no blob write).
+	/// mstore(<bare bytes/string local>, n): EVM length-word write = resize.
+	bool tryHandleBytesMemoryLengthWrite(
+		solidity::yul::FunctionCall const& _call,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	bool tryHandleBytesMemoryWrite(
 		solidity::yul::FunctionCall const& _call,
 		awst::SourceLocation const& _loc,

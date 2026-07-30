@@ -3237,6 +3237,45 @@ def test_asm_mem_ptr_roundtrip(harness):
         assert as_int(harness.call(app, "expRt(uint160)", v).abi_return) == v
 
 
+def test_asm_mstore_length_word(harness):
+    """puyasolRegression/contracts/asm_mstore_length_word.sol — NOT an o.g. semantic test.
+
+    `mstore(ptr, n)` on a bytes/string buffer POINTER is the EVM LENGTH-WORD
+    write: it resizes the buffer. Only the `add(ptr, k)` data form was matched,
+    so a bare pointer hard-errored ("cannot coerce non-scalar type 'string' to
+    biguint in assembly arithmetic"). That is the OZ ShortStrings.toString
+    idiom, and it blocked kaito/degen/builder in the chainwide replay sweep.
+    Verified against a live solc+EVM by fuzz_evm.py (93 calls, 0 divergences).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_mstore_length_word.sol")
+    w = bytes(range(1, 33))                       # 0x0102...20, all ASCII-safe
+    for n in (0, 1, 7, 31, 32):
+        # length-then-data and data-then-length must agree: the data write is
+        # itself clamped to the buffer length, so both yield w's first n bytes.
+        # (string returns decode to str, bytes returns stay bytes.)
+        assert harness.call(app, "toStr(bytes32,uint256)", w, n).abi_return == w[:n].decode()
+        assert harness.call(app, "toStrRev(bytes32,uint256)", w, n).abi_return == w[:n].decode()
+        assert as_bytes(harness.call(app, "shrink(bytes32,uint256)", w, n).abi_return) == w[:n]
+    for n in (0, 1, 8, 33, 64):                   # shrink AND grow past new bytes(8)
+        assert as_int(harness.call(app, "growLen(uint256)", n).abi_return) == n
+
+
+def test_assign_target_constant_fails_loud(harness):
+    """puyasolRegression/contracts/assign_target_constant.sol — NOT an o.g. test.
+
+    An assignment whose LHS lowers to a constant is a write that goes nowhere.
+    It came from SolExpressionDispatch's "unsupported member access" fallback
+    (a warning returning an empty BytesConstant) on the OZ StorageSlot idiom
+    `getStringSlot(store).value = v`. puya rejected it with an unreadable
+    "deserialization failed: 'BytesConstant'"; other shapes would drop the store
+    silently. Must be a loud compile error until the lvalue is supported.
+    """
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy(
+            "puyasolRegression/contracts/assign_target_constant.sol")
+
+
 def test_ens_core_resolver(harness):
     """puyasolRegression/contracts/ens_core_resolver.sol — NOT an o.g. semantic test.
 
