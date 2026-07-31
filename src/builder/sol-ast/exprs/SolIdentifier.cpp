@@ -1,6 +1,7 @@
 /// @file SolIdentifier.cpp — variable/constant/state variable resolution.
 
 #include "builder/sol-ast/exprs/SolIdentifier.h"
+#include "Logger.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
@@ -8,6 +9,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/Arc4Defaults.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -75,6 +77,64 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		{
 			using AB = builder::AssemblyBuilder;
 			auto const* vt = m_ctx.typeMapper.map(varDecl->type());
+			// DYNAMIC ARRAY value-use: materialise, don't leak the offset.
+			//
+			// A blob-backed array used as a VALUE (returned, passed, assigned)
+			// must come back out of the blob, exactly like the bytes/string case
+			// below. Leaking the raw uint64 offset instead produced a subroutine
+			// that returns uint64 while its declared return type is the array —
+			// puya rejects the program ("invalid return type
+			// [PrimitiveIRType.uint64], expected EncodedType(...)"). Hit by OZ
+			// EnumerableSet.values(), whose `assembly { result := store }`
+			// pointer-pun blob-backs `result` and then returns it (blocked gho).
+			//
+			// EVM memory layout is [32-byte COUNT][elements]; ARC4 wants a
+			// 2-byte count prefix, so the re-encode is just swapping the header —
+			// valid only while an element occupies 32 bytes in BOTH (address,
+			// bytes32, uint256). Anything else (bool bit-packing, uint8[] at one
+			// byte per element, dynamic elements needing an offset table) would
+			// need a per-element re-encode; refuse loudly rather than emit a
+			// wrong length or a mis-strided read.
+			if (vt && vt->kind() == awst::WTypeKind::ARC4DynamicArray)
+			{
+				auto const* arr = static_cast<awst::ARC4DynamicArray const*>(vt);
+				int esz = builder::computeEncodedElementSize(arr->elementType());
+				if (esz != 32)
+				{
+					Logger::instance().error(
+						"cannot materialise assembly-backed array '" + name
+						+ "': element type '" + arr->elementType()->name()
+						+ "' encodes to " + std::to_string(esz)
+						+ " bytes, not 32, so the EVM memory layout and the ARC4"
+						" layout disagree on stride",
+						m_loc);
+					return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
+				}
+				auto offRead = [&]() {
+					return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
+				};
+				// count = low 8 bytes of the 32-byte count word at the buffer offset
+				auto count = awst::makeEvalOnce(
+					awst::makeExtractUInt64(
+						AB::readMemWordDirect(offRead(), m_loc),
+						awst::makeIntegerConstant("24", m_loc), m_loc),
+					m_loc);
+				auto dataStart = awst::makeUInt64BinOp(offRead(),
+					awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant("32", m_loc), m_loc);
+				auto byteLen = awst::makeUInt64BinOp(count,
+					awst::UInt64BinaryOperator::Mult,
+					awst::makeIntegerConstant("32", m_loc), m_loc);
+				auto data = awst::makeExtract3(
+					awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),
+					std::move(dataStart), std::move(byteLen), m_loc);
+				// ARC4 dynamic array = uint16 count ++ elements
+				auto hdr = awst::makeExtract3(awst::makeItob(count, m_loc),
+					awst::makeIntegerConstant("6", m_loc),
+					awst::makeIntegerConstant("2", m_loc), m_loc);
+				auto val = awst::makeConcat(std::move(hdr), std::move(data), m_loc);
+				return awst::makeReinterpretCast(std::move(val), vt, m_loc);
+			}
 			if (vt != awst::WType::bytesType() && vt != awst::WType::stringType())
 				return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
 			auto offRead = [&]() {

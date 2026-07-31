@@ -3327,6 +3327,27 @@ def test_string_concat_wtype(harness):
     assert as_bytes(harness.call(app, "toBytes(string)", "k").abi_return) == b"zk"
 
 
+def test_blob_array_value_use(harness):
+    """puyasolRegression/contracts/blob_array_value_use.sol — NOT an o.g. test.
+
+    A blob-backed ARRAY used as a VALUE leaked its raw uint64 blob offset, so
+    the subroutine returned uint64 against an array return type and puya
+    rejected the program ("invalid return type [PrimitiveIRType.uint64]").
+    Triggered by OZ EnumerableSet.values()'s `assembly { result := store }`
+    pointer-pun, which blob-backs `result` and then returns it. Blocked gho.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/blob_array_value_use.sol")
+    for n in (0, 1, 2, 5, 12):
+        assert as_int(harness.call(app, "countAddrs(uint256)", n).abi_return) == n
+        # elements are 1..n, so the sum is the triangular number
+        assert as_int(harness.call(app, "sumUints(uint256)", n).abi_return) \
+            == n * (n + 1) // 2
+    for n in (1, 2, 5, 12):
+        assert as_int(harness.call(app, "firstUint(uint256)", n).abi_return) == 1
+        assert as_int(harness.call(app, "lastUint(uint256)", n).abi_return) == n
+
+
 def test_ens_core_resolver(harness):
     """puyasolRegression/contracts/ens_core_resolver.sol — NOT an o.g. semantic test.
 
