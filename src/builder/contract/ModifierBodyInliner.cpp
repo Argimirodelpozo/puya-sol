@@ -301,6 +301,11 @@ void inlineModifiers(
 
 				argExpr = TypeCoercion::implicitNumericCast(
 					std::move(argExpr), paramType, modLoc);
+				// `onlyRole(MINTER_ROLE)` binds keccak256(...) — wtype unsized
+				// `bytes` — to a `bytes32` param. Bytes are right, label is not,
+				// and puya rejects the mismatch outright.
+				argExpr = TypeCoercion::relabelUnsizedBytes(
+					std::move(argExpr), paramType, modLoc);
 
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 

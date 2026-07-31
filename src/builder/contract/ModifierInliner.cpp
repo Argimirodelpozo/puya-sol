@@ -254,6 +254,11 @@ void ContractBuilder::buildModifierChain(
 				}
 
 				argExpr = TypeCoercion::implicitNumericCast(std::move(argExpr), paramType, modLoc);
+				// `onlyRole(MINTER_ROLE)` binds keccak256(...) — wtype unsized
+				// `bytes` — to a `bytes32` param. Bytes are right, label is not,
+				// and puya rejects the mismatch outright.
+				argExpr = TypeCoercion::relabelUnsizedBytes(
+					std::move(argExpr), paramType, modLoc);
 
 				// A modifier ARGUMENT can be a side-effecting expression — a ternary
 				// with a checked/negate branch (`mod(a > 0 ? a : -a)`), a checked op —

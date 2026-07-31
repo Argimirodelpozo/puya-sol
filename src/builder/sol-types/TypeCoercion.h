@@ -62,6 +62,20 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Relabel an UNSIZED `bytes` value as a declared fixed `bytesN`.
+	///
+	/// `bytes32 role = keccak256("MINTER_ROLE")` binds a value whose wtype is
+	/// unsized `bytes` to a `bytes[32]` target. The bytes are already correct —
+	/// only the wtype bookkeeping disagrees — but puya type-checks the pair and
+	/// rejects the whole program ("assignment target type differs from
+	/// expression value type"). Reinterpret so the label matches.
+	/// No-op unless the target is a SIZED bytes and the source an UNSIZED one.
+	static std::shared_ptr<awst::Expression> relabelUnsizedBytes(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::WType const* _targetType,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Sign-extend an N-bit signed integer to 256-bit two's complement.
 	/// Masks to N bits, then conditionally adds (2^256 − 2^N) mod 2^256.
 	static std::shared_ptr<awst::Expression> signExtendToUint256(

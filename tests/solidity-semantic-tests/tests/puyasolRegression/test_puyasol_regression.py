@@ -3276,6 +3276,34 @@ def test_assign_target_constant_fails_loud(harness):
             "puyasolRegression/contracts/assign_target_constant.sol")
 
 
+def test_modifier_arg_bytes32(harness):
+    """puyasolRegression/contracts/modifier_arg_bytes32.sol — NOT an o.g. test.
+
+    `onlyRole(MINTER_ROLE)` binds keccak256(...) — AWST wtype UNSIZED `bytes` —
+    to a `bytes32` modifier param. puya type-checks the pair and rejected the
+    program ("assignment target type differs from expression value type"),
+    which blocked five real deployed contracts (gho, strk, imx, xerc20,
+    burnminterc20). The bytes were always right; only the wtype label was not.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_arg_bytes32.sol")
+    from eth_utils import keccak
+    minter, burner = keccak(b"MINTER_ROLE"), keccak(b"BURNER_ROLE")
+    assert as_int(harness.call(app, "mint()").abi_return) == 7
+    assert as_bytes(harness.call(app, "lastRole()").abi_return) == minter
+    assert as_int(harness.call(app, "burn()").abi_return) == 9
+    assert as_bytes(harness.call(app, "lastRole()").abi_return) == burner
+    # a runtime bytes32 argument must still bind correctly
+    r = bytes(range(32))
+    assert as_int(harness.call(app, "anyRole(bytes32)", r).abi_return) == 11
+    assert as_bytes(harness.call(app, "lastRole()").abi_return) == r
+    # the role must still key a mapping the same way on both paths
+    import algosdk.encoding as _enc
+    who = _enc.encode_address(bytes(31) + b"\x07")
+    harness.call(app, "grant(bytes32,address)", minter, who)
+    assert harness.call(app, "isMember(bytes32,address)", minter, who).abi_return is True
+
+
 def test_ens_core_resolver(harness):
     """puyasolRegression/contracts/ens_core_resolver.sol — NOT an o.g. semantic test.
 

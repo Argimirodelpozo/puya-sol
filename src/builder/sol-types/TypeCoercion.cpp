@@ -844,6 +844,23 @@ std::string TypeCoercion::buildArc4Selector(
 
 // ── Defaults ─────────────────────────────────────────────────────
 
+std::shared_ptr<awst::Expression> TypeCoercion::relabelUnsizedBytes(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc
+)
+{
+	if (!_expr || !_expr->wtype || !_targetType)
+		return _expr;
+	if (_expr->wtype == _targetType)
+		return _expr;
+	auto const* dst = dynamic_cast<awst::BytesWType const*>(_targetType);
+	auto const* src = dynamic_cast<awst::BytesWType const*>(_expr->wtype);
+	if (!dst || !src || !dst->length().has_value() || src->length().has_value())
+		return _expr;
+	return awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	awst::WType const* _type,
 	awst::SourceLocation const& _loc
