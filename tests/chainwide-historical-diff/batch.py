@@ -87,7 +87,33 @@ CANDIDATES = [
     ("polygon.blockscout.com",  "0xAC0F66379A6d7801D7726d5a943356A172549Adb", "xtoken"),
     ("arbitrum.blockscout.com", "0x41CA7586cC1311807B4605fBB748a3B8862b42b5", "burnminterc20"),
     ("arbitrum.blockscout.com", "0x25d887Ce7a35172C62FeBFD67a1856F20FaEbB00", "pepeoft"),
+    # ── batch 4: deep eth token-listing harvest (pagination fixed — booleans in
+    # next_page_params must be JSON true/false, Python's str(False) 422'd and
+    # silently capped every chain at one 50-row page). Picked for STRUCTURAL
+    # variety: ERC-4626 vaults, tax-on-transfer, governance, bridged/wrapped.
+    ("eth.blockscout.com",      "0x57e114B691Db790C35207b2e685D4A43181e6061", "ena"),
+    ("eth.blockscout.com",      "0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f", "gho"),
+    ("eth.blockscout.com",      "0x18084fbA666a33d37592fA2633fD49a74DD93a88", "tbtc"),
+    ("eth.blockscout.com",      "0xE0f63A424a4439cBE457D80E4f4b51aD25b2c56C", "spx"),
+    ("eth.blockscout.com",      "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72", "ens_tok"),
+    ("eth.blockscout.com",      "0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766", "strk"),
+    ("eth.blockscout.com",      "0x83F20F44975D03b1b09e64809B757c47f942BEeA", "sdai_eth"),   # ERC-4626
+    ("eth.blockscout.com",      "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB", "cow"),
+    ("eth.blockscout.com",      "0x320623b8E4fF03373931769A31Fc52A4E78B5d70", "rsr"),
+    ("eth.blockscout.com",      "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB", "metamorpho"),  # ERC-4626
+    ("eth.blockscout.com",      "0xac3E018457B222d93114458476f3E3416Abbe38F", "sfrxeth"),     # ERC-4626
+    ("eth.blockscout.com",      "0x5E8422345238F34275888049021821E8E08CAa1f", "frxeth"),
+    ("eth.blockscout.com",      "0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E", "floki"),       # tax-on-transfer
+    ("eth.blockscout.com",      "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF", "imx"),
+    ("eth.blockscout.com",      "0xf0bb20865277aBd641a307eCe5Ee04E79073416C", "boringvault"),
+    ("eth.blockscout.com",      "0x470EBf5f030Ed85Fc1ed4C2d36B9DD02e77CF1b7", "temple"),
+    ("eth.blockscout.com",      "0xcccCCCcCCC33D538DBC2EE4fEab0a7A1FF4e8A94", "cfg"),
+    ("eth.blockscout.com",      "0xe76C6c83af64e4C60245D8C7dE953DF673a7A33D", "rail"),
+    ("eth.blockscout.com",      "0x8881562783028F5c1BCB985d2283D5E170D88888", "shfl"),
+    ("eth.blockscout.com",      "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6", "pol"),
 ]
+
+
 def main():
     argv = list(sys.argv[1:])
     max_txns = 200

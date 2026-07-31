@@ -295,6 +295,13 @@ def main():
         # silently skipped those maps (op_gov/_nonces).
         return bool(re.match(r"^mapping\(address\b", label or ""))
 
+    def _is_b32_mapping(label):
+        # OZ AccessControl's `_roles` is mapping(bytes32 => RoleData) — the role
+        # HASH is the key. Candidate keys come from the replay's own call args
+        # (grantRole/revokeRole take the role as a bytes32), so this stays a
+        # bounded probe, never an enumeration.
+        return bool(re.match(r"^mapping\(bytes32\b", label or ""))
+
     def _value_shape(tid):
         """Classify a mapping's value type into something the reader can decode."""
         vt = _TY.get(tid, {})
@@ -309,9 +316,22 @@ def main():
             return ("scalar", vt)
         return (None, vt)                    # string/bytes/other: not covered
 
+    # bytes32 keys actually used by this window's calls (marker form {"__b__": hex})
+    b32_keys = []
+    for c in calls:
+        for a in c.get("args") or []:
+            if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
+                if a["__b__"] not in b32_keys:
+                    b32_keys.append(a["__b__"])
+
     maps = []
     for e in layout.get("storage") or []:
         t = _TY.get(e["type"], {})
+        if _is_b32_mapping(t.get("label", "")):
+            kind, vt = _value_shape(t.get("value"))
+            if kind in ("scalar", "struct", "array"):
+                maps.append((e["label"], int(e["slot"]), "b32", (kind, vt)))
+            continue
         if not _is_addr_mapping(t.get("label", "")):
             continue
         kind, vt = _value_shape(t.get("value"))
@@ -500,6 +520,14 @@ def main():
             for name, slot, depth, vshape in maps:
                 cur_name[0] = name
                 got = {}
+                if depth == "b32":
+                    for kh in b32_keys:
+                        s1 = keccak(bytes.fromhex(kh) + slot.to_bytes(32, "big"))
+                        v = read_at(int.from_bytes(s1, "big"), vshape)
+                        if v is not None:
+                            got["0x" + kh] = v
+                    out[name] = got
+                    continue
                 for sym, addr in syms:
                     k = bytes.fromhex(str(addr)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
                     s1 = keccak(k + slot.to_bytes(32, "big"))

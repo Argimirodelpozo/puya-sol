@@ -373,18 +373,39 @@ def main():
     avm_events = getattr(app.app_spec, "events", None) or []
     ev_types = {e["name"]: e["inputs"] for e in case["abi"] if e.get("type") == "event"}
 
+    def _canon_arg(v, sol_type):
+        """Match the EVM leg's canonical form for one event argument.
+
+        address -> registry symbol; bytesN/bytes -> "0x…" hex. algosdk decodes a
+        `byte[32]` to a LIST OF INTS, which never equals the EVM leg's hex
+        string even when the bytes are identical — that alone reported 4 bogus
+        divergences on temple (OZ AccessControl role hashes)."""
+        t = str(sol_type or "")
+        if t == "address":
+            return fold(v)
+        if t.startswith("bytes"):
+            if isinstance(v, (list, tuple)):
+                return "0x" + bytes(v).hex()
+            if isinstance(v, (bytes, bytearray)):
+                return "0x" + bytes(v).hex()
+            return v
+        if isinstance(v, (list, tuple)):          # arrays/tuples: element-wise
+            base = t[:t.rindex("[")] if t.endswith("]") and "[" in t else t
+            return [_canon_arg(x, base) for x in v]
+        return v
+
     def fold_events(raw):
         """decode_avm_logs canonicalises addresses to 32-byte hex; re-fold those
-        to registry symbols so both legs compare symbol-to-symbol."""
+        to registry symbols, and normalise bytesN, so both legs compare like
+        for like."""
         got = decode_avm_logs(raw, avm_events)
         if got is None:
             return None
         out = []
         for lg in got:
             ins = ev_types.get(lg["name"], [])
-            args = []
-            for v, i2 in zip(lg["args"], ins):
-                args.append(fold(v) if i2.get("type") == "address" else v)
+            args = [_canon_arg(v, i2.get("type"))
+                    for v, i2 in zip(lg["args"], ins)]
             out.append({"name": lg["name"], "args": args})
         return out
 
@@ -455,6 +476,13 @@ def main():
         syms[symbol(_i)] = encoding.decode_address(_a.address)
     for _ad, _i in reg["args"].items():
         syms[symbol(_i)] = bytes(12) + arg_content20(_i)
+    # bytes32 keys this window's calls actually used (OZ AccessControl role
+    # hashes). Derived from calls.json exactly as the EVM leg does, so the two
+    # candidate sets — and hence the compared key names — are identical.
+    for c in calls:
+        for a in c.get("args") or []:
+            if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
+                syms["0x" + a["__b__"]] = bytes.fromhex(a["__b__"])
     storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold)
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},

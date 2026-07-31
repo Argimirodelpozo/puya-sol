@@ -130,9 +130,14 @@ def main():
         npp = d.get("next_page_params")
         if not npp:
             break
-        # names can contain spaces/unicode → must be percent-encoded
+        # names can contain spaces/unicode → must be percent-encoded. Booleans
+        # must go over the wire as JSON true/false: Python's str(False) is
+        # "False", which the token endpoint rejects with a 422 — that alone
+        # capped every token harvest at one page (50 rows) per chain.
         from urllib.parse import quote
-        params = "&" + "&".join(f"{k}={quote(str(v), safe='')}"
+        def _enc(v):
+            return "true" if v is True else "false" if v is False else str(v)
+        params = "&" + "&".join(f"{k}={quote(_enc(v), safe='')}"
                                 for k, v in npp.items() if v is not None)
         time.sleep(0.4)
 
