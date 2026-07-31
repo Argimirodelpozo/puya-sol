@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -75,6 +76,17 @@ def ensure_app_funded(algod, dispenser, app_addr, min_spare=20_000_000,
 def _dec_avm(raw, vtype, fold):
     """Decode an AVM state value using the arc56-declared Solidity type."""
     t = str(vtype or "")
+    # Sized bytesN FIRST: the EVM leg renders a bytesN slot as "0x…" hex, and
+    # without this a bytes32 state var fell through to the int decode and read
+    # as 0 while the EVM leg read "0x000…0" — the same zero, reported as a
+    # divergence (xerc20/_PERMIT_TYPEHASH_DEPRECATED_SLOT). Handled before the
+    # int short-circuit because AVM global state may hold it as a uint.
+    _m = re.match(r"^bytes(\d+)$", t)
+    if _m:
+        n = int(_m.group(1))
+        b = (raw.to_bytes(n, "big") if isinstance(raw, int)
+             else (raw or b""))
+        return "0x" + b.rjust(n, b"\0").hex()
     if isinstance(raw, int):
         return raw
     b = raw or b""

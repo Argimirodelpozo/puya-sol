@@ -1,0 +1,360 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "lastRole" "members" "__ctor_pending" 0x151f7c75
+    intc_1 // 0
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xbb2db532 0x73ad653e 0x83b7f097 0x4a493f6c 0xc8ffb6e8 0x090c1529 0x12562753 0x81775f72 0x87384e65 // method "__postInit()void", method "grant(byte[32],address)void", method "mint()uint256", method "burn()uint256", method "anyRole(byte[32])uint256", method "isMember(byte[32],address)bool", method "MINTER_ROLE()byte[32]", method "BURNER_ROLE()byte[32]", method "members(byte[32],address)bool", method "lastRole()byte[32]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_grant_route@6 main_mint_route@7 main_burn_route@8 main_anyRole_route@9 main_isMember_route@10 main_MINTER_ROLE_route@11 main_BURNER_ROLE_route@12 main_members_route@13 main_lastRole_route@14
+    err
+
+main_lastRole_route@14:
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "lastRole"
+    app_global_get_ex
+    assert // check lastRole exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_members_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 4
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    dig 3
+    bytec_1 // "members"
+    concat
+    sha256
+    dig 3
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@25:
+    intc_1 // 0
+    b main_ternary_merge@26
+
+main_BURNER_ROLE_route@12:
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    pushbytes 0x151f7c753c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@31
+
+main_MINTER_ROLE_route@11:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    pushbytes 0x151f7c759f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main_isMember_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@40
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@41:
+    !
+    assert // not payable
+    dup
+    bytec_1 // "members"
+    concat
+    sha256
+    dig 5
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@40:
+    intc_1 // 0
+    b main_ternary_merge@41
+
+main_anyRole_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    bytec_0 // "lastRole"
+    dig 2
+    app_global_put
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@45:
+    intc_1 // 0
+    b main_ternary_merge@46
+
+main_burn_route@8:
+    txn GroupIndex
+    bz main_ternary_false@50
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@51:
+    !
+    assert // not payable
+    bytec_0 // "lastRole"
+    pushbytes 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000009
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@50:
+    intc_1 // 0
+    b main_ternary_merge@51
+
+main_mint_route@7:
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    bytec_0 // "lastRole"
+    pushbytes 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@55:
+    intc_1 // 0
+    b main_ternary_merge@56
+
+main_grant_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@60
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@61:
+    !
+    assert // not payable
+    dup
+    bytec_1 // "members"
+    concat
+    sha256
+    dig 5
+    swap
+    concat
+    sha256
+    intc_0 // 1
+    itob
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@60:
+    intc_1 // 0
+    b main_ternary_merge@61
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "members"
+    pushint 2
+    box_create
+    pop
+    bytec_0 // "lastRole"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 1
+    return

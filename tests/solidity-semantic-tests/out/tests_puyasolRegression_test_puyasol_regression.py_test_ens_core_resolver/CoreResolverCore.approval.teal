@@ -1,0 +1,993 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 2
+    bytecblock "recordVersions" 0x 0x151f7c75 "versionable_addresses" "__ctor_pending" "versionable_pubkeys" "versionable_names" "versionable_hashes" "versionable_texts" 0x000000000000000000000000000000000000000000000000000000000000003c 0x01000000000000000000000000
+    intc_0 // 0
+    dupn 12
+    bytec_1 // ""
+    dupn 3
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x591d5f30 0xe1339269 0x176a6cd7 0x8c439b80 0x60b43710 0xd2fd5565 0x69dc2ff4 0x76cb8b16 0x38c6f65f 0xf9945a6c 0x097a5080 0xcad99cd3 0x738739b3 // method "__postInit()void", method "setAddr(byte[32],uint256,byte[])void", method "addr(byte[32],uint256)byte[]", method "setAddrEth(byte[32],address)void", method "addrEth(byte[32])address", method "setText(byte[32],string,string)void", method "text(byte[32],string)string", method "setContenthash(byte[32],byte[])void", method "contenthash(byte[32])byte[]", method "setName(byte[32],string)void", method "getName(byte[32])string", method "setPubkey(byte[32],byte[32],byte[32])void", method "pubkey(byte[32])(byte[32],byte[32])", method "clearRecords(byte[32])void"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setAddr_route@6 main_addr_route@7 main_setAddrEth_route@8 main_addrEth_route@9 main_setText_route@10 main_text_route@11 main_setContenthash_route@12 main_contenthash_route@13 main_setName_route@14 main_getName_route@15 main_setPubkey_route@16 main_pubkey_route@17 main_clearRecords_route@18
+    err
+
+main_clearRecords_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    dig 9
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 1
+    +
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_pubkey_route@17:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    dig 9
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 5 // "versionable_pubkeys"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@29:
+    intc_0 // 0
+    b main_ternary_merge@30
+
+main_setPubkey_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 7
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    bury 6
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    dig 5
+    dig 5
+    concat
+    dig 10
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 5 // "versionable_pubkeys"
+    concat
+    sha256
+    concat
+    sha256
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@34:
+    intc_0 // 0
+    b main_ternary_merge@35
+
+main_getName_route@15:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    dig 9
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 6 // "versionable_names"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@39:
+    intc_0 // 0
+    b main_ternary_merge@40
+
+main_setName_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 11
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    dig 9
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 6 // "versionable_names"
+    concat
+    sha256
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 11
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@44:
+    intc_0 // 0
+    b main_ternary_merge@45
+
+main_contenthash_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    dig 9
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 7 // "versionable_hashes"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@49:
+    intc_0 // 0
+    b main_ternary_merge@50
+
+main_setContenthash_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 13
+    txn GroupIndex
+    bz main_ternary_false@54
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@55:
+    !
+    assert // not payable
+    dig 9
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 7 // "versionable_hashes"
+    concat
+    sha256
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 13
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@54:
+    intc_0 // 0
+    b main_ternary_merge@55
+
+main_text_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 12
+    txn GroupIndex
+    bz main_ternary_false@59
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@60:
+    !
+    assert // not payable
+    dig 11
+    sha256
+    dig 10
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 8 // "versionable_texts"
+    concat
+    sha256
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@59:
+    intc_0 // 0
+    b main_ternary_merge@60
+
+main_setText_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 12
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 7
+    txn GroupIndex
+    bz main_ternary_false@64
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@65:
+    !
+    assert // not payable
+    dig 11
+    sha256
+    dig 10
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 8 // "versionable_texts"
+    concat
+    sha256
+    concat
+    sha256
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@64:
+    intc_0 // 0
+    b main_ternary_merge@65
+
+main_addrEth_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@69
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@70:
+    !
+    assert // not payable
+    dig 9
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec_3 // "versionable_addresses"
+    concat
+    sha256
+    concat
+    sha256
+    bytec 9 // 0x000000000000000000000000000000000000000000000000000000000000003c
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    bury 15
+    len
+    dup
+    bury 2
+    itob
+    dup
+    bury 10
+    intc_0 // 0
+    itob
+    b==
+    bz main_after_if_else@72
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@73:
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@72:
+    pushint 20
+    itob
+    dig 9
+    b==
+    assert
+    load 0
+    store 0
+    intc_1 // 32
+    bzero
+    bury 8
+    intc_0 // 0
+    bury 4
+    dup
+    bz main_ternary_false@91
+    dig 3
+    bury 2
+
+main_ternary_merge@92:
+    dup
+    dig 2
+    -
+    dup
+    bury 4
+    intc_1 // 32
+    <
+    bz main_ternary_false@94
+    dig 2
+
+main_ternary_merge@95:
+    dig 14
+    dig 3
+    uncover 2
+    extract3
+    dig 8
+    dup
+    cover 2
+    concat
+    extract 0 32
+    bytec 10 // 0x01000000000000000000000000
+    b/
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    load 0
+    store 0
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@73
+
+main_ternary_false@94:
+    intc_1 // 32
+    b main_ternary_merge@95
+
+main_ternary_false@91:
+    dup
+    bury 2
+    b main_ternary_merge@92
+
+main_ternary_false@69:
+    intc_0 // 0
+    b main_ternary_merge@70
+
+main_setAddrEth_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 17
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    pushint 20
+    bzero
+    load 0
+    store 0
+    intc_1 // 32
+    bzero
+    dig 17
+    bytec 10 // 0x01000000000000000000000000
+    b*
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    extract 0 20
+    replace2 0
+    load 0
+    store 0
+    dig 10
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec_3 // "versionable_addresses"
+    concat
+    sha256
+    concat
+    sha256
+    bytec 9 // 0x000000000000000000000000000000000000000000000000000000000000003c
+    swap
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@77:
+    intc_0 // 0
+    b main_ternary_merge@78
+
+main_addr_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 18
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@82
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@83:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 10
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec_3 // "versionable_addresses"
+    concat
+    sha256
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@82:
+    intc_0 // 0
+    b main_ternary_merge@83
+
+main_setAddr_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 11
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 18
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 15
+    txn GroupIndex
+    bz main_ternary_false@87
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@88:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    dig 17
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 10
+    dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec_3 // "versionable_addresses"
+    concat
+    sha256
+    concat
+    sha256
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 15
+    box_put
+    intc_2 // 1
+    return
+
+main_ternary_false@87:
+    intc_0 // 0
+    b main_ternary_merge@88
+
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 4 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "recordVersions"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "versionable_addresses"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "versionable_texts"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "versionable_hashes"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "versionable_names"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "versionable_pubkeys"
+    intc_3 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return

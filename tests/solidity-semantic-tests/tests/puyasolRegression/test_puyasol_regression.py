@@ -3304,6 +3304,29 @@ def test_modifier_arg_bytes32(harness):
     assert harness.call(app, "isMember(bytes32,address)", minter, who).abi_return is True
 
 
+def test_string_concat_wtype(harness):
+    """puyasolRegression/contracts/string_concat_wtype.sol — NOT an o.g. test.
+
+    `string.concat` returns `string memory` but lowered to the `concat`
+    intrinsic labelled plain `bytes`. puya type-checks assignment target vs
+    value and rejected the whole program once the result hit a string-typed
+    local ("assignment target type differs from expression value type"). The
+    return path had its own fixup, so `direct` compiled and `viaLocal` did not.
+    Blocked xerc20. Verified against a live solc+EVM (36 calls, 0 divergences).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/string_concat_wtype.sol", ctor_args=["ab"])
+    assert harness.call(app, "nm()").abi_return == "xab"
+    assert harness.call(app, "viaLocal(string)", "yz").abi_return == "xyz"
+    assert harness.call(app, "direct(string)", "q").abi_return == "aqb"
+    assert harness.call(app, "chained(string,string)", "l", "r").abi_return == "l-rl-r"
+    assert as_int(harness.call(app, "lenOf(string)", "abcd").abi_return) == 7
+    # bytes.concat must be untouched by a string-only fix
+    assert as_bytes(harness.call(app, "bcat(bytes)", b"\x01\x02").abi_return) \
+        == b"\x01\x02\xff"
+    assert as_bytes(harness.call(app, "toBytes(string)", "k").abi_return) == b"zk"
+
+
 def test_ens_core_resolver(harness):
     """puyasolRegression/contracts/ens_core_resolver.sol — NOT an o.g. semantic test.
 

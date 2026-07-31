@@ -102,12 +102,33 @@ def diff_case(case_dir: Path) -> dict:
         hits = [int(i) for i, d in delta.items() if var in d]
         return max(hits) if hits else None
 
+    def _same_word(x, y):
+        """A 32-byte slot rendered as "0x…" hex on one leg and as an int on the
+        other is the SAME 256-bit word.
+
+        The EVM leg knows a var is `bytes32` from solc's storageLayout and emits
+        hex; the AVM leg cannot, because puya-sol declares it in arc56 as the
+        untyped `AVMBytes` (xerc20/_PERMIT_TYPEHASH_DEPRECATED_SLOT read
+        "0x000…0" vs 0 — the same zero, reported as a divergence). Comparing
+        numerically is lossless, so a genuinely different value still differs.
+        """
+        if x == y:
+            return True
+        for a, b in ((x, y), (y, x)):
+            if isinstance(a, str) and a.startswith("0x") and isinstance(b, int) \
+                    and not isinstance(b, bool):
+                try:
+                    return int(a, 16) == b
+                except ValueError:
+                    return False
+        return False
+
     e_sc, a_sc = es.get("scalars") or {}, as_.get("scalars") or {}
     for var in sorted(set(e_sc) | set(a_sc)):
         if var.startswith("__"):
             continue
         ev_, av_ = e_sc.get(var), a_sc.get(var)
-        if ev_ == av_:
+        if _same_word(ev_, av_):
             continue
         # A var only the EVM side reports is usually a puya-sol representation
         # choice (e.g. immutables/constants not materialised as app state), not
@@ -204,7 +225,8 @@ def diff_case(case_dir: Path) -> dict:
         ee, aa = e_m.get(m) or {}, a_m.get(m) or {}
         # Both sides are keyed by registry SYMBOL (the AVM leg computes box
         # names forward through puya-sol's hash), so entries compare 1:1.
-        keys = [k for k in sorted(set(ee) | set(aa)) if ee.get(k) != aa.get(k)]
+        keys = [k for k in sorted(set(ee) | set(aa))
+                if not _same_word(ee.get(k), aa.get(k))]
         off = _uniform_offset([(ee.get(k), aa.get(k)) for k in keys])
         bucket = "storage_noise" if off is not None else "storage_map_div"
         for k in keys:

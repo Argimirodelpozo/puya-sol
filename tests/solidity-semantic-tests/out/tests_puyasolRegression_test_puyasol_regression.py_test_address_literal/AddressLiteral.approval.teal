@@ -1,0 +1,269 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "router" 0x151f7c75 0x00
+    intc_1 // 0
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "router"
+    pushbytes 0x0000000000000000000000007a250d5630b4cf539739df2c5dacb4c659f2488d
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd9b23dcf 0xa31a9fe0 0x4b75720c 0xa1b7a160 0x95c7a840 0xa00be3b3 0x66591ccf 0x1d1131b0 // method "getRouter()address", method "isRouter(address)bool", method "localLit()address", method "dead()address", method "eqDead(address)bool", method "pick(bool)address", method "setRouter(address)void", method "router()address"
+    txna ApplicationArgs 0
+    match main_getRouter_route@5 main_isRouter_route@6 main_localLit_route@7 main_dead_route@8 main_eqDead_route@9 main_pick_route@10 main_setRouter_route@11 main_router_route@12
+    err
+
+main_router_route@12:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "router"
+    app_global_get_ex
+    assert // check router exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@57
+
+main_setRouter_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    bytec_0 // "router"
+    dig 2
+    app_global_put
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24
+
+main_pick_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    dupn 2
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz main_ternary_false@31
+    pushbytes 0x0000000000000000000000001111111111111111111111111111111111111111
+
+main_ternary_merge@32:
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    pushbytes 0x0000000000000000000000002222222222222222222222222222222222222222
+    b main_ternary_merge@32
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_eqDead_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    dig 1
+    pushbytes 0xdead
+    ==
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main_dead_route@8:
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000dead
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@41:
+    intc_1 // 0
+    b main_ternary_merge@42
+
+main_localLit_route@7:
+    txn GroupIndex
+    bz main_ternary_false@46
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@47:
+    !
+    assert // not payable
+    pushbytes 0x151f7c750000000000000000000000009ba188e4b2c46c15450ea5eac83a048e5e5d9444
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@46:
+    intc_1 // 0
+    b main_ternary_merge@47
+
+main_isRouter_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@51
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@52:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "router"
+    app_global_get_ex
+    assert // check router exists
+    dig 2
+    ==
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@51:
+    intc_1 // 0
+    b main_ternary_merge@52
+
+main_getRouter_route@5:
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@57
+
+main_ternary_false@56:
+    intc_1 // 0
+    b main_ternary_merge@57
