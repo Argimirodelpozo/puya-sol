@@ -111,6 +111,28 @@ CANDIDATES = [
     ("eth.blockscout.com",      "0xe76C6c83af64e4C60245D8C7dE953DF673a7A33D", "rail"),
     ("eth.blockscout.com",      "0x8881562783028F5c1BCB985d2283D5E170D88888", "shfl"),
     ("eth.blockscout.com",      "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6", "pol"),
+    # ── batch 5: deep L2 harvest (base / optimism / gnosis / polygon /
+    # arbitrum), 217 candidates. Same diversity rule; one of each shape.
+    ("base.blockscout.com",     "0x940181a94A35A4569E4529A3CDfB74e38FD98631", "aero"),
+    ("base.blockscout.com",     "0x532f27101965dd16442E59d40670FaF5eBB142E4", "brett"),
+    ("base.blockscout.com",     "0x0C03Ce270B4826Ec62e7DD007f0B716068639F7B", "tig"),
+    ("base.blockscout.com",     "0x58ecEF26335Af7b04A998105a6603B0Dc475aF33", "babydoge"),
+    ("base.blockscout.com",     "0x182FA643E5f29d5EcA75e7b9CF9336A3fe4620b2", "b_token6"),
+    ("base.blockscout.com",     "0xf43eB8De897Fbc7F2502483B2Bef7Bb9EA179229", "zen"),
+    ("optimism.blockscout.com", "0x9560e827aF36c94D2Ac33a39bCE1Fe78631088Db", "velo"),
+    ("optimism.blockscout.com", "0x9A601C5bb360811d96A23689066af316a30c3027", "pika"),
+    ("optimism.blockscout.com", "0x10398AbC267496E49106B07dd6BE13364D10dC71", "systemcoin"),
+    ("optimism.blockscout.com", "0x2dAD3a13ef0C6366220f989157009e501e7938F8", "extra"),
+    ("optimism.blockscout.com", "0x14778860E937f509e651192a90589dE711Fb88a9", "cyber"),
+    ("gnosis.blockscout.com",   "0xeEeEEb57642040bE42185f49C52F7E9B38f8eeeE", "elk"),
+    ("gnosis.blockscout.com",   "0x5Cb9073902F2035222B9749F8fB0c9BFe5527108", "gbp"),
+    ("gnosis.blockscout.com",   "0x536dd2E72686d3d7d6A1d4A6FEbD69Ec1B7C05Bd", "pbnj"),
+    ("gnosis.blockscout.com",   "0x1D1498166DDCEeE616a6d99868e1E0677300056f", "xerc20"),
+    ("polygon.blockscout.com",  "0x8DE5B80a0C1B02Fe4976851D030B36122dbb8624", "vanry"),
+    ("polygon.blockscout.com",  "0x564906ec1DF8399F00e4ad32c0eCAC0404a27A1c", "wallettok"),
+    ("polygon.blockscout.com",  "0x37C5eBfaE4E4dA225e9D8042B05063c4A2C94bb6", "staup"),
+    ("polygon.blockscout.com",  "0xbFc70507384047Aa74c29Cdc8c5Cb88D0f7213AC", "polyalierc20"),
+    ("arbitrum.blockscout.com", "0x1337420dED5ADb9980CFc35f8f2B054ea86f8aB1", "sqd"),
 ]
 
 

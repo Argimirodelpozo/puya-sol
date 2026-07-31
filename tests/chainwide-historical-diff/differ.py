@@ -75,8 +75,19 @@ def diff_case(case_dir: Path) -> dict:
             ev_, av_ = es.get(sig), as_.get(sig)
             if ev_ == av_:
                 continue
+            # BOTH legs reverting is agreement on the observable outcome. The
+            # messages are not comparable across VMs — the EVM leg carries the
+            # ABI revert payload, the AVM leg an algod transaction id — so
+            # comparing the strings manufactures a divergence for every
+            # legitimately-reverting getter (staup's getLockPeriod, an
+            # owner-gated view, tripped it on all 16 snapshots). Revert PAYLOAD
+            # comparison for real calls is handled by the value/status differ,
+            # which is where it belongs.
+            both_revert = (isinstance(ev_, str) and isinstance(av_, str)
+                           and ev_.startswith("REVERT:") and av_.startswith("REVERT:"))
             bucket = ("snapshot_noise"
-                      if sig in KNOWN_NOISE_GETTERS or _NOISE_SIG_RE.search(sig)
+                      if both_revert or sig in KNOWN_NOISE_GETTERS
+                      or _NOISE_SIG_RE.search(sig)
                       else "snapshot_div")
             findings[bucket].append({"after_txn": int(k), "getter": sig,
                                      "evm": ev_, "avm": av_})
@@ -151,17 +162,58 @@ def diff_case(case_dir: Path) -> dict:
         hits = [int(i) for i, w in writes.items() if mapname in (w.get("names") or ())]
         return max(hits) if hits else None
 
+    def _uniform_offset(diffs):
+        """Signature of a BLOCK/TIME base difference rather than a miscompile.
+
+        The EVM leg pins block numbers and timestamps to historical values; the
+        AVM leg cannot (LocalNet's round is whatever it is). A contract storing
+        `block.number + period` therefore differs on EVERY entry by the SAME
+        constant, with every other field equal. staup does exactly that
+        (`_locked[a] = lockAddressInfo(block.number + blocklockperiod, true)`):
+        16 entries, one delta of 487989, bool matching on all 16.
+
+        Requires >= 2 entries and one distinct non-zero delta, so it cannot
+        absorb a one-off wrong value. Still reported — as noise, not a finding.
+        """
+        if len(diffs) < 2:
+            return None
+        deltas = set()
+        for ev_, av_ in diffs:
+            e_l = ev_ if isinstance(ev_, list) else [ev_]
+            a_l = av_ if isinstance(av_, list) else [av_]
+            if len(e_l) != len(a_l):
+                return None
+            d = None
+            for x, y in zip(e_l, a_l):
+                if x == y:
+                    continue
+                if not (isinstance(x, int) and isinstance(y, int)) \
+                        or isinstance(x, bool) or isinstance(y, bool):
+                    return None          # a non-numeric field differs => real
+                if d is not None:
+                    return None          # two numeric fields differ => real
+                d = y - x
+            if d in (None, 0):
+                return None
+            deltas.add(d)
+        return deltas.pop() if len(deltas) == 1 else None
+
     for m in sorted(set(e_m) & set(a_m)):
         if m.startswith("__"):
             continue
         ee, aa = e_m.get(m) or {}, a_m.get(m) or {}
         # Both sides are keyed by registry SYMBOL (the AVM leg computes box
         # names forward through puya-sol's hash), so entries compare 1:1.
-        for k in sorted(set(ee) | set(aa)):
-            if ee.get(k) != aa.get(k):
-                findings["storage_map_div"].append(
-                    {"map": m, "key": k, "evm": ee.get(k), "avm": aa.get(k),
-                     "last_write_txn": _last_write(m)})
+        keys = [k for k in sorted(set(ee) | set(aa)) if ee.get(k) != aa.get(k)]
+        off = _uniform_offset([(ee.get(k), aa.get(k)) for k in keys])
+        bucket = "storage_noise" if off is not None else "storage_map_div"
+        for k in keys:
+            f = {"map": m, "key": k, "evm": ee.get(k), "avm": aa.get(k),
+                 "last_write_txn": _last_write(m)}
+            if off is not None:
+                f["note"] = (f"uniform +{off} on every entry — EVM/AVM block or "
+                             "timestamp base, not a value divergence")
+            findings.setdefault(bucket, []).append(f)
 
     skips = {}
     for c in calls:
