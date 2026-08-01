@@ -6,6 +6,7 @@
 /// per-kind handler in src/builder/sol-ast/exprs/. The visitor base
 /// (SolASTVisitor.h) handles the dynamic_cast cascade.
 
+#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-ast/SolASTVisitor.h"
 #include "builder/sol-ast/SolExpressionFactory.h"
@@ -103,6 +104,56 @@ public:
 
 	std::shared_ptr<awst::Expression> visitMemberAccess(MemberAccess const& _n) override
 	{
+		// STORAGE-POINTER ALIAS: `StorageSlot.getStringSlot(store).value` denotes
+		// the same storage location as `store`, so resolve to the argument and
+		// skip the call entirely. Solidity forbids assigning to a storage
+		// pointer, which is exactly why OZ routes writes through this wrapper —
+		// so this must produce an LVALUE, not a copy. See
+		// AsmScan.h::storagePointerAliasParam for the exact shape required.
+		if (auto const* call = dynamic_cast<FunctionCall const*>(&_n.expression()))
+		{
+			Declaration const* refDecl = nullptr;
+			if (auto const* ma = dynamic_cast<MemberAccess const*>(&call->expression()))
+				refDecl = ma->annotation().referencedDeclaration;
+			else if (auto const* id = dynamic_cast<Identifier const*>(&call->expression()))
+				refDecl = id->annotation().referencedDeclaration;
+			if (auto const* fd = dynamic_cast<FunctionDefinition const*>(refDecl))
+				if (auto alias = builder::storagePointerAliasParam(*fd))
+					if (alias->second == _n.memberName()
+						&& alias->first < call->arguments().size())
+					{
+						auto const* arg = call->arguments()[alias->first].get();
+						// Writing through a bytes/string storage-ref PARAM only
+						// reaches the caller's state when the enclosing function
+						// is a LIBRARY/free function — those get the storage
+						// write-back augmentation (buildFreestandingSubroutine);
+						// contract methods do not, so the store would vanish.
+						// That combination was previously unreachable (this alias
+						// is the only legal way to write through such a param),
+						// and it must not become a SILENT dropped write.
+						if (auto const* aid = dynamic_cast<Identifier const*>(arg))
+							if (auto const* pv = dynamic_cast<VariableDeclaration const*>(
+									aid->annotation().referencedDeclaration))
+								if (pv->isCallableOrCatchParameter()
+									&& pv->referenceLocation()
+										== VariableDeclaration::Location::Storage)
+								{
+									auto const* owner = dynamic_cast<FunctionDefinition const*>(
+										pv->scope());
+									auto const* c = owner ? owner->annotation().contract : nullptr;
+									if (!c || !c->isLibrary())
+										Logger::instance().error(
+											"write through a storage-ref parameter of a "
+											"contract method is not supported — only "
+											"library/free functions get storage write-back, "
+											"so this store would be dropped. Move the helper "
+											"into a library.",
+											makeLoc(_n));
+								}
+						return visit(*arg);
+					}
+		}
+
 		// Scalar-leaf read on a >4KB blob aggregate (`p.w1.x`): route through
 		// the multi-slot blob. resolveBlobOffset no-ops for non-blob-agg roots.
 		if (m_ctx.currentScope)

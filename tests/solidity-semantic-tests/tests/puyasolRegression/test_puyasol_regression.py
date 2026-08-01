@@ -3265,11 +3265,16 @@ def test_assign_target_constant_fails_loud(harness):
     """puyasolRegression/contracts/assign_target_constant.sol — NOT an o.g. test.
 
     An assignment whose LHS lowers to a constant is a write that goes nowhere.
-    It came from SolExpressionDispatch's "unsupported member access" fallback
-    (a warning returning an empty BytesConstant) on the OZ StorageSlot idiom
-    `getStringSlot(store).value = v`. puya rejected it with an unreadable
-    "deserialization failed: 'BytesConstant'"; other shapes would drop the store
-    silently. Must be a loud compile error until the lvalue is supported.
+    It comes from lvalue paths that give up and return a placeholder
+    (SolExpressionDispatch's "unsupported member access" warning). puya happens
+    to reject a constant target, but other shapes of the same mistake would
+    SILENTLY DROP THE STORE, so puya-sol hard-errors on it after serialization.
+
+    Fixture is OZ Checkpoints._unsafeAccess, which writes through a storage ref
+    whose slot is computed by ARITHMETIC in assembly, so it denotes a different
+    location than any parameter and is NOT a storage-pointer alias — contrast
+    test_storage_slot_write_through, where `r.slot := store.slot` IS an identity
+    alias and now compiles. Needs real storage-pointer arithmetic; stay loud.
     """
     with pytest.raises(CompileError):
         harness.compile_and_deploy(
@@ -3346,6 +3351,40 @@ def test_blob_array_value_use(harness):
     for n in (1, 2, 5, 12):
         assert as_int(harness.call(app, "firstUint(uint256)", n).abi_return) == 1
         assert as_int(harness.call(app, "lastUint(uint256)", n).abi_return) == n
+
+
+def test_storage_slot_write_through(harness):
+    """puyasolRegression/contracts/storage_slot_write_through.sol — NOT o.g.
+
+    OZ StorageSlot: `getStringSlot(store).value = v` is the only legal way to
+    write THROUGH a storage pointer. It resolved to a bare biguint slot number,
+    `.value` was an unsupported member access, and the write was dropped.
+    Blocked 7 real contracts via OZ ShortStrings.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/storage_slot_write_through.sol")
+    harness.call(app, "setA(string)", "hello")
+    assert harness.call(app, "getA()").abi_return == "hello"
+    assert harness.call(app, "readA()").abi_return == "hello"   # read via alias
+    assert as_int(harness.call(app, "lenA()").abi_return) == 5
+    harness.call(app, "setC(bytes)", b"\x01\x02\x03")
+    assert as_bytes(harness.call(app, "getC()").abi_return) == b"\x01\x02\x03"
+    # write through a `string storage` param of a LIBRARY function (the OZ shape)
+    harness.call(app, "setDViaLib(string)", "via-lib")
+    assert harness.call(app, "getD()").abi_return == "via-lib"
+
+
+def test_storage_slot_write_through_contract_method_fails_loud(harness):
+    """The contract-method equivalent must stay a LOUD compile error.
+
+    Only library/free functions get the storage write-back augmentation
+    (buildFreestandingSubroutine); a contract method would drop the store. That
+    combination was previously unreachable, and must not become silent now that
+    the alias resolves.
+    """
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy(
+            "puyasolRegression/contracts/storage_slot_write_contract_method.sol")
 
 
 def test_ens_core_resolver(harness):

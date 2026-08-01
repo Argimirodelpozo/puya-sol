@@ -283,6 +283,25 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		int srcLen = srcBytes && srcBytes->length() ? *srcBytes->length() : 0;
 		int tgtLen = static_cast<int>(fbType->numBytes());
 
+		// UNSIZED `bytes memory` → bytesN. Solidity takes the FIRST N bytes,
+		// right-padding with zeros: the value is LEFT-aligned in the word. This
+		// fell through to a bare reinterpret, so a later `uint256(...)` read the
+		// short byte string as a NUMBER and right-aligned it — `bytes32("abc")`
+		// came out 0x00…616263 instead of 0x616263…00. OZ ShortStrings packs
+		// `bytes32(uint256(bytes32(bstr)) | bstr.length)`, so the length was
+		// OR'd onto the last DATA byte instead of the length byte
+		// ("hello world" round-tripped as "hello worlo") and byteLength()
+		// returned a character code. Blocked usde/kaito/ena/aero/velo.
+		if (srcLen == 0 && tgtLen > 0)
+		{
+			auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
+			auto padded = awst::makeConcat(
+				std::move(toBytes), awst::makeBzero(tgtLen, _loc), _loc);
+			auto result = awst::makeExtract(std::move(padded), 0, tgtLen, _loc);
+			auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
+			return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
+		}
+
 		if (srcLen > 0 && tgtLen > 0 && srcLen != tgtLen)
 		{
 			auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);

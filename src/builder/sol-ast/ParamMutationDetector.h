@@ -1,5 +1,7 @@
 #pragma once
 
+#include "builder/sol-ast/AsmScan.h"
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -172,6 +174,23 @@ private:
 				{ lhs = &ix->baseExpression(); continue; }
 			if (auto const* mb = dynamic_cast<MemberAccess const*>(lhs))
 				{ lhs = &mb->expression(); continue; }
+			// STORAGE-POINTER ALIAS: `StorageSlot.getStringSlot(store).value = v`
+			// mutates `store`, but syntactically the assignment target is a member
+			// of a CALL RESULT, so the walk stopped here and the param was never
+			// recorded as mutated — the write-back was skipped and the store
+			// silently dropped. Follow the alias into its argument.
+			if (auto const* call = dynamic_cast<FunctionCall const*>(lhs))
+			{
+				Declaration const* rd = nullptr;
+				if (auto const* ma = dynamic_cast<MemberAccess const*>(&call->expression()))
+					rd = ma->annotation().referencedDeclaration;
+				else if (auto const* idc = dynamic_cast<Identifier const*>(&call->expression()))
+					rd = idc->annotation().referencedDeclaration;
+				if (auto const* fd = dynamic_cast<FunctionDefinition const*>(rd))
+					if (auto alias = storagePointerAliasParam(*fd);
+						alias && alias->first < call->arguments().size())
+						{ lhs = call->arguments()[alias->first].get(); continue; }
+			}
 			if (auto const* tup = dynamic_cast<TupleExpression const*>(lhs))
 			{
 				for (auto const& c: tup->components())

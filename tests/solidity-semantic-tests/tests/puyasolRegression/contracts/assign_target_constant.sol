@@ -1,29 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-// CUSTOM regression fixture (NOT vendored). Guards FAIL-LOUD on a dropped write.
+// CUSTOM regression fixture (NOT vendored). MUST FAIL TO COMPILE.
 //
-// The OZ StorageSlot idiom `getStringSlot(store).value = v` writes THROUGH a
-// storage-slot handle produced by assembly. puya-sol models that handle as a
-// bare biguint slot number, so `.value` hit SolExpressionDispatch's
-// "unsupported member access" path — a WARNING returning an empty BytesConstant.
-// As an assignment TARGET that means the write silently goes nowhere; here it
-// happened to reach puya, which rejected it with the unreadable
-// "deserialization failed: 'BytesConstant'" (a constant is not in its Lvalue
-// union), but other shapes would simply drop the store.
+// Guards the general rule that an assignment whose LHS lowers to a CONSTANT is
+// a write that goes nowhere. Such targets come from lvalue paths that give up
+// and return a placeholder (SolExpressionDispatch's "unsupported member access"
+// warning yields an empty BytesConstant / zero IntegerConstant). puya happens
+// to reject a constant target — it is not in its Lvalue union — but other
+// shapes of the same mistake would SILENTLY DROP THE STORE, so puya-sol
+// hard-errors on it after serialization instead.
 //
-// Assigning INTO a constant is never meaningful, so puya-sol now hard-errors on
-// it after serialization, naming the source location. This fixture must keep
-// FAILING TO COMPILE until writes through a storage-slot handle are supported;
-// if it ever compiles, check that the write actually lands before relaxing this.
-library SS {
-    struct StringSlot { string value; }
-    function getStringSlot(string storage store) internal pure returns (StringSlot storage r) {
-        assembly { r.slot := store.slot }
+// The shape below is OZ Checkpoints._unsafeAccess, which writes through a
+// storage reference whose slot is computed by ARITHMETIC in assembly:
+//     assembly { mstore(0, self.slot); r.slot := add(keccak256(0, 0x20), pos) }
+// That denotes a DIFFERENT storage location than any parameter, so it is NOT a
+// storage-pointer alias (contrast storage_slot_write_through.sol, where
+// `r.slot := store.slot` IS an identity alias and now compiles). Supporting it
+// needs real storage-pointer arithmetic; until then it must stay LOUD.
+library Ckpt {
+    struct Item { uint224 value; }
+
+    function unsafeAccess(Item[] storage self, uint256 pos)
+        internal pure returns (Item storage r)
+    {
+        assembly {
+            mstore(0, self.slot)
+            r.slot := add(keccak256(0, 0x20), pos)
+        }
     }
 }
 
-contract SlotW {
-    string private _fallback;
-    function setIt(string calldata v) external { SS.getStringSlot(_fallback).value = v; }
-    function get() external view returns (string memory) { return _fallback; }
+contract AssignTargetConstant {
+    Ckpt.Item[] private items;
+
+    function push(uint224 v) external { items.push(Ckpt.Item(v)); }
+
+    // the write that would be silently dropped
+    function overwriteLast(uint224 v) external {
+        Ckpt.unsafeAccess(items, items.length - 1).value = v;
+    }
 }

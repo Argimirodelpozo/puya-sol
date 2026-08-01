@@ -195,6 +195,17 @@ int main(int _argc, char* _argv[])
 	puyasol::json::AWSTSerializer serializer;
 	auto awstJson = serializer.serialize(roots);
 
+	// Create output directory
+	fs::create_directories(opts.outputDir);
+
+	// Write awst.json
+	std::string awstPath = (fs::path(opts.outputDir) / "awst.json").string();
+	{
+		std::ofstream out(awstPath);
+		out << awstJson.dump(2) << std::endl;
+		logger.info("Wrote: " + awstPath);
+	}
+
 	// Assigning INTO a constant is never meaningful — it means some lvalue path
 	// gave up and returned a placeholder (e.g. SolExpressionDispatch's
 	// "unsupported member access" warning yields an empty BytesConstant), so the
@@ -243,16 +254,6 @@ int main(int _argc, char* _argv[])
 			return 1;
 	}
 
-	// Create output directory
-	fs::create_directories(opts.outputDir);
-
-	// Write awst.json
-	std::string awstPath = (fs::path(opts.outputDir) / "awst.json").string();
-	{
-		std::ofstream out(awstPath);
-		out << awstJson.dump(2) << std::endl;
-		logger.info("Wrote: " + awstPath);
-	}
 
 	// Dump to stdout if requested (keep on stdout for piping)
 	if (opts.dumpAwst)
