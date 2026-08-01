@@ -16,6 +16,8 @@ from chd_common import dump_json, load_json
 KNOWN_NOISE_GETTERS = {
     "DOMAIN_SEPARATOR()",          # EIP-712 hash over chainid + address(this)
     "getChainId()", "chainId()",
+    "clock()",                     # ERC-6372: block.number — EVM leg's local
+                                   # height vs the AVM round can never match
 }
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_SEPARATOR|chainid|CHAIN_ID)", re.I)
 
@@ -74,6 +76,18 @@ def diff_case(case_dir: Path) -> dict:
         for sig in sorted(set(es) | set(as_)):
             ev_, av_ = es.get(sig), as_.get(sig)
             if ev_ == av_:
+                continue
+            # EIP-5267 eip712Domain(): field 3 is the CHAIN ID — pure
+            # environment (py-evm's id vs the AVM's fixed 1), not compilation.
+            # Compare the other six fields for real; matching = noise.
+            if (sig == "eip712Domain()" and isinstance(ev_, list)
+                    and isinstance(av_, list) and len(ev_) == len(av_)
+                    and len(ev_) >= 4
+                    and [x for i2, x in enumerate(ev_) if i2 != 3]
+                        == [x for i2, x in enumerate(av_) if i2 != 3]):
+                findings["snapshot_noise"].append(
+                    {"after_txn": int(k), "getter": sig,
+                     "evm": ev_, "avm": av_, "note": "chainid-only"})
                 continue
             # BOTH legs reverting is agreement on the observable outcome. The
             # messages are not comparable across VMs — the EVM leg carries the

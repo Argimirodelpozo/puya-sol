@@ -253,6 +253,9 @@ def main():
                 pass
 
     layout = target.get("storageLayout") or {"storage": [], "types": {}}
+    # Slot-mode AVM replays read storage through the SAME layout (see
+    # chd_slot_reader) — persist it for the AVM leg (runs after this one).
+    dump_json(case_dir / "storage_layout.json", layout)
 
     def _decode_slot_bytes(raw: bytes, label: str, fold):
         if label == "address" or label.startswith("contract "):

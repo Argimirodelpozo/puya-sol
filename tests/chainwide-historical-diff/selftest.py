@@ -146,7 +146,11 @@ def main():
     from differ import print_report
     case_dir = build_case()
     print(f"[selftest] synthetic case at {case_dir}")
-    rep = replay(TAG, max_txns=len(CALLS), snapshot_every=5)
+    evm_layout = "--evm-layout" in sys.argv
+    if evm_layout:
+        print("[selftest] --evm-storage-layout slot mode")
+    rep = replay(TAG, max_txns=len(CALLS), snapshot_every=5,
+                 evm_layout=evm_layout)
     print_report(rep)
     print("\n[selftest] storage-map coverage:")
     bad = check(case_dir)

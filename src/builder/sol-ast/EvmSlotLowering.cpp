@@ -525,6 +525,12 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
 	auto word = readSlotWord(_a.slot, m_loc);
 	if (_a.size == 32 && !_a.byteOffset)
 	{
+		// Fast path: a biguint carrier IS the raw word (canonical 256-bit TC);
+		// only signed sub-256 needs the sign-extension step. Skipping the
+		// pad/extract round-trip saves ~15 bytes of TEAL per read site.
+		if (_a.wtype == awst::WType::biguintType())
+			return TypeCoercion::signExtendSignedElement(
+				std::move(word), _a.solType, m_loc);
 		auto raw = awst::makeLeftPadToN(awst::makeAsBytes(std::move(word), m_loc), 32, m_loc);
 		return SlotWordCodec::packedBytesToNative(std::move(raw), _a.wtype, _a.solType, 32, m_loc);
 	}
@@ -548,6 +554,13 @@ void EvmSlotLowering::writeValue(
 {
 	if (_a.size == 32 && !_a.byteOffset)
 	{
+		// Fast path: a biguint value is already the canonical word.
+		if (_value && _value->wtype == awst::WType::biguintType())
+		{
+			_out.push_back(SlotHandleAccess::writeSlot(
+				_a.slot, std::move(_value), m_loc));
+			return;
+		}
 		auto packed = SlotWordCodec::nativeToPackedBytes(
 			std::move(_value), _a.wtype, 32, m_loc);
 		_out.push_back(SlotHandleAccess::writeSlot(

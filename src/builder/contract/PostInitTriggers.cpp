@@ -1,4 +1,5 @@
 #include "builder/contract/PostInitTriggers.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
@@ -260,6 +261,24 @@ bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const&
 
 bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contract)
 {
+	// --evm-storage-layout: EVERY state write is a box write, and boxes of the
+	// app being created cannot be referenced in the create txn — defer any
+	// state initializer / constructor body to __postInit.
+	if (evmStorageLayout())
+	{
+		bool anyStateWork = _contract.constructor() != nullptr;
+		if (!anyStateWork)
+			for (auto const* base: _contract.annotation().linearizedBaseContracts)
+				for (auto const* var: base->stateVariables())
+					if (var && var->value() && !var->isConstant() && !var->immutable())
+						anyStateWork = true;
+		if (anyStateWork)
+		{
+			Logger::instance().debug(
+				"Forcing __postInit: --evm-storage-layout state writes are box ops");
+			return true;
+		}
+	}
 	if (detectBoxRefsInConstructor(_contract))
 		return true;
 	if (detectNewExprInConstructor(_contract))

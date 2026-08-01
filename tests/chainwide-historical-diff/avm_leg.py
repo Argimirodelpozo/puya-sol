@@ -282,6 +282,7 @@ def main():
     cj = load_json(case_dir / "calls.json")
     meta, calls = cj["meta"], cj["calls"]
     ext_skips = set(int(k) for k in (opts.get("skips") or []))
+    evm_layout = bool(opts.get("evm_layout"))
 
     mut = {}
     for e in case["abi"]:
@@ -348,9 +349,11 @@ def main():
         artifacts = h.compile(tmp_root / mf["main"],
                               extra_sources=[tmp_root / r for r in mf["files"]],
                               extra_import_dir=tmp_root,
-                              extra_remappings=mf["remappings"])
+                              extra_remappings=mf["remappings"],
+                              extra_args=(["--evm-storage-layout"] if evm_layout else None))
     else:
-        artifacts = h.compile(case_dir / "prepared.sol")
+        artifacts = h.compile(case_dir / "prepared.sol",
+                              extra_args=(["--evm-storage-layout"] if evm_layout else None))
     app = h.deploy(artifacts, case["name"],
                    ctor_args=[resolve(m) for m in meta["ctor_args"]] or None)
     print(f"[avm] deployed {case['name']} app_id={app.app_id}")
@@ -481,7 +484,6 @@ def main():
     arc56 = {}
     for cand in sorted((case_dir / "out_avm").glob(f"{case['name']}.arc56.json")):
         arc56 = load_json(cand)
-    storage = read_avm_storage(algod, app.app_id, arc56, fold)
     syms = {symbol("C"): encoding.decode_address(dispenser.address),
             symbol("Z"): bytes(32)}
     for _i, _a in accts.items():
@@ -495,7 +497,16 @@ def main():
         for a in c.get("args") or []:
             if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
                 syms["0x" + a["__b__"]] = bytes.fromhex(a["__b__"])
-    storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold)
+    if evm_layout:
+        # --evm-storage-layout: storage IS solc's slot layout in boxes — read
+        # it exactly the way the EVM leg reads py-evm state (chd_slot_reader).
+        from chd_slot_reader import read_slot_map, read_slot_storage
+        slot_layout = load_json(case_dir / "storage_layout.json")
+        storage = read_slot_storage(
+            read_slot_map(algod, app.app_id), slot_layout, syms, fold, calls)
+    else:
+        storage = read_avm_storage(algod, app.app_id, arc56, fold)
+        storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold)
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,

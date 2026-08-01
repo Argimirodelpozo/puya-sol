@@ -1,6 +1,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
 #include "builder/storage/EvmLayoutMode.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
@@ -128,18 +129,6 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			if (translatedFunctions.count(var->name()))
 				return; // explicit getter already exists
 
-			// --evm-storage-layout: auto-getters still read named cells; not
-			// yet ported to slot reads. Skip loudly — write explicit getters.
-			if (evmStorageLayout())
-			{
-				Logger::instance().warning(
-					"--evm-storage-layout: skipping auto-getter for public state "
-					"variable '" + var->name() + "' (not yet supported; write an "
-					"explicit getter function)", makeLoc(var->location()));
-				translatedFunctions.insert(var->name());
-				return;
-			}
-
 			// Getter type: param types (mapping keys, array indices) + return types (struct filtering).
 			auto getterFuncType = var->functionType(/*_internal=*/false);
 			if (!getterFuncType)
@@ -224,7 +213,156 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			auto body = awst::makeBlock(loc);
 
 			std::shared_ptr<awst::Expression> readExpr;
-			if (var->isConstant())
+			if (!var->isConstant() && evmStorageLayout())
+			{
+				// --evm-storage-layout: walk the declared type over the getter
+				// args (mapping keys / array indices) to the leaf's slot address
+				// and read it there — the slot-mode twin of the branches below.
+				sol_ast::EvmSlotLowering low(
+					*m_exprBuilder, *m_exprBuilder->currentScope, loc);
+				auto addr = low.addrForStateVar(*var);
+				bool supported = addr.has_value();
+				solidity::frontend::Type const* walk = var->type();
+				size_t ai = 0;
+				while (supported && ai < getter.args.size())
+				{
+					if (auto const* mt =
+							dynamic_cast<solidity::frontend::MappingType const*>(walk))
+					{
+						auto keyVar = awst::makeVarExpression(
+							getter.args[ai].name, getter.args[ai].wtype, loc);
+						auto slot = low.mappingEntrySlot(
+							addr->slot, std::move(keyVar), mt->keyType());
+						walk = mt->valueType();
+						sol_ast::EvmSlotLowering::Addr a;
+						a.slot = std::move(slot);
+						a.size = walk->storageBytes();
+						a.solType = walk;
+						a.wtype = m_typeMapper.map(walk);
+						if (a.wtype == awst::WType::accountType())
+							a.size = 32;   // full-slot AVM address
+						addr = std::move(a);
+						ai++;
+						continue;
+					}
+					if (auto const* at =
+							dynamic_cast<solidity::frontend::ArrayType const*>(walk);
+						at && !at->isByteArrayOrString())
+					{
+						auto idxRef = awst::makeVarExpression(
+							getter.args[ai].name, getter.args[ai].wtype, loc);
+						auto idx = TypeCoercion::implicitNumericCast(
+							std::move(idxRef), awst::WType::biguintType(), loc);
+						std::shared_ptr<awst::Expression> dataBase;
+						std::shared_ptr<awst::Expression> lenExpr;
+						if (at->isDynamicallySized())
+						{
+							lenExpr = sol_ast::EvmSlotLowering::readSlotWord(addr->slot, loc);
+							dataBase = sol_ast::EvmSlotLowering::dynDataBase(addr->slot, loc);
+						}
+						else
+						{
+							lenExpr = awst::makeIntegerConstant(
+								at->length().str(), loc, awst::WType::biguintType());
+							dataBase = addr->slot;
+						}
+						auto idxRef2 = awst::makeVarExpression(
+							getter.args[ai].name, getter.args[ai].wtype, loc);
+						auto idxCheck = TypeCoercion::implicitNumericCast(
+							std::move(idxRef2), awst::WType::biguintType(), loc);
+						auto cmp = awst::makeNumericCompare(std::move(idxCheck),
+							awst::NumericComparison::Lt, std::move(lenExpr), loc);
+						body->body.push_back(awst::makeExpressionStatement(
+							awst::makeAssert(std::move(cmp), loc, "array out-of-bounds"),
+							loc));
+						addr = low.elemAddr(std::move(dataBase), std::move(idx),
+							at->baseType());
+						walk = at->baseType();
+						ai++;
+						continue;
+					}
+					supported = false;
+				}
+				if (supported)
+				{
+					if (walk->isValueType())
+						readExpr = low.readValue(*addr);
+					else if (sol_ast::EvmSlotLowering::isBytesLike(walk))
+						readExpr = low.readBytesValue(*addr);
+					else if (auto const* st =
+							dynamic_cast<solidity::frontend::StructType const*>(walk))
+					{
+						// project fields flat, skipping mapping/array members
+						// (solc's public-accessor rule); string/bytes stay.
+						std::vector<std::shared_ptr<awst::Expression>> items;
+						for (auto const& m: st->structDefinition().members())
+						{
+							if (!m)
+								continue;
+							auto const* mtOfM = m->type();
+							if (dynamic_cast<solidity::frontend::MappingType const*>(mtOfM))
+								continue;
+							if (auto const* ma2 = dynamic_cast<
+									solidity::frontend::ArrayType const*>(mtOfM);
+								ma2 && !ma2->isByteArrayOrString())
+								continue;
+							auto const& off = st->storageOffsetsOfMember(m->name());
+							sol_ast::EvmSlotLowering::Addr fa;
+							fa.slot = off.first == 0 ? addr->slot
+								: awst::makeBigUIntBinOp(addr->slot,
+									awst::BigUIntBinaryOperator::Add,
+									awst::makeIntegerConstant(off.first.str(), loc,
+										awst::WType::biguintType()), loc);
+							fa.byteOffset = off.second
+								? awst::makeIntegerConstant(
+									static_cast<uint64_t>(off.second), loc)
+								: nullptr;
+							fa.size = mtOfM->storageBytes();
+							fa.solType = mtOfM;
+							fa.wtype = m_typeMapper.map(mtOfM);
+							if (fa.wtype == awst::WType::accountType()
+								&& !fa.byteOffset)
+								fa.size = 32;   // matches the write side's widening
+							std::shared_ptr<awst::Expression> item;
+							if (sol_ast::EvmSlotLowering::isBytesLike(mtOfM))
+								item = low.readBytesValue(fa);
+							else
+								item = low.readValue(fa);
+							if (auto it2 = builder::SolIntType::fromSol(mtOfM);
+								item && it2 && it2->isSigned && it2->bits < 256)
+								item = TypeCoercion::signExtendToUint256(
+									TypeCoercion::implicitNumericCast(std::move(item),
+										awst::WType::biguintType(), loc),
+									it2->bits, loc);
+							items.push_back(std::move(item));
+						}
+						if (items.size() == 1)
+							readExpr = std::move(items[0]);
+						else if (!items.empty())
+						{
+							auto tuple = awst::makeTupleExpression(getter.returnType, loc);
+							for (auto& it3: items)
+								tuple->items.push_back(std::move(it3));
+							readExpr = std::move(tuple);
+						}
+					}
+				}
+				// flush anything the lowering queued (index pins etc.)
+				for (auto& st2: m_exprBuilder->takePrePending())
+					body->body.push_back(std::move(st2));
+				for (auto& st2: m_exprBuilder->takePending())
+					body->body.push_back(std::move(st2));
+				if (!readExpr)
+				{
+					Logger::instance().warning(
+						"--evm-storage-layout: skipping auto-getter for public "
+						"state variable '" + var->name()
+						+ "' (shape not yet supported; write an explicit getter)",
+						loc);
+					return;
+				}
+			}
+			else if (var->isConstant())
 			{
 				// Compile-time constant: return directly.
 				if (var->value())

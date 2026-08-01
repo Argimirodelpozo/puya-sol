@@ -1,3 +1,27 @@
+# Semantic Test Status — v476
+
+> **feat: --evm-storage-layout differ integration — REAL HISTORIES REPLAY CLEAN, 2026-08-01:**
+> **12 failed / 1393 passed / 107 xf / 30 xp** (zero regressions; the 12 = the known
+> baseline set). The asm-compat-memory-mode.md §5 verification sequence is closed:
+> `chainwide-historical-diff/replay.py <tag> --evm-layout` compiles the AVM leg in slot
+> mode and reads its storage via the new chd_slot_reader.py — a slot→word map rebuilt
+> from the "p:"/"s:" boxes, walked with solc's OWN storageLayout (dumped by the EVM leg
+> to storage_layout.json) and the same forward keccak derivations as the EVM reader, so
+> differ.py compares unchanged and coverage is STRONGER (dense pages enumerate every
+> nonzero slot; unread state is visible by construction — degen's Trace208
+> _totalCheckpoints surfaces as an honest both-legs coverage warning).
+> **REPLAYS: usde 250 txns ✅ / kaito 239 ✅ / degen 273 ✅ — ZERO divergences** vs the
+> py-evm oracle (statuses, returns, reverts, events, snapshots, slot-for-slot storage).
+> Landed to get there: slot-mode AUTO-GETTERS (type-walk over mapping keys / array
+> indices to a leaf slot addr, struct-field projection; validated by
+> selftest.py --evm-layout across scalar/nested/struct/array-valued mappings);
+> __postInit ALWAYS forced in-mode (state writes are box ops — illegal in the create
+> txn; USDe's deploy caught it); full-slot biguint read/write FAST PATH (the word IS
+> the canonical 256-bit TC value — degen 8230→8060 B, under the 4-page cap); noise
+> classification for eip712Domain() (chainId field masked-compare) and clock()
+> (ERC-6372 block.number). Third `e->wtype`+`std::move(e)` arg-eval-order segfault
+> fixed (resolver bounds pin, degen-exposed).
+
 # Semantic Test Status — v475
 
 > **feat: --evm-storage-layout STAGE 2 — storage refs as slot handles, 2026-08-01:**

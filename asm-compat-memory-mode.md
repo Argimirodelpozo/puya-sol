@@ -68,12 +68,33 @@ write-through (direct + through a `string storage` library param),
 using-for push/latest via asm keccak+add, library array params, storage
 locals with runtime rebind.
 
+**DIFFER INTEGRATION + REAL-HISTORY REPLAYS LANDED** (same day): the §5
+verification sequence is real. `replay.py <tag> --evm-layout` compiles the
+AVM leg with the mode and reads its storage through
+`chd_slot_reader.py` — a slot→word map rebuilt from the page/sparse boxes,
+walked with solc's own storageLayout (dumped by the EVM leg) and the same
+forward keccak derivations as the EVM reader. Same output shapes, so
+differ.py compares unchanged; coverage got STRONGER (dense pages enumerate
+every nonzero slot, so unread state is visible by construction). Slot-mode
+auto-getters landed too (mapping keys / array indices / struct-field
+projection walk the declared type to a leaf slot). `__postInit` is always
+forced in-mode (every state write is a box op — illegal in the create txn).
+Full-slot biguint reads/writes got a fast path (word IS the canonical value),
+which also brought degen under the 8 KB×4-page cap (8230 → 8060 B).
+
+**Replay results (real on-chain histories vs py-evm oracle, slot-for-slot
+storage compare): usde 250 txns ✅, kaito 239 txns ✅, degen 273 txns ✅ —
+zero divergences.** Environment-only getter noise is classified
+(`eip712Domain()` chainId field masked-compare; `clock()` = ERC-6372
+block.number). Slot-mode `selftest.py --evm-layout` green on every mapping
+shape (scalar/nested/struct/array values).
+
 **Not yet (stage 3)**: universal blob memory (asm pointer arithmetic on
-memory strings/arrays — what builder needs), bytes/string element access &
-push/pop, whole-ARRAY materialisation, public auto-getters, `layout at`
-bases ≥ 2^16, chainwide-differ integration (its `read_avm_maps` storage
-comparison still assumes ARC-56 box-map declarations; in-mode it should
-switch to direct slot-map comparison — §5).
+memory strings/arrays — what builder needs; builder also uses
+codesize/extcodesize, unfixable on AVM), bytes/string element access &
+push/pop, whole-ARRAY materialisation, struct-typed top-level vars in the
+differ readers (OZ Trace208 `_totalCheckpoints` — reported as uncompared
+coverage on both legs, not silent), `layout at` bases ≥ 2^16.
 
 Force puya-sol's *internal* storage (and optionally memory) layout to emulate
 Solidity's, backed by AVM boxes, so that inline assembly which does real slot
