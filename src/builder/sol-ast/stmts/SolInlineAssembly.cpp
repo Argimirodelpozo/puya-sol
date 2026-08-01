@@ -7,6 +7,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/StorageMapper.h"
@@ -151,6 +152,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	std::map<std::string, AssemblyBuilder::BoxKeyedSlot> boxKeyedStructSlots;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
+		if (builder::evmStorageLayout()) break;   // slot space is real — no box sentinels
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isLocalVariable()) continue;
@@ -173,6 +175,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	std::map<std::string, AssemblyBuilder::StateVarSlot> stateVarSlots;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
+		if (builder::evmStorageLayout()) break;   // sstore(v.slot, w) writes the real slot
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isStateVariable() || varDecl->isConstant()) continue;
@@ -258,6 +261,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			// HERE, in the compiler (zero opcodes) — routing is constant comparison.
 			forEachStateVar(*contractDef, [&](solidity::frontend::VariableDeclaration const* svDecl)
 			{
+				if (builder::evmStorageLayout()) return;   // no named-cell routes in slot space
 				if (!svDecl || svDecl->isConstant() || svDecl->immutable()) return;
 				if (svDecl->referenceLocation() == VariableDeclaration::Location::Transient) return;
 				auto const* vi = layout.getVarInfo(svDecl->name());
@@ -304,6 +308,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			// unmodeled-.slot hard error exists to stop).
 			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{
+				if (builder::evmStorageLayout()) break;   // member arrays live at real slots
 				if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 				if (!varDecl || !varDecl->isLocalVariable()) continue;

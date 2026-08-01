@@ -101,6 +101,7 @@ def _compute_cache_key(
     ensure_budget: dict[str, int] | None,
     via_yul_behavior: bool,
     evm_version: str | None,
+    extra_args: list[str] | None = None,
 ) -> str:
     """Cache key from inputs that affect the compile output.
 
@@ -132,6 +133,7 @@ def _compute_cache_key(
         "ensure_budget": dict(sorted((ensure_budget or {}).items())),
         "via_yul_behavior": via_yul_behavior,
         "evm_version": evm_version,
+        "extra_args": list(extra_args or []),
     }
     h.update(json.dumps(flags, sort_keys=True).encode())
     return h.hexdigest()
@@ -213,6 +215,7 @@ def _puya_sol_cmd(
     via_yul_behavior: bool,
     evm_version: str | None,
     puya_path: str,
+    extra_args: list[str] | None = None,
 ) -> list[str]:
     """Build the puya-sol argv. `puya_path` selects the backend: the real PUYA
     for a full compile, or a no-op (`true`) to emit AWST only."""
@@ -232,6 +235,8 @@ def _puya_sol_cmd(
         cmd += ["--via-yul-behavior"]
     if evm_version:
         cmd += ["--evm-version", evm_version]
+    if extra_args:
+        cmd += list(extra_args)
     return cmd
 
 
@@ -260,6 +265,7 @@ def _flags_blob(
     ensure_budget: dict[str, int] | None,
     via_yul_behavior: bool,
     evm_version: str | None,
+    extra_args: list[str] | None = None,
 ) -> bytes:
     """Stable serialization of the compile flags that affect output."""
     return json.dumps({
@@ -267,6 +273,7 @@ def _flags_blob(
         "ensure_budget": dict(sorted((ensure_budget or {}).items())),
         "via_yul_behavior": via_yul_behavior,
         "evm_version": evm_version,
+        "extra_args": list(extra_args or []),
     }, sort_keys=True).encode()
 
 
@@ -395,6 +402,7 @@ def compile_sol(
     extra_sources: list[Path] | None = None,
     extra_import_dir: Path | None = None,
     extra_remappings: list[str] | None = None,
+    extra_args: list[str] | None = None,
 ) -> CompiledArtifacts:
     """Compile a .sol file with puya-sol → puya. Returns CompiledArtifacts.
 
@@ -425,6 +433,7 @@ def compile_sol(
         ensure_budget=ensure_budget,
         via_yul_behavior=via_yul_behavior,
         evm_version=evm_version,
+        extra_args=extra_args,
     )
     cache_hit = _cache_lookup(cache_key, out_dir)
     main_source_text = ""
@@ -462,6 +471,7 @@ def compile_sol(
             _puya_sol_cmd(
                 source_path, all_sources, out_dir, import_dir, remappings,
                 ensure_budget, via_yul_behavior, evm_version, puya_path,
+                extra_args,
             ),
             capture_output=True, text=True, timeout=timeout, env=env,
         )
@@ -490,7 +500,8 @@ def compile_sol(
         # (serve output is byte-identical to subprocess output).
         bkey = _backend_cache_key(
             out_dir,
-            _flags_blob(remappings, ensure_budget, via_yul_behavior, evm_version),
+            _flags_blob(remappings, ensure_budget, via_yul_behavior, evm_version,
+                        extra_args),
         )
         if not (bkey and _backend_cache_lookup(bkey, out_dir)):
             from .puya_serve import compile_via_server

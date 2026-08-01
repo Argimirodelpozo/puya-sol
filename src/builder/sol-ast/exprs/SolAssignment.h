@@ -53,6 +53,10 @@ private:
 	/// Pre-buildExpr early-out handlers (each claims the shape or returns nullopt).
 
 	/// `tx = v` / `tx += v` for a transient state var; routes through TransientStorage.
+	/// --evm-storage-layout: any value-type write rooted at a persistent state
+	/// var lowers to __storage_write at its EVM word address (EvmSlotLowering).
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleEvmStorageWrite();
+
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleTransientStateWrite();
 
 	/// `m = m2` for a local storage-pointer: updates compile-time alias (state-var)

@@ -9,6 +9,7 @@
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
@@ -463,6 +464,15 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_exprBuilder->currentContract = &_contract;
 	m_exprBuilder->viaIRSequencing = m_viaIR;
 
+	// --evm-storage-layout: expose the solc-exact layout to expression builders
+	// so state access lowers to slot addresses (EvmSlotLowering).
+	if (evmStorageLayout())
+	{
+		m_evmLayout = std::make_unique<StorageLayout>();
+		m_evmLayout->computeLayout(_contract, m_typeMapper);
+		m_exprBuilder->evmSlotLayout = m_evmLayout.get();
+	}
+
 	// Pre-populate internalized library func map before translation so the call
 	// resolver routes them as InstanceMethodTargets.
 	for (auto const* libFunc : m_internalizableLibFuncs)
@@ -516,7 +526,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			);
 	}
 
-	contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
+	// --evm-storage-layout: state lives in opaque numbered slots — no per-var
+	// ARC-56 declarations (the reason the mode is opt-in; see the design doc).
+	if (!evmStorageLayout())
+		contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
 	// EVM-memory scratch slots 0..MEMORY_SLOT_LAST (default 0-4; raisable via
 	// --evm-memory-slots) plus transient + flash-accounting slots.

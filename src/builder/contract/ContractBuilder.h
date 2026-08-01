@@ -4,6 +4,7 @@
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolStatement.h"
+#include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/TransientStorage.h"
@@ -261,6 +262,10 @@ private:
 	/// Unified AppGlobal / Box / Transient dispatch facade.
 	std::optional<StorageBackend> m_storageBackend;
 
+	/// --evm-storage-layout: per-contract solc-exact layout handed to the
+	/// expression builders via ContractContext::evmSlotLayout.
+	std::unique_ptr<StorageLayout> m_evmLayout;
+
 	/// The contract currently being built (for modifier override resolution).
 	solidity::frontend::ContractDefinition const* m_currentContract = nullptr;
 
@@ -334,6 +339,15 @@ private:
 
 	/// Emit __storage_read/__storage_write: switch on slot → app_global, box fallthrough for dynamic.
 	void buildStorageDispatch(
+		solidity::frontend::ContractDefinition const& _contract,
+		awst::Contract* _contractNode,
+		std::string const& _contractName
+	);
+
+	/// --evm-storage-layout: __storage_read/__storage_write over a flat slot
+	/// space — dense slots (< 2^16) in 2048-byte page boxes ("p:" ++ itob(page)),
+	/// hashed slots in one box per slot ("s:" ++ slot32). No named-cell routing.
+	void buildEvmSlotStorageDispatch(
 		solidity::frontend::ContractDefinition const& _contract,
 		awst::Contract* _contractNode,
 		std::string const& _contractName

@@ -3,6 +3,9 @@
 /// Migrated from MemberAccessBuilder.cpp lines 476-555.
 
 #include "builder/sol-ast/members/SolLengthAccess.h"
+#include "Logger.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -149,6 +152,36 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 			return cumLength;
 		}
 	}
+
+	// --evm-storage-layout: dynamic storage array length = its slot's word.
+	if (builder::evmStorageLayout())
+		if (auto const* arrType = dynamic_cast<ArrayType const*>(
+				baseExpr.annotation().type);
+			arrType && arrType->dataStoredIn(solidity::frontend::DataLocation::Storage)
+			&& EvmSlotLowering::isStorageStateRef(baseExpr))
+		{
+			if (!arrType->isDynamicallySized() && !arrType->isByteArrayOrString())
+			{
+				std::ostringstream oss;
+				oss << arrType->length();
+				return awst::makeIntegerConstant(oss.str(), m_loc,
+					arrType->length() > std::numeric_limits<uint64_t>::max()
+						? awst::WType::biguintType() : awst::WType::uint64Type());
+			}
+			if (arrType->isByteArrayOrString())
+			{
+				EvmSlotLowering low(m_ctx, m_scope, m_loc);
+				auto addr = low.resolve(baseExpr);
+				if (!addr)
+					return nullptr;
+				return awst::makeLen(low.readBytesValue(*addr), m_loc);
+			}
+			EvmSlotLowering low(m_ctx, m_scope, m_loc);
+			auto addr = low.resolve(baseExpr);
+			if (!addr)
+				return nullptr;
+			return EvmSlotLowering::readSlotWord(addr->slot, m_loc);
+		}
 
 	// Box-backed dynamic array: length = box_len(key) / elemSize
 	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))

@@ -1,5 +1,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
+#include "builder/storage/EvmLayoutMode.h"
+#include "Logger.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/contract/ParamABIValidator.h"
@@ -125,6 +127,18 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				return;
 			if (translatedFunctions.count(var->name()))
 				return; // explicit getter already exists
+
+			// --evm-storage-layout: auto-getters still read named cells; not
+			// yet ported to slot reads. Skip loudly — write explicit getters.
+			if (evmStorageLayout())
+			{
+				Logger::instance().warning(
+					"--evm-storage-layout: skipping auto-getter for public state "
+					"variable '" + var->name() + "' (not yet supported; write an "
+					"explicit getter function)", makeLoc(var->location()));
+				translatedFunctions.insert(var->name());
+				return;
+			}
 
 			// Getter type: param types (mapping keys, array indices) + return types (struct filtering).
 			auto getterFuncType = var->functionType(/*_internal=*/false);

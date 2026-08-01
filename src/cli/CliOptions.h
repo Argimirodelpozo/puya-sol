@@ -32,6 +32,10 @@ struct Options
 	// --evm-memory-slots <N>: sets MEMORY_SLOT_LAST=N-1. 0=default (5 slots=20KB).
 	// UltraHonk needs 32.
 	int evmMemorySlots = 0;
+	// --evm-storage-layout: back ALL contract storage with EVM-numbered slots
+	// (hybrid paged/sparse boxes) instead of per-variable named cells. Makes
+	// assembly slot arithmetic faithful; disables ARC-56 state declarations.
+	bool evmStorageLayout = false;
 	// SimpleSplitter (alternative to UrosSplitter): moves subroutines into a
 	// sibling helper contract (TMPL_<helperName>_APP_ID substitution). Used by
 	// polymarket v1+v2 to keep CTFExchange under 8 KB. Also avoids puyabug.md

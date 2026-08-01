@@ -7,8 +7,10 @@
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -59,6 +61,47 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (stateVarInitialized.count(var->name()))
 					continue;
 				stateVarInitialized.insert(var->name());
+
+				// --evm-storage-layout: slot space zero-initialises for free
+				// (absent box = 0); only explicit initializers need a write.
+				// Immutables keep their named cells (they are not in EVM
+				// storage) and fall through to the existing path.
+				if (evmStorageLayout() && !var->immutable()
+					&& var->referenceLocation()
+						!= solidity::frontend::VariableDeclaration::Location::Transient)
+				{
+					if (!var->value())
+						continue;
+					auto const* t = var->type();
+					if (!t || !t->isValueType())
+					{
+						Logger::instance().error(
+							"--evm-storage-layout: aggregate state initializer "
+							"not yet supported for '" + var->name() + "'",
+							method.sourceLocation);
+						continue;
+					}
+					sol_ast::EvmSlotLowering low(
+						*m_exprBuilder, *m_exprBuilder->currentScope,
+						method.sourceLocation);
+					auto addr = low.addrForStateVar(*var);
+					if (!addr)
+						continue;
+					auto initVal = m_exprBuilder->build(*var->value());
+					if (!initVal)
+						continue;
+					initVal = TypeCoercion::coerceForAssignment(
+						std::move(initVal), addr->wtype, method.sourceLocation);
+					for (auto& preStmt: m_exprBuilder->takePrePending())
+						targetBody.push_back(std::move(preStmt));
+					for (auto& postStmt: m_exprBuilder->takePending())
+						targetBody.push_back(std::move(postStmt));
+					std::vector<std::shared_ptr<awst::Statement>> writes;
+					low.writeValue(*addr, std::move(initVal), writes);
+					for (auto& st: writes)
+						targetBody.push_back(std::move(st));
+					continue;
+				}
 
 				auto kind = StorageMapper::shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
@@ -192,6 +235,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		};
 
 		// Collect box-stored array/bytes vars for box_create in __postInit.
+		// --evm-storage-layout: no named boxes exist; slot pages materialise
+		// lazily on first write.
+		if (!evmStorageLayout())
 		{
 			std::set<std::string> lengthInitialized;
 			forEachStateVarReverse(_contract, [&](auto const* var)

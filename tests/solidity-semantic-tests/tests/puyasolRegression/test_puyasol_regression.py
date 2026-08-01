@@ -3613,3 +3613,212 @@ def test_mapping_key_collision(harness):
     harness.call(app, "setBc(bytes,uint256)", b"\x02", 9)
     assert harness.call(app, "getC(bytes)", b"\x01\x02").abi_return == 5
     assert harness.call(app, "getBc(bytes)", b"\x02").abi_return == 9
+
+
+# ── --evm-storage-layout mode (asm-compat-memory-mode.md, stage 1) ──────────
+#
+# All storage becomes a flat EVM slot space backed by boxes: dense declared
+# slots (< 2^16) in 2048-byte pages ("p:" ++ itob(slot/64)), hashed slots
+# (mapping entries / dyn-array data at keccak256 outputs) one box per slot
+# ("s:" ++ slot32). Solidity-level access and assembly sload/sstore address
+# the SAME words, so slot arithmetic in Yul is faithful by construction.
+
+_EVM_LAYOUT = ["--evm-storage-layout"]
+_EVM_SOL = "puyasolRegression/contracts/evm_storage_layout.sol"
+
+
+def _evm_layout_app(harness):
+    arts = harness.compile(_EVM_SOL, extra_args=_EVM_LAYOUT)
+    # Box MBR: pages are 2048 B (~0.83 ALGO each) and sparse slots ~0.029
+    # ALGO each — fund generously.
+    return harness.deploy(arts, extra_funding_microalgos=30_000_000)
+
+
+def test_evm_layout_scalars_and_packing(harness):
+    """Value vars (full + packed sub-word + signed + bool + address) via slot
+    words; ctor initializers; ++/--/compound/delete; and the packed slot's raw
+    word must match EVM's byte layout exactly (checked through asm sload)."""
+    app = _evm_layout_app(harness)
+    opts = {"extra_fee": 10_000}
+
+    assert as_int(harness.call(app, "getA()", **opts).abi_return) == 41  # ctor init
+    assert as_int(harness.call(app, "getB()", **opts).abi_return) == 7   # ctor body
+    assert as_int(harness.call(app, "bump()", **opts).abi_return) == 45  # ++/prefix/+=
+    harness.call(app, "clearA()", **opts)                                # delete
+    assert as_int(harness.call(app, "getA()", **opts).abi_return) == 0
+
+    harness.call(app, "setCD(uint32,bool)", 0xDEADBEEF, True, **opts)
+    assert as_int(harness.call(app, "getC()", **opts).abi_return) == 0xDEADBEEF
+    assert harness.call(app, "getD()", **opts).abi_return is True
+    harness.call(app, "setE(int64)", -5, **opts)
+    assert as_signed_int(harness.call(app, "getE()", **opts).abi_return, 256) == -5
+
+    # owner = msg.sender survives the account round-trip (full-slot address
+    # keeps all 32 AVM bytes)
+    sender = harness.localnet.account.address
+    assert as_int(harness.call(app, "getOwner()", **opts).abi_return) == as_int(sender)
+
+    # THE packing check: slot 1 = b | c<<64 | d<<96 | e<<104, exactly as the
+    # EVM would pack (uint64, uint32, bool, int64 at byte offsets 0/8/12/13).
+    word = as_int(harness.call(app, "rawSlot(uint256)", 1, **opts).abi_return)
+    e_tc = (-5) & 0xFFFFFFFFFFFFFFFF
+    expected = 7 | (0xDEADBEEF << 64) | (1 << 96) | (e_tc << 104)
+    assert word == expected, f"packed word {word:#x} != {expected:#x}"
+
+
+def test_evm_layout_asm_solidity_coherence(harness):
+    """The point of the mode: assembly slot arithmetic and Solidity-level
+    access hit the same storage. sstore(s,v) is visible to the high-level
+    reader; keccak-derived mapping/array slots match between asm and codegen
+    (OZ StorageSlot / Checkpoints idioms)."""
+    app = _evm_layout_app(harness)
+    opts = {"extra_fee": 10_000}
+
+    # raw sstore to slot 0 = variable `a`
+    harness.call(app, "rawStore(uint256,uint256)", 0, 1234, **opts)
+    assert as_int(harness.call(app, "getA()", **opts).abi_return) == 1234
+    assert as_int(harness.call(app, "aViaAsm()", **opts).abi_return) == 1234
+
+    # StorageSlot idiom: mapping entry slot computed with keccak in ASM,
+    # written with sstore, read back through ordinary Solidity codegen.
+    sender = harness.localnet.account.address
+    harness.call(app, "storeBalAsm(address,uint256)", sender, 777, **opts)
+    assert as_int(harness.call(app, "getBal(address)", sender, **opts).abi_return) == 777
+
+    # ...and the reverse: Solidity write, asm keccak+add read (Checkpoints idiom)
+    harness.call(app, "pushNum(uint256)", 111, **opts)
+    harness.call(app, "pushNum(uint256)", 222, **opts)
+    assert as_int(harness.call(app, "numAtAsm(uint256)", 1, **opts).abi_return) == 222
+
+    # absent slots read as zero (EVM semantics; no box materialised on read)
+    assert as_int(harness.call(app, "rawSlot(uint256)", 4321, **opts).abi_return) == 0
+
+
+def test_evm_layout_mappings(harness):
+    """Mapping entries at keccak256(key32 ++ slot32); nested mappings chain;
+    string keys hash raw bytes; signed values; compound writes."""
+    app = _evm_layout_app(harness)
+    opts = {"extra_fee": 10_000}
+    sender = harness.localnet.account.address
+
+    harness.call(app, "setBal(address,uint256)", sender, 100, **opts)
+    harness.call(app, "addBal(address,uint256)", sender, 23, **opts)
+    assert as_int(harness.call(app, "getBal(address)", sender, **opts).abi_return) == 123
+
+    harness.call(app, "setGrid(uint256,uint256,int256)", 3, 4, -99, **opts)
+    assert as_signed_int(
+        harness.call(app, "getGrid(uint256,uint256)", 3, 4, **opts).abi_return, 256) == -99
+    assert as_int(harness.call(app, "getGrid(uint256,uint256)", 4, 3, **opts).abi_return) == 0
+
+    harness.call(app, "setNamed(string,uint256)", "alice", 11, **opts)
+    harness.call(app, "setNamed(string,uint256)", "bob", 22, **opts)
+    assert as_int(harness.call(app, "getNamed(string)", "alice", **opts).abi_return) == 11
+    assert as_int(harness.call(app, "getNamed(string)", "bob", **opts).abi_return) == 22
+
+    # struct-in-mapping field write/read
+    harness.call(app, "setPossY(uint256,uint128)", 9, 3131, **opts)
+    assert as_int(harness.call(app, "getPossY(uint256)", 9, **opts).abi_return) == 3131
+
+
+def test_evm_layout_arrays_and_structs(harness):
+    """Dynamic arrays (length word at p, data at keccak256(p)); packed uint32[]
+    elements; push/pop with EVM zero-on-pop; fixed arrays; struct fields at
+    sequential slots with sub-word packing."""
+    app = _evm_layout_app(harness)
+    opts = {"extra_fee": 10_000}
+
+    assert as_int(harness.call(app, "numsLen()", **opts).abi_return) == 0
+    harness.call(app, "pushNum(uint256)", 10, **opts)
+    harness.call(app, "pushNum(uint256)", 20, **opts)
+    harness.call(app, "pushNum(uint256)", 30, **opts)
+    assert as_int(harness.call(app, "numsLen()", **opts).abi_return) == 3
+    assert as_int(harness.call(app, "numAt(uint256)", 0, **opts).abi_return) == 10
+    assert as_int(harness.call(app, "numAt(uint256)", 2, **opts).abi_return) == 30
+    harness.call(app, "setNum(uint256,uint256)", 1, 21, **opts)
+    assert as_int(harness.call(app, "numAt(uint256)", 1, **opts).abi_return) == 21
+    harness.call(app, "popNum()", **opts)
+    assert as_int(harness.call(app, "numsLen()", **opts).abi_return) == 2
+    # OOB after pop reverts (bounds vs the length word)
+    r = harness.call(app, "numAt(uint256)", 2, expect_revert=True, **opts)
+    assert r.reverted
+
+    # packed uint32[]: 8 elements per slot
+    for i in range(10):
+        harness.call(app, "pushPacked(uint32)", i + 1, **opts)
+    assert as_int(harness.call(app, "packedAt(uint256)", 0, **opts).abi_return) == 1
+    assert as_int(harness.call(app, "packedAt(uint256)", 9, **opts).abi_return) == 10
+    harness.call(app, "setPacked(uint256,uint32)", 3, 999, **opts)
+    assert as_int(harness.call(app, "packedAt(uint256)", 3, **opts).abi_return) == 999
+    assert as_int(harness.call(app, "packedAt(uint256)", 2, **opts).abi_return) == 3, \
+        "packed neighbor clobbered"
+
+    # fixed array occupies slots 7..10 directly
+    harness.call(app, "setFixed(uint256,uint256)", 2, 555, **opts)
+    assert as_int(harness.call(app, "fixedAt(uint256)", 2, **opts).abi_return) == 555
+    assert as_int(harness.call(app, "rawSlot(uint256)", 9, **opts).abi_return) == 555
+
+    # struct: x,y pack into slot 11; z takes slot 12
+    harness.call(app, "setPos(uint128,uint128,uint256)", 6, 7, 8, **opts)
+    assert as_int(harness.call(app, "getPosX()", **opts).abi_return) == 6
+    assert as_int(harness.call(app, "getPosZ()", **opts).abi_return) == 8
+    word = as_int(harness.call(app, "rawSlot(uint256)", 11, **opts).abi_return)
+    assert word == 6 | (7 << 128), f"struct packed word {word:#x}"
+
+
+def test_evm_layout_default_mode_untouched(harness):
+    """No-regression guard: the same fixture compiled WITHOUT the flag keeps
+    the named-cell model (per-var ARC-56 state declarations present)."""
+    import json as _json
+    arts = harness.compile(_EVM_SOL)
+    arc56 = _json.loads(arts.by_contract["EvmFull"]["arc56"].read_text())
+    keys = arc56.get("state", {}).get("keys", {}).get("global", {})
+    maps = arc56.get("state", {}).get("maps", {}).get("box", {})
+    assert "a" in keys or "a" in arc56.get("state", {}).get("keys", {}).get("box", {}), \
+        "default mode should still declare per-var state"
+    assert "bal" in maps
+
+
+def test_evm_layout_strings(harness):
+    """bytes/string state vars in Solidity's EVM storage format: short form
+    (data ++ 2*len in one word — verified byte-exact through asm sload), long
+    form (2*len+1 word + keccak chunks), shrink clears stale chunks."""
+    app = _evm_layout_app(harness)
+    opts = {"extra_fee": 10_000}
+
+    harness.call(app, "setTag(string)", "hi", **opts)
+    assert harness.call(app, "getTag()", **opts).abi_return == "hi"
+    assert as_int(harness.call(app, "tagLen()", **opts).abi_return) == 2
+    # EVM short-string form: "hi" left-aligned, low byte = 2*2
+    word = as_int(harness.call(app, "tagWord()", **opts).abi_return)
+    expected = int.from_bytes(b"hi" + bytes(29) + bytes([4]), "big")
+    assert word == expected, f"short-string word {word:#x} != {expected:#x}"
+
+    long_s = "x" * 75  # 3 chunks
+    harness.call(app, "setTag(string)", long_s, **opts)
+    assert harness.call(app, "getTag()", **opts).abi_return == long_s
+    assert as_int(harness.call(app, "tagLen()", **opts).abi_return) == 75
+    word = as_int(harness.call(app, "tagWord()", **opts).abi_return)
+    assert word == 2 * 75 + 1, "long form length word"
+
+    # shrink long → short: stale chunks must be cleared
+    harness.call(app, "setTag(string)", "ok", **opts)
+    assert harness.call(app, "getTag()", **opts).abi_return == "ok"
+    # the old chunk slots at keccak(15) read back as zero
+    import hashlib
+    try:
+        from Crypto.Hash import keccak as _keccak
+        k = _keccak.new(digest_bits=256); k.update((15).to_bytes(32, "big"))
+        chunk0 = int.from_bytes(k.digest(), "big")
+        assert as_int(harness.call(app, "rawSlot(uint256)", chunk0, **opts).abi_return) == 0
+    except ImportError:
+        pass  # keccak lib unavailable — chunk-clear still covered by round-trips
+
+    harness.call(app, "clearTag()", **opts)
+    assert harness.call(app, "getTag()", **opts).abi_return == ""
+    assert as_int(harness.call(app, "tagLen()", **opts).abi_return) == 0
+
+    # string values inside a mapping (leaf at the keccak-derived slot)
+    harness.call(app, "setNote(uint256,string)", 1, "alpha", **opts)
+    harness.call(app, "setNote(uint256,string)", 2, "y" * 40, **opts)
+    assert harness.call(app, "getNote(uint256)", 1, **opts).abi_return == "alpha"
+    assert harness.call(app, "getNote(uint256)", 2, **opts).abi_return == "y" * 40

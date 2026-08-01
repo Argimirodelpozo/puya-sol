@@ -126,6 +126,7 @@ class Harness:
         ensure_budget: dict[str, int] | None = None,
         via_yul_behavior: bool = False,
         evm_version: str | None = None,
+        extra_args: list[str] | None = None,
         ctor_args: list | None = None,
         fund_wei: int = 0,
         postinit_args: list | None = None,
@@ -146,6 +147,7 @@ class Harness:
             ensure_budget=ensure_budget,
             via_yul_behavior=via_yul_behavior,
             evm_version=evm_version,
+            extra_args=extra_args,
         )
         return self.deploy(
             artifacts,

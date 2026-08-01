@@ -1,0 +1,496 @@
+/// @file EvmSlotLowering.cpp
+/// See EvmSlotLowering.h. Slot derivation mirrors Solidity's storage layout
+/// exactly (StorageLayout is tripwire-verified against solc's own tables), so
+/// Yul-side slot arithmetic and Solidity-side accesses address the same words.
+
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/Context.h"
+#include "builder/storage/EvmLayoutMode.h"
+#include "builder/storage/StorageLayout.h"
+#include "builder/storage/SlotHandleAccess.h"
+#include "builder/storage/SlotWordCodec.h"
+#include "builder/sol-types/TypeCoercion.h"
+#include "awst/NameGen.h"
+#include "Logger.h"
+
+namespace puyasol::builder::sol_ast
+{
+
+using namespace solidity::frontend;
+
+namespace
+{
+
+VariableDeclaration const* referencedVar(Expression const& _e)
+{
+	auto const* id = dynamic_cast<Identifier const*>(&_e);
+	if (!id)
+		return nullptr;
+	return dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
+}
+
+bool isPersistentStateVar(VariableDeclaration const* _vd)
+{
+	return _vd && _vd->isStateVariable() && !_vd->isConstant() && !_vd->immutable()
+		&& _vd->referenceLocation() != VariableDeclaration::Location::Transient;
+}
+
+/// biguint → uint64 (values known < 2^64: page offsets, lengths).
+std::shared_ptr<awst::Expression> biguintToU64(
+	std::shared_ptr<awst::Expression> _v, awst::SourceLocation const& _loc)
+{
+	auto cat = awst::makeLeftPad(awst::makeAsBytes(std::move(_v), _loc), 8, _loc);
+	return awst::makeBtoi(awst::makeExtractLastN(std::move(cat), 8, _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> toBiguintIndex(
+	std::shared_ptr<awst::Expression> _idx, awst::SourceLocation const& _loc)
+{
+	if (_idx->wtype == awst::WType::uint64Type())
+		return awst::makeAsBiguint(awst::makeItob(std::move(_idx), _loc), _loc);
+	if (_idx->wtype && _idx->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+		return awst::makeARC4Decode(std::move(_idx), awst::WType::biguintType(), _loc);
+	return _idx;
+}
+
+/// slot (biguint) → its 32-byte big-endian word form.
+std::shared_ptr<awst::Expression> slot32Bytes(
+	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
+{
+	return awst::makeLeftPadToN(awst::makeAsBytes(std::move(_slot), _loc), 32, _loc);
+}
+
+} // namespace
+
+bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
+{
+	Expression const* cur = &_e;
+	for (;;)
+	{
+		if (auto const* ia = dynamic_cast<IndexAccess const*>(cur))
+		{
+			cur = &ia->baseExpression();
+			continue;
+		}
+		if (auto const* ma = dynamic_cast<MemberAccess const*>(cur))
+		{
+			// Only peel STRUCT member access — `.length`/`.push` etc. are not
+			// storage lvalue layers.
+			if (dynamic_cast<StructType const*>(ma->expression().annotation().type))
+			{
+				cur = &ma->expression();
+				continue;
+			}
+			return false;
+		}
+		break;
+	}
+	return isPersistentStateVar(referencedVar(*cur));
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::biguintConst(std::string const& _v)
+{
+	return awst::makeIntegerConstant(_v, m_loc, awst::WType::biguintType());
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::readSlotWord(
+	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
+{
+	return SlotHandleAccess::readSlot(std::move(_slot), _loc);
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::dynDataBase(
+	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
+{
+	return awst::makeAsBiguint(
+		awst::makeKeccak256(slot32Bytes(std::move(_slot), _loc), _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::mappingEntrySlot(
+	std::shared_ptr<awst::Expression> _base,
+	std::shared_ptr<awst::Expression> _key,
+	Type const* _keyType)
+{
+	// EVM: entry slot = keccak256(encodedKey ++ slot32). Value-type keys encode
+	// as their 32-byte word; string/bytes keys contribute their raw bytes.
+	std::shared_ptr<awst::Expression> keyBytes;
+	auto const* keyArr = dynamic_cast<ArrayType const*>(_keyType);
+	bool isDynamicBytesKey = keyArr && keyArr->isByteArrayOrString();
+	if (isDynamicBytesKey)
+	{
+		keyBytes = _key->wtype == awst::WType::stringType()
+			? awst::makeAsBytes(std::move(_key), m_loc)
+			: std::move(_key);
+		if (keyBytes->wtype != awst::WType::bytesType())
+			keyBytes = awst::makeAsBytes(std::move(keyBytes), m_loc);
+	}
+	else
+	{
+		// Coerce to the mapped key carrier first (integer literals may build
+		// narrower), then take the value's slot-word form.
+		auto const* keyW = m_ctx.typeMapper.map(_keyType);
+		if (keyW && _key->wtype != keyW
+			&& (keyW == awst::WType::uint64Type() || keyW == awst::WType::biguintType()))
+			_key = TypeCoercion::implicitNumericCast(std::move(_key), keyW, m_loc);
+		auto const* effW = _key->wtype;
+		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(effW);
+			bw && bw->length().has_value())
+		{
+			// bytesN keys are LEFT-aligned in the key word (EVM right-pads).
+			unsigned n = static_cast<unsigned>(*bw->length());
+			keyBytes = awst::makeAsBytes(std::move(_key), m_loc);
+			if (n < 32)
+				keyBytes = awst::makeConcat(
+					std::move(keyBytes), awst::makeBzero(32 - static_cast<int>(n), m_loc), m_loc);
+		}
+		else
+			keyBytes = SlotWordCodec::nativeToPackedBytes(std::move(_key), effW, 32, m_loc);
+	}
+
+	auto preimage = awst::makeConcat(
+		std::move(keyBytes), slot32Bytes(std::move(_base), m_loc), m_loc);
+	return awst::makeAsBiguint(awst::makeKeccak256(std::move(preimage), m_loc), m_loc);
+}
+
+EvmSlotLowering::Addr EvmSlotLowering::makeLeafAddr(
+	std::shared_ptr<awst::Expression> _slot,
+	std::shared_ptr<awst::Expression> _byteOffset,
+	unsigned _size,
+	bool _aloneInSlot,
+	Type const* _solType)
+{
+	Addr a;
+	a.slot = std::move(_slot);
+	a.byteOffset = std::move(_byteOffset);
+	a.size = _size;
+	a.solType = _solType;
+	a.wtype = m_ctx.typeMapper.map(_solType);
+	// Full-slot AVM account: keep all 32 bytes so real addresses round-trip.
+	// (EVM's 20-byte packing survives only where the address shares its slot.)
+	if (a.wtype == awst::WType::accountType() && _aloneInSlot && !a.byteOffset)
+		a.size = 32;
+	return a;
+}
+
+std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& _e)
+{
+	if (auto const* id = dynamic_cast<Identifier const*>(&_e))
+		return resolveIdentifier(*id);
+	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_e))
+		return resolveIndexAccess(*ia);
+	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_e))
+		return resolveMemberAccess(*ma);
+	Logger::instance().error(
+		"unsupported storage expression shape in --evm-storage-layout", m_loc);
+	return std::nullopt;
+}
+
+std::optional<EvmSlotLowering::Addr> EvmSlotLowering::addrForStateVar(
+	VariableDeclaration const& _vd)
+{
+	auto const* layout = m_ctx.evmSlotLayout;
+	if (!layout)
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: no storage layout in this context (state "
+			"variable '" + _vd.name() + "' accessed outside a contract?)", m_loc);
+		return std::nullopt;
+	}
+	auto const* sv = layout->getVarInfoById(_vd.id());
+	if (!sv)
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: state variable '" + _vd.name()
+			+ "' missing from the storage layout", m_loc);
+		return std::nullopt;
+	}
+	// Alone in its slot (isFullSlot only covers 32-byte vars; a lone address
+	// is 20 bytes yet still owns the whole slot).
+	bool alone = sv->isFullSlot;
+	if (!alone)
+		if (auto const* si = layout->getSlotInfo(sv->slot))
+			alone = si->variables.size() == 1;
+	return makeLeafAddr(
+		biguintConst(sv->slot.str()),
+		sv->byteOffset
+			? awst::makeIntegerConstant(static_cast<uint64_t>(sv->byteOffset), m_loc)
+			: nullptr,
+		sv->byteSize,
+		alone,
+		_vd.type());
+}
+
+std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIdentifier(
+	Identifier const& _id)
+{
+	auto const* vd = referencedVar(_id);
+	if (!isPersistentStateVar(vd))
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: cannot resolve '" + _id.name()
+			+ "' to a storage slot (not a persistent state variable)", m_loc);
+		return std::nullopt;
+	}
+	return addrForStateVar(*vd);
+}
+
+std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
+	IndexAccess const& _ia)
+{
+	auto const* baseType = _ia.baseExpression().annotation().type;
+	if (!_ia.indexExpression())
+		return std::nullopt;
+
+	if (auto const* mt = dynamic_cast<MappingType const*>(baseType))
+	{
+		auto base = resolve(_ia.baseExpression());
+		if (!base)
+			return std::nullopt;
+		auto key = m_ctx.buildExpr(*_ia.indexExpression());
+		if (!key)
+			return std::nullopt;
+		auto slot = mappingEntrySlot(base->slot, std::move(key), mt->keyType());
+		auto const* valueType = mt->valueType();
+		return makeLeafAddr(std::move(slot), nullptr,
+			valueType->storageBytes(), /*alone*/ true, valueType);
+	}
+
+	if (auto const* at = dynamic_cast<ArrayType const*>(baseType);
+		at && at->dataStoredIn(DataLocation::Storage))
+	{
+		if (at->isByteArrayOrString())
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: bytes/string element access not yet supported",
+				m_loc);
+			return std::nullopt;
+		}
+		auto base = resolve(_ia.baseExpression());
+		if (!base)
+			return std::nullopt;
+
+		auto idx = toBiguintIndex(m_ctx.buildExpr(*_ia.indexExpression()), m_loc);
+		if (!idx)
+			return std::nullopt;
+
+		std::shared_ptr<awst::Expression> dataBase;
+		if (at->isDynamicallySized())
+		{
+			// Bounds: idx < length word (EVM Panic 0x32 shape). Pin the index —
+			// the assert is a separate pre-statement.
+			if (!dynamic_cast<awst::VarExpression const*>(idx.get())
+				&& !dynamic_cast<awst::IntegerConstant const*>(idx.get()))
+			{
+				std::string nm = "__evm_idx_"
+					+ std::to_string(awst::NameGen::next("EvmSlotLowering.idx"));
+				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(nm, idx->wtype, m_loc), std::move(idx), m_loc));
+				idx = awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc);
+			}
+			auto len = readSlotWord(base->slot, m_loc);
+			auto cmp = awst::makeNumericCompare(
+				idx, awst::NumericComparison::Lt, std::move(len), m_loc);
+			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"), m_loc));
+			dataBase = dynDataBase(base->slot, m_loc);
+		}
+		else
+		{
+			idx = SlotHandleAccess::boundsCheckIndex(
+				m_ctx.prePendingStatements, std::move(idx), at, m_loc);
+			dataBase = base->slot;
+		}
+
+		return elemAddr(std::move(dataBase), std::move(idx), at->baseType());
+	}
+
+	Logger::instance().error(
+		"--evm-storage-layout: unsupported index-access base in storage", m_loc);
+	return std::nullopt;
+}
+
+std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveMemberAccess(
+	MemberAccess const& _ma)
+{
+	auto const* st = dynamic_cast<StructType const*>(_ma.expression().annotation().type);
+	if (!st || !st->dataStoredIn(DataLocation::Storage))
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: unsupported member-access base in storage", m_loc);
+		return std::nullopt;
+	}
+	auto base = resolve(_ma.expression());
+	if (!base)
+		return std::nullopt;
+
+	auto const& off = st->storageOffsetsOfMember(_ma.memberName());
+	auto const* fieldType = _ma.annotation().type;
+	unsigned size = fieldType ? fieldType->storageBytes() : 32;
+
+	// Alone in its slot? (Decides the full-32 account widening.)
+	bool alone = true;
+	for (auto const& memberDecl: st->structDefinition().members())
+	{
+		if (!memberDecl || memberDecl->name() == _ma.memberName())
+			continue;
+		auto const& mo = st->storageOffsetsOfMember(memberDecl->name());
+		if (mo.first == off.first)
+		{
+			alone = false;
+			break;
+		}
+	}
+
+	auto slot = off.first == 0
+		? base->slot
+		: awst::makeBigUIntBinOp(base->slot, awst::BigUIntBinaryOperator::Add,
+			biguintConst(off.first.str()), m_loc);
+	return makeLeafAddr(std::move(slot),
+		off.second
+			? awst::makeIntegerConstant(static_cast<uint64_t>(off.second), m_loc)
+			: nullptr,
+		size, alone, fieldType);
+}
+
+EvmSlotLowering::Addr EvmSlotLowering::elemAddr(
+	std::shared_ptr<awst::Expression> _dataBase,
+	std::shared_ptr<awst::Expression> _idx,
+	Type const* _elemType)
+{
+	auto l = SlotHandleAccess::layoutFor(_elemType);
+	if (l.strideSlots > 1)
+	{
+		auto slot = awst::makeBigUIntBinOp(std::move(_dataBase),
+			awst::BigUIntBinaryOperator::Add,
+			awst::makeBigUIntBinOp(std::move(_idx), awst::BigUIntBinaryOperator::Mult,
+				biguintConst(std::to_string(l.strideSlots)), m_loc),
+			m_loc);
+		return makeLeafAddr(std::move(slot), nullptr, 32, true, _elemType);
+	}
+	if (l.perSlot <= 1)
+	{
+		auto slot = awst::makeBigUIntBinOp(std::move(_dataBase),
+			awst::BigUIntBinaryOperator::Add, std::move(_idx), m_loc);
+		return makeLeafAddr(std::move(slot), nullptr, l.size, true, _elemType);
+	}
+	// Packed elements: slot = base + idx/perSlot, offset = (idx%perSlot)*size.
+	auto idxOnce = awst::makeEvalOnce(std::move(_idx), m_loc);
+	auto slot = awst::makeBigUIntBinOp(std::move(_dataBase),
+		awst::BigUIntBinaryOperator::Add,
+		awst::makeBigUIntBinOp(idxOnce, awst::BigUIntBinaryOperator::FloorDiv,
+			biguintConst(std::to_string(l.perSlot)), m_loc),
+		m_loc);
+	auto within = awst::makeBigUIntBinOp(idxOnce, awst::BigUIntBinaryOperator::Mod,
+		biguintConst(std::to_string(l.perSlot)), m_loc);
+	auto off = awst::makeUInt64BinOp(biguintToU64(std::move(within), m_loc),
+		awst::UInt64BinaryOperator::Mult,
+		awst::makeIntegerConstant(static_cast<uint64_t>(l.size), m_loc), m_loc);
+	return makeLeafAddr(std::move(slot), std::move(off), l.size, false, _elemType);
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
+	std::shared_ptr<awst::Expression> _value, Addr const& _a)
+{
+	if (!_value || !_a.wtype || _value->wtype == _a.wtype)
+		return _value;
+	if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+		_value = awst::makeARC4Decode(std::move(_value), awst::WType::biguintType(), m_loc);
+	bool valueNum = _value->wtype == awst::WType::uint64Type()
+		|| _value->wtype == awst::WType::biguintType();
+	bool targetNum = _a.wtype == awst::WType::uint64Type()
+		|| _a.wtype == awst::WType::biguintType();
+	if (valueNum && targetNum)
+		return TypeCoercion::implicitNumericCast(std::move(_value), _a.wtype, m_loc);
+	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_a.wtype);
+		bw && bw->length().has_value())
+		return TypeCoercion::relabelUnsizedBytes(std::move(_value), _a.wtype, m_loc);
+	return _value;
+}
+
+bool EvmSlotLowering::isBytesLike(Type const* _t)
+{
+	auto const* at = dynamic_cast<ArrayType const*>(_t);
+	return at && at->isByteArrayOrString();
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::readBytesValue(Addr const& _a)
+{
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{"__puyasol___evm_bytes_read"},
+		awst::WType::bytesType(), m_loc);
+	awst::pushCallArg(call->args, "__slot", _a.slot);
+	auto const* at = dynamic_cast<ArrayType const*>(_a.solType);
+	if (at && at->isString())
+		return awst::makeReinterpretCast(
+			std::move(call), awst::WType::stringType(), m_loc);
+	return call;
+}
+
+void EvmSlotLowering::writeBytesValue(
+	Addr const& _a,
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (_value && _value->wtype != awst::WType::bytesType())
+		_value = awst::makeAsBytes(std::move(_value), m_loc);
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{"__puyasol___evm_bytes_write"},
+		awst::WType::voidType(), m_loc);
+	awst::pushCallArg(call->args, "__slot", _a.slot);
+	awst::pushCallArg(call->args, "__val", std::move(_value));
+	_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
+{
+	auto word = readSlotWord(_a.slot, m_loc);
+	if (_a.size == 32 && !_a.byteOffset)
+	{
+		auto raw = awst::makeLeftPadToN(awst::makeAsBytes(std::move(word), m_loc), 32, m_loc);
+		return SlotWordCodec::packedBytesToNative(std::move(raw), _a.wtype, _a.solType, 32, m_loc);
+	}
+	auto wordB = awst::makeLeftPadToN(awst::makeAsBytes(std::move(word), m_loc), 32, m_loc);
+	// start = 32 - byteOffset - size (byte window, big-endian word)
+	std::shared_ptr<awst::Expression> start = awst::makeIntegerConstant(
+		static_cast<uint64_t>(32 - _a.size), m_loc);
+	if (_a.byteOffset)
+		start = awst::makeUInt64BinOp(std::move(start),
+			awst::UInt64BinaryOperator::Sub, _a.byteOffset, m_loc);
+	auto raw = awst::makeExtract3(std::move(wordB), std::move(start),
+		awst::makeIntegerConstant(static_cast<uint64_t>(_a.size), m_loc), m_loc);
+	return SlotWordCodec::packedBytesToNative(
+		std::move(raw), _a.wtype, _a.solType, _a.size, m_loc);
+}
+
+void EvmSlotLowering::writeValue(
+	Addr const& _a,
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (_a.size == 32 && !_a.byteOffset)
+	{
+		auto packed = SlotWordCodec::nativeToPackedBytes(
+			std::move(_value), _a.wtype, 32, m_loc);
+		_out.push_back(SlotHandleAccess::writeSlot(
+			_a.slot, awst::makeAsBiguint(std::move(packed), m_loc), m_loc));
+		return;
+	}
+	// Sub-word: read-modify-write the word. Both slot uses live in ONE
+	// statement (the write call), so EvalOnce is safe.
+	auto slotOnce = awst::makeEvalOnce(_a.slot, m_loc);
+	auto packed = SlotWordCodec::nativeToPackedBytes(
+		std::move(_value), _a.wtype, _a.size, m_loc);
+	auto wordB = awst::makeLeftPadToN(
+		awst::makeAsBytes(readSlotWord(slotOnce, m_loc), m_loc), 32, m_loc);
+	std::shared_ptr<awst::Expression> start = awst::makeIntegerConstant(
+		static_cast<uint64_t>(32 - _a.size), m_loc);
+	if (_a.byteOffset)
+		start = awst::makeUInt64BinOp(std::move(start),
+			awst::UInt64BinaryOperator::Sub, _a.byteOffset, m_loc);
+	auto newWord = awst::makeReplace3(
+		std::move(wordB), std::move(start), std::move(packed), m_loc);
+	_out.push_back(SlotHandleAccess::writeSlot(
+		slotOnce, awst::makeAsBiguint(std::move(newWord), m_loc), m_loc));
+}
+
+} // namespace puyasol::builder::sol_ast

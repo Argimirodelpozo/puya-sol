@@ -24,6 +24,8 @@ private:
 	std::shared_ptr<awst::Expression> handleBitNot(std::shared_ptr<awst::Expression> _operand);
 	std::shared_ptr<awst::Expression> handleIncDec(std::shared_ptr<awst::Expression> _operand);
 	std::shared_ptr<awst::Expression> handleDelete(std::shared_ptr<awst::Expression> _operand);
+	/// --evm-storage-layout: ++/--/delete on a storage state ref via slot RMW.
+	std::shared_ptr<awst::Expression> handleEvmStorageIncDecDelete();
 };
 
 } // namespace puyasol::builder::sol_ast

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_simple.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 0 16 2
     bytecblock 0x151f7c75 "__ctor_pending" "sLong" "s"
     intc_1 // 0
     dup
@@ -48,7 +48,7 @@ main_fromSlice_route@10:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -68,6 +68,10 @@ main_ternary_merge@17:
     assert // not payable
     dig 1
     substring 1 9
+    pushint 8
+    bzero
+    concat
+    extract 0 8
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -93,6 +97,10 @@ main_ternary_merge@22:
     bytec_2 // "sLong"
     box_get
     assert // box exists
+    pushint 32
+    bzero
+    concat
+    extract 0 32
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -118,6 +126,10 @@ main_ternary_merge@27:
     bytec_3 // "s"
     box_get
     assert // box exists
+    intc_2 // 16
+    bzero
+    concat
+    extract 0 16
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -134,7 +146,7 @@ main_fromCalldata_route@7:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -152,8 +164,14 @@ main_fromCalldata_route@7:
 main_ternary_merge@32:
     !
     assert // not payable
-    bytec_0 // 0x151f7c75
+    intc_2 // 16
+    bzero
     dig 2
+    swap
+    concat
+    extract 0 16
+    bytec_0 // 0x151f7c75
+    swap
     concat
     log
     intc_0 // 1
@@ -168,7 +186,7 @@ main_fromMemory_route@6:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -186,8 +204,14 @@ main_fromMemory_route@6:
 main_ternary_merge@37:
     !
     assert // not payable
-    bytec_0 // 0x151f7c75
+    intc_2 // 16
+    bzero
     dig 1
+    swap
+    concat
+    extract 0 16
+    bytec_0 // 0x151f7c75
+    swap
     concat
     log
     intc_0 // 1
@@ -209,7 +233,7 @@ main___postInit_route@5:
     intc_1 // 0
     app_global_put
     bytec_3 // "s"
-    pushint 16
+    intc_2 // 16
     box_create
     pop
     bytec_3 // "s"

@@ -2,7 +2,9 @@
 /// Migrated from IndexAccessBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-eb/NodeBuilder.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -114,6 +116,27 @@ SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _no
 std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 {
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
+
+	// --evm-storage-layout: reads rooted at a persistent state var resolve to
+	// their EVM word address (writes intercept in SolAssignment and never
+	// build the index expression).
+	if (builder::evmStorageLayout()
+		&& EvmSlotLowering::isStorageStateRef(m_indexAccess))
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(m_indexAccess);
+		if (!addr)
+			return nullptr;
+		auto const* resType = m_indexAccess.annotation().type;
+		if (resType && resType->isValueType())
+			return low.readValue(*addr);
+		if (EvmSlotLowering::isBytesLike(resType))
+			return low.readBytesValue(*addr);
+		Logger::instance().error(
+			"--evm-storage-layout: aggregate storage element used as a value "
+			"is not yet supported", m_loc);
+		return nullptr;
+	}
 
 	// Slice indexing `root[a:b]...[i]`: fold the slice chain into a direct index;
 	// bytes-substring3 would produce bytes[1] instead of the declared element type.

@@ -7,6 +7,9 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/SlotHandleAccess.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
+#include "Logger.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -14,6 +17,26 @@ namespace puyasol::builder::sol_ast
 std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 {
 	std::string member = memberName();
+
+	// --evm-storage-layout: struct-field reads rooted at a persistent state
+	// var resolve to their EVM word address (writes intercept in SolAssignment).
+	if (builder::evmStorageLayout()
+		&& EvmSlotLowering::isStorageStateRef(m_memberAccess))
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(m_memberAccess);
+		if (!addr)
+			return nullptr;
+		auto const* resType = m_memberAccess.annotation().type;
+		if (resType && resType->isValueType())
+			return low.readValue(*addr);
+		if (EvmSlotLowering::isBytesLike(resType))
+			return low.readBytesValue(*addr);
+		Logger::instance().error(
+			"--evm-storage-layout: aggregate struct member used as a value "
+			"is not yet supported", m_loc);
+		return nullptr;
+	}
 
 	// Field read through a LIVE static calldata pointer: `assembly { s := s2 }
 	// r = s.x;` must read the word the (repointed) pointer designates inside

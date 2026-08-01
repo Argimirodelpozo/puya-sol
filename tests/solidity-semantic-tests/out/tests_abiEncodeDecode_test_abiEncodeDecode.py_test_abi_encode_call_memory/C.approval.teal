@@ -6,9 +6,9 @@ main:
     intcblock 1 0 24 16
     bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x40e33532 TMPL_APPROVAL_D TMPL_CLEAR_D
     intc_1 // 0
-    dupn 2
+    dupn 3
     pushbytes ""
-    dupn 2
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -112,22 +112,22 @@ main_ternary_merge@13:
     extract 0 12 // on error: index access is out of bounds
     extract 8 4
     dup
-    bury 8
+    bury 10
     swap
     extract 8 4
-    bury 6
+    bury 8
     len
     itob
     pushint 4
     itob
     dup
-    bury 6
+    bury 8
     b==
     bz main_bool_false@17
-    dig 4
+    dig 6
     len
     itob
-    dig 4
+    dig 6
     b==
     dup
     bury 2
@@ -135,28 +135,39 @@ main_ternary_merge@13:
     dup
     bz main_bool_false@17
     intc_0 // 1
-    bury 3
+    bury 4
 
 main_bool_merge@18:
-    dig 2
+    dig 3
     bnz main_after_if_else@20
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@20:
-    dig 2
+    dig 3
     assert
-    dig 5
-    dig 5
+    pushint 4
+    bzero
+    dig 8
+    dig 1
+    concat
+    extract 0 4
+    dup
+    cover 2
+    bury 7
+    dig 8
+    swap
+    concat
+    extract 0 4
     ==
     dup
-    bury 3
+    bury 4
     bnz main_after_if_else@22
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@22:
-    dig 1
+    dig 2
     dup
     assert
     bnz main_after_if_else@24
@@ -164,14 +175,20 @@ main_after_if_else@22:
     log
 
 main_after_if_else@24:
-    dig 1
+    dig 4
+    dig 7
+    ==
+    dup
+    bury 3
     bnz main_after_if_else@26
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@26:
+    dig 1
+    assert
     pushbytes 0x151f7c75
-    dig 6
+    dig 5
     concat
     log
     intc_0 // 1
@@ -179,7 +196,7 @@ main_after_if_else@26:
 
 main_bool_false@17:
     intc_1 // 0
-    bury 3
+    bury 4
     b main_bool_merge@18
 
 main_ternary_false@12:

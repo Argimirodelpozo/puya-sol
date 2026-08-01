@@ -4,6 +4,10 @@
 
 #include "builder/sol-ast/calls/SolArrayMethod.h"
 #include "awst/NameGen.h"
+#include "Logger.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
+#include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -26,6 +30,115 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 
 	std::string memberName = memberAccess->memberName();
 	auto const& baseExpr = memberAccess->expression();
+
+	// --evm-storage-layout: push/pop on a storage dynamic array = length-word
+	// RMW at the root slot + element write at keccak256(slot32)+addressing.
+	// Pop ZEROES the vacated element (EVM semantics), so push() never needs to.
+	if (builder::evmStorageLayout() && (memberName == "push" || memberName == "pop"))
+	{
+		auto const* arrT = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
+		if (arrT && arrT->isDynamicallySized()
+			&& arrT->dataStoredIn(DataLocation::Storage)
+			&& EvmSlotLowering::isStorageStateRef(baseExpr))
+		{
+			if (arrT->isByteArrayOrString())
+			{
+				Logger::instance().error(
+					"--evm-storage-layout: bytes/string push/pop not yet supported",
+					m_loc);
+				return nullptr;
+			}
+			auto const* elemType = arrT->baseType();
+			if (!elemType->isValueType())
+			{
+				Logger::instance().error(
+					"--evm-storage-layout: push/pop of aggregate elements not "
+					"yet supported", m_loc);
+				return nullptr;
+			}
+			EvmSlotLowering low(m_ctx, m_scope, m_loc);
+			auto base = low.resolve(baseExpr);
+			if (!base)
+				return nullptr;
+			// Root slot and length feed several statements — pin to temps.
+			auto pin = [&](std::shared_ptr<awst::Expression> e, char const* tag) {
+				if (dynamic_cast<awst::VarExpression const*>(e.get())
+					|| dynamic_cast<awst::IntegerConstant const*>(e.get()))
+					return e;
+				std::string nm = std::string("__evm_") + tag + "_"
+					+ std::to_string(awst::NameGen::next("SolArrayMethod.evmPin"));
+				auto const* wt = e->wtype;   // read BEFORE the move (arg eval order)
+				m_ctx.queuePrePending(awst::makeAssignmentStatement(
+					awst::makeVarExpression(nm, wt, m_loc), std::move(e), m_loc));
+				return std::shared_ptr<awst::Expression>(
+					awst::makeVarExpression(nm, wt, m_loc));
+			};
+			auto rootSlot = pin(base->slot, "arr");
+			auto len = pin(EvmSlotLowering::readSlotWord(rootSlot, m_loc), "len");
+			auto dataBase = EvmSlotLowering::dynDataBase(rootSlot, m_loc);
+
+			if (memberName == "push")
+			{
+				std::shared_ptr<awst::Expression> value;
+				if (!m_call.arguments().empty())
+					value = buildExpr(*m_call.arguments()[0]);
+				else if (m_ctx.pendingArrayPushValue)
+					value = std::move(m_ctx.pendingArrayPushValue);
+				auto addr = low.elemAddr(dataBase, len, elemType);
+				if (value)
+				{
+					value = low.coerceToNative(std::move(value), addr);
+					if (!value)
+						return nullptr;
+					std::vector<std::shared_ptr<awst::Statement>> writes;
+					low.writeValue(addr, std::move(value), writes);
+					for (auto& st: writes)
+						m_ctx.queuePrePending(std::move(st));
+				}
+				auto newLen = awst::makeBigUIntBinOp(len,
+					awst::BigUIntBinaryOperator::Add,
+					awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
+					m_loc);
+				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					rootSlot, std::move(newLen), m_loc));
+				return awst::makeZero(m_loc, awst::WType::biguintType());
+			}
+
+			// pop
+			auto nonEmpty = awst::makeNumericCompare(len,
+				awst::NumericComparison::Gt,
+				awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
+				m_loc);
+			m_ctx.queuePrePending(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(nonEmpty), m_loc, "pop from empty array"),
+				m_loc));
+			auto lastIdx = pin(awst::makeBigUIntBinOp(len,
+				awst::BigUIntBinaryOperator::Sub,
+				awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
+				m_loc), "last");
+			auto addr = low.elemAddr(dataBase, lastIdx, elemType);
+			std::shared_ptr<awst::Expression> zero;
+			if (addr.wtype == awst::WType::accountType())
+				zero = awst::makeAddressConstant(
+					"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ", m_loc);
+			else if (addr.wtype == awst::WType::biguintType())
+				zero = awst::makeZero(m_loc, awst::WType::biguintType());
+			else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(addr.wtype);
+				bw && bw->length().has_value())
+				zero = awst::makeBytesConstant(
+					std::vector<uint8_t>(static_cast<size_t>(*bw->length()), 0), m_loc,
+					awst::BytesEncoding::Base16, addr.wtype);
+			else
+				zero = awst::makeZero(m_loc);
+			std::vector<std::shared_ptr<awst::Statement>> writes;
+			low.writeValue(addr, std::move(zero), writes);
+			for (auto& st: writes)
+				m_ctx.queuePrePending(std::move(st));
+			m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+				rootSlot, lastIdx, m_loc));
+			return awst::makeZero(m_loc, awst::WType::biguintType());
+		}
+	}
 
 	// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression (wrapped
 	// in StateGet when read). Unwrap and emit ArrayExtend/ArrayPop on the raw

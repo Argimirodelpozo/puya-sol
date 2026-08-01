@@ -2,6 +2,8 @@
 
 #include "builder/sol-ast/exprs/SolIdentifier.h"
 #include "Logger.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
@@ -215,6 +217,33 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		if (varDecl->isStateVariable())
 		{
 			auto* type = m_ctx.typeMapper.map(varDecl->type());
+
+			// --evm-storage-layout: persistent state vars read from their EVM
+			// slot address. Aggregates never build here — index/member/write
+			// accesses intercept on the AST above this identifier.
+			if (builder::evmStorageLayout()
+				&& !varDecl->isConstant() && !varDecl->immutable()
+				&& varDecl->referenceLocation() != VariableDeclaration::Location::Transient)
+			{
+				if (varDecl->type() && varDecl->type()->isValueType())
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					if (auto addr = low.resolve(m_ident))
+						return low.readValue(*addr);
+					return nullptr;
+				}
+				if (EvmSlotLowering::isBytesLike(varDecl->type()))
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					if (auto addr = low.resolve(m_ident))
+						return low.readBytesValue(*addr);
+					return nullptr;
+				}
+				Logger::instance().error(
+					"--evm-storage-layout: aggregate state variable '" + name
+					+ "' used as a value is not yet supported", m_loc);
+				return nullptr;
+			}
 
 			// Mapping used as a VALUE (`r = a;` where r is a storage-pointer alias):
 			// return its name as bytes so the alias holds the box-key prefix.

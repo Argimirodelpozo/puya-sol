@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "cli/AwstPostPasses.h"
 #include "cli/CliOptions.h"
@@ -40,6 +41,8 @@ int main(int _argc, char* _argv[])
 	// --evm-memory-slots: N scratch slots for EVM memory (default 5 = 20KB).
 	if (opts.evmMemorySlots > 0)
 		puyasol::builder::AssemblyBuilder::MEMORY_SLOT_LAST = opts.evmMemorySlots - 1;
+
+	puyasol::builder::setEvmStorageLayout(opts.evmStorageLayout);
 
 	if (opts.sourceFiles.empty())
 	{

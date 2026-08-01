@@ -1,3 +1,25 @@
+# Semantic Test Status — v474
+
+> **feat: --evm-storage-layout Stage-1 prototype (asm-compat-memory-mode.md), 2026-08-01:**
+> **12 failed / 1392 passed / 107 xf / 30 xp** (zero regressions; the 12 = the known
+> baseline set). New opt-in mode backs ALL contract storage with a flat EVM slot space:
+> dense declared slots (< 2^16) in 2048-byte page boxes ("p:" ++ itob(slot/64), one
+> box-ref budget per 64 slots, lazy create, absent reads 0), keccak-derived slots one box
+> per slot ("s:" ++ slot32), bytes/string in Solidity's short/long storage format
+> (__evm_bytes_read/write, shrink zeroes stale chunks). One recursive slot-lvalue
+> resolver (sol-ast/EvmSlotLowering) lowers state access — scalars incl. packed
+> sub-word, mappings (keccak256(key32‖slot32), nested, string keys), dynamic/fixed
+> arrays (data at keccak256(slot32); push/pop with EVM zero-on-pop), struct members,
+> ++/--/delete, compound assigns, ctor initializers — through the same
+> __storage_read/write the asm sload/sstore path uses, so Yul slot arithmetic and
+> Solidity codegen address the SAME words (OZ StorageSlot write-through and
+> Checkpoints add(keccak,i) idioms verified on localnet, plus byte-exact EVM
+> packed-word and short-string forms via raw sload). In-mode: per-var ARC-56 state
+> declarations suppressed, auto-getters skipped w/ warning, named-cell asm SlotRoutes
+> disabled; default mode byte-identical (guard test). 6 new tests (test_evm_layout_*)
+> + harness extra_args pass-through (cache-keyed). Stage 2 = storage-ref params/locals
+> as biguint slots (the OZ library shape unlocking kaito/usde/degen/builder).
+
 # Semantic Test Status — v473
 
 > **fix: constant-offset calldatacopy silent no-op (found by fuzz_mem), 2026-07-23:**

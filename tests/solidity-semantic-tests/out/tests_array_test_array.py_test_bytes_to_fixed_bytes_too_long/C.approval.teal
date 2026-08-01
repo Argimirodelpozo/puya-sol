@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_too_long.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 0 32 2
     bytecblock 0x151f7c75 "__ctor_pending" "s"
     intc_1 // 0
     dup
@@ -48,7 +48,7 @@ main_fromSlice_route@9:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -68,6 +68,10 @@ main_ternary_merge@16:
     assert // not payable
     dig 1
     substring 0 33
+    intc_2 // 32
+    bzero
+    concat
+    extract 0 32
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -93,6 +97,10 @@ main_ternary_merge@21:
     bytec_2 // "s"
     box_get
     assert // box exists
+    intc_2 // 32
+    bzero
+    concat
+    extract 0 32
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -109,7 +117,7 @@ main_fromCalldata_route@7:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -127,8 +135,14 @@ main_fromCalldata_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    bytec_0 // 0x151f7c75
+    intc_2 // 32
+    bzero
     dig 2
+    swap
+    concat
+    extract 0 32
+    bytec_0 // 0x151f7c75
+    swap
     concat
     log
     intc_0 // 1
@@ -143,7 +157,7 @@ main_fromMemory_route@6:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -161,8 +175,14 @@ main_fromMemory_route@6:
 main_ternary_merge@31:
     !
     assert // not payable
-    bytec_0 // 0x151f7c75
+    intc_2 // 32
+    bzero
     dig 1
+    swap
+    concat
+    extract 0 32
+    bytec_0 // 0x151f7c75
+    swap
     concat
     log
     intc_0 // 1

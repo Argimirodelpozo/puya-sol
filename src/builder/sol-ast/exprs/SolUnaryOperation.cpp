@@ -9,6 +9,8 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "builder/sol-eb/AssignmentHelper.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -713,6 +715,113 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	return _operand;
 }
 
+std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelete()
+{
+	auto const& sub = m_unaryOp.subExpression();
+	auto const* solType = sub.annotation().type;
+	if (m_unaryOp.getOperator() == Token::Delete
+		&& EvmSlotLowering::isBytesLike(solType))
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(sub);
+		if (!addr)
+			return nullptr;
+		std::vector<std::shared_ptr<awst::Statement>> writes;
+		low.writeBytesValue(*addr,
+			awst::makeBytesConstant({}, m_loc), writes);
+		for (auto& st: writes)
+			m_ctx.queuePending(std::move(st));
+		return awst::makeZero(m_loc, awst::WType::biguintType());
+	}
+	if (!solType || !solType->isValueType())
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: delete/++/-- on aggregate storage not yet "
+			"supported", m_loc);
+		return nullptr;
+	}
+	EvmSlotLowering low(m_ctx, m_scope, m_loc);
+	auto addr = low.resolve(sub);
+	if (!addr)
+		return nullptr;
+
+	// The slot (and any runtime byte offset) is referenced by the value read
+	// AND the queued write — separate statements, so pin to temps (the
+	// cross-statement idiom; SingleEvaluation would be unsound here).
+	auto pinToTemp = [&](std::shared_ptr<awst::Expression>& _e, char const* _tag) {
+		if (!_e || dynamic_cast<awst::VarExpression const*>(_e.get())
+			|| dynamic_cast<awst::IntegerConstant const*>(_e.get()))
+			return;
+		std::string nm = std::string("__evm_") + _tag + "_"
+			+ std::to_string(awst::NameGen::next("SolUnaryOperation.evmPin"));
+		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(nm, _e->wtype, m_loc), _e, m_loc));
+		_e = awst::makeVarExpression(nm, _e->wtype, m_loc);
+	};
+	pinToTemp(addr->slot, "slot");
+	pinToTemp(addr->byteOffset, "off");
+
+	Token op = m_unaryOp.getOperator();
+	std::vector<std::shared_ptr<awst::Statement>> writes;
+	if (op == Token::Delete)
+	{
+		std::shared_ptr<awst::Expression> zero;
+		if (addr->wtype == awst::WType::accountType())
+			zero = awst::makeAddressConstant(
+				"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ", m_loc);
+		else if (addr->wtype == awst::WType::biguintType())
+			zero = awst::makeZero(m_loc, awst::WType::biguintType());
+		else if (addr->wtype == awst::WType::boolType()
+			|| addr->wtype == awst::WType::uint64Type())
+			zero = awst::makeZero(m_loc);
+		else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(addr->wtype);
+			bw && bw->length().has_value())
+			zero = awst::makeBytesConstant(
+				std::vector<uint8_t>(static_cast<size_t>(*bw->length()), 0), m_loc,
+				awst::BytesEncoding::Base16, addr->wtype);
+		else
+			zero = builder::StorageMapper::makeDefaultValue(addr->wtype, m_loc);
+		low.writeValue(*addr, std::move(zero), writes);
+		for (auto& st: writes)
+			m_ctx.queuePending(std::move(st));
+		return awst::makeZero(m_loc, awst::WType::biguintType());
+	}
+
+	bool isInc = (op == Token::Inc);
+	bool isPrefix = m_unaryOp.isPrefixOperation();
+	auto current = low.readValue(*addr);
+	auto one = awst::makeIntegerConstant("1", m_loc,
+		addr->wtype == awst::WType::biguintType()
+			? awst::WType::biguintType() : awst::WType::uint64Type());
+	auto newValue = eb::AssignmentHelper::tryComputeCompoundValue(
+		m_ctx, isInc ? Token::AssignAdd : Token::AssignSub,
+		solType, current, one, m_loc);
+	if (!newValue)
+		newValue = m_ctx.buildBinaryOp(
+			isInc ? Token::Add : Token::Sub, current, std::move(one),
+			current->wtype, m_loc);
+	if (newValue && addr->wtype && newValue->wtype != addr->wtype
+		&& (newValue->wtype == awst::WType::uint64Type()
+			|| newValue->wtype == awst::WType::biguintType())
+		&& (addr->wtype == awst::WType::uint64Type()
+			|| addr->wtype == awst::WType::biguintType()))
+		newValue = builder::TypeCoercion::implicitNumericCast(
+			std::move(newValue), addr->wtype, m_loc);
+	if (!newValue)
+		return nullptr;
+	low.writeValue(*addr, std::move(newValue), writes);
+	// Prefix: write BEFORE the value read (fresh read sees the new value).
+	// Postfix: write queued after — the value read still sees the old one.
+	for (auto& st: writes)
+	{
+		if (isPrefix)
+			m_ctx.prePendingStatements.push_back(std::move(st));
+		else
+			m_ctx.queuePending(std::move(st));
+	}
+	return low.readValue(*addr);
+}
+
 std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 {
 	// The canonical constant path (fable-review item 1): solc folded the WHOLE
@@ -726,6 +835,16 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 	// foldTyped's in-range guard keeps `-intN.min` on the checked path.
 	if (auto folded = builder::SolcConstFold::foldTyped(m_unaryOp, m_loc))
 		return folded;
+
+	// --evm-storage-layout: ++/--/delete on storage state refs must not build
+	// the operand (the sub-expression is the lvalue, not a value).
+	{
+		Token op = m_unaryOp.getOperator();
+		if ((op == Token::Inc || op == Token::Dec || op == Token::Delete)
+			&& builder::evmStorageLayout()
+			&& EvmSlotLowering::isStorageStateRef(m_unaryOp.subExpression()))
+			return handleEvmStorageIncDecDelete();
+	}
 
 	auto operand = buildExpr(m_unaryOp.subExpression());
 

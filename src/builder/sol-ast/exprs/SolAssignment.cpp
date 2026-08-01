@@ -15,7 +15,9 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/EffectScan.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "Logger.h"
 
@@ -43,6 +45,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 	// (1) Pre-buildExpr early-outs.
 	if (auto r = tryHandleTransientStateWrite())     return std::move(*r);
+	if (auto r = tryHandleEvmStorageWrite())         return std::move(*r);
 	if (auto r = tryHandleStoragePointerReassign())  return std::move(*r);
 	if (auto r = tryHandleMultiBoxArrayWrite())      return std::move(*r);
 	if (auto r = tryHandleBoxedArrayElemWrite())     return std::move(*r);
@@ -258,6 +261,76 @@ bool rootsInSlotHandle(
 	return vd && vd->isLocalVariable() && scope.findSlotStorageRef(vd->id()) != nullptr;
 }
 } // namespace
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleEvmStorageWrite()
+{
+	if (!builder::evmStorageLayout())
+		return std::nullopt;
+	auto const& lhsExpr = m_assignment.leftHandSide();
+	if (!EvmSlotLowering::isStorageStateRef(lhsExpr))
+		return std::nullopt;
+
+	auto const* lhsType = lhsExpr.annotation().type;
+	if (lhsType && !lhsType->isValueType()
+		&& EvmSlotLowering::isBytesLike(lhsType)
+		&& m_assignment.assignmentOperator() == Token::Assign)
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(lhsExpr);
+		if (!addr)
+			return std::shared_ptr<awst::Expression>{
+				awst::makeZero(m_loc, awst::WType::biguintType())};
+		auto value = buildExpr(m_assignment.rightHandSide());
+		if (!value)
+			return std::nullopt;
+		std::vector<std::shared_ptr<awst::Statement>> out;
+		low.writeBytesValue(*addr, std::move(value), out);
+		for (auto& st: out)
+			m_ctx.queuePending(std::move(st));
+		return std::shared_ptr<awst::Expression>{
+			awst::makeZero(m_loc, awst::WType::biguintType())};
+	}
+	if (!lhsType || !lhsType->isValueType())
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: aggregate storage assignment not yet supported",
+			m_loc);
+		return std::shared_ptr<awst::Expression>{
+			awst::makeZero(m_loc, awst::WType::biguintType())};
+	}
+
+	EvmSlotLowering low(m_ctx, m_scope, m_loc);
+	auto addr = low.resolve(lhsExpr);
+	if (!addr)
+		return std::shared_ptr<awst::Expression>{
+			awst::makeZero(m_loc, awst::WType::biguintType())};
+	// The slot may embed side-effecting key/index builds and is referenced by
+	// both the compound read and the write — pin it. All uses land in the one
+	// write statement, so SingleEvaluation is safe.
+	addr->slot = awst::makeEvalOnce(addr->slot, m_loc);
+
+	Token op = m_assignment.assignmentOperator();
+	auto value = buildExpr(m_assignment.rightHandSide());
+	if (!value)
+		return std::nullopt;
+	if (op != Token::Assign)
+	{
+		auto current = low.readValue(*addr);
+		value = applyCompoundAssignment(op, current, std::move(value));
+	}
+
+	value = low.coerceToNative(std::move(value), *addr);
+	if (!value)
+		return std::nullopt;
+
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	low.writeValue(*addr, std::move(value), out);
+	for (auto& st: out)
+		m_ctx.queuePending(std::move(st));
+	return std::shared_ptr<awst::Expression>{
+		awst::makeZero(m_loc, awst::WType::biguintType())};
+}
 
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleSlotHandleElemWrite()

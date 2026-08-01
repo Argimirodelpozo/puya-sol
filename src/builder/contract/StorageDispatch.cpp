@@ -1,5 +1,6 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StateVarWalker.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/SlotWordCodec.h"
@@ -29,12 +30,528 @@ struct InlineAsmDetector: public solidity::frontend::ASTConstVisitor
 };
 }
 
+void ContractBuilder::buildEvmSlotStorageDispatch(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract* _contractNode,
+	std::string const& _contractName
+)
+{
+	StorageLayout layout;
+	layout.computeLayout(_contract, m_typeMapper);
+
+	InlineAsmDetector asmDetector;
+	forEachDefinedFunction(_contract, [&](auto const* func)
+	{
+		if (asmDetector.found) return;
+		if (func->isImplemented())
+			func->body().accept(asmDetector);
+	});
+
+	if (layout.totalSlots() == 0 && !asmDetector.found)
+		return;
+
+	std::string cref = m_sourceFile + "." + _contractName;
+	awst::SourceLocation loc;
+	loc.file = m_sourceFile;
+
+	auto makeUint64 = [&](std::string const& val) {
+		return awst::makeIntegerConstant(val, loc);
+	};
+	auto makeBytes = [&](std::string const& s) {
+		return awst::makeUtf8BytesConstant(s, loc);
+	};
+	auto slotVar = [&]() {
+		return awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
+	};
+
+	// EVM slot arithmetic wraps mod 2^256 (see buildStorageDispatch).
+	auto makeSlotWrapStmt = [&]() {
+		auto wrapped = awst::makeBigUIntBinOp(
+			slotVar(),
+			awst::BigUIntBinaryOperator::Mod,
+			awst::makeBiguintConstant(
+				"115792089237316195423570985008687907853269984665640564039457584007913129639936",
+				loc),
+			loc);
+		return awst::makeAssignmentStatement(slotVar(), std::move(wrapped), loc);
+	};
+
+	// __slot < 2^16 → dense region (declared vars), page boxes of 64 slots.
+	auto denseCmp = [&]() {
+		return awst::makeNumericCompare(slotVar(), awst::NumericComparison::Lt,
+			awst::makeIntegerConstant(std::to_string(kEvmDenseSlotLimit), loc,
+				awst::WType::biguintType()), loc);
+	};
+
+	// Bind the uint64 slot, then key = "p:" ++ itob(slot / 64), off = (slot % 64) * 32.
+	std::string const s64Name = "__eslot64";
+	auto s64Var = [&]() {
+		return awst::makeVarExpression(s64Name, awst::WType::uint64Type(), loc);
+	};
+	auto bindS64 = [&](awst::Block& _blk) {
+		auto cast = awst::makeAsBytes(slotVar(), loc);
+		auto cat = awst::makeLeftPad(std::move(cast), 8, loc);
+		auto extract = awst::makeExtractLastN(std::move(cat), 8, loc);
+		_blk.body.push_back(awst::makeAssignmentStatement(
+			s64Var(), awst::makeBtoi(std::move(extract), loc), loc));
+	};
+	auto pageKey = [&]() {
+		auto page = awst::makeUInt64BinOp(s64Var(),
+			awst::UInt64BinaryOperator::FloorDiv,
+			makeUint64(std::to_string(kEvmSlotsPerPage)), loc);
+		return awst::makeConcat(makeBytes("p:"),
+			awst::makeItob(std::move(page), loc), loc);
+	};
+	auto pageOff = [&]() {
+		auto idx = awst::makeUInt64BinOp(s64Var(),
+			awst::UInt64BinaryOperator::Mod,
+			makeUint64(std::to_string(kEvmSlotsPerPage)), loc);
+		return awst::makeUInt64BinOp(std::move(idx),
+			awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
+	};
+	auto sparseKey = [&]() {
+		auto slotBytes = awst::makeLeftPadToN(awst::makeAsBytes(slotVar(), loc), 32, loc);
+		return awst::makeConcat(makeBytes("s:"), std::move(slotBytes), loc);
+	};
+	auto boxExists = [&](std::shared_ptr<awst::Expression> _key) {
+		auto boxLen = StorageMapper::makeBoxLenTuple(m_typeMapper, std::move(_key), loc);
+		return awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), loc);
+	};
+	auto retZero = [&](awst::Block& _blk) {
+		_blk.body.push_back(awst::makeReturnStatement(
+			awst::makeIntegerConstant("0", loc, awst::WType::biguintType()), loc));
+	};
+
+	// ── __storage_read(slot: biguint) -> biguint ──
+	{
+		awst::ContractMethod readSub;
+		readSub.sourceLocation = loc;
+		readSub.cref = cref;
+		readSub.memberName = "__storage_read";
+		readSub.returnType = awst::WType::biguintType();
+		readSub.arc4MethodConfig = std::nullopt;
+		readSub.pure = false;
+
+		awst::SubroutineArgument slotArg;
+		slotArg.name = "__slot";
+		slotArg.wtype = awst::WType::biguintType();
+		slotArg.sourceLocation = loc;
+		readSub.args.push_back(slotArg);
+
+		auto body = awst::makeBlock(loc);
+		body->body.push_back(makeSlotWrapStmt());
+
+		// Dense: absent page reads as 0 (no box_create on the read path — a
+		// read must not charge MBR).
+		auto denseBlk = awst::makeBlock(loc);
+		{
+			bindS64(*denseBlk);
+			auto key = pageKey();
+			auto thenBlk = awst::makeBlock(loc);
+			thenBlk->body.push_back(awst::makeReturnStatement(
+				awst::makeAsBiguint(
+					awst::makeBoxExtract(key, pageOff(), makeUint64("32"), loc), loc),
+				loc));
+			denseBlk->body.push_back(awst::makeIfElse(
+				boxExists(key), std::move(thenBlk), nullptr, loc));
+			retZero(*denseBlk);
+		}
+
+		// Sparse: one box per slot, absent slot reads as 0.
+		auto sparseBlk = awst::makeBlock(loc);
+		{
+			auto key = sparseKey();
+			auto thenBlk = awst::makeBlock(loc);
+			thenBlk->body.push_back(awst::makeReturnStatement(
+				awst::makeAsBiguint(
+					awst::makeBoxExtract(key, makeUint64("0"), makeUint64("32"), loc), loc),
+				loc));
+			sparseBlk->body.push_back(awst::makeIfElse(
+				boxExists(key), std::move(thenBlk), nullptr, loc));
+			retZero(*sparseBlk);
+		}
+
+		body->body.push_back(awst::makeIfElse(
+			denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
+
+		readSub.body = body;
+		_contractNode->methods.push_back(std::move(readSub));
+	}
+
+	// ── __storage_write(slot: biguint, value: biguint) -> void ──
+	{
+		awst::ContractMethod writeSub;
+		writeSub.sourceLocation = loc;
+		writeSub.cref = cref;
+		writeSub.memberName = "__storage_write";
+		writeSub.returnType = awst::WType::voidType();
+		writeSub.arc4MethodConfig = std::nullopt;
+		writeSub.pure = false;
+
+		awst::SubroutineArgument slotArg;
+		slotArg.name = "__slot";
+		slotArg.wtype = awst::WType::biguintType();
+		slotArg.sourceLocation = loc;
+		writeSub.args.push_back(slotArg);
+
+		awst::SubroutineArgument valArg;
+		valArg.name = "__value";
+		valArg.wtype = awst::WType::biguintType();
+		valArg.sourceLocation = loc;
+		writeSub.args.push_back(valArg);
+
+		auto body = awst::makeBlock(loc);
+		body->body.push_back(makeSlotWrapStmt());
+
+		auto paddedVal = [&]() {
+			return awst::makeLeftPadToN(awst::makeAsBytes(
+				awst::makeVarExpression("__value", awst::WType::biguintType(), loc), loc),
+				32, loc);
+		};
+
+		// Dense: lazily materialise the 2048-byte page (box_create is a no-op
+		// when it already exists), then patch the slot's 32-byte window.
+		auto denseBlk = awst::makeBlock(loc);
+		{
+			bindS64(*denseBlk);
+			auto key = pageKey();
+			denseBlk->body.push_back(awst::makeExpressionStatement(
+				awst::makeBoxCreate(key,
+					makeUint64(std::to_string(kEvmSlotsPerPage * 32ULL)), loc), loc));
+			auto boxReplace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), loc);
+			boxReplace->stackArgs.push_back(key);
+			boxReplace->stackArgs.push_back(pageOff());
+			boxReplace->stackArgs.push_back(paddedVal());
+			denseBlk->body.push_back(
+				awst::makeExpressionStatement(std::move(boxReplace), loc));
+			denseBlk->body.push_back(awst::makeReturnStatement(nullptr, loc));
+		}
+
+		// Sparse: one 32-byte box per slot.
+		auto sparseBlk = awst::makeBlock(loc);
+		{
+			auto key = sparseKey();
+			sparseBlk->body.push_back(awst::makeExpressionStatement(
+				awst::makeBoxCreate(key, makeUint64("32"), loc), loc));
+			auto boxReplace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), loc);
+			boxReplace->stackArgs.push_back(key);
+			boxReplace->stackArgs.push_back(makeUint64("0"));
+			boxReplace->stackArgs.push_back(paddedVal());
+			sparseBlk->body.push_back(
+				awst::makeExpressionStatement(std::move(boxReplace), loc));
+			sparseBlk->body.push_back(awst::makeReturnStatement(nullptr, loc));
+		}
+
+		body->body.push_back(awst::makeIfElse(
+			denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
+
+		writeSub.body = body;
+		_contractNode->methods.push_back(std::move(writeSub));
+	}
+
+	// ── EVM bytes/string storage codec ──────────────────────────────────────
+	// Solidity storage format: short (len<32) = data left-aligned ++ 2*len in
+	// the low byte, all in the slot word; long = word 2*len+1 at the slot,
+	// data in 32-byte chunks at keccak256(slot32)+i.
+	auto readWordCall = [&](std::shared_ptr<awst::Expression> _slot) {
+		auto call = awst::makeSubroutineCall(
+			awst::SubroutineID{"__puyasol___storage_read"},
+			awst::WType::biguintType(), loc);
+		awst::pushCallArg(call->args, "__slot", std::move(_slot));
+		return std::shared_ptr<awst::Expression>(std::move(call));
+	};
+	auto writeWordStmt = [&](std::shared_ptr<awst::Expression> _slot,
+		std::shared_ptr<awst::Expression> _word) {
+		auto call = awst::makeSubroutineCall(
+			awst::SubroutineID{"__puyasol___storage_write"},
+			awst::WType::voidType(), loc);
+		awst::pushCallArg(call->args, "__slot", std::move(_slot));
+		awst::pushCallArg(call->args, "__value", std::move(_word));
+		return awst::makeExpressionStatement(std::move(call), loc);
+	};
+	auto chunkBase = [&]() {
+		// keccak256(slot32) as biguint — the data region of the long form.
+		auto slotBytes = awst::makeLeftPadToN(
+			awst::makeAsBytes(slotVar(), loc), 32, loc);
+		return awst::makeAsBiguint(
+			awst::makeKeccak256(std::move(slotBytes), loc), loc);
+	};
+	auto u64Var = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::uint64Type(), loc);
+	};
+	auto bytesVar = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::bytesType(), loc);
+	};
+	auto biguintVar = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::biguintType(), loc);
+	};
+	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, loc); };
+	auto u64ToBiguint = [&](std::shared_ptr<awst::Expression> e) {
+		return awst::makeAsBiguint(awst::makeItob(std::move(e), loc), loc);
+	};
+	auto biguintToU64 = [&](std::shared_ptr<awst::Expression> e) {
+		auto cat = awst::makeLeftPad(awst::makeAsBytes(std::move(e), loc), 8, loc);
+		return awst::makeBtoi(awst::makeExtractLastN(std::move(cat), 8, loc), loc);
+	};
+
+	// ── __evm_bytes_read(slot: biguint) -> bytes ──
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_bytes_read";
+		sub.returnType = awst::WType::bytesType();
+		sub.arc4MethodConfig = std::nullopt;
+		sub.pure = false;
+		awst::SubroutineArgument slotArg;
+		slotArg.name = "__slot";
+		slotArg.wtype = awst::WType::biguintType();
+		slotArg.sourceLocation = loc;
+		sub.args.push_back(slotArg);
+
+		auto body = awst::makeBlock(loc);
+		// wb = pad32(word); lastByte = wb[31]
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__wb"),
+			awst::makeLeftPadToN(awst::makeAsBytes(
+				readWordCall(slotVar()), loc), 32, loc), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__last"),
+			awst::makeBtoi(awst::makeExtract(bytesVar("__wb"), 31, 1, loc), loc), loc));
+		// short form: even last byte → len = last/2, data = wb[0:len]
+		{
+			auto isShort = awst::makeNumericCompare(
+				awst::makeUInt64BinOp(u64Var("__last"),
+					awst::UInt64BinaryOperator::Mod, u64c(2), loc),
+				awst::NumericComparison::Eq, u64c(0), loc);
+			auto thenBlk = awst::makeBlock(loc);
+			auto lenS = awst::makeUInt64BinOp(u64Var("__last"),
+				awst::UInt64BinaryOperator::FloorDiv, u64c(2), loc);
+			thenBlk->body.push_back(awst::makeReturnStatement(
+				awst::makeExtract3(bytesVar("__wb"), u64c(0), std::move(lenS), loc),
+				loc));
+			body->body.push_back(awst::makeIfElse(
+				std::move(isShort), std::move(thenBlk), nullptr, loc));
+		}
+		// long form: len = (word-1)/2 (word reconstructed from wb)
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__len"),
+			biguintToU64(awst::makeBigUIntBinOp(
+				awst::makeBigUIntBinOp(
+					awst::makeAsBiguint(bytesVar("__wb"), loc),
+					awst::BigUIntBinaryOperator::Sub,
+					awst::makeIntegerConstant("1", loc, awst::WType::biguintType()), loc),
+				awst::BigUIntBinaryOperator::FloorDiv,
+				awst::makeIntegerConstant("2", loc, awst::WType::biguintType()), loc)),
+			loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			biguintVar("__chunk"), chunkBase(), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__data"), awst::makeBytesConstant({}, loc), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__i"), u64c(0), loc));
+		{
+			auto cond = awst::makeNumericCompare(
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Mult, u64c(32), loc),
+				awst::NumericComparison::Lt, u64Var("__len"), loc);
+			auto loop = awst::makeBlock(loc);
+			auto chunkWord = readWordCall(awst::makeBigUIntBinOp(
+				biguintVar("__chunk"), awst::BigUIntBinaryOperator::Add,
+				u64ToBiguint(u64Var("__i")), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__data"),
+				awst::makeConcat(bytesVar("__data"),
+					awst::makeLeftPadToN(
+						awst::makeAsBytes(std::move(chunkWord), loc), 32, loc),
+					loc), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__i"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
+			body->body.push_back(awst::makeWhileLoop(std::move(cond), std::move(loop), loc));
+		}
+		body->body.push_back(awst::makeReturnStatement(
+			awst::makeExtract3(bytesVar("__data"), u64c(0), u64Var("__len"), loc), loc));
+
+		sub.body = body;
+		_contractNode->methods.push_back(std::move(sub));
+	}
+
+	// ── __evm_bytes_write(slot: biguint, val: bytes) -> void ──
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_bytes_write";
+		sub.returnType = awst::WType::voidType();
+		sub.arc4MethodConfig = std::nullopt;
+		sub.pure = false;
+		awst::SubroutineArgument slotArg;
+		slotArg.name = "__slot";
+		slotArg.wtype = awst::WType::biguintType();
+		slotArg.sourceLocation = loc;
+		sub.args.push_back(slotArg);
+		awst::SubroutineArgument valArg;
+		valArg.name = "__val";
+		valArg.wtype = awst::WType::bytesType();
+		valArg.sourceLocation = loc;
+		sub.args.push_back(valArg);
+
+		auto valVar = [&]() { return bytesVar("__val"); };
+		auto body = awst::makeBlock(loc);
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__len"), awst::makeLen(valVar(), loc), loc));
+		// old word FIRST (stale-chunk cleanup needs the previous length)
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__ow"),
+			awst::makeLeftPadToN(awst::makeAsBytes(
+				readWordCall(slotVar()), loc), 32, loc), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			biguintVar("__chunk"), chunkBase(), loc));
+		// old chunk count: odd old word → ceil(((word-1)/2)/32), else 0
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__oldChunks"), u64c(0), loc));
+		{
+			auto wasLong = awst::makeNumericCompare(
+				awst::makeUInt64BinOp(
+					awst::makeBtoi(awst::makeExtract(bytesVar("__ow"), 31, 1, loc), loc),
+					awst::UInt64BinaryOperator::Mod, u64c(2), loc),
+				awst::NumericComparison::Eq, u64c(1), loc);
+			auto thenBlk = awst::makeBlock(loc);
+			auto oldLen = biguintToU64(awst::makeBigUIntBinOp(
+				awst::makeBigUIntBinOp(
+					awst::makeAsBiguint(bytesVar("__ow"), loc),
+					awst::BigUIntBinaryOperator::Sub,
+					awst::makeIntegerConstant("1", loc, awst::WType::biguintType()), loc),
+				awst::BigUIntBinaryOperator::FloorDiv,
+				awst::makeIntegerConstant("2", loc, awst::WType::biguintType()), loc));
+			thenBlk->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__oldChunks"),
+				awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(std::move(oldLen),
+						awst::UInt64BinaryOperator::Add, u64c(31), loc),
+					awst::UInt64BinaryOperator::FloorDiv, u64c(32), loc), loc));
+			body->body.push_back(awst::makeIfElse(
+				std::move(wasLong), std::move(thenBlk), nullptr, loc));
+		}
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__newChunks"), u64c(0), loc));
+		// short: word = val ++ zeros to 31 ++ byte(2*len)
+		{
+			auto isShort = awst::makeNumericCompare(
+				u64Var("__len"), awst::NumericComparison::Lt, u64c(32), loc);
+			auto thenBlk = awst::makeBlock(loc);
+			auto data31 = awst::makeExtract3(
+				awst::makeConcat(valVar(), awst::makeBzero(31, loc), loc),
+				u64c(0), u64c(31), loc);
+			auto lenByte = awst::makeExtract(
+				awst::makeItob(awst::makeUInt64BinOp(u64Var("__len"),
+					awst::UInt64BinaryOperator::Mult, u64c(2), loc), loc),
+				7, 1, loc);
+			thenBlk->body.push_back(writeWordStmt(slotVar(),
+				awst::makeAsBiguint(awst::makeConcat(
+					std::move(data31), std::move(lenByte), loc), loc)));
+			auto elseBlk = awst::makeBlock(loc);
+			// long: length word = 2*len+1, chunks at keccak(slot)+i
+			elseBlk->body.push_back(writeWordStmt(slotVar(),
+				awst::makeAsBiguint(awst::makeItob(
+					awst::makeUInt64BinOp(
+						awst::makeUInt64BinOp(u64Var("__len"),
+							awst::UInt64BinaryOperator::Mult, u64c(2), loc),
+						awst::UInt64BinaryOperator::Add, u64c(1), loc), loc), loc)));
+			elseBlk->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__newChunks"),
+				awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(u64Var("__len"),
+						awst::UInt64BinaryOperator::Add, u64c(31), loc),
+					awst::UInt64BinaryOperator::FloorDiv, u64c(32), loc), loc));
+			elseBlk->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__padded"),
+				awst::makeConcat(valVar(), awst::makeBzero(32, loc), loc), loc));
+			elseBlk->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__i"), u64c(0), loc));
+			auto cond = awst::makeNumericCompare(u64Var("__i"),
+				awst::NumericComparison::Lt, u64Var("__newChunks"), loc);
+			auto loop = awst::makeBlock(loc);
+			auto chunk = awst::makeExtract3(bytesVar("__padded"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Mult, u64c(32), loc),
+				u64c(32), loc);
+			loop->body.push_back(writeWordStmt(
+				awst::makeBigUIntBinOp(biguintVar("__chunk"),
+					awst::BigUIntBinaryOperator::Add,
+					u64ToBiguint(u64Var("__i")), loc),
+				awst::makeAsBiguint(std::move(chunk), loc)));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__i"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
+			elseBlk->body.push_back(awst::makeWhileLoop(
+				std::move(cond), std::move(loop), loc));
+			body->body.push_back(awst::makeIfElse(
+				std::move(isShort), std::move(thenBlk), std::move(elseBlk), loc));
+		}
+		// clear stale long chunks beyond the new count (EVM zeroes on shrink)
+		{
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__j"), u64Var("__newChunks"), loc));
+			auto cond = awst::makeNumericCompare(u64Var("__j"),
+				awst::NumericComparison::Lt, u64Var("__oldChunks"), loc);
+			auto loop = awst::makeBlock(loc);
+			loop->body.push_back(writeWordStmt(
+				awst::makeBigUIntBinOp(biguintVar("__chunk"),
+					awst::BigUIntBinaryOperator::Add,
+					u64ToBiguint(u64Var("__j")), loc),
+				awst::makeIntegerConstant("0", loc, awst::WType::biguintType())));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__j"),
+				awst::makeUInt64BinOp(u64Var("__j"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
+			body->body.push_back(awst::makeWhileLoop(
+				std::move(cond), std::move(loop), loc));
+		}
+		body->body.push_back(awst::makeReturnStatement(nullptr, loc));
+
+		sub.body = body;
+		_contractNode->methods.push_back(std::move(sub));
+	}
+
+	// Promote to root-level Subroutines (see buildStorageDispatch's tail).
+	std::vector<awst::ContractMethod> remainingMethods;
+	for (auto& m: _contractNode->methods)
+	{
+		if (m.memberName == "__storage_read" || m.memberName == "__storage_write"
+			|| m.memberName == "__evm_bytes_read" || m.memberName == "__evm_bytes_write")
+		{
+			auto sub = awst::makeSubroutine(
+				std::string("__puyasol_") + m.memberName, m.memberName,
+				m.args, m.returnType, m.body, /*pure=*/false, m.sourceLocation);
+			m_dispatchSubroutines.push_back(std::move(sub));
+		}
+		else
+			remainingMethods.push_back(std::move(m));
+	}
+	_contractNode->methods = std::move(remainingMethods);
+
+	Logger::instance().debug(
+		"Generated EVM-slot __storage_read/__storage_write (paged<"
+		+ std::to_string(kEvmDenseSlotLimit) + "/sparse) for "
+		+ std::to_string(layout.totalSlots()) + " dense slots", loc);
+}
+
 void ContractBuilder::buildStorageDispatch(
 	solidity::frontend::ContractDefinition const& _contract,
 	awst::Contract* _contractNode,
 	std::string const& _contractName
 )
 {
+	if (evmStorageLayout())
+	{
+		buildEvmSlotStorageDispatch(_contract, _contractNode, _contractName);
+		return;
+	}
+
 	StorageLayout layout;
 	layout.computeLayout(_contract, m_typeMapper);
 

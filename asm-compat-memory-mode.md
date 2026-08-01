@@ -1,6 +1,45 @@
 # EVM-layout compatibility mode (`--evm-storage-layout`)
 
-**Status: DESIGN ONLY. No code written.** Proposed 2026-07-30.
+**Status: STAGE 1 PROTOTYPE LANDED** (2026-08-01; proposed 2026-07-30 as design-only).
+
+Implemented behind `--evm-storage-layout`, exactly the hybrid design below:
+
+- **Dispatch** (`StorageDispatch.cpp::buildEvmSlotStorageDispatch`):
+  `__storage_read/write` = slot < 2^16 → 2048-byte page box `"p:" ++ itob(slot/64)`
+  (lazy create on write, absent page reads 0 — no MBR on reads); else sparse
+  `"s:" ++ slot32`. Plus `__evm_bytes_read/write`: Solidity's short/long
+  string storage format (short: data ++ 2·len in the word; long: 2·len+1 at p,
+  chunks at keccak256(p); shrink zeroes stale chunks).
+- **Lowering** (`sol-ast/EvmSlotLowering.{h,cpp}`): one recursive slot-lvalue
+  resolver (state var → mapping keccak256(key32‖slot32) chains → dyn-array data
+  at keccak256(slot32) → struct member offsets → packed sub-word windows) +
+  read/write emitters through SlotWordCodec. Hooked at: SolIdentifier,
+  SolIndexAccess, SolFieldAccess, SolLengthAccess, SolAssignment
+  (`tryHandleEvmStorageWrite`, incl. compound), SolUnaryOperation (++/--/
+  delete), SolArrayMethod (push/pop, EVM zero-on-pop), ctor initializers.
+- **Asm coherence**: named-cell SlotRoutes / stateVarSlots / box sentinels are
+  disabled in-mode; `.slot`/`.offset` still resolve to real layout constants,
+  so sload/sstore and Solidity codegen address the SAME words. Verified on
+  localnet: asm `sstore` visible to high-level reads, asm
+  `keccak256(key‖slot)` mapping writes read back via `m[k]`, Checkpoints-style
+  `add(keccak256(p),i)` reads, exact EVM packed-word bytes, exact EVM
+  short-string word bytes.
+- **ARC-56**: per-var state declarations suppressed (only `__ctor_pending`
+  remains); auto-getters for public vars skipped with a warning (explicit
+  getters required for now). Immutables/constants/transients keep their
+  existing named-cell/scratch models (they are not EVM storage).
+- **Address caveat**: an `address` ALONE in its slot stores all 32 AVM bytes
+  (round-trips real accounts); a PACKED address keeps the EVM trailing-20
+  convention (lossy for real AVM addresses — documented divergence).
+- **Tests**: `tests/puyasolRegression/test_puyasol_regression.py::test_evm_layout_*`
+  (6 green on localnet) + fixture `contracts/evm_storage_layout.sol`; harness
+  gained `extra_args` pass-through (cache-keyed).
+
+**Not yet (stage 2)**: storage-ref params/locals as biguint slots (the OZ
+library shape — `getStringSlot(string storage store)`, Checkpoints
+`Checkpoint[] storage self`), whole-aggregate reads/copies, bytes/string
+element access & push/pop, public auto-getters, `layout at` bases ≥ 2^16
+(dense/sparse split assumes declared slots < 2^16).
 
 Force puya-sol's *internal* storage (and optionally memory) layout to emulate
 Solidity's, backed by AVM boxes, so that inline assembly which does real slot

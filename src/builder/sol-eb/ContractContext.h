@@ -30,6 +30,7 @@ namespace puyasol::builder
 class TypeMapper;
 class StorageMapper;
 class StorageBackend;
+class StorageLayout;
 class TransientStorage;
 namespace sol_ast {
 class Context;
@@ -92,6 +93,9 @@ public:
 	TransientStorage* transientStorage = nullptr;
 	/// Unified AppGlobal/Box/Transient dispatch; populated alongside transientStorage.
 	StorageBackend* storageBackend = nullptr;
+	/// --evm-storage-layout: the contract's solc-exact storage layout (set by
+	/// ContractBuilder when the mode is on; null otherwise / for free functions).
+	StorageLayout const* evmSlotLayout = nullptr;
 	std::string const& sourceFile;
 	std::string const& contractName;
 	/// Current contract (nullptr during free-function translation).
